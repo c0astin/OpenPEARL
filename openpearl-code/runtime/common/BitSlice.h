@@ -253,7 +253,7 @@ namespace pearlrt {
                  by the current object
       */
       template<int RHSSIZE>
-      void setSlice(BitString<RHSSIZE>& rhs) {
+      void setSlice(BitString<RHSSIZE> rhs) {
          static const Fixed<15> one(1);
 
          // the BitString class provides the modification of
