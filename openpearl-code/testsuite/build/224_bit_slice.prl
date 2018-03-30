@@ -52,7 +52,7 @@ lhsSlice: PROC;
    DCL (b15,c15) BIT(15);
 
    b15 := '111'B CAT '555'B4;
-!   b15.BIT(2) = '0'B1;
+   b15.BIT(2) = '0'B1;
 
    IF b15.BIT(1:3) NE '101'B1 THEN
       PUT 'error#1a with .BIT ' ,b15.BIT(1:3),' NE 101' TO console
