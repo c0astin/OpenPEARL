@@ -3,25 +3,32 @@ PROBLEM;
 
 T1: TASK MAIN;
 
-  DCL f1 FIXED(15) INIT(1);
-  DCL f2 FIXED(15) INIT(2);
-  DCL f3 FIXED(15) INIT(3);
-  DCL b  BIT(1) INIT('1'B1);
+DCL i99 INV FIXED INIT(42);
+DCL (i1,i2,i3) FIXED(22) INIT(1+1,1+2,i99*7);
 
-  IF f1< f2 THEN
-    IF f1 > f2 THEN
-      f3 = 5;
-    FIN;
-    f3 = 4;
-  FIN;
+DCL f FLOAT INIT(3.14);
+DCL d DURATION INIT(0.1 SEC);
+DCL c CLOCK INIT( 12HRS 10 MIN 42 SEC);
+DCL b BIT(40) INIT('302213'B2);
 
-  IF f1 < f2 AND f2 < f3 THEN
-     f2 := 0;
-  FIN;
+DCL f1 FIXED(15) INIT(39);
+DCL f2 FIXED(15) INIT(2);
+DCL f3 FIXED(15) INIT(3);
 
-  IF b THEN
-     f2 := 0;
-  FIN;
+!  IF f1 < f2 THEN
+!    IF f1 > f2 THEN
+!      f3 = 5;
+!    FIN;
+!    f3 = 4;
+!  FIN;
+
+!  IF f1 < f2 AND f2 < f3 THEN
+!     f2 := 0;
+!  FIN;
+
+!  IF b THEN
+!     f2 := 0;
+!  FIN;
 END;
 
 MODEND;

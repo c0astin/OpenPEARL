@@ -65,7 +65,7 @@ interactive: TASK;
       PUT 'enter new delay in us F(6) format' TO console BY A,SKIP;
       GET delay FROM console BY F(6), SKIP;
       !delayms = 1SEC * delay / 1.0E-6;
-      delayms = 1SEC * delay / 1000000.0;
+      delayms = 1SEC * delay / 1.0E-6;
       PUT 'new delay: ', delayms TO console BY X(2),A,D(13,6), SKIP;
    END;
    CLOSE console;
