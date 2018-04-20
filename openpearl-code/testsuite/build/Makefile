@@ -18,7 +18,6 @@
 DONOTBUILD= 030_signals 031_signalsInduce  \
 	043_switch \
 	103_fixed_monadic_arith \
-	150_array_dcl \
 	400_char_dcl \
 	701_dation_pg \
 	706_convert \
