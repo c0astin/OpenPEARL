@@ -86,18 +86,6 @@ public class SymbolTable {
 
     }
 
-    public SymbolTable newLevel(StructureEntry structEntry) {
-        SymbolTable newst;
-
-        enter(structEntry);
-        newst = structEntry.scope = new SymbolTable();
-        newst.parent = this;
-        newst.m_level = m_level + 1;
-
-        return newst;
-
-    }
-
     public SymbolTable newLevel(BlockEntry blockEntry) {
         SymbolTable newst;
 

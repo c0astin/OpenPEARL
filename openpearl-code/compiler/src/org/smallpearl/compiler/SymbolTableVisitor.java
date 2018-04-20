@@ -46,6 +46,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     public SymbolTable symbolTable;
     private SymbolTableEntry m_currentEntry;
     private SymbolTable m_currentSymbolTable;
+    private TypeStructure m_currentTypeStructure;
     private LinkedList<LinkedList<SemaphoreEntry>> m_listOfTemporarySemaphoreArrays;
     private LinkedList<LinkedList<BoltEntry>> m_listOfTemporaryBoltArrays;
     private LinkedList<ArrayDescriptor> m_listOfArrayDescriptors;
@@ -71,6 +72,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         this.m_listOfArrayDescriptors = new LinkedList<ArrayDescriptor>();
         this.m_symboltablePerContext = new ParseTreeProperty<SymbolTable>();
         this.m_constantPool = constantPool;
+        this.m_currentTypeStructure = null;
     }
 
     @Override
@@ -122,6 +124,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                     visitLengthDefinition((SmallPearlParser.LengthDefinitionContext) c);
                 } else if (c instanceof SmallPearlParser.StructVariableDeclarationContext) {
                     visitStructVariableDeclaration((SmallPearlParser.StructVariableDeclarationContext) c);
+                } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
+                    visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c);
                 }
             }
         }
@@ -1401,9 +1405,13 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         if (m_debug) {
             System.out.println("SymbolTableVisitor: visitTypeStructure");
         }
-
+        visitChildren(ctx);
         return null;
     }
+
+
+    // structureDenotation :
+    //    ID dimensionAttribute? assignmentProtection? typeStructure globalAttribute? initialisationAttribute?
 
     @Override
     public Void visitStructureDenotation(SmallPearlParser.StructureDenotationContext ctx) {
@@ -1417,14 +1425,17 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             throw new DoubleDeclarationException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
+        // VariableEntry variableEntry = new VariableEntry(ctx.ID().toString(), m_type, hasAllocationProtection, ctx, initElementList.get(j));
 
-        StructureEntry structEntry = new StructureEntry(ctx.ID().getText(), ctx, this.m_currentSymbolTable);
-        this.m_currentSymbolTable = this.m_currentSymbolTable.newLevel(structEntry);
-        this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
+        // TypeStructure typeStructure = new TypeStructure();
+
+//        StructureEntry structEntry = new StructureEntry(ctx.ID().getText(), ctx, this.m_currentSymbolTable);
+//        this.m_currentSymbolTable = this.m_currentSymbolTable.newLevel(structEntry);
+//        this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
 
         visitChildren(ctx);
 
-        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+//        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
 
         return null;
     }
