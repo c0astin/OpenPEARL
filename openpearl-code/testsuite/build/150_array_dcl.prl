@@ -2,7 +2,7 @@ MODULE (array_dcl);
 
 PROBLEM;
 
-DCL muduleArray(10,20) FIXED;
+DCL moduleArray(10,20) FIXED;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! test for data types

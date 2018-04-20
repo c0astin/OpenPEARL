@@ -1168,6 +1168,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
             for (ParseTree c : ctx.children) {
                 if (c instanceof SmallPearlParser.ScalarVariableDeclarationContext) {
                     problem_part.add("ScalarVariableDeclarations", visitScalarVariableDeclaration((SmallPearlParser.ScalarVariableDeclarationContext) c));
+                } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
+                    problem_part.add("ArrayVariableDeclarations", visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.SemaDeclarationContext) {
                     problem_part.add("SemaDeclarations", visitSemaDeclaration((SmallPearlParser.SemaDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.BoltDeclarationContext) {

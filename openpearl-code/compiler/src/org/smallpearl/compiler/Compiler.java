@@ -40,7 +40,7 @@ import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
 
 public class Compiler {
-    static String version = "v0.8.9.21";
+    static String version = "v0.8.9.22";
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();
@@ -63,6 +63,7 @@ public class Compiler {
     static boolean debugSTG = false;
     static boolean stacktrace = false;
     static boolean imc = true;
+    static boolean printSysInfo = false;
     static int     noOfErrors = 0;
     static int     noOfWarnings = 0;
     static int     warninglevel = 255;
@@ -77,6 +78,8 @@ public class Compiler {
         }
 
         long startTime = System.nanoTime();
+
+        Runtime runtime = Runtime.getRuntime();
 
         ConstantPool constantPool = new ConstantPool();
         SymbolTableVisitor symbolTableVisitor = new SymbolTableVisitor(verbose, constantPool);
@@ -195,12 +198,18 @@ public class Compiler {
             System.out.println("");
             System.out.println("Number of errors in " + inputFiles.get(i) + " encountered: " + noOfErrors);
 
-            long difference = System.nanoTime() - startTime;
+            if ( printSysInfo) {
 
-            System.out.println("Total execution time: " +
-                    String.format("%d.%d sec",
-                            TimeUnit.NANOSECONDS.toSeconds(difference),
-                            TimeUnit.NANOSECONDS.toMillis(difference) - TimeUnit.NANOSECONDS.toSeconds(difference) * 1000));
+                long difference = System.nanoTime() - startTime;
+
+                System.out.println("Total execution time: " +
+                        String.format("%d.%d sec",
+                                TimeUnit.NANOSECONDS.toSeconds(difference),
+                                TimeUnit.NANOSECONDS.toMillis(difference) - TimeUnit.NANOSECONDS.toSeconds(difference) * 1000));
+
+                SystemInformation sysinfo = new SystemInformation();
+                System.out.println(sysinfo.Info());
+            }
 
             if ( noOfErrors == 0 ) {
                 System.exit(0);
@@ -228,11 +237,12 @@ public class Compiler {
                 "  --debug                     Generate debug information            \n" +
                 "  --stacktrace                Print stacktrace in case of an        \n" +
                 "                              exception                             \n" +
-                "  --warninglevel <m_level>      Set the warning m_level                 \n" +
+                "  --warninglevel <m_level>      Set the warning m_level             \n" +
                 "                              Level   0: no warning                 \n" +
                 "                              Level 255: all warnings (default)     \n" +
                 " --imc                        Enable Inter Module Checker           \n" +
                 "                              file                                  \n" +
+                "  --sysinfo                   Print system information              \n" +
                 "  --output <filename>         Filename of the generated code        \n" +
                 "  infile ...                                                        \n");
     }
@@ -261,6 +271,8 @@ public class Compiler {
                 trace = true;
             } else if (arg.equals("--SLL")) {
                 SLL = true;
+            } else if (arg.equals("--sysinfo")) {
+                printSysInfo = true;
             } else if (arg.equals("--nosemantic")) {
                 nosemantic = true;
             } else if (arg.equals("--diagnostics")) {
