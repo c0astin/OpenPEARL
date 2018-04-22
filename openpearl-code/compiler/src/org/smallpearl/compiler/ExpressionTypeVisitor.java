@@ -105,9 +105,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitPrimaryExpression(SmallPearlParser.PrimaryExpressionContext ctx) {
-        if (m_debug)
+        if (m_debug) {
             System.out.println("ExpressionTypeVisitor: visitPrimaryExpression");
-
+        }
 
         if (ctx.literal() != null) {
             visitLiteral(ctx.literal());
@@ -961,6 +961,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         return null;
     }
+
 
     //
     // Reference: OpenPEARL Language Report 6.1 Expressions
@@ -2641,5 +2642,94 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
 
+    //
+    // Reference: OpenPEARL Language Report 6.9 Other dyadic operators
+    //
+    // -------------+-----------+-----------+-------------+---------------------------------
+    // Expression   | Type of   | Type of   | Result type | Meaning of operation
+    //              | operand 1 | operand 2 |             |
+    // -------------+-----------+-----------+-------------+---------------------------------
+    // op1 LWB op2  | FIXED(g)  | array     | FIXED(31)   | lower boundary of the dimension
+    //              |           |           |             | (given by op1) of the array
+    //              |           |           |             | (determined by op2), if existing
+    // -------------+-----------+-----------+-------------+---------------------------------
+    // op1 UPB op2  | FIXED(g)  | array     | FIXED(31)   | upper boundary of the dimension
+    //              |           |           |             | (given by op1) of the array
+    //              |           |           |             | (determined by op2), if existing
+    // -------------+-----------+-----------+-------------+---------------------------------
+
+    @Override
+    public Void visitLwbDyadicExpression(SmallPearlParser.LwbDyadicExpressionContext ctx) {
+        ExpressionResult op1;
+        ExpressionResult op2;
+        ExpressionResult res;
+
+        if (m_debug)
+            System.out.println("ExpressionTypeVisitor: visitLwbDyadicExpression");
+
+        res = new ExpressionResult(new TypeFixed(31), false);
+        m_properties.put(ctx, res);
+
+        return null;
+    }
+
+    @Override
+    public Void visitUpbDyadicExpression(SmallPearlParser.UpbDyadicExpressionContext ctx) {
+        ExpressionResult op1;
+        ExpressionResult op2;
+        ExpressionResult res;
+
+        if (m_debug)
+            System.out.println("ExpressionTypeVisitor: visitUpbDyadicExpression");
+
+        res = new ExpressionResult(new TypeFixed(31), false);
+        m_properties.put(ctx, res);
+
+        return null;
+    }
+
+    //
+    // Reference: OpenPEARL Language Report 6.4 Other monadic perators
+    //
+    // -------------+---------------+-------------+---------------------------------
+    // Expression   | Type of       | Result type | Meaning of operation
+    //              | operand       |             |
+    // -------------+---------------+-------------+---------------------------------
+    // LWB a        | array         | FIXED(31)   | lower boundary of the first
+    //              |               |             | dimension of the operand array
+    // -------------+---------------+-------------+---------------------------------
+    // UPB a        | array         | FIXED(31)   | upper boundary of the first
+    //              |               |             | dimension of the operand array
+    //              +---------------+-------------+---------------------------------
+    //              | CHARACTER(lg) | FIXED(15)   | result := lg
+    // -------------+---------------+-------------+---------------------------------
+
+    @Override
+    public Void visitLwbMonadicExpression(SmallPearlParser.LwbMonadicExpressionContext ctx) {
+        ExpressionResult op;
+        ExpressionResult res;
+
+        if (m_debug)
+            System.out.println("ExpressionTypeVisitor: visitLwbMonadicExpression");
+
+        res = new ExpressionResult(new TypeFixed(31), false);
+        m_properties.put(ctx, res);
+
+        return null;
+    }
+
+    @Override
+    public Void visitUpbMonadicExpression(SmallPearlParser.UpbMonadicExpressionContext ctx) {
+        ExpressionResult op;
+        ExpressionResult res;
+
+        if (m_debug)
+            System.out.println("ExpressionTypeVisitor: visitUpbMonadicExpression");
+
+        res = new ExpressionResult(new TypeFixed(31), false);
+        m_properties.put(ctx, res);
+
+        return null;
+    }
 
 }

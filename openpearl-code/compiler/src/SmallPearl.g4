@@ -1968,13 +1968,15 @@ expression
     | op='ENTIER' expression                                # entierExpression
     | op='ROUND' expression                                 # roundExpression
     | op='CONT' expression                                  # CONTExpression
+    | op='LWB' expression                                   # lwbMonadicExpression
+    | op='UPB' expression                                   # upbMonadicExpression
     | op='NOW'                                              # nowFunction
     | op='DATE'                                             # dateFunction
     | op='TASK'                                             # taskFunction
     | <assoc=right> expression op='**'  expression          # exponentiationExpression
     | <assoc=right> expression op='FIT' expression          # fitExpression
-    | <assoc=right> expression op='LWB' expression          # lwbExpression
-    | <assoc=right> expression op='UPB' expression          # upbExpression
+    | <assoc=right> expression op='LWB' expression          # lwbDyadicExpression
+    | <assoc=right> expression op='UPB' expression          # upbDyadicExpression
     | op=('*'|'/') expression                               # unaryMultiplicativeExpression
     | op='-' expression                                     # unarySubtractiveExpression
     | op='+' expression                                     # unaryAdditiveExpression
@@ -2469,7 +2471,7 @@ Letter : [a-zA-Z] ;
 constant :
       sign? ( fixedConstant | floatingPointConstant )
     | timeConstant
-    | durationConstant
+    | sign? durationConstant
     | bitStringConstant
     | StringLiteral
     | 'NIL'

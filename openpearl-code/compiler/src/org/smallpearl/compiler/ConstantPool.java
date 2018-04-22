@@ -215,9 +215,9 @@ public class ConstantPool {
         return null;
     }
 
-    static public ConstantDurationValue lookupDurationValue(int hours, int minutes, double seconds) {
+    static public ConstantDurationValue lookupDurationValue(int hours, int minutes, double seconds, int sign) {
         int i;
-        ConstantDurationValue other = new ConstantDurationValue(hours,minutes,seconds);
+        ConstantDurationValue other = new ConstantDurationValue(hours,minutes,seconds,sign);
 
         for (i = 0; i < constantPool.size(); i++) {
             if (constantPool.get(i) instanceof ConstantDurationValue) {

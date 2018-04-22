@@ -1092,7 +1092,7 @@ VariableDeclaration(name,TypeAttribute,InitElement,global,inv) ::= <%
 %>
 
 InitElement(value) ::= <<
-"<value>"
+<value>
 >>
 
 GlobalAttribute() ::= <<
@@ -1725,6 +1725,8 @@ CONT(operand) ::= <%
 pearlrt::cont(<operand>)
 %>
 
+/* --------------------------- ARRAYS -------------------------------------------*/
+
 ArrayVariableDeclarations(declarations) ::= <<
 <declarations: {declaration|<declaration>}>
 >>
@@ -1773,8 +1775,16 @@ ArrayRHS(name,descriptor,indices) ::= <%
 *(data_<name> + <descriptor>->offset(<indices>))
 %>
 
-ArrayInitalisations(initelements)::= <%
-{<initelements: {initelement|<initelement>} ; separator=",">}
+ArrayInitalisations(initElements)::= <%
+{<initElements: {initElement|<initElement>} ; separator=",">}
+%>
+
+ArrayLWB(descriptor,index) ::= <%
+<descriptor>->lwb(<index>)
+%>
+
+ArrayUPB(descriptor,index) ::= <%
+<descriptor>->upb(<index>)
 %>
 
 /* --------------------------- CONVERT STATEMENT -------------------------------------------*/

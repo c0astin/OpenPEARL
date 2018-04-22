@@ -33,11 +33,19 @@ public class ConstantDurationValue extends ConstantValue {
     private int m_hours = 0;
     private int m_minutes = 0;
     private double m_seconds = 0.0;
+    private int m_sign = 1;
 
     ConstantDurationValue(int hours, int minutes, int seconds) {
         m_hours = hours;
         m_minutes = minutes;
         m_seconds = seconds;
+    }
+
+    ConstantDurationValue(int hours, int minutes, int seconds, int sign) {
+        m_hours = hours;
+        m_minutes = minutes;
+        m_seconds = seconds;
+        m_sign = sign;
     }
 
     ConstantDurationValue(int hours, int minutes, double seconds) {
@@ -46,12 +54,21 @@ public class ConstantDurationValue extends ConstantValue {
         m_seconds = seconds;
     }
 
+    ConstantDurationValue(int hours, int minutes, double seconds, int sign) {
+        m_hours = hours;
+        m_minutes = minutes;
+        m_seconds = seconds;
+        m_sign = sign;
+    }
+
+
+    public int getSign() { return m_sign;};
     public int getHours() { return m_hours;};
     public int getMinutes() { return m_minutes;};
     public double getSeconds() { return m_seconds;};
 
     public double getValue() {
-        return m_hours * 3600 + m_minutes * 60 + m_seconds;
+        return m_sign * ( m_hours * 3600 + m_minutes * 60 + m_seconds);
     }
 
     public String getBaseType() {
@@ -62,10 +79,10 @@ public class ConstantDurationValue extends ConstantValue {
         String name = "CONST_" + getBaseType().toUpperCase();
         double value = this.getValue();
 
-        if ( value < 0 ) {
+        if ( m_sign == -1 ) {
             name += "_N";
         }
-        else if (value >= 0 ) {
+        else if (m_sign == 1 ) {
             name += "_P";
         }
 
@@ -90,9 +107,10 @@ public class ConstantDurationValue extends ConstantValue {
         ConstantDurationValue other = (ConstantDurationValue) o;
 
         // field comparison
-        return this.m_hours == other.m_hours &&
-                this.m_minutes == other.m_minutes &&
-                this.m_seconds == other.m_seconds;
+        return this.m_sign == other.m_sign &&
+               this.m_hours == other.m_hours &&
+               this.m_minutes == other.m_minutes &&
+               this.m_seconds == other.m_seconds;
 
     }
 }
