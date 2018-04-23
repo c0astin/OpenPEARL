@@ -135,24 +135,62 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
     }
 
     @Override
+    public Void visitCase_statement_selection2(SmallPearlParser.Case_statement_selection2Context ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+
+    @Override
     public Void visitCase_statement_selection2_alt(SmallPearlParser.Case_statement_selection2_altContext ctx) {
+        long lowerBoundary;
+        long upperBoundary;
+        ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
+
         for ( int i = 0; i < ctx.case_list().index_section().size(); i++) {
             SmallPearlParser.Index_sectionContext index = ctx.case_list().index_section(i);
 
-            if ( index.expression().size() == 1) {
-                for ( int j = 0; j < m_listOfAlternatives.size(); j++) {
-//                    if ( m_listOfAlternatives.get(j).isContained())
+            if ( index.constantFixedExpression().size() == 1) {
+                ConstantValue alt = evaluator.visit(index.constantFixedExpression(0));
+
+                if ( !(alt instanceof ConstantFixedValue)) {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
-                m_listOfAlternatives.add(new FixedRange(1,1));
+
+                lowerBoundary = ((ConstantFixedValue) alt).getValue();
+                upperBoundary = lowerBoundary;
+
+                for ( int j = 0; j < m_listOfAlternatives.size(); j++) {
+                    if ( m_listOfAlternatives.get(j).isContained(lowerBoundary)) {
+                        throw new DuplicateAltValueException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                    }
+                }
+
+                m_listOfAlternatives.add(new FixedRange(lowerBoundary,upperBoundary));
             }
             else {
-                m_listOfAlternatives.add(new FixedRange(1,1));
+                ConstantValue lower = evaluator.visit(index.constantFixedExpression(0));
+                ConstantValue upper = evaluator.visit(index.constantFixedExpression(1));
+
+                if ( !(lower instanceof ConstantFixedValue)) {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+
+                if ( !(upper instanceof ConstantFixedValue)) {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+
+                lowerBoundary = ((ConstantFixedValue) lower).getValue();
+                upperBoundary = ((ConstantFixedValue) upper).getValue();
+
+                for ( int j = 0; j < m_listOfAlternatives.size(); j++) {
+                    if ( m_listOfAlternatives.get(j).isContained(lowerBoundary,upperBoundary)) {
+                        throw new DuplicateAltValueException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                    }
+                }
+
+                m_listOfAlternatives.add(new FixedRange(lowerBoundary,upperBoundary));
             }
-
-        }
-
-        for ( int j = 0; j < m_listOfAlternatives.size(); j++) {
-            System.out.println( "CheckCaseSwitch:visitCase_statement_selection2_alt" + m_listOfAlternatives.get(j));
         }
 
         return null;

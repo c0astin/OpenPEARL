@@ -621,8 +621,6 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             } else if (toType != null) {
                 precision = ((TypeFixed) toRes.getType()).getPrecision();
             }
-
-//TODO            m_constantPool.add(new ConstantFixedValue(value,precision));
         }
 
         for (int i = 0; i < ctx.statement().size(); i++) {
@@ -670,6 +668,11 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         visitChildren(ctx);
 
         m_currFixedLength = null;
+        return null;
+    }
+
+    @Override
+    public Void visitCase_list(SmallPearlParser.Case_listContext ctx) {
         return null;
     }
 }

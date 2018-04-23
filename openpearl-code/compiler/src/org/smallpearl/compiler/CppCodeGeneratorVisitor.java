@@ -2041,8 +2041,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
                     throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
-                st_range.add("from", from.toString());
-                st_range.add("to", to.toString());
+                st_range.add("from", ((ConstantFixedValue)from).getValue());
+                st_range.add("to", ((ConstantFixedValue)to).getValue());
 
                 m_map_to_const = old_map_to_const;
 

@@ -48,6 +48,7 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
     private int m_accumulator;
     private ParseTreeProperty<ConstantValue> m_properties = null;
     private ConstantPoolVisitor m_constantPoolVisitor;
+    private boolean m_enterResultinConstantPool = true;
 
 
     public ConstantExpressionEvaluatorVisitor(int verbose,
@@ -62,10 +63,20 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
         m_currentSymbolTable = m_symboltable;
         m_constantPoolVisitor = constantPoolVisitor;
         m_properties = new ParseTreeProperty<ConstantValue>();
+        m_enterResultinConstantPool = true;
     }
 
     public ConstantValue lookup(ParserRuleContext ctx) {
         return m_properties.get(ctx);
+    }
+
+    public boolean getEnterResultinConstantPool() {
+        return m_enterResultinConstantPool;
+    }
+
+    public Void setEnterResultinConstantPool(boolean flag) {
+        m_enterResultinConstantPool = flag;
+        return null;
     }
 
     @Override
@@ -78,7 +89,10 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
             ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable, this, m_constantPoolVisitor);
             ConstantFixedValue result = evaluator.visit(ctx.constantFixedExpression());
             m_properties.put(ctx, result);
-            m_constantPoolVisitor.add(result);
+
+            if ( m_enterResultinConstantPool) {
+                m_constantPoolVisitor.add(result);
+            }
             
             if ( m_debug) {
                 System.out.println("ConstantExpressionEvaluatorVisitor: visitConstantExpression : result=" + result);
@@ -100,7 +114,10 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
         ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable, this,m_constantPoolVisitor);
         ConstantFixedValue result = evaluator.visit(ctx);
         m_properties.put(ctx, result);
-        m_constantPoolVisitor.add(result);
+
+        if (m_enterResultinConstantPool) {
+            m_constantPoolVisitor.add(result);
+        }
 
         if (m_debug) {
             System.out.println("ConstantExpressionEvaluatorVisitor: visitConstantExpression : result=" + result);
@@ -134,7 +151,9 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
             }
 
             value = new ConstantFixedValue(curval,curlen);
-            m_constantPoolVisitor.add(value);
+            if ( m_enterResultinConstantPool) {
+                m_constantPoolVisitor.add(value);
+            }
         }
 
         return null;
@@ -178,6 +197,15 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
         visitChildren(ctx);
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+        return null;
+    }
+
+    @Override
+    public Void visitCase_list(SmallPearlParser.Case_listContext ctx) {
+        boolean old_enterResultinConstantPool = m_enterResultinConstantPool;
+        m_enterResultinConstantPool = false;
+        visitChildren(ctx);
+        m_enterResultinConstantPool = old_enterResultinConstantPool;
         return null;
     }
 }

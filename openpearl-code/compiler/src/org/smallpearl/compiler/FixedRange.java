@@ -31,29 +31,29 @@ package org.smallpearl.compiler;
 
 
 public class FixedRange {
-    private int m_lowerBoundary;
-    private int m_upperBoundary;
+    private long m_lowerBoundary;
+    private long m_upperBoundary;
 
     public FixedRange() {
         this.m_lowerBoundary = 0;
         this.m_upperBoundary = 0;
     }
 
-    public FixedRange(int lowerBoundary, int upperBoundary) {
+    public FixedRange(long lowerBoundary, long upperBoundary) {
         this.m_lowerBoundary = lowerBoundary;
         this.m_upperBoundary = upperBoundary;
     }
 
     public String toString() {
-        return Integer.toString(this.m_lowerBoundary) + ":" + Integer.toString(this.m_upperBoundary);
+        return Long.toString(this.m_lowerBoundary) + ":" + Long.toString(this.m_upperBoundary);
     }
 
-    public int getNoOfElements() {
+    public long getNoOfElements() {
         return m_upperBoundary - m_lowerBoundary + 1;
     }
 
-    public int getLowerBoundary() { return this.m_lowerBoundary; }
-    public int getUpperBoundary() { return this.m_upperBoundary; }
+    public long getLowerBoundary() { return this.m_lowerBoundary; }
+    public long getUpperBoundary() { return this.m_upperBoundary; }
 
     @Override
     public boolean equals(Object other) {
@@ -67,11 +67,11 @@ public class FixedRange {
         return this.m_lowerBoundary == that.m_lowerBoundary && this.m_upperBoundary == that.m_upperBoundary;
     }
 
-    public boolean isContained(int value) {
+    public boolean isContained(long value) {
         return this.m_lowerBoundary <= value && value <= this.m_upperBoundary;
     }
 
-    public boolean isContained(int lwb, int upb) {
+    public boolean isContained(long lwb, long upb) {
         return this.m_lowerBoundary <= lwb && lwb <= this.m_upperBoundary || this.m_lowerBoundary <= upb && upb <= this.m_upperBoundary;
     }
 
