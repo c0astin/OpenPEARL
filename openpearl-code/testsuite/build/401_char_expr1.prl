@@ -57,7 +57,7 @@ t1: TASK MAIN;
       success = '0'B1;
    FIN;
 
-   x4.CHAR(1) = 'A';
+   x4.CHAR(2:3) = ' ';
    IF x4 /= 'A  D' THEN
      PUT  'error#7   x4=>',x4, '<' 
        TO con BY A,A,A,SKIP;
