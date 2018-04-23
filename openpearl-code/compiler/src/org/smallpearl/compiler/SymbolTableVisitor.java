@@ -1261,7 +1261,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             }
         }
 
-        m_constantPool.add(constant);
+        constant = m_constantPool.add(constant);
         return constant;
     }
 

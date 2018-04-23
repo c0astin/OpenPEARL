@@ -44,9 +44,10 @@ public class ConstantPool {
     public ConstantPool() {
     }
 
-    public Void add(ConstantValue value) {
+    public ConstantValue add(ConstantValue value) {
         int i;
         int constantBitNo = 0;
+        ConstantValue retValue = value;
 
         boolean found = false;
 
@@ -58,6 +59,7 @@ public class ConstantPool {
 
                     if ( a.getValue() == b.getValue() && a.getPrecision() == b.getPrecision()) {
                         found = true;
+                        retValue = constantPool.get(i);
                         break;
                     }
                 }
@@ -70,6 +72,7 @@ public class ConstantPool {
 
                         if ( Double.compare(a.getValue(),b.getValue()) == 0 && a.getPrecision() == b.getPrecision()) {
                             found = true;
+                            retValue = constantPool.get(i);
                             break;
                         }
                     }
@@ -82,6 +85,7 @@ public class ConstantPool {
 
                     if ( s1.equals(s2)) {
                         found = true;
+                        retValue = constantPool.get(i);
                         break;
                     }
                 }
@@ -97,6 +101,7 @@ public class ConstantPool {
 
                     if ( s1.equals(s2) && l1 == l2) {
                         found = true;
+                        retValue = constantPool.get(i);
                         break;
                     }
                 }
@@ -107,6 +112,7 @@ public class ConstantPool {
 
                     if ( value.equals(other) ) {
                         found = true;
+                        retValue = constantPool.get(i);
                         break;
                     }
                 }
@@ -117,6 +123,7 @@ public class ConstantPool {
 
                     if ( value.equals(other) ) {
                         found = true;
+                        retValue = constantPool.get(i);
                         break;
                     }
                 }
@@ -137,7 +144,7 @@ public class ConstantPool {
             }
         }
 
-        return null;
+        return retValue;
     }
 
     static

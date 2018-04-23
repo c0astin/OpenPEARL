@@ -1015,7 +1015,7 @@ case_list
 ////////////////////////////////////////////////////////////////////////////////
 
 index_section
-    : expression ( ':' expression )?
+    : constantFixedExpression ( ':' constantFixedExpression )?
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2337,7 +2337,7 @@ SChar
 
 fragment
 ControlCharacterSequence
-    : '\'\\' ( B4Digit B4Digit)+ '\\\''
+    : '\'\\' Whitespace? (B4Digit B4Digit) (Whitespace B4Digit B4Digit)* Whitespace? '\\\''
     ;
 
 ////////////////////////////////////////////////////////////////////////////////

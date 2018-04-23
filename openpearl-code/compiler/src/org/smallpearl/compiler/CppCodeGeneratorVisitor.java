@@ -2009,25 +2009,41 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
         for (int i = 0; i < ctx.index_section().size(); i++){
             SmallPearlParser.Index_sectionContext index = ctx.index_section(i);
 
-            if ( index.expression().size() == 1) {
+            if ( index.constantFixedExpression().size() == 1) {
                 boolean old_map_to_const = m_map_to_const; // very ugly, but did not found proper solution yet :-(
                 ST st_index = m_group.getInstanceOf("CaseIndex");
 
-                m_map_to_const = false;
-                ST expr = getExpression(index.expression(0));
-                m_map_to_const = old_map_to_const;
+                ConstantValue value = m_constantExpressionEvaluatorVisitor.lookup(index.constantFixedExpression(0));
 
-                st_index.add("index", expr);
+                if ( value == null || !(value instanceof ConstantFixedValue)) {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+
+                st_index.add("index", ((ConstantFixedValue) value).getValue());
                 st.add("indices", st_index);
             }
-            else if ( index.expression().size() == 2) {
+            else if ( index.constantFixedExpression().size() == 2) {
                 boolean old_map_to_const = m_map_to_const; // very ugly, but did not found proper solution yet :-(
 
                 ST st_range = m_group.getInstanceOf("CaseRange");
 
                 m_map_to_const = false;
-                st_range.add("from", getExpression(index.expression(0)));
-                st_range.add("to", getExpression(index.expression(1)));
+
+                ConstantValue from = m_constantExpressionEvaluatorVisitor.lookup(index.constantFixedExpression(0));
+
+                if ( from == null || !(from instanceof ConstantFixedValue)) {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+
+                ConstantValue to = m_constantExpressionEvaluatorVisitor.lookup(index.constantFixedExpression(1));
+
+                if ( to == null || !(to instanceof ConstantFixedValue)) {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+
+                st_range.add("from", from.toString());
+                st_range.add("to", to.toString());
+
                 m_map_to_const = old_map_to_const;
 
                 st.add("indices", st_range);
@@ -2774,7 +2790,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
                             TypeArray typeArray = (TypeArray)var.getType();
                             ArrayDescriptor array_descriptor = new ArrayDescriptor(typeArray.getNoOfDimensions(), typeArray.getDimensions());
                             st.add("descriptor", array_descriptor.getName());
-                            st.add("index", visit(ctx.expression(0)));
+                            st.add("index",  getExpression(ctx.expression(0)).render());
                         }
                         else {
                             throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2848,7 +2864,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
                             TypeArray typeArray = (TypeArray)var.getType();
                             ArrayDescriptor array_descriptor = new ArrayDescriptor(typeArray.getNoOfDimensions(), typeArray.getDimensions());
                             st.add("descriptor", array_descriptor.getName());
-                            st.add("index",visit(ctx.expression(0)));
+                            st.add("index",  getExpression(ctx.expression(0)).render());
                         }
                         else {
                             throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -5033,7 +5049,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
 
             fromType = m_expressionTypeVisitor.lookupType(ctx.loopStatement_from().expression());
 
-            m_map_to_const = false;
+            m_map_to_const = true;
             st.add("from", getExpression(ctx.loopStatement_from().expression()));
             m_map_to_const = old_map_to_const;
         }
@@ -5043,7 +5059,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
 
             toType = m_expressionTypeVisitor.lookupType(ctx.loopStatement_to().expression());
 
-            m_map_to_const = false;
+            m_map_to_const = true;
             st.add( "to", getExpression(ctx.loopStatement_to().expression()));
             m_map_to_const = old_map_to_const;
 
@@ -5073,7 +5089,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
 
             byType = m_expressionTypeVisitor.lookupType(ctx.loopStatement_by().expression());
 
-            m_map_to_const = false;
+            m_map_to_const = true;
             st.add("by", getExpression(ctx.loopStatement_by().expression()));
             st.add("byPrecision", rangePrecision);
             m_map_to_const = old_map_to_const;

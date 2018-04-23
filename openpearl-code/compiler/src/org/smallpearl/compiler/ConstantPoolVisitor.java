@@ -51,12 +51,12 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
     private Integer m_currFixedLength = null;
     private ExpressionTypeVisitor m_expressionTypeVisitor = null;
 
-    public ConstantPoolVisitor( String sourceFileName,
-                                int verbose,
-                                boolean debug,
-                                SymbolTableVisitor symbolTableVisitor,
-                                ConstantPool constantPool,
-                                ExpressionTypeVisitor expressionTypeVisitor) {
+    public ConstantPoolVisitor(String sourceFileName,
+                               int verbose,
+                               boolean debug,
+                               SymbolTableVisitor symbolTableVisitor,
+                               ConstantPool constantPool,
+                               ExpressionTypeVisitor expressionTypeVisitor) {
 
 
         m_debug = debug;
@@ -70,13 +70,13 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         m_expressionTypeVisitor = expressionTypeVisitor;
 
         if (m_verbose > 0) {
-            System.out.println( "Start ConstantPoolVisitor");
+            System.out.println("Start ConstantPoolVisitor");
         }
 
         // Add commonly used constants:
-        m_constantPool.add(new ConstantFixedValue(0,Defaults.FIXED_LENGTH));
-        m_constantPool.add(new ConstantFixedValue(1,Defaults.FIXED_LENGTH));
-        m_constantPool.add(new ConstantFixedValue(-1,Defaults.FIXED_LENGTH));
+        m_constantPool.add(new ConstantFixedValue(0, Defaults.FIXED_LENGTH));
+        m_constantPool.add(new ConstantFixedValue(1, Defaults.FIXED_LENGTH));
+        m_constantPool.add(new ConstantFixedValue(-1, Defaults.FIXED_LENGTH));
     }
 
     public Void add(ConstantValue value) {
@@ -86,54 +86,50 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         boolean found = false;
 
         for (i = 0; i < m_constantPool.constantPool.size(); i++) {
-            if ( value instanceof ConstantFixedValue) {
+            if (value instanceof ConstantFixedValue) {
                 if (m_constantPool.constantPool.get(i) instanceof ConstantFixedValue) {
-                    ConstantFixedValue a = (ConstantFixedValue)(value);
-                    ConstantFixedValue b = (ConstantFixedValue)(m_constantPool.constantPool.get(i));
+                    ConstantFixedValue a = (ConstantFixedValue) (value);
+                    ConstantFixedValue b = (ConstantFixedValue) (m_constantPool.constantPool.get(i));
 
-                    if ( a.getValue() == b.getValue() && a.getPrecision() == b.getPrecision()) {
+                    if (a.getValue() == b.getValue() && a.getPrecision() == b.getPrecision()) {
                         found = true;
                         break;
                     }
                 }
-            }
-            else if ( value instanceof ConstantFloatValue) {
+            } else if (value instanceof ConstantFloatValue) {
                 if (m_constantPool.constantPool.get(i) instanceof ConstantFloatValue) {
-                    if ( Double.compare( ((ConstantFloatValue)(value)).getValue(), ((ConstantFloatValue)(m_constantPool.constantPool.get(i))).getValue()) == 0) {
+                    if (Double.compare(((ConstantFloatValue) (value)).getValue(), ((ConstantFloatValue) (m_constantPool.constantPool.get(i))).getValue()) == 0) {
                         found = true;
                         break;
                     }
                 }
-            }
-            else if ( value instanceof ConstantCharacterValue) {
+            } else if (value instanceof ConstantCharacterValue) {
                 if (m_constantPool.constantPool.get(i) instanceof ConstantCharacterValue) {
-                    String s1 = ((ConstantCharacterValue)(value)).getValue();
-                    String s2 = ((ConstantCharacterValue)(m_constantPool.constantPool.get(i))).getValue();
+                    String s1 = ((ConstantCharacterValue) (value)).getValue();
+                    String s2 = ((ConstantCharacterValue) (m_constantPool.constantPool.get(i))).getValue();
 
-                    if ( s1.equals(s2)) {
+                    if (s1.equals(s2)) {
                         found = true;
                         break;
                     }
                 }
-            }
-            else if ( value instanceof ConstantBitValue) {
+            } else if (value instanceof ConstantBitValue) {
                 if (m_constantPool.constantPool.get(i) instanceof ConstantBitValue) {
                     constantBitNo = constantBitNo + 1;
-                    String s1 = ((ConstantBitValue)(value)).getValue();
-                    String s2 = ((ConstantBitValue)(m_constantPool.constantPool.get(i))).getValue();
+                    String s1 = ((ConstantBitValue) (value)).getValue();
+                    String s2 = ((ConstantBitValue) (m_constantPool.constantPool.get(i))).getValue();
 
-                    if ( s1.equals(s2)) {
+                    if (s1.equals(s2)) {
                         found = true;
                         break;
                     }
                 }
-            }
-            else if ( value instanceof ConstantDurationValue) {
+            } else if (value instanceof ConstantDurationValue) {
                 if (m_constantPool.constantPool.get(i) instanceof ConstantDurationValue) {
-                    ConstantDurationValue other = (ConstantDurationValue)value;
-                    ConstantDurationValue constant = ((ConstantDurationValue)(m_constantPool.constantPool.get(i)));
+                    ConstantDurationValue other = (ConstantDurationValue) value;
+                    ConstantDurationValue constant = ((ConstantDurationValue) (m_constantPool.constantPool.get(i)));
 
-                    if ( constant.equals(other)) {
+                    if (constant.equals(other)) {
                         found = true;
                         break;
                     }
@@ -142,7 +138,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         }
 
         if (!found) {
-            if ( value instanceof ConstantBitValue) {
+            if (value instanceof ConstantBitValue) {
                 constantBitNo = constantBitNo + 1;
                 ((ConstantBitValue) (value)).setNo(constantBitNo);
             }
@@ -164,16 +160,16 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             int minutes = 0;
             double seconds = 0.0;
 
-            if ( ctx.durationConstant().hours() != null ) {
+            if (ctx.durationConstant().hours() != null) {
                 hours = getHours(ctx.durationConstant().hours());
             }
 
-            if ( ctx.durationConstant().minutes() != null ) {
+            if (ctx.durationConstant().minutes() != null) {
                 minutes = getMinutes(ctx.durationConstant().minutes());
             }
 
-            if ( ctx.durationConstant().seconds() !=  null) {
-            seconds = getSeconds(ctx.durationConstant().seconds());
+            if (ctx.durationConstant().seconds() != null) {
+                seconds = getSeconds(ctx.durationConstant().seconds());
             }
 
             m_constantPool.add(new ConstantDurationValue(hours, minutes, seconds));
@@ -194,20 +190,20 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             m_constantPool.add(new ConstantClockValue(hours, minutes, seconds));
         } else if (ctx.BitStringLiteral() != null) {
             long value = CommonUtils.convertBitStringToLong(ctx.BitStringLiteral().getText());
-            int  nb = CommonUtils.getBitStringLength(ctx.BitStringLiteral().getText());
-            m_constantPool.add(new ConstantBitValue(value,nb));
+            int nb = CommonUtils.getBitStringLength(ctx.BitStringLiteral().getText());
+            m_constantPool.add(new ConstantBitValue(value, nb));
         } else if (ctx.floatingPointConstant() != null) {
             try {
                 double value = 0.0;
                 int precision = m_currentSymbolTable.lookupDefaultFloatLength();
 
-                if ( ctx.floatingPointConstant().FloatingPointNumberPrecision() != null) {
+                if (ctx.floatingPointConstant().FloatingPointNumberPrecision() != null) {
                     precision = Integer.valueOf(ctx.floatingPointConstant().FloatingPointNumberPrecision().toString());
                 }
 
                 value = Double.valueOf(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
 
-                m_constantPool.add(new ConstantFloatValue(value,precision));
+                m_constantPool.add(new ConstantFloatValue(value, precision));
 
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -221,17 +217,17 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 int value;
                 int precision = m_currentSymbolTable.lookupDefaultFixedLength();
 
-                if ( ctx.fixedConstant().fixedNumberPrecision() != null) {
+                if (ctx.fixedConstant().fixedNumberPrecision() != null) {
                     precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
                 } else {
-                    if (m_currFixedLength != null ) {
+                    if (m_currFixedLength != null) {
                         precision = m_currFixedLength;
                     }
                 }
 
                 value = Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
 
-                m_constantPool.add(new ConstantFixedValue(value,precision));
+                m_constantPool.add(new ConstantFixedValue(value, precision));
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
@@ -258,17 +254,16 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                         try {
                             double value = -1 * Double.parseDouble(literal_ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
                             int precision = m_currentSymbolTable.lookupDefaultFloatLength();
-                            add(new ConstantFloatValue(value,precision));
+                            add(new ConstantFloatValue(value, precision));
                         } catch (NumberFormatException ex) {
                             throw new NumberOutOfRangeException(ctx.getText(), literal_ctx.start.getLine(), literal_ctx.start.getCharPositionInLine());
                         }
-                    }
-                    else if (literal_ctx.fixedConstant() != null) {
+                    } else if (literal_ctx.fixedConstant() != null) {
                         try {
                             Integer value = null;
                             int precision = m_currentSymbolTable.lookupDefaultFixedLength();
 
-                            if ( literal_ctx.fixedConstant().fixedNumberPrecision() != null) {
+                            if (literal_ctx.fixedConstant().fixedNumberPrecision() != null) {
                                 precision = Integer.parseInt(literal_ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
                             }
 
@@ -284,7 +279,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                         try {
                             double value = -1 * Double.parseDouble(literal_ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
                             int precision = m_currentSymbolTable.lookupDefaultFloatLength();
-                            add(new ConstantFloatValue(value,precision));
+                            add(new ConstantFloatValue(value, precision));
                         } catch (NumberFormatException ex) {
                             throw new NumberOutOfRangeException(ctx.getText(), literal_ctx.start.getLine(), literal_ctx.start.getCharPositionInLine());
                         }
@@ -313,60 +308,59 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         }
 
 
-        if ( ctx.fixedConstant() != null ) {
+        if (ctx.fixedConstant() != null) {
             try {
                 int value;
                 int precision = m_currentSymbolTable.lookupDefaultFixedLength();
 
                 value = sign * Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
 
-                if (ctx.fixedConstant().fixedNumberPrecision() != null ) {
+                if (ctx.fixedConstant().fixedNumberPrecision() != null) {
                     precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
-                }
-                else {
+                } else {
 /***
-                    // walk up the AST and get VariableDenotationContext:
-                    ParserRuleContext sctx = ctx.getParent();
-                    while (sctx != null && !((sctx instanceof SmallPearlParser.VariableDenotationContext) || (sctx instanceof SmallPearlParser.ArrayDenotationContext))) {
-                        sctx = sctx.getParent();
-                    }
+ // walk up the AST and get VariableDenotationContext:
+ ParserRuleContext sctx = ctx.getParent();
+ while (sctx != null && !((sctx instanceof SmallPearlParser.VariableDenotationContext) || (sctx instanceof SmallPearlParser.ArrayDenotationContext))) {
+ sctx = sctx.getParent();
+ }
 
-                    if (sctx != null) {
-                        if ( sctx instanceof SmallPearlParser.VariableDenotationContext) {
-                            SmallPearlParser.TypeAttributeContext typeAttributeContext = ((SmallPearlParser.VariableDenotationContext) sctx).typeAttribute();
-                            if (typeAttributeContext.simpleType() != null) {
-                                SmallPearlParser.SimpleTypeContext simpleTypeContext = typeAttributeContext.simpleType();
+ if (sctx != null) {
+ if ( sctx instanceof SmallPearlParser.VariableDenotationContext) {
+ SmallPearlParser.TypeAttributeContext typeAttributeContext = ((SmallPearlParser.VariableDenotationContext) sctx).typeAttribute();
+ if (typeAttributeContext.simpleType() != null) {
+ SmallPearlParser.SimpleTypeContext simpleTypeContext = typeAttributeContext.simpleType();
 
-                                if (simpleTypeContext.typeInteger() != null) {
-                                    SmallPearlParser.TypeIntegerContext typeIntegerContext = simpleTypeContext.typeInteger();
+ if (simpleTypeContext.typeInteger() != null) {
+ SmallPearlParser.TypeIntegerContext typeIntegerContext = simpleTypeContext.typeInteger();
 
-                                    if (typeIntegerContext.mprecision() != null) {
-                                        precision = Integer.parseInt(typeIntegerContext.mprecision().integerWithoutPrecision().IntegerConstant().toString());
-                                    }
-                                }
-                            }
-                        } else if ( sctx instanceof SmallPearlParser.ArrayDenotationContext) {
-                            SmallPearlParser.TypeAttributeForArrayContext typeAttributeForArrayContext = ((SmallPearlParser.ArrayDenotationContext)sctx).typeAttributeForArray();
-//                            typeAttributeForArray :
-//                                      type_fixed
-//                                    | type_float
-//                                    | type_duration
-//                                    | type_clock
-//                                    | type_bit
-//                                    | type_char
-//                                    | typeReference
-                            ;
-                            if ( typeAttributeForArrayContext.type_fixed() != null ) {
+ if (typeIntegerContext.mprecision() != null) {
+ precision = Integer.parseInt(typeIntegerContext.mprecision().integerWithoutPrecision().IntegerConstant().toString());
+ }
+ }
+ }
+ } else if ( sctx instanceof SmallPearlParser.ArrayDenotationContext) {
+ SmallPearlParser.TypeAttributeForArrayContext typeAttributeForArrayContext = ((SmallPearlParser.ArrayDenotationContext)sctx).typeAttributeForArray();
+ //                            typeAttributeForArray :
+ //                                      type_fixed
+ //                                    | type_float
+ //                                    | type_duration
+ //                                    | type_clock
+ //                                    | type_bit
+ //                                    | type_char
+ //                                    | typeReference
+ ;
+ if ( typeAttributeForArrayContext.type_fixed() != null ) {
 
-                            }
-                            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-                        } else {
-                            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-                        }
-                    } else {
-                        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-                    }
-***/
+ }
+ throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+ } else {
+ throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+ }
+ } else {
+ throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+ }
+ ***/
                 }
 
                 value = sign * Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
@@ -376,11 +370,9 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
-        }
-        else if ( ctx.StringLiteral() != null ) {
+        } else if (ctx.StringLiteral() != null) {
             m_constantPool.add(new ConstantCharacterValue(ctx.StringLiteral().toString()));
-        }
-        else if ( ctx.durationConstant() != null ) {
+        } else if (ctx.durationConstant() != null) {
             Integer hours = 0;
             Integer minutes = 0;
             Double seconds = 0.0;
@@ -401,8 +393,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
             ConstantDurationValue durationConst = new ConstantDurationValue(hours, minutes, seconds, sign);
             m_constantPool.add(durationConst);
-        }
-        else if ( ctx.timeConstant() != null ) {
+        } else if (ctx.timeConstant() != null) {
             Integer hours = 0;
             Integer minutes = 0;
             Double seconds = 0.0;
@@ -412,66 +403,61 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
             if (ctx.timeConstant().floatingPointConstant() != null) {
                 seconds = Double.valueOf(ctx.timeConstant().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
-            }
-            else if (ctx.timeConstant().IntegerConstant(2) != null) {
+            } else if (ctx.timeConstant().IntegerConstant(2) != null) {
                 seconds = Double.valueOf(ctx.timeConstant().IntegerConstant(2).toString());
-            }
-            else {
+            } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
             ConstantClockValue clockConst = new ConstantClockValue(hours, minutes, seconds);
             m_constantPool.add(clockConst);
-        }
-
-        else if ( ctx.floatingPointConstant() != null ) {
+        } else if (ctx.floatingPointConstant() != null) {
             try {
-                double  value = 0.0;
+                double value = 0.0;
                 int precision = m_currentSymbolTable.lookupDefaultFloatLength();
 
 /***
-                // walk up the AST and get VariableDenotationContext:
-                ParserRuleContext  sctx =  ctx.getParent();
-                while ( sctx != null && !(sctx instanceof SmallPearlParser.VariableDenotationContext)) {
-                    sctx = sctx.getParent();
-                }
+ // walk up the AST and get VariableDenotationContext:
+ ParserRuleContext  sctx =  ctx.getParent();
+ while ( sctx != null && !(sctx instanceof SmallPearlParser.VariableDenotationContext)) {
+ sctx = sctx.getParent();
+ }
 
-                if (sctx != null) {
-                    SmallPearlParser.TypeAttributeContext typeAttributeContext = ((SmallPearlParser.VariableDenotationContext)sctx).typeAttribute();
-                    if ( typeAttributeContext.simpleType() != null ) {
-                        SmallPearlParser.SimpleTypeContext simpleTypeContext = typeAttributeContext.simpleType();
+ if (sctx != null) {
+ SmallPearlParser.TypeAttributeContext typeAttributeContext = ((SmallPearlParser.VariableDenotationContext)sctx).typeAttribute();
+ if ( typeAttributeContext.simpleType() != null ) {
+ SmallPearlParser.SimpleTypeContext simpleTypeContext = typeAttributeContext.simpleType();
 
-                        if( simpleTypeContext.typeFloatingPointNumber() != null ) {
-                            SmallPearlParser.TypeFloatingPointNumberContext typeFloatingPointNumberContext = simpleTypeContext.typeFloatingPointNumber();
+ if( simpleTypeContext.typeFloatingPointNumber() != null ) {
+ SmallPearlParser.TypeFloatingPointNumberContext typeFloatingPointNumberContext = simpleTypeContext.typeFloatingPointNumber();
 
-                            if ( typeFloatingPointNumberContext.IntegerConstant() != null) {
-                                precision = Integer.valueOf(typeFloatingPointNumberContext.IntegerConstant().toString());
-                            }
-                        }
-                    }
+ if ( typeFloatingPointNumberContext.IntegerConstant() != null) {
+ precision = Integer.valueOf(typeFloatingPointNumberContext.IntegerConstant().toString());
+ }
+ }
+ }
 
-                }
-                else {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-                }
-***/
+ }
+ else {
+ throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+ }
+ ***/
                 value = Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
 
-                if ( ctx.sign() != null ) {
-                    if ( ctx.sign() instanceof SmallPearlParser.SignMinusContext) {
+                if (ctx.sign() != null) {
+                    if (ctx.sign() instanceof SmallPearlParser.SignMinusContext) {
                         value = -1 * value;
                     }
                 }
 
-                m_constantPool.add(new ConstantFloatValue(value,precision));
+                m_constantPool.add(new ConstantFloatValue(value, precision));
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
-        }
-        else if ( ctx.bitStringConstant() != null ) {
+        } else if (ctx.bitStringConstant() != null) {
             long value = CommonUtils.convertBitStringToLong(ctx.bitStringConstant().BitStringLiteral().getText());
-            int  nb = CommonUtils.getBitStringLength(ctx.bitStringConstant().BitStringLiteral().getText());
-            ConstantBitValue cbv = new ConstantBitValue(value,nb);
+            int nb = CommonUtils.getBitStringLength(ctx.bitStringConstant().BitStringLiteral().getText());
+            ConstantBitValue cbv = new ConstantBitValue(value, nb);
             m_constantPool.add(cbv);
         }
 
@@ -524,14 +510,15 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
         return seconds;
     }
+
     @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {
         if (m_debug) {
-            System.out.println( "ConstantPoolVisitor: visitModule");
+            System.out.println("ConstantPoolVisitor: visitModule");
         }
 
         org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable.lookupLocal(ctx.ID().getText());
-        m_currentSymbolTable = ((ModuleEntry)symbolTableEntry).scope;
+        m_currentSymbolTable = ((ModuleEntry) symbolTableEntry).scope;
         visitChildren(ctx);
         m_currentSymbolTable = m_currentSymbolTable.ascend();
         return null;
@@ -540,7 +527,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
     @Override
     public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
         if (m_debug) {
-            System.out.println( "ConstantPoolVisitor: visitProcedureDeclaration");
+            System.out.println("ConstantPoolVisitor: visitProcedureDeclaration");
         }
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -552,7 +539,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
     @Override
     public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
         if (m_debug) {
-            System.out.println( "ConstantPoolVisitor: visitTaskDeclaration");
+            System.out.println("ConstantPoolVisitor: visitTaskDeclaration");
         }
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -564,7 +551,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
     @Override
     public Void visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
         if (m_debug) {
-            System.out.println( "ConstantPoolVisitor: visitBlock_statement");
+            System.out.println("ConstantPoolVisitor: visitBlock_statement");
         }
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -576,24 +563,22 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
     @Override
     public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
         if (m_debug) {
-            System.out.println( "ConstantPoolVisitor: visitLoopStatement");
+            System.out.println("ConstantPoolVisitor: visitLoopStatement");
         }
 
         int precision;
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
 
-        if ( ctx.loopStatement_for() == null ) {
+        if (ctx.loopStatement_for() == null) {
             visitChildren(ctx);
-        }
-        else {
+        } else {
             SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.loopStatement_for().ID().getText());
             VariableEntry var = null;
 
-            if ( entry != null && entry instanceof VariableEntry) {
+            if (entry != null && entry instanceof VariableEntry) {
                 var = (VariableEntry) entry;
-            }
-            else {
+            } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
             TypeFixed fromType = null;
@@ -601,46 +586,46 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
             ExpressionResult fromRes = null;
             ExpressionResult toRes = null;
-            if ( ctx.loopStatement_from() != null ) {
-                fromRes  = m_expressionTypeVisitor.lookup(ctx.loopStatement_from().expression());
+            if (ctx.loopStatement_from() != null) {
+                visit(ctx.loopStatement_from().expression());
+                fromRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_from().expression());
                 TypeDefinition typ = var.getType();
-                if ( typ instanceof TypeFixed) {
-                    fromType = (TypeFixed)typ;
-                }
-                else {
+                if (typ instanceof TypeFixed) {
+                    fromType = (TypeFixed) typ;
+                } else {
                     throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
             }
 
-            if ( ctx.loopStatement_to() != null ) {
-                toRes  = m_expressionTypeVisitor.lookup(ctx.loopStatement_to().expression());
+            if (ctx.loopStatement_to() != null) {
+                toRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_to().expression());
                 TypeDefinition typ = var.getType();
-                if ( typ instanceof TypeFixed) {
-                    toType = (TypeFixed)typ; //TODO stimmt nicht!!!!
-                }
-                else {
+
+                visit(ctx.loopStatement_to().expression());
+
+                if (typ instanceof TypeFixed) {
+                    toType = (TypeFixed) typ; //TODO stimmt nicht!!!!
+                } else {
                     throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
             }
 
             precision = m_currentSymbolTable.lookupDefaultFixedLength();
 
-            if ( fromType != null) {
-                if ( toType != null ) {
-                    precision = Math.max(((TypeFixed)fromRes.getType()).getPrecision(),((TypeFixed)toRes.getType()).getPrecision());
+            if (fromType != null) {
+                if (toType != null) {
+                    precision = Math.max(((TypeFixed) fromRes.getType()).getPrecision(), ((TypeFixed) toRes.getType()).getPrecision());
+                } else {
+                    precision = ((TypeFixed) fromRes.getType()).getPrecision();
                 }
-                else {
-                    precision = ((TypeFixed)fromRes.getType()).getPrecision();
-                }
-            }
-            else if ( toType != null ) {
-                precision = ((TypeFixed)toRes.getType()).getPrecision();
+            } else if (toType != null) {
+                precision = ((TypeFixed) toRes.getType()).getPrecision();
             }
 
 //TODO            m_constantPool.add(new ConstantFixedValue(value,precision));
         }
 
-        for ( int i = 0; i < ctx.statement().size(); i++) {
+        for (int i = 0; i < ctx.statement().size(); i++) {
             visit(ctx.statement(i));
         }
 
@@ -656,11 +641,10 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             System.out.println("ConstantPoolVisitor: visitAssignment_statement");
         }
 
-        if ( ctx.stringSelection() != null ) {
-            if ( ctx.stringSelection().charSelection() != null ) {
+        if (ctx.stringSelection() != null) {
+            if (ctx.stringSelection().charSelection() != null) {
                 id = ctx.stringSelection().charSelection().ID().getText();
-            }
-            else  if (ctx.stringSelection().bitSelection() != null) {
+            } else if (ctx.stringSelection().bitSelection() != null) {
                 id = ctx.stringSelection().bitSelection().ID().getText();
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -672,14 +656,14 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
 
         if (!(entry instanceof VariableEntry)) {
-            throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         SmallPearlParser.ExpressionContext expr = ctx.expression();
 
-        VariableEntry var = (VariableEntry)entry;
-        if ( var.getType() instanceof TypeFixed) {
-            TypeFixed typ = (TypeFixed)(var.getType());
+        VariableEntry var = (VariableEntry) entry;
+        if (var.getType() instanceof TypeFixed) {
+            TypeFixed typ = (TypeFixed) (var.getType());
             m_currFixedLength = typ.getPrecision();
         }
 
@@ -688,5 +672,4 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         m_currFixedLength = null;
         return null;
     }
-
 }

@@ -358,6 +358,8 @@ public class CommonUtils {
         StringBuilder sb = new StringBuilder(st.length());
         int state = 0;
         String value = "";
+        String octalValue = "";
+        String val = "";
 
         for (int i = 0; i < st.length(); i++) {
             char ch = st.charAt(i);
@@ -382,30 +384,43 @@ public class CommonUtils {
                     break;
 
                 case 2:
-                    value += ch;
-                    state = 3;
+                    if ( ch == ' ') {
+                        state = 2;
+                    }
+                    else {
+                        value += ch;
+                        state = 3;
+                    }
                     break;
+
 
                 case 3:
                     value += ch;
+                    val = Integer.toString(Integer.parseInt(value, 16), 8);
+                    if ( val.length() == 1) {
+                        val = "0" + val;
+                    }
+                    octalValue = "\\0" + val;
+                    sb.append(octalValue);
+                    value = "";
                     state = 4;
                     break;
 
                 case 4:
                     if (ch == '\\') {
                         state = 5;
+                    } else if ( ch == ' ') {
+                        state = 4;
                     }
                     else {
-                        state = 0;
-                        sb.append(ch);
+                        value += ch;
+                        state = 3;
                     }
                     break;
 
                 case 5:
                     state = 0;
                     if (ch == '\'') {
-                        String octalValue = "\\0" + Integer.toString(Integer.parseInt(value, 16), 8);
-                        sb.append(octalValue);
                     } else {
                         sb.append(ch);
                     }
