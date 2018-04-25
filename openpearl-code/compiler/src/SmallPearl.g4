@@ -2429,8 +2429,7 @@ DecimalIntegerConstant
 
 fragment
 DecimalNumeral
-	:	'0'+
-	|	NonZeroDigit Digits?
+	:	Digits+
 	;
 
 ////////////////////////////////////////////////////////////////////////////////

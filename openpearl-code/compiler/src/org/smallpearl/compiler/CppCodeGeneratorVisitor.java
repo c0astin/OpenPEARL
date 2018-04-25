@@ -78,8 +78,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
 
-        m_verbose = 1;
-
         LinkedList<ModuleEntry> listOfModules = this.m_currentSymbolTable.getModules();
 
         if ( listOfModules.size() > 1 ) {
@@ -1006,8 +1004,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
         }
 
         ConstantDurationValue constant = ConstantPool.lookupDurationValue(hours,minutes,seconds, m_sign);
-
-        ConstantPool.dump();
 
         if ( constant == null ) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
