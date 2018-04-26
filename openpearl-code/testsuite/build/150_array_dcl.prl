@@ -211,6 +211,7 @@ T1: TASK MAIN;
     switch_on(3) := '0100'B1;
 
     CALL test_matmul;
+    CALL arrayOperators;
 END;
 
 !!!!!!!!!
