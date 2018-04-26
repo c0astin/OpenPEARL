@@ -17,7 +17,7 @@ test_data_types: PROC;
    DCL float53_5(5) FLOAT(53) INIT(1.0, 2.0,3.0, -1.0);
    DCL dur_10_1(10) DURATION INIT(1HRS, 1 MIN, -1 SEC);
    DCL dur_10_2(10) DURATION INIT(1HRS, 1 MIN, 1 SEC);
-   DCL clk_10(10) CLOCK;!  INIT(12:00:01 , 01:01:01);
+   DCL clk_10(10) CLOCK INIT(12:00:01 , 01:01:01);
    DCL char30_10(10) CHARACTER(30) INIT('A', 'B');
 END;
 
