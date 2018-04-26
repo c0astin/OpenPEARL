@@ -11,6 +11,8 @@ DCL control1 CHAR(14) INIT('A '\1B\' BC'); ! should produce "A \033 BC"
 DCL control2 CHAR(14) INIT('A '\1B 01\' BC'); ! should produce "A \033\001 BC"
 DCL control3 CHAR(14) INIT('A '\1B 01\' BC'); ! should produce "A \033\001 BC"
 DCL control4 CHAR(14) INIT('A '\ 1B \' BC'); ! should produce "A \033 BC"
+DCL control6 CHAR(14) INIT('A '\ 1B
+                  12 \' BC'); ! should produce "A \033\022 BC"
 DCL x8 CHAR(8);
 
 /*
