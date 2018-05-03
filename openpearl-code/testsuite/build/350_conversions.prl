@@ -1,0 +1,23 @@
+MODULE(conversions);
+
+
+PROBLEM;
+
+T1: TASK MAIN;
+   DCL ch CHAR;
+   DCL b16 BIT(16);
+   DCL f15 FIXED(15) INIT(48);
+   DCL x FLOAT(24);
+   DCL f31 FIXED(31);
+
+!   ch = TOCHAR (f15);        ! does not compile
+   b16 = TOBIT(f15);	     ! compiles
+   f15 = TOFIXED(b16);       ! compiles
+!   f15 = TOFIXED(ch);        ! does not compile
+   x = TOFLOAT(f15);
+   f31 = ENTIER(x);
+   f15 = ENTIER(x)  FIT f15;
+ 
+END;
+
+MODEND;
