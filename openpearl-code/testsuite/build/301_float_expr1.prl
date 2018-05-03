@@ -11,6 +11,7 @@ DCL z24 FLOAT(24);
 DCL bit BIT(1);
 DCL x54 FLOAT(53);
 DCL f31 FIXED(31) INIT(2);
+DCL f15 FIXED(15) INIT(7);
 
 T1: TASK MAIN;
 __cpp__ ("bool ok = 1;");
@@ -76,6 +77,14 @@ __cpp__("ok &= _f31.x == -4;");
 
    f31 := SIZEOF x24;
    f31 := SIZEOF(x24);
+
+   ! mixed type operations
+   f15 = 3;
+!   x24 = x24 * 3;
+   x24 = x24 * f15;
+!   x24 = x24 * f31;
+
+
 __cpp__("ok &= _f31.x == 4;");
 
 __cpp__("pearlrt::Control::setExitCode(ok);");

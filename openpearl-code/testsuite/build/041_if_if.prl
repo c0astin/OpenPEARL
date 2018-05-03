@@ -15,20 +15,21 @@ DCL f1 FIXED(15) INIT(39);
 DCL f2 FIXED(15) INIT(2);
 DCL f3 FIXED(15) INIT(3);
 
-!  IF f1 < f2 THEN
-!    IF f1 > f2 THEN
-!      f3 = 5;
-!    FIN;
-!    f3 = 4;
-!  FIN;
+  IF f1 < f2 THEN
+    IF f1 > f2 THEN
+      f3 = 5;
+    FIN;
+    f3 = 4;
+  FIN;
 
-!  IF f1 < f2 AND f2 < f3 THEN
-!     f2 := 0;
-!  FIN;
+  IF f1 < f2 AND f2 < f3 THEN
+     f2 := 0;
+  FIN;
 
-!  IF b THEN
-!     f2 := 0;
-!  FIN;
+  IF b THEN
+     f2 := 0;
+  FIN;
+
 END;
 
 MODEND;

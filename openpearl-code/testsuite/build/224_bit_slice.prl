@@ -7,7 +7,53 @@ PROBLEM;
  DCL console DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(term);
  DCL success BIT(1) INIT('1'B);
 
+bitSelect: PROC;
+   DCL b16 BIT(16) INIT('1234'B4);
+   DCL bit1 BIT(1);
+   DCL index FIXED INIT(1);
 
+   PUT 'bitSelect:', 'as BIT(16)',b16,'as 16*BIT(1)' TO console
+   BY  A,SKIP,A,B1(16),SKIP,A;
+
+   FOR i TO 16 REPEAT
+      index := i;
+      bit1 := b16.BIT(index);
+      PUT bit1 TO console BY B1(1);
+    END;
+    bit1 := b16.BIT(1);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(2);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(3);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(4);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(5);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(6);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(7);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(8);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(9);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(10);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(11);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(12);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(13);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(14);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(15);
+    PUT bit1 TO console BY B1(1);
+    bit1 := b16.BIT(16);
+    PUT bit1 TO console BY B1(1);
+   PUT TO console BY SKIP;
+END;  
 
 rhsSlice: PROC;
    DCL (b15,c15) BIT(15);
@@ -68,6 +114,7 @@ T1: TASK MAIN;
     OPEN console;
     CALL rhsSlice;
     CALL lhsSlice;
+    CALL bitSelect;
     IF success THEN
         PUT '*** success' TO console BY A, SKIP;
     ELSE
