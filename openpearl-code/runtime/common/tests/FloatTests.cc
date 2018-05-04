@@ -540,3 +540,29 @@ TEST(Float, fixed) {
    z53 = x53 - y31;
 }
 
+/**
+TOFLOAT
+*/
+TEST(Float, TOFLOAT) {
+   pearlrt::Float<24> fl24;
+   pearlrt::Float<53> fl53;
+
+   pearlrt::Fixed<15> f15(15);
+   pearlrt::Fixed<31> f31(31);
+   pearlrt::Fixed<55> f55(55);
+
+   fl24 = pearlrt::Float<24>(f15);
+   EXPECT_EQ(fl24.x, f15.x);
+   fl24 = pearlrt::Float<24>(f31);
+   EXPECT_EQ(fl24.x, f31.x);
+   fl24 = pearlrt::Float<24>(f55);
+   EXPECT_EQ(fl24.x, f55.x);
+
+   fl53 = pearlrt::Float<53>(f15);
+   EXPECT_EQ(fl53.x, f15.x);
+   fl53 = pearlrt::Float<53>(f31);
+   EXPECT_EQ(fl53.x, f31.x);
+   fl53 = pearlrt::Float<53>(f55);
+   EXPECT_EQ(fl53.x, f55.x);
+
+}
