@@ -40,9 +40,9 @@ This class provides the operations of the data type char.
 #include "Character.h"
 
 namespace pearlrt {
-   Character<1>  toChar(int x) {
+   Character<1>  toChar(Fixed<7> x) {
       Character<1> c;
-      c.data[0] = x;
+      c.data[0] = x.x;
       return c;
    }
 

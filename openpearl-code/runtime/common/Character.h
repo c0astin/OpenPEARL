@@ -403,7 +403,7 @@ namespace pearlrt {
    \param x ascii value of a character
    \return Char with the given value
    */
-   Character<1>  toChar(int x);
+   Character<1>  toChar(Fixed<7> x);
 
 #if 0
    /**

@@ -255,6 +255,20 @@ TEST(Char, throw) {
       ASSERT_THROW(
          c.toFixed(), pearlrt::CharacterTooLongSignal);
    }
+
+}
+
+TEST(Char,toChar) {
+   pearlrt::Character<1> h;
+   pearlrt::Fixed<7> f7(65);
+   pearlrt::Fixed<15> f15(200);
+
+   h = pearlrt::toChar(f7);
+   ASSERT_EQ(h.data[0],'A');
+
+   ASSERT_THROW( h = pearlrt::toChar(f15),
+                 pearlrt::FixedRangeSignal);
+
 }
 
 
