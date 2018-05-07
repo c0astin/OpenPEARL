@@ -46,9 +46,7 @@ public class TypeStructure extends TypeDefinition {
     }
 
     public boolean addComponent(StructureComponent component) {
-        System.out.println("TypeStructure:addComponent:" + component);
         m_listOfComponents.add(component);
         return true;
     }
-
 }

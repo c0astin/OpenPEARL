@@ -150,7 +150,7 @@ public class ConstantPool {
     static
     public Void dump(){
         int i;
-        System.out.println("");
+        System.out.println();
         System.out.println("ConstantPool: (Entries:" + constantPool.size() + ")");
 
         for ( i = 0; i < constantPool.size(); i++) {

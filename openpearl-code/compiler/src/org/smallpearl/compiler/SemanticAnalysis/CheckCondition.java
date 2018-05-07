@@ -64,6 +64,40 @@ public class CheckCondition extends SmallPearlBaseVisitor<Void> implements Small
     }
 
     @Override
+    public Void visitIf_statement(SmallPearlParser.If_statementContext ctx) {
+
+        TypeDefinition typeDef = m_expressionTypeVisitor.lookupType(ctx.expression());
+
+//        if ( typeDef instanceof TypeBit ) {
+//            TypeBit typeBit = (TypeBit) typeDef;
+//
+//            if ( typeBit.getPrecision() == 1 ) {
+//                stmt.add("rhs",  getExpression(ctx.expression()));
+//            }
+//            else {
+//                ST cast = m_group.getInstanceOf("CastBitToBoolean");
+//                cast.add("name", getExpression(ctx.expression()));
+//                stmt.add("rhs", cast);
+//            }
+//        }
+//        else {
+
+        if ( typeDef instanceof TypeBit ) {
+            TypeBit conditionType = (TypeBit) typeDef;
+            if ( conditionType.getPrecision() != 1 ) {
+                throw new SemanticError(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(), "Loop condition must be of type BIT(1)");
+            }
+        }
+        else {
+            throw new SemanticError(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(), "Loop condition must be of type BIT(1)");
+        }
+
+        return null;
+    }
+
+
+
+    @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {
         if (m_debug) {
             System.out.println( "Semantic: Check Condition: visitModule");

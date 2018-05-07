@@ -191,7 +191,7 @@ public class SymbolTable {
     }
 
     public void dump() {
-        System.out.println("");
+        System.out.println();
         System.out.println("Symboltable:");
         System.out.println(toString());
     }

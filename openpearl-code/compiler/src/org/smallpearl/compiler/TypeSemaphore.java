@@ -42,10 +42,7 @@ public class TypeSemaphore extends TypeDefinition {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof TypeSemaphore)) {
-            return false;
-        }
-        return true;
+        return other instanceof TypeSemaphore;
     }
 
 }

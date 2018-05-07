@@ -40,10 +40,7 @@ public class TypeSignal extends TypeDefinition {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof TypeSignal)) {
-            return false;
-        }
-        return true;
+        return other instanceof TypeSignal;
     }
 
 }

@@ -88,13 +88,13 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
 
         for (ParseTree c : ctx.children) {
             if (c instanceof SmallPearlParser.AdditiveConstantFixedExpressionTermContext) {
-                ConstantFixedValue rhs =  visit((SmallPearlParser.AdditiveConstantFixedExpressionTermContext)c);
+                ConstantFixedValue rhs =  visit(c);
                 long res = value.getValue() + rhs.getValue();
                 ConstantFixedValue v = new ConstantFixedValue(res);
                 value = v;
             }
             else if (c instanceof SmallPearlParser.SubtractiveConstantFixedExpressionTermContext) {
-                ConstantFixedValue rhs =  visit((SmallPearlParser.SubtractiveConstantFixedExpressionTermContext)c);
+                ConstantFixedValue rhs =  visit(c);
                 long res = value.getValue() - rhs.getValue();
                 ConstantFixedValue v = new ConstantFixedValue(res);
                 value = v;
@@ -121,13 +121,13 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
 
         for (ParseTree c : ctx.children) {
             if (c instanceof SmallPearlParser.MultiplicationConstantFixedExpressionTermContext) {
-                ConstantFixedValue rhs =  visit((SmallPearlParser.MultiplicationConstantFixedExpressionTermContext)c);
+                ConstantFixedValue rhs =  visit(c);
                 long res = value.getValue() * rhs.getValue();
                 ConstantFixedValue v = new ConstantFixedValue(res);
                 value = v;
             }
             else if (c instanceof SmallPearlParser.DivisionConstantFixedExpressionTermContext) {
-                ConstantFixedValue rhs =  visit((SmallPearlParser.DivisionConstantFixedExpressionTermContext)c);
+                ConstantFixedValue rhs =  visit(c);
 
                 if ( rhs.getValue() != 0 ) {
                     long res = value.getValue() / rhs.getValue();
@@ -138,7 +138,7 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
                 }
             }
             else if (c instanceof SmallPearlParser.RemainderConstantFixedExpressionTermContext) {
-                ConstantFixedValue rhs =  visit((SmallPearlParser.RemainderConstantFixedExpressionTermContext)c);
+                ConstantFixedValue rhs =  visit(c);
 
                 if ( rhs.getValue() != 0 ) {
                     long res = value.getValue() % rhs.getValue();
@@ -256,7 +256,7 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
             ConstantFixedValue length;
             length = visitConstantFixedExpressionFit( ctx.constantFixedExpressionFit());
 
-            int l = (int) length.getPrecision();
+            int l = length.getPrecision();
             ConstantFixedValue fittedValue = new ConstantFixedValue(value.getValue(),l);
             value = fittedValue;
 

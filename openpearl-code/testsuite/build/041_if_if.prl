@@ -26,7 +26,7 @@ DCL f3 FIXED(15) INIT(3);
      f2 := 0;
   FIN;
 
-  IF b THEN
+  IF b.BIT(10) THEN
      f2 := 0;
   FIN;
 

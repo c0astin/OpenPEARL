@@ -41,7 +41,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implements SmallPearlVisitor<ST> {
+public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> 
+                                     implements SmallPearlVisitor<ST> {
 
     private STGroup m_group;
     private int m_verbose;
@@ -135,7 +136,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
         for (int i = 0; i < ConstantPool.constantPool.size(); i++) {
             if (ConstantPool.constantPool.get(i) instanceof ConstantFixedValue ) {
                 ST entry = m_group.getInstanceOf("ConstantPoolEntry");
-                entry.add("name", ((ConstantFixedValue) ConstantPool.constantPool.get(i)).toString());
+                entry.add("name", ConstantPool.constantPool.get(i).toString());
                 entry.add("type", ((ConstantFixedValue) ConstantPool.constantPool.get(i)).getBaseType());
                 entry.add("precision", ((ConstantFixedValue) ConstantPool.constantPool.get(i)).getPrecision());
                 entry.add("value", ((ConstantFixedValue) ConstantPool.constantPool.get(i)).getValue());
@@ -146,7 +147,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
         for (int i = 0; i < ConstantPool.constantPool.size(); i++) {
             if (ConstantPool.constantPool.get(i) instanceof ConstantFloatValue) {
                 ST entry = m_group.getInstanceOf("ConstantPoolEntry");
-                entry.add("name", ((ConstantFloatValue) ConstantPool.constantPool.get(i)).toString());
+                entry.add("name", ConstantPool.constantPool.get(i).toString());
                 entry.add("type", ((ConstantFloatValue) ConstantPool.constantPool.get(i)).getBaseType());
                 entry.add("precision", ((ConstantFloatValue) ConstantPool.constantPool.get(i)).getPrecision());
                 entry.add("value", ((ConstantFloatValue) ConstantPool.constantPool.get(i)).getValue());
@@ -695,7 +696,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
                     ST stValue = m_group.getInstanceOf("expression");
 
                     if (value instanceof ConstantFixedValue) {
-                        stValue.add("code", ((ConstantFixedValue) value).toString());
+                        stValue.add("code", value.toString());
                     } else {
                         stValue.add("code", value);
                     }
@@ -950,30 +951,30 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
             Long r = Long.parseLong(bres, 2);
 
             if (Long.toBinaryString(Math.abs(r)).length() < 15) {
-                bitStringConstant.add("value", "## 0x" + Long.toHexString(r).toString());
+                bitStringConstant.add("value", "## 0x" + Long.toHexString(r));
             } else if (Long.toBinaryString(Math.abs(r)).length() < 31) {
-                bitStringConstant.add("value", "## 0x" + Long.toHexString(r).toString() + "UL");
+                bitStringConstant.add("value", "## 0x" + Long.toHexString(r) + "UL");
             } else {
-                bitStringConstant.add("value", "## 0x" + Long.toHexString(r).toString() + "ULL");
+                bitStringConstant.add("value", "## 0x" + Long.toHexString(r) + "ULL");
             }
         } else if (numberOfBits > b.length()) {
             bres = b;
             Long r = Long.parseLong(bres, 2);
             if (Long.toBinaryString(Math.abs(r)).length() < 15) {
-                bitStringConstant.add("value", "## 0x" + Long.toHexString(r).toString());
+                bitStringConstant.add("value", "## 0x" + Long.toHexString(r));
             } else if (Long.toBinaryString(Math.abs(r)).length() < 31) {
-                bitStringConstant.add("value", "## 0x" + Long.toHexString(r).toString() + "UL");
+                bitStringConstant.add("value", "## 0x" + Long.toHexString(r) + "UL");
             } else {
-                bitStringConstant.add("value", "## 0x" + Long.toHexString(r).toString() + "ULL");
+                bitStringConstant.add("value", "## 0x" + Long.toHexString(r) + "ULL");
             }
         } else
         {
             if (Long.toBinaryString(Math.abs(l)).length() < 15) {
-                bitStringConstant.add("value", "## 0x" + Long.toHexString(l).toString());
+                bitStringConstant.add("value", "## 0x" + Long.toHexString(l));
             } else if (Long.toBinaryString(Math.abs(l)).length() < 31) {
-                bitStringConstant.add("value", "## 0x" + Long.toHexString(l).toString() + "UL");
+                bitStringConstant.add("value", "## 0x" + Long.toHexString(l) + "UL");
             } else {
-                bitStringConstant.add("value", "## 0x" + Long.toHexString(l).toString() + "ULL");
+                bitStringConstant.add("value", "## 0x" + Long.toHexString(l) + "ULL");
             }
         }
 
@@ -1591,6 +1592,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
                 st.add("code", visitTOFLOATExpression(((SmallPearlParser.TOFLOATExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.TOBITExpressionContext) {
                 st.add("code", visitTOBITExpression(((SmallPearlParser.TOBITExpressionContext) ctx)));
+            } else if (ctx instanceof SmallPearlParser.TOCHARExpressionContext) {
+                st.add("code", visitTOCHARExpression(((SmallPearlParser.TOCHARExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.CONTExpressionContext) {
                 st.add("code", visitCONTExpression(((SmallPearlParser.CONTExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.LwbDyadicExpressionContext) {
@@ -2172,7 +2175,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
 
                             st.add("id", getUserVariable(id));
 
-                            SmallPearlParser.CharSelectionContext c = (SmallPearlParser.CharSelectionContext) ctx.stringSelection().charSelection();
+                            SmallPearlParser.CharSelectionContext c = ctx.stringSelection().charSelection();
                             for (int i = 0; i < c.charSelectionSlice().size(); i++) {
                                 ST slice= m_group.getInstanceOf("CharSlice");
 
@@ -2199,7 +2202,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
 
                             st.add("id", getUserVariable(id));
 
-                            SmallPearlParser.BitSelectionContext c = (SmallPearlParser.BitSelectionContext) ctx.stringSelection().bitSelection();
+                            SmallPearlParser.BitSelectionContext c = ctx.stringSelection().bitSelection();
                             for (int i = 0; i < c.bitSelectionSlice().size(); i++) {
                                 ST slice = m_group.getInstanceOf("GetBitSlice");
 
@@ -3202,7 +3205,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
             }
 
             if (rstVars.size() == 1) {
-                String var = rstVars.get(0).toString();
+                String var = rstVars.get(0);
 
                 stmt.add("rst_var", var);
             }
@@ -3245,7 +3248,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
             }
 
             if (idfFilenames.size() == 1) {
-                String fname = idfFilenames.get(0).toString();
+                String fname = idfFilenames.get(0);
 //                fname = fname.substring(1, fname.length() - 1);
 
                 ST declFilename = m_group.getInstanceOf("declare_idf_filename");
@@ -3275,7 +3278,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
             }
 
             if (rstVars.size() == 1) {
-                String var = rstVars.get(0).toString();
+                String var = rstVars.get(0);
 
                 stmt.add("rst_var", var);
             }
@@ -4958,7 +4961,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
         }
 
         if (ctx.typeOfTransmissionData() != null) {
-            st.add("attribute", getTypeOfTransmissionData((SmallPearlParser.TypeOfTransmissionDataContext) ctx.typeOfTransmissionData()));
+            st.add("attribute", getTypeOfTransmissionData(ctx.typeOfTransmissionData()));
         }
 
         return st;
@@ -5348,13 +5351,22 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
 
     @Override
     public ST visitTOFLOATExpression(SmallPearlParser.TOFLOATExpressionContext ctx) {
+        ST st = m_group.getInstanceOf("TOFLOAT");
         TypeDefinition op = m_expressionTypeVisitor.lookupType(ctx.expression());
 
-        ST st = m_group.getInstanceOf("TOFLOAT");
         st.add("operand",  getExpression(ctx.expression()));
 
         if ( op instanceof TypeFixed) {
-            st.add("precision", ((TypeFixed)op).getPrecision());
+            TypeFixed fixedValue = (TypeFixed) op;
+            int       precision = 0;
+
+            if ( fixedValue.getPrecision() <= Defaults.FLOAT_SHORT_PRECISION) {
+                precision = Defaults.FLOAT_SHORT_PRECISION;
+            }
+            else {
+                precision = Defaults.FLOAT_LONG_PRECISION;
+            }
+            st.add("precision", (precision));
         }
         else {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -5363,7 +5375,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
         return st;
     }
 
-        @Override
+    @Override
     public ST visitTOBITExpression(SmallPearlParser.TOBITExpressionContext ctx) {
         TypeDefinition op = m_expressionTypeVisitor.lookupType(ctx.expression());
 
@@ -5378,6 +5390,19 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
         }
 
         return st;
+    }
+
+    @Override
+    public ST visitTOCHARExpression(SmallPearlParser.TOCHARExpressionContext ctx) {
+        TypeDefinition op = m_expressionTypeVisitor.lookupType(ctx.expression());
+
+        if ( op instanceof TypeFixed) {
+            ST st = m_group.getInstanceOf("FIXEDTOCHARACTER");
+            st.add("operand", getExpression(ctx.expression()));
+            return st;
+        }
+
+        return null;
     }
 
     @Override
@@ -5676,7 +5701,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST> implement
 
         return visitChildren(ctx);
     }
-    ;
+
     @Override
     public ST visitEnableStatement( SmallPearlParser.EnableStatementContext ctx) {
         ST st = m_group.getInstanceOf("EnableStatement");

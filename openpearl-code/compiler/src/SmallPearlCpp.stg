@@ -1346,7 +1346,11 @@ BITSTOFIXED(operand) ::= <%
 %>
 
 CHARACTERSTOFIXED(operand) ::= <%
-pearlrt::Characters::toFixed(<operand>)
+<operand>.toFixed()
+%>
+
+FIXEDTOCHARACTER(operand) ::= <%
+pearlrt::toChar(<operand>)
 %>
 
 TASK() ::= <%

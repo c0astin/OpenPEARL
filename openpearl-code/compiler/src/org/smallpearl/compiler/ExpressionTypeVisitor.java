@@ -1291,10 +1291,25 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         if (op.getType() instanceof TypeBit) {
             res = new ExpressionResult(new TypeFixed(((TypeBit) op.getType()).getPrecision() - 1), op.isConstant());
             m_properties.put(ctx, res);
-            if (m_debug)
+
+            if (m_debug) {
                 System.out.println("ExpressionTypeVisitor: TOFIXED: rule#1");
+            }
         } else if (op.getType() instanceof TypeChar) {
-            throw new NotYetImplementedException("CHARACTER", ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            TypeChar typeChar;
+
+            if (m_debug) {
+                System.out.println("ExpressionTypeVisitor: TOFIXED: rule#2");
+            }
+
+            typeChar = (TypeChar) op.getType();
+
+            if ( typeChar.getSize() != 1 ) {
+                throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            }
+
+            res = new ExpressionResult(new TypeFixed(1));
+            m_properties.put(ctx, res);
         } else {
             throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
@@ -1318,8 +1333,19 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         }
 
         if (op.getType() instanceof TypeFixed) {
-            res = new ExpressionResult(new TypeFloat(((TypeFixed) op.getType()).getPrecision()), op.isConstant());
+            TypeFixed fixedValue = (TypeFixed) op.getType();
+            int       precision = 0;
+
+            if ( fixedValue.getPrecision() <= Defaults.FLOAT_SHORT_PRECISION) {
+                precision = Defaults.FLOAT_SHORT_PRECISION;
+            }
+            else {
+                precision = Defaults.FLOAT_LONG_PRECISION;
+            }
+
+            res = new ExpressionResult(new TypeFloat(precision));
             m_properties.put(ctx, res);
+
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: TOFLOAT: rule#1");
         } else {
@@ -1356,9 +1382,39 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
 
+    //
+    // Reference: OpenPEARL Language Report 6.1 Expressions
+    //            Table 6.2: Monadic operators for explicit type conversions
+    // -----------+--------------+-----------+--------------+---------------------------------
+    // Expression | Type of      |           | Result type  | Meaning of operation
+    //            | operand      |           |              |
+    // -----------+------------- +-----------+--------------+---------------------------------
+    // TOCHAR op  | FIXED        |           | CHARRATER(1) | character for the ASCII code of the
+    //            |              |           |              | operand
+
     @Override
     public Void visitTOCHARExpression(SmallPearlParser.TOCHARExpressionContext ctx) {
-        throw new NotYetImplementedException("TOCHAR", ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        ExpressionResult op;
+        ExpressionResult res;
+
+        if (m_debug)
+            System.out.println("ExpressionTypeVisitor: visitTOCHARExpression");
+
+        visit(ctx.expression());
+        op = m_properties.get(ctx.expression());
+
+        if (op == null) {
+            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+
+        if (op.getType() instanceof TypeFixed) {
+            res = new ExpressionResult(new TypeChar(1));
+            m_properties.put(ctx, res);
+        } else {
+            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+
+        return null;
     }
 
     //

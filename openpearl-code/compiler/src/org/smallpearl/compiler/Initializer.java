@@ -22,22 +22,22 @@ public class Initializer  {
 
 	public String toString() {
 	 	if ( m_constant instanceof ConstantFixedValue) {
-	 		return ((ConstantFixedValue)m_constant).toString();
+	 		return m_constant.toString();
 		}
 		else if ( m_constant instanceof ConstantFloatValue) {
-            return ((ConstantFloatValue)m_constant).toString();
+            return m_constant.toString();
         }
         else if ( m_constant instanceof ConstantDurationValue) {
-            return ((ConstantDurationValue)m_constant).toString();
+            return m_constant.toString();
         }
         else if ( m_constant instanceof ConstantClockValue) {
-            return ((ConstantClockValue)m_constant).toString();
+            return m_constant.toString();
         }
         else if ( m_constant instanceof ConstantCharacterValue) {
-            return ((ConstantCharacterValue)m_constant).toString();
+            return m_constant.toString();
         }
         else if ( m_constant instanceof ConstantBitValue) {
-            return ((ConstantBitValue)m_constant).toString();
+            return m_constant.toString();
         }
         else {
 			return m_constant.toString();

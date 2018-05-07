@@ -62,10 +62,13 @@ public class ConstantDurationValue extends ConstantValue {
     }
 
 
-    public int getSign() { return m_sign;};
-    public int getHours() { return m_hours;};
-    public int getMinutes() { return m_minutes;};
-    public double getSeconds() { return m_seconds;};
+    public int getSign() { return m_sign;}
+
+    public int getHours() { return m_hours;}
+
+    public int getMinutes() { return m_minutes;}
+
+    public double getSeconds() { return m_seconds;}
 
     public double getValue() {
         return m_sign * ( m_hours * 3600 + m_minutes * 60 + m_seconds);

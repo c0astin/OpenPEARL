@@ -70,7 +70,7 @@ public class Compiler {
     static int     lineWidth = 80;
 
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         int i, j;
         if (args.length < 1) {
             printHelp();
@@ -115,7 +115,7 @@ public class Compiler {
             // Start Analysis
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            System.out.println("Start compiling of:" + inputFiles.get(i).toString());
+            System.out.println("Start compiling of:" + inputFiles.get(i));
             System.out.println("Performing syntax check");
             ParserRuleContext tree = parser.program();
             System.out.flush();
@@ -158,7 +158,7 @@ public class Compiler {
                     expressionTypeVisitor.visit(tree);
 
                     if (dumpConstantPool) {
-                        constantPool.dump();
+                        ConstantPool.dump();
                     }
 
                     if (!nosemantic) {
@@ -182,7 +182,7 @@ public class Compiler {
                 }
 
                 if (dumpConstantPool) {
-                    constantPool.dump();
+                    ConstantPool.dump();
                 }
 
                 if ( stacktrace )  {
@@ -195,7 +195,7 @@ public class Compiler {
             noOfErrors = parser.getNumberOfSyntaxErrors();
 
             System.out.flush();
-            System.out.println("");
+            System.out.println();
             System.out.println("Number of errors in " + inputFiles.get(i) + " encountered: " + noOfErrors);
 
             if ( printSysInfo) {
