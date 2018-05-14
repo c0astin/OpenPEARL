@@ -214,7 +214,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             add(new ConstantCharacterValue(s));
         } else if (ctx.fixedConstant() != null) {
             try {
-                int value;
+                long value;
                 int precision = m_currentSymbolTable.lookupDefaultFixedLength();
 
                 if (ctx.fixedConstant().fixedNumberPrecision() != null) {
@@ -225,7 +225,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                     }
                 }
 
-                value = Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
+                value = Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
 
                 m_constantPool.add(new ConstantFixedValue(value, precision));
             } catch (NumberFormatException ex) {
@@ -307,13 +307,12 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             }
         }
 
-
         if (ctx.fixedConstant() != null) {
             try {
-                int value;
+                long value;
                 int precision = m_currentSymbolTable.lookupDefaultFixedLength();
 
-                value = sign * Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
+                value = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
 
                 if (ctx.fixedConstant().fixedNumberPrecision() != null) {
                     precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
@@ -363,8 +362,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
  ***/
                 }
 
-                value = sign * Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
-
+                value = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
                 m_constantPool.add(new ConstantFixedValue(value, precision));
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());

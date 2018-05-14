@@ -1278,7 +1278,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         }
 
         if ( ctx.fixedConstant() != null) {
-            int curval = sign * Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
+            long curval = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
             int curlen =   m_currentSymbolTable.lookupDefaultFixedLength();
 
             if ( ctx.fixedConstant().fixedNumberPrecision() != null ) {

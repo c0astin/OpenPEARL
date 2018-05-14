@@ -32,7 +32,7 @@ package org.smallpearl.compiler;
 public class Defaults  {
     public static final int FIXED_LENGTH              = 31;
     public static final int FIXED_MIN_LENGTH          = 0;
-    public static final int FIXED_MAX_LENGTH          = 33;
+    public static final int FIXED_MAX_LENGTH          = 63;
 
     public static final int FLOAT_SHORT_PRECISION    = 24;
     public static final int FLOAT_LONG_PRECISION     = 53;

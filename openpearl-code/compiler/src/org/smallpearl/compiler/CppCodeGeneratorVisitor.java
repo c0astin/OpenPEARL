@@ -2742,7 +2742,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         } else if (ctx.fixedConstant() != null) {
             try {
-                int value;
+                long value;
                 int precision = m_currentSymbolTable.lookupDefaultFixedLength();
 
                 if ( ctx.fixedConstant().fixedNumberPrecision() != null) {
@@ -2755,7 +2755,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                 String s = ctx.fixedConstant().IntegerConstant().toString();
 
-                value = Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
+                value = Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
 
                 if (m_map_to_const) {
                     ConstantFixedValue fixed_value = new ConstantFixedValue(value,precision);
