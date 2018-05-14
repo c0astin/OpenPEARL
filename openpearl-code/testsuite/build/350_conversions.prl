@@ -12,6 +12,7 @@ T1: TASK MAIN;
    DCL f31 FIXED(31) INIT(100000);
    DCL f50 FIXED(50); ! INIT(4000000000);
 
+!   f50 = 10000000000;
    f50 = 10*1000*1000*1000;
    ch = TOCHAR (f15);        ! does not compile
    IF ch NE '0' THEN
