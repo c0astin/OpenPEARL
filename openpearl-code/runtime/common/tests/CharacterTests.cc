@@ -261,13 +261,16 @@ TEST(Char, throw) {
 TEST(Char,toChar) {
    pearlrt::Character<1> h;
    pearlrt::Fixed<7> f7(65);
-   pearlrt::Fixed<15> f15(200);
+   pearlrt::Fixed<15> f15(300);
+   pearlrt::Fixed<15> fm1(-1);
 
    h = pearlrt::toChar(f7);
    ASSERT_EQ(h.data[0],'A');
 
    ASSERT_THROW( h = pearlrt::toChar(f15),
-                 pearlrt::FixedRangeSignal);
+                 pearlrt::CharacterNotValidSignal);
+   ASSERT_THROW( h = pearlrt::toChar(fm1),
+                 pearlrt::CharacterNotValidSignal);
 
 }
 

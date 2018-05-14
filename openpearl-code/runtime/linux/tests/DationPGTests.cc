@@ -93,18 +93,18 @@ TEST(DationPG, simple_put) {
    /* read binary and compare */
    pearlrt::Character<1> data[12];
    pearlrt::Character<1> rdata[12];
-   data[0] = pearlrt::toChar('P');
-   data[1] = pearlrt::toChar('E');
-   data[2] = pearlrt::toChar('A');
-   data[3] = pearlrt::toChar('R');
-   data[4] = pearlrt::toChar('L');
-   data[5] = pearlrt::toChar(' ');
-   data[6] = pearlrt::toChar(' ');
-   data[7] = pearlrt::toChar(' ');
-   data[8] = pearlrt::toChar('\n');
-   data[9] = pearlrt::toChar(' ');
-   data[10] = pearlrt::toChar('4');
-   data[11] = pearlrt::toChar('2');
+   data[0] = pearlrt::toChar((pearlrt::Fixed<8>)'P');
+   data[1] = pearlrt::toChar((pearlrt::Fixed<8>)'E');
+   data[2] = pearlrt::toChar((pearlrt::Fixed<8>)'A');
+   data[3] = pearlrt::toChar((pearlrt::Fixed<8>)'R');
+   data[4] = pearlrt::toChar((pearlrt::Fixed<8>)'L');
+   data[5] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[6] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[7] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[8] = pearlrt::toChar((pearlrt::Fixed<8>)'\n');
+   data[9] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[10] = pearlrt::toChar((pearlrt::Fixed<8>)'4');
+   data[11] = pearlrt::toChar((pearlrt::Fixed<8>)'2');
    pearlrt::DationRW log_bin(disc_,
                              pearlrt::Dation::IN |
                              pearlrt::Dation::FORWARD |
@@ -138,18 +138,18 @@ TEST(DationPG, simple_get) {
    pearlrt::Log::info("      DationPG: simple_get start   ");
    /* write binary */
    pearlrt::Character<1> data[12];
-   data[0] = pearlrt::toChar('P');
-   data[1] = pearlrt::toChar('E');
-   data[2] = pearlrt::toChar('A');
-   data[3] = pearlrt::toChar('R');
-   data[4] = pearlrt::toChar('L');
-   data[5] = pearlrt::toChar(' ');
-   data[6] = pearlrt::toChar(' ');
-   data[7] = pearlrt::toChar(' ');
-   data[8] = pearlrt::toChar('\n');
-   data[9] = pearlrt::toChar(' ');
-   data[10] = pearlrt::toChar('4');
-   data[11] = pearlrt::toChar('2');
+   data[0] = pearlrt::toChar((pearlrt::Fixed<8>)'P');
+   data[1] = pearlrt::toChar((pearlrt::Fixed<8>)'E');
+   data[2] = pearlrt::toChar((pearlrt::Fixed<8>)'A');
+   data[3] = pearlrt::toChar((pearlrt::Fixed<8>)'R');
+   data[4] = pearlrt::toChar((pearlrt::Fixed<8>)'L');
+   data[5] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[6] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[7] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[8] = pearlrt::toChar((pearlrt::Fixed<8>)'\n');
+   data[9] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[10] = pearlrt::toChar((pearlrt::Fixed<8>)'4');
+   data[11] = pearlrt::toChar((pearlrt::Fixed<8>)'2');
    pearlrt::DationRW log_bin(disc_,
                              pearlrt::Dation::OUT |
                              pearlrt::Dation::FORWARD |
@@ -227,18 +227,18 @@ TEST(DationPG, signal_get) {
    pearlrt::Log::info("      DationPG: simple_get start   ");
    /* write binary */
    pearlrt::Character<1> data[12];
-   data[0] = pearlrt::toChar('P');
-   data[1] = pearlrt::toChar('E');
-   data[2] = pearlrt::toChar('A');
-   data[3] = pearlrt::toChar('R');
-   data[4] = pearlrt::toChar('L');
-   data[5] = pearlrt::toChar(' ');
-   data[6] = pearlrt::toChar(' ');
-   data[7] = pearlrt::toChar(' ');
-   data[8] = pearlrt::toChar('\n');
-   data[9] = pearlrt::toChar(' ');
-   data[10] = pearlrt::toChar('4');
-   data[11] = pearlrt::toChar('2');
+   data[0] = pearlrt::toChar((pearlrt::Fixed<8>)'P');
+   data[1] = pearlrt::toChar((pearlrt::Fixed<8>)'E');
+   data[2] = pearlrt::toChar((pearlrt::Fixed<8>)'A');
+   data[3] = pearlrt::toChar((pearlrt::Fixed<8>)'R');
+   data[4] = pearlrt::toChar((pearlrt::Fixed<8>)'L');
+   data[5] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[6] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[7] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[8] = pearlrt::toChar((pearlrt::Fixed<8>)'\n');
+   data[9] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[10] = pearlrt::toChar((pearlrt::Fixed<8>)'4');
+   data[11] = pearlrt::toChar((pearlrt::Fixed<8>)'2');
    pearlrt::DationRW log_bin(disc_,
                              pearlrt::Dation::OUT |
                              pearlrt::Dation::FORWARD |
@@ -386,18 +386,18 @@ TEST(DationPG, lineOverflow) {
 #if 0   /* read binary and compare */
    pearlrt::Character<1> data[12];
    pearlrt::Character<1> rdata[12];
-   data[0] = pearlrt::toChar('P');
-   data[1] = pearlrt::toChar('E');
-   data[2] = pearlrt::toChar('A');
-   data[3] = pearlrt::toChar('R');
-   data[4] = pearlrt::toChar('L');
-   data[5] = pearlrt::toChar(' ');
-   data[6] = pearlrt::toChar(' ');
-   data[7] = pearlrt::toChar(' ');
-   data[8] = pearlrt::toChar('\n');
-   data[9] = pearlrt::toChar(' ');
-   data[10] = pearlrt::toChar('4');
-   data[11] = pearlrt::toChar('2');
+   data[0] = pearlrt::toChar((pearlrt::Fixed<8>)'P');
+   data[1] = pearlrt::toChar((pearlrt::Fixed<8>)'E');
+   data[2] = pearlrt::toChar((pearlrt::Fixed<8>)'A');
+   data[3] = pearlrt::toChar((pearlrt::Fixed<8>)'R');
+   data[4] = pearlrt::toChar((pearlrt::Fixed<8>)'L');
+   data[5] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[6] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[7] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[8] = pearlrt::toChar((pearlrt::Fixed<8>)'\n');
+   data[9] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
+   data[10] = pearlrt::toChar((pearlrt::Fixed<8>)'4');
+   data[11] = pearlrt::toChar((pearlrt::Fixed<8>)'2');
    pearlrt::DationRW log_bin(disc_,
                              pearlrt::Dation::IN |
                              pearlrt::Dation::FORWARD |

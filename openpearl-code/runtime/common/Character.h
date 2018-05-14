@@ -41,7 +41,6 @@ This class provides the operations of the data type character.
 #include <string.h>
 #include "Signals.h"
 #include "Fixed.h"
-//#include "VarCharacter.h"
 
 namespace pearlrt {
    /**
@@ -403,65 +402,16 @@ namespace pearlrt {
    \param x ascii value of a character
    \return Char with the given value
    */
-   Character<1>  toChar(Fixed<7> x);
-
-#if 0
-   /**
-    compare two strings
-
-    the shorter string is expanded with spaces
-
-     \param lhs left hand side parameter
-     \param rhs right hand side parameter
-     \returns -1, if lhs<rhs <br>0, if lhs==rhs<br>+1, if lhs>rhs
-
-   */
-   template<size_t LLHS, size_t LRHS>
-   int compareChar(Character<LLHS>& lhs, Character<RLHS> & rhs) {
-      return BitString<1> (characterCompare(lhs.data, LLHS, rhs.data, LRHS));
-
-      size_t i;
-      size_t len = (size_t)(lhs.upb().x);
-
-      if (len > (size_t)(rhs.upb().x)) {
-         len = (size_t)(rhs.upb().x);
-      }
-
-      for (i = 0; i < len && (lhs.data[i] == rhs.data[i]); i++) {
-         ;
-      }
-
-      if (i < len) {
-         return lhs.data[i] - rhs.data[i];
-      }
-
-      if (len < (size_t)(lhs.upb().x)) {
-         for (i = len; i < (size_t)(lhs.upb().x) && lhs.data[i] == ' '; i++) {
-            ;
-         }
-
-         if (i == (size_t)(lhs.upb().x)) {
-            return (0);
-         } else {
-            return lhs.data[i] - ' ';
-         }
-      }
-
-      if (len < (size_t)(rhs.upb().x)) {
-         for (i = len; i < (size_t)(rhs.upb().x) && rhs.data[i] == ' '; i++) {
-            ;
-         }
-
-         if (i == (size_t)(rhs.upb().x)) {
-            return (0);
-         } else {
-            return ' ' - rhs.data[i];
-         }
-      }
-
-      return 0;
+   template <int T>
+   Character<1>  toChar(Fixed<T> x) {
+       if (x.x >= 0 && x.x <= 255) {
+           Character<1> c;
+           c.data[0] = x.x;
+           return c;
+       }
+       throw theCharacterNotValidSignal;
    }
-#endif
+
 }
 
 #endif

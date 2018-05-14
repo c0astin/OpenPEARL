@@ -40,11 +40,13 @@ This class provides the operations of the data type char.
 #include "Character.h"
 
 namespace pearlrt {
+#if 0
    Character<1>  toChar(Fixed<7> x) {
       Character<1> c;
       c.data[0] = x.x;
       return c;
    }
+#endif
 
    int characterCompare(const char*s1, int l1, const char* s2, int l2) {
       int i;
