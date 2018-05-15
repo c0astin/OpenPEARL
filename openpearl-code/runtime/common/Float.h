@@ -179,8 +179,10 @@ namespace pearlrt {
       is created.
 
       \param xx the preset value
+      \tparam T size of the Fixed value
       */
-      Float<S>(Fixed<31> xx) {
+      template <int T>
+      Float<S>(Fixed<T> xx) {
          x = xx.x;  // use the c++ internal type conversion
       }
 
@@ -341,7 +343,7 @@ namespace pearlrt {
       the current objects value.
       E.g. 4.5 -> 4.0; 4.0 -> 4.0; -4.5 -> -5; -4.4 -> -5 ; -4.0 -> -4.0
 
-      \returns the absolute value of the object
+      \returns the larges integer less than the value of the object
       */
       Fixed<S> entier() const {
          Fixed<S> result;
@@ -360,6 +362,7 @@ namespace pearlrt {
 
          return result;
       }
+
       /** round value: round()
 
       Return the the rounded value according DIN  of
