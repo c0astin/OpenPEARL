@@ -52,7 +52,7 @@ namespace pearlrt {
          if (e.whichRST() == theDationTFURecordSignal.whichRST()) {
             throw;
          }
-         printf("map signal %s to NoMore...\n", e.which());
+//       printf("map signal %s to NoMoreCharactersSignal\n", e.which());
          throw theNoMoreCharactersSignal;
       }
 
