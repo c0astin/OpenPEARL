@@ -398,7 +398,7 @@ conversion of the type of objects.
 
 \kw{TOFIXED} a
 \index{TOFIXED@\textbf{TOFIXED}|textbf}
-        & \code{CHARACTER(1)}  & \code{FIXED(7)} & internal representation\\
+        & \code{CHARACTER(1)}  & \code{FIXED(8)} & internal representation\\
         &                      &                 & for operand character\\
         & \code{BIT(lg)}       & \code{FIXED(g)} & interpreting the bit pattern of the\\
         &                      &                 & operand as an integer, with g = lg-1\\ \hline
@@ -435,6 +435,14 @@ conversion of the type of objects.
 \end{center} 
 \end{table}
 
+%%%\begin{added}
+In \OpenPEARL{} the conversions from \code{FLOAT} to \code{FIXED} produce a 
+\code{FixedRangeSignal}, if the
+data values exeed the value range of the \code{FIXED} type.
+The conversion from \code{FIXED} to \code{CHAR} produce a \code{CharacterNotValidSignal},
+if the value of the \code{FIXED} expression ist outside the range of 0 to 255.
+%%%\end{added}
+
 Examples (Table \ref{tab_monadic_type}):
 
 \begin{lstlisting}
@@ -443,7 +451,7 @@ DCL a  FIXED(31),
     a1 FIXED(31),
     b  BIT(15),
     c  BIT(32);
-...
+
 a1 := ENTIER x//2;    /* corresponds to a := (ENTIER x)//2; */ 
 a1 := ENTIER (x/2.0);  /* with float division */
 a1 := ENTIER 3.4;     /* delivers 3 */ 
@@ -455,7 +463,7 @@ a1 := ROUND 3.5;      /* delivers 4 */
 a1 := ROUND -3.4;     /* delivers -3 */ 
 a1 := ROUND -3.5;     /* delivers -4 */
 c :=  TOBIT a AND b;
-a :=  ROUND x + TOFIXED b;
+a :=  ROUND x + TOFIXED b; 
 \end{lstlisting}
 \FloatBarrier
 
