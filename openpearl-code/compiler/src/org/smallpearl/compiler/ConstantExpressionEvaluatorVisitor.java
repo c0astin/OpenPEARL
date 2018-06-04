@@ -131,30 +131,57 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
     public Void visitConstant(SmallPearlParser.ConstantContext ctx) {
         ConstantValue value = null;
         int sign = 1;
+        int precision = 0;
+        long curval = 0;
 
         if (m_debug) {
             System.out.println("ConstantExpressionEvaluatorVisitor: visitConstant");
         }
 
-        if ( ctx.sign() != null ) {
-            if ( ctx.sign() instanceof SmallPearlParser.SignMinusContext ) {
+        if (ctx.sign() != null) {
+            if (ctx.sign() instanceof SmallPearlParser.SignMinusContext) {
                 sign = -1;
             }
         }
 
-        if ( ctx.fixedConstant() != null) {
-            long curval = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
-            int curlen =   m_currentSymbolTable.lookupDefaultFixedLength();
+        if (ctx.fixedConstant() != null) {
+            curval = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
+            precision = m_currentSymbolTable.lookupDefaultFixedLength();
 
-            if ( ctx.fixedConstant().fixedNumberPrecision() != null ) {
-                curlen = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
+            if (ctx.fixedConstant().fixedNumberPrecision() != null) {
+                precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
+            }
+            else {
+            // walk up the AST and get VariableDenotationContext:
+            ParserRuleContext sctx = ctx.getParent();
+            while (sctx != null && !((sctx instanceof SmallPearlParser.VariableDenotationContext) || (sctx instanceof SmallPearlParser.ArrayDenotationContext))) {
+                sctx = sctx.getParent();
             }
 
-            value = new ConstantFixedValue(curval,curlen);
-            if ( m_enterResultinConstantPool) {
-                m_constantPoolVisitor.add(value);
+            if (sctx != null) {
+                if (sctx instanceof SmallPearlParser.VariableDenotationContext) {
+                    SmallPearlParser.TypeAttributeContext typeAttributeContext = ((SmallPearlParser.VariableDenotationContext) sctx).typeAttribute();
+                    if (typeAttributeContext.simpleType() != null) {
+                        SmallPearlParser.SimpleTypeContext simpleTypeContext = typeAttributeContext.simpleType();
+
+                        if (simpleTypeContext.typeInteger() != null) {
+                            SmallPearlParser.TypeIntegerContext typeIntegerContext = simpleTypeContext.typeInteger();
+
+                            if (typeIntegerContext.mprecision() != null) {
+                                precision = Integer.parseInt(typeIntegerContext.mprecision().integerWithoutPrecision().IntegerConstant().toString());
+                            }
+                        }
+                    }
+                } else if (sctx instanceof SmallPearlParser.ArrayDenotationContext) {
+                }
             }
         }
+    }
+        value = new ConstantFixedValue(curval,precision);
+
+        if ( m_enterResultinConstantPool) {
+           m_constantPoolVisitor.add(value);
+         }
 
         return null;
     }

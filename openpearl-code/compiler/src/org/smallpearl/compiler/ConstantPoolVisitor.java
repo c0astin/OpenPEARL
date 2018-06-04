@@ -317,49 +317,29 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 if (ctx.fixedConstant().fixedNumberPrecision() != null) {
                     precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
                 } else {
-/***
- // walk up the AST and get VariableDenotationContext:
- ParserRuleContext sctx = ctx.getParent();
- while (sctx != null && !((sctx instanceof SmallPearlParser.VariableDenotationContext) || (sctx instanceof SmallPearlParser.ArrayDenotationContext))) {
- sctx = sctx.getParent();
- }
+                    // walk up the AST and get VariableDenotationContext:
+                    ParserRuleContext sctx = ctx.getParent();
+                    while (sctx != null && !((sctx instanceof SmallPearlParser.VariableDenotationContext) || (sctx instanceof SmallPearlParser.ArrayDenotationContext))) {
+                        sctx = sctx.getParent();
+                    }
 
- if (sctx != null) {
- if ( sctx instanceof SmallPearlParser.VariableDenotationContext) {
- SmallPearlParser.TypeAttributeContext typeAttributeContext = ((SmallPearlParser.VariableDenotationContext) sctx).typeAttribute();
- if (typeAttributeContext.simpleType() != null) {
- SmallPearlParser.SimpleTypeContext simpleTypeContext = typeAttributeContext.simpleType();
+                    if (sctx != null) {
+                        if (sctx instanceof SmallPearlParser.VariableDenotationContext) {
+                            SmallPearlParser.TypeAttributeContext typeAttributeContext = ((SmallPearlParser.VariableDenotationContext) sctx).typeAttribute();
+                            if (typeAttributeContext.simpleType() != null) {
+                                SmallPearlParser.SimpleTypeContext simpleTypeContext = typeAttributeContext.simpleType();
 
- if (simpleTypeContext.typeInteger() != null) {
- SmallPearlParser.TypeIntegerContext typeIntegerContext = simpleTypeContext.typeInteger();
+                                if (simpleTypeContext.typeInteger() != null) {
+                                    SmallPearlParser.TypeIntegerContext typeIntegerContext = simpleTypeContext.typeInteger();
 
- if (typeIntegerContext.mprecision() != null) {
- precision = Integer.parseInt(typeIntegerContext.mprecision().integerWithoutPrecision().IntegerConstant().toString());
- }
- }
- }
- } else if ( sctx instanceof SmallPearlParser.ArrayDenotationContext) {
- SmallPearlParser.TypeAttributeForArrayContext typeAttributeForArrayContext = ((SmallPearlParser.ArrayDenotationContext)sctx).typeAttributeForArray();
- //                            typeAttributeForArray :
- //                                      type_fixed
- //                                    | type_float
- //                                    | type_duration
- //                                    | type_clock
- //                                    | type_bit
- //                                    | type_char
- //                                    | typeReference
- ;
- if ( typeAttributeForArrayContext.type_fixed() != null ) {
-
- }
- throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
- } else {
- throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
- }
- } else {
- throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
- }
- ***/
+                                    if (typeIntegerContext.mprecision() != null) {
+                                        precision = Integer.parseInt(typeIntegerContext.mprecision().integerWithoutPrecision().IntegerConstant().toString());
+                                    }
+                                }
+                            }
+                        } else if (sctx instanceof SmallPearlParser.ArrayDenotationContext) {
+                        }
+                    }
                 }
 
                 value = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
