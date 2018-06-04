@@ -20,15 +20,14 @@ DONOTBUILD= 030_signals 031_signalsInduce  \
         103_fixed_monadic_arith \
 	224_bit_slice \
 	400_char_dcl \
-       	701_dation_pg \
+	701_dation_pg \
 	706_convert \
 	707_dation_pg_formats \
 	850_ref_decl
 
 DONOTRUN=000_empty \
 	050_interrupt \
-	350_conversions \
-	703_userdation_dcl \
+        703_userdation_dcl \
 	704_dation_open \
 	705_dation_close
 
