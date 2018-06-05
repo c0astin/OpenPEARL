@@ -2756,7 +2756,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 String s = ctx.fixedConstant().IntegerConstant().toString();
 
                 value = Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
-
+                precision = Long.toBinaryString(Math.abs(value)).length();
+                if ( value <  0) {
+                    precision++;
+                }
                 if (m_map_to_const) {
                     ConstantFixedValue fixed_value = new ConstantFixedValue(value,precision);
                     literal.add("integer", fixed_value);
@@ -3529,6 +3532,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                     k = k + 1;
                     j = j + 1;
+
                     if (j == ctx.formatPosition().size()) {
                         j = 0;
                     }

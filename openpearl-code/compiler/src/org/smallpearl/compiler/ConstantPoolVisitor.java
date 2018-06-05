@@ -226,6 +226,11 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 }
 
                 value = Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
+                precision = Long.toBinaryString(Math.abs(value)).length();
+
+                if ( value <  0) {
+                    precision++;
+                }
 
                 m_constantPool.add(new ConstantFixedValue(value, precision));
             } catch (NumberFormatException ex) {

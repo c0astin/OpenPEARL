@@ -644,6 +644,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
+
         visit(ctx.expression(1));
         op2 = m_properties.get(ctx.expression(1));
 
@@ -1566,6 +1567,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                     precision = m_currFixedLength;
                 }
 
+                m_calculateRealFixedLength = true;
                 if ( m_calculateRealFixedLength) {
                     long value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
 
@@ -1574,6 +1576,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                         precision++;
                     }
                 }
+
+                m_calculateRealFixedLength = false;
 
 //                System.out.println( "ExpressionTypeVisitor:visitLiteral:Fixed: ctx="+ctx.toStringTree()+" precision="+precision);
                 ExpressionResult expressionResult = new ExpressionResult(new TypeFixed(precision), true);
