@@ -2641,7 +2641,34 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         }
 
         if ( ctx.bitSlice() != null ) {
-            res = new ExpressionResult(new TypeBit(1));
+            int bits = 0;
+            if ( ctx.bitSlice() instanceof SmallPearlParser.Case1BitSliceContext) {
+                bits = 1;
+            } else if ( ctx.bitSlice() instanceof SmallPearlParser.Case2BitSliceContext) {
+                SmallPearlParser.Case2BitSliceContext ctx1 = (SmallPearlParser.Case2BitSliceContext)ctx.bitSlice();
+                long lowerBoundary;
+                long upperBoundary;
+                ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
+
+                ConstantValue lower = evaluator.visit(ctx1.constantFixedExpression(0));
+                ConstantValue upper = evaluator.visit(ctx1.constantFixedExpression(1));
+
+                if ( !(lower instanceof ConstantFixedValue)) {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+
+                if ( !(upper instanceof ConstantFixedValue)) {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+
+                lowerBoundary = ((ConstantFixedValue) lower).getValue();
+                upperBoundary = ((ConstantFixedValue) upper).getValue();
+
+
+                bits = (int)upperBoundary - (int)lowerBoundary + 1;
+            }
+
+           res = new ExpressionResult(new TypeBit(bits));
         }
         else if ( ctx.charSlice() != null ) {
             res = new ExpressionResult(new TypeChar(1));
@@ -2790,6 +2817,13 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         m_properties.put(ctx, res);
 
         return null;
+    }
+
+    private ConstantValue getConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
+        ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
+        ConstantValue constant = evaluator.visit(ctx.constantFixedExpression());
+
+        return constant;
     }
 
 }

@@ -85,11 +85,11 @@ public class CheckCondition extends SmallPearlBaseVisitor<Void> implements Small
         if ( typeDef instanceof TypeBit ) {
             TypeBit conditionType = (TypeBit) typeDef;
             if ( conditionType.getPrecision() != 1 ) {
-                throw new SemanticError(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(), "Loop condition must be of type BIT(1)");
+                throw new SemanticError(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(), "Condition must be of type BIT(1)");
             }
         }
         else {
-            throw new SemanticError(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(), "Loop condition must be of type BIT(1)");
+            throw new SemanticError(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(), "Condition must be of type BIT(1)");
         }
 
         return null;
