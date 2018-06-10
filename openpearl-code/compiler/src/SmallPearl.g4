@@ -163,6 +163,7 @@ problem_part:
     'PROBLEM' ';'
     (
           lengthDefinition
+        | typeDefinition
         | scalarVariableDeclaration
         | structVariableDeclaration
         | arrayVariableDeclaration
@@ -286,6 +287,16 @@ identification_attribute:
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+
+////////////////////////////////////////////////////////////////////////////////
+//   TypeDefinition ::=
+//     TYPE Identifier§ForType { SimpleType | TypeStructure } ;
+////////////////////////////////////////////////////////////////////////////////
+
+typeDefinition :
+    'TYPE' ID ( simpleType | typeStructure | ID) ';'
+    ;
+
 ////////////////////////////////////////////////////////////////////////////////
 //  ScalarVariableDeclaration ::=
 //      { DECLARE | DCL } VariableDenotation [ , VariableDenotation ] ... ;
@@ -328,6 +339,7 @@ globalAttribute :
 typeAttribute
     : simpleType
     | typeReference
+    | ID
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1389,7 +1401,7 @@ putStatement :
 //   Factor ( FormatPosition [ , FormatPosition ] ... )
 ////////////////////////////////////////////////////////////////////////////////
 
-formatPosition :
+ formatPosition :
       factor? format                                             # factorFormat
     | factor? position                                           # factorPosition
     | factor '(' formatPosition ( ( ','  formatPosition )* )?')' # factorFormatPosition
