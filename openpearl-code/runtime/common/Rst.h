@@ -58,6 +58,7 @@ namespace pearlrt {
    */
    class Rst {
    protected:
+#if 0
       /**
       pointer to error variable.
 
@@ -65,7 +66,8 @@ namespace pearlrt {
       This attribute is preset with NULL in the start of the i/o
       operation.
       */
-      Fixed<15> * rstValue;
+      Fixed<SIZE> * rstValue;
+#endif
 
       /**
       pointer to the error variable with the IOJob interface
@@ -91,7 +93,14 @@ namespace pearlrt {
         \param rstVar the variable, which should be set is case of
                       exception after this call
       */
-      void rst(Fixed<15> & rstVar);
+   template <int SIZE>
+      void rst(Fixed<SIZE> & rstVariable) {
+//       rstValue = & rst;
+         rst(&rstVariable, SIZE);
+//         rst = (Fixed<SIZE>)0;
+//         rstVoidPointer = &rst;
+//         rstLength = SIZE;
+      }
 
       /**
         set the rst variable via an IOJob

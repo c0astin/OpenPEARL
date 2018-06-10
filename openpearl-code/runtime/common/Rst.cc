@@ -37,26 +37,27 @@
 #include "Fixed.h"
 
 namespace pearlrt {
-
+#if 0
    void Rst::rst(Fixed<15> & rst) {
       rstValue = & rst;
       rst = (Fixed<15>)0;
       rstVoidPointer = NULL;
    }
+#endif
 
    void Rst::rst(void * rstPointer, size_t len) {
       rstVoidPointer = rstPointer;
       rstLength = len;
       /* is in Fixed.h */
       assignIntToFixedViaVoidPointer(rstVoidPointer, rstLength, 0);
-      rstValue = NULL;
+//      rstValue = NULL;
    }
 
    bool Rst::updateRst(Signal * s) {
-      if (rstValue != NULL) {
-         * rstValue = s->whichRST();
-         return true;
-      }
+//      if (rstValue != NULL) {
+//         * rstValue = s->whichRST();
+//         return true;
+//      }
 
       if (rstVoidPointer != NULL) {
          /* is in Fixed.h */

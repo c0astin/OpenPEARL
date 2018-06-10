@@ -43,7 +43,8 @@ namespace pearlrt {
 
    UserDation::UserDation() {
       currentTask = NULL;
-      rstValue = NULL;
+      //rstValue = NULL;
+      rstVoidPointer = NULL;
       mutex.name("UserDation");
    }
 
@@ -80,7 +81,7 @@ namespace pearlrt {
       mutex.lock();
 
       currentTask = me;
-      rstValue = NULL;
+      //rstValue = NULL;
       rstVoidPointer = NULL;
 
       if (me) {
