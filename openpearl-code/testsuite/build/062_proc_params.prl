@@ -69,6 +69,15 @@ proc_008: PROC (p1 FIXED) RETURNS(FIXED(8));
 	RETURN(p1);
 END;
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+proc_009: PROC RETURNS(FIXED);
+    DCL x FIXED INIT(42);
+!    RETURN 42;    ! does not compile
+    RETURN (42);
+!    RETURN x;     ! does not compile
+    RETURN (x);
+END;
+
 
 T1: TASK MAIN;
    DCL f FIXED;
@@ -82,6 +91,8 @@ T1: TASK MAIN;
    CALL proc_005(f, f15);
 !   CALL proc_008(f);      ! not ok - dicarding result value
 !   proc_008(f);	   ! not ok - discarding result value
+
+   f := proc_009;
 
 END;
 

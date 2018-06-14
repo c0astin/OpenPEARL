@@ -17,6 +17,7 @@
  
 DONOTBUILD= 030_signals 031_signalsInduce  \
 	043_switch \
+	062_proc_params \
         103_fixed_monadic_arith \
 	224_bit_slice \
 	400_char_dcl \
