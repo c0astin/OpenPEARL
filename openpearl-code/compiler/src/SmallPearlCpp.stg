@@ -1048,7 +1048,7 @@ fromA(<element><if(fieldwidth)>,(pearlrt::Fixed\<31>)(<fieldwidth>)<endif>)
 /******************************** CALL Statement *********************************/
 
 CallStatement(callee, ListOfActualParameters) ::= <<
-<user_procedure(callee)>( me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>);
+<user_procedure(callee)>(me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>);
 >>
 
 ListOfActualParameters(ActualParameters) ::= <%

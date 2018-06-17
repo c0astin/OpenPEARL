@@ -2323,8 +2323,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 ST functionCall = m_group.getInstanceOf("FunctionCall");
                 functionCall.add("callee", ctx.ID().getText());
 
-                if ( ctx.expression() != null ){
-                    functionCall.add("ListOfActualParameters", getActualParameters(ctx.expression()));
+                if ( ctx.expression() != null && ctx.expression().size() > 0){
+                        functionCall.add("ListOfActualParameters", getActualParameters(ctx.expression()));
                 }
 
                 expression.add("functionCall", functionCall);
