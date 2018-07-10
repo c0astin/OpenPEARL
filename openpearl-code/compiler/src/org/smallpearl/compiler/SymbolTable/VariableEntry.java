@@ -25,7 +25,7 @@ public class VariableEntry extends SymbolTableEntry {
         this.m_initializer = null;
     }
 
-    public VariableEntry(String name, TypeDefinition type, Boolean hasAssigmentProtection, SmallPearlParser.VariableDenotationContext ctx, Initializer initializer)
+    public VariableEntry(String name, TypeDefinition type, Boolean hasAssigmentProtection, org.antlr.v4.runtime.ParserRuleContext ctx, Initializer initializer)
     {
         super(name);
         this.m_ctx = ctx;

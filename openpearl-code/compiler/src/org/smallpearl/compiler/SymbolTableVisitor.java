@@ -198,7 +198,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         /* Enter formal parameter into the local symboltable of this procedure */
         if (formalParameters != null && formalParameters.size() > 0) {
             for (FormalParameter formalParameter : formalParameters) {
-                VariableEntry param = new VariableEntry(formalParameter.name, formalParameter.type, formalParameter.assignmentProtection, null, null);
+                VariableEntry param = new VariableEntry(formalParameter.name, formalParameter.type, formalParameter.assignmentProtection, formalParameter.m_ctx, null);
                 this.m_currentSymbolTable.enter(param);
             }
         }
@@ -247,7 +247,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 }
 
                 getParameterType(ctx.parameterType());
-                listOfFormalParameters.add(new FormalParameter(name, m_type, assignmentProtection));
+                listOfFormalParameters.add(new FormalParameter(name, m_type, assignmentProtection, ctx));
             }
         }
 
@@ -632,7 +632,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             addArrayDescriptor(new ArrayDescriptor(((TypeArray)m_type).getNoOfDimensions(),((TypeArray)m_type).getDimensions()));
 
             for (int i = 0; i < identifierDenotationList.size(); i++) {
-                VariableEntry variableEntry = new VariableEntry(identifierDenotationList.get(i), m_type,hasAssigmentProtection,null,null);
+                VariableEntry variableEntry = new VariableEntry(identifierDenotationList.get(i), m_type,hasAssigmentProtection,  ctx,null);
                 if (!m_currentSymbolTable.enter(variableEntry)) {
                     System.out.println("ERR: Double definition of " + identifierDenotationList.get(i));
                 }
