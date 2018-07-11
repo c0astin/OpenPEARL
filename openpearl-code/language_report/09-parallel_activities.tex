@@ -838,10 +838,6 @@ Possible problem situations:
 \begin{description}
 \item[\kw{TaskTerminatedSignal}] is induced, if the task is in terminated state
  when a \code{TERMINATE} statement is executed.
-\item[Termination is delayed], if the task is doing i/o. The task's termination
-is delayed until the i/o-statement is completed, or a record mark 
-(\code{SKIP}) 
-is encountered.  This is done to enshure the integrity of the i/o-behavior.
 \end{description}
 %%%\end{added}
 
@@ -871,9 +867,6 @@ Possible problem situations:
 a \code{SUSPEND} statement is executed.
 \item[\kw{TaskSuspendedSignal}] is induced, if the task is already suspended when
 a \code{SUSPEND} statement is executed.
-\item[Suspending is delayed], if the task is doing i/o. The task's suspension
-is delayed until the i/o-statement is completed, or a record mark (\code{SKIP}) 
-is encountered. This is done to enshure the integrity of the i/o-behavior.
 \end{description}
 %%%\end{added}
 
