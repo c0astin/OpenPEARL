@@ -68,11 +68,12 @@ namespace pearlrt {
    \param adr addres of the i2c device
    \param n maximum number of expected data bytes
    \param data array of data elements
-   \returns number of receive data bytes
+   \returns number of received data bytes
    */
    int I2CBus::readData(int adr, int n, uint8_t * data) {
       long a = adr;
       int received;
+      int errnoCopy;
 
       mutex.lock();
 
@@ -82,12 +83,39 @@ namespace pearlrt {
          throw theInternalDationSignal;
       }
 
-      received  = read(i2c_file, data, n);
+      errno = 0;
 
-      if (n !=  received) {
+      // perform the read() inside a try-catch block
+      // treatCancelIO will throw an expection if the current
+      // task should become terminated. In the catch block,
+      // the mutex becomes released
+      try {
+         do {
+            received  = read(i2c_file, data, n);
+
+            // safe the value of errno for further evaluation
+            errnoCopy = errno;
+
+            if (received < 1) {
+               if (errnoCopy == EINTR) {
+                  Task::currentTask()->treatCancelIO();
+                  Log::info("I2CBus: treatCancelIO finished");
+               } else {
+                  // other read errors
+                  Log::error("I2CBus: error at read (%s)", strerror(errnoCopy));
+                  mutex.unlock();
+                  throw theReadingFailedSignal;
+               }
+            }
+            if (n != received) {
+                mutex.unlock();
+                Log::error("I2CBus::read error: %s", strerror(errno));
+                throw theReadingFailedSignal;
+            }
+         } while (ret <= 0);
+      } catch (TerminateRequestSignal s) {
          mutex.unlock();
-         Log::error("I2CBus::read error: %s", strerror(errno));
-         throw theReadingFailedSignal;
+         throw;
       }
 
       mutex.unlock();
@@ -97,21 +125,49 @@ namespace pearlrt {
    int I2CBus::writeData(int adr, int n, uint8_t * data) {
       long a = adr;
       int written;
+      int errnoCopy;
 
       mutex.lock();
 
       if (ioctl(i2c_file, I2C_SLAVE, a) < 0) {
          mutex.unlock();
-         Log::error("I2CBus::write: %s", strerror(errno));
+         Log::error("I2CBus::write/ioctl: %s", strerror(errno));
          throw theInternalDationSignal;
       }
 
-      written = write(i2c_file, data, n);
+      errno = 0;
 
-      if (written != n) {
+      // perform the write() inside a try-catch block
+      // treatCancelIO will throw an expection if the current
+      // task should become terminated. In the catch block,
+      // the mutex becomes released
+      try {
+         do {
+            written  = write(i2c_file, data, n);
+
+            // safe the value of errno for further evaluation
+            errnoCopy = errno;
+
+            if (written < 1) {
+               if (errnoCopy == EINTR) {
+                  Task::currentTask()->treatCancelIO();
+                  Log::info("I2CBus: treatCancelIO finished");
+               } else {
+                  // other write errors
+                  Log::error("I2CBus: error at write (%s)", strerror(errnoCopy));
+                  mutex.unlock();
+                  throw theWritingFailedSignal;
+               }
+            }
+            if (n != written) {
+                mutex.unlock();
+                Log::error("I2CBus::write error: %s", strerror(errno));
+                throw theWritingFailedSignal;
+            }
+         } while (ret <= 0);
+      } catch (TerminateRequestSignal s) {
          mutex.unlock();
-         Log::error("I2CBus::write error: %s", strerror(errno));
-         throw theWritingFailedSignal;
+         throw;
       }
 
       mutex.unlock();
@@ -120,7 +176,7 @@ namespace pearlrt {
 
 
    /**
-   perform several i2c action without intermediate stop condition.
+   perform several i2c actions without intermediate stop condition.
    This feature need the capability of REPEATED START from the i2c controller
    If an implementation of a concrete I2CProvider does not support this
    feature, a NULL implementation must be implemented and the absence of

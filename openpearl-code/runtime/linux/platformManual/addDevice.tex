@@ -1,4 +1,79 @@
-\section{Checklist: How to create a new System Device}
+\section{Linux specific Details in Device Driver Implementation}
+In linux the system devices are represented by a device driver of
+the linux kernel.
+It is possible to access the devices via the normal interface
+with {\em open}, {\em close}, {\em read}, {\em write} and {\em ioctl}.
+The device node name in the folder \verb|/dev| must have access
+priviledges for {\em users}.
+
+These functions should be used in the methods of the C++ class 
+for the device driver.
+
+\subsection{MUTEX-treatment}
+Each user dation provides a mutex mechanism. 
+Some device drivers need a mutex-mechanisme to enable atomic behavior
+when used from different tasks.
+This is obviously true for connection providers.
+
+The read/write system calls will be interrupted by the UNIX signal
+\verb|SIG_CANCEL_IO|. This leed to an error value \texttt{EINTR} for
+the system call or the according value of \texttt{errno} for fread/fwrite.
+
+\subsection{Sample code from StdIn.cc}
+\begin{verbatim}
+#include "Task.h"
+
+   void StdIn::dationRead(void * destination, size_t size) {
+      int ret;
+      int errnoCopy;
+
+      mutex.lock();
+      clearerr(fp);
+      errno = 0;
+
+      // perform the read() inside a try-catch block
+      // treatCancelIO will throw an expection if the current
+      // task should become terminated. In the catch block,
+      // the mutex becomes released
+      try {
+         do {
+            ret = fread(destination, size, 1, fp);
+
+            // safe the value of errno for further evaluation
+            errnoCopy = errno;
+
+            if (ret < 1 ) {
+               if (errnoCopy == EINTR) {
+                  Task::currentTask()->treatCancelIO();
+                  Log::info("StdIn: treatCancelIO finished");
+               } else if (feof(fp)) {
+                  Log::error("StdIn: error across EOF");
+                  mutex.unlock();
+                  throw theDationEOFSignal;
+               } else {
+                  // other read errors
+                  Log::error("StdIn: error at read (%s)", strerror(errnoCopy));
+                  mutex.unlock();
+                  throw theReadingFailedSignal;
+               }
+            }
+         } while (ret <= 0);
+      } catch (TerminateRequestSignal s) {
+         mutex.unlock();
+         throw;
+      }
+      mutex.unlock();
+   }
+
+
+   void StdIn::dationWrite(void * source, size_t size) {
+      Log::error("StdIn: write is not supported");
+      throw theDationNotSupportedSignal;
+   }
+\end{verbatim}
+
+
+\subsection{Checklist: How to create a new System Device}
 In linux the system devices are represented by a device driver of
 the linux kernel.
 It is possible to access the devices via the normal interface
@@ -38,7 +113,7 @@ The creation of a new device is very simple:
       device characteristics.
 \item If the device depends on special libraries or 
       system setup, insert a configuration item  
-      in the system configuration menu
+      in the system configuration menu (make menuconfig)
       and set the default to {\em not available} ('n').
 \item modify the corresponding Makefile and add the device depending on
       the configuration item. If additional libraries are needed,

@@ -141,9 +141,9 @@ digraph G {
    continue -> continueTimer[label="setup"];
    activateHandler->activateTimer[label="stop"];
 
-   continueTimer->signalThread[label="SIGRTMIN+3"];
-   activateTimer->signalThread[label="SIGRTMIN+1"];
-   resumeTimer->signalThread[label="SIGRTMIN+2"];
+   continueTimer->signalThread[label="SIG_CONTINUE"];
+   activateTimer->signalThread[label="SIG_ACTIVATE"];
+   resumeTimer->signalThread[label="SIG_RESUME"];
 }
 \enddot
 The colors indicate the active thread context.
@@ -241,6 +241,7 @@ List of commands:
 #include <pwd.h>
 #include <sys/resource.h> // get/set rlimit
 
+#include "SignalMapper.h"
 #include "Task.h"
 #include "TaskTimer.h"
 #include "TaskList.h"
@@ -292,17 +293,11 @@ namespace pearlrt {
       case Task::RUNNING:
          return ((char*)"RUNNING");
 
-      case Task::SEMA_BLOCKED:
-         return ((char*)"SEMA_BLOCKED");
+      case Task::BLOCKED:
+         return ((char*)"SEMA/BOLT/IO_BLOCKED");
 
-      case Task::SEMA_SUSPENDED_BLOCKED:
-         return ((char*)"SEMA_SUSP_BLOCKED");
-
-      case Task::IO_BLOCKED:
-         return ((char*)"IO_BLOCKED");
-
-      case Task::IO_SUSPENDED_BLOCKED:
-         return ((char*)"IO_SUSP_BLOCKED");
+      case Task::SUSPENDED_BLOCKED:
+         return ((char*)"SEMA/BOLT/IO_SUSP_BLOCKED");
 
       default:
          return ((char*)"unknown state");
@@ -505,8 +500,10 @@ int main() {
       PrioMapper::getInstance()->logPriorities();
    }
 
+   // register a signal handler for the situation where
+   // the last active or pending task terminates
+   signal(SIG_NO_MORE_TASKS, noMoreTasksPendingHandler);
 
-   signal(SIGRTMIN + 4, noMoreTasksPendingHandler);
    Log::info("Defined Tasks");
    sprintf(line, "%-10.10s %4s %s", "Name", "Prio", "isMain");
    Log::info(line);
@@ -562,4 +559,3 @@ int main() {
 
    // will never reach this point !
 }
-

@@ -40,13 +40,13 @@
 #include "Dation.h"
 #include "Log.h"
 #include "Signals.h"
+#include "Task.h"
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
 namespace pearlrt {
-//   int StdOut::declaredDations = 0;
 
    StdOut::StdOut() :
       SystemDationNB() {
@@ -109,14 +109,38 @@ namespace pearlrt {
 
    void StdOut::dationWrite(void * source, size_t size) {
       int ret;
+      int errnoCopy;
+
       mutex.lock();
       errno = 0;
-      ret = fwrite(source, size, 1, fp);
+      clearerr(fp);
 
-      if (ret < 1) {
-         Log::error("StdOut: error at write (%s)", strerror(errno));
+      // perform the read() inside a try-catch block
+      // treatCancelIO will throw an expection if the current
+      // task should become terminated. In the catch block,
+      // the mutex becomes released
+      try {
+         do {
+            ret = fwrite(source, size, 1, fp);
+            // safe the value of errno for further evaluation
+            errnoCopy = errno;
+
+            if (ret < 1) {
+               if (errnoCopy == EINTR) {
+                  Task::currentTask()->treatCancelIO();
+                  Log::info("StdOut: treatCancelIO finished");
+               } else {
+                  // other read errors
+                  Log::error("StdOut: error at write (%s)",
+                            strerror(errnoCopy));
+                  mutex.unlock();
+                  throw theWritingFailedSignal;
+               }
+            }
+         } while (ret <= 0);
+      } catch (TerminateRequestSignal s) {
          mutex.unlock();
-         throw theWritingFailedSignal;
+         throw;
       }
 
       mutex.unlock();

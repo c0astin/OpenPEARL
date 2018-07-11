@@ -51,17 +51,22 @@ namespace pearlrt {
       int ret;
       ret = pthread_mutex_trylock(&mutex);
 
+      do {
       if (ret == 0) {
          // was free
          ret = pthread_mutex_unlock(&mutex);
+	// printf("mutex %s was free\n", id);
       }  else {
-//         printf("\n@destroy: mutex %s is locked\n", id);
+         printf("\n@destroy: mutex %s is locked\n", id);
          ret = pthread_mutex_unlock(&mutex);
       }
+      } while (ret != 0);
 
       ret = pthread_mutex_destroy(&mutex);
 
       if (ret != 0) {
+         printf( "mutex destroy (%s): errno=%d \n",
+                 id, ret);
          fprintf(stderr, "mutex destroy (%s): errno=%d %s\n",
                  id, ret, strerror(ret));
       }
@@ -70,7 +75,7 @@ namespace pearlrt {
    void Mutex::lock() {
       int ret;
 
-//    printf("Mutex::lock(%s)...", id);
+//    if (strcmp(id, "UserDation") == 0) printf("Mutex::lock(%s)...", id);
 //     if (strstr(IGNORELIST, id) == 0) Log::debug("Mutex::lock(%s)", id);
       ret = pthread_mutex_lock(&mutex);
 
@@ -84,7 +89,7 @@ namespace pearlrt {
 
    void Mutex::unlock() {
       int ret;
-//	printf("... Mutex::unlock(%s)\n", id);
+//    if (strcmp(id, "UserDation") == 0) printf("... Mutex::unlock(%s)\n", id);
 //      if (strstr(IGNORELIST, id) == 0) Log::debug("Mutex::unlock(%s)", id);
       ret = pthread_mutex_unlock(&mutex);
 

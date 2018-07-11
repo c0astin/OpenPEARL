@@ -275,32 +275,32 @@ TEST(DationPG, signal_get) {
    ASSERT_THROW(
 
    try {
-      logbuch.beginSequence(NULL);
+      logbuch.beginSequence(NULL, pearlrt::Dation::IN);
       logbuch.fromF(x, (pearlrt::Fixed<31>)3);
-      logbuch.endSequence();
+      logbuch.endSequence(NULL);
    } catch (pearlrt::Signal & s) {
       if (!logbuch.updateRst(&s)) {
-         logbuch.endSequence();
+         logbuch.endSequence(NULL);
          throw;
       }
 
-      logbuch.endSequence();
+      logbuch.endSequence(NULL);
    },
    pearlrt::FixedValueSignal);
    ASSERT_NO_THROW(
 
    try {
-      logbuch.beginSequence(NULL);
+      logbuch.beginSequence(NULL, pearlrt::Dation::OUT);
       logbuch.rst(rst);
       logbuch.fromF(x, (pearlrt::Fixed<31>)3);
-      logbuch.endSequence();
+      logbuch.endSequence(NULL);
    } catch (pearlrt::Signal & s) {
       if (!logbuch.updateRst(&s)) {
-         logbuch.endSequence();
+         logbuch.endSequence(NULL);
          throw;
       }
 
-      logbuch.endSequence();
+      logbuch.endSequence(NULL);
    }
    );
    ASSERT_EQ(rst.x , pearlrt::theFixedValueSignal.whichRST());
@@ -334,7 +334,7 @@ TEST(DationPG, notOpened) {
 */
    pearlrt::Character<8> text("PEARL");
    pearlrt::Fixed<31>  x(42);
-   ASSERT_THROW(logbuch.beginSequence(NULL),
+   ASSERT_THROW(logbuch.beginSequence(NULL, pearlrt::Dation::OUT),
       pearlrt::DationNotOpenSignal);
 }
 
@@ -363,7 +363,7 @@ TEST(DationPG, lineOverflow) {
          & filename,
          (pearlrt::Fixed<15>*)NULL));
    pearlrt::Character<8> text("PEARL");
-   logbuch.beginSequence(NULL);
+   logbuch.beginSequence(NULL, pearlrt::Dation::OUT);
    try {
       logbuch.rst(rstValue);
       logbuch.toA(text);
@@ -371,11 +371,11 @@ TEST(DationPG, lineOverflow) {
       logbuch.toA(text);
    } catch (pearlrt::Signal & s) {
       if (!logbuch.updateRst(&s)) {
-         logbuch.endSequence();
+         logbuch.endSequence(NULL);
          throw;
       }
 
-      logbuch.endSequence();
+      logbuch.endSequence(NULL);
    };
    ASSERT_EQ(pearlrt::theDationIndexBoundSignal.whichRST(),
              rstValue.x);
@@ -445,7 +445,7 @@ TEST(DationPG, eof) {
          (pearlrt::Fixed<15>*)NULL));
    pearlrt::Character<8> text("PEARL");
    for (int i=0; i<4; i++) {
-      logbuch.beginSequence(NULL);
+      logbuch.beginSequence(NULL, pearlrt::Dation::OUT);
       try {
          logbuch.rst(rstValue);
          logbuch.toF(line,6);
@@ -454,15 +454,15 @@ TEST(DationPG, eof) {
          logbuch.toSkip(1);
       } catch (pearlrt::Signal & s) {
          if (!logbuch.updateRst(&s)) {
-            logbuch.endSequence();
+            logbuch.endSequence(NULL);
             throw;
          }
 
       }
-      logbuch.endSequence();
+      logbuch.endSequence(NULL);
    }
       line = pearlrt::Fixed<15>(10);
-      logbuch.beginSequence(NULL);
+      logbuch.beginSequence(NULL, pearlrt::Dation::OUT);
       try {
          logbuch.rst(rstValue);
          logbuch.eof();
@@ -472,12 +472,12 @@ TEST(DationPG, eof) {
          logbuch.toSkip(1);
       } catch (pearlrt::Signal & s) {
          if (!logbuch.updateRst(&s)) {
-            logbuch.endSequence();
+            logbuch.endSequence(NULL);
             throw;
          }
 
       }
-      logbuch.endSequence();
+      logbuch.endSequence(NULL);
       ASSERT_EQ(rstValue.x, 0);
 
    logbuch.dationClose(pearlrt::Dation::PRM, (pearlrt::Fixed<15>*)0);

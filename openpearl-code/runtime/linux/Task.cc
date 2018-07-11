@@ -44,6 +44,7 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include "SignalMapper.h"
 #include "Task.h"
 #include "Log.h"
 #include "TaskList.h"
@@ -54,11 +55,27 @@
 #include "Semaphore.h"
 #include "Bolt.h"
 
+//          remove this vv comment to enable debug messages
+#define DEBUG(fmt, ...) // Log::debug(fmt, ##__VA_ARGS__)
+
 namespace pearlrt {
+
+   /*
+   we need a signal handler function to convince the system calls
+   to abort with EINTR. But there is nothing to do inside of the
+   signal handler
+   */
+   static void eintrSignalHandler(int sig) {
+      // Log::info("%s: eintrSignalHandler got signal %d",
+      //          Task::currentTask()->getName(), sig);
+   }
+
+   static __thread Task* mySelf;
 
    Task::Task() : TaskCommon(NULL, Prio(), BitString<1>(0)) {
       Log::error("task %s: illegal call to default constructor of Task::",
                  name);
+      throw theInternalTaskSignal;
    }
 
    // tasks are created statically - no mutex protection needed
@@ -72,22 +89,40 @@ namespace pearlrt {
       schedActivateData.taskTimer = &activateTaskTimer;
       schedContinueData.taskTimer = &continueTaskTimer;
 
-      //create activate timer for SIGRTMIN+1 if expired and
-      //create continue timer for SIGRTMIN+3 if expired
+      //create activate timer for SIG_ACTIVATE if expired and
+      //create continue timer for SIG_CONTINUE if expired
       ((TaskTimer*)schedActivateData.taskTimer)->create(
-         this, SIGRTMIN + 1, activateHandler);
+         this, SIG_ACTIVATE, activateHandler);
       ((TaskTimer*)schedContinueData.taskTimer)->create(
-         this, SIGRTMIN + 3, continueHandler);
+         this, SIG_CONTINUE, continueHandler);
 
       if (pthread_attr_init(&attr) != 0) {
          Log::error("task %s: error initializing pthread_attr", name);
          throw theInternalTaskSignal;
       }
 
-      if (pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN) < 0) {
-         Log::error("task %s: error setting pthread_attr_stacksize", name);
-         throw theInternalTaskSignal;
+#if 0
+      // the stack size is taken from the ulimit setting
+      // is is possible to modify the maximum value of the stack
+      // per thread beyond the limit of 'ulimit -s xxx'
+      // I see no indication to set the stack size to a dedicated value
+      //
+      // the version with PTHREAD_STACK_MIN (16kB) came from 32 bit linux
+      // to avoid the limit for the number of tasks due to the stack
+      // adress restrictions on only 4 GB total memory addresses
+      {
+         size_t ss = 64 * 1024 * 1024; // 64 MB
+
+         //if (pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN) < 0) {
+         if (pthread_attr_setstacksize(&attr, ss) < 0) {
+            Log::error("task %s: error setting pthread_attr_stacksize", name);
+            throw theInternalTaskSignal;
+         }
+
+         pthread_attr_getstacksize(&attr, &ss);
+         printf("stack size :%zu\n", ss);
       }
+#endif
 
       //no inheritance of the main thread priority
       if (pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED) != 0) {
@@ -114,15 +149,49 @@ namespace pearlrt {
       // this function is called with locked tasks mutex
       // unlocking is done in calling function, except
       // this function throws an exception
-      switch (taskState) {
-      case SEMA_SUSPENDED_BLOCKED:
-         // reinsert the task in the semaphores wait queue
-         taskState = SEMA_BLOCKED;
-         Semaphore::addToWaitQueue(this);
 
-      // no break here! setting the priority is included
-      //    in RUNNING/SUSPENDED
-      case SEMA_BLOCKED:
+      DEBUG("%s: continueFromOtherTask: taskState=%d bp.reason=%d",
+                 name, taskState, blockParams.why.reason);
+
+      switch (taskState) {
+      case SUSPENDED_BLOCKED:
+
+         // reinsert the task in the semaphores wait queue
+         switch (blockParams.why.reason) {
+         case  REQUEST:
+            taskState = BLOCKED;
+            Semaphore::addToWaitQueue(this);
+            break;
+
+         case ENTER:
+         case RESERVE:
+            taskState = BLOCKED;
+            Bolt::addToWaitQueue(this);
+            break;
+
+         case IO:
+            continueSuspended();
+            break;
+
+         case IOWAITQUEUE:
+            taskState = BLOCKED;
+            // restart the i/o request
+            blockParams.why.u.ioWaitQueue.dation->restart(
+                    this,
+                    blockParams.why.u.ioWaitQueue.direction);
+            DEBUG("task %s: continueFromOtherTask: added to queue", name);
+            break;
+
+         default:
+            Log::error("%s: in SUSPENDED_BLOCKED: "
+                       "untreated block reason in continueFromOtherTask (%d)",
+                       name, blockParams.why.reason);
+            throw theInternalTaskSignal;
+         }
+
+         break;
+
+      case BLOCKED:
 
          // adjust the tasks position in the semaphores wait queue
          // according the tasks (new) priority
@@ -130,80 +199,47 @@ namespace pearlrt {
             currentPrio = prio.get();
          }
 
-         Semaphore::updateWaitQueue(this);
-         Bolt::updateWaitQueue(this);
+         // reinsert the task in the semaphores wait queue
+         switch (blockParams.why.reason) {
+         case  REQUEST:
+            Semaphore::updateWaitQueue(this);
+            break;
 
-      // no break here! setting the priority is included
-      //    in RUNNING/SUSPENDED
-      case RUNNING:
+         case ENTER:
+         case RESERVE:
+            Bolt::updateWaitQueue(this);
+            break;
 
-         // adjust the tasks priority according the tasks (new) priority
-         try {
-            if (condition & PRIO) {
-               changeThreadPrio(prio.get());   // just set new priority
+         case IO:
+            // just update the thread priority if given
+            break;
+
+         case IOWAITQUEUE:
+            {
+               PriorityQueue *q;
+               q =  blockParams.why.u.ioWaitQueue.dation->getWaitQueue();
+               q->remove(this);
+               q->insert(this);
             }
-         } catch (Signal s) {
-            mutexUnlock();
-            throw;
+            break;
+
+         default:
+            Log::error("in BLOCKED: untreated "
+                       "block reason in contineFromOtherTask (%d)",
+                       blockParams.why.reason);
+            throw theInternalTaskSignal;
          }
+         break;
 
-//????         mutexUnlock();
-
+      case RUNNING:
+         // nothing to do here; priority change ocuurs common for
+         // all alternatives
          break;
 
       case SUSPENDED:
-//         try {
-//            if (condition & PRIO) {
-//               changeThreadPrio(prio.get());   // just set new priority
-//            }
-//         } catch (Signal s) {
-//            mutexUnlock();
-//            throw;
-//         }
-//
-//         sendContinueCondition();
          continueSuspended();
-
          break;
 
-      case IO_BLOCKED:
-
-         if (asyncSuspendRequested) {
-            Log::debug("   asyncSuspendRequest resetted");
-            asyncSuspendRequested = false;
-         }
-
-         try {
-            if (condition & PRIO) {
-               Log::debug("   set new prio in IO_BLOCKED");
-               changeThreadPrio(prio.get());  // set new priority
-            }
-         } catch (Signal s) {
-            mutexUnlock();
-            throw;
-         }
-
-//        mutexUnlock();
-         break;
-
-      case IO_SUSPENDED_BLOCKED:
-         Log::debug("   continue in IO_SUSPENDED_BLOCKED detected");
-
-//         try {
-//            if (condition & PRIO) {
-//               Log::debug("   set new prio in IO_BLOCKED");
-//               changeThreadPrio(prio.get());  // set new priority
-//            }
-//         } catch (Signal s) {
-//            mutexUnlock();
-//            throw;
-//         }
-//
-//         sendContinueCondition();
-         continueSuspended();
-
-//         mutexUnlock();
-         break;
 
       case TERMINATED:
          Log::error("task %s: continue at terminated state", name);
@@ -216,6 +252,19 @@ namespace pearlrt {
          mutexUnlock();
          throw theInternalTaskSignal;
       }
+
+      // update the thread priority here
+      // adjust the tasks priority according the tasks (new) priority
+      try {
+         if (condition & PRIO) {
+Log::info("%s: set priority to %d",name, prio.get().x); 
+            changeThreadPrio(prio.get());   // just set new priority
+         }
+      } catch (Signal s) {
+         mutexUnlock();
+         throw;
+      }
+
    }
 
    void Task::continueSuspended() {
@@ -225,48 +274,95 @@ namespace pearlrt {
             changeThreadPrio(schedContinueData.prio);
          }
       } catch (Signal s) {
-         Log::error("   task %s: setting priority", name);
+         Log::error("%s: setting priority failed", name);
          mutexUnlock();
          throw;
       }
 
-      Log::debug("   task %s: send continuation data",
-                 name);
+      DEBUG("%s: send continuation data", name);
       char dummy = 'c';
       continueWaiters++;
       write(pipeResume[1], &dummy, 1);
       mutexUnlock();
       continueDone.request();
-      Log::debug("   task %s: send continuation data: acknowledged",
-                 name);
+      DEBUG("%s: continuation data received and acknowledged", name);
       mutexLock();
    }
 
 
    void Task::suspendFromOtherTask() {
+      // this method is called with mutexTask locked
+
+      DEBUG("%s: suspendFromOtherTask , state=%d", name, taskState);
+
       switch (taskState) {
-      case SEMA_BLOCKED:
+      case BLOCKED:
+
          // leave the task blocked on its block-semaphore
          // and remove it from the wait queue
-         taskState = SEMA_SUSPENDED_BLOCKED;
-         Semaphore::removeFromWaitQueue(this);
-         break;
+         switch (blockParams.why.reason) {
+         case  REQUEST:
+            Semaphore::removeFromWaitQueue(this);
+            break;
 
-      case IO_BLOCKED:
-         Log::debug("   task %s: set suspend request flag in IO_BLOCKED",
-                    name);
-         asyncSuspendRequested = true;
-         switchToSchedPrioMax();
-//???         mutexUnlock();
-         // no jobDoneRequest request here!
-         // the suspending task shall be delayed until the
-         // io-doing task reaches the suspending point
-         // jobDone.request();
+         case ENTER:
+         case RESERVE:
+            Bolt::removeFromWaitQueue(this);
+            break;
+
+         case IOWAITQUEUE:
+            Log::error("suspendFromOtherTask: IOWAITQUEUE start");
+
+            blockParams.why.u.ioWaitQueue.dation->getWaitQueue()->remove(this);
+            DEBUG("task %s: suspendFromOtherTask: removed from queue",
+                       name);
+            break;
+
+         case IO:
+            // send the SIG_CANCEL_IO signal to the i/O performing thread
+            // this will produce an EINTR error of the system call
+            // The driver will detect this and perform the selfTermination
+            //
+            // there is a duration between setting the taskState to IO+BLOCKED
+            // and entering the system call
+            // if the termination request occurs in this period, we do not
+            // get the EINTR error code
+            //
+            // Thus, we set the asyncTerminationRequested flag
+            // and send the signal repetitive until the flag is reset by the
+            // device driver
+
+            asyncSuspendRequested = true;
+
+            suspendWaiters ++;
+            switchToSchedPrioMax();
+
+            while (asyncSuspendRequested) {
+Log::info("%s: send SIG_CANCEL", name);
+               pthread_kill(threadPid, SIG_CANCEL_IO);
+               usleep(100000);
+            }
+
+            suspendDone.request();
+
+            // the suspended task unlocked the global task mutex
+            // thus we have to lock it again
+            mutexLock();
+            break;
+
+         default:
+            Log::error("%s: untreated block reason (%d) in"
+                       " continueFromOtherTask",
+                       name, blockParams.why.reason);
+            throw theInternalTaskSignal;
+         }
+
+         taskState = SUSPENDED_BLOCKED;
          break;
 
       case RUNNING:
          asyncSuspendRequested = true;
-         Log::debug("   task %s: set suspend request flag", name);
+         DEBUG("%s: set suspend request flag", name);
          suspendWaiters ++;
          mutexUnlock();
          switchToSchedPrioMax();
@@ -275,75 +371,70 @@ namespace pearlrt {
          break;
 
       default:
-         Log::error("   suspendFromOtherTask taskState %d not treated",
-                    taskState);
+         Log::error("%s:   suspendFromOtherTask taskState %d not treated",
+                    name, taskState);
          throw theInternalTaskSignal;
       }
    }
 
-   void Task::setSuspendRequested() {
-      asyncSuspendRequested = true;
-   }
-
    void Task::suspendMySelf() {
-      internalSuspendMySelf(false);
+      internalSuspendMySelf();
    }
 
-   void Task::internalSuspendMySelf(bool releaseJobDone) {
+   void Task::internalSuspendMySelf() {
       char dummy;
+
+      DEBUG("%s: internalSuspendMyself taskState=%d", name, taskState);
 
       switch (taskState) {
       case RUNNING:
          taskState = Task::SUSPENDED;
          break;
 
-      case IO_BLOCKED:
-         taskState = IO_SUSPENDED_BLOCKED;
+      case BLOCKED:
+         taskState = SUSPENDED_BLOCKED;
          break;
 
       default:
-         Log::error("   Task::internalsSuspendMySelf: unknown taskState =%d",
-                    taskState);
+         Log::error("%s:   Task::internalSuspendMySelf: unknown taskState =%d",
+                    name, taskState);
          mutexUnlock();
          throw theInternalTaskSignal;
       }
 
-
-//      if (releaseJobDone) {
-//         jobDone.release();
-//      }
       while (suspendWaiters > 0) {
          suspendWaiters --;
          suspendDone.release();
       }
 
-      Log::debug("   task %s: suspended (wait for contine data) ", name);
+      DEBUG("%s:   suspended (wait for contine data) ", name);
       mutexUnlock();
       read(pipeResume[0], &dummy, 1);
 
       mutexLock();
-      Log::debug("   suspendMySelf:: %s got data %c", name, dummy);
+      DEBUG("%s:   suspendMySelf: got data %c", name, dummy);
 
       switch (dummy) {
       case 't' :
-         internalTerminateMySelf(true);
+         internalTerminateMySelf();
          break;
 
       case 'c' :
+         DEBUG("%s: suspendMySelf: continued: old taskState=%d",
+                    name, taskState);
 
          switch (taskState) {
          case SUSPENDED:
             taskState = Task::RUNNING;
             break;
 
-         case IO_SUSPENDED_BLOCKED:
-            taskState = IO_BLOCKED;
+         case SUSPENDED_BLOCKED:
+            taskState = BLOCKED;
             break;
 
          default:
-            Log::error(
-               "   Task::internalSuspendMySelf: unknown taskState =%d",
-               taskState);
+            Log::error("%s:   Task::internalSuspendMySelf:"
+                       " unknown taskState =%d", name, taskState);
             mutexUnlock();
             throw theInternalTaskSignal;
          }
@@ -353,13 +444,12 @@ namespace pearlrt {
             continueDone.release();
          }
 
-         Log::info("   task %s: continue from suspend done", name);
+         DEBUG("%s:  continue from suspend done", name);
          switchToSchedPrioCurrent();
-//???         mutexUnlock();
          break;
 
       default:
-         Log::error("   task %s: resume: received unknown continue (%c)",
+         Log::error("%s:   resume: received unknown continue (%c)",
                     name, dummy);
          break;
       }
@@ -375,20 +465,23 @@ namespace pearlrt {
 
    void Task::switchThreadSchedPrio(int p) {
       struct sched_param sp;
+      int error;
 
       if (! useNormalSchedulerFlag) {
          param.sched_priority = p;
          sp.sched_priority = p;
 
          //setting up the new priority
-         Log::debug("setting linux prio for task %s to %d",
-                    name, param.sched_priority);
+         DEBUG("%s: setting linux prio to %d (threadPid=%d)",
+                    name, param.sched_priority, (int)threadPid);
 
-         if (pthread_setschedparam(threadPid, SCHED_RR, &sp)) {
+         error = pthread_setschedparam(threadPid, SCHED_RR, &sp);
+
+         if (error) {
             mutexUnlock();
             Log::error(
-               "task %s: error on setting new priority",
-               name);
+               "%s: error on setting new priority (%s)",
+               name, strerror(error));
             throw theInternalTaskSignal;
          }
       }
@@ -403,58 +496,34 @@ namespace pearlrt {
       }
    }
 
-   void Task::scheduleCallback(bool isLocked) {
+   void Task::scheduleCallback(void) {
+      mutexLock();
 
       if (asyncTerminateRequested) {
-         if (! isLocked) {
-            mutexLock();
-         }
-
          asyncTerminateRequested = false;
-
-         if (taskState == IO_BLOCKED) {
-            dation->suspend();
+         if (taskState == BLOCKED && blockParams.why.reason == IO) {
+             DEBUG("schedCB: throw terminateRequestSignal");
+             mutexUnlock();
+             throw theTerminateRequestSignal;
          }
-
-         internalTerminateMySelf(taskState != IO_BLOCKED);
+         DEBUG("schedCB: internalTermMySelf");
+         internalTerminateMySelf();
       }
 
       if (asyncSuspendRequested) {
-         Log::debug("Task %s: scheduledCallback : suspend request detected",
+         DEBUG("%s: scheduledCallback : suspend request detected",
                     name);
 
-         if (!isLocked) {
-            mutexLock();
-         }
-
          asyncSuspendRequested = false;
-
-         // the paremeter denotes wether the suspending task should
-         // be informed about reaching the suspended state
-         // if the task is io-blocked, the suspending task does not wait
-         // for the completion notice
-         if (taskState == IO_BLOCKED) {
-            dation->suspend();  // release dations mutex to allow other
-            // tasks to work with this dation
-         }
-
-         internalSuspendMySelf(taskState != IO_BLOCKED);
-
-         if (taskState == IO_BLOCKED) {
-            dation->cont();     // lock the mutex again when
-            // continuing the operation
-         }
-
-         if (!isLocked) {
-            mutexUnlock();
-         }
+         internalSuspendMySelf();
       }
+
+      mutexUnlock();
    }
 
    void Task::entry() {
-      //block timer signals, they should only delivered to main thread
-      sigset_t set;
-      sigemptyset(&set);
+
+      enableCancelIOSignalHandler();
       asyncTerminateRequested = false;
       asyncSuspendRequested = false;
       suspendWaiters = 0;
@@ -463,9 +532,13 @@ namespace pearlrt {
       // store own pid
       threadPid = pthread_self();
       taskState = Task::RUNNING;
+
+      // set the pointer to the current object in the thread's local data
+      mySelf = this;
+
       activateDone.release();
       switchToSchedPrioCurrent();
-      Log::info("Task %s activation completed", name);
+      DEBUG("%s: task activation completed", name);
    }
 
 
@@ -486,7 +559,7 @@ namespace pearlrt {
          // system start. Therefore this attribute is not set
          // statically in the constructor.
          if (pthread_attr_setschedpolicy(&attr, SCHED_RR) != 0) {
-            Log::error("task %s: error setting SCHED_RR scheduler", name);
+            Log::error("%s: error setting SCHED_RR scheduler", name);
             throw theInternalTaskSignal;
          }
 
@@ -495,7 +568,7 @@ namespace pearlrt {
          param.sched_priority = schedPrioMax;
 
          if (pthread_attr_setschedparam(&attr, &param) != 0) {
-            Log::error("task %s: error on setting priority", name);
+            Log::error("%s: error on setting priority", name);
             throw theInternalTaskSignal;
          }
       }
@@ -503,7 +576,7 @@ namespace pearlrt {
       ret = pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
       if (ret != 0) {
-         Log::error("task %s: error on setting cancellation type", name);
+         Log::error("%s: error on setting cancellation type", name);
          throw theInternalTaskSignal;
       }
 
@@ -512,7 +585,7 @@ namespace pearlrt {
       if (pthread_create(&threadPid, &attr,
                          (void * (*)(void*))entryPoint,
                          (void*)this) != 0) {
-         Log::error("task %s: could not create thread (%s))",
+         Log::error("%s: could not create thread (%s))",
                     name, strerror(errno));
          throw theInternalTaskSignal;
       }
@@ -540,7 +613,7 @@ namespace pearlrt {
       }
 
 
-      if (taskState == SEMA_BLOCKED) {
+      if (taskState == BLOCKED) {
          switch (blockParams.why.reason) {
          case REQUEST:
             sprintf(line[i], "REQUESTing %d SEMAs:",
@@ -602,57 +675,88 @@ namespace pearlrt {
 
    void Task::terminateFromOtherTask() {
       char dummy;
-      bool wait4completion = true;
       asyncTerminateRequested = true;
-      Log::debug("   task %s: terminateFromOtherTask: state=%d  "
-                 "asyncTerminateRequested := true", name, taskState);
+
       switchToSchedPrioMax();
 
+      DEBUG("%s: terminateFromOtherTask: state=%d  "
+                 "asyncTerminateRequested = %d",
+                 name, taskState, asyncTerminateRequested);
+
       switch (taskState) {
-      case IO_BLOCKED:
-         // perform a pthread_cancel/pthread_join
-         // to enshure immediate termination, which is possible here
-         /*
-         Log::debug("   task %s: terminateFromOtherTask: do pthread_cancel",
-                             name);
-         Log::debug("   threadPid=%x", (int)threadPid);
-         ret = pthread_cancel(threadPid);
 
-         if (ret != 0) {
-             Log::error("   task %s: error in pthread_cancel (%s)",
-                         name, strerror(ret));
-             throw theInternalTaskSignal;
-         }
-         dation->suspend();
+      case BLOCKED:
+         terminateWaiters ++;   // increment before treatment from target task
 
-         Log::debug("task %s: terminateFromOtherTask: do pthread_join", name);
-         Log::debug("   threadPid=%x", (int)threadPid);
-         ret = pthread_join(threadPid, NULL);
+         // remove the task from the wait queue and release block
+         switch (blockParams.why.reason) {
+         case  REQUEST:
+            taskState = Task::TERMINATED;
+            Semaphore::removeFromWaitQueue(this);
+            blockParams.semaBlock.release();
+            DEBUG("task %s: terminateFromOtherTask: block/queue updated",
+                       name);
+            mutexUnlock();
+            break;
 
-         if (ret != 0) {
-            Log::error("task %s: error in pthread_join (%s)",
-                         name, strerror(ret));
+         case ENTER:
+         case RESERVE:
+            taskState = Task::TERMINATED;
+            Bolt::removeFromWaitQueue(this);
+            blockParams.semaBlock.release();
+            DEBUG("task %s: terminateFromOtherTask: block/queue updated",
+                       name);
+            mutexUnlock();
+            break;
+
+         case IOWAITQUEUE:
+            Log::error("terminateFromOtherTask: IOWAITQUEUE start");
+
+            blockParams.why.u.ioWaitQueue.dation->getWaitQueue()->remove(this);
+            blockParams.semaBlock.release();
+            DEBUG("task %s: terminateFromOtherTask: IOWAITQUEUE",
+                       name);
+            mutexUnlock();
+            break;
+
+         case IO:
+            // send the SIG_CANCEL_IO signal to the i/O performing thread
+            // this will produce an EINTR error of the system call
+            // The driver will detect this and perform the selfTermination
+            //
+            // there is a duration between setting the taskState to IO+BLOCKED
+            // and entering the system call
+            // if the termination request occurs in this period, we do not
+            // get the EINTR error code
+            //
+            // Thus, we set the asyncTerminationRequested flag
+            // and send the signal repetitive until the flag is reset by the
+            // device driver
+
+            DEBUG("%s:   terminateFromOtherTask: in IO_BLOCKED",
+                       name);
+
+            asyncTerminateRequested = true;
+
+            while (asyncTerminateRequested) {
+               DEBUG("send SIG_CANCEL_IO to %d", (int)threadPid);
+               pthread_kill(threadPid, SIG_CANCEL_IO);
+               usleep(100000);
+            }
+
+            break;
+
+         default:
+            Log::error("%s: untreated block reason in terminateFromOtherTask",
+                       name);
             throw theInternalTaskSignal;
          }
-         Log::debug("task %s: terminateFromOtherTask: do pthread_join done",
-                     name);
-         */
-         // unlocking of the dations lock is not guaranteed
-         wait4completion = false;
-         mutexUnlock();
-         break;
 
-      case SEMA_BLOCKED:
-         terminateWaiters ++;   // increment before treatment from target task
-         Semaphore::removeFromWaitQueue(this);
-         taskState = Task::RUNNING;
-         blockParams.semaBlock.release();
-         mutexUnlock();
          break;
 
       case SUSPENDED:
          terminateWaiters ++;   // increment before treatment from target task
-         Log::info("   task %s: terminateRemote suspended task", name);
+         DEBUG("%s:   terminateRemote suspended task", name);
          dummy = 't';
          mutexUnlock();
          write(pipeResume[1], &dummy, 1);
@@ -660,54 +764,86 @@ namespace pearlrt {
 
       case RUNNING:
          terminateWaiters ++;   // increment before treatment from target task
-
-         //resetTimer(&schedContinueData, true);
-//         if (schedContinueData.taskTimer->cancel()) {
-//            throw theInternalTaskSignal;
-//         }
+         DEBUG("%s:  terminateRemote running task", name);
 
          mutexUnlock();
          break;
 
-      case SEMA_SUSPENDED_BLOCKED:
+      case SUSPENDED_BLOCKED:
          terminateWaiters ++;   // increment before treatment from target task
-         Log::debug("   task %s: terminateRemote susp_blocked task", name);
+         DEBUG("%s:  terminateRemote susp_blocked task", name);
+
+         // unblock the task - the task is not in any wait queue
+         switch (blockParams.why.reason) {
+         case  REQUEST:
+            blockParams.semaBlock.release();
+            break;
+
+         case ENTER:
+         case RESERVE:
+            blockParams.semaBlock.release();
+            break;
+
+         case IO:
+
+            // send the SIG_CANCEL_IO signal to the i/O performing thread
+            // this will produce an EINTR error of the system call
+            // The driver will detect this and perform the selfTermination
+            //
+            // there is a duration between setting the taskState to IO+BLOCKED
+            // and entering the system call
+            // if the termination request occurs in this period, we do not
+            // get the EINTR error code
+            //
+            // Thus, we set the asyncTerminationRequested flag
+            // and send the signal repetitive until the flag is reset by the
+            // device driver
+
+            asyncTerminateRequested = true;
+
+            while (asyncTerminateRequested) {
+               pthread_kill(threadPid, SIG_CANCEL_IO);
+               usleep(1000);
+            }
+
+            break;
+
+         default:
+            Log::error("%s: untreated block reason in terminateFromOtherTask",
+                       name);
+            throw theInternalTaskSignal;
+         }
+
          taskState = Task::RUNNING;
-         blockParams.semaBlock.release();  // unblock
-         mutexUnlock();
          break;
 
       default:
-         Log::error("   task %s: unhandled taskState (%d) at TERMINATE",
+         Log::error("%s:   unhandled taskState (%d) at TERMINATE",
                     name, taskState);
          mutexUnlock();
          throw theInternalTaskSignal;
       }
 
 
-      if (wait4completion) {
-         Log::debug("   task %s: terminateRemote: wait for completion", name);
-         terminateDone.request();
-         Log::info("   task %s: terminateRemote: done", name);
-      } else {
-         Log::info("   task %s: terminateRemote: pending", name);
-      }
+      DEBUG("%s:   terminateRemote: "
+                 "wait for completion state=%d", name, taskState);
+      terminateDone.request();
+
+      DEBUG("%s:   terminateRemote: done state=%d", name, taskState);
 
    }
 
    void Task::terminateMySelf() {
-      internalTerminateMySelf(false);
+      internalTerminateMySelf();
    }
 
-   void Task::internalTerminateMySelf(bool releaseJobDone) {
-      Log::debug("   task %s: terminateMySelf: start", name);
-      taskState = Task::TERMINATED;
-      threadPid = 0; // invalidate threadid
+   void Task::internalTerminateMySelf() {
+      DEBUG("%s:   terminateMySelf: start state=%d",
+                 name, taskState);
 
-      Log::info("   task %s: terminates", name);
 
       if (suspendWaiters > 0) {
-         Log::warn("   Task %s terminates while %d other tasks wait"
+         Log::info("%s:   terminates while %d other tasks wait"
                    " to suspend it",
                    name, suspendWaiters);
       }
@@ -718,9 +854,9 @@ namespace pearlrt {
       }
 
       if (terminateWaiters > 0) {
-         Log::warn("   Task %s terminates while %d other tasks wait"
-                   " to terminate it",
-                   name, terminateWaiters);
+         DEBUG("%s:   terminates while %d other tasks wait"
+                    " to terminate it",
+                    name, terminateWaiters);
       }
 
       while (terminateWaiters > 0) {
@@ -730,23 +866,22 @@ namespace pearlrt {
 
       if (schedActivateOverrun) {
          // missed one scheduled activation --> do it immediatelly now
-         Log::debug("   Task %s terminates with missed scheduled"
+         DEBUG("%s:   terminates with missed scheduled"
                     " activate pending", name);
          schedActivateOverrun = false;
          directActivate(schedActivateData.prio);
-         mutexUnlock();
       } else {
          /* still pending ? */
-         //if (schedActivateData.counts == 0 &&
          if (schedActivateData.taskTimer->isActive() == false &&
                schedActivateData.whenRegistered == false) {
-            mutexUnlock();
             TaskMonitor::Instance().decPendingTasks();
-         } else {
-            mutexUnlock();
          }
       }
 
+      taskState = Task::TERMINATED;
+      threadPid = 0; // invalidate thread id
+      DEBUG("%s: terminates", name);
+      mutexUnlock();
       pthread_exit(0);
    }
 
@@ -755,7 +890,7 @@ namespace pearlrt {
 
       taskState = Task::SUSPENDED;
 
-      Log::debug("task %s: resume: going to suspended", name);
+      DEBUG("%s: resume: going to suspended", name);
       mutexUnlock();
       read(pipeResume[0], &dummy, 1);
       mutexLock();
@@ -763,11 +898,11 @@ namespace pearlrt {
       // the continue handler keeps the mutex locked after sending
       // the data --> unlocking of the mutex must be done at the
       // end of treatment here
-      Log::debug("task %s: resume: received continue (%c)", name, dummy);
+      DEBUG("%s: resume: received continue (%c)", name, dummy);
 
       switch (dummy) {
       case 't' :
-         internalTerminateMySelf(true);
+         internalTerminateMySelf();
          break;
 
       case 'c' :
@@ -782,7 +917,7 @@ namespace pearlrt {
          break;
 
       default:
-         Log::error("task %s: resume: received unknown continue (%c)",
+         Log::error("%s: resume: received unknown continuation data (%c)",
                     name, dummy);
          break;
       }
@@ -809,4 +944,47 @@ namespace pearlrt {
       return entryPoint;
    }
 
+   Task* Task::currentTask(void) {
+      return mySelf;
+   }
+
+   void Task::enableCancelIOSignalHandler() {
+      struct sigaction sa = {{0}};
+      sa.sa_handler = &eintrSignalHandler;
+      sigemptyset(&sa.sa_mask);
+      sa.sa_flags = 0;
+
+      if (sigaction(SIG_CANCEL_IO, & sa, NULL) != 0) {
+         Log::error("%s: could not register SIG_CANCEL_IO", name);
+      }
+   }
+
+
+   void Task::treatCancelIO(void) {
+      DEBUG("%s: treatCancelIO", name);
+
+      // we do not need to lock the global task lock, since this
+      // was already done where the signal was raises in suspendFromOtherTask
+      // or terminateFromOtherTask.
+
+      if (asyncTerminateRequested) {
+         asyncTerminateRequested = false;
+         DEBUG("%s: terminate during system IO device", name);
+         mutexUnlock();
+         throw theTerminateRequestSignal;
+      }
+
+      if (asyncSuspendRequested) {
+         asyncSuspendRequested = false;
+
+         // reactivate the signal processing in system calls
+         enableCancelIOSignalHandler();  // reactivate the signal processing
+
+         DEBUG("%s: Task::treatIOCancelIO: suspending ...", name);
+         internalSuspendMySelf();
+         DEBUG("%s: Task::treatIOCancelIO: continued", name);
+         mutexUnlock();
+      }
+
+   }
 }

@@ -35,6 +35,7 @@
 \author R. Mueller
 */
 #include <pthread.h>
+#include <errno.h>
 #include <string.h>  // strerror
 #include <semaphore.h>
 
@@ -50,12 +51,20 @@ namespace pearlrt {
 
    CSema::~CSema() {
       int ret;
-      ret = sem_destroy(&sem);
+      bool again = false;
 
-      if (ret != 0) {
-         Log::error("CSema destroy (%s): errno=%d %s",
+      do {
+         ret = sem_destroy(&sem);
+
+         if (ret != 0) {
+            if (errno == EINTR) {
+                again = true;
+            } else {
+               Log::error("CSema destroy (%s): errno=%d %s",
                     id, ret, strerror(ret));
-      }
+           }
+         }
+      } while (again == true);
    }
 
    void CSema::name(const char * s) {
@@ -68,7 +77,7 @@ namespace pearlrt {
 
       if (ret != 0) {
          Log::error("CSema request (%s): errno=%d %s",
-                    id, ret, strerror(ret));
+                    id, errno, strerror(errno));
       }
    }
 

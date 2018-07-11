@@ -147,7 +147,9 @@ This version does not support:
 \begin{itemize}
 \item STRUCT
 \item TYPE
-\item TFU  
+\item TFU 
+\item SIGNAL treatment
+\item REF CHAR
 \item ...??? fehlt noch was
 \item Semantic analysis for good diagnostic error messages.
      In case of problems error messages from the c++ compiler may appear. 
@@ -161,6 +163,11 @@ This version does not support:
    normal users with
    the usual completely fair scheduler. The priority values are 
    not regarded in the scheduling.
+   It is possible by system configuation to allow normal users
+   the access to real-time priorities. Just modify the file
+   \verb|/etc/security/limits.conf| by a line like\newline
+   \verb|*  - rtprio 99|\newline
+   This allows all users to use real-time priorities.
 \item If the application is run with root priviledges, the socalled 
   round-robin scheduler is used. This provides only 100 priority values.
   For administrative reasons, some priorities are clipped by the OpenPEARL
@@ -200,6 +207,7 @@ source code.
 The excecution speed depends on many hardware parameters. 
 The following data are taken from my development machine, which consists of
 ......
+
 \begin{tabular}{|p{5cm}|l|r|}
 \hline
 Parameter & Test Program & Result \\
@@ -233,7 +241,7 @@ The OpenPEARL signals are organized in some groups.
 \import{../../common/}{signallist.tex}
 
 
-\chapter{How-To Add new System Elements}
+\chapter{How-To: Add new System Elements}
 \import{../../common/platformManual/}{addDeviceCommon.tex}
 \import{./}{addDevice.tex}
 \import{../../common/platformManual/}{addInterruptCommon.tex}

@@ -100,5 +100,3 @@ namespace pearlrt {
 }
 
 #endif
-
-

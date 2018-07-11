@@ -40,6 +40,7 @@
 #include "Dation.h"
 #include "Log.h"
 #include "Signals.h"
+#include "Task.h"
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -102,23 +103,46 @@ namespace pearlrt {
 
    void StdIn::dationRead(void * destination, size_t size) {
       int ret;
+      int errnoCopy;
+
       mutex.lock();
       clearerr(fp);
       errno = 0;
-      ret = fread(destination, size, 1, fp);
 
-      if (ret < 1) {
-         if (feof(fp)) {
-            Log::error("StdIn: error across EOF");
-            mutex.unlock();
-            throw theDationEOFSignal;
-         }
+      // perform the read() inside a try-catch block
+      // treatCancelIO will throw an expection if the current
+      // task should become terminated. In the catch block,
+      // the mutex becomes released
+      try {
+         do {
+            ret = fread(destination, size, 1, fp);
 
-         Log::error("StdIn: error at read (%s)", strerror(errno));
+            // safe the value of errno for further evaluation
+            errnoCopy = errno;
+
+            if (ret < 1) {
+               if (errnoCopy == EINTR) {
+                  Task::currentTask()->treatCancelIO();
+//                  Log::debug("StdIn: treatCancelIO finished");
+               } else if (feof(fp)) {
+                  Log::error("StdIn: error read across EOF");
+                  mutex.unlock();
+                  throw theDationEOFSignal;
+               } else {
+                  // other read errors
+                  Log::error("StdIn: error at read (%s)", 
+                             strerror(errnoCopy));
+                  mutex.unlock();
+                  throw theReadingFailedSignal;
+               }
+            }
+         } while (ret <= 0);
+      } catch (TerminateRequestSignal s) {
          mutex.unlock();
-         throw theReadingFailedSignal;
+         throw;
       }
-
+//       Log::debug("StdIn::dationRead normal end size=%d data=%x",
+//          size, *(char*)destination);
       mutex.unlock();
    }
 

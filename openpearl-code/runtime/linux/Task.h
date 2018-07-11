@@ -102,7 +102,7 @@ namespace pearlrt {
       */
       typedef void (*TaskEntry)(Task *);
 
-      void scheduleCallback(bool isLocked = false);
+      void scheduleCallback(void);
    private:
 
       void (*entryPoint)(Task * me); //< C function containing the code
@@ -172,13 +172,6 @@ namespace pearlrt {
       */
       void resume2();
 
-      /**
-      set the suspend request bit
-
-      The bit is polled in scheduleCallback and treated there
-      */
-      void setSuspendRequested();
-
    private:
       /**
       suspend the task
@@ -187,9 +180,8 @@ namespace pearlrt {
 
       /**
       suspend the task
-      \param releaseJobDone indicates, where the semaphore should be released
       */
-      void internalSuspendMySelf(bool releaseJobDone);
+      void internalSuspendMySelf();
 
 
       /**
@@ -199,9 +191,8 @@ namespace pearlrt {
 
       /**
       internal terminate the own thread
-      \param releaseJobDone indicates, where the semaphore should be released
       */
-      void internalTerminateMySelf(bool releaseJobDone);
+      void internalTerminateMySelf();
 
       /**
       terminate the thread of this object as an action from another task
@@ -392,6 +383,34 @@ namespace pearlrt {
         \returns number of information lines
       */
       int detailedTaskState(char * lines[3]);
+
+      /**
+      deliver pointer to current task object
+
+      This feature is solved via a static  task local data element
+      named 'mySelf' in Task.cc
+
+      \returns the pointer of task object which calling any
+           other method
+      */
+      static Task* currentTask(void);
+
+      /**
+      the suspend and terminate while doing an io statement is solved
+      via a signal mechanism. This causes the linux kernel to abort
+      the system call with EINTR.
+      The device driver calls this method to do all necessary operations
+      for suspend/terminate.
+      Thbis methods return on continuation, dies with the thread
+      on termination.
+
+      The task mutex is locked whne the signal is emitted.
+      The mutex becomes unlocked in case of trmination.
+      */
+      void treatCancelIO(void);
+
+   private:
+      void enableCancelIOSignalHandler(void);
    };
 
 }
@@ -485,5 +504,3 @@ static void pearlrt::x ## _body (pearlrt::Task * me)
 #endif
 
 #endif
-
-

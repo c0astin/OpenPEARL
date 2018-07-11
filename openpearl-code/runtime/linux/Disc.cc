@@ -40,6 +40,7 @@
 #include "Dation.h"
 #include "Log.h"
 #include "Signals.h"
+#include "Task.h"
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -391,34 +392,79 @@ namespace pearlrt {
 
    void Disc::DiscFile::dationRead(void * destination, size_t size) {
       int ret;
+      int errnoCopy;
+
       clearerr(fp);
       fseek(fp, 0, SEEK_CUR);   // allow read after write
       errno = 0;
-      ret = fread(destination, size, 1, fp);
 
-      if (ret < 1) {
-         if (feof(fp)) {
-            Log::error("Disc: error across EOF");
-            throw theDationEOFSignal;
-         }
+      // perform the read() inside a try-catch block
+      // treatCancelIO will throw an expection if the current
+      // task should become terminated.
+      try {
+         do {
+            ret = fread(destination, size, 1, fp);
+            // safe the value of errno for further evaluation
+            errnoCopy = errno;
 
-         Log::error("Disc: error at read (%s)", strerror(errno));
-         throw theReadingFailedSignal;
+            if (ret < 1) {
+               if (errnoCopy == EINTR) {
+                  Task::currentTask()->treatCancelIO();
+                  Log::info("DiscFile: treatCancelIO finished");
+               } else if (feof(fp)) {
+                  Log::error("DiscFile: error read across EOF");
+                  throw theDationEOFSignal;
+               } else {
+                  // other read errors
+                  Log::error("DiscFile: error at read (%s)",
+                       strerror(errnoCopy));
+                  throw theReadingFailedSignal;
+               }
+            }
+         } while (ret <= 0);
+      } catch (TerminateRequestSignal s) {
+         throw;
       }
+
    }
 
 
    void Disc::DiscFile::dationWrite(void * source, size_t size) {
       int ret;
+      int errnoCopy;
+
+      clearerr(fp);
       fseek(fp, 0, SEEK_CUR);      // allow write after read
       errno = 0;
-      ret = fwrite(source, size, 1, fp);
 
-      if (ret < 1) {
-         Log::error("Disc: error at write (%s)", strerror(errno));
-         throw theWritingFailedSignal;
+      // perform the read() inside a try-catch block
+      // treatCancelIO will throw an expection if the current
+      // task should become terminated.
+      try {
+         do {
+            ret = fwrite(source, size, 1, fp);
+            errnoCopy = errno;
+
+            if (ret < 1) {
+               if (errnoCopy == EINTR) {
+                  Task::currentTask()->treatCancelIO();
+                  Log::info("Pipe: treatCancelIO finished");
+               } else if (feof(fp)) {
+                  Log::error("Pipe: error read across EOF");
+                  throw theDationEOFSignal;
+               } else {
+                  // other read errors
+                  Log::error("Pipe: error at read (%s)", strerror(errnoCopy));
+                  throw theReadingFailedSignal;
+               }
+            }
+         } while (ret <= 0);
+      } catch (TerminateRequestSignal s) {
+         throw;
       }
+
    }
+
 
    void Disc::DiscFile::dationSeek(const Fixed<31>& p, const int dationParam) {
       if (dationParam & Dation::DIRECT) {

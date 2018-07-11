@@ -1,13 +1,14 @@
 \section{System Overview}
 
-PEARL tasks on a PEARL application are mapped the pthreads in a single
+PEARL tasks of a PEARL application are mapped the pthreads in a single
 process.  The thread scheduling is done by the system scheduler of the 
 linux system. If the apllication runs with normal user priviledges, the
 completly fair scheduler (CFS) is used and PEARL priorities are not
-regarded at task scheduling. In run with root priviledges, the 
+regarded at task scheduling. If run with root priviledges, the 
 \texttt{SCHED\_FIFO} scheduler is used, which provides the 
 PEARL-specific preemtive priority scheduling with the lack of some 
-priority levels.
+priority levels. This can alsoachieved by setting the allowed
+real-time priorities in \verb|/etc/security/limits.conf|.
 
 The timing functions are taken from the native itimer system.
 The clock resolution is defined by the settings in the linux system.
@@ -38,12 +39,12 @@ The system startup contains several steps:
    the same behavior as PEARL requires. Tasks with the same priority
    are run with round-robin, tasks with differnt priority are run with
    preemptive priority scheduling.
-   This operation needs root-priviledges. If the PEARL application is 
-   started with normal user priviledges, this is detected and the 
+   This operation needs root-priviledges. If \verb|SCHED_FIFO|
+   is not available (e.q. run as normal user), this is detected and the 
    Linux {\em completely fair scheduler} is used.
 \item[setup of run time limit] to 180 seconds. This is a fail safe
    operation to end the application automatically in case to run away
-   high priority task. Pending on the Linux keernel configuration,
+   high priority task. Pending on the Linux kernel configuration,
    it would be possible that no shell input like CTRL-C is will
    be done, when the complete CPU-power is consumed by a free running thread.
 \item[start of a thread] to do all timer operations. This thread 

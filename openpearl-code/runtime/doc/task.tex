@@ -1,53 +1,97 @@
 \chapter{Task}
 \label{task}
-A task implementation is very specific for each plattform.
+A task implementation is very specific for each platform.
 
 The language report indicates the task state diagram from 
 fig. \ref{taskStatesPEARL90}. There is not difference made between {\em running} and {\em runable}. The switching between these two states is done by the
 operating system automatically --- not visible to the PEARL application.
 
 \begin{figure}[bpht]
-\includegraphics[width=14cm]{taskStatesPEARL90.jpg}
+\includegraphics[width=14cm]{taskStatesPEARL.jpg}
 \caption{Task statediagram derived from the language report.
-The transition \texttt{XXX\_RESUME} and \texttt{XXX\_OCCURED} denote 
-the possiblities AFTER/AT/WHEN and the corresponding events.}
+The bolt operations are omitted, sice they are identical to the
+semaphore operations,
 \label{taskStatesPEARL90}
 \end{figure}
 
-To trigger the events in the state diagram suitable methods in the task 
-objects are provided. 
 
 RTOS-UH used a different model, where termination while an active i/o statement
 is delayed until the next end-of-record. 
-This behavior is reasonable and is applied for termination and
-suspending a task. The new state diagram is shown in 
+This behavior is reasonable and may be applied for termination and
+suspending a task. 
+
+OpenPEARL uses an implementation which is more close to the language report.
+All tasking statements which are executed be the task itself are executed 
+obviously synchronous. Tasking statements concerning other tasks are a little 
+bit more difficult, because the runtime system uses internally semaphore
+ and mutex
+variables to avoid race conditions. During such a critical region,
+no task termination must occur. So the  {\em remote suspend request} and 
+{\em remote termination request} just set a flag and wait for the fulfilling
+ of the 
+tasking statement from the adressed task. Each task has synchronisation points,
+which are
+\begin{itemize}
+\item  after each source statement and
+\item  in each synchronisation statement and 
+\item in each i/o operation on the system device.
+\end{itemize}
+
+The platform specific implementation must deal with this situation and
+provide a mechanisme to suspend and terminate itself.
+
+During i/o-operation it is a little bit more complicated. OpenPEARL
+recommends like stated in the language report that suspend and terminate
+effect the task state immediatelly. Thus the platform specific implementation
+must inform the system device driver to stop the i/o operation.
+The system device driver must invoke a platform dependend method
+\verb|treatCancelIo| which will throw ether an exception
+(\verb|TerminateRequestSignal|) in case of a termination request
+ or just suspends itself.
+The TerminateRequestSignal is caught and rethrown at each block which 
+locks internal mutexes or semaphores. These variables are unlocked in
+the exception handler and the exception is rethrown up to the upmost i/o-API
+function.
+
+The new state diagram is shown in 
 fig. \ref{taskStatesOpenPEARL}.
 The transitions from the  states {\em terminatePending} and 
-{\em suspendPending}  are triggered from the i/o-system when a end-of-record
-({\em SKIP}) is encountered or the i/o-statement becomes completed.
+{\em suspendPending}  are triggered from the synchrinisation points.
 
 \begin{figure}[bpht]
 \includegraphics[width=14cm]{taskStatesOpenPEARL.jpg}
 \caption{Task statediagram in OpenPEARL.
-The transition \texttt{XXX\_RESUME} and \texttt{XXX\_OCCURED} denote 
-the possiblities AFTER/AT/WHEN and the corresponding events.}
+The states suspendPending and terminatePending were introduced.}
 \label{taskStatesOpenPEARL}
 \end{figure}
+To trigger the events in the state diagram suitable methods in the task 
+objects are provided. 
+
+The blocked state is treated differently depending of the block reason, which
+is ether:
+\begin{description}
+\item[REQUEST, ENTER or RESERVE], which means that the task is waiting for 
+   the synchronisation variable
+\item[IO], which means that the task is currently doing an i/o-operation
+   on an user dation
+\item[IOWaitQueue], which means that the task is waiting in a priority based
+   queue to start ist i/o-operation
+\end{description}
 
 Several classes support the tasking operations:
 \begin{description}
 \item[class Interrupt] provides the semantics of the PEARL language interrupts
 \item[class Semaphore] provides PEARL semaphore semantics with simultanous
    locking on semaphore arrays.
-\item[class TaskTimerCommon] provides an interface for the plattform
+\item[class TaskTimerCommon] provides an interface for the platform
    specific class \verb|TaskTimer|. 
 \item[class TaskCommon] provides most of the error checking depending on
-   the task state and tasking operation, as well as plattform independent
+   the task state and tasking operation, as well as platform independent
    parts of the tasking operations. Theses operations delegate the concrete
-   plattform specific operation to the plattform specific implementation
+   platform specific operation to the platform specific implementation
    in the class \verb|Task|. The api methods in TaskCommon perform some
     parameter checks and look the mutex for all tasks before delegating 
-    the job to the plattform specific implementation. 
+    the job to the platform specific implementation. 
     The mutex must be unlocked by the target specific implementation 
     after completion of the job. Some operation may need to release and 
     rerequest the mutex in the target specific job --- e.g. suspend,
@@ -58,7 +102,7 @@ Several classes support the tasking operations:
 \item[class TaskMonitor] keeps track of all scheduled and active tasks and
    detects the end of the application.
 \item[class Control] allows setting the exit status for the application. 
-  The treatment of this status is plattform specific.
+  The treatment of this status is platform specific.
 \end{description}
 
 \section{Thread Safety}
@@ -70,11 +114,11 @@ The mutual exclusion is realized by  public class methods
 \item \verb|TaskCommon::mutexUnlock()|
 \end{itemize}
  
-This mutex is used in the task related classes, as well as in the interrupt
-and semphore related classes. 
+This mutex is used in the task related classes, as well as in the interrupt,
+semaphore, bolt and i/o related classes. 
 
 All tasking related methods, which check or modify  the tasks state lock the 
-mutex variable. Some parts of execution are delegated to plattform specific
+mutex variable. Some parts of execution are delegated to platform specific
 code. For details about unlocking the mutex please check the code
 documentation from doxygen.
 
@@ -96,8 +140,8 @@ documentation from doxygen.
     into \verb|Prio|- and \verb|BitString<1>|-type.
 \end{description}
 
-The implementation of task handling is plattform specific.
-Each plattform specific implementation need:
+The implementation of task handling is platform specific.
+Each platform specific implementation need:
 \begin{enumerate}
 \item  a class {\em Task} which is derived from {\em TaskCommon}.
 \item the suitable definition of the \verb|DCLTASK|- and \verb|SPCTASK|-macros
@@ -139,10 +183,10 @@ The tasks default priority is defined in the TASK-statement and passed
 as second parameter in the DCLTASK-macro.
 Scheduling calls may alter the tasks priority. This new priority is valid 
 until a new priority is assigne. At restart of the task the default 
-priority is used again. Each plattform must provide a class \verb|PrioMapper|.
+priority is used again. Each platform must provide a class \verb|PrioMapper|.
 
 If the concrete target system (like linux) does not support 255 
- application priorities, the method \verb|freomPearl()| must throw
+ application priorities, the method \verb|fromPearl()| must throw
 an exception.
 
 \section{Tasking Methods (class TaskCommon)}
@@ -153,7 +197,14 @@ Scheduled operations are possible in combination of ACTIVATE,
 CONTINUE and RESUME.
 The schedule (like AT, ALL, AFTER, WHEN,..) is passed to the 
 tasks methods. The way of treatment (by timers, specific timer threads, ... )
-is decided by the plattform code.
+is decided by the platform code.
+
+For details about the API of the provided methods, please check the doxygen 
+version of the documentation.
+Please run  the command \verb|make doc| in the base dirtectory of the
+desired platform.
+
+\if0
 The parameter {\em condition} of the methods for ACTIVATE, CONTINUE and RESUME
 codes bit by bit, which additional parameters are really used.
 The enumeration {\em TaskScheduling} defines the constants:
@@ -199,14 +250,14 @@ void activate(TaskCommon* me,
 \end{CppCode}
 
 This method delegates the concrete tasks activation to the method
-\verb|directActivate(...)|, which must be provided in the plattform specific
+\verb|directActivate(...)|, which must be provided in the platform specific
 part.
 
 \subsection{Task termination}
 The task termination may be called from the task self, or from another task.
-The task shall terminate immediatelly. In case an I/O-operation is in progress
-the task termination is delay until a suitable point is reached
-(e.g. end-of-record).
+The task shall terminate immediatelly.
+ In case an I/O-operation or running state
+the task termination is delay until a suitable point is reached.
 
 \begin{CppCode}
 virtual void terminate(TaskCommon* me) = 0;
@@ -214,7 +265,7 @@ virtual void terminate(TaskCommon* me) = 0;
 
 This method delegates the concrete tasks termination to the methods
 \verb|terminateMySelf(...)| and \verb|terminateFromOtherTask()|,
-which must be provided in the plattform specific part.
+which must be provided in the platform specific part.
 
 \subsection{Task Suspending}
 A task may suspend itself or suspend another task.
@@ -234,7 +285,7 @@ void suspend(TaskCommon* me);
 
 This method delegates the concrete tasks suspend operation to the methods
 \verb|suspendMySelf(...)| and \verb|suspendFromOtherTask()|,
-which must be provided in the plattform specific part.
+which must be provided in the platform specific part.
 
 \subsection{Task Continuation}
 A task may be continued if it is running or suspended.
@@ -258,7 +309,7 @@ void cont(TaskCommon* me,
 
 This method delegates the concrete tasks continuation to the methods
 \verb|continueSuspended(...)| and \verb|continueFromOtherTask()|,
-which must be provided in the plattform specific part.
+which must be provided in the platform specific part.
 
 \subsection{Task Delay}
 The execution of a task may be suspended for a while.
@@ -274,7 +325,7 @@ void resume( int condition = 0,
 \end{CppCode}
 This method delegates the concrete tasks continuation to the method
 \verb|resume2(...)|,
-which must be provided in the plattform specific part.
+which must be provided in the platform specific part.
 
 
 \subsection{Delete Task Schedules}
@@ -322,6 +373,7 @@ DCLTASK(T2, Prio(255), BitString<1>(1)) {
 }
 
 \end{CppCode}
+\fi
 
 \section{Error Tracing}
 The error handling of PEARL is done with SIGNALs.
@@ -331,9 +383,9 @@ hierarchy to catch several exceptions of one kind in one step.
 To provide a backtrace to the originating PEARL source line, the compiler 
 must add tracing functions.
 \begin{CppCode}
-Task::setSource(const char * fileName, int lineNumber);
+Task::setLocation(const char * fileName, int lineNumber);
 \end{CppCode}
-The method {\em setSource()} is supplied with the valiues from
+The method {\em setLocation()} is supplied with the values from
 the PEARL source file.
 
 \begin{CppCode}

@@ -40,6 +40,8 @@
 #include "Dation.h"
 #include "Log.h"
 #include "Signals.h"
+#include "Task.h"
+
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -409,40 +411,84 @@ namespace pearlrt {
 
    void Pipe::PipeFile::dationRead(void * destination, size_t size) {
       int ret;
-//   allow read after write does not apply at pipes; they are unidirectional
-//      clearerr(fp);
-//      fseek(fp, 0, SEEK_CUR);   // allow read after write
+      int errnoCopy;
+
+      clearerr(fp);
       errno = 0;
-      ret = fread(destination, size, 1, fp);
+//   allow read after write does not apply at pipes; they are unidirectional
+//      fseek(fp, 0, SEEK_CUR);   // allow read after write
 
-      if (ret < 1) {
-         if (feof(fp)) {
-            Log::error("Pipe: error across EOF");
-            throw theDationEOFSignal;
-         }
+      // perform the read() inside a try-catch block
+      // treatCancelIO will throw an expection if the current
+      // task should become terminated. In the catch block,
+      // the mutex becomes released
+      try {
+         do {
+            ret = fread(destination, size, 1, fp);
 
-         Log::error("Pipe: error at read (%s)", strerror(errno));
-         throw theReadingFailedSignal;
+            // safe the value of errno for further evaluation
+            errnoCopy = errno;
+
+            if (ret < 1) {
+               if (errnoCopy == EINTR) {
+                  Task::currentTask()->treatCancelIO();
+                  Log::info("Pipe: treatCancelIO finished");
+               } else if (feof(fp)) {
+                  Log::error("Pipe: error read across EOF");
+                  throw theDationEOFSignal;
+               } else {
+                  // other read errors
+                  Log::error("Pipe: error at read (%s)", strerror(errnoCopy));
+                  throw theReadingFailedSignal;
+               }
+            }
+         } while (ret <= 0);
+      } catch (TerminateRequestSignal s) {
+         throw;
       }
+
    }
 
-
    void Pipe::PipeFile::dationWrite(void * source, size_t size) {
+   
       int ret;
-      fseek(fp, 0, SEEK_CUR);      // allow write after read
+      int errnoCopy;
+
+      clearerr(fp);
       errno = 0;
-      ret = fwrite(source, size, 1, fp);
+      fseek(fp, 0, SEEK_CUR);      // allow write after read
 
-      if (ret < 1) {
-         Log::error("Pipe: error at write (%s)", strerror(errno));
-         throw theWritingFailedSignal;
+      // perform the write() inside a try-catch block
+      // treatCancelIO will throw an expection if the current
+      // task should become terminated.
+      try {
+         do {
+            ret = fwrite(source, size, 1, fp);
+
+            // safe the value of errno for further evaluation
+            errnoCopy = errno;
+
+            if (ret < 1) {
+               if (errnoCopy == EINTR) {
+                  Task::currentTask()->treatCancelIO();
+                  Log::info("Pipe: treatCancelIO finished");
+               } else {
+                  // other read errors
+                  Log::error("Pipe: error at write (%s)",
+                       strerror(errnoCopy));
+                  throw theWritingFailedSignal;
+               }
+            }
+
+            ret = fflush(fp);
+            if (ret != 0) {
+                Log::error("Pipe: error at fflush (%s)", strerror(errno));
+            }
+         } while (ret <= 0);
+      } catch (TerminateRequestSignal s) {
+         throw;
       }
 
-      ret = fflush(fp);
-
-      if (ret != 0) {
-         Log::error("Pipe: error at fflush (%s)", strerror(errno));
-      }
    }
 
    void Pipe::PipeFile::dationUnGetChar(const char x) {

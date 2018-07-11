@@ -40,13 +40,13 @@
 #include "Dation.h"
 #include "Log.h"
 #include "Signals.h"
+#include "Task.h"
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
 namespace pearlrt {
-//   int StdError::declaredDations = 0;
 
    StdError::StdError() :
       SystemDationNB() {
@@ -107,19 +107,46 @@ namespace pearlrt {
 
 
    void StdError::dationWrite(void * source, size_t size) {
-      int ret;
-      mutex.lock();
-      errno = 0;
-      ret = fwrite(source, size, 1, fp);
 
-      if (ret < 1) {
-         Log::error("StdError: error at write (%s)", strerror(errno));
+      int ret;
+      int errnoCopy;
+
+      mutex.lock();
+      clearerr(fp);
+      errno = 0;
+
+      // perform the read() inside a try-catch block
+      // treatCancelIO will throw an expection if the current
+      // task should become terminated. In the catch block,
+      // the mutex becomes released
+      try {
+         do {
+            ret = fwrite(source, size, 1, fp);
+
+            // safe the value of errno for further evaluation
+            errnoCopy = errno;
+
+            if (ret < 1) {
+               if (errnoCopy == EINTR) {
+                  Task::currentTask()->treatCancelIO();
+                  Log::info("StdError: treatCancelIO finished");
+               } else {
+                  // other write errors
+                  Log::error("StdError: error at write (%s)",
+                       strerror(errnoCopy));
+                  mutex.unlock();
+                  throw theWritingFailedSignal;
+               }
+            }
+         } while (ret <= 0);
+      } catch (TerminateRequestSignal s) {
          mutex.unlock();
-         throw theWritingFailedSignal;
+         throw;
       }
 
       mutex.unlock();
    }
+
 
    void StdError::dationUnGetChar(const char x) {
       Log::error("StdError: does not support unget");

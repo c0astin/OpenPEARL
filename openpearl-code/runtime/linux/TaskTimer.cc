@@ -1,6 +1,6 @@
 /*
  [The "BSD license"]
- Copyright (c) 2015 Rainer Mueller
+ Copyright (c) 2015-2018 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@
 #include <errno.h>
 #include <sys/signalfd.h>  // signalfd
 
+#include "SignalMapper.h"
 #include "Signals.h"
 #include "UnixSignal.h"
 #include "TaskTimer.h"
@@ -187,7 +188,7 @@ namespace pearlrt {
             Log::debug(
                "task %s: scheduled after=%.3f s all %.3f s %d times",
                task->getName(),
-               its.it_value.tv_sec + its.it_value.tv_nsec / 1e9 ,
+               its.it_value.tv_sec + its.it_value.tv_nsec / 1e9,
                its.it_interval.tv_sec + its.it_interval.tv_nsec / 1e9,
                counts);
          } else {
@@ -195,7 +196,7 @@ namespace pearlrt {
             Log::debug(
                "task %s: scheduled  after=%.3f s all %.3f s eternally",
                task->getName(),
-               its.it_value.tv_sec + its.it_value.tv_nsec / 1e9 ,
+               its.it_value.tv_sec + its.it_value.tv_nsec / 1e9,
                its.it_interval.tv_sec + its.it_interval.tv_nsec / 1e9);
          }
       }
@@ -273,25 +274,27 @@ namespace pearlrt {
    static void* signalThreadCode(void*);
    void TaskTimer::init(int p) {
 
-
-      if (SIGRTMAX >= SIGRTMIN + 4) {
+      // verify that enough real-time signals are available
+      // this must be done at run time, since SIGRTMIN and SIGRTMAX
+      // are defined as function calls of the c-library
+      if (SIGRTMAX >= SIG_LAST_MAPPED) {
          Log::info("System reports: SIGRTMIN SIGRTMAX range is [%d,%d]: ok",
                    SIGRTMIN, SIGRTMAX);
       } else {
          Log::info("System reports: SIGRTMIN SIGRTMAX range is [%d,%d]: "
                    ": not enough RT-Signals free",
                    SIGRTMIN, SIGRTMAX);
-         fprintf(stderr, "not enough RT-Signal free");
+         Log::error("not enough RT-Signal free --> startup aborted");
          exit(1);
       }
 
       // block signals, which are treated by signalThread
       sigset_t set;
       sigemptyset(&set);
-      sigaddset(&set, SIGRTMIN + 1);  // activate
-      sigaddset(&set, SIGRTMIN + 2);  // resume
-      sigaddset(&set, SIGRTMIN + 3);  // continue
-      sigaddset(&set, SIGRTMIN);      // suspend
+      sigaddset(&set, SIG_ACTIVATE);  // activate
+      sigaddset(&set, SIG_RESUME);  // resume
+      sigaddset(&set, SIG_CONTINUE);  // continue
+      sigaddset(&set, SIG_SUSPEND);      // suspend
 
       if (sigprocmask(SIG_BLOCK, &set, NULL) < 0) {
          Log::error("timerTask: error blocking signals");
@@ -368,12 +371,12 @@ namespace pearlrt {
 
       sigset_t set;
       sigemptyset(&set);
-      sigaddset(&set, SIGRTMIN + 1);
-      sigaddset(&set, SIGRTMIN + 2);
-      sigaddset(&set, SIGRTMIN + 3);
+      sigaddset(&set, SIG_ACTIVATE);
+      sigaddset(&set, SIG_RESUME);
+      sigaddset(&set, SIG_CONTINUE);
       UnixSignal::updateSigMask(&set);
 
-      //sigaddset(&set, SIGRTMIN);
+      //sigaddset(&set, SIG_SUSPEND);
       if (sigprocmask(SIG_BLOCK, &set, NULL) < 0) {
          Log::error("timerTask: error blocking signals");
          throw theInternalTaskSignal;
@@ -403,14 +406,14 @@ namespace pearlrt {
 
          TaskTimer * t = (TaskTimer*)si.ssi_ptr;
 
-         if (si.ssi_signo == (uint32_t)SIGRTMIN + 1) {  // activate
+         if (si.ssi_signo == (uint32_t)SIG_ACTIVATE) {  // activate
             t->update();
-         } else if (si.ssi_signo == (uint32_t)SIGRTMIN + 3) {   // continue
+         } else if (si.ssi_signo == (uint32_t)SIG_CONTINUE) {   // continue
             t->update();
          } else if (UnixSignal::treat(si.ssi_signo)) {
             // do nothing here - action is in treat()-method
          } else {
-            Log::error("signalThread: got unexpeceted signal %d",
+            Log::error("signalThread: got unexpected signal %d",
                        si.ssi_signo);
          }
       }

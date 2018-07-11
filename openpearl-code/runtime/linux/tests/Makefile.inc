@@ -50,8 +50,8 @@ targets +=  \
 	tests/susp_cont_test \
 	tests/sched_demo \
 	tests/signalTest\
-	tests/DationTests \
-	tests/DationSuspendTerminateTests 
+	tests/DationTests
+#	tests/DationSuspendTerminateTests 
 
 $(warning $(targets))
 $(warning $(CXX_COMMON_TEST_PROGS))
@@ -129,7 +129,7 @@ tests/DataTypeTests: $(GTEST_OBJS) $(PLIB) $(LIBGTEST)
 tests/DationTests: $(GTEST_DATION_OBJS) $(PLIB) $(LIBGTEST)
 	$(LINK)
 
-tests/sematerminate: ../common/tests/sematerminate.o $(PLIB)
+tests/terminateTests: ../common/tests/terminateTests.o $(PLIB)
 	$(LINK)
 
 
