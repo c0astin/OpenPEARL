@@ -31,12 +31,13 @@
 #define PRIORITYQUEUE_INCLUDED
 
 namespace pearlrt {
-   class PriorityQueue ;
+   class TaskCommon ;
 }
 
-#include "TaskCommon.h"
+//#include "TaskCommon.h"
 
 namespace pearlrt {
+
    /**
    realize a queue of tasks which is ordered according the tasks
    priorities
@@ -70,8 +71,11 @@ namespace pearlrt {
       If the given task is not in the queue - nothing happens.
 
       \param x pointer to the task to be added into the queue
+
+      \returns true, if the task was in the queue<br>
+               false, if the task was not in the queue
       */
-      void remove(TaskCommon * x);
+      bool remove(TaskCommon * x);
 
       /**
       retrieve the first element of the queue

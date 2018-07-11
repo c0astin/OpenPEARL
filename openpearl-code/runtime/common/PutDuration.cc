@@ -45,42 +45,30 @@ using namespace std;
 
 namespace pearlrt {
 
-   /* add a decimal value with max 4 digits at the location s */
-   /* leading zeros are suppressed and not printed            */
-   static void i4sink(int x, Sink& sink) {
+   /* add a decimal value with max 6 digits to the output sink */
+   /* leading zeros are suppressed and not printed             */
+   static void i6sink(int x, Sink& sink) {
       bool suppressZero = true;
       char ch;
+      int i;
+      int base = 100000;  // start with 100 thousend digit
 
-      ch  = (x / 1000 + '0');
-      if (suppressZero && ch == '0') {
-         // ch = ' ';
-      } else {
-         suppressZero = false;
-         sink.putChar(ch);
-      }
-      ch %= 1000;
-
-      ch  = (x / 100 + '0');
-      if (suppressZero && ch == '0') {
-         //ch = ' ';
-      } else {
-         suppressZero = false;
-         sink.putChar(ch);
-      }
-      ch %= 100;
-
-      ch  = (x / 10 + '0');
-      if (suppressZero && ch == '0') {
-         //ch = ' ';
-      } else {
-         suppressZero = false;
-         sink.putChar(ch);
+      for (i=0; i<5; i++) {
+         ch  = (x / base + '0');
+         if (suppressZero && ch == '0') {
+            // ch = ' ';
+         } else {
+            suppressZero = false;
+            sink.putChar(ch);
+         }
+         x %= base;
+         base /= 10;
       }
 
       sink.putChar(x % 10 + '0');
    }
 
-   /* add a two digit decimal value at the location s */
+   /* add a decimal value with max 2 digits to the output sink */
    static void i2sink(int x, bool suppressZero, Sink& sink) {
       char ch = (x / 10 + '0');
 
@@ -123,12 +111,13 @@ namespace pearlrt {
         isNegativ = 1;
         dur = - _dur;
       } 
-
+#if 0
       if (dur.get().get() >= (Fixed63::Fixed63_t)(24 * 3600 * 1000000LL)  ||
             dur.get().get() < (Fixed63::Fixed63_t)0) {
+Log::error("??? %d", dur.get().get());
          throw  theDurationValueSignal;
       }
-
+#endif
       sec = dur.getSec();
       us = dur.getUsec();
 
@@ -164,8 +153,10 @@ namespace pearlrt {
           digitsNeeded += 16;   // "xx_HRS_xx_MIN_xx"
         } else if (hours < 1000) {
            digitsNeeded += 17;   // "xxx_HRS_xx_MIN_xx"
+        } else if (hours < 10000) {
+           digitsNeeded += 18;   // "xxxx_HRS_xx_MIN_xx"
         } else {
-          digitsNeeded += 18;   // "xxxx_HRS_xx_MIN_xx" sufficient for 100 days
+          digitsNeeded += 19;   // "xxxxx_HRS_xx_MIN_xx" sufficient for 100 days
         }
       } else if (showMinutes) {
         if (min < 10) {
@@ -201,7 +192,7 @@ namespace pearlrt {
  
       leadingSpace = true;
       if (showHours) {
-         i4sink(hours, sink);
+         i6sink(hours, sink);
          leadingSpace = false;
          s2sink(" HRS ", sink);
       } 

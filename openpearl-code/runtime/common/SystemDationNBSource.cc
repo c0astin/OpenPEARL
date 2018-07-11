@@ -42,11 +42,11 @@ namespace pearlrt {
 
    char SystemDationNBSource::realGetChar(void) {
       char c;
-
+printf("SystemDationNBSource: realGetChar\n");
       try {
          src->dationRead(&c, 1);
       } catch (Signal & e) {
-         printf("SystemDationNBSource: caught signal \n");
+         printf("SystemDationNBSource: caught signal %d\n", e.whichRST());
          throw theNoMoreCharactersSignal;
       }
 

@@ -48,11 +48,15 @@ namespace pearlrt {
       try {
          c = realGetChar();
       } catch (Signal & e) {
-         // all dation error 
+         // catch all errors 
          if (e.whichRST() == theDationTFURecordSignal.whichRST()) {
             throw;
          }
-//       printf("map signal %s to NoMoreCharactersSignal\n", e.which());
+         if (e.whichRST() == theTerminateRequestSignal.whichRST()) {
+            throw;
+         }
+       printf("map signal %s (%d) to NoMoreCharactersSignal\n", e.which(),
+   		   e.whichRST());
          throw theNoMoreCharactersSignal;
       }
 

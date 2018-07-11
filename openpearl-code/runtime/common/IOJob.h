@@ -378,9 +378,17 @@ namespace pearlrt {
       For READ and WRITE, this element contains the number of bytes
       to transfer.
       */
-      union { size_t *numberOfElements;
-              size_t * start;} param1;
-      union { size_t * end;} param2;
+      union { 
+         /** pointer to the number of data elements */
+         size_t *numberOfElements;
+         /** pointer to the first element in the array to be read */
+         size_t * start;
+      } param1;  ///< start of array or slice
+
+      union {
+          /** the end value for loops */
+          size_t * end;
+      } param2;  ///< end of array or slice
 
    };
 

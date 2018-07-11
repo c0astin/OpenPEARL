@@ -102,7 +102,7 @@ namespace pearlrt {
       TaskCommon::mutexLock();
       Log::info("request from task %s for %d semaphores", me->getName(),
                 nbrOfSemas);
-      me->scheduleCallback(true);
+
       wouldBlock = check(&(bd.u.sema));
 
       if (! wouldBlock) {
@@ -117,8 +117,10 @@ namespace pearlrt {
          waiters.insert(me);
          // critical region ends in block()
          me->block(&bd);
+         me->scheduleCallback();
       }
    }
+
    void Semaphore::release(TaskCommon* me,
                            int nbrOfSemas,
                            Semaphore** semas) {
@@ -224,7 +226,8 @@ namespace pearlrt {
    }
 
    void Semaphore::updateWaitQueue(TaskCommon * t) {
-      waiters.remove(t);
-      waiters.insert(t);
+      if (waiters.remove(t)) {
+         waiters.insert(t);
+      }
    }
 }

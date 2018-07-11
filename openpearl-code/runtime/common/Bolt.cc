@@ -50,7 +50,7 @@ namespace pearlrt {
 
    Bolt::Bolt(const char * n) {
       name = n;
-      Log::debug("Bolt %s created", n);
+      Log::debug("%s: Bolt created", n);
       nbrOfEnterOperations = 0;
    }
 
@@ -93,7 +93,7 @@ namespace pearlrt {
             wouldBlock = 1;
          }
 
-         Log::debug("   check::bolt: %s is %d nbrOfEnterOperations=%d",
+         Log::debug("%s:   check bolt: state is %d; nbrOfEnterOperations=%d",
                     bd->bolts[i]->getName(), (int)bd->bolts[i]->getState(),
                     (int)bd->bolts[i]->getNbrOfEnterOperations());
       }
@@ -149,14 +149,13 @@ namespace pearlrt {
       TaskCommon::mutexLock();
 
       if (operation == ENTER) {
-         Log::info("ENTER from task %s for %d bolts", me->getName(),
+         Log::info("%s: ENTER for %d bolts", me->getName(),
                    nbrOfBolts);
       } else {
-         Log::info("RESERVE from task %s for %d bolts", me->getName(),
+         Log::info("%s: RESERVE for %d bolts", me->getName(),
                    nbrOfBolts);
       }
 
-      me->scheduleCallback(true);
       wouldBlock = check(operation, &(bd.u.bolt));
 
       if (! wouldBlock) {
@@ -171,10 +170,11 @@ namespace pearlrt {
          // critical region end
          TaskCommon::mutexUnlock();
       } else {
-         Log::info("   task: %s going to blocked", me->getName());
+         Log::debug("%s: going to blocked on BOLT", me->getName());
          waiters.insert(me);
-         // critival region ends in block()
+         // critical region ends in block()
          me->block(&bd);
+         me->scheduleCallback();  // check for suspend/terminate
       }
    }
 
@@ -204,16 +204,16 @@ namespace pearlrt {
       TaskCommon::mutexLock();
 
       if (oldState == ENTERED) {
-         Log::debug("LEAVE from task %s for %d bolts", me->getName(),
+         Log::debug("%s: LEAVE for %d bolts", me->getName(),
                     nbrOfBolts);
       } else {
-         Log::debug("FREE from task %s for %d bolts", me->getName(),
+         Log::debug("%s: FREE for %d bolts", me->getName(),
                     nbrOfBolts);
       }
 
       for (i = 0; i < nbrOfBolts; i++) {
          if (bolts[i]->getState() != oldState) {
-            Log::error("   bolt: %s has wrong state (%d)",
+            Log::error("%s:   bolt has wrong state (%d)",
                        bolts[i]->getName(),
                        bolts[i]->getState());
             TaskCommon::mutexUnlock();
@@ -231,7 +231,7 @@ namespace pearlrt {
          } else {
             // RESERVED
             bolts[i]->setState(FREE);
-            Log::debug("   bolt: %s is now free",
+            Log::debug("%s: BOLT is now free",
                        bolts[i]->getName());
          }
       }
@@ -251,7 +251,7 @@ namespace pearlrt {
 
                waiters.remove(t);
                t->unblock();
-               Log::info("   unblocking: %s", t->getName());
+               Log::debug("%s: unblocking from RESERVE", t->getName());
             } else {
                reserveIsWaiting = 1;
             }
@@ -273,7 +273,7 @@ namespace pearlrt {
 
                   waiters.remove(t);
                   t->unblock();
-                  Log::info("   unblocking: %s", t->getName());
+                  Log::info("%s: unblocking from ENTER", t->getName());
                }
             }
          }
@@ -296,12 +296,15 @@ namespace pearlrt {
 
       if (!wouldBlock)  {
          for (int i = 0; i < bd.u.bolt.nbolts; i++) {
-            bd.u.bolt.bolts[i]->setState(bd.reason);
+            if (bd.reason == ENTER) {
+               bd.u.bolt.bolts[i]->setState(ENTERED);
+            } else {
+               bd.u.bolt.bolts[i]->setState(RESERVED);
+            }
          }
 
-         waiters.remove(t);
          t->unblock();
-         Log::debug("   unblocking: %s", t->getName());
+         Log::debug("%s: unblocking from BOLT", t->getName());
       }  else {
          waiters.insert(t);
       }
@@ -309,7 +312,9 @@ namespace pearlrt {
    }
 
    void Bolt::updateWaitQueue(TaskCommon * t) {
-      waiters.remove(t);
-      waiters.insert(t);
+      if(waiters.remove(t)) {
+         // reinsert the task only if it was in the queue
+         waiters.insert(t);
+      }
    }
 }

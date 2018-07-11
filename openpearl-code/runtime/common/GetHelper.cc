@@ -422,12 +422,15 @@ endSampling:
          } else {
             return -2;
          }
-      } 
-     
+      } catch (TerminateRequestSignal s) {
+         throw;
+      }
 
       if ((delimiter & DoubleSpace) && retVal == ' ') {
          try {
             retVal1 = source->getChar();
+         } catch (TerminateRequestSignal s) {
+            throw;
          } catch (NoMoreCharactersSignal & s) {
             if (delimiter & EndOfFile) {
                return -1;
@@ -657,6 +660,8 @@ endSampling:
             *f = zero;
             discardRemaining();
             throw theFixedRangeSignal;
+         } catch (TerminateRequestSignal s) {
+            throw;
          }
       }
 

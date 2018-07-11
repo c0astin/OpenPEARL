@@ -49,6 +49,7 @@ namespace pearlrt {
 #include "RefChar.h"
 #include "Dation.h"
 #include "Log.h"
+#include "PriorityQueue.h"
 
 namespace pearlrt {
    /**
@@ -77,21 +78,12 @@ namespace pearlrt {
      the call of beginSequence().
    */
    class UserDation : public Dation, public Rst {
-   protected:
-      /**
-      this mutex enhures that only one PEARL io statement is
-      executed at the same time on the same user dation.
-
-      There may be several user dations created upon the same system
-      dation. This must be treated inside the system dation.
-      */
-      Mutex mutex;
 
    protected:
       /** pointer to the task, which performs an i/o-operation on this
           dation
       */
-      TaskCommon* currentTask;
+//      TaskCommon* currentTask;
 
       /** current transfer direction.
           This is eather Dation::IN or Dation::OUT
@@ -101,6 +93,23 @@ namespace pearlrt {
       /** the system dation which performs the io processing
       */
       SystemDation * systemDation;
+      /**
+      queue of waiting tasks for operations on this user dation
+
+      New jobs are added to the wait queue, if the user dation is busy.
+      At the end of a job, the next (best priority) task will be taken
+      from the waitQueue
+      */
+      PriorityQueue waitQueue;
+
+      /**
+      flag if this user dation has an operation in progress
+
+      This value ist true, if an operation is in progress. The next
+      jobs will be added in the waitQueue. At the end of a job, the next
+      (best priority) task will be taken from the waitQueue
+      */
+      bool isBusy;
 
    public:
       /**
@@ -233,6 +242,18 @@ namespace pearlrt {
 
    public:
       /**
+      restart the i/o operation after suspenion from wait queue
+
+      \param me pointer to the task which performs the i/o.
+                    May be NULL for testing purpose. Then no suspend and
+                    terminate is done during the i/o-operation
+      \param dir indicates the transer direction.
+                 Allowed values are: Dation::IN and Dation::OUT
+      */
+      void restart(TaskCommon * me,
+                         Dation::DationParams dir);
+
+      /**
       Aquired the mutex to enshure atomic operation on the dation.
 
       This method may throw an exception in case of problems with the mutex
@@ -247,30 +268,27 @@ namespace pearlrt {
                  Allowed values are: Dation::IN and Dation::OUT
       */
       void beginSequence(TaskCommon * me,
-                         Dation::DationParams dir = Dation::OUT);
+                         Dation::DationParams dir);
 
       /**
       Free the mutex to mark the end of the atomic operation on the dation.
 
       This method may throw an exception in case of problems with the mutex
       operations.
-      */
-      void endSequence();
 
-   public:
-      /**
-       suspend
-
-       suspend doing the io freeing the mutex
+      \param me pointer to the task which performs the i/o.
+                    May be NULL for testing purpose. Then no suspend and
+                    terminate is done during the i/o-operation
       */
-      void suspend();
+      void endSequence(TaskCommon * me);
 
       /**
-       cont
+      get access to the wait queue
 
-       continue doing the io requesting the mutex
+      \return pointer to the PriorityQueue of waiting tasks for this UserDation
       */
-      void cont();
+      PriorityQueue* getWaitQueue();
+
 
    protected:
       /**

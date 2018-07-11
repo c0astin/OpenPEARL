@@ -590,10 +590,6 @@ namespace pearlrt {
 
       toAdv(zero, n, -dim->getColumn());
 
-      if (currentTask) {
-//         Log::info("UserDationNB::toSkip: scheduleCallback() invocation\n");
-         currentTask->scheduleCallback(false);
-      }
    }
 
    void UserDationNB::toPage(const Fixed<31> n) {
@@ -726,9 +722,6 @@ namespace pearlrt {
 
       fromAdv(zero, n, -dim->getColumn());
 
-      if (currentTask) {
-         currentTask->scheduleCallback(false);
-      }
    }
 
    void UserDationNB::fromPage(const Fixed<31> n) {
@@ -969,21 +962,21 @@ namespace pearlrt {
             tfuBuffer.prepare();
          }
       }
-
+#if 0
       if (system->allowMultipleIORequests()) {
          // register current task in system dation
          TaskCommon::mutexLock(); // we need access to the global task lock
          bd.reason = IO;
-         bd.u.io.dation = (SystemDation*)this;
+         bd.u.io.dation = /* (SystemDation*) */ this;
          system->registerWaitingTask(me, currentDirection);
 
          // release the user dation lock, if multipl io is supported
-         mutex.unlock();
+         mutexUserDation.unlock();
 
          // aquired global task lock, since unblock expects unlocks this
          me->block(&bd);    // block releases the global task lock
       }
-
+#endif
    }
 
    void UserDationNB::endSequenceHook() {
@@ -1042,6 +1035,7 @@ namespace pearlrt {
          }
       }
 
+#if 0
       // if multiple IO-requests are allowed
       // the task unblocking is done by the system dation
       // there is no need to release the user dations mutex
@@ -1051,9 +1045,9 @@ namespace pearlrt {
          // this must not be done, when multiple I/O-operations
          // are allowed. In this case the concrete system dation
          // already released the mutex
-         mutex.unlock();
+         mutexUserDation.unlock();
       }
-
+#endif
    }
 
    int UserDationNB::toPositioningFormat(TaskCommon * me,

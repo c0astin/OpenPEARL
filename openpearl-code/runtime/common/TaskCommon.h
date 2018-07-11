@@ -38,21 +38,23 @@
 
 */
 
+#include "Dation.h"
 
 namespace pearlrt {
    class TaskCommon;
    class Semaphore;
    class Bolt;
-   class SystemDation;
+   class UserDation;
 
    /** reasons for blocking a task
    */
    enum BlockReason {
-      NOTBLOCKED,               ///< task is currently not blocked
-      REQUEST,                  ///< task is block due to REQUEST
-      ENTER,                    ///< task is block due to ENTER
-      RESERVE,                  ///< task is block due to RESERVE
-      IO                        ///< task is blocked due to IO
+      NOTBLOCKED,       ///< task is currently not blocked
+      REQUEST,          ///< task is block due to REQUEST
+      ENTER,            ///< task is block due to ENTER
+      RESERVE,          ///< task is block due to RESERVE
+      IO,               ///< task is blocked due to IO operation
+      IOWAITQUEUE       ///< task is blocked due IO operation of other task
    };
 
    /**
@@ -88,8 +90,16 @@ namespace pearlrt {
          blocking due to IO
          */
          struct BlockIO {
-            SystemDation* dation;  /// < pointer to the system dation
-         } io;         /// < \return the io data
+            UserDation* dation;  ///< pointer to the user dation
+         } io;         ///< \returns  the io data
+
+         /**
+         blocking due to IO on a busy userdation
+         */
+         struct BlockIOWaitQueue {
+            UserDation* dation;  ///< pointer to the user dation
+            Dation::DationParams direction;  ///<  the current io direction
+         } ioWaitQueue;         ///< \return the io data
       } u;		///< \returns the union containing all blocking requests
    };
 
@@ -106,7 +116,6 @@ namespace pearlrt {
 #include "TaskWhenLinks.h"
 #include "TaskTimerCommon.h"
 #include "BitString.h"
-//#include "SystemDation.h"
 
 namespace pearlrt {
    /**
@@ -175,16 +184,13 @@ namespace pearlrt {
    After continuation the i/o-operation continues at the suspended position.
    </ul>
 
-   \image html  taskStatesPEARL90.jpg
-   \image latex taskStatesPEARL90.eps
+   \image html  taskStatesOpenPEARL.jpg
+   \image latex taskStatesOpenPEARL.png
 
 
    */
    class TaskCommon : public TaskWhenLinks {
    protected:
-      /** pointer to dation object when doing I/O
-      */
-      UserDation * dation;
 
       /**
         tests for correct combination AT/ALL/..
@@ -235,13 +241,16 @@ namespace pearlrt {
       possible states of a thread
       */
       enum TaskState {
-         TERMINATED,            //< task is terminated
-         RUNNING,               //< task is running (runnable)
-         SUSPENDED,             //< task is suspended
-         SEMA_SUSPENDED_BLOCKED, //< task is suspended and (prev.) sema op.
-         SEMA_BLOCKED,          //< task is blocked due to sema request
-         IO_SUSPENDED_BLOCKED, //< task is suspended and (prev.) dation op.
-         IO_BLOCKED           //< task is blocked due to dation operation
+         /** 0: task is terminated  */
+         TERMINATED,      
+         /** 1: task is running (runnable) */
+         RUNNING,    
+         /** 2: task is suspended          */
+         SUSPENDED,  
+         /** 3: task is suspended and (prev.) sema,bolt or io op. */
+         SUSPENDED_BLOCKED,
+         /** 4: task is blocked due to sema, bolt or io request   */
+         BLOCKED 
       };
 
       /**
@@ -505,9 +514,8 @@ namespace pearlrt {
       In Linux-environment, it is not possible to terminate an asynchronously
       suspended thread.
 
-      \param isLocked is passed as true if the tasksMutex is currently locked
       */
-      virtual void scheduleCallback(bool isLocked = false);
+      virtual void scheduleCallback(void);
 
       /**
       set source location
@@ -582,7 +590,7 @@ namespace pearlrt {
       /**
          enter i/o operation
 
-         updates task state to IO_BLOCKED
+         updates task state to BLOCKED (IO)
 
          \param d pointer to the dation which performs the i/o
       */
@@ -745,7 +753,6 @@ namespace pearlrt {
       */
       virtual void continueFromOtherTask(int condition,
                                          Prio prio) = 0;
-
    };
 
 

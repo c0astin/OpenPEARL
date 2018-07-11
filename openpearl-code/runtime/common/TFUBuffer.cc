@@ -202,6 +202,9 @@ namespace pearlrt {
          try {
             system->dationRead(&c, 1);
          } catch (Signal & s)  {
+            if (s.whichRST() == theTerminateRequestSignal.whichRST()) {
+               throw;
+            }
             throw theNoMoreCharactersSignal;
          }
       }

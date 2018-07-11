@@ -39,7 +39,7 @@ CXX_COMMON_GTESTS := $(CXX_COMMON_TESTS)
 CXX_COMMON_TEST_PROGS := SampleBasicDationTests.cc \
 	sematest.cc \
 	bolttest.cc \
-	sematerminate.cc \
+	terminateTests.cc \
 	interruptTest.cc  \
 	log_test.cc \
 	RefTest.cc

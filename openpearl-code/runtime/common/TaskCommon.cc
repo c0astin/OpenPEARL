@@ -80,30 +80,33 @@ namespace pearlrt {
    static volatile int cccc = 1;
 
    void TaskCommon::mutexLock() {
-//      Log::debug("MUTEX TASK: LOCKING...cccc= %d", cccc);
-//printf("MUTEX TASK: LOCKING...cccc= %d\n", cccc);
+      mutexTasks.name("MutexTasks");
+//    Log::debug("MUTEX TASK: LOCKING...cccc= %d", cccc);
+//    printf("MUTEX TASK: LOCKING...cccc= %d\n", cccc);
+
       mutexTasks.request();
+
+      // decrement monitoring variable
       cccc --;
-//      Log::debug("MUTEX TASK: LOCKED   cccc= %d", cccc);
-//printf("MUTEX TASK: LOCKED   cccc= %d\n", cccc);
+
+//    Log::debug("MUTEX TASK: LOCKED   cccc= %d", cccc);
+//    printf("MUTEX TASK: LOCKED   cccc= %d\n", cccc);
    }
 
    void TaskCommon::mutexUnlock() {
-      cccc ++;
+//    printf("MUTEX TASK: UNLOCKING...cccc= %d\n", cccc);
 
-//printf("MUTEX TASK: UNLOCKING...cccc= %d\n", cccc);
+      // increment monitoring variable
+      cccc ++;
 
       if (cccc > 1) {
          Log::error("MUTEX TASK: ....UNLOCKED --> %d\n", cccc);
+      } else {
+//         Log::debug("MUTEX TASK: ....UNLOCKED --> %d\n", cccc);
       }
-
-      /*
-                else {
-                     Log::debug("MUTEX TASK: ....UNLOCKED --> %d\n", cccc);
-                  }
-      */
+     
       mutexTasks.release();
-//printf("MUTEX TASK: UNLOCKED...cccc= %d\n", cccc);
+//    printf("MUTEX TASK: UNLOCKED...cccc= %d\n", cccc);
    }
 
    char* TaskCommon::getName() {
@@ -119,10 +122,11 @@ namespace pearlrt {
    }
 
    TaskCommon::TaskState TaskCommon::getTaskState() {
+//    Log::info("%s : taskState = %d", name, taskState);
       return taskState;
    }
 
-   void TaskCommon::scheduleCallback(bool isLocked) {
+   void TaskCommon::scheduleCallback() {
    }
 
    void TaskCommon::setLocation(int l, const char *f) {
@@ -177,11 +181,12 @@ namespace pearlrt {
    }
 
    void TaskCommon::block(BlockData *w) {
-      taskState = SEMA_BLOCKED;
+      taskState = BLOCKED;
       blockParams.semaBlock.name(name);
       blockParams.why = *w;
       mutexUnlock();
       blockParams.semaBlock.request();
+      Log::debug("blocked task %s continued", name);
    }
 
    void TaskCommon::unblock() {
@@ -204,17 +209,18 @@ namespace pearlrt {
    }
 
    void TaskCommon::enterIO(UserDation * d) {
-      mutexLock();
-      taskState = IO_BLOCKED;
-      dation = d;
-      mutexUnlock();
+      // note: the task lock is already locked by the user dation 
+      taskState = BLOCKED;
+Log::info("%s: enterIO: taskstate=%d reason=%d", name, taskState, IO);
+      blockParams.why.reason = IO;
+      blockParams.why.u.io.dation = d;
    }
 
    void TaskCommon::leaveIO() {
-      mutexLock();
+//      mutexLock();
       taskState = RUNNING;
-      dation = NULL;
-      mutexUnlock();
+Log::info("%s: leaveIO: taskstate=%d", name, taskState);
+//      mutexUnlock();
    }
 
    bool TaskCommon::isMySelf(TaskCommon  *me) {
@@ -320,16 +326,16 @@ namespace pearlrt {
       } else {
          switch (taskState) {
          case TERMINATED:
-            Log::error("task %s: already terminated at TERMINATE", name);
+            Log::error("%s: already terminated at TERMINATE", name);
             mutexUnlock();
             throw theTaskTerminatedSignal;
 
          case RUNNING:
          case SUSPENDED:
-         case SEMA_SUSPENDED_BLOCKED:
-         case IO_SUSPENDED_BLOCKED:
-         case SEMA_BLOCKED:
-         case IO_BLOCKED:
+         case SUSPENDED_BLOCKED:
+//         case IO_SUSPENDED_BLOCKED:
+         case BLOCKED:
+//         case IO_BLOCKED:
 
             try {
                terminateFromOtherTask();
@@ -341,7 +347,7 @@ namespace pearlrt {
             break;
 
          default:
-            Log::error("   task %s terminate: unhandled taskState (%d)"
+            Log::error("%s: terminate: unhandled taskState (%d)"
                        " at TERMINATE",
                        name, taskState);
             mutexUnlock();
@@ -351,19 +357,18 @@ namespace pearlrt {
    }
 
    void TaskCommon::suspend(TaskCommon * me) {
-      Log::debug("task %s: suspend %s request: received", me->getName(), name);
+      Log::debug("%s: suspend for %s request: received", me->getName(), name);
       mutexLock();
 
       switch (taskState) {
       case TERMINATED:
-         Log::error("task %s: not running at SUSPEND", name);
+         Log::error("%s: not running at SUSPEND", name);
          mutexUnlock();
          throw theTaskTerminatedSignal;
 
       case SUSPENDED:
-      case IO_SUSPENDED_BLOCKED:
-      case SEMA_SUSPENDED_BLOCKED:
-         Log::error("task %s: already suspended at SUSPEND", name);
+      case SUSPENDED_BLOCKED:
+         Log::error("%s: already suspended at SUSPEND", name);
          mutexUnlock();
          throw theTaskSuspendedSignal;
 
@@ -388,22 +393,21 @@ namespace pearlrt {
          mutexUnlock();
          break;
 
-      case SEMA_BLOCKED:
-      case IO_BLOCKED:
-         Log::debug("   task %s: SUSPEND at BLOCKED ",
+      case BLOCKED:
+         Log::debug("%s: SUSPEND at BLOCKED ",
                     name);
          suspendFromOtherTask();
          mutexUnlock();
          break;
 
       default:
-         Log::error("   task %s: unhandled taskState (%d) at SUSPEND",
+         Log::error("%s: unhandled taskState (%d) at SUSPEND",
                     name, taskState);
          mutexUnlock();
          throw theInternalTaskSignal;
       }
 
-      Log::debug("   Task: suspend done");
+      Log::debug("%s:   Task: suspend done", name);
    }
 
 
@@ -481,7 +485,7 @@ namespace pearlrt {
 
          mutexUnlock();
       } else {
-         Log::debug("task %s: continue task %s with prio %d",
+         Log::debug("%s: continue task %s with prio %d",
                     me->getName(), name, p.x);
          mutexLock();
 
@@ -500,7 +504,7 @@ namespace pearlrt {
          continueFromOtherTask(condition, prio);
 
          mutexUnlock();
-         Log::debug("   task %s: continue task %s completed",
+         Log::debug("%s: continue task %s completed",
                     me->getName(), name);
       }
 
@@ -516,7 +520,7 @@ namespace pearlrt {
          return;
       }
 
-      Log::debug("task %s: resume cond=%d", name, condition);
+      Log::debug("%s: resume cond=%d", name, condition);
 
       if (condition != Task::AT && condition != Task::AFTER) {
          Log::error("task %s: resume nether AT nor AFTER", name);
@@ -552,7 +556,7 @@ namespace pearlrt {
       }
 
       // do the plattform specific part ... and release the mutexTasks lock
-      Log::debug("call resume2");
+      Log::debug("%s: call resume2", name);
       resume2();
       mutexUnlock();
    }
@@ -607,7 +611,7 @@ namespace pearlrt {
       //struct itimerspec its;
       bool schedActivateWasSet = false;
 
-      Log::debug("task %s: prevent %s start", me->getName(), name);
+      Log::debug("%s: prevent %s start", me->getName(), name);
       mutexLock();
 
       // check if number of pending must be reduced
@@ -658,7 +662,7 @@ namespace pearlrt {
       mutexLock();
 
       if (taskState == Task::TERMINATED) {
-         Log::debug("task %s: scheduled activate: starts", name);
+         Log::debug("%s: scheduled activate: starts", name);
 //         internalDirectActivate(schedActivateData.prio, false);
          directActivate(schedActivateData.prio);
 //         activateDone.request();
@@ -684,9 +688,9 @@ namespace pearlrt {
       mutexLock();
 
       if (taskState == Task::SUSPENDED ||
-            taskState == Task::SEMA_SUSPENDED_BLOCKED ||
+            taskState == Task::SUSPENDED_BLOCKED ||
             taskState == Task::RUNNING) {
-//         Log::debug("task %s: scheduled continue: timeout reached", name);
+         Log::debug("%s: scheduled continue: timeout reached", name);
 
          if (schedContinueData.prio.x != 0) {
             continueFromOtherTask(PRIO, Prio(schedContinueData.prio));
@@ -694,10 +698,10 @@ namespace pearlrt {
             continueFromOtherTask(0, Prio());
          }
 
-//         Log::debug("task %s: scheduled continue done", name);
+         Log::debug("%s: scheduled continue done", name);
 
       } else {
-         Log::warn("task %s: scheduled continue: skipped", name);
+         Log::warn("%s: scheduled continue: skipped", name);
       }
 
       mutexUnlock();
@@ -710,7 +714,7 @@ namespace pearlrt {
 
    // call with locked task lock
    void TaskCommon::triggeredContinue() {
-      Log::debug("task %s: triggeredContinue called", name);
+      Log::debug("%s: triggeredContinue called", name);
       schedContinueData.whenRegistered = false;  // automatically unregistered
 
       if (schedContinueData.taskTimer->isSet()) {
@@ -730,7 +734,7 @@ namespace pearlrt {
 
    // call with locked task lock
    void TaskCommon::triggeredActivate() {
-      Log::debug("task %s: triggeredActivate called", name);
+      Log::debug("%s: triggeredActivate called", name);
 
       if (schedActivateData.taskTimer->isSet()) {
          if (schedActivateData.taskTimer->start()) {
@@ -739,12 +743,12 @@ namespace pearlrt {
          }
       } else {
          if (taskState == Task::TERMINATED) {
-            Log::debug("task %s: scheduled activate (when): starts", name);
+            Log::debug("%s: scheduled activate (when): starts", name);
             directActivate(schedActivateData.prio);
          } else {
             if (schedActivateOverrun) {
                // warn that this activation is skipped
-               Log::warn("task %s: scheduled activate: overrun", name);
+               Log::warn("%s: scheduled activate: overrun", name);
             }
 
             schedActivateOverrun = true;

@@ -229,14 +229,14 @@ namespace pearlrt {
                         *dataList->entry[dataElement].param1.numberOfElements);
          }
 
-         endSequence();
+         endSequence(me);
       } catch (Signal &s) {
          if (! updateRst(&s)) {
-            endSequence();
+            endSequence(me);
             throw;
          }
 
-         endSequence();
+         endSequence(me);
       }
    }
 
@@ -268,14 +268,14 @@ namespace pearlrt {
                        *dataList->entry[dataElement].param1.numberOfElements);
          }
 
-         endSequence();
+         endSequence(me);
       } catch (Signal &s) {
          if (! updateRst(&s)) {
-            endSequence();
+            endSequence(me);
             throw;
          }
 
-         endSequence();
+         endSequence(me);
       }
    }
 }

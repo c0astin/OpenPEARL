@@ -46,6 +46,7 @@ namespace pearlrt {
          c = sourceObj->getNextChar();
 //         readPtr ++;
       } catch (CharacterIndexOutOfRangeSignal & e) {
+printf("RefCharSource throw NoMoreCharactersSignal\n");
          throw theNoMoreCharactersSignal;
       } 
 

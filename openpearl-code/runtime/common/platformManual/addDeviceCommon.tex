@@ -1,4 +1,5 @@
-\section{Interface for User supplied Drivers for Basic Dations}
+\section{Common Interface for User supplied Drivers for Basic Dations
+for all Platforms}
 For new  system interfaces a C++ class must be supplied to 
 provide the system device.
 
@@ -63,7 +64,7 @@ The method should make shure that only an opened dation may be used.
 The methods may throw C++ exceptions, which are defines in the signal list.
 Existing signals should be reused as far as possible.
 
-\section{Interface for User supplied Drivers for Non Basic Dations}
+\section{Common Interface for User supplied Drivers for Non Basic Dations}
 For currently not supported system interfaces a C++ class must be supplied to 
 provide the system device.
 
@@ -143,7 +144,7 @@ until all data is transfered.
 The methods may throw C++ exceptions, which are defined in the signal list.
 Existing signals should be reused as far as possible.
 
-\section{Connection Provider}
+\section{Common Interface for Connection Providers}
 OpenPEARL allows the usage of connection of system elements  with other 
 system elements. These connections have a definite type which is defined
 by the connection provider.

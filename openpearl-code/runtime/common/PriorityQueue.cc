@@ -59,19 +59,21 @@ namespace pearlrt {
       }
    }
 
-   void PriorityQueue::remove(TaskCommon * x) {
+   bool PriorityQueue::remove(TaskCommon * x) {
       if (head == x) {
          // remove first element
          head = x->getNext();
          x->setNext(0);
+         return(true);  // task was in the queue
       } else {
          for (TaskCommon * i = head; i != 0; i = i->getNext()) {
             if (i->getNext() == x) {
                i->setNext(x->getNext());
                x->setNext(0);
-               break;   // abort loop
+               return(true);  // task was in the queue
             }
          }
+         return(false);  // task was not in the queue
       }
    }
 
