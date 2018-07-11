@@ -232,12 +232,15 @@ namespace pearlrt {
       cp = switchToThreadPrioMax();
 
       switch (taskState) {
-      case IO_BLOCKED:
+      case BLOCKED:
+         switch (blockParams.why.reason) {
+
+         case IO:
          // unlocking of the dations lock is not guaranteed
          Log::warn("terminate remote in i/o blocked not supported");
          break;
 
-      case SEMA_BLOCKED:
+         case REQUEST:
          // update the OpenPEARL internal list
          Semaphore::removeFromWaitQueue(this);
 
@@ -247,6 +250,7 @@ namespace pearlrt {
          // only in the linux environment. I leave this reminder to make
          // clear that this is no copy error
          break;
+      }
 
       case SUSPENDED:
          // no problem - just kill
@@ -255,6 +259,7 @@ namespace pearlrt {
       case RUNNING:
          break;
 
+#if 0
       case SEMA_SUSPENDED_BLOCKED:
          Log::debug("   task %s: terminateRemote susp_blocked task", name);
 
@@ -264,7 +269,7 @@ namespace pearlrt {
          // only in the linux environment. I leave this reminder to make
          // clear that this is no copy error
          break;
-
+#endif
       default:
          Log::error("   task %s: unhandled taskState (%d) at TERMINATE",
                     name, taskState);
@@ -331,12 +336,15 @@ namespace pearlrt {
       int cp; // current calling threads priority
 
       switch (taskState) {
-      case SEMA_BLOCKED:
-         taskState = SEMA_SUSPENDED_BLOCKED;
+      case BLOCKED:
+         switch (blockParams.why.reason) {
+
+         case REQUEST:
+         taskState = SUSPENDED;
          Semaphore::removeFromWaitQueue(this);
          break;
 
-      case IO_BLOCKED:
+         case IO:
          Log::debug("   task %s: set suspend request flag in IO_BLOCKED",
                     name);
 //         asyncSuspendRequested = true;
@@ -347,7 +355,7 @@ namespace pearlrt {
          // io-doing task reaches the suspending point
          // jobDone.request();
          break;
-
+      }
       case RUNNING:
          Log::debug("   task %s: suspend request in RUNNING mode", name);
 
@@ -375,15 +383,24 @@ namespace pearlrt {
       cp = switchToThreadPrioMax();
 
       switch (taskState) {
-      case SEMA_SUSPENDED_BLOCKED:
+      case BLOCKED:
+        switch (blockParams.why.reason) {
+         case  IO:
+               break;
+         default: // treat other reasons missing
+		;
+        } 
+      case SUSPENDED_BLOCKED:
          // reinsert the task in the semaphores wait queue
-         taskState = SEMA_BLOCKED;
-         Semaphore::addToWaitQueue(this);
+         if (blockParams.why.reason == REQUEST) {
+             taskState = BLOCKED;
+             // setup block-reeason missing !!!!
+             Semaphore::addToWaitQueue(this);
+         }
+         break;
 
-      // no break here! setting the priority is included
-      //    in RUNNING/SUSPENDED
-      case SEMA_BLOCKED:
-
+#if 0
+   update later
          // adjust the tasks position in the semaphores wait queue
          // according the tasks (new) priority
          if (condition & PRIO) {
@@ -393,7 +410,7 @@ namespace pearlrt {
          }
 
          Semaphore::updateWaitQueue(this);
-
+#endif
       // no break here! setting the priority is included
       //    in RUNNING/SUSPENDED
       case RUNNING:
@@ -415,28 +432,11 @@ namespace pearlrt {
 
          break;
 
-      case IO_BLOCKED:
-         Log::debug("   continue in IO_SUSPENDED_BLOCKED missing");
-
-/////         if (asyncSuspendRequested) {
-/////            Log::debug("   asyncSuspendRequest resetted");
-/////            asyncSuspendRequested = false;
-/////         }
-/////
-/////         try {
-/////            if (condition & PRIO) {
-/////               Log::debug("   set new prio in IO_BLOCKED");
-/////               changeThreadPrio(prio.get());  // set new priority
-/////           }
-/////         } catch (Signal s) {
-/////            mutexUnlock(); /7 Tasks.release();
-/////            throw;
-/////         }
-         break;
-
-      case IO_SUSPENDED_BLOCKED:
+#if 0
+      case BLOCKED:
+// test for block-reason is missing!
          Log::debug("   continue in IO_SUSPENDED_BLOCKED detected");
-
+//
 //         try {
 //            if (condition & PRIO) {
 //               Log::debug("   set new prio in IO_BLOCKED");
@@ -451,7 +451,7 @@ namespace pearlrt {
 //         sendContinueCondition();
          continueSuspended();
          break;
-
+#endif
       case TERMINATED:
          Log::error("task %s: continue at terminated state", name);
          mutexUnlock();
