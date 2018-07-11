@@ -633,16 +633,18 @@ SOP=<sop>
 write_statement(dation,elements) ::= <<
 // WRITE STATEMENT BEGIN
 try {
-    <dation>.beginSequence(me);
+    <dation>.beginSequence(me,pearlrt::Dation::OUT);
     <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence();
-}
-catch(pearlrt::Signal &s) {
+    <dation>.endSequence(me);
+} catch(pearlrt::TerminateRequestSignal  &s) {
+     <dation>.endSequence(me);
+     me->terminate(me);
+} catch(pearlrt::Signal &s) {
     if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence();
+        <dation>.endSequence(me);
         throw;
     }
-    <dation>.endSequence();
+    <dation>.endSequence(me);
 }
 // WRITE STATEMENT END
 >>
@@ -650,16 +652,18 @@ catch(pearlrt::Signal &s) {
 read_statement(dation,elements) ::= <<
 // READ STATEMENT BEGIN
 try {
-    <dation>.beginSequence(me);
+    <dation>.beginSequence(me,pearlrt::Dation::IN);
     <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence();
-}
-catch(pearlrt::Signal &s) {
+    <dation>.endSequence(me);
+} catch(pearlrt::TerminateRequestSignal  &s) {
+     <dation>.endSequence(me);
+     me->terminate(me);
+} catch(pearlrt::Signal &s) {
     if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence();
+        <dation>.endSequence(me);
         throw;
     }
-    <dation>.endSequence();
+    <dation>.endSequence(me);
 }
 // READ STATEMENT END
 >>
@@ -737,16 +741,18 @@ read_write_sop_position(dation,id1,id2,id3) ::= <%
 take_statement(dation,elements) ::= <<
 // TAKE STATEMENT BEGIN
 try {
-    <dation>.beginSequence(me);
+    <dation>.beginSequence(me, pearlrt::Dation::IN);
     <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence();
-}
-catch(pearlrt::Signal &s) {
+    <dation>.endSequence(me);
+} catch(pearlrt::TerminateRequestSignal  &s) {
+     <dation>.endSequence(me);
+     me->terminate(me);
+} catch(pearlrt::Signal &s) {
     if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence();
+        <dation>.endSequence(me);
         throw;
     }
-    <dation>.endSequence();
+    <dation>.endSequence(me);
 }
 // TAKE STATEMENT END
 >>
@@ -758,16 +764,18 @@ take_id(dation,id) ::= <%
 send_statement(dation,elements) ::= <<
 // SEND STATEMENT BEGIN
 try {
-    <dation>.beginSequence(me);
+    <dation>.beginSequence(me, pearlrt::Dation::OUT);
     <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence();
-}
-catch(pearlrt::Signal &s) {
+    <dation>.endSequence(me);
+} catch(pearlrt::TerminateRequestSignal  &s) {
+     <dation>.endSequence(me);
+     me->terminate(me);
+} catch(pearlrt::Signal &s) {
     if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence();
+        <dation>.endSequence(me);
         throw;
     }
-    <dation>.endSequence();
+    <dation>.endSequence(me);
 }
 // SEND STATEMENT END
 >>
@@ -892,16 +900,18 @@ expressionList(expression) ::= <%
 put_statement(dation,elements) ::= <<
 // PUT STATEMENT BEGIN
 try {
-    <dation>.beginSequence(me);
+    <dation>.beginSequence(me, pearlrt::Dation::OUT);
     <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence();
-}
-catch(pearlrt::Signal &s) {
+    <dation>.endSequence(me);
+} catch(pearlrt::TerminateRequestSignal  &s) {
+     <dation>.endSequence(me);
+     me->terminate(me);
+} catch(pearlrt::Signal &s) {
     if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence();
+        <dation>.endSequence(me);
         throw;
     }
-    <dation>.endSequence();
+    <dation>.endSequence(me);
 }
 // PUT STATEMENT END
 >>
@@ -971,16 +981,18 @@ put_statement_bit_format_4(element,numberOfCharacters) ::= <%
 get_statement(dation,elements) ::= <<
 // GET STATEMENT BEGIN
 try {
-    <dation>.beginSequence(me);
+    <dation>.beginSequence(me, pearlrt::Dation::IN);
     <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence();
-}
-catch(pearlrt::Signal &s) {
+    <dation>.endSequence(me);
+} catch(pearlrt::TerminateRequestSignal  &s) {
+     <dation>.endSequence(me);
+     me->terminate(me);
+} catch(pearlrt::Signal &s) {
     if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence();
+        <dation>.endSequence(me);
         throw;
     }
-    <dation>.endSequence();
+    <dation>.endSequence(me);
 }
 // GET STATEMENT END
 >>
