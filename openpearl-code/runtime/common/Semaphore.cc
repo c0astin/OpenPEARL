@@ -193,9 +193,11 @@ namespace pearlrt {
       }
 
       TaskCommon::mutexUnlock();
+
       if (wouldBlock) {
-          result.x = 0;   // false
+         result.x = 0;   // false
       }
+
       //return !wouldBlock;
       return result;
    }

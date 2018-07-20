@@ -44,8 +44,8 @@ START: TASK PRIO 10 MAIN;
     OPEN so;
     OPEN si;
 
-!    CALL ioQueuePrioTest;
-!    CALL ioQueueTerminateTest;
+    CALL ioQueuePrioTest;
+    CALL ioQueueTerminateTest;
     CALL ioQueueSuspendTest1;
     CALL ioQueueSuspendTest2;
     CALL ioQueueSuspendTest3;
@@ -58,6 +58,7 @@ ioQueuePrioTest: PROC;
    ACTIVATE ioTask1;
    ACTIVATE ioTask2;
    ACTIVATE ioTask3;
+   PUT 'please enter 1 2 3 with a CR after each number' TO so BY A, SKIP;
    AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
    ! with priority scheduling: 
    !    ioTask1 blocked on input from si
@@ -77,10 +78,11 @@ ioQueuePrioTest: PROC;
    REQUEST done;
    REQUEST done;
    REQUEST done;
+   AFTER 0.2 SEC RESUME;  ! wait for other tasks to terminate
 END;
 
 ioQueueSuspendTest1: PROC;
-__cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest \");");
+__cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest1 \");");
    ACTIVATE ioTask1;
    ACTIVATE ioTask2;
    ACTIVATE ioTask3;
@@ -96,9 +98,7 @@ __cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest \");");
    !    after CONTINUE
    !    waitqueue: ioTask2, ioTask3
    ! expected output: 
-   !  ioTask1: got ...
-   !  ioTask2: got ...
-   !  ioTask3: got ...
+   !  nothing
    CONTINUE ioTask2 PRIO 10;
    SUSPEND ioTask2;
    AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
@@ -140,9 +140,7 @@ __cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest \");");
    !    after CONTINUE
    !    waitqueue: ioTask2, ioTask3
    ! expected output: 
-   !  ioTask1: got ...
-   !  ioTask2: got ...
-   !  ioTask3: got ...
+   !  nothing
    CONTINUE ioTask2 PRIO 10;
    SUSPEND ioTask2;
    AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
@@ -183,9 +181,7 @@ __cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest \");");
    !    after CONTINUE
    !    waitqueue: ioTask2, ioTask3
    ! expected output: 
-   !  ioTask1: got ...
-   !  ioTask2: got ...
-   !  ioTask3: got ...
+   !  nothing
    CONTINUE ioTask2 PRIO 10;
    SUSPEND ioTask2;
    AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
@@ -225,9 +221,7 @@ __cpp__("pearlrt::Log::info(\"****** ioQueueTerminateTest \");");
    !    after CONTINUE
    !    waitqueue: ioTask2, ioTask3
    ! expected output: 
-   !  ioTask1: got ...
-   !  ioTask2: got ...
-   !  ioTask3: got ...
+   !  nothing
    CONTINUE ioTask2 PRIO 10;
    TERMINATE ioTask2;
    TERMINATE ioTask3;
@@ -244,21 +238,21 @@ __cpp__("pearlrt::Log::info(\"****** ioQueueTerminateTest \");");
 
 END;
 
-ioTask1: TASK PRIO 100;
+ioTask1: TASK PRIO 50;
    DCL x CHAR;
    x := doInput(x);
    PUT 'ioTask1: got: ',x TO so BY A,A,SKIP;
    RELEASE done;
 END;
 
-ioTask2: TASK PRIO 80;
+ioTask2: TASK PRIO 45;
    DCL x CHAR;
    x := doInput(x);
    PUT 'ioTask2: got: ',x TO so BY A,A,SKIP;
    RELEASE done;
 END;
 
-ioTask3: TASK PRIO 60;
+ioTask3: TASK PRIO 40;
    DCL x CHAR;
    x := doInput(x);
    PUT 'ioTask3: got: ',x TO so BY A,A,SKIP;

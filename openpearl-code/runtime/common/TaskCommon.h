@@ -41,6 +41,11 @@
 #include "Dation.h"
 
 namespace pearlrt {
+   /**
+   \addtogroup tasking_common
+   @{
+   */
+
    class TaskCommon;
    class Semaphore;
    class Bolt;
@@ -236,6 +241,17 @@ namespace pearlrt {
       */
       bool schedActivateOverrun;
 
+      /**
+        we terminate a task which is a wait queue by
+        <ol>
+        <li> setting this flag
+        <li>remove the task from the wait queue
+        <li> unlock the task
+        <li> wait until the task detected the flag and terminates self
+        </ol>
+      */
+      volatile bool asyncTerminateRequested;
+
    public:
       /**
       possible states of a thread
@@ -287,6 +303,25 @@ namespace pearlrt {
          /** reason on blocking */
          BlockData why;
       } blockParams;   ///< control block to store the blocking request
+
+      /** Semaphor for completion of suspend call (inits by default to 0)   */
+      CSema suspendDone;
+
+      /** number of threads waiting for the suspend completion */
+      int suspendWaiters;
+
+      /** Semaphor for completion of continue call (inits by default to 0)   */
+      CSema continueDone;
+
+      /** number of threads waiting for the continue completion */
+      int continueWaiters;
+
+      /** Semaphor for completion of terminate call
+           (inits by default to 0)   */
+      CSema terminateDone;
+
+      /** number of threads waiting for the terminate completion */
+      int terminateWaiters;
 
       /**
       constructor of the class
@@ -439,7 +474,7 @@ namespace pearlrt {
          The method checkes the timer situation and cancels any
          scheduled continues for this task.
          The resume operation itself is delegated to the virtual method
-         resume2().
+         suspendMySelf().
 
          \param condition a bit map with the resume condition
              (see enum TaskScheduling)
@@ -453,14 +488,6 @@ namespace pearlrt {
                   Duration after = 0.0,
                   Interrupt* when = 0);
 
-      /**
-      do the resume operation
-
-      All checks are done in the plattform independent method resume().
-      This method is call with locked mutexTasks lock. This lock must NOT be
-      released.
-      */
-      virtual void resume2() = 0;
       /**
          remove all scheduled action for the task
 
@@ -671,7 +698,39 @@ namespace pearlrt {
       */
       void triggeredActivate();
 
+      /**
+      terminate the thread of this object as an action from another task
+      */
+      void terminateFromOtherTask();
 
+      /**
+        change the threads priority to the new PEARL prio
+
+        this affects the currentPrio as well as the 
+        existing threads priority
+
+        the method returns after setting the new priority
+
+        \param prio the new PEARL priority of the task
+      */
+      void changeThreadPrio(const Fixed<15>& prio);
+
+
+private:
+    /**
+       perform required operations to adjust priority, semaphore
+       wait queues, .... when the task got the continue condition
+
+       \param condition indicates if a new priority should be set
+       \param prio the new priority for the task
+
+       \note this method expects the tasks mutex to be locked.
+             It releases the tasks mutex only in case of throwing an
+             exception.
+      */
+      void continueFromOtherTask(int condition,
+                                 Prio prio);
+public:
       /* -----------------------------------------
       define virtual methods which must be suppiled by plattform
       specific task implementation
@@ -698,23 +757,48 @@ namespace pearlrt {
       */
       virtual void terminateMySelf() = 0;
 
+
+
       /**
       terminate the thread of this object as an action from another task
+      while doing an io-operation
 
-      The method must deal with all possible task state situations.
-      Only error checked (already terminated) ist done in superior
-      layers.
-
-      The method is called with locked matiexTasks lock and must
+      The method is called with locked mutexTasks lock and must
       release it at the end.
       */
-      virtual void terminateFromOtherTask() = 0;
+      virtual void terminateIO() = 0;
+
+      /**
+      terminate the thread of this object as an action from another task
+      while beeing suspended
+
+      The method is called with locked mutexTasks lock and must
+      release it at the end.
+      */
+      virtual void terminateSuspended() = 0;
+
+      /**
+      terminate the thread of this object as an action from another task
+      while beeing suspended during an io-operation
+
+      The method is called with locked mutexTasks lock and must
+      release it at the end.
+      */
+      virtual void terminateSuspendedIO() = 0;
+
+      /**
+      terminate the thread of this object as an action from another task
+      while running
+
+      The method is called with locked mutexTasks lock and must
+      release it at the end.
+      */
+      virtual void terminateRunning() = 0;
 
       /**
       suspend the task
 
-         this method must treat all relevant taskStates,
-         which are RUNNING and IO_BLOCKED(??).
+         this method must deal with the taskState RUNNING
 
          Only the error checking for not allowed suspend
          calls according to the current task state is
@@ -727,36 +811,64 @@ namespace pearlrt {
       virtual void suspendMySelf() = 0;
 
       /**
-         suspend a task
+         suspend a running task (from other task)
 
-         this method must treat all relevant taskStates.
-         Only the error checking for not allowed suspend
+         The error checking for not allowed suspend
          calls according to the current task state is
-         treated in superior levels
+         treated in TaskCommon.
 
          The method is call with locked mutexTasks and
          must NOT release the mutexTasks lock.
          It may temporarily release the lock and gather it again.
       */
-      virtual void suspendFromOtherTask() = 0;
+      virtual void suspendRunning() = 0;
 
       /**
-       perform required operations to adjust priority, semaphore
-       wait queues, .... when the task got the continue condition
+         suspend a task just doing IO on a system device (from other task)
 
-       \param condition indicates if a new priority should be set
+         The error checking for not allowed suspend
+         calls according to the current task state is
+         treated in TaskCommon.
+
+         The method is call with locked mutexTasks and
+         must NOT release the mutexTasks lock.
+         It may temporarily release the lock and gather it again.
+      */
+      virtual void suspendIO() = 0;
+
+      /**
+         continue a suspended task (from other task)
+
+         The error checking for not allowed suspend
+         calls according to the current task state is
+         treated in TaskCommon.
+
+         The task was suspended ether be suspendRunning or
+         suspendIO.
+
+         The method is call with locked mutexTasks and
+         must NOT release the mutexTasks lock.
+         It may temporarily release the lock and gather it again.
+      */
+      virtual void continueSuspended() = 0;
+
+      /**
+       perform required operations to adjust priority
+
        \param prio the new priority for the task
 
        \note this method expects the tasks mutex to be locked.
              It releases the tasks mutex only in case of throwing an
              exception.
       */
-      virtual void continueFromOtherTask(int condition,
-                                         Prio prio) = 0;
+      virtual void setPearlPrio(const Fixed<15>& prio) = 0;
    };
 
 
 }
 
+/**
+@}
+*/
 
 #endif

@@ -49,6 +49,6 @@ namespace pearlrt {
    }
 
    const char * MutexCommon::getName() {
-      return(id);
+      return (id);
    }
 }

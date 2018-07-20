@@ -1,6 +1,6 @@
 /*
- [The "BSD license"]
- Copyright (c) 2012-2013 Rainer Mueller
+ [A "BSD license"]
+ Copyright (c) 2012-2018 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -54,6 +54,10 @@
 #include "TaskTimer.h"
 
 namespace pearlrt {
+   /**
+   \addtogroup tasking_linux
+   @{
+   */
 
    /**
    \brief wrapper object to map PEARL tasks on posix threads
@@ -83,9 +87,6 @@ namespace pearlrt {
    completion of the action at a suitable point of execution from the
    task itself.
 
-   \image html  taskStatesLinux.jpg
-   \image latex taskStatesLinux.pdf
-
    \note The type REF TASK should be handled inside the compiler
 
    */
@@ -107,6 +108,7 @@ namespace pearlrt {
 
       void (*entryPoint)(Task * me); //< C function containing the code
 
+#if 0
       /** Semaphor for completion of suspend call (inits by default to 0)   */
       CSema suspendDone;
       int suspendWaiters;
@@ -119,6 +121,7 @@ namespace pearlrt {
            (inits by default to 0)   */
       CSema terminateDone;
       int terminateWaiters;
+#endif
 
       /** Semaphor for completion message of activate
           (inits by default to 0)   */
@@ -131,14 +134,19 @@ namespace pearlrt {
       */
       int pipeResume[2];
 
+
       /* suspend and terminate from other tasks is is conflict
          with the pthread library.
          Thus these requests are set a flags to the thread.
          They are polled in setLocation() and treated from the
          target thread istself.
+
+         The flag for task termination is located in TaskCommon, since
+         this flag is also required for the termination of a task
+         which resides in a wait queue
       */
-      volatile bool asyncTerminateRequested;
       volatile bool asyncSuspendRequested;
+
 
       pthread_t threadPid; //thread id
       pthread_attr_t attr;  // pthread scheduling parameters
@@ -165,12 +173,14 @@ namespace pearlrt {
 
    public:
 
+#if 0
       /**
          Perform a scheduled RESUME
 
          The plattform indepened part is done in TaskCommon
       */
       void resume2();
+#endif
 
    private:
       /**
@@ -200,6 +210,11 @@ namespace pearlrt {
       void terminateFromOtherTask();
 
    public:
+      void terminateIO();
+      void terminateSuspended();
+      void terminateSuspendedIO();
+      void terminateRunning();
+
       /**
       setup a new task
 
@@ -221,6 +236,9 @@ namespace pearlrt {
       Task(void (*entry)(Task*), char * n, Prio prio,
            BitString<1> isMain);
 
+      void suspendRunning();
+      void suspendIO();
+      //void continueSuspendedIO(int condition, Prio p);
    private:
       /**
          suspend a task
@@ -238,6 +256,7 @@ namespace pearlrt {
       */
       void suspendFromOtherTask();
 
+#if 0
       /**
         change the threads priority to the new PEARL prio
 
@@ -246,21 +265,9 @@ namespace pearlrt {
         \param prio the new PEARL priority of the task
       */
       void changeThreadPrio(const Fixed<15>& prio);
+#endif
 
-      /**
-       perform required operations to adjust priority, semaphore
-       wait queues, .... when the task got the continue condition
-
-       \param condition indicates if a new priority should be set
-       \param prio the new priority for the task
-
-       \note this method expects the tasks mutex to be locked.
-             It releases the tasks mutex only in case of throwing an
-             exception.
-      */
-      void continueFromOtherTask(int condition,
-                                 Prio prio);
-
+   public:
       /**
         fullfill the suspend request of the current task
 
@@ -273,7 +280,6 @@ namespace pearlrt {
       */
       void continueSuspended();
 
-   public:
       /**
           Perform the dynamic part of task initialising
 
@@ -367,15 +373,20 @@ namespace pearlrt {
       */
       void switchToSchedPrioCurrent();
 
-   private:
       /**
       set the threads priority
 
-      \param p new threads priority - in system internal representation
+      \param prio new threads priority - in PEARL representation
       */
-      void switchThreadSchedPrio(int p);
+      void setPearlPrio(const Fixed<15>& prio);
 
-   public:
+      /**
+      set the pthreads priority
+
+      \param p the priority for the RR-scheduler
+      */
+      void setThreadPrio(int p);
+
       /**
         deliver detailed information about this task
 
@@ -502,5 +513,9 @@ static void x ## _entry (pearlrt::Task * me) { 		\
 namespace #x {						\
 static void pearlrt::x ## _body (pearlrt::Task * me)
 #endif
+
+/**
+@}
+*/
 
 #endif

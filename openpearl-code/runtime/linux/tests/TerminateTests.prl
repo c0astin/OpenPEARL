@@ -158,7 +158,7 @@ suspendRunning: PROC;
    AFTER 2 SEC RESUME;  ! wait to finish T2suspendRunning
 END;
 
-T2suspendRunning: TASK PRIO 3;
+T2suspendRunning: TASK PRIO 30; ! prio must be worse than the prio of START
    DCL end CLOCK;
    end := NOW + 2 SEC;
 
