@@ -1,3 +1,10 @@
+#ifndef SIGNALMAPPER_INCLUDED
+#define SIGNALMAPPER_INCLUDED
+
+/**
+\addtogroup tasking_linux
+*/
+
 /**
 mapper for system signals to OpenPEARL specific identifiers
 
@@ -6,8 +13,6 @@ The standard UNIX signals are mainly treated by the UnixSignal system device
 */
 
 
-#ifndef SIGNALMAPPER_INCLUDED
-#define SIGNALMAPPER_INCLUDED
 
 #include  <signal.h>
 
@@ -21,3 +26,4 @@ The standard UNIX signals are mainly treated by the UnixSignal system device
 
 #endif
 
+/** @} */
