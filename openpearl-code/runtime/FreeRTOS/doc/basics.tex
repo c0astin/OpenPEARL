@@ -302,7 +302,7 @@ Implementation of FreeRTOS Hooks:
 \item[assert.c] provides the implementation of the function
   \texttt{assert()}, which is used in FreeRTOS to verify
   proper operation
-\item[FreeRTOSHooks.c] provides some error hooks for stack and head overflow.
+\item[FreeRTOSHooks.c] provides some error hooks for stack and heap overflow.
 \end{description}
 
 \section{Task Mapping}
@@ -359,7 +359,7 @@ The operation of the driver job is passed to an interrupt service routine and
 the calling thread is blocked by a FreeRTOS mechanism e.q. binary semaphore.
 At completion of the driver job in the isr the calling thread is continued.
 
-The semaphore handle will be a class attribute.
+The semaphore handle will be a attribute of the driver class.
 \begin{verbatim}
 SemaphoreHandle_t blockSema;
 \end{verbatim}
