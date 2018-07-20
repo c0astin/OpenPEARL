@@ -292,9 +292,9 @@ namespace pearlrt {
       sigset_t set;
       sigemptyset(&set);
       sigaddset(&set, SIG_ACTIVATE);  // activate
-      sigaddset(&set, SIG_RESUME);  // resume
+      sigaddset(&set, SIG_RESUME);    // resume
       sigaddset(&set, SIG_CONTINUE);  // continue
-      sigaddset(&set, SIG_SUSPEND);      // suspend
+      sigaddset(&set, SIG_SUSPEND);   // suspend
 
       if (sigprocmask(SIG_BLOCK, &set, NULL) < 0) {
          Log::error("timerTask: error blocking signals");

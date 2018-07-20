@@ -47,6 +47,11 @@
 
 namespace pearlrt {
    /**
+   \addtogroup tasking_linux
+   @{
+   */
+
+   /**
    \brief timer facility for task scheduling
 
    This class provides the timer functions required for task scheduling.
@@ -215,7 +220,9 @@ namespace pearlrt {
    };
 
 
-
+/**
+@}
+*/
 
 }
 #endif

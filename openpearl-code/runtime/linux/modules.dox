@@ -22,6 +22,24 @@ These classes provide support for the PEARL data types
 */
 
 /**
+\defgroup tasking_common Platform independent classen for tasking
+
+\brief These classes provide the tasking features of OpenPEARL
+forall platforms. They delegate platform depending stuff to the
+platform depending implementations.
+
+*/
+
+/**
+\defgroup tasking_linux Linux specific tasking implementations
+\ingroup  tasking_common
+
+\brief These classes provide the linux platform specific classes
+for the tasking section
+*/
+
+
+/**
 \defgroup interrupt PEARL INTERRUPT
 
 \brief These classes provide support for the PEARL INTERRUPT datatype
@@ -89,5 +107,3 @@ on linux systems.
 \brief These are the provided device drivers
 
 */
-
-

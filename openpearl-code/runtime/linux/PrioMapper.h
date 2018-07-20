@@ -40,6 +40,10 @@ this module provides the mapping of PEARL priorities to system priorities
 
 
 namespace pearlrt {
+   /**
+   \addtogroup tasking_linux
+   @{
+   */
 
    /**
    \brief priority mapper
@@ -97,6 +101,8 @@ namespace pearlrt {
       */
       void logPriorities();
    };
+
+   /** @} */
 }
 
 #endif

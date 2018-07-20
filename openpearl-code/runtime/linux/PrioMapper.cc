@@ -45,6 +45,7 @@ priorities to system priorities.
 #include "Fixed.h"
 #include "Signals.h"
 #include "PrioMapper.h"
+#include "Task.h"
 
 namespace pearlrt {
 
@@ -76,7 +77,7 @@ namespace pearlrt {
       if (p.x == 255) {
          sys = min;
       } else if (sys <= min) {
-         Log::error((char*)"the requested priority is not available");
+         Log::error((char*)"the requested priority %d is not available", p.x);
          throw thePriorityNotMapableSignal;
       }
 

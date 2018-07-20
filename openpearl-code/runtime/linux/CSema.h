@@ -41,6 +41,10 @@
 #include "CSemaCommon.h"
 
 namespace pearlrt {
+   /**
+   \addtogroup tasking_linux
+   @{
+   */
 
    /**
    \brief access to posix counting semaphores
@@ -84,6 +88,7 @@ namespace pearlrt {
       */
       void release();
    };
+   /** @} */
 }
 
 #endif
