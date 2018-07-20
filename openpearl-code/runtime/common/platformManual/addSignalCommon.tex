@@ -2,7 +2,7 @@
 The signals of PEARL are mapped to C++ exceptions in OpenPEARL.
 For each PEARL signal a special class is required.
 These classes are very similar. The creation of theses classes
-is automated via an OpenOffice-spreadsheet and a pearl-skript.
+is automated via an OpenOffice-spreadsheet and a perl-skript.
 
 As long as no new signal group is required, the new signal
 must be added to the spreadsheet \texttt{Signals.ods}.
@@ -16,9 +16,9 @@ data in the corresponding column in the spreadsheet:
    be used as postfix.
 \item[ParentClass] is used for signal grouping in the signal handlers
 \item[System] use GENERIC, if the signal appears in all target
-   platform of OpenPEARL, or select the concerend target platform.
+   platform of OpenPEARL, or select the concerned target platform.
 \item[Message] is the message which is printed to the error log.
-   This message shoul not exceed 40 characters.
+   This message should not exceed 40 characters.
 \item[Description] is a TeX formatted text for the documentation
 \end{description}
 
