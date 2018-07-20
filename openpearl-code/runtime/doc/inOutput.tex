@@ -1,9 +1,9 @@
 \chapter{Devices and I/O}
 
 PEARL distinguishes between system dations and user dations.
-All examples in the language report shown that the statements TAKE and SEND
-operate directly on system dations like a digital i/o.
-The operations READ, WRITE, GET and PUT work only on user dations.
+%All examples in the language report shown that the statements TAKE and SEND
+%operate directly on system dations like a digital i/o.
+The operations TAKE, SEND, READ, WRITE, GET and PUT work only on user dations.
 User dations are created upon a system dation.
 
 System part and problem part may be compiled separatelly. Therefore 
@@ -313,22 +313,21 @@ It is never stated but clearly appreciated that i/o-statements from
 different tasks should not intermix within their i/o-operations.
 This behavior is achieved by the {\em beginSequence} and 
 {\em endSequence} clause. 
-This clause locks mutex of the dation object to block concurrent
-i/o-statments upon the same dation.
-The task's object reference (me-pointer) is passed with
-the {\em beginSequence} call.
+This clause  checkes if a user dation is currently busy or not.
+If the user dation is busy, the i/o request is placed in a priority
+based waitqueue. In {\em endSequence} the wait queue is checked for
+pendings requests.
 
 In case of abnormal termination due to signals in the try-block
 the {\em endSequence} in the catch-clause releases the used mutex.
 If a RST-value is specified in the statement the given variable is
 updated, else the exception is rethrown.
 
-Task suspending and termination within the try-block would cause an
-eternal blocking of the dation. 
-This behavior is not desired.
-Thus the suspend and terminate will not be done only at the end of a record
-({\em SKIP}) or after the completion of the i/o-statement.
-This is realized internally in the runtime system.
+In case of invokation a \textbf{TERMINATE} on a task beeing busy in i/o,
+the device driver is informed to abort the i/o request and emit the
+{\em TerminateIOSignal}, which is caught in each superior layer 
+in the i/o stack which needs postprocessing in this case.
+
 
 \begin{PEARLCode}
 DCL (x,y) Fixed(15);
@@ -360,7 +359,7 @@ If the error is produced in the formatting of x, a signal is thrown.
 If the error is produced in the formatting of y, no signal is thrown but rst
 is set.
 
-If the system dation supports multipe io-operations in the same time,
+If the system dation supports multiple io-operations in the same time,
 the locking mechanism of the user dation is switched off, by implementing
 a method \verb|bool allowMultipleIOOperations()| in the system dation.
 In this case, ths system dation is responsible for proper operation.

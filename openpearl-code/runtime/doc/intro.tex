@@ -227,6 +227,8 @@
 	   problems which appear with FreeRTOS and LTO (Link Time Optimization)
 	\item[\_\_attribute\_\_((section("...")))] is used to control the
 	   memory usage for the microcontroller.
+        \item[ \_\_attribute\_\_ ((aligned(8)))] is used to place 
+           the TFU buffer to 64 bit boundary for fast transfers.
 	\end{description}
 	  
         The threading support from C++ was not used, since this would
