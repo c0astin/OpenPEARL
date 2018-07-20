@@ -38,6 +38,10 @@
 #define IMUTEXCOMMON_INCLUDED
 
 namespace pearlrt {
+   /**
+   \addtogroup tasking_common
+   @{
+   */
 
    /**
    class for mutual exclusion
@@ -91,6 +95,10 @@ namespace pearlrt {
       */
       virtual void unlock() = 0;
    };
+
+/**
+@}
+*/
 }
 
 #endif

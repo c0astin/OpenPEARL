@@ -37,6 +37,10 @@ namespace pearlrt {
 //#include "TaskCommon.h"
 
 namespace pearlrt {
+   /**
+   \addtogroup tasking_common
+   @{
+   */
 
    /**
    realize a queue of tasks which is ordered according the tasks
@@ -95,6 +99,11 @@ namespace pearlrt {
       TaskCommon* getNext(TaskCommon * x);
 
    };
+
+/**
+@]
+*/
+
 }
 
 #endif

@@ -38,6 +38,10 @@
 #define CSEMACOMMON_INCLUDED
 
 namespace pearlrt {
+   /**
+   \addtogroup tasking_common
+   @{
+   */
 
    /**
    class for simple counting semaphores
@@ -82,6 +86,10 @@ namespace pearlrt {
       */
       virtual void release() = 0;
    };
+
+/**
+@}
+*/
 }
 
 #endif
