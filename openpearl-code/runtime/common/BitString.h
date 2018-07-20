@@ -57,6 +57,10 @@ template<int S> class BitString;
 
 namespace pearlrt {
 #include "NumberOfBytes.h"
+   /**
+   \addtogroup datatypes
+   @{
+   */
 
    /**
    template interface
@@ -153,10 +157,6 @@ namespace pearlrt {
    };
 
 #include "IfThenElseTemplate.h"
-   /**
-   \addtogroup datatypes
-   @{
-   */
    /**
    \brief Implemenation of BitString
 

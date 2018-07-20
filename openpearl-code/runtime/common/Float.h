@@ -92,6 +92,11 @@ namespace pearlrt {
    };
 
    /**
+   \addtogroup datatypes
+   @{
+   */
+
+   /**
 
    \brief the type FLOAT(S)
 
@@ -607,6 +612,8 @@ namespace pearlrt {
       FloatHelper::testFloatResult(result.x);
       return result;
    }
+
+   /** @} */
 }
 #endif
 
