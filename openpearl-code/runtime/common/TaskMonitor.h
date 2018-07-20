@@ -42,6 +42,10 @@ stops the system at the end of the last running task
 #include "Mutex.h"
 
 namespace pearlrt {
+   /**
+   \addtogroup tasking_common
+   @{
+   */
 
    /**
       Monitor all tasks
@@ -91,6 +95,9 @@ namespace pearlrt {
       int getPendingTasks();
    };
 
+/**
+@}
+*/
 }
 
 #endif

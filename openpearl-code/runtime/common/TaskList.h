@@ -41,6 +41,10 @@
 #include "Task.h"
 
 namespace pearlrt {
+   /**
+   \addtogroup tasking_common
+   @{
+   */
 
    /**
       \brief Provide access to all defined tasks at run time
@@ -132,6 +136,10 @@ namespace pearlrt {
       */
       int getNbrOfMainTasks();
    };
+
+/**
+@}
+*/
 }
 
 #endif

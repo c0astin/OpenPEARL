@@ -40,6 +40,11 @@
 
 namespace pearlrt {
    /**
+   \addtogroup tasking_common
+   @{
+   */
+
+   /**
    \brief supply linked lists for task scheduling on interrupts
 
    PEARL allows several tasking methods to be scheduled on one
@@ -114,7 +119,9 @@ namespace pearlrt {
       */
       virtual void triggeredActivate() = 0;
    };
-
+/**
+@}
+*/
 }
 
 #endif

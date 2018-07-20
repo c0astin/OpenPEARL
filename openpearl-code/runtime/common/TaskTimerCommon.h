@@ -45,6 +45,11 @@
 
 namespace pearlrt {
    /**
+   \addtogroup tasking_common
+   @{
+   */
+
+   /**
    \brief timer facility for task scheduling
 
    This class provides the timer functions required for task scheduling.
@@ -133,7 +138,9 @@ namespace pearlrt {
       */
       virtual bool isSet() = 0;
    };
-
+/**
+@}
+*/
 }
 #endif
 
