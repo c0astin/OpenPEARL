@@ -1579,7 +1579,12 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,rangePrecision,from,fromPreci
                 break;
             <endif>
 
-            <body>
+            <if (body)> 
+               <body>
+            <else>
+                /* empty body needs a set_location as a memory barriers */
+                me->setLocation(<srcLine>, filename);
+            <endif>
 
             me->setLocation(<srcLine>, filename);
 
@@ -1605,7 +1610,12 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,rangePrecision,from,fromPreci
                 break;
             <endif>
 
-            <body>
+            <if (body)> 
+               <body>
+            <else>
+               /* empty body needs a set_location as a memory barriers */
+               me->setLocation(<srcLine>, filename);
+            <endif>
 
             <if(countLoopPass)>a_value = a_value + s_value;<endif>
         }
