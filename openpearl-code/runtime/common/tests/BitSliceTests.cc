@@ -158,5 +158,19 @@ TEST(BitSliceTest, mkBitString) {
 }
 
 /**
+bitslice and selections
+*/
+TEST(BitSlice, sliceSelections) {
+// stop := (d1 AND d2).BIT(3);
+   pearlrt::BitString<8> d1, d2, d3;
+   pearlrt::BitString<1> stop;
+   pearlrt::Fixed<31> drei(3);
+//   d3 = (d1.bitAnd(d2));
+   stop = pearlrt::BitSlice((d1.bitAnd(d2)))
+//   stop = pearlrt::BitSlice(d3)
+        .getSlice(drei,drei)
+        .mkBitString((pearlrt::BitString<1>*) 0);
+}
+/**
 \endcond
 */

@@ -46,6 +46,7 @@ There are several unit tests using the google test framework.
 #include "gtest.h"
 
 #include "BitString.h"
+#include "BitSlice.h"
 #include "compare.h"
 #include "Signals.h"
 
@@ -313,6 +314,7 @@ TEST(BitTest, comparison) {
    EXPECT_FALSE((a16==b16).getBoolean());
    EXPECT_TRUE((a16!=b16).getBoolean());
 }
+
 /**
 \endcond
 */

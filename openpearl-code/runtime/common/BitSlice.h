@@ -153,7 +153,7 @@ namespace pearlrt {
          \tparam S the length of the source BitString string
       */
       template <int S>
-      BitSlice(BitString<S>& source) {
+      BitSlice(BitString<S> source) {
          length = Fixed<15>(S);
          data   = &source.x;
          primaryDataLength = sizeof(source);
