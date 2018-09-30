@@ -73,15 +73,16 @@ SRCANDH = \
 	CSema.cc \
 	Pipe.cc Disc.cc \
 	StdIn.cc StdOut.cc StdError.cc \
-	Console.cc \
 	UnixSignal.cc \
-#	TcpIpServer.cc
+	TcpIpServer.cc \
+#	Console.cc \
+
 
 XML_FILES += Pipe.xml Disc.xml
 XML_FILES += StdIn.xml StdOut.xml StdError.xml
-XML_FILES += Console.xml
+#XML_FILES += Console.xml
 XML_FILES += UnixSignal.xml
-#XML_FILES += TcpIpServer.xml
+XML_FILES += TcpIpServer.xml
 
 
 SRCONLY =os.cc \
@@ -232,7 +233,7 @@ install: all
 	@cp libOpenPEARLlinux.a $(CONFIG_INSTALL_Target)/lib
 	@rm -f pearl2.h sysincs.h
 	# ########
-	@echo '$(CXX) -DTARGET=1 $(CXXFLAGS) $(CFLAGS) $(LDFLAGS) -I $(CONFIG_INSTALL_Target)/include $$SYSTEM $$fn.cc -o $$fn $(CONFIG_INSTALL_Target)/lib/libOpenPEARLlinux.a $(LDLIBS)' > cc_bin.inc
+	@echo '$(CXX) -DTARGET=1 $(CXXFLAGS) $(CFLAGS) $(LDFLAGS) -I $(CONFIG_INSTALL_Target)/include system.cc $$fn.cc -o $$fn $(CONFIG_INSTALL_Target)/lib/libOpenPEARLlinux.a $(LDLIBS)' > cc_bin.inc
 	# ##########
 	@echo './$$fn' >run_bin.inc
 	# #########
