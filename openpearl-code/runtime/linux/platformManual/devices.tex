@@ -362,3 +362,23 @@ END;
 ...
 \end{PEARLCode}
 
+\section{Tcp/IP Server Socket}
+The device provides a TCP/IP server socket.
+
+\begin{tabular}{ll}
+Synopsis: & \verb|TcpIpServerSocket(port)|\\ 
+\end{tabular}
+
+\begin{description}
+\item[port] specifies the port numbe to listen (e.g. 1234)
+\end{description}
+
+The corresponding user dation starts waiting for one (1) connection with {\em OPEN}.
+Subsequent PUT/GET statements transfer the data between client ansd server.
+The {\em CLOSE} statement terminates the connection.
+
+\paragraph{Note:} The system dation is still experimental. 
+There is no complete error treatment, especially with connection loss due 
+to network issues or remote termination.
+
+
