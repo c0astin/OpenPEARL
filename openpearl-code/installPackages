@@ -19,8 +19,8 @@ rc=$?
 if [ $rc -eq 0 ]
 then
    echo "detected: Ubuntu 17.10 "
-   AptPackageList+="gcc g++ make"
-   AptPackageList+="openjdk-8-jdk"
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" openjdk-8-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
    if [ $Developer -eq 1 ]
@@ -36,9 +36,9 @@ grep "PRETTY_NAME=\"Linux Mint 18.3\"" /etc/os-release >/dev/null
 rc=$?
 if [ $rc -eq 0 ]
 then
-   echo "detected: "Linux Mint 18.3 "
-   AptPackageList+="gcc g++ make"
-   AptPackageList+="openjdk-8-jdk"
+   echo "detected: Linux Mint 18.3"
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" openjdk-8-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
    if [ $Developer -eq 1 ]
@@ -55,7 +55,7 @@ rc=$?
 if [ $rc -eq 0 ]
 then
    echo "detected: Debian 8 jessie "
-   AptPackageList+="openjdk-7-jdk"
+   AptPackageList+=" openjdk-7-jdk"
    AptPackageList+=" gcc g++ git make gawk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
@@ -71,7 +71,7 @@ rc=$?
 if [ $rc -eq 0 ]
 then
    echo "detected: Debian 9 stretch "
-   AptPackageList+="openjdk-8-jdk"
+   AptPackageList+=" openjdk-8-jdk"
    AptPackageList+=" gcc g++ git make gawk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
@@ -87,7 +87,7 @@ rc=$?
 if [ $rc -eq 0 ]
 then
    echo "detected: Raspbian 8 jessie "
-   AptPackageList+="openjdk-7-jdk"
+   AptPackageList+=" openjdk-7-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
    if [ $Developer -eq 1 ]
@@ -102,7 +102,7 @@ rc=$?
 if [ $rc -eq 0 ]
 then
    echo "detected: Raspbian 9 stretch "
-   #AptPackageList+="openjdk-8-jdk" # raspbian comes with a javac
+   #AptPackageList+=" openjdk-8-jdk" # raspbian comes with a javac
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
    if [ $Developer -eq 1 ]
