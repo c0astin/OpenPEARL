@@ -56,7 +56,7 @@
 #include "Bolt.h"
 
 //          remove this vv comment to enable debug messages
-#define DEBUG(fmt, ...)  // Log::debug(fmt, ##__VA_ARGS__)
+#define DEBUG(fmt, ...)   Log::debug(fmt, ##__VA_ARGS__)
 
 namespace pearlrt {
 
@@ -195,7 +195,7 @@ namespace pearlrt {
          suspendDone.request();
       }
       switchToSchedPrioCurrent();
-
+      DEBUG("%s: suspendIO: done", name);
    }
 
 
@@ -216,6 +216,7 @@ namespace pearlrt {
 
    void Task::suspendMySelf() {
       char dummy;
+      int result;
 
       while (suspendWaiters > 0) {
          suspendWaiters --;
@@ -229,7 +230,12 @@ namespace pearlrt {
       switchToSchedPrioMax();
       {
          mutexUnlock();
-         read(pipeResume[0], &dummy, 1);
+         result = read(pipeResume[0], &dummy, 1);
+         if (result != 1) {
+            DEBUG("%s: read returned %d", name, result);
+         } else {
+            DEBUG("%s: suspendMySelf got %c", name, dummy);
+         }
          mutexLock();
       }
       switchToSchedPrioCurrent();
@@ -672,6 +678,11 @@ namespace pearlrt {
          DEBUG("%s: Task::treatIOCancelIO: suspending ...", name);
          suspendMySelf();
          DEBUG("%s: Task::treatIOCancelIO: continued", name);
+
+         // we must unlock the mutex at this point, due to the asymmetry 
+         // at suspendIO(). 
+         mutexUnlock(); 
+
       }
 
    }

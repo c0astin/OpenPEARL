@@ -188,21 +188,11 @@ namespace pearlrt {
       */
       void suspendMySelf();
 
-      /**
-      suspend the task
-      */
-      void internalSuspendMySelf();
-
 
       /**
       terminate the own thread
       */
       void terminateMySelf();
-
-      /**
-      internal terminate the own thread
-      */
-      void internalTerminateMySelf();
 
       /**
       terminate the thread of this object as an action from another task
@@ -240,6 +230,7 @@ namespace pearlrt {
       void suspendIO();
       //void continueSuspendedIO(int condition, Prio p);
    private:
+#if 0
       /**
          suspend a task
 
@@ -256,7 +247,6 @@ namespace pearlrt {
       */
       void suspendFromOtherTask();
 
-#if 0
       /**
         change the threads priority to the new PEARL prio
 

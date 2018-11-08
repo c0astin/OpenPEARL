@@ -53,7 +53,7 @@
 #include "Bolt.h"
 
 //          remove this vv comment to enable debug messages
-#define DEBUG(fmt, ...) // Log::debug(fmt, ##__VA_ARGS__)
+#define DEBUG(fmt, ...)  Log::debug(fmt, ##__VA_ARGS__)
 
 namespace pearlrt {
 
@@ -344,11 +344,9 @@ namespace pearlrt {
       //char dummy;
       asyncTerminateRequested = true;
 
-//???      switchToSchedPrioMax();
-
-//      DEBUG("%s: terminateFromOtherTask: state=%d  "
-//                 "asyncTerminateRequested = %d",
-//                 name, taskState, asyncTerminateRequested);
+      DEBUG("%s: terminateFromOtherTask: state=%d  "
+                 "asyncTerminateRequested = %d",
+                 name, taskState, asyncTerminateRequested);
 
       switch (taskState) {
 
@@ -399,6 +397,7 @@ namespace pearlrt {
          break;
 
       case SUSPENDED:
+         terminateWaiters ++;   // increment before treatment from target task
          terminateSuspended();
          break;
 
@@ -489,6 +488,8 @@ namespace pearlrt {
    }
 
    void TaskCommon::suspend(TaskCommon * me) {
+      bool doReleaseMutex = true;  // special treatment for blocked at IO
+
       Log::debug("%s: suspend for %s request: received", me->getName(), name);
       mutexLock();
 
@@ -551,6 +552,9 @@ namespace pearlrt {
 
          case IO:
             suspendIO();
+            // the global task mutex is unlocked when the targetted task
+            // becomes suspended. Thus we must not unlock the mutex now
+	    doReleaseMutex = false;
             break;
 
          default:
@@ -571,7 +575,9 @@ namespace pearlrt {
       }
 
       Log::debug("%s:   Task: suspend done", name);
-      mutexUnlock();
+      if (doReleaseMutex) {
+         mutexUnlock();
+      }
    }
 
 
@@ -648,6 +654,8 @@ namespace pearlrt {
             break;
 
          case IOWAITQUEUE: {
+            // remove and insert the task in the wait queue to enshure
+            // proper sorting if the priority has changed
             PriorityQueue *q;
             q =  blockParams.why.u.ioWaitQueue.dation->getWaitQueue();
             q->remove(this);

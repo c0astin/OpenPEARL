@@ -341,11 +341,14 @@ namespace pearlrt {
       ressources from the system. Ressources, which are assigned to the task
       will remain assigned to the task.
 
-      If the task is in BLOCKED state, the task will no longer try
-      to receive the unblocking condition. After continuation, the task
-      will try to get the unblocking condition. (see RTOS-UH p210 21-06-2006)
+      If the task is in blocked state, the task will not try to obtain
+      the unblocking condition.
+      If the task is blocked at an io-operation, the io-operation
+      must become informed about the suspend request. 
+      The global task mutex is released, when the suepend-request is
+      and nearly treated by the io-operation.
 
-      If the task is  any other state, no operation is performed.
+      If the task is nether running or blocked, and error is emitted.
 
       \param me pointer to the current tasks object
       */
