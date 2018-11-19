@@ -81,9 +81,8 @@ namespace pearlrt {
    Character<50> result;
    RefChar rc;
 
-   setRefChar(rc,wrk);
+   rc.setRefChar(wrk);
    {
-      rc.clear();
       Character<5> hello((char*)"Hallo");
       rc.add(hello);
    }
