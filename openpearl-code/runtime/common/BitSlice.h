@@ -160,6 +160,13 @@ namespace pearlrt {
          firstSelectedBit = Fixed<15>(1);
       }
 
+      template <int S>
+      BitSlice(BitString<S>* source) {
+         length = Fixed<15>(S);
+         data   = &(source->x);
+         primaryDataLength = sizeof(*source);
+         firstSelectedBit = Fixed<15>(1);
+      }
       /**
          create a BitString variable upon the data of the
          BitSlice object.
@@ -224,7 +231,7 @@ namespace pearlrt {
                is outside of the limits of the current object
          \return reference to the same object
       */
-      BitSlice& getSlice(Fixed<15> start, Fixed<15> end) {
+      BitSlice* getSlice(Fixed<15> start, Fixed<15> end) {
          static const Fixed<15> one(1);
 
          if (start.x < 1 || length.x < end.x ||
@@ -236,7 +243,7 @@ namespace pearlrt {
 
          length = end - start + one;
          firstSelectedBit = firstSelectedBit + start - one;
-         return (*this);
+         return (this);
       }
 
       /**
@@ -266,9 +273,16 @@ namespace pearlrt {
                                             firstSelectedBit + length - one,
                                             rhs);
          } else if (primaryDataLength == 2) {
+            BitString<16> help(*(uint16_t*)data);
+            help.setSlice(firstSelectedBit,
+                                             firstSelectedBit + length - one,
+                                             rhs);
+            *(uint16_t*)data = help.x;
+/*
             ((BitString<16>*)data)->setSlice(firstSelectedBit,
                                              firstSelectedBit + length - one,
                                              rhs);
+*/
          } else if (primaryDataLength == 4) {
             ((BitString<32>*)data)->setSlice(firstSelectedBit,
                                              firstSelectedBit + length - one,

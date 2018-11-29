@@ -1856,7 +1856,7 @@ assignmentStatementBitSlice(id,slices,rhs) ::= <<
 BitSliceRHS(id,lwb,upb,size) ::= <%
     pearlrt::BitSlice(<user_variable(id)>)<\n>
       .getSlice(<lwb>,<upb>)<\n>
-      .mkBitString((pearlrt::BitString\<<size>>*) 0)
+      ->mkBitString((pearlrt::BitString\<<size>>*) 0)
 %>
 
 GetBitSlice(lwb,upb) ::= <<
@@ -1864,7 +1864,7 @@ GetBitSlice(lwb,upb) ::= <<
 >>
 
 SetBitSlice(expr,size) ::= <%
-    .setSlice(<expr>)
+    ->setSlice(<expr>)
 %>
 
 

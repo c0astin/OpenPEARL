@@ -106,20 +106,22 @@ TEST(BitSliceTest, setSlice) {
 
    {
    pearlrt::BitString<16> b16(0x0ffff);
-   pearlrt::BitSlice(b16).getSlice(zwei,vier).setSlice(b2);
+printf("b16 is at: %p .... b16.x is at %p\n", &b16, &(b16.x));
+   pearlrt::BitSlice(&b16).getSlice(zwei,vier)->setSlice(b2);
    EXPECT_EQ(b16.x,0xcfff);
    }
 
    {
    pearlrt::BitString<16> b16(0x0ffff);
-   pearlrt::BitSlice(b16).getSlice(zwei,drei).setSlice(b2);
+printf("b16.x is at %p\n", &(b16.x));
+   pearlrt::BitSlice(&b16).getSlice(zwei,drei)->setSlice(b2);
    EXPECT_EQ(b16.x,0xdfff);
    }
 
    {
    pearlrt::BitString<16> b16(0x0ffff);
    EXPECT_THROW(
-   pearlrt::BitSlice(b16).getSlice(zwei,drei).setSlice(b3),
+   pearlrt::BitSlice(b16).getSlice(zwei,drei)->setSlice(b3),
                                                       // ^^ too large
       pearlrt::BitIndexOutOfRangeSignal);
    }
@@ -137,23 +139,23 @@ TEST(BitSliceTest, mkBitString) {
   
    b2 = pearlrt::BitSlice(b16)
            .getSlice(zwei,drei)
-           .mkBitString((pearlrt::BitString<2>*)0);
+           ->mkBitString((pearlrt::BitString<2>*)0);
    EXPECT_EQ(b2.x,(uint8_t)0x80);
   
    b2 = pearlrt::BitSlice(b16)
            .getSlice(eins,zwei)
-           .mkBitString((pearlrt::BitString<2>*)0);
+           ->mkBitString((pearlrt::BitString<2>*)0);
    EXPECT_EQ(b2.x,(uint8_t)0x40);
   
    b5 = pearlrt::BitSlice(b16)
            .getSlice(eins,vier)
-           .mkBitString((pearlrt::BitString<5>*)0);
+           ->mkBitString((pearlrt::BitString<5>*)0);
    EXPECT_EQ(b5.x,(uint8_t)0x50);
 
    EXPECT_THROW(
       pearlrt::BitSlice(b16)
            .getSlice(eins,vier)
-           .mkBitString((pearlrt::BitString<3>*)0),
+           ->mkBitString((pearlrt::BitString<3>*)0),
        pearlrt::InternalDatatypeSignal);
 }
 
@@ -169,7 +171,7 @@ TEST(BitSlice, sliceSelections) {
    stop = pearlrt::BitSlice((d1.bitAnd(d2)))
 //   stop = pearlrt::BitSlice(d3)
         .getSlice(drei,drei)
-        .mkBitString((pearlrt::BitString<1>*) 0);
+        ->mkBitString((pearlrt::BitString<1>*) 0);
 }
 /**
 \endcond
