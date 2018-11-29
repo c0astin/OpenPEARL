@@ -94,15 +94,18 @@ DCLTASK(_t, ...) {
 internally to the base data value.
 \item passing a slice to another procedure by reference (\textbf{IDENT}) 
 is possible as complete or subslice.
-\item Constants and \textbf{INV} variables are not allowed as actual parameters
+\item Constants and \textbf{INV} variables are not allowed as actual
+ parameters if the formal parameter is not INV (refer \ref{sec_inv_ident}).
 \end{enumerate}
 
 \subsection{INV Call By Reference (IDENT)}
+\label{sec_inv_ident}
 The compiler must check that there is no change of the actual parameter
 by assignment or parameter passing.
 
 The invocation with constants is possible. They must become converted 
-to a bit- or char slice by the compiler.
+to a bit- or char slice by the compiler. For other data types, the compiler
+must create a constant data element for the given value.
 
 \subsection{REF Types}
 \textbf{REF} types may be passed by value as well as by reference 
@@ -120,7 +123,9 @@ by the compiler. If the actual parameter is of type:
 \begin{description}
 \item[CHAR(x):] A temporary RefChar data must be created and passed.
 \item[REF CHAR():] The RefChar data object may by passed directly 
-   by value or as pointer depending on the presence of IDENT
+   only by value. Passing a REF CHAR() by IDENT may cause inconsistent
+   data storage access, if the REF CHAR() is assigned to a procedure
+   local CHAR-variable.
 \end{description}
 
 \subsubsection{REF INV CHAR()}
@@ -140,34 +145,3 @@ The passing of STRUCTs works like simple variables.
 \section{Return Value}
 The language report forbids \textbf{REF CHAR()} as result type.
 
-\section{Diskussion}
-\begin{enumerate}
-\item Der letzte Abschnitt in 5.9 ist mir nicht klar.
-RETURNS(REF CHAR()) ist wohl verboten.
-Aber als IDENT Parameter zul\"assig?
-
-\begin{PEARLCode}
-DCL (s,t) CHAR(10);
-...
-P: PROC(x CHAR(10), y REF CHAR() IDENT, z CHAR(10) IDENT);
-   x := y; ! ok, evtl CharTooLongSignal
-   y := x; ! sollte nicht gehen
-   y := z; ! sollte nicht gehen, da die Lebensdauer nicht kontrollierbar ist
-   y := s; ! sollte gehen, da Lebensdauer unkritisch ist
-END;
-\end{PEARLCode}
-
-\item Bei der Einf\"uhrung der Slices in Kap 6.1 steht, dass eine .CHAR(a:b)
- bei evtl. 
-erst zur Laufzeit bestimmt wird. Ein solcher Ausdruck darf nur 
-bei CAT nicht benutzt werden --- also als Parameter zul\"assig?
-\item Expressions sind eigentlich nicht per IDENT \"ubergebbar. Allerdings sind
-Bit und Char Slices --- im Sprachreport Segment genannt --- auch auf der 
-linken Seite einer Zuweisung erlaubt (lvalue).
-\item Sollen auch Array-Slices als Prozedurparameter m\"oglich sein?
-Im Sprachreport habe ich nichts gefunden. M\"oglich w"are es:\\ 
-If the actual parameter is a slice, an array descriptor must be created
- according the  current size of the slice. As data array  the adress
-of the first element of the slice must be given.
-
-\end{enumerate}
