@@ -36,11 +36,18 @@
 
 
 #include "SystemDation.h"
+#include "Log.h"
 
 namespace pearlrt {
 
    bool SystemDation::allowMultipleIORequests() {
       return false;
    }
+
+  void SystemDation::registerWaitingTask(void * task, int direction) {
+      Log::error("SystemDationNB: missing overload in concrete system dation");
+      throw theInternalDationSignal;
+   }
+
 
 }

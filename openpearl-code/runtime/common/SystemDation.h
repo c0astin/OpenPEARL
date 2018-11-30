@@ -120,10 +120,22 @@ namespace pearlrt {
       semaBlock semaphore until their data arrive or is processed.
 
       \return true if the dation supports multiple io-operations at thesame time
-      \return false, if onky on operation is allowed at one time. In this
+      \return false, if only on operation is allowed at one time. In this
          case the tasks are added into a priority based wait queue
       */
       virtual bool allowMultipleIORequests();
+
+     /**
+      register the calling task as waiting for an IO-operation
+
+      The method is only called if allowMultipleIORequests is set by the
+      system dation
+
+      \param task the pointer to the calling task
+      \param direction is ether Dation::IN or Dation::OUT
+      */
+//      virtual void registerWaitingTask(TaskCommon * task, int direction);
+      virtual void registerWaitingTask(void * task, int direction);
 
    };
 }

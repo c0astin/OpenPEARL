@@ -131,6 +131,8 @@ namespace pearlrt {
       */      
       virtual Fixed<31> dationEof();
 
+#if 0   // moved to SystemDation
+
       /**
       register the calling task as waiting for an IO-operation
 
@@ -142,7 +144,7 @@ namespace pearlrt {
       */
 //      virtual void registerWaitingTask(TaskCommon * task, int direction);
       virtual void registerWaitingTask(void * task, int direction);
-
+#endif
 
    };
 }

@@ -52,9 +52,10 @@ namespace pearlrt {
       throw theNoEOFDationSignal;
    }
 
+#if 0 // moved to SystemDation
    void SystemDationNB::registerWaitingTask(void * task, int direction) {
       Log::error("SystemDationNB: missing overload in concrete system dation");
       throw theInternalDationSignal;
    }
-
+#endif
 }
