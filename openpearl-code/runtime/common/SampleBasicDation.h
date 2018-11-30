@@ -136,6 +136,10 @@ namespace pearlrt {
       \returns available commands of the device
       */
       int capabilities();
+
+     void suspend();
+     void terminate();
+
    };
 }
 #endif

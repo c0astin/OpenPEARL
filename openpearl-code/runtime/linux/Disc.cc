@@ -58,7 +58,7 @@ namespace pearlrt {
    }
 
    Disc::Disc(const char* dev, const int nbrOfFiles) :
-      SystemDationNB() {
+      InterruptableSystemDationNB() {
       /* ctor is called before multitasking starts --> no mutex required */
       struct stat attribut;
       devicePath = (char*)dev;

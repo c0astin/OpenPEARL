@@ -80,6 +80,15 @@ namespace pearlrt {
    class UserDation : public Dation, public Rst {
 
    protected:
+     /**
+      this mutex enhures that only one PEARL io statement is
+      executed at the same time on the same user dation.
+
+      There may be several user dations created upon the same system
+      dation. This must be treated inside the system dation.
+      */
+      Mutex mutexUserDation;
+
       /** pointer to the task, which performs an i/o-operation on this
           dation
       */
@@ -309,6 +318,9 @@ namespace pearlrt {
       */
       virtual void endSequenceHook(void) = 0;
 
+   public:
+      void suspend();
+      void terminate();
    };
 }
 #endif

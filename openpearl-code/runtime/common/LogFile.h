@@ -154,6 +154,9 @@ public:
       */
       void translateNewLine(bool doNewLineTranslation);
 
+      void suspend();
+      void terminate();
+
 };
 }
 #endif

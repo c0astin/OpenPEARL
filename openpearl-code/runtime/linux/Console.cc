@@ -45,7 +45,6 @@
 #include "BitString.h"
 
 DCLTASK(stbp, pearlrt::Prio(1), pearlrt::BitString<1>(1)) {
-   printf("stbp started\n");
    pearlrt::Console * console;
    pearlrt::TaskCommon * taskEntered;
 
@@ -117,8 +116,6 @@ namespace pearlrt {
    Console* Console::dationOpen(const char * idf, int openParams) {
       struct termios newSetting;
 
-      printf("console 1\n");
-
       if (openParams & (Dation::IDF | Dation::CAN)) {
          Log::error("Console: does not support IDF and CAN");
          throw theDationParamSignal;
@@ -132,7 +129,6 @@ namespace pearlrt {
       newSetting.c_lflag &= ~(ICANON | ECHO);   // no echo, no line edit
       tcsetattr(0, TCSANOW, &newSetting);   // 0 = STDIN
 //      setbuf(stdin, NULL);    // work unbuffered
-      printf("console 6\n");
 
       consoleMutex.unlock();
       return this;
@@ -176,8 +172,6 @@ namespace pearlrt {
 
 
    void Console::dationWrite(void * source, size_t size) {
-//         Log::error("Console: write is not supported");
-//         throw theDationNotSupportedSignal;
       stdOut.dationWrite(source, size);
    }
 
@@ -202,5 +196,9 @@ namespace pearlrt {
       consoleCommon.registerWaitingTask(task, direction);
    }
 
+   void Console::suspend() {
+   }
+   void Console::terminate() {
+   }
 
 }

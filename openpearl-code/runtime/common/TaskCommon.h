@@ -59,7 +59,8 @@ namespace pearlrt {
       ENTER,            ///< task is block due to ENTER
       RESERVE,          ///< task is block due to RESERVE
       IO,               ///< task is blocked due to IO operation
-      IOWAITQUEUE       ///< task is blocked due IO operation of other task
+      IOWAITQUEUE,      ///< task is blocked due IO operation of other task
+      IO_MULTIPLE_IO    ///< task is blocked on device with multiple io statements
    };
 
    /**

@@ -135,6 +135,7 @@ namespace pearlrt {
 
     The code for the data list and result variables should look like:
     \code
+    { // create local block
     Fixed<15> resultOfExpr1;
 
     IODataEntry dataEntries[] = {
@@ -155,10 +156,11 @@ namespace pearlrt {
           .dataPtr{.outData=&resultOfExpr1}
        },
     };
+    // add a try-catch block for each expression in data items
     try {
        resultOfExpr1 = _y + CONST_FIXED_POS_1_31;
     } catch (Signal & s) {
-       // modify data entry to throw the signal
+       // modify the corresponding data entry to throw the signal
        dataEntries[3].dataType.baseType = IODataEntry::InduceData;
        dataEntries[3].dataType.dataWidth = s.whichRST();
     }
@@ -166,6 +168,9 @@ namespace pearlrt {
     IODataList dataList={sizeof(dataEntries)/sizeof(dataEntries[0]),
                          dataEntries);
 
+    // .. setup format list
+    // .. invoke put
+    } // close local block
    \endcode
    */
    class IODataList {
@@ -200,11 +205,13 @@ namespace pearlrt {
     Assume x and width as FIXED(15), and y as FLOAT(53)
 
     \code
-    PUT 'X=',x, 'Y=', y+1 TO so BY A,F(5), X(width),A(4), E(13,6),SKIP;
+    PUT 'X=',x, 'Y=', y+1 TO so BY A,F(5), X(width+2),A(4), E(13,6),SKIP;
     \endcode
 
     The code for the format list and result  variables should look like:
     \code
+    { // open local block
+    // .. setup format list
     Fixed<31> resultOfExpr2;
 
     IOFormatEntry formatEntries[] = {
@@ -234,14 +241,16 @@ namespace pearlrt {
        },
     };
 
+    // add a try-catch block for each expression in format items
     try {
       resultOfExpr2 = width+(pearlrt::Fixed<31>)(2);
     } catch (Signal & s) {
-       // modify format entry to throw the signal
-       formatEntries[5].format = IOFormatEntry::InduceFormat;
-       formatEntries[5].intValue = s.whichRST();
+       // modify format the corresponding  entry to throw the signal
+       formatEntries[2].format = IOFormatEntry::InduceFormat;
+       formatEntries[2].intValue = s.whichRST();
     }
-
+    // .. invoke put
+    } // close local block
     \endcode
 
    */

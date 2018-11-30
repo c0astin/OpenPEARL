@@ -49,7 +49,7 @@
 namespace pearlrt {
 
    StdError::StdError() :
-      SystemDationNB() {
+      InterruptableSystemDationNB() {
       /* ctor is called before multitasking starts --> no mutex required */
       mutex.name("StdError");
       inUse = false;

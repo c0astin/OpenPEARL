@@ -284,12 +284,12 @@ namespace pearlrt {
                   // and quit this function
                   inputLine[i] = '\0';
 
-// printf("Taskname=>%s<  waitingForInput=%p\n", inputLine+1, waitingForInput);
                   // pointer to predecessor in list for easy
                   // removal operation
                   for (t = waitingForInput;
                         t != NULL; t = t->getNext()) {
-                     if (strcmp(t->getName(), inputLine + 1) == 0) {
+                     // ignore leading underscore in task name
+                     if (strcmp(t->getName()+1, inputLine + 1) == 0) {
                         // found adressed task
 
                         // remove this task from wait queue
@@ -354,7 +354,6 @@ namespace pearlrt {
       }
 
       if (direction == Dation::OUT) {
-
          if (inputStarted || waitingForOutput.getHead()) {
             // queue not empty --> add task as waiter
             waitingForOutput.insert(t);

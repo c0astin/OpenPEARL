@@ -39,7 +39,7 @@
        file from/to filesystem
 */
 
-#include "SystemDationNB.h"
+#include "InterruptableSystemDationNB.h"
 #include "Mutex.h"
 #include "Character.h"
 #include "RefChar.h"
@@ -73,7 +73,7 @@ namespace pearlrt {
 
    */
 
-   class Disc: public SystemDationNB {
+   class Disc: public InterruptableSystemDationNB {
 
    public:
       /**
@@ -82,7 +82,7 @@ namespace pearlrt {
       A DiscFile represents a file on a Disc. This class is responsible
       for all operations with the  operating system.
       */
-      class DiscFile : public SystemDationNB {
+      class DiscFile : public InterruptableSystemDationNB {
       private:
          FILE * fp;
          RefCharacter   rcFn;

@@ -126,5 +126,11 @@ namespace pearlrt {
       int cap =  IN  | OUT | INOUT;
       return cap;
    }
+
+   void SampleBasicDation::suspend() {
+   }
+
+   void SampleBasicDation::terminate() {
+   }
 }
 

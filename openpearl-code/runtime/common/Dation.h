@@ -1,7 +1,7 @@
 /*
  [A "BSD license"]
  Copyright (c) 2012-2013 Holger Koelle
- Copyright (c) 2014-2017 Rainer Mueller
+ Copyright (c) 2014-2018 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -224,6 +224,22 @@ namespace pearlrt {
       \throws * may throw exceptions in case of problems in execution
       */
       virtual void dationWrite(void * destination, size_t size) = 0;
+
+      /**
+      suspend i/o operation 
+
+      This method is invoked by the tasking methods, when a task should
+      become SUSPENDed while doing an i/o-operation
+      */
+      virtual void suspend() = 0;
+
+      /**
+      terminate in an i/o operation 
+
+      This method is invoked by the tasking methods, when a task should
+      become TERMINATEd while doing an i/o-operation
+      */
+      virtual void terminate() = 0;
 
    };
    /** @} */

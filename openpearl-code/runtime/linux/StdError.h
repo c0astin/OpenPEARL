@@ -39,7 +39,7 @@
        to standard stream stderr
 */
 
-#include "SystemDationNB.h"
+#include "InterruptableSystemDationNB.h"
 #include "Mutex.h"
 #include "Character.h"
 #include "RefChar.h"
@@ -66,7 +66,7 @@ namespace pearlrt {
 
    */
 
-   class StdError: public SystemDationNB {
+   class StdError: public InterruptableSystemDationNB {
 
    private:
       /**

@@ -39,7 +39,7 @@
        to standard stream stdout
 */
 
-#include "SystemDationNB.h"
+#include "InterruptableSystemDationNB.h"
 #include "Mutex.h"
 #include "Character.h"
 #include "RefChar.h"
@@ -70,7 +70,7 @@ namespace pearlrt {
    \endverbatim
 
    */
-   class StdOut: public SystemDationNB {
+   class StdOut: public InterruptableSystemDationNB {
 
    private:
       /**

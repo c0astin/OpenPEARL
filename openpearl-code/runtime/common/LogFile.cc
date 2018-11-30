@@ -108,4 +108,12 @@ namespace pearlrt {
       provider->translateNewLine(doNewLineTranslation);
    }
 
+   void LogFile::suspend() {
+       provider->suspend();
+   }
+
+   void LogFile::terminate() {
+       provider->terminate();
+   }
+
 }

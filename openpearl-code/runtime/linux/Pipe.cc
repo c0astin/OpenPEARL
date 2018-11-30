@@ -69,7 +69,7 @@ namespace pearlrt {
    }
 
    Pipe::Pipe(const char* dev, const int nbrOfFiles, const char * params) :
-      SystemDationNB() {
+      InterruptableSystemDationNB() {
       /* ctor is called before multitasking starts --> no mutex required */
       struct stat attribut;
       devicePath = (char*)dev;

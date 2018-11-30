@@ -43,6 +43,7 @@
 #include "Mutex.h"
 #include "Character.h"
 #include "RefChar.h"
+#include "InterruptableSystemDationNB.h"
 #include <unistd.h>
 
 namespace pearlrt {
@@ -68,14 +69,14 @@ namespace pearlrt {
 
    */
 
-   class Pipe: public SystemDationNB {
+   class Pipe: public InterruptableSystemDationNB {
 
    public:
       /**
       A PipeFile represents a file on a Pipe. This class is responsible
       for all operations with the  operating system.
       */
-      class PipeFile : public SystemDationNB {
+      class PipeFile : public InterruptableSystemDationNB {
       private:
          FILE * fp;
          Pipe * 	myPipe;

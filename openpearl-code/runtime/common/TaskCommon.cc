@@ -385,7 +385,8 @@ namespace pearlrt {
             break;
 
          case IO:
-            terminateIO();
+            blockParams.why.u.io.dation->terminate();
+            //terminateIO();
             break;
 
          default:
@@ -551,7 +552,8 @@ namespace pearlrt {
             break;
 
          case IO:
-            suspendIO();
+            //suspendIO();
+            blockParams.why.u.io.dation->suspend();
             // the global task mutex is unlocked when the targetted task
             // becomes suspended. Thus we must not unlock the mutex now
 	    doReleaseMutex = false;

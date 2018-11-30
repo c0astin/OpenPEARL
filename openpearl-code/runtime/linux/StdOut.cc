@@ -49,7 +49,7 @@
 namespace pearlrt {
 
    StdOut::StdOut() :
-      SystemDationNB() {
+      InterruptableSystemDationNB() {
       /* ctor is called before multitasking starts --> no mutex required */
       mutex.name("StdOut");
       inUse = false;

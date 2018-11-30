@@ -237,9 +237,12 @@ namespace pearlrt {
       The Console device consists of simple io devices like
       StdIn and Stdout
 
-      These devices Will be opened.
+      These devices will be opened.
       */
       void openSubDations();
+
+      void suspend();
+      void terminate();
    };
    /** @} */
 }

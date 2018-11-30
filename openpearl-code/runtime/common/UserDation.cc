@@ -46,6 +46,7 @@ namespace pearlrt {
       //rstValue = NULL;
       rstVoidPointer = NULL;
       isBusy = false;
+      mutexUserDation.name("UserDation");
    }
 
    void UserDation::internalDationClose(const int p) {
@@ -102,12 +103,15 @@ namespace pearlrt {
       // this method is called before any dation operation starts
       // in the application
       struct BlockData bd;
+      bool blockThread;
 
-//printf("beginSequence this=%p task=%s  isBusy=%d\n", this, me->getName(),isBusy);
+//printf("beginSequence this=%p task=%s  isBusy=%d dir=%d\n",
+//     this, me->getName(),isBusy, direction);
 
       // verify that the dation is really open
       assertOpen();
 
+      mutexUserDation.lock();
 
      // for testing purpose it is possible to use
      // without a task object
@@ -116,41 +120,55 @@ namespace pearlrt {
          // more than one task is affected
          // lock the global task lock, and treat async requests 
          // if pending, after the lock is gained
-         TaskCommon::mutexLock();
+         //TaskCommon::mutexLock();
 
-         //currentTask = me;
          rstVoidPointer = NULL;
 
-         if (isBusy) {
-             // user dation is busy --> add current task to wait queue
-             // and wait for end of the i/o operation
-             waitQueue.insert(me);
-             bd.reason = IOWAITQUEUE;
-             bd.u.ioWaitQueue.dation = this;
-             bd.u.ioWaitQueue.direction = direction;
-          
-             Log::info("%s: added to wait queue and waits...", me->getName());
-             // get global task lock, since block() releases ths lock
-             me->block(&bd);        // update the blockParams in TaskCommon
-             // gain the global task lock again
-             Log::info("%s: .. unblocked", me->getName());
-             me->scheduleCallback();  // check if we must terminate
-             TaskCommon::mutexLock();
-             me->enterIO(this);
+         me->enterIO(this);
 
-             // we may continue --> lock the user dation again
+         if (systemDation->allowMultipleIORequests()) {
+            // register current task in system dation
+            //TaskCommon::mutexLock(); // we need access to the global task lock
+            systemDation->registerWaitingTask(me, direction);
+            bd.reason = IO_MULTIPLE_IO;
+            bd.u.io.dation = this;
+            blockThread = true;
+         } else if (isBusy) {
+              // user dation is busy --> add current task to wait queue
+               // and wait for end of the i/o operation
+               waitQueue.insert(me);
+               bd.reason = IOWAITQUEUE;
+               bd.u.ioWaitQueue.dation = this;
+               bd.u.ioWaitQueue.direction = direction;
+          
+               Log::info("%s: added to wait queue and waits...", me->getName());
+               blockThread = true;
          } else {
-            me->enterIO(this);
             isBusy = true;
+            blockThread = false;
          }
+
+
+         if (blockThread) {
+            // aquired task block sema, since unblock expects this
+            mutexUserDation.unlock();
+            TaskCommon::mutexLock(); // we need access to the global task lock
+            me->block(&bd);    // block releases the global task lock
+            mutexUserDation.lock();
+
+         }
+
       }
 
       currentDirection = direction;
+      //rstValue = NULL;
+      rstVoidPointer = NULL;
 
       // if multiple IO-requests are allowed, the beginSequenceHook
       // must deal with the task blocking
       beginSequenceHook(me);
-      TaskCommon::mutexUnlock();
+      //TaskCommon::mutexUnlock();
+      mutexUserDation.unlock();
    }
 
    void UserDation::endSequence(TaskCommon * me) {
@@ -158,7 +176,8 @@ namespace pearlrt {
 
       // gain global task lock, since the task state of at least one
       // task changes
-      TaskCommon::mutexLock();
+      //TaskCommon::mutexLock();
+      mutexUserDation.lock();
 
       endSequenceHook();
 
@@ -181,7 +200,8 @@ namespace pearlrt {
             pendingTask->unblock();
          } 
       }
-      TaskCommon::mutexUnlock();
+      //TaskCommon::mutexUnlock();
+      mutexUserDation.unlock();
       if (me) {
          me->scheduleCallback();
       }
@@ -197,6 +217,14 @@ namespace pearlrt {
          Log::error("dation open required");
          throw theDationNotOpenSignal;
       }
+   }
+
+   void UserDation::suspend() {
+      systemDation->suspend();
+   }
+
+   void UserDation::terminate() {
+      systemDation->terminate();
    }
 
 }

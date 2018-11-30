@@ -71,16 +71,17 @@ SRCANDH = \
 	Task.cc \
 	Mutex.cc PrioMapper.cc \
 	CSema.cc \
+	InterruptableSystemDationNB.cc \
 	Pipe.cc Disc.cc \
 	StdIn.cc StdOut.cc StdError.cc \
 	UnixSignal.cc \
 	TcpIpServer.cc \
-#	Console.cc \
+	Console.cc \
 
 
 XML_FILES += Pipe.xml Disc.xml
 XML_FILES += StdIn.xml StdOut.xml StdError.xml
-#XML_FILES += Console.xml
+XML_FILES += Console.xml
 XML_FILES += UnixSignal.xml
 XML_FILES += TcpIpServer.xml
 
