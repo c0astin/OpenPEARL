@@ -1,0 +1,39 @@
+MODULE(ctest);
+
+SYSTEM;
+ con: Console;
+!con: StdOut;
+
+PROBLEM;
+   SPC con DATION OUT SYSTEM ALPHIC;
+
+   DCL console DATION INOUT ALPHIC DIM(*,80) FORWARD CREATED(con);
+
+t1: TASK MAIN;
+   DCL text CHAR(10);
+__cpp__("printf(\" t1 started\n\");");
+   OPEN console;
+   ACTIVATE t2;
+   PUT 'hallo from t1' TO console BY A, SKIP;
+
+   REPEAT
+   GET text FROM console BY A, SKIP;
+   PUT 't1 got', text TO console BY A, A, SKIP;
+   END;
+
+   CLOSE console;
+END;
+
+t2: TASK;
+   DCL text CHAR(10);
+__cpp__("printf(\" t2 started\n\");");
+   PUT 'hallo from t2' TO console BY A, SKIP;
+   REPEAT
+   GET text FROM console BY A, SKIP;
+   PUT 't2 got', text TO console BY A, A, SKIP;
+   END;
+   CLOSE console;
+END;
+
+MODEND;
+
