@@ -49,7 +49,7 @@
 namespace pearlrt {
    bool StdIn::_isDefined = false;
 
-   StdIn::StdIn() : SystemDationNB() {
+   StdIn::StdIn() : InterruptableSystemDationNB() {
       /* ctor is called before multitasking starts --> no mutex required */
       mutex.name("StdIn");
       inUse = false;
