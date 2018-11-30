@@ -60,7 +60,6 @@ namespace pearlrt {
          Log::error("SampleBasicDation: Dation already open");
          throw theOpenFailedSignal;
       }
-
       dationStatus = OPENED;
       return this;
    }

@@ -105,8 +105,8 @@ namespace pearlrt {
       struct BlockData bd;
       bool blockThread;
 
-//printf("beginSequence this=%p task=%s  isBusy=%d dir=%d\n",
-//     this, me->getName(),isBusy, direction);
+//printf("beginSequence this=%p task=%s  isBusy=%d dir=%d system=%p\n",
+//     this, me->getName(),isBusy, direction, systemDation);
 
       // verify that the dation is really open
       assertOpen();

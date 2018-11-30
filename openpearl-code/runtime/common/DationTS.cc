@@ -69,6 +69,8 @@ namespace pearlrt {
          work = system->dationOpen(NULL, dationParams);
       }
 
+      systemDation = work;
+
       internalOpen();
       dationStatus = OPENED;
    }
@@ -111,7 +113,7 @@ namespace pearlrt {
          Log::error("DationTS: device does not support read");
          throw theInternalDationSignal;
       }
-
+printf("DationPG::dationWrite: work=%p\n", work);
       work->dationWrite(data, size);
    }
 
