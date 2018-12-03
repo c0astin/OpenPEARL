@@ -192,13 +192,15 @@ namespace pearlrt {
         their parent systemdation.
 
       */
-      SystemDationNB* system;
+      SystemDationNB* parent;
 
+#if 0
       /**
       Current system dation object during operation - this may be different
       to system if the system dation supports multiple i/o-channels
       */
-      SystemDationNB* work;
+      SystemDationNB* systemDation;
+#endif
 
       /**
         Size of the elements to read/write from/to the dation

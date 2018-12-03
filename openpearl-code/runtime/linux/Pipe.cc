@@ -415,8 +415,6 @@ namespace pearlrt {
 
       clearerr(fp);
       errno = 0;
-//   allow read after write does not apply at pipes; they are unidirectional
-//      fseek(fp, 0, SEEK_CUR);   // allow read after write
 
       // perform the read() inside a try-catch block
       // treatCancelIO will throw an expection if the current
@@ -452,11 +450,11 @@ namespace pearlrt {
    void Pipe::PipeFile::dationWrite(void * source, size_t size) {
    
       int ret;
+      int flushOk;
       int errnoCopy;
 
       clearerr(fp);
       errno = 0;
-      fseek(fp, 0, SEEK_CUR);      // allow write after read
 
       // perform the write() inside a try-catch block
       // treatCancelIO will throw an expection if the current
@@ -480,8 +478,8 @@ namespace pearlrt {
                }
             }
 
-            ret = fflush(fp);
-            if (ret != 0) {
+            flushOk = fflush(fp);
+            if (flushOk != 0) {
                 Log::error("Pipe: error at fflush (%s)", strerror(errno));
             }
          } while (ret <= 0);

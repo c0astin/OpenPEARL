@@ -81,7 +81,7 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      if (!(system->capabilities() & (IN | INOUT))) {
+      if (!(systemDation->capabilities() & (IN | INOUT))) {
          Log::error("DationPG: device does not support read");
          throw theDationParamSignal;
       }
@@ -91,7 +91,7 @@ namespace pearlrt {
 
       // read remaining from device
       if (size > 1) {
-         work->dationRead(d + 1, size - 1);
+         systemDation->dationRead(d + 1, size - 1);
       }
    }
 
@@ -104,7 +104,7 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      if (!(system->capabilities() & (OUT | INOUT))) {
+      if (!(systemDation->capabilities() & (OUT | INOUT))) {
          Log::error("DationPG: device does not support write");
          throw theDationParamSignal;
       }
@@ -119,7 +119,7 @@ namespace pearlrt {
    void DationPG::dationSeek(const Fixed<31> & p, const int dationParam) {
       assertOpen();
       source.forgetUnGetChar();
-      work->dationSeek(p, dationParam);
+      ((SystemDationNB*)systemDation)->dationSeek(p, dationParam);
    }
 
 
@@ -128,15 +128,15 @@ namespace pearlrt {
    }
 
    void DationPG::internalOpen() {
-      tfuBuffer.setSystemDation((SystemDationNB*)work);
+      tfuBuffer.setSystemDation((SystemDationNB*)systemDation);
       /*
             } else {
                if (dationParams & (OUT | INOUT)) {
-                  sink.setSystemDationNB((SystemDationNB*)work);
+                  sink.setSystemDationNB((SystemDationNB*)systemDation);
                }
 
                if (dationParams & (IN | INOUT)) {
-                  source.setSystemDationNB((SystemDationNB*)work);
+                  source.setSystemDationNB((SystemDationNB*)systemDation);
                }
             }
             setupIOFormats(&sink, &source);

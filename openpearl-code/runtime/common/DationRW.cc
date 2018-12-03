@@ -76,7 +76,7 @@ namespace pearlrt {
    }
 
    void DationRW::internalOpen() {
-      tfuBuffer.setSystemDation(work);
+      tfuBuffer.setSystemDation((SystemDationNB*)systemDation);
    }
 
    void DationRW::internalClose() {
@@ -90,14 +90,14 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      if (!(system->capabilities() & (IN | INOUT))) {
+      if (!(systemDation->capabilities() & (IN | INOUT))) {
          Log::error("DationRW: device does not support read");
          throw theDationParamSignal;
       }
 
       if (dationParams & NOCYCL) {
          adv(size / stepSize.x);
-         //work->dationRead(data, size);
+         //systemDation->dationRead(data, size);
          tfuBuffer.read(data, size);
       } else {
          // dimension is limited. This is enshured by the tests in ctor
@@ -111,7 +111,7 @@ namespace pearlrt {
          // read first chunk
          if ((nbrOfElements > remaining).getBoolean()) {
             adv(remaining.x);
-//            work->dationRead(d, remaining.x * stepSize.x);
+//            systemDation->dationRead(d, remaining.x * stepSize.x);
             tfuBuffer.read(d, (remaining * stepSize).x);
             d += remaining.x * stepSize.x;
             dationSeek(0, dationParams);
@@ -122,14 +122,14 @@ namespace pearlrt {
          while ((nbrOfElements > zero).getBoolean()) {
             if ((nbrOfElements > cap).getBoolean()) {
                adv(cap.x);
-               // work->dationRead(d, cap.x * stepSize.x);
+               // systemDation->dationRead(d, cap.x * stepSize.x);
                tfuBuffer.read(d, (cap * stepSize).x);
                d += cap.x * stepSize.x;
                dationSeek(0, dationParams);
                nbrOfElements = nbrOfElements - cap;
             } else {
                adv(nbrOfElements.x);
-               //work->dationRead(d, nbrOfElements.x * stepSize.x);
+               //systemDation->dationRead(d, nbrOfElements.x * stepSize.x);
                tfuBuffer.read(d, (nbrOfElements * stepSize).x);
                d += nbrOfElements.x * stepSize.x;
                nbrOfElements = zero;
@@ -146,14 +146,14 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      if (!(system->capabilities() & (OUT | INOUT))) {
+      if (!(systemDation->capabilities() & (OUT | INOUT))) {
          Log::error("DationRW: device does not support read");
          throw theDationParamSignal;
       }
 
       if (dationParams & NOCYCL) {
          adv(size / stepSize.x);
-         //work->dationWrite(data, size);
+         //systemDation->dationWrite(data, size);
          tfuBuffer.write(data, size);
       } else {
          // dimension is limited. This is enshured by the tests in ctor
@@ -166,7 +166,7 @@ namespace pearlrt {
          // write first chunk
          if ((nbrOfElements > remaining).getBoolean()) {
             adv(remaining.x);
-            //work->dationWrite(d, remaining.x * stepSize.x);
+            //systemDation->dationWrite(d, remaining.x * stepSize.x);
             tfuBuffer.write(d, (remaining * stepSize).x);
             d += remaining.x * stepSize.x;
             dationSeek(0, dationParams);
@@ -177,14 +177,14 @@ namespace pearlrt {
          while ((nbrOfElements > zero).getBoolean()) {
             if ((nbrOfElements > cap).getBoolean()) {
                adv(cap.x);
-               //work->dationWrite(d, cap.x * stepSize.x);
+               //systemDation->dationWrite(d, cap.x * stepSize.x);
                tfuBuffer.write(d, (cap * stepSize).x);
                d += cap.x * stepSize.x;
                dationSeek(0, dationParams);
                nbrOfElements = nbrOfElements - cap;
             } else {
                adv(nbrOfElements.x);
-               //work->dationWrite(d, nbrOfElements.x * stepSize.x);
+               //systemDation->dationWrite(d, nbrOfElements.x * stepSize.x);
                tfuBuffer.write(d, (nbrOfElements * stepSize).x);
                d += nbrOfElements.x * stepSize.x;
                nbrOfElements = zero;
@@ -194,11 +194,11 @@ namespace pearlrt {
    }
 
    void DationRW::dationSeek(const Fixed<31> & p, const int dationParam) {
-      work->dationSeek(p, dationParam);
+      ((SystemDationNB*)systemDation)->dationSeek(p, dationParam);
    }
 
    void DationRW::dationUnGetChar(const char c) {
-      work->dationUnGetChar(c);
+      ((SystemDationNB*)systemDation)->dationUnGetChar(c);
    }
 
    void DationRW::write(TaskCommon*me,

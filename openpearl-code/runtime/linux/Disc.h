@@ -88,6 +88,7 @@ namespace pearlrt {
          RefCharacter   rcFn;
          Character<256> completeFileName;
          Disc * 	myDisc;
+	 int 		cap;
       public:
          /**
             shows whether this pool element is in use

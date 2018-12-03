@@ -54,8 +54,9 @@ namespace pearlrt {
                               DationDim * dimensions,
                               DationType dt)
       : dationType(dt) {
-      system = parent;
-      systemDation = parent;  // set this reference also for SystemDation
+      this->parent = parent;
+      systemDation = NULL;  // this will be set when the open operation
+                            // occurs
 
       if (dimensions == NULL) {
          Log::error("UserDationNB: no dimension passed");
@@ -106,14 +107,14 @@ namespace pearlrt {
 
       // verify compatibility of system device capabilities with dation
       // parameters
-      if ((system->capabilities() & DIRECTIONMASK & params) !=
+      if ((parent->capabilities() & DIRECTIONMASK & params) !=
             (params & DIRECTIONMASK)) {
          Log::error(
             "UserDationNB: required direction not supported by system dation");
          throw theInternalDationSignal;
       }
 
-      if ((system->capabilities() & POSITIONINGMASK & params) !=
+      if ((parent->capabilities() & POSITIONINGMASK & params) !=
             (params & POSITIONINGMASK)) {
          Log::error(
             "UserDationNB: required positioning are "
@@ -125,7 +126,7 @@ namespace pearlrt {
       dim->setDationParams(dationParams);
 
       // perform NewLine translation only for ALPHIC dations
-      system->translateNewLine(dationType == ALPHIC);
+      parent->translateNewLine(dationType == ALPHIC);
 
       if (dationType == ALPHIC) {
          paddingElement = ' ';
@@ -135,7 +136,7 @@ namespace pearlrt {
    }
 
    void UserDationNB::closeSystemDation(int dationParams) {
-      work-> dationClose(dationParams);
+      systemDation->dationClose(dationParams);
    }
 
    void UserDationNB::pos(Fixed<31> element) {
@@ -263,7 +264,7 @@ namespace pearlrt {
 //printf("getIndex=%d  col=%d stepSize=%d\n",
 //    dim->getIndex().x,dim->getColumn().x,stepSize.x);
 //printf("tempPos=%d\n", tempPos.x);
-         work->dationSeek(tempPos, dationParams);
+         ((SystemDationNB*)systemDation)->dationSeek(tempPos, dationParams);
 //         if (currentDirection == Dation::IN) {
 //            tfuBuffer.prepare();
 //            tfuBuffer.readRecord(dationType==ALPHIC);
@@ -275,7 +276,7 @@ namespace pearlrt {
       } else {
          Fixed<31> tempPos;
          tempPos = dim->getIndex() * stepSize;
-         work->dationSeek(tempPos, dationParams);
+         ((SystemDationNB*)systemDation)->dationSeek(tempPos, dationParams);
       }
    }
 
@@ -516,7 +517,7 @@ namespace pearlrt {
 
          if ((dationParams & Dation::DIRECT) &&
                (row.x != 0 || page.x != 0)) {
-            work->dationSeek(dim->getIndex() * stepSize, dationParams);
+            ((SystemDationNB*)systemDation)->dationSeek(dim->getIndex() * stepSize, dationParams);
             // update position on physical device
             // with TFU we must set the location to the beginning
             // of the adressed record and the position in the record
@@ -554,7 +555,7 @@ namespace pearlrt {
       } else {
          // no TFU buffer active
          if (dationParams & Dation::DIRECT)  {
-            work->dationSeek(dim->getIndex() * stepSize, dationParams);
+            ((SystemDationNB*)systemDation)->dationSeek(dim->getIndex() * stepSize, dationParams);
          }
 
          if (dationParams & Dation::FORWARD)  {
@@ -637,7 +638,7 @@ namespace pearlrt {
 
       if (tfuBuffer.isUsed()) {
          if (dationParams & Dation::DIRECT) {
-            work->dationSeek(dim->getIndex() * stepSize, dationParams);
+            ((SystemDationNB*)systemDation)->dationSeek(dim->getIndex() * stepSize, dationParams);
             // update position on physical device
             // with TFU we must set the location to the beginning
             // of the adressed record and the position in the record
@@ -673,7 +674,7 @@ namespace pearlrt {
          // no TFU buffer active
          if (dationParams & Dation::DIRECT)  {
             adv(page, row, element);
-            work->dationSeek(dim->getIndex() * stepSize, dationParams);
+            ((SystemDationNB*)systemDation)->dationSeek(dim->getIndex() * stepSize, dationParams);
          } else if (dationParams & Dation::FORWARD)  {
             if (dationType == ALPHIC) {
 //printf("fromAdv ALPHIC: p/r/c: %d/%d/%d\n", page.x, row.x, element.x);
@@ -750,7 +751,7 @@ namespace pearlrt {
       Fixed<31> p, r, c;
 
       assertOpenDirectOrForward();
-      endOfFilePos = work->dationEof();
+      endOfFilePos = ((SystemDationNB*)systemDation)->dationEof();
 
       if (dationParams & Dation::DIRECT) {
          dimensions = dim->getDimensions();
@@ -808,17 +809,17 @@ namespace pearlrt {
          throw theOpenFailedSignal;
       }
 
-      if ((system->capabilities() & IDF) && !(p & IDF) && !(p & ANY)) {
+      if ((parent->capabilities() & IDF) && !(p & IDF) && !(p & ANY)) {
          Log::error("UserDationNB: system dation requires IDF");
          throw theDationParamSignal;
       }
 
-      if (!(system->capabilities() & IDF) && (p & IDF)) {
+      if (!(parent->capabilities() & IDF) && (p & IDF)) {
          Log::error("UserDationNB: system dation does not support IDF");
          throw theDationParamSignal;
       }
 
-      if ((system->capabilities() & OPENMASK & p) !=
+      if ((parent->capabilities() & OPENMASK & p) !=
             (p & OPENMASK)) {
          Log::error("UserDationNB: open parameter not supported "
                     "by system device");
@@ -844,10 +845,10 @@ namespace pearlrt {
       // open system dation
       if (p & IDF) {
          // pass filename if specified by IDF
-         work = system->dationOpen(rc->getCstring(), dationParams);
+         systemDation = parent->dationOpen(rc->getCstring(), dationParams);
       } else {
          // no filename specified by IDF --> pass NULL as name
-         work = system->dationOpen(NULL, dationParams);
+         systemDation = parent->dationOpen(NULL, dationParams);
       }
 
       // do dation (RW/PG) specific stuff
@@ -864,7 +865,7 @@ namespace pearlrt {
       Fixed<31> h = n;
 
       while (h.x > 0) {
-         work->dationWrite(&fillChar, 1);
+         systemDation->dationWrite(&fillChar, 1);
          h.x --;
       }
    }
@@ -877,7 +878,7 @@ namespace pearlrt {
       char dummy;
 
       while (h.x > 0) {
-         work->dationRead(&dummy, 1);
+         systemDation->dationRead(&dummy, 1);
          //dationRead(&dummy, 1);
          h.x --;
       }
@@ -892,12 +893,12 @@ namespace pearlrt {
       char dummy;
 
       while (h.x > 0) {
-         work->dationRead(&dummy, 1);
+         systemDation->dationRead(&dummy, 1);
          //dationRead(&dummy, 1);
          h.x --;
 
          if (dummy == '\n' || dummy == '\f') {
-            work->dationUnGetChar(dummy);
+            ((SystemDationNB*)systemDation)->dationUnGetChar(dummy);
             //dationUnGetChar(dummy);
             return;
          }
@@ -916,7 +917,7 @@ namespace pearlrt {
 //printf("skip until %d*%x\n", n.x,targetChar);
 
       while (h.x > 0) {
-         //work->dationRead(&dummy, 1);
+         //systemDation->dationRead(&dummy, 1);
          //dummy = getChar();
          //dationRead(&dummy, 1);
          dummy = tfuBuffer.getChar();
@@ -925,7 +926,7 @@ namespace pearlrt {
          if (dummy == targetChar) {
             h.x --;
          } else if (dummy == '\f' && targetChar == '\n') {
-            //work->dationUnGetChar(dummy);
+            //systemDation->dationUnGetChar(dummy);
             //dationUnGetChar(dummy);
             tfuBuffer.unGetChar(dummy);
             return;

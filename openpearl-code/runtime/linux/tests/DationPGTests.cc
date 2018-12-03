@@ -379,43 +379,8 @@ TEST(DationPG, lineOverflow) {
    };
    ASSERT_EQ(pearlrt::theDationIndexBoundSignal.whichRST(),
              rstValue.x);
-   printf("rstval=%d\n", rstValue.x);
 
    logbuch.dationClose(pearlrt::Dation::PRM, (pearlrt::Fixed<15>*)0);
- 
-#if 0   /* read binary and compare */
-   pearlrt::Character<1> data[12];
-   pearlrt::Character<1> rdata[12];
-   data[0] = pearlrt::toChar((pearlrt::Fixed<8>)'P');
-   data[1] = pearlrt::toChar((pearlrt::Fixed<8>)'E');
-   data[2] = pearlrt::toChar((pearlrt::Fixed<8>)'A');
-   data[3] = pearlrt::toChar((pearlrt::Fixed<8>)'R');
-   data[4] = pearlrt::toChar((pearlrt::Fixed<8>)'L');
-   data[5] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
-   data[6] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
-   data[7] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
-   data[8] = pearlrt::toChar((pearlrt::Fixed<8>)'\n');
-   data[9] = pearlrt::toChar((pearlrt::Fixed<8>)' ');
-   data[10] = pearlrt::toChar((pearlrt::Fixed<8>)'4');
-   data[11] = pearlrt::toChar((pearlrt::Fixed<8>)'2');
-   pearlrt::DationRW log_bin(disc_,
-                             pearlrt::Dation::IN |
-                             pearlrt::Dation::FORWARD |
-                             pearlrt::Dation::STREAM |
-                             pearlrt::Dation::NOCYCL,
-                             &dim,
-                             (pearlrt::Fixed<15>)1);
-   ASSERT_NO_THROW(
-      log_bin.dationOpen(
-         pearlrt::Dation::IDF |
-         pearlrt::Dation::OLD ,
-         & filename,
-         (pearlrt::Fixed<15>*)NULL));
-   log_bin.dationRead(&rdata, sizeof(rdata));
-   log_bin.dationClose(0, (pearlrt::Fixed<15>*)0);
-   ASSERT_TRUE(
-      ARRAY_EQUAL(12, data, rdata));
-#endif
 }
 
 /**

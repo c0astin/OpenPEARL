@@ -41,6 +41,7 @@
 #include "Log.h"
 #include "Signals.h"
 #include "Task.h"
+#include "capabilitiesFromPermissions.h"
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -87,57 +88,7 @@ namespace pearlrt {
       usedCapacity = 0;
       // check folder permissions
       cap = IDF | DIRECT | FORWARD;
-
-      if (geteuid() == attribut.st_uid) {
-         //  am owner of the folder
-         if (attribut.st_mode & S_IRUSR) {
-            cap |= IN;
-         }
-
-         if (attribut.st_mode & S_IWUSR) {
-            cap |= OUT;
-         }
-
-         if (attribut.st_mode & (S_IRUSR | S_IWUSR)) {
-            cap |= INOUT;
-         }
-      }
-
-      if (getegid() == attribut.st_gid) {
-         //  am in the same group as the folder
-         if (attribut.st_mode & S_IRGRP) {
-            cap |= IN;
-         }
-
-         if (attribut.st_mode & S_IWGRP) {
-            cap |= OUT;
-         }
-
-         if (attribut.st_mode & (S_IRGRP | S_IWGRP)) {
-            cap |= INOUT;
-         }
-      }
-
-      // permissions of OTHERs apply also
-      if (attribut.st_mode & S_IROTH) {
-         cap |= IN;
-      }
-
-      if (attribut.st_mode & S_IWOTH) {
-         cap |= OUT;
-      }
-
-      if (attribut.st_mode & (S_IROTH | S_IWOTH)) {
-         cap |= INOUT;
-      }
-
-      if (cap & OUT) {
-         cap |= (NEW | ANY | PRM | CAN);
-      }
-
-      if (cap & IN) {
-         cap |= (OLD | ANY);
-      }
+      cap |= capabilitiesFromPermissions(attribut);
 
       Character<80> capString;
       RefCharacter rc(capString);
@@ -221,7 +172,7 @@ namespace pearlrt {
    }
 
    int Disc::DiscFile::capabilities() {
-      return 0;  // will never called; the parents capabilities are requested
+      return cap;
    }
 
    Disc::DiscFile *  Disc::dationOpen(const char * idfValue, int openParams) {
@@ -277,6 +228,8 @@ namespace pearlrt {
 
    Disc::DiscFile* Disc::DiscFile::dationOpen(const char * fn,
          int openParams) {
+      struct stat attribut;
+
       // setup open mode
       //            IN      OUT      INOUT  precondition
       //  OLD       r        w+       w+    file must exist
@@ -348,7 +301,16 @@ namespace pearlrt {
          myDisc->mutex.unlock();
          throw theOpenFailedSignal;
       }
+      
+      if (stat(fn, &attribut) == -1) {
+         //can't get stat -> throw signal
+         Log::error("DiscFile: could not locate %s", fn);
+         throw theDationParamSignal;
+      }
 
+      cap = IDF | DIRECT | FORWARD;
+      cap |= capabilitiesFromPermissions(attribut);
+      
       return this;
    }
 

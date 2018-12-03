@@ -80,6 +80,7 @@ namespace pearlrt {
       private:
          FILE * fp;
          Pipe * 	myPipe;
+         int            cap;
 
       public:
          /**

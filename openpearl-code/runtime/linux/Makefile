@@ -67,6 +67,7 @@ phony = _all
 _all: all
 
 SRCANDH = \
+	capabilitiesFromPermissions.cc \
 	TaskTimer.cc \
 	Task.cc \
 	Mutex.cc PrioMapper.cc \
@@ -243,6 +244,7 @@ install: all
 libOpenPEARLlinux.a: $(PLIB_OBJ)
 	@rm -f $@
 	@echo "[build]  libOpenPEARL.a"
+	@echo $(PLIB_OBJ)
 	@ar r $@  $(PLIB_OBJ) 
 
 # -------------------------------------------------
