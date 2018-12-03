@@ -1,0 +1,24 @@
+MODULE(structDcl);
+
+PROBLEM;
+
+   DCL person STRUCT [
+      name STRUCT [
+         first  CHAR(20),
+         second CHAR(20)
+      ], 
+      adr STRUCT [ 
+         str      CHAR(30),
+         postCode FIXED,
+         town     CHAR(20)
+      ]
+   ];
+
+ttt: TASK;
+  DCL f FIXED;
+
+!  person.adr.postCode := f;
+
+END;
+MODEND;
+
