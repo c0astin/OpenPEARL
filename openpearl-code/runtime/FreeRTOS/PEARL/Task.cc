@@ -58,6 +58,9 @@
 
 namespace pearlrt {
 
+//          remove this vv comment to enable debug messages
+#define DEBUG(fmt, ...)  Log::debug(fmt, ##__VA_ARGS__)
+
    /*********************************************************************//**
     * @brief		Constructor for FreeRTOS based tasks
     * @param[in]	n task name
@@ -76,7 +79,8 @@ namespace pearlrt {
       schedContinueData.taskTimer = &continueTimer;
 
       // FreeRTOS part
-      stackDepth = 800;
+      stackDepth = 800; //sizeof(stack)/sizeof(stack[0]);
+
       xth = pdFALSE;
       TaskList::Instance().add(this);
    }
@@ -97,7 +101,7 @@ namespace pearlrt {
 
       int freeRtosPrio = PrioMapper::getInstance()->fromPearl(prio.x);
 
-      Log::debug("%s::directActivate freeRTOSprio=%d", name, freeRtosPrio);
+      DEBUG("%s::directActivate freeRTOSprio=%d", name, freeRtosPrio);
 
       BaseType_t taskCreation = pdFALSE;
 
@@ -126,24 +130,25 @@ namespace pearlrt {
                                  freeRtosPrio, &xth);
 
       if (taskCreation) {
-         Log::debug("%s: started", name);
+         DEBUG("%s: started", name);
          taskState = RUNNING;
       } else {
          Log::error("%s: not created", name);
          throw theInternalTaskSignal;
       }
 
-      Log::debug("%s::activated ", name);
+      DEBUG("%s::activated ", name);
 
       if (freeRtosRunning) {
          switchToThreadPrioCurrent(cp);
       }
    }
 
-
+#if 0
    void Task::resume2() {
       suspendMySelf();
    }
+#endif
 
    void Task::entry() {
       schedActivateOverrun = false;
@@ -153,7 +158,7 @@ namespace pearlrt {
       Task* me = ((Task*)param);
 
       me->entry();
-      Log::debug("%s: starts", me->getName());
+      DEBUG("%s: starts", me->getName());
 
       try {
          me->task(me);
@@ -175,7 +180,7 @@ namespace pearlrt {
 
    void Task::terminateMySelf() {
       TaskHandle_t oldTaskHandle = xth;
-      Log::debug("%s: terminateSelf", name);
+      DEBUG("%s: terminateSelf", name);
 
       // set the calling tasks priority to maximum to be shure that
       // the following code - especially the restarting of the task itself
@@ -190,7 +195,7 @@ namespace pearlrt {
          */
          ServiceJob s = {(void (*)(void *))restartTaskStatic, this};
 
-         Log::debug("%s: terminates with schedOverrun flag - start task again",
+         DEBUG("%s: terminates with schedOverrun flag - start task again",
                     name);
 
          /* note: the current task prio is "RunToCompletion"
@@ -223,6 +228,57 @@ namespace pearlrt {
       vTaskDelete(oldTaskHandle);
    }
 
+   void Task::terminateIO() {
+         Log::warn("terminate remote in i/o blocked not supported");
+   }
+
+   void Task::terminateSuspended() {
+       DEBUG("%s: terminateSuspended", name);
+       terminateRunning();
+   }
+
+   void Task::terminateRunning() {
+      int cp; // current calling tasks priority
+
+       DEBUG("%s: terminateRunning", name);
+
+      // set the calling threads priority to maximum priority
+      // to enshure the execution of this function without task switch
+      cp = switchToThreadPrioMax();
+
+
+      taskState = TERMINATED;
+      vTaskDelete(this->xth);
+      DEBUG("%s: terminateRunning .. done", name);
+
+      // test if the a scheduled activation was not performed due to 
+      // the task was still active. Restart the task right now
+      if (schedActivateOverrun) {
+         schedActivateOverrun = false;
+         directActivate(schedActivateData.prio);
+      } else {
+         if (schedActivateData.taskTimer->isActive() == false &&
+               schedActivateData.whenRegistered == false) {
+            mutexUnlock();
+            TaskMonitor::Instance().decPendingTasks();
+         } else {
+            mutexUnlock();
+         }
+      }
+
+      while(terminateWaiters > 0) {
+         terminateWaiters --;
+         terminateDone.release();
+      }
+
+      switchToThreadPrioCurrent(cp);
+   }
+
+   void Task::terminateSuspendedIO() {
+         Log::warn("terminate remote in suspended i/o blocked not supported");
+   }
+
+#if 0
    void Task::terminateFromOtherTask() {
       Log::debug("%s: terminateFromOtherTask", name);
       int cp; // current calling tasks priority
@@ -298,10 +354,11 @@ namespace pearlrt {
 
       switchToThreadPrioCurrent(cp);
    }
+#endif
 
    void Task::suspendMySelf() {
       int cp; // current calling threads priority
-      Log::debug("%s: suspendMyself  taskState=%d", name, taskState);
+      DEBUG("%s: suspendMyself  taskState=%d", name, taskState);
 
       switch (taskState) {
       case RUNNING:
@@ -322,16 +379,34 @@ namespace pearlrt {
       // state is set again.
       cp = switchToThreadPrioMax();
       mutexUnlock();
+DEBUG("suspendMySelf: go into suspend state");
       vTaskSuspend(xth);
+DEBUG("suspended - got continue");
       mutexLock();
 
       taskState = RUNNING;
       switchToThreadPrioCurrent(cp);
 
-      Log::debug("   task %s: continue from suspend done", name);
+      DEBUG("   task %s: continue from suspend done", name);
 
    }
 
+   void Task::suspendRunning() {
+      int cp; // current calling threads priority
+         DEBUG("   task %s: suspend request in RUNNING mode", name);
+
+         cp = switchToThreadPrioMax();
+         taskState = SUSPENDED;
+         vTaskSuspend(this->xth);
+         switchToThreadPrioCurrent(cp);
+   }
+
+   void Task::suspendIO() {
+         Log::warn("suspend remote in i/o blocked not supported");
+   }
+
+
+#if 0
    void Task::suspendFromOtherTask() {
       int cp; // current calling threads priority
 
@@ -379,7 +454,7 @@ namespace pearlrt {
       int cp; // current calling threads priority
       // this may be the timer-task from FreeRTOS in case
       // of timed continue
-
+    
       cp = switchToThreadPrioMax();
 
       switch (taskState) {
@@ -468,8 +543,10 @@ namespace pearlrt {
 
       switchToThreadPrioCurrent(cp);
    }
+#endif
 
    void Task::continueSuspended() {
+#if 0
       try {
          if (schedContinueData.prio.x > 0) {
             // just set new priority
@@ -479,13 +556,15 @@ namespace pearlrt {
          mutexUnlock();
          throw;
       }
-
+#endif
+      DEBUG("%s: continue suspended", name);
       vTaskResume(xth);
+      DEBUG("%s: continue suspended ... done",name);
       // update of taskState and release of mutexTask is done in
       // continued task
    }
 
-   void Task::changeThreadPrio(const Fixed<15>& prio) {
+   void Task::setPearlPrio(const Fixed<15>& prio) {
       currentPrio = prio;
 
       int p = PrioMapper::getInstance()->fromPearl(prio);

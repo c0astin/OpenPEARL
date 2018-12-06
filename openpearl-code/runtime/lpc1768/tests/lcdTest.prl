@@ -61,7 +61,28 @@ __cpp__(" pearlrt::Character<5> _black(\"\\033[30m\");"
 pgoto: PROC( (line,col) FIXED);
    DCL ch CHAR(1);
    DCL l FIXED INIT(3);
+   DCL help FIXED;
    DCL c FIXED INIT(6);
+
+  !goto.CHAR(3) = TOCHAR line/10+48;
+   help := line // 10 + 48;
+   ch = TOCHAR help;
+   goto.CHAR(3) := ch;
+   
+   help := line REM 10 + 48;
+   ch = TOCHAR help;
+   goto.CHAR(4) := ch;
+
+   help := col // 10 + 48;
+   ch = TOCHAR help;
+   goto.CHAR(6) := ch;
+   
+   help := col REM 10 + 48;
+   ch = TOCHAR help;
+   goto.CHAR(7) := ch;
+
+
+/* 
    __cpp__(
        " int p;"
        " p = _l.x;"
@@ -77,6 +98,8 @@ pgoto: PROC( (line,col) FIXED);
        "_ch = pearlrt::toChar(_col.x+'0'); "
        "_goto.setCharAt(p+1,_ch);"
    );
+*/
+
 END;
 
 fill: PROC;

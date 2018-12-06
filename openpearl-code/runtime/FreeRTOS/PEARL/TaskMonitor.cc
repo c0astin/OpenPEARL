@@ -42,6 +42,8 @@ stops the system when no more activity may occur
 #include "TaskMonitor.h"
 #include "Log.h"
 
+// remove comments     vv  to enable debug messages
+#define DEBUG(fmt,...) // Log::debug(fmt, ##__VA_ARGS__)
 namespace pearlrt {
 
    TaskMonitor::TaskMonitor() {
@@ -52,7 +54,7 @@ namespace pearlrt {
    void TaskMonitor::decPendingTasks() {
       mutex.lock();
       nbrPendingTasks --;
-      Log::debug("TaskMonitor: dec: %d task active/pending", nbrPendingTasks);
+      DEBUG("TaskMonitor: dec: %d task active/pending", nbrPendingTasks);
       mutex.unlock();
 
       if (nbrPendingTasks == 0) {

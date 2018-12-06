@@ -53,6 +53,10 @@
 
 
 namespace pearlrt {
+   /** \addtogroup tasking_freertos
+       @{
+   */
+
    /**
 
    \brief Base class for FreeRTOS based tasks
@@ -106,7 +110,50 @@ namespace pearlrt {
       */
       void directActivate(const Fixed<15>& prio);
 
+/* ------------------------ */
       /**
+       perform required operations to adjust priority
+
+       \param prio the new priority for the task
+
+       \note this method expects the tasks mutex to be locked.
+             It releases the tasks mutex only in case of throwing an
+             exception.
+      */
+      void setPearlPrio(const Fixed<15>& prio);
+
+      /**
+      suspend the task
+      */
+      void suspendMySelf();
+
+      /**
+      terminate the own thread
+      */
+      void terminateMySelf();
+
+     /**
+      internal terminate the own thread
+      */
+      void internalTerminateMySelf();
+#if 0
+      /**
+      terminate the thread of this object as an action from another task
+      */
+      void terminateFromOtherTask();
+#endif
+   public:
+      void terminateIO();
+      void terminateSuspended();
+      void terminateSuspendedIO();
+      void terminateRunning();
+     void suspendRunning();
+      void suspendIO();
+
+/* -------- */
+   
+#if 0
+   /**
        perform required operations to adjust priority, semaphore
        wait queues, .... when the task got the continue condition
 
@@ -119,12 +166,14 @@ namespace pearlrt {
       */
       void continueFromOtherTask(int condition,
                                  Prio prio);
+#endif
    private:
       void continueSuspended();
       static void restartTaskStatic(Task*t);
       void restartTask();
    public:
 
+#if 0
       /**
       goto suspend mode
       */
@@ -142,14 +191,10 @@ namespace pearlrt {
       void terminateFromOtherTask();
 
       /**
-      suspend the task by itself
-      */
-      void suspendMySelf();
-
-      /**
       suspend the task by another task
       */
       void suspendFromOtherTask();
+#endif
 
       /**
       the tasks body.
@@ -209,7 +254,7 @@ namespace pearlrt {
       */
       FakeTaskHandle_t getFreeRTOSTaskHandle();
    };
-
+   /** @} */
 }
 
 #endif /* TASK_H_ */

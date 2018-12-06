@@ -97,7 +97,7 @@ __attribute__((weak)) int main(void) {
       Lpc17xxClock dummy(0);  // the object may be discarded immediately
    }
 
-   Log::getInstance()->setLevel(0x0e);
+   Log::getInstance()->setLevel(0x0f);
 
    // obtain the reset reason
    resetReason = Chip_SYSCTL_GetSystemRSTStatus();
@@ -176,8 +176,8 @@ __attribute__((weak)) int main(void) {
    Log::info("system startup complete");
 
    /* Start the scheduler. */
-
    vTaskStartScheduler();
+
    Log::error("main.c: could not create idle task");
    exit(1);
 }

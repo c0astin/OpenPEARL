@@ -46,12 +46,13 @@ targets +=  \
 	tests/susp_cont_test \
 	tests/sched_demo \
 	tests/SampleBasicDationTests \
-	tests/sematest tests/sematerminate  \
+	tests/sematest\
 	tests/signalTest \
 	tests/clockTest \
 	tests/interruptTest \
 	tests/gpioInterrupt \
 	tests/log_test \
+# tests/sematerminate  \
 #	tests/DationTests \
 #	tests/DationSuspendTerminateTests 
 	
