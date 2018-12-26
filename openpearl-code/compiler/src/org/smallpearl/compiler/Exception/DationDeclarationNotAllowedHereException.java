@@ -27,13 +27,15 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class LoopByOutOfRangeException extends RuntimeException {
+public class DationDeclarationNotAllowedHereException extends RuntimeException {
 
-    public LoopByOutOfRangeException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column +
-                ": Loop BY out of range " );
+    public DationDeclarationNotAllowedHereException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Dation declaration not allowed here.");
+    }
 
+    public DationDeclarationNotAllowedHereException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Dation declaration not allowed here: " + sReason);
     }
 }

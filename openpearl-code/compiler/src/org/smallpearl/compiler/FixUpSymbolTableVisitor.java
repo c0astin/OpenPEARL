@@ -29,8 +29,10 @@
 
 package org.smallpearl.compiler;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
+import org.smallpearl.compiler.Exception.LoopByOutOfRangeException;
+import org.smallpearl.compiler.Exception.NotYetImplementedException;
 import org.smallpearl.compiler.SymbolTable.*;
 
 import java.util.LinkedList;
@@ -45,7 +47,7 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
     private ExpressionTypeVisitor m_expressionTypeVisitor;
     private ConstantPoolVisitor m_constantPoolVisitor;
     private ModuleEntry m_module;
-    private ParseTreeProperty<ExpressionResult> m_properties = null;
+    private ParseTreeProperty<ASTAttribute> m_properties = null;
 
     public FixUpSymbolTableVisitor(int verbose,
                                    boolean debug,
@@ -70,7 +72,7 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
 
         m_module = listOfModules.get(0);
         m_currentSymbolTable = m_module.scope;
-        m_properties = new ParseTreeProperty<ExpressionResult>();
+        m_properties = new ParseTreeProperty<ASTAttribute>();
     }
 
 
@@ -178,9 +180,9 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
         TypeFixed toType = null;
         TypeFixed byType = null;
 
-        ExpressionResult fromRes = null;
-        ExpressionResult toRes = null;
-        ExpressionResult byRes = null;
+        ASTAttribute fromRes = null;
+        ASTAttribute toRes = null;
+        ASTAttribute byRes = null;
 
         int fromPrecision = 1;
         int toPrecision   = Defaults.FIXED_LENGTH;

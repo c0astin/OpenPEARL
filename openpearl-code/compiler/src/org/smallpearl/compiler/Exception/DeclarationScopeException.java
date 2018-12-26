@@ -27,7 +27,7 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
 public class DeclarationScopeException extends RuntimeException {
 

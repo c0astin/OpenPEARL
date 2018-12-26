@@ -27,13 +27,11 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NotAssignableException extends OperationMismatchException {
-/* TODO
-    public NotAssignableException(Definition d) {
-        super("Error at line " + d.getPosition().getLocation() + ": Cannot assign a value to " +
-                d.toString() + ".");
+public class ValueOutOfBoundsException extends RuntimeException {
+
+    public ValueOutOfBoundsException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Value out of bounds");
     }
-*/
 }

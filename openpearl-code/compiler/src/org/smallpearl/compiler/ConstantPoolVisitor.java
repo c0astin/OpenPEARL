@@ -31,6 +31,10 @@ package org.smallpearl.compiler;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
+import org.smallpearl.compiler.Exception.NumberOutOfRangeException;
+import org.smallpearl.compiler.Exception.UnknownIdentifierException;
+import org.smallpearl.compiler.Exception.ValueOutOfBoundsException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
@@ -567,8 +571,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             TypeFixed fromType = null;
             TypeFixed toType = null;
 
-            ExpressionResult fromRes = null;
-            ExpressionResult toRes = null;
+            ASTAttribute fromRes = null;
+            ASTAttribute toRes = null;
             if (ctx.loopStatement_from() != null) {
                 visit(ctx.loopStatement_from().expression());
                 fromRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_from().expression());

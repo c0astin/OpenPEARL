@@ -27,15 +27,14 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class ResultDiscardedException extends RuntimeException {
+public class NumberOutOfRangeException extends RuntimeException {
 
-    public ResultDiscardedException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Result discarded!");
-    }
+    public NumberOutOfRangeException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column +
+                ": Numbers may range from -2147483648 to 2147483647, but " +
+                sNumber + " has been found.");
 
-    public ResultDiscardedException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Result discarded:" + sReason);
     }
 }

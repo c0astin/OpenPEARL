@@ -27,15 +27,13 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class TypeMismatchException extends RuntimeException {
-    public TypeMismatchException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Type mismatch");
-    }
+public class OperationMismatchException extends RuntimeException {
 
-    public TypeMismatchException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Type mismatch: " + sReason);
+/* TODO   public OperationMismatchException(String s) {
+        super(s);
     }
+*/
 
 }

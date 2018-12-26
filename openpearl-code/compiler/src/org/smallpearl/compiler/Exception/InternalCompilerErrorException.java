@@ -27,15 +27,15 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class DuplicateAltValueException extends RuntimeException {
+public class InternalCompilerErrorException extends RuntimeException {
 
-    public DuplicateAltValueException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Duplicate value for alternative.");
+    public InternalCompilerErrorException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Internal compiler error. Please send a bug report!");
     }
 
-    public DuplicateAltValueException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Duplicate value for alternative: " + sReason);
+    public InternalCompilerErrorException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Internal compiler error: " + sReason + ". Please send a bug report!");
     }
 }

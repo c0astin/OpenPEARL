@@ -2069,7 +2069,6 @@ primaryExpression
     | stringSlice
     ;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // ConstantExpression ::=
 //   { + | - } FloatingPointNumber

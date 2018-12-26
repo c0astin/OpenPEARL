@@ -27,15 +27,16 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class IllegalExpressionException extends RuntimeException {
+public class UnknownIdentifierException extends RuntimeException {
 
-    public IllegalExpressionException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Illegal expression error.");
+    public UnknownIdentifierException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Unknown identifier");
     }
 
-    public IllegalExpressionException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Illegal expression error: " + sReason);
+    public UnknownIdentifierException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Unknown identifier: " + sReason);
     }
+
 }

@@ -30,6 +30,7 @@
 package org.smallpearl.compiler.SemanticAnalysis;
 
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.DeclarationScopeException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 

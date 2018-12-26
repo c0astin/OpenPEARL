@@ -32,7 +32,9 @@ package org.smallpearl.compiler;
 import org.antlr.v4.runtime.*;
 import org.stringtemplate.v4.*;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.io.PrintWriter;
 import java.io.IOException;
@@ -40,7 +42,7 @@ import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
 
 public class Compiler {
-    static String version = "v0.8.9.24";
+    static String version = "v0.8.9.30";
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();
@@ -68,7 +70,6 @@ public class Compiler {
     static int     noOfWarnings = 0;
     static int     warninglevel = 255;
     static int     lineWidth = 80;
-
 
     public static void main(String[] args) {
         int i, j;
@@ -115,10 +116,17 @@ public class Compiler {
             // Start Analysis
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            System.out.println("Start compiling of:" + inputFiles.get(i));
-            System.out.println("Performing syntax check");
+            // Setup logger
+            Log.Logger logger = new Log.Logger();
+            logger.setLogFilename(getBaseName(inputFiles.get(i)) + ".log");
+            Log.setLogger(logger);
+
+
+            Log.info("OpenPEARL compiler version " + version);
+            Log.info("Start compiling of:" + inputFiles.get(i));
+            Log.debug("Performing syntax check");
+
             ParserRuleContext tree = parser.program();
-            System.out.flush();
 
             if (printAST) {
                 System.out.println("Parse tree:");
@@ -136,7 +144,6 @@ public class Compiler {
                     if (dumpSymbolTable) {
                         symbolTableVisitor.symbolTable.dump();
                     }
-
 
                     ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose, debug, symbolTableVisitor);
                     expressionTypeVisitor.visit(tree);
@@ -332,6 +339,8 @@ public class Compiler {
         return true;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     private static Void CppGenerate(String sourceFileName,
                                     ParserRuleContext tree,
                                     SymbolTableVisitor symbolTableVisitor,
@@ -385,6 +394,8 @@ public class Compiler {
         return null;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     private static Void SystemPartExport(String sourceFileName, ParserRuleContext tree) {
         String outputFileName = sourceFileName;
 
@@ -401,9 +412,7 @@ public class Compiler {
             }
         }
 
-
-        outputFileName = outputFileName.substring(0, outputFileName.lastIndexOf('.'));
-        outputFileName = outputFileName.concat(".xml");
+        outputFileName = getBaseName(outputFileName).concat(".xml");
 
         try {
 
@@ -415,11 +424,13 @@ public class Compiler {
             writer.println(systemPart.render(lineWidth));
             writer.close();
         } catch (IOException e) {
-            System.err.println("Problem writing to the IMC file " + outputFileName);
+            System.err.println("Problem writing the IMC file " + outputFileName);
         }
 
         return null;
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     static String getStackTrace(Throwable t) {
         StringWriter sw = new StringWriter();
@@ -429,5 +440,16 @@ public class Compiler {
         sw.flush();
         return sw.toString();
     }
-}
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    static String  getBaseName(String filename) {
+        String basename = "";
+
+        if (filename != null) {
+            basename = filename.substring(0, filename.lastIndexOf('.'));
+        }
+
+        return basename;
+    }
+}

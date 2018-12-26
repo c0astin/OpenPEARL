@@ -27,14 +27,15 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NoProcedureException extends RuntimeException {
-
-/* TODO    public NoProcedureException(String name, int line, int column, int type) {
-        super("Error at line " + line + ":" + column +
-                ": A procedure was expected, but " + Symbol.SYMBOLNAME_LC[type] + " " + name +
-                " has been found.");
+public class PrecisionNotSupportedException extends RuntimeException {
+    public PrecisionNotSupportedException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Precison not supported");
     }
-*/
+
+    public PrecisionNotSupportedException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Precison not supported: " + sReason);
+    }
+
 }

@@ -31,6 +31,9 @@ package org.smallpearl.compiler.SemanticAnalysis;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.DationDeclarationNotAllowedHereException;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
+import org.smallpearl.compiler.Exception.NumberOfInitializerMismatchException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;

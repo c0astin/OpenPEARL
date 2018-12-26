@@ -30,7 +30,7 @@
 package org.smallpearl.compiler;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.smallpearl.compiler.SymbolTable.ModuleEntry;
+import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
@@ -55,6 +55,8 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
         m_currentSymbolTable = symbolTable;
         m_constantExpressionEvaluatorVisitor = constantExpressionEvaluatorVisitor;
         m_constantPoolVisitor = constantPoolVisitor;
+
+        m_debug = true;
 
         if (m_verbose > 0) {
             System.out.println( "    ConstantFixedExpressionEvaluator");

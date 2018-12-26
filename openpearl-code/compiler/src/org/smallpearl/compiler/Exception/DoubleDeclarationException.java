@@ -27,11 +27,22 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class ValueOutOfBoundsException extends RuntimeException {
+public class DoubleDeclarationException extends RuntimeException {
 
-    public ValueOutOfBoundsException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Value out of bounds");
+    public DoubleDeclarationException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Double declaration error.");
     }
+
+    public DoubleDeclarationException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Double declaration error: " + sReason);
+    }
+
+/* TODO
+    public DoubleDeclarationException(Definition d, Definition dOld) {
+        super("Error at line " + d.getPosition().getLocation() + ": Symbol " + d.getName() +
+                " has already been defined at line " + dOld.getPosition().getLocation() + ".");
+    }
+*/
 }

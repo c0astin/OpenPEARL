@@ -32,6 +32,8 @@ package org.smallpearl.compiler;
 import java.util.LinkedList;
 import java.util.UUID;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.misc.Interval;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 import org.stringtemplate.v4.ST;
@@ -492,4 +494,11 @@ public class CommonUtils {
         return len;
     }
 
+    public static String printContext(ParserRuleContext ctx) {
+        int a = ctx.start.getStartIndex();
+        int b = ctx.stop.getStopIndex();
+
+        Interval interval = new Interval(a, b);
+        return ctx + ":" + ctx.start.getInputStream().getText(interval);
+    }
 }

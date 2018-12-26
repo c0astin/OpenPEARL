@@ -27,13 +27,15 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NotYetImplementedException extends RuntimeException {
+public class TypeMismatchException extends RuntimeException {
+    public TypeMismatchException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Type mismatch");
+    }
 
-    public NotYetImplementedException(String name, int line, int column) {
-        super("Error at line " + line + ":" + column +
-                ": Feature not yet implemented: " + name);
+    public TypeMismatchException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Type mismatch: " + sReason);
     }
 
 }

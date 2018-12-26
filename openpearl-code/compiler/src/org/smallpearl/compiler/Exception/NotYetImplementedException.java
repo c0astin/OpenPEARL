@@ -27,13 +27,13 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class DivisionByZeroException extends RuntimeException {
+public class NotYetImplementedException extends RuntimeException {
 
-    public DivisionByZeroException(String name, int line, int column) {
+    public NotYetImplementedException(String name, int line, int column) {
         super("Error at line " + line + ":" + column +
-                ": Division by zero not allowed");
+                ": Feature not yet implemented: " + name);
     }
 
 }

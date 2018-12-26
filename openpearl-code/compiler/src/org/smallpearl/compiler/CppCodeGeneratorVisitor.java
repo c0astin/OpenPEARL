@@ -31,6 +31,7 @@ package org.smallpearl.compiler;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;

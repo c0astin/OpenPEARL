@@ -29,15 +29,13 @@
 
 package org.smallpearl.compiler.SemanticAnalysis;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
+import org.smallpearl.compiler.Exception.TypeMismatchException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
-import org.stringtemplate.v4.ST;
-import org.stringtemplate.v4.STGroup;
 
 public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
 
@@ -106,7 +104,7 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
         SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
 
         TypeDefinition rhs = m_expressionTypeVisitor.lookupType(ctx.expression());
-        ExpressionResult rhs1 = m_expressionTypeVisitor.lookup(ctx.expression());
+        ASTAttribute rhs1 = m_expressionTypeVisitor.lookup(ctx.expression());
 
         if ( lhs instanceof VariableEntry) {
             VariableEntry variable = (VariableEntry) lhs;

@@ -27,15 +27,13 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class DationDeclarationNotAllowedHereException extends RuntimeException {
+public class NoOfFormatSpecifiersDoesNotMatchException extends RuntimeException {
 
-    public DationDeclarationNotAllowedHereException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Dation declaration not allowed here.");
-    }
+    public NoOfFormatSpecifiersDoesNotMatchException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column +
+                ": No of format specifiers does not match.");
 
-    public DationDeclarationNotAllowedHereException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Dation declaration not allowed here: " + sReason);
     }
 }

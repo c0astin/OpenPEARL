@@ -29,13 +29,37 @@
 
 package org.smallpearl.compiler;
 
-public class PrecisionNotSupportedException extends RuntimeException {
-    public PrecisionNotSupportedException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Precison not supported");
+import org.smallpearl.compiler.SymbolTable.VariableEntry;
+
+public class ASTAttribute {
+    public TypeDefinition  m_type;
+    public boolean         m_constant;
+    public VariableEntry   m_variable;
+
+    ASTAttribute(TypeDefinition type) {
+        m_type = type;
+        m_constant = false;
+        m_variable = null;
     }
 
-    public PrecisionNotSupportedException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Precison not supported: " + sReason);
+    ASTAttribute(TypeDefinition type, boolean constant) {
+        m_type = type;
+        m_constant = constant;
+        m_variable = null;
     }
 
+    ASTAttribute(TypeDefinition type, boolean constant, VariableEntry variable ) {
+        m_type = type;
+        m_constant = constant;
+        m_variable = variable;
+    }
+
+    public boolean isConstant() { return this.m_constant; }
+    public boolean isNotConstant() { return !this.isConstant(); }
+    public TypeDefinition getType() { return this.m_type; }
+    public VariableEntry getVariable() { return this.m_variable; }
+
+    public String toString() {
+        return "ASTAttribute: " + this.m_type + " " + this.isConstant() + " " + this.m_variable;
+    }
 }

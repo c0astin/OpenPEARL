@@ -27,16 +27,14 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class UnknownIdentifierException extends RuntimeException {
+public class NoProcedureException extends RuntimeException {
 
-    public UnknownIdentifierException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Unknown identifier");
+/* TODO    public NoProcedureException(String name, int line, int column, int type) {
+        super("Error at line " + line + ":" + column +
+                ": A procedure was expected, but " + Symbol.SYMBOLNAME_LC[type] + " " + name +
+                " has been found.");
     }
-
-    public UnknownIdentifierException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Unknown identifier: " + sReason);
-    }
-
+*/
 }

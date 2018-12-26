@@ -27,14 +27,13 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NumberOutOfRangeException extends RuntimeException {
+public class LoopByOutOfRangeException extends RuntimeException {
 
-    public NumberOutOfRangeException(String sNumber, int line, int column) {
+    public LoopByOutOfRangeException(String sNumber, int line, int column) {
         super("Error at line " + line + ":" + column +
-                ": Numbers may range from -2147483648 to 2147483647, but " +
-                sNumber + " has been found.");
+                ": Loop BY out of range " );
 
     }
 }

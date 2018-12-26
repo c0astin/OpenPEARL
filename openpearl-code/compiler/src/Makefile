@@ -83,7 +83,9 @@ javac:
 				    org/smallpearl/compiler/*.class \
 	                            org/smallpearl/compiler/SymbolTable/*.class \
 	                            org/smallpearl/compiler/SemanticAnalysis/*.class \
-			            SmallPearlCpp.stg IMC.stg
+	                            org/smallpearl/compiler/Exception/*.class \
+	                            org/smallpearl/compiler/AST/*.class \
+				    SmallPearlCpp.stg IMC.stg
 
 ##############################################################################
 
@@ -117,6 +119,8 @@ clean:
 	$(RM) $(OUTPUT_DIR)/org/smallpearl/compiler/*.class
 	$(RM) $(OUTPUT_DIR)/org/smallpearl/compiler/SymbolTable/*.class
 	$(RM) $(OUTPUT_DIR)/org/smallpearl/compiler/SemanticAnalysis/*.class
+	$(RM) $(OUTPUT_DIR)/org/smallpearl/compiler/AST/*.class
+	$(RM) $(OUTPUT_DIR)/org/smallpearl/compiler/Exception/*.class
 	$(RM) $(OUTPUT_DIR)/*.jar
 	$(RM) $(OUTPUT_DIR)/*.stg
 	$(RM) ../prl_cc.inc

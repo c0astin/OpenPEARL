@@ -30,6 +30,8 @@
 package org.smallpearl.compiler.SemanticAnalysis;
 
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.DuplicateAltValueException;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 

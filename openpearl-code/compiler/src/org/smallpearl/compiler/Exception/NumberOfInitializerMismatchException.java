@@ -27,16 +27,14 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NoValueException extends RuntimeException {
-
-/* TODO
-    public NoValueException(String name, int line, int column, int type) {
+/**
+ * Created by marcel on 30.07.14.
+ */
+public class NumberOfInitializerMismatchException extends RuntimeException {
+    public NumberOfInitializerMismatchException(String name, int line, int column) {
         super("Error at line " + line + ":" + column +
-                ": A variable or a constant was expected, but " + Symbol.SYMBOLNAME_LC[type] + " " + name +
-                " has been found.");
+                ": Number of Initializer does not match number of variable declarations.");
     }
-     */
-
 }

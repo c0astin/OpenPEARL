@@ -30,8 +30,8 @@
 package org.smallpearl.compiler.SemanticAnalysis;
 
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.ResultDiscardedException;
 import org.smallpearl.compiler.SymbolTable.*;
-import org.stringtemplate.v4.ST;
 
 import java.util.List;
 

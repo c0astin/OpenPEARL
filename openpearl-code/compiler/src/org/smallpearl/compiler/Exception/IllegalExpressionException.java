@@ -27,15 +27,15 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class InternalCompilerErrorException extends RuntimeException {
+public class IllegalExpressionException extends RuntimeException {
 
-    public InternalCompilerErrorException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Internal compiler error. Please send a bug report!");
+    public IllegalExpressionException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Illegal expression error.");
     }
 
-    public InternalCompilerErrorException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Internal compiler error: " + sReason + ". Please send a bug report!");
+    public IllegalExpressionException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Illegal expression error: " + sReason);
     }
 }

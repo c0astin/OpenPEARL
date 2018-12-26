@@ -27,13 +27,14 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NotSupportedTypeException extends RuntimeException {
+public class NoDeclarationException extends RuntimeException {
 
-    public NotSupportedTypeException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column +
-                ": Datatype is not supported.");
-
+/*
+    public NoDeclarationException(Symbol s) {
+        super("Error at line " + s.getLine() + ":" + s.getColumn() + ": Symbol " + s.getName() +
+                " has not been declared.");
     }
+*/
 }
