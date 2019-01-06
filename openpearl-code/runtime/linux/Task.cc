@@ -56,7 +56,7 @@
 #include "Bolt.h"
 
 //          remove this vv comment to enable debug messages
-#define DEBUG(fmt, ...)   Log::debug(fmt, ##__VA_ARGS__)
+#define DEBUG(fmt, ...) //  Log::debug(fmt, ##__VA_ARGS__)
 
 namespace pearlrt {
 
@@ -550,25 +550,20 @@ namespace pearlrt {
    }
 
    void Task::terminateSuspendedIO() {
-      // send the SIG_CANCEL_IO signal to the i/O performing thread
-      // this will produce an EINTR error of the system call
-      // The driver will detect this and perform the selfTermination
-      //
-      // there is a duration between setting the taskState to IO+BLOCKED
-      // and entering the system call
-      // if the termination request occurs in this period, we do not
-      // get the EINTR error code
-      //
-      // Thus, we set the asyncTerminationRequested flag
-      // and send the signal repetitive until the flag is reset by the
-      // device driver
-
+      // the task is currently suspended, thus we set the 
+      // terminate request flag and continue the task
+      // this will detect the terminate request and 
+      // must unroll the i/o stack with locked mutexes and 
+      // semaphores
+      char dummy;
       asyncTerminateRequested = true;
 
-      while (asyncTerminateRequested) {
-         pthread_kill(threadPid, SIG_CANCEL_IO);
-         usleep(1000);
-      }
+//      terminateWaiters ++;   // increment before treatment from target task
+      DEBUG("%s:   terminateRemote suspended task", name);
+      dummy = 'c';
+      mutexUnlock();
+      write(pipeResume[1], &dummy, 1);
+
    }
 
    void Task::terminateMySelf() {
@@ -614,7 +609,7 @@ namespace pearlrt {
 
       taskState = Task::TERMINATED;
       threadPid = 0; // invalidate thread id
-      DEBUG("%s: terminates", name);
+      DEBUG("%s: terminates now", name);
       mutexUnlock();
       pthread_exit(0);
    }
@@ -656,18 +651,13 @@ namespace pearlrt {
 
 
    void Task::treatCancelIO(void) {
-      DEBUG("%s: treatCancelIO", name);
+      DEBUG("%s: treatCancelIO: termReq=%d suspeReq=%d", name
+             , asyncTerminateRequested, asyncSuspendRequested);
 
       // we do not need to lock the global task lock, since this
       // was already done where the signal was raises in suspendFromOtherTask
       // or terminateFromOtherTask.
 
-      if (asyncTerminateRequested) {
-         asyncTerminateRequested = false;
-         DEBUG("%s: terminate during system IO device", name);
-         mutexUnlock();
-         throw theTerminateRequestSignal;
-      }
 
       if (asyncSuspendRequested) {
          asyncSuspendRequested = false;
@@ -677,13 +667,23 @@ namespace pearlrt {
 
          DEBUG("%s: Task::treatIOCancelIO: suspending ...", name);
          suspendMySelf();
-         DEBUG("%s: Task::treatIOCancelIO: continued", name);
+         DEBUG("%s: Task::treatIOCancelIO: continued: termReq=%d suspeReq=%d",
+              name , asyncTerminateRequested, asyncSuspendRequested);
 
-         // we must unlock the mutex at this point, due to the asymmetry 
-         // at suspendIO(). 
-         mutexUnlock(); 
-
+         if (! asyncTerminateRequested) {
+            // we must unlock the mutex at this point, due to the asymmetry 
+            // at suspendIO(). 
+            // if there is a terminate request pending, the unlock is done
+            // in the next if statement
+            mutexUnlock(); 
+         }
       }
 
+      if (asyncTerminateRequested) {
+         asyncTerminateRequested = false;
+         DEBUG("%s: terminate during system IO device", name);
+         mutexUnlock();
+         throw theTerminateRequestSignal;
+      }
    }
 }

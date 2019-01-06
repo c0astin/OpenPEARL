@@ -145,7 +145,7 @@ namespace pearlrt {
          this flag is also required for the termination of a task
          which resides in a wait queue
       */
-      volatile bool asyncSuspendRequested;
+//      volatile bool asyncSuspendRequested;
 
 
       pthread_t threadPid; //thread id
