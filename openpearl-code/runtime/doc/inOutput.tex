@@ -412,6 +412,29 @@ Remarks:
    If they do not match a PEARL signal is raised
 \end{itemize}
 
+\section{System Dation API}
+The API consists of of usual methods
+\begin{itemize}
+\item dationOpen
+\item dationClose
+\item dationRead
+\item dationWrite
+\end{itemize}
+
+Addionally the following methods must be provided
+\begin{description}
+\item[capabilities] must return a bit map about the supported 
+   capabilities like FORWARD, DIRECT, IN, OUT, CAN,... of the system dation
+\item[suspend] must suspend the i/o operation. No further i/o operation 
+must be performed  until the task becomes continued or terminated.
+\item[terminate] must cancel the i/o operation and emit the 
+\verb|IOTerminationRequestSignal|, which is caught in superior levels
+ of the i/o stack in order to free any allocated semaphorfes or mutexes.
+\end{description}
+
+The details of the API is documentes in the doxygen part of the documentations.
+
+
 \section{IO Transfer Operations}
 The IO-operations are treated by methods  of the user dations.
 These methods receive a list of data elements and a list of format

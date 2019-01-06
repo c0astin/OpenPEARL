@@ -22,10 +22,12 @@ suspending a task.
 
 OpenPEARL uses an implementation which is more close to the language report.
 All tasking statements which are executed be the task itself are executed 
-obviously synchronous. Tasking statements concerning other tasks are a little 
+obviously synchronously.
+Tasking statements concerning other tasks are a little 
 bit more difficult, because the runtime system uses internally semaphore
  and mutex
-variables to avoid race conditions. During such a critical region,
+variables to avoid race conditions on i/o operations.
+During such a critical region,
 no task termination must occur. So the  {\em remote suspend request} and 
 {\em remote termination request} just set a flag and wait for the fulfilling
  of the 
@@ -36,9 +38,12 @@ which are
 \item  in each synchronisation statement and 
 \item in each i/o operation on the system device.
 \end{itemize}
-
-The platform specific implementation must deal with this situation and
-provide a mechanisme to suspend and terminate itself.
+In order to interrupt a blocked i/o operation, each platform MUST implement 
+methods in the task implementation to SUSPEND and TERMIATE a task while 
+performing i/o operations.
+For the list of specialized tasking methods please refer the
+{\em pure virtual} methods of \verb|TaskCommon| in the Doxygen
+part of the documentation.
 
 During i/o-operation it is a little bit more complicated. OpenPEARL
 recommends like stated in the language report that suspend and terminate
@@ -190,7 +195,7 @@ If the concrete target system (like linux) does not support 255
 an exception.
 
 \section{Tasking Methods (class TaskCommon)}
-For Task objects there are methods defined to do the tasking actions like
+For task objects there are methods defined to do the tasking actions like
 ACTIVATE, TERMINATE, SUSPEND, CONTINUE , RESUME and PREVENT.
 
 Scheduled operations are possible in combination of ACTIVATE, 
