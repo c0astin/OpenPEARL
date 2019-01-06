@@ -31,6 +31,7 @@
 #define LOGFILE_INCLUDED
 
 #include "SystemDationNB.h"
+#include "TaskCommon.h"
 
 /**
 \file
@@ -154,8 +155,8 @@ public:
       */
       void translateNewLine(bool doNewLineTranslation);
 
-      void suspend();
-      void terminate();
+      void suspend(TaskCommon* ioPerformingTask);
+      void terminate(TaskCommon* ioPerformingTask);
 
 };
 }

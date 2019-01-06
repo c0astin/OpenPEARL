@@ -37,6 +37,7 @@
 
 #include "SystemDation.h"
 #include "Log.h"
+#include "TaskCommon.h"
 
 namespace pearlrt {
 
@@ -49,5 +50,11 @@ namespace pearlrt {
       throw theInternalDationSignal;
    }
 
+   void SystemDation::suspend(TaskCommon * ioPerformingTask) {
+      ioPerformingTask->doAsyncSuspend();
+   }
 
+   void SystemDation::terminate(TaskCommon * ioPerformingTask) {
+      ioPerformingTask->doAsyncTerminate();
+   }
 }

@@ -44,6 +44,8 @@
 
 namespace pearlrt {
 
+   class TaskCommon;
+
    /**
    \addtogroup io_common_helper
    @{
@@ -230,16 +232,22 @@ namespace pearlrt {
 
       This method is invoked by the tasking methods, when a task should
       become SUSPENDed while doing an i/o-operation
+
+      \param ioPerformingTask  pointer to the task, which performs the 
+             io statement
       */
-      virtual void suspend() = 0;
+      virtual void suspend(TaskCommon * ioPerformingTask) = 0;
 
       /**
       terminate in an i/o operation 
 
       This method is invoked by the tasking methods, when a task should
       become TERMINATEd while doing an i/o-operation
+
+      \param ioPerformingTask  pointer to the task, which performs the 
+             io statement
       */
-      virtual void terminate() = 0;
+      virtual void terminate(TaskCommon * ioPerformingTask) = 0;
 
    };
    /** @} */

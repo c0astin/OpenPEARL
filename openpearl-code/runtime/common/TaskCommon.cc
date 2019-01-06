@@ -53,7 +53,7 @@
 #include "Bolt.h"
 
 //          remove this vv comment to enable debug messages
-#define DEBUG(fmt, ...)  Log::debug(fmt, ##__VA_ARGS__)
+#define DEBUG(fmt, ...) // Log::debug(fmt, ##__VA_ARGS__)
 
 namespace pearlrt {
 
@@ -385,7 +385,7 @@ namespace pearlrt {
             break;
 
          case IO:
-            blockParams.why.u.io.dation->terminate();
+            blockParams.why.u.io.dation->terminate(this);
             //terminateIO();
             break;
 
@@ -432,7 +432,6 @@ namespace pearlrt {
             throw theInternalTaskSignal;
          }
 
-         taskState = Task::RUNNING;
          break;
 
       default:
@@ -553,7 +552,7 @@ namespace pearlrt {
 
          case IO:
             //suspendIO();
-            blockParams.why.u.io.dation->suspend();
+            blockParams.why.u.io.dation->suspend(this);
             // the global task mutex is unlocked when the targetted task
             // becomes suspended. Thus we must not unlock the mutex now
 	    doReleaseMutex = false;
@@ -1040,5 +1039,15 @@ namespace pearlrt {
    void TaskCommon::changeThreadPrio(const Fixed<15>& prio) {
       currentPrio = prio;
       setPearlPrio(prio);
+   }
+
+   void TaskCommon::doAsyncSuspend() {
+       asyncSuspendRequested = true;
+       suspendDone.request();
+   }
+
+   void TaskCommon::doAsyncTerminate() {
+      asyncTerminateRequested = true;
+      terminateDone.request();
    }
 }

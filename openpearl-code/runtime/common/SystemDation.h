@@ -134,8 +134,39 @@ namespace pearlrt {
       \param task the pointer to the calling task
       \param direction is ether Dation::IN or Dation::OUT
       */
-//      virtual void registerWaitingTask(TaskCommon * task, int direction);
       virtual void registerWaitingTask(void * task, int direction);
+
+      /**
+      suspend i/o operation
+
+      This method is invoked by the tasking methods, when a task should
+      become SUSPENDed while doing an i/o-operation.
+      This is the default implementation for devices which do non blocking
+      i/o. 
+      This implementation must be overwritten for devices which block
+      during io. This will platform dependent.
+
+      \param ioPerformingTask  pointer to the task, which performs the
+             io statement
+      */
+      void suspend(TaskCommon * ioPerformingTask);
+
+      /**
+      terminate in an i/o operation
+
+      This method is invoked by the tasking methods, when a task should
+      become TERMINATEd while doing an i/o-operation
+      This is the default implementation for devices which do non blocking
+      i/o. 
+      This implementation must be overwritten for devices which block
+      during io. This will platform dependent.
+
+
+      \param ioPerformingTask  pointer to the task, which performs the
+             io statement
+      */
+      void terminate(TaskCommon * ioPerformingTask);
+
 
    };
 }

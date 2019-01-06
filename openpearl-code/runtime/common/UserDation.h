@@ -319,8 +319,8 @@ namespace pearlrt {
       virtual void endSequenceHook(void) = 0;
 
    public:
-      void suspend();
-      void terminate();
+      void suspend(TaskCommon * ioPerformingTask);
+      void terminate(TaskCommon * ioPerformingTask);
    };
 }
 #endif

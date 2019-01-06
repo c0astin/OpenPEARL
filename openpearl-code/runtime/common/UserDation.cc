@@ -219,12 +219,12 @@ namespace pearlrt {
       }
    }
 
-   void UserDation::suspend() {
-      systemDation->suspend();
+   void UserDation::suspend(TaskCommon * ioPerformingTask) {
+      systemDation->suspend(ioPerformingTask);
    }
 
-   void UserDation::terminate() {
-      systemDation->terminate();
+   void UserDation::terminate(TaskCommon * ioPerformingTask) {
+      systemDation->terminate(ioPerformingTask);
    }
 
 }

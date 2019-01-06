@@ -253,6 +253,12 @@ namespace pearlrt {
       */
       volatile bool asyncTerminateRequested;
 
+      /*
+      for io operations which do not block the calling thread,
+      the io performing task will be suspended at a suitable point 
+      e.g. after the io-statement
+      */
+      volatile bool asyncSuspendRequested;
    public:
       /**
       possible states of a thread
@@ -719,6 +725,25 @@ namespace pearlrt {
       */
       void changeThreadPrio(const Fixed<15>& prio);
 
+      /**
+      this method is invoked e.g. by a device driver, when
+      the io performing task should become SUSPENDED and the device 
+      driver would nether block nor take much cpu time.
+
+      The method will set the asynSuspendRequested flag and wait 
+      until the task suspends self.      
+      */
+      void doAsyncSuspend();
+
+      /**
+      this method is invoked e.g. by a device driver, when
+      the io performing task should become TERMINATED and the device 
+      driver would nether block nor take much cpu time.
+
+      The method will set the asynSuspendRequested flag and wait 
+      until the task terminates self.      
+      */
+      void doAsyncTerminate();
 
 private:
     /**
