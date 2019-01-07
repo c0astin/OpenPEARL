@@ -196,9 +196,9 @@ namespace pearlrt {
       consoleCommon.registerWaitingTask(task, direction);
    }
 
-   void Console::suspend() {
+   void Console::suspend(TaskCommon * ioPerformingTask) {
    }
-   void Console::terminate() {
+   void Console::terminate(TaskCommon * ioPerformingTask) {
    }
 
 }

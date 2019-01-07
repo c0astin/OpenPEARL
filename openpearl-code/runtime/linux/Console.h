@@ -241,8 +241,8 @@ namespace pearlrt {
       */
       void openSubDations();
 
-      void suspend();
-      void terminate();
+      void suspend(TaskCommon * ioPerformingTask);
+      void terminate(TaskCommon * ioPerformingTask);
    };
    /** @} */
 }
