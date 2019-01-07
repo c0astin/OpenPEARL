@@ -137,9 +137,6 @@ namespace pearlrt {
       */
       int capabilities();
 
-     void suspend();
-     void terminate();
-
    };
 }
 #endif

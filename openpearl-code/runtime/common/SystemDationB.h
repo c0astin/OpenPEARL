@@ -66,7 +66,6 @@ class SystemDationB: public SystemDation {
        dations. BASIC dations are opened directly by the application.
        They need no user defined dation. 
 */
-protected:
 
 public:
     /**

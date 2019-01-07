@@ -1,6 +1,7 @@
 #ifndef INTERRUPTABLESYSTEMDATIONNB_INCLUDED
 #define INTERRUPTABLESYSTEMDATIONNB_INCLUDED
 
+#include "TaskCommon.h"
 #include "SystemDationNB.h"
 
 namespace pearlrt {
@@ -25,13 +26,21 @@ namespace pearlrt {
       public:
          /**
          realize a suspend operation whil the task performs an i/o operation.
+
+         \param ioPerformingTask  pointer to the task, which performs the
+             io statement
+ 
          */
-         void suspend();
+         void suspend(TaskCommon* ioPerformingTask);
 
          /**
          realize a terminate operation while the task performs an i/o operation.
+
+         \param ioPerformingTask  pointer to the task, which performs the
+             io statement
+ 
          */
-         void terminate();
+         void terminate(TaskCommon* ioPerformingTask);
    };
 }
 #endif

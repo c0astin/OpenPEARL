@@ -558,7 +558,6 @@ namespace pearlrt {
       char dummy;
       asyncTerminateRequested = true;
 
-//      terminateWaiters ++;   // increment before treatment from target task
       DEBUG("%s:   terminateRemote suspended task", name);
       dummy = 'c';
       mutexUnlock();

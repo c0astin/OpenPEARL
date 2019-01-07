@@ -131,21 +131,6 @@ namespace pearlrt {
       */      
       virtual Fixed<31> dationEof();
 
-#if 0   // moved to SystemDation
-
-      /**
-      register the calling task as waiting for an IO-operation
-
-      The method is only called if allowMultipleIORequests is set by the 
-      system dation
-
-      \param task the pointer to the calling task
-      \param direction is ether Dation::IN or Dation::OUT
-      */
-//      virtual void registerWaitingTask(TaskCommon * task, int direction);
-      virtual void registerWaitingTask(void * task, int direction);
-#endif
-
    };
 }
 #endif

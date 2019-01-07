@@ -126,10 +126,5 @@ namespace pearlrt {
       return cap;
    }
 
-   void SampleBasicDation::suspend() {
-   }
-
-   void SampleBasicDation::terminate() {
-   }
 }
 

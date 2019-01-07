@@ -341,10 +341,9 @@ namespace pearlrt {
 
 
    void TaskCommon::terminateFromOtherTask() {
-      //char dummy;
       asyncTerminateRequested = true;
 
-      DEBUG("%s: terminateFromOtherTask: state=%d  "
+      DEBUG("%s: terminateFromOtherTask: taskState=%d  "
                  "asyncTerminateRequested = %d",
                  name, taskState, asyncTerminateRequested);
 
@@ -386,7 +385,6 @@ namespace pearlrt {
 
          case IO:
             blockParams.why.u.io.dation->terminate(this);
-            //terminateIO();
             break;
 
          default:
