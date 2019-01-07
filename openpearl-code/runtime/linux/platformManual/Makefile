@@ -1,4 +1,8 @@
-TEXFILES = OpenPEARL_linux.tex ../../common/signallist.tex
+TEXFILES = OpenPEARL_linux.tex \
+	addDevice.tex     devices.tex     log.tex \
+	pearlrc.tex \
+	addInterrupt.tex  interrupts.tex \
+	../../common/signallist.tex
 
 all: OpenPEARL_linux.pdf  $(TEXFILES)
 

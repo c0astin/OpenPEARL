@@ -9,15 +9,40 @@ priviledges for {\em users}.
 These functions should be used in the methods of the C++ class 
 for the device driver.
 
-\subsection{MUTEX-treatment}
+\subsection{First Considerations}
+Some considerations must be done at the early beginning:
+\begin{itemize}
+\item Which i/o perations are intended?\newline
+In case of  READ/WRITE or PUT/GET the parent class is SystemDationNB or 
+InterruptableSystemDationNB.
+In case of  TAKE/SENDE the parent class is SystemDationB or 
+InterruptableSystemDationB.
+\item Are there blocking operation in the device code?
+\newline
+Use the InterruptableSystemDationB or InterruptableSystemDationNB as parent
+class and treat the return code EINTR as shown in the following example.
+\item Provides the device a service to other system devices eg. like
+an I2C-bus?
+Define an interface for the client devices in a separate class.
+\end{itemize}
+
+\subsection{Interruption of system calls}
 Each user dation provides a mutex mechanism. 
-Some device drivers need a mutex-mechanisme to enable atomic behavior
+Some device drivers need a mutex-mechanism to enable atomic behavior
 when used from different tasks.
 This is obviously true for connection providers.
 
 The read/write system calls will be interrupted by the UNIX signal
 \verb|SIG_CANCEL_IO|. This leed to an error value \texttt{EINTR} for
 the system call or the according value of \texttt{errno} for fread/fwrite.
+
+In case of a SUSPEND request, the system call must be repeated after a 
+CONTINUE opreation. Locked ressources remein locked.
+In case of a TERMIANTE request, alle locks in the i/o stack must become
+released. 
+Both cases are treated in the class InterruptableSystemDationNB and 
+InterruptableSystemDationB.
+
 
 \subsection{Sample code from StdIn.cc}
 \begin{verbatim}
@@ -97,6 +122,9 @@ The creation of a new device is very simple:
       on the dation type. SystemDationB is the parent for process dations.
       SystemDationNB is parent for dations for formatted and unformatted
       i/o with PUT,GET,READ and WRITE
+\item if there are blocking statements in den device code use 
+      InterruptableSystemDationB or InterruptableSystemDationNB as
+      parent class.
 \item provide {\em capabilities} in the ctor in that way that the allowed
       capabilities are listed
 \item if more than on dation may be opened in a concurrent way on the new
