@@ -1,6 +1,6 @@
 /*
- [The "BSD license"]
- Copyright (c) 2012-2013 Rainer Mueller
+ [A "BSD license"]
+ Copyright (c) 2015 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -27,45 +27,53 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef ALLTASKPRIORITIES_INCLUDED
+#define ALLTASKPRIORITIES_INCLUDED
+
+#include "FreeRTOSConfig.h"
+
 /**
 \file
 
-\brief monitor of runningtasks
+List of task priorities of other system tasks in the complete application.
 
-stops the system when no more activity may occur
+This list provides the overview of all tasks known by FreeRTOS in the
+OpenPEARL application.
 
-\author R. Mueller
+There may be tasks for background operations below all PEARL apllications
+as well as tasks which must run with better priorities
+
 */
 
-#include <stdio.h>
+/*
+idle task of FreeRTOS runs with prio 0!
+--> let's start with priority 1 as lowest (not important) priority
+*/
 
-#include "TaskMonitor.h"
-#include "Log.h"
+/**
+priority range for PEARL tasks is from PRIO_PEARL_PRIO_MIN 
+to PRIO_PEARL_PRIO_MAX
+*/
+#define PRIO_PEARL_PRIO_MIN 	1
+#define PRIO_PEARL_PRIO_MAX  	(PRIO_PEARL_PRIO_MIN+255)
 
-// remove comments     vv  to enable debug messages
-#define DEBUG(fmt,...) // Log::debug(fmt, ##__VA_ARGS__)
-namespace pearlrt {
+/** 
+  the timer task (FreeRTOS/addOns/timer.c) receives the notifications
+  from the interrupt service routine. When a time period expired a 
+  reschedule may be necessary.
+  No application task may run with better priority than this task to enshure
+  the correct detection of timeouts
+*/
+#define PRIO_TASK_SERVICE	(PRIO_PEARL_PRIO_MAX+1)
 
-   TaskMonitor::TaskMonitor() {
-      nbrPendingTasks = 0;
-      mutex.name("TaskMonitor");
-   }
+/**
+  The startup and shutdown of application task may not be interrupted
+  by other application tasks. This allows a run-to-completion behavior 
+*/
+#define PRIO_TASK_MAX_PRIO 	(PRIO_TASK_SERVICE+1)
 
-   void TaskMonitor::decPendingTasks() {
-      mutex.lock();
-      nbrPendingTasks --;
-      DEBUG("TaskMonitor: dec: %d task active/pending", nbrPendingTasks);
-      mutex.unlock();
+#if (PRIO_TASK_MAX_PRIO >= configMAX_PRIORITIES) 
+# error "configMAX_PRIORITIES too small"
+#endif
 
-      if (nbrPendingTasks == 0) {
-         // we dont kill the scheduler. FreeRTOS will present a assert-warning
-         // if we would do. 
-         //    vTaskEndScheduler();
-         // Just print the end message to show the user that his application
-         // has finished
-         printf("last task exited -- end.\n");
-         //exit(0);
-      }
-   }
-
-}
+#endif

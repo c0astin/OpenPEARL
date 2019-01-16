@@ -24,6 +24,8 @@ int sizeFATFS = -1;
 int sizeFIL = -1;
 int sizeVOLUMES = -1;
 
+int success = 1;
+
 int main() {
 
     FILE * fp;
@@ -41,11 +43,13 @@ int main() {
     fgets(line, sizeof(line), fp);
     if (strlen(line) >= sizeof(line)-2) {
        fprintf(stderr,"%s:%d input line too long\n", FILENAME, lineNbr);
+       success = 0;
     }
     lineNbr ++;
     fgets(line, sizeof(line), fp);
     if (strlen(line) >= sizeof(line)-2) {
        fprintf(stderr,"%s:%d input line too long\n", FILENAME, lineNbr);
+       success = 0;
     }
 
     while(! feof(fp)){
@@ -54,6 +58,7 @@ int main() {
 
        if (strlen(line) >= sizeof(line)-2) {
           fprintf(stderr,"%s:%d input line too long\n", FILENAME, lineNbr);
+          success = 0;
        }
 
        // parse line
@@ -63,6 +68,7 @@ int main() {
        }
        if (n != 3) {
           fprintf(stderr,"%s:%d parse error (format)\n", FILENAME, lineNbr);
+          success = 0;
        }
 
        if (strcmp(name,"TCB_T") == 0) {
@@ -94,11 +100,14 @@ int main() {
 //             sizeTCB_T, sizeSTACKTYPE, sizePORTSHORT);
 
    switch (sizeSTACKTYPE) {
+      case 1: stacktype = "uint8_t";
+              break;
       case 4: stacktype = "uint32_t";
               break;
       default:
             fprintf(stderr,"unsupported type for portSTACK_TYPE (size=%d)\n",
                     sizeSTACKTYPE);
+            success = 0;
    }
 
    switch (sizePORTSHORT) {
@@ -107,6 +116,7 @@ int main() {
       default:
             fprintf(stderr,"unsupported type for portSHORT (size=%d)\n",
                     sizeSTACKTYPE);
+            success = 0;
    }
    switch (sizeUBASETYPE) {
       case 1: ubasetype ="unsigned char";
@@ -116,6 +126,7 @@ int main() {
       default:
             fprintf(stderr,"unsupported type for UBaseType (size=%d)\n",
                     sizeSTACKTYPE);
+            success = 0;
    }
 
    fp = fopen("FakeTypes.h","w");

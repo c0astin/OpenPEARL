@@ -9,6 +9,7 @@ PEARL_FREERTOS_SRC += \
 
 #	Log.cc \
 
+ifdef CONFIG_HAS_FAT
 ifeq ($(CONFIG_HAS_FAT),y)
 PEARL_FREERTOS_SRC += FatFsVolume.cc 
 PEARL_FREERTOS_SRC += FatFs.cc 
@@ -16,6 +17,7 @@ PEARL_FREERTOS_XML += FatFs.xml
 endif
 ifeq ($(CONFIG_HAS_SDCARDSPI),y)
 PEARL_FREERTOS_SRC += SDCardSpi.cc 
+endif
 endif
 
 PEARL_FREERTOS_INC = .

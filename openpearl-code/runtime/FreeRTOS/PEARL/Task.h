@@ -51,6 +51,7 @@
 #include "Signals.h"
 #include "FakeTypes.h"
 
+#define STACK_SIZE 8000
 
 namespace pearlrt {
    /** \addtogroup tasking_freertos
@@ -82,7 +83,7 @@ namespace pearlrt {
       FakeTCB_t tcb;
 
       /* the FreeRTOS stack */
-      FakeStackType_t stack[800];
+      FakeStackType_t stack[STACK_SIZE];
 
    public:
       /**
@@ -212,6 +213,7 @@ namespace pearlrt {
       \param param pointer to the tasks object data
       */
       static void tskfunc(void* param);
+      static void wrapperTskfunc(void* param);
 
       /**
       task entry initilization

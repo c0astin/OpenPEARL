@@ -83,9 +83,14 @@
   \param ismain a pearlrt::BitString<1> value to specify whether the task
                  has a MAIN attribute set
  */
+#if 0
 #define DCLTASK(x, prio, ismain) 			\
- C_##x x __attribute__ ((section ("PEARL_APPLICATION"))) \
+ C_##x x __attribute__ ((section ("PEARL_APPLICATION")))  \
 	 ((char*)#x,prio, ismain);	\
+ void C_##x::task(pearlrt::Task * me)
+#endif
+#define DCLTASK(x, prio, ismain) 			\
+ C_##x x ((char*)#x,prio, ismain);	\
  void C_##x::task(pearlrt::Task * me)
 
 #endif /* GENERICTASK_H_ */

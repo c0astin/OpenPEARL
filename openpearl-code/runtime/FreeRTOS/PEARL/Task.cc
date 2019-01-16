@@ -79,7 +79,7 @@ namespace pearlrt {
       schedContinueData.taskTimer = &continueTimer;
 
       // FreeRTOS part
-      stackDepth = 800; //sizeof(stack)/sizeof(stack[0]);
+      stackDepth = sizeof(stack)/sizeof(stack[0]);
 
       xth = pdFALSE;
       TaskList::Instance().add(this);
@@ -96,7 +96,9 @@ namespace pearlrt {
 
    void Task::directActivate(const Fixed<15>& prio) {
       bool freeRtosRunning;
+#ifdef USE_FREERTOS_8_0
       StructParameters_t taskParams;
+#endif
       int cp;  // current prio of calling task
 
       int freeRtosPrio = PrioMapper::getInstance()->fromPearl(prio.x);
@@ -120,6 +122,7 @@ namespace pearlrt {
          cp = switchToThreadPrioMax();
       }
 
+#ifdef USE_FREERTOS_8_0
       taskParams.pvParameter = (void*) this;
       taskParams.tcb = &tcb;
       taskParams.stack = stack;
@@ -128,8 +131,19 @@ namespace pearlrt {
                                  (const char*) this->name,
                                  this->stackDepth, &taskParams,
                                  freeRtosPrio, &xth);
+#else
+      xth = xTaskCreateStatic(
+                        &wrapperTskfunc,
+                        (const char*) this->name,
+                        this->stackDepth,
+                        (void*) this,
+                        freeRtosPrio,
+                        stack,
+                        ((StaticTask_t*) &tcb));
 
-      if (taskCreation) {
+#endif
+
+      if (!taskCreation) {
          DEBUG("%s: started", name);
          taskState = RUNNING;
       } else {
@@ -153,6 +167,11 @@ namespace pearlrt {
    void Task::entry() {
       schedActivateOverrun = false;
    }
+
+   void Task::wrapperTskfunc(void * param) {
+       tskfunc(param);
+   }
+
 
    void Task::tskfunc(void* param) {
       Task* me = ((Task*)param);

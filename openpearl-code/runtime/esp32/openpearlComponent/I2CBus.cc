@@ -1,6 +1,6 @@
 /*
- [The "BSD license"]
- Copyright (c) 2012-2013 Rainer Mueller
+ [A "BSD license"]
+ Copyright (c) 2016 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -27,45 +27,50 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/**
-\file
-
-\brief monitor of runningtasks
-
-stops the system when no more activity may occur
-
-\author R. Mueller
-*/
-
-#include <stdio.h>
-
-#include "TaskMonitor.h"
+#include "I2CBus.h"
+#include "I2CProvider.h"
 #include "Log.h"
+#include "Signals.h"
 
-// remove comments     vv  to enable debug messages
-#define DEBUG(fmt,...) // Log::debug(fmt, ##__VA_ARGS__)
+//#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <string.h>  // strerror
+#include <errno.h>
+#include <unistd.h>
+
 namespace pearlrt {
-
-   TaskMonitor::TaskMonitor() {
-      nbrPendingTasks = 0;
-      mutex.name("TaskMonitor");
+   I2CBus::I2CBus(const char * deviceName) {
    }
 
-   void TaskMonitor::decPendingTasks() {
-      mutex.lock();
-      nbrPendingTasks --;
-      DEBUG("TaskMonitor: dec: %d task active/pending", nbrPendingTasks);
-      mutex.unlock();
+   /**
+   read n bytes of data from the i2c device
+   \param adr addres of the i2c device
+   \param n maximum number of expected data bytes
+   \param data array of data elements
+   \returns number of receive data bytes
+   */
+   int I2CBus::readData(int adr, int n, uint8_t * data) {
+      return 0;
+   }
 
-      if (nbrPendingTasks == 0) {
-         // we dont kill the scheduler. FreeRTOS will present a assert-warning
-         // if we would do. 
-         //    vTaskEndScheduler();
-         // Just print the end message to show the user that his application
-         // has finished
-         printf("last task exited -- end.\n");
-         //exit(0);
-      }
+   int I2CBus::writeData(int adr, int n, uint8_t * data) {
+      return 0;
+   }
+
+
+   /**
+   perform several i2c action without intermediate stop condition.
+   This feature need the capability of REPEATED START from the i2c controller
+   If an implementation of a concrete I2CProvider does not support this
+   feature, a NULL implementation must be implemented and the absence of
+   this feature denoted in the XML-definition of the device
+
+   \param n number of transactions
+   \param data array of transactions
+   */
+   void I2CBus::rdwr(int n, I2CProvider::I2CMessage* data) {
    }
 
 }

@@ -113,6 +113,7 @@ static void itimerspec2internaltimerspec(
                       a->it_interval.tv_nsec;
 }
 
+#if 0
 static void dump_timers() {
    timer_t i;
 
@@ -126,16 +127,8 @@ static void dump_timers() {
       i = timerTable[i].next;
    }
 }
-/*
-static void internaltimerspec2itimerspec(
-   const struct internalTimerSpec *const a,
-   struct itimerspec *const b) {
-   b->it_value.tv_sec     = a->nsec_value / 1e9;
-   b->it_value.tv_nsec    = a->nsec_value - b->it_value.tv_sec;
-   b->it_interval.tv_sec  = a->nsec_interval / 1e9;
-   b->it_interval.tv_nsec = a->nsec_interval - b->it_value.tv_sec;
-}
-*/
+#endif
+
 
 /**
 retrigger the timer for the next relevant value
@@ -299,7 +292,12 @@ static void insert_timer_into_active_list(timer_t t) {
 }
 
 static inline void DMB(void) {
+#ifdef __ARMCC_VERSION__
+#pragma message "ARM-gcc detected" __ARMCC_VERSION__
    asm volatile("dmb" ::: "memory");
+#else
+   asm volatile("" ::: "memory");
+#endif
 }
 
 
@@ -380,7 +378,7 @@ int timer_create(clockid_t clock_id,
 
    firstfree = find_free_timer_and_remove_from_free_list();
 
-   if (firstfree < 0) {
+   if (firstfree == -1) {
       LEAVECRITICAL;
       errno = EAGAIN;
       return -1;

@@ -1,6 +1,7 @@
 /*
  [The "BSD license"]
  Copyright (c) 2012-2013 Rainer Mueller
+ Copyright (c) 2018 Michael Kotzjan
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -30,42 +31,76 @@
 /**
 \file
 
-\brief monitor of runningtasks
+\brief list of header file
 
-stops the system when no more activity may occur
+The compiler does not needed to know all header files of the run time system.
+Only this file mus be included.
 
-\author R. Mueller
 */
 
-#include <stdio.h>
-
+#include "TaskCommon.h"
+#include "Task.h"
+#include "GenericTask.h"
+#include "TaskTimer.h"
+#include "TaskTimerCommon.h"
 #include "TaskMonitor.h"
-#include "Log.h"
+#include "Clock.h"
+#include "PutClock.h"
+#include "GetClock.h"
 
-// remove comments     vv  to enable debug messages
-#define DEBUG(fmt,...) // Log::debug(fmt, ##__VA_ARGS__)
-namespace pearlrt {
+#include "Duration.h"
+#include "PutDuration.h"
+#include "GetDuration.h"
 
-   TaskMonitor::TaskMonitor() {
-      nbrPendingTasks = 0;
-      mutex.name("TaskMonitor");
-   }
+#include "Interrupt.h"
 
-   void TaskMonitor::decPendingTasks() {
-      mutex.lock();
-      nbrPendingTasks --;
-      DEBUG("TaskMonitor: dec: %d task active/pending", nbrPendingTasks);
-      mutex.unlock();
+#include "Fixed.h"
+#include "PutFixed.h"
+#include "GetFixed.h"
 
-      if (nbrPendingTasks == 0) {
-         // we dont kill the scheduler. FreeRTOS will present a assert-warning
-         // if we would do. 
-         //    vTaskEndScheduler();
-         // Just print the end message to show the user that his application
-         // has finished
-         printf("last task exited -- end.\n");
-         //exit(0);
-      }
-   }
+#include "Fixed63.h"
+#include "Character.h"
+#include "PutCharacter.h"
+#include "GetCharacter.h"
 
-}
+#include "RefChar.h"
+#include "ScheduleSignalAction.h"
+#include "Prio.h"
+#include "BitString.h"
+#include "PutBitString.h"
+#include "GetBitString.h"
+#include "RefCharSink.h"
+#include "Signals.h"
+#include "Device.h"
+#include "SystemDationNB.h"
+#include "SystemDationB.h"
+#include "UserDation.h"
+#include "DationPG.h"
+#include "DationRW.h"
+#include "DationTS.h"
+#include "UserDationNB.h"
+#include "DationDim.h"
+#include "DationDim1.h"
+#include "DationDim2.h"
+#include "DationDim3.h"
+#include "Semaphore.h"
+
+#include "SystemDationNBSink.h"
+#include "SystemDationNBSource.h"
+
+#include "Control.h"
+
+#include "StdOut.h"
+#include "SoftInt.h"
+
+#include "Float.h"
+#include "compare.h"
+
+#include "SampleBasicDation.h"
+
+#include "Array.h"
+
+#include "Esp32BME280.h"
+#include "Esp32Wifi.h"
+#include "TcpIpServer.h"
+

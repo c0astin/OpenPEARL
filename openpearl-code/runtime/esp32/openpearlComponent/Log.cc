@@ -1,6 +1,7 @@
 /*
- [The "BSD license"]
- Copyright (c) 2012-2013 Rainer Mueller
+ [A "BSD license"]
+ Copyright (c) 2016 Rainer Mueller
+ Copyright (c) 2018 Michael Kotzjan
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -27,45 +28,57 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/**
-\file
-
-\brief monitor of runningtasks
-
-stops the system when no more activity may occur
-
-\author R. Mueller
-*/
-
-#include <stdio.h>
-
-#include "TaskMonitor.h"
 #include "Log.h"
+#include "Mutex.h"
+#include "Signals.h"
+#include "rom/ets_sys.h"
 
-// remove comments     vv  to enable debug messages
-#define DEBUG(fmt,...) // Log::debug(fmt, ##__VA_ARGS__)
 namespace pearlrt {
+   static Mutex mutex;
 
-   TaskMonitor::TaskMonitor() {
-      nbrPendingTasks = 0;
-      mutex.name("TaskMonitor");
+   Log::Log() {
+      ctorIsActive = true;
+      provider = NULL;          // no provider --> use ets_printf
+      ctorIsActive = false;
    }
 
-   void TaskMonitor::decPendingTasks() {
-      mutex.lock();
-      nbrPendingTasks --;
-      DEBUG("TaskMonitor: dec: %d task active/pending", nbrPendingTasks);
-      mutex.unlock();
+   void Log::doit(const Character<7>& type,
+                  const char * format,
+                  va_list args) {
+      Character<128> line;
+      RefCharacter rc(line);
+      bool usePrintf = false;
 
-      if (nbrPendingTasks == 0) {
-         // we dont kill the scheduler. FreeRTOS will present a assert-warning
-         // if we would do. 
-         //    vTaskEndScheduler();
-         // Just print the end message to show the user that his application
-         // has finished
-         printf("last task exited -- end.\n");
-         //exit(0);
+      try {
+         doFormat(type, rc, format, args);
+
+         if (!provider) {
+            usePrintf = true;
+         }
+         /*
+         if (lpc17_isInterrupt()) {
+            usePrintf = true;
+         }
+         */
+         if (!usePrintf) {
+            mutex.lock();
+            provider->dationWrite(rc.getCstring(), rc.getCurrent());
+            mutex.unlock();
+         } else {
+            ets_printf(rc.getCstring());
+         }
+      } catch (CharacterTooLongSignal s) {
+         if (provider) {
+            mutex.lock();
+            provider->dationWrite(line.get(), (size_t)(line.upb().x));
+            provider->dationWrite((void*)ERRORMESSAGE, strlen(ERRORMESSAGE));
+            mutex.unlock();
+         } else {
+            ets_printf(line.get());
+         }
       }
+
    }
+
 
 }

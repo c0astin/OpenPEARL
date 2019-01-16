@@ -29,7 +29,7 @@
 #include <time.h>
 #include <inttypes.h>
 #include <stdio.h>
-#include "chip.h"
+
 #include "time_addons.h"
 #include "FreeRTOS.h"
 #include "FreeRTOSConfig.h"
@@ -78,7 +78,7 @@ namespace pearlrt {
       t = (nsec * configTICK_RATE_HZ + nsPerSec - 1) / nsPerSec;
 
       ticks = t;
-//printf("FreeRTOSClock: armed after %d ticks\n", ticks);
+      //printf("FreeRTOSClock: armed after %d ticks\n", ticks);
    }
 
    void FreeRTOSClock::gettime(uint64_t *nsec) {

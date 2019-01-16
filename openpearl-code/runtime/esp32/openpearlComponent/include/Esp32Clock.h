@@ -1,6 +1,7 @@
 /*
- [The "BSD license"]
- Copyright (c) 2012-2013 Rainer Mueller
+ [A "BSD license"]
+ Copyright (c) 2015-2017 Rainer Mueller
+ Copyright (c) 2018 Michael Kotzjan
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -27,45 +28,64 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef ESP32_CLOCK_INCLUDED
+#define ESP32_CLOCK_INCLUDED
+
+
 /**
 \file
 
-\brief monitor of runningtasks
-
-stops the system when no more activity may occur
-
-\author R. Mueller
+\brief select the clock source by defining a system device
 */
 
-#include <stdio.h>
 
-#include "TaskMonitor.h"
-#include "Log.h"
-
-// remove comments     vv  to enable debug messages
-#define DEBUG(fmt,...) // Log::debug(fmt, ##__VA_ARGS__)
 namespace pearlrt {
 
-   TaskMonitor::TaskMonitor() {
-      nbrPendingTasks = 0;
-      mutex.name("TaskMonitor");
-   }
+   /**
+   \brief Clock Source for the ESP32
 
-   void TaskMonitor::decPendingTasks() {
-      mutex.lock();
-      nbrPendingTasks --;
-      DEBUG("TaskMonitor: dec: %d task active/pending", nbrPendingTasks);
-      mutex.unlock();
+   With this class it is possible to define the clock source
+   for an application. The parameter selects one of the possible
+   clock sources.
 
-      if (nbrPendingTasks == 0) {
-         // we dont kill the scheduler. FreeRTOS will present a assert-warning
-         // if we would do. 
-         //    vTaskEndScheduler();
-         // Just print the end message to show the user that his application
-         // has finished
-         printf("last task exited -- end.\n");
-         //exit(0);
-      }
-   }
+   The default clock Esp32Clock(0) is set automatically in
+   system startup procedure, if no other setting was selected.
 
+   Usage:
+   \verbatim
+   SYSTEM;
+      Esp32Clock(1); ! 0=Systick, 1=RTC initial time + Systick
+   PROBLEM;
+      ! no access to this device in the problem part
+   \endverbatim
+
+   */
+   class Esp32Clock {
+
+   private:
+      static bool clockSelected;
+
+   public:
+
+      /**
+      Constructor to setup the clock
+
+      \param typeOfClock selector of the desired clock system
+                  <ul>
+        <li>0=Systick only (no absolute time),
+                  <li>1=RTC used as initial time; update by systick
+                  <li> ... others follow
+                  </ul>
+
+      */
+      Esp32Clock(const int typeOfClock);
+
+      /**
+      check if a clock was selected
+
+      \return true, if a clock source was selected
+      */
+      static bool isClockSelected();
+   };
 }
+#endif

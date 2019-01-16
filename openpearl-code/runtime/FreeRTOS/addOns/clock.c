@@ -72,6 +72,7 @@ struct tm *localtime(const time_t *_time) {
 }
 
 /* prototype in <time.h>  */
+#ifdef __ARMCC_VERSION__
 extern int clock_gettime(clockid_t clock_id, struct timespec *ts) {
    uint64_t now;
 
@@ -80,6 +81,9 @@ extern int clock_gettime(clockid_t clock_id, struct timespec *ts) {
    ts->tv_sec = now / 1000000000;
    return (0);  // return success
 }
+#else
+#pragma message "clock_gettime removed"
+#endif
 
 /*
   default time base, just returning (0,0) and sets the errno variable
