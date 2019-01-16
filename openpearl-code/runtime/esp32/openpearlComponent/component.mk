@@ -1,4 +1,4 @@
-include ~/OpenPEARL/openpearl-code/configuration/.config
+include $(OPENPEARL_DIR)/configuration/.config
 
 include $(OPENPEARL_DIR)/runtime/common/Files.common
 
@@ -22,6 +22,9 @@ COMPONENT_SRCDIRS := . common
 
 #common/TaskCommon.o: CXXFLAGS += -frtti
 CXXFLAGS += -frtti
+#ifeq ($(CONFIG_ESP32_CHECK_STACK_OVERFLOW),y)
+CXXFLAGS += -finstrument-functions
+#endif
 
 #COMPONENT_PRIV_INCLUDEDIRS := ../freertos/include/freertos ../freertos/PEARL ../lwip/inlcude/lwip
 #COMPONENT_SRCDIRS := . ../freertos/addOns

@@ -99,7 +99,7 @@ namespace pearlrt {
 #ifdef USE_FREERTOS_8_0
       StructParameters_t taskParams;
 #endif
-      int cp;  // current prio of calling task
+      int cp=0;  // current prio of calling task
 
       int freeRtosPrio = PrioMapper::getInstance()->fromPearl(prio.x);
 

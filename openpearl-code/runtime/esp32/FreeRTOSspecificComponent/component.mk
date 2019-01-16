@@ -18,7 +18,12 @@ COMPONENT_OBJS += \
                 addOns/FreeRTOSClock.o \
                 addOns/FreeRTOSHooks.o \
                 addOns/service.o \
-                addOns/timer.o 
+                addOns/timer.o
+
+#ifeq ($(CONFIG_ESP32_CHECK_STACK_OVERFLOW),y)
+COMPONENT_OBJS += addOns/testStackOverflow.o
+#endif
+
  $(warning $(COMPONENT_OBJS))
 
 COMPONENT_SRCDIRS := . addOns PEARL
@@ -28,6 +33,12 @@ COMPONENT_EXTRA_INCLUDES := $(OPENPEARL_DIR)/runtime/esp32 \
 		$(OPENPEARL_DIR)/runtime/common
 CXXFLAGS += -frtti
 $(warning $(COMPONENT_EXTRA_INCLUDES))
+
+#
+# -finstrument-functions is set -- propably due to freeRTOS stck check
+# lets remove this for this component
+CXXFLAGS := $(filter-out -finstrument-functions,$(CXXFLAGS))
+$(warning $(CXXFLAGS))
 
 # Overriding build and clean to add mkFakeTypes
 COMPONENT_OWNBUILDTARGET := 1
