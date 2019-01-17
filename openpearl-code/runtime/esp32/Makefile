@@ -10,6 +10,9 @@ include ../../configuration/.config
 #remove quotes from the config-variable
 ESP_IDF_PATH:= $(subst $\",,$(CONFIG_ESP32_IDF_PATH))
 
+#setup the variable for esp-idf build process
+export IDF_PATH=$(ESP_IDF_PATH)
+
 #and have a look into this folder
 ifeq (,$(wildcard $(ESP_IDF_PATH)/add_path.sh))
      $(error ESP_IDF_PATH seems to be wrong)
