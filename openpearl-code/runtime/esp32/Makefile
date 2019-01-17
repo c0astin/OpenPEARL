@@ -149,7 +149,7 @@ esp32.xml: $(XMLFILES)
 #	@$(CXX) -MM $(CFLAGS) $(CPPFLAGS) $(INCS) $^ >.depend
 
 phony += clean
-clean:
+clean: setuplinks
 	$(call esp32build) clean
 	@rm -f $(BOARDSUPPORT_OBJ)
 	@rm -f $(targets)
