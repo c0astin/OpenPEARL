@@ -113,7 +113,7 @@ tests/testStackOverflow.s: tests/testStackOverflow.cc
 
 esp-idf-build: ../common/Signals.hh ../common/Signals.hcc
 	@echo "[create] $@"
-	cp -p FreeRTOSConfig.h $(ESP_IDF_PATH)/components/freertos/include/freertos
+	cp --preserve=timestamps FreeRTOSConfig.h $(ESP_IDF_PATH)/components/freertos/include/freertos
 	export IDF_PATH=$(ESP_IDF_PATH)
 	$(call esp32build)
 
