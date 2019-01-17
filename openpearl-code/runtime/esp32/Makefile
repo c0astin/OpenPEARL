@@ -1,12 +1,27 @@
-ESP_IDF_PATH=~/esp/esp-idf
-
+# lets get the absolute path of this directory
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
+
+# read system configuration setting from menuconfig
+# this must be done after the path extractions, since include 
+# modifies MAKEFILE_PATH
+include ../../configuration/.config
+
+#remove quotes from the config-variable
+ESP_IDF_PATH:= $(subst $\",,$(CONFIG_ESP32_IDF_PATH))
+
+#and have a look into this folder
+ifeq (,$(wildcard $(ESP_IDF_PATH)/add_path.sh))
+     $(error ESP_IDF_PATH seems to be wrong)
+endif
+ifeq (,$(wildcard $(ESP_IDF_PATH)/components))
+     $(error ESP_IDF_PATH seems to be wrong)
+endif
+
+
 OPENPEARL_DIR := $(abspath $(MAKEFILE_PATH)/../../..)
 export OPENPEARL_DIR
 
-# read system configuration setting from menuconfig
-include ../../configuration/.config
 
 phony = all clean
 _all: all
@@ -156,29 +171,42 @@ doc:
 phony += gitclean
 gitclean:
 	@echo "clean all files and links for git operations"
-	rm -f esp-idf 
-	rm -f openpearlComponent/common
-	rm -f FreeRTOSspecificComponent/PEARL
-	rm -f FreeRTOSspecificComponent/addOns
-	rm -rf esp-idf-project/build
+	@rm -f esp-idf 
+	@rm -f openpearlComponent/common
+	@rm -f FreeRTOSspecificComponent/PEARL
+	@rm -f FreeRTOSspecificComponent/addOns
+	@rm -rf esp-idf-project/build
+
+phony += verify_esp_idf_path
+verify_esp_idf_path:
+	@echo [verify ESP_IDF_PATH setting ]
+	ls $(ESP_IDF_PATH)
+	echo $(ESP_IDF_PATH)
+	$(warning $(ESP_IDF_PATH))
+	echo "$(wildcard $(ESP_IDF_PATH)/add_path.sh)"
+	ifeq ("$(wildcard $(ESP_IDF_PATH)/add_path.sh)","")
+		$(error xxx)
+	endif
+#	ifneq ("$(wildcard $(ESP_IDF_PATH)/add_path.sh)","")
+#	   $(error esp-idf-path seems to be wrong)
+#	endif
 
 phony += setuplinks
 setuplinks:
-	# we must remove the target of the 'ln' command first
-	# to avoid spurious other links
-	rm -f esp-idf
-	ln -s $(ESP_IDF_PATH) esp-idf
-	rm -f openpearlComponent/common
-	ln -s $(CURRENT_DIR)../common  openpearlComponent/common
-	rm -f $(ESP_IDF_PATH)/components/openpearl
-	ln -s $(CURRENT_DIR)openpearlComponent $(ESP_IDF_PATH)/components/openpearl
-	rm -f $(ESP_IDF_PATH)/components/freertos_specific
-	ln -s $(CURRENT_DIR)FreeRTOSspecificComponent $(ESP_IDF_PATH)/components/freertos_specific
-
-	rm -f FreeRTOSspecificComponent/PEARL
-	ln -sf $(CURRENT_DIR)../FreeRTOS/PEARL $(CURRENT_DIR)/FreeRTOSspecificComponent/PEARL
-	rm -f FreeRTOSspecificComponent/addOns
-	ln -sf $(CURRENT_DIR)../FreeRTOS/addOns $(ESP_IDF_PATH)/components/freertos_specific/addOns
+	@# we must remove the target of the 'ln' command first
+	@# to avoid spurious other links
+	@rm -f esp-idf
+	@ln -s $(ESP_IDF_PATH) esp-idf
+	@rm -f openpearlComponent/common
+	@ln -s $(CURRENT_DIR)../common  openpearlComponent/common
+	@rm -f $(ESP_IDF_PATH)/components/openpearl
+	@ln -s $(CURRENT_DIR)openpearlComponent $(ESP_IDF_PATH)/components/openpearl
+	@rm -f $(ESP_IDF_PATH)/components/freertos_specific
+	@ln -s $(CURRENT_DIR)FreeRTOSspecificComponent $(ESP_IDF_PATH)/components/freertos_specific
+	@rm -f FreeRTOSspecificComponent/PEARL
+	@ln -s $(CURRENT_DIR)../FreeRTOS/PEARL $(CURRENT_DIR)/FreeRTOSspecificComponent/PEARL
+	@rm -f FreeRTOSspecificComponent/addOns
+	@ln -s $(CURRENT_DIR)../FreeRTOS/addOns $(ESP_IDF_PATH)/components/freertos_specific/addOns
 
 phony += prepare
 prepare:
