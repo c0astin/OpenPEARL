@@ -18,6 +18,9 @@ ifeq (,$(wildcard $(ESP_IDF_PATH)/components))
      $(error ESP_IDF_PATH seems to be wrong)
 endif
 
+$(warning ESP_IDF_PATH: $(ESP_IDF_PATH))
+$(warning CURRENT_DIR: $(CURRENT_DIR))
+
 
 OPENPEARL_DIR := $(abspath $(MAKEFILE_PATH)/../../..)
 export OPENPEARL_DIR
@@ -177,23 +180,9 @@ gitclean:
 	@rm -f FreeRTOSspecificComponent/addOns
 	@rm -rf esp-idf-project/build
 
-phony += verify_esp_idf_path
-verify_esp_idf_path:
-	@echo [verify ESP_IDF_PATH setting ]
-	ls $(ESP_IDF_PATH)
-	echo $(ESP_IDF_PATH)
-	$(warning $(ESP_IDF_PATH))
-	echo "$(wildcard $(ESP_IDF_PATH)/add_path.sh)"
-	ifeq ("$(wildcard $(ESP_IDF_PATH)/add_path.sh)","")
-		$(error xxx)
-	endif
-#	ifneq ("$(wildcard $(ESP_IDF_PATH)/add_path.sh)","")
-#	   $(error esp-idf-path seems to be wrong)
-#	endif
-
 phony += setuplinks
 setuplinks:
-	@# we must remove the target of the 'ln' command first
+	@echo [ setup links from/to esp-idf ]
 	@# to avoid spurious other links
 	@rm -f esp-idf
 	@ln -s $(ESP_IDF_PATH) esp-idf
