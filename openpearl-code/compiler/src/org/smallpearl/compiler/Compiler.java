@@ -41,8 +41,14 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
 
+import static org.smallpearl.compiler.Log.LEVEL_INFO;
+import static org.smallpearl.compiler.Log.LEVEL_NONE;
+import static org.smallpearl.compiler.Log.LEVEL_WARN;
+import static org.smallpearl.compiler.Log.LEVEL_DEBUG;
+import static org.smallpearl.compiler.Log.LEVEL_ERROR;
+
 public class Compiler {
-    static String version = "v0.8.9.30";
+    static String version = "v0.8.9.32";
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();
@@ -89,8 +95,19 @@ public class Compiler {
             return;
         }
 
+        // Setup logger
+        Log.Logger logger = new Log.Logger();
+        Log.setLogger(logger);
+        //Log.set(LEVEL_INFO);
+
         for (i = 0; i < inputFiles.size(); i++) {
             OpenPearlLexer lexer = null;
+            AST ast = new AST();
+
+            logger.setLogFilename(getBaseName(inputFiles.get(i)) + ".log");
+            Log.info("OpenPEARL compiler version " + version);
+            Log.info("Start compiling of:" + inputFiles.get(i));
+            Log.debug("Performing syntax check");
 
             try {
                 lexer = new OpenPearlLexer(new ANTLRFileStream(inputFiles.get(i)));
@@ -116,16 +133,6 @@ public class Compiler {
             // Start Analysis
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // Setup logger
-            Log.Logger logger = new Log.Logger();
-            logger.setLogFilename(getBaseName(inputFiles.get(i)) + ".log");
-            Log.setLogger(logger);
-
-
-            Log.info("OpenPEARL compiler version " + version);
-            Log.info("Start compiling of:" + inputFiles.get(i));
-            Log.debug("Performing syntax check");
-
             ParserRuleContext tree = parser.program();
 
             if (printAST) {
@@ -145,38 +152,42 @@ public class Compiler {
                         symbolTableVisitor.symbolTable.dump();
                     }
 
-                    ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose, debug, symbolTableVisitor);
+                    ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose, debug, symbolTableVisitor, ast);
                     expressionTypeVisitor.visit(tree);
+
+                    ConstantFoldingVisitor constantFoldingVisitor = new ConstantFoldingVisitor(symbolTableVisitor, ast);
+                    constantFoldingVisitor.visit(tree);
 
                     ConstantPoolVisitor constantPoolVisitor = new ConstantPoolVisitor(lexer.getSourceName(),
                                                                                       verbose,
                                                                                       debug,
                                                                                       symbolTableVisitor,
                                                                                       constantPool,
-                                                                                      expressionTypeVisitor);
+                                                                                      expressionTypeVisitor,
+                                                                                      ast);
                     constantPoolVisitor.visit(tree);
 
                     ConstantExpressionEvaluatorVisitor constantExpressionVisitor = new ConstantExpressionEvaluatorVisitor(verbose, debug, symbolTableVisitor, constantPoolVisitor);
                     constantExpressionVisitor.visit(tree);
 
-                    FixUpSymbolTableVisitor fixUpSymbolTableVisitor = new FixUpSymbolTableVisitor(verbose,debug,symbolTableVisitor,expressionTypeVisitor,constantPoolVisitor);
+                    FixUpSymbolTableVisitor fixUpSymbolTableVisitor = new FixUpSymbolTableVisitor(verbose,debug,symbolTableVisitor,expressionTypeVisitor,constantPoolVisitor,ast);
                     fixUpSymbolTableVisitor.visit(tree);
 
-                    expressionTypeVisitor.visit(tree);
+                    // expressionTypeVisitor.visit(tree);
 
                     if (dumpConstantPool) {
                         ConstantPool.dump();
                     }
 
                     if (!nosemantic) {
-                        SemanticCheck semanticCheck = new SemanticCheck(lexer.getSourceName(), verbose, debug, tree, symbolTableVisitor, expressionTypeVisitor);
+                        SemanticCheck semanticCheck = new SemanticCheck(lexer.getSourceName(), verbose, debug, tree, symbolTableVisitor, expressionTypeVisitor, ast);
                     }
 
                     if (imc) {
                         SystemPartExport(lexer.getSourceName(), tree);
                     }
 
-                    CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor, expressionTypeVisitor, constantExpressionVisitor);
+                    CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor, expressionTypeVisitor, constantExpressionVisitor, ast);
 
                 }
             }
@@ -206,16 +217,19 @@ public class Compiler {
             System.out.println("Number of errors in " + inputFiles.get(i) + " encountered: " + noOfErrors);
 
             if ( printSysInfo) {
-
+                String lines;
                 long difference = System.nanoTime() - startTime;
 
-                System.out.println("Total execution time: " +
+                lines = "System Information:\n";
+                lines += "Total execution time: " +
                         String.format("%d.%d sec",
                                 TimeUnit.NANOSECONDS.toSeconds(difference),
-                                TimeUnit.NANOSECONDS.toMillis(difference) - TimeUnit.NANOSECONDS.toSeconds(difference) * 1000));
+                                TimeUnit.NANOSECONDS.toMillis(difference) - TimeUnit.NANOSECONDS.toSeconds(difference) * 1000);
 
                 SystemInformation sysinfo = new SystemInformation();
-                System.out.println(sysinfo.Info());
+                lines += "\n" + sysinfo.Info();
+                Log.info(lines);
+                System.out.println(lines);
             }
 
             if ( noOfErrors == 0 ) {
@@ -292,6 +306,7 @@ public class Compiler {
                 dumpConstantPool = true;
             } else if (arg.equals("--debug")) {
                 debug = true;
+                Log.set(LEVEL_DEBUG);
             } else if (arg.equals("--debugSTG")) {
                 debugSTG = true;
             } else if (arg.equals("--stacktrace")) {
@@ -345,7 +360,8 @@ public class Compiler {
                                     ParserRuleContext tree,
                                     SymbolTableVisitor symbolTableVisitor,
                                     ExpressionTypeVisitor expressionTypeVisitor,
-                                    ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor) {
+                                    ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor,
+                                    AST ast) {
 
         CppCodeGeneratorVisitor cppCodeGenerator = new CppCodeGeneratorVisitor( sourceFileName,
                                                                                 groupFile,
@@ -353,7 +369,8 @@ public class Compiler {
                                                                                 debug,
                                                                                 symbolTableVisitor,
                                                                                 expressionTypeVisitor,
-                                                                                constantExpressionEvaluatorVisitor);
+                                                                                constantExpressionEvaluatorVisitor,
+                                                                                ast);
 
         ST code = cppCodeGenerator.visit(tree);
 

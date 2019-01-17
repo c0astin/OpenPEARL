@@ -48,18 +48,21 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
     private ConstantPoolVisitor m_constantPoolVisitor;
     private ModuleEntry m_module;
     private ParseTreeProperty<ASTAttribute> m_properties = null;
+    private AST m_ast = null;
 
     public FixUpSymbolTableVisitor(int verbose,
                                    boolean debug,
                                    SymbolTableVisitor symbolTableVisitor,
                                    ExpressionTypeVisitor expressionTypeVisitor,
-                                   ConstantPoolVisitor   constantPoolVisitor) {
+                                   ConstantPoolVisitor   constantPoolVisitor,
+                                   AST ast) {
 
         m_verbose = verbose;
         m_debug = debug;
 
         m_symbolTableVisitor = symbolTableVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
+        m_ast =  ast;
 
         m_expressionTypeVisitor = expressionTypeVisitor;
         m_constantPoolVisitor  = constantPoolVisitor;
@@ -189,19 +192,19 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
         int byPrecision   = 1;
 
         if (ctx.loopStatement_from() != null) {
-            fromRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_from().expression());
+            fromRes = m_ast.lookup(ctx.loopStatement_from().expression());
             fromPrecision = ((TypeFixed)fromRes.getType()).getPrecision();
             fromType = new TypeFixed(fromPrecision);
         }
 
         if (ctx.loopStatement_to() != null) {
-            toRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_to().expression());
+            toRes = m_ast.lookup(ctx.loopStatement_to().expression());
             toPrecision = ((TypeFixed)toRes.getType()).getPrecision();
             toType = new TypeFixed(toPrecision);
         }
 
         if (ctx.loopStatement_by() != null) {
-            byRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_by().expression());
+            byRes = m_ast.lookup(ctx.loopStatement_by().expression());
             byPrecision = ((TypeFixed)byRes.getType()).getPrecision();
             byType = new TypeFixed(byPrecision);
         }

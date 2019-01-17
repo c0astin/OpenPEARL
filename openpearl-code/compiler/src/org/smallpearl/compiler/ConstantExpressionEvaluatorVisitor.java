@@ -187,7 +187,7 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
         return null;
     }
 
-        @Override
+    @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {
         org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable.lookupLocal(ctx.ID().getText());
         m_currentSymbolTable = ((ModuleEntry)symbolTableEntry).scope;

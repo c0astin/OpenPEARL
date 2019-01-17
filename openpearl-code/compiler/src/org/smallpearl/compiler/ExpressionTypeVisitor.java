@@ -29,8 +29,6 @@
 
 package org.smallpearl.compiler;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
 
@@ -44,25 +42,21 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     private org.smallpearl.compiler.SymbolTable.SymbolTable m_symboltable;
     private org.smallpearl.compiler.SymbolTable.SymbolTable m_currentSymbolTable;
     private org.smallpearl.compiler.SymbolTable.ModuleEntry m_module;
-    private ParseTreeProperty<ASTAttribute> m_properties = null;
     private Integer m_currFixedLength = null;
     private boolean m_calculateRealFixedLength;
+    private org.smallpearl.compiler.AST m_ast;
 
-    public ExpressionTypeVisitor(int verbose, boolean debug, SymbolTableVisitor symbolTableVisitor) {
+    public ExpressionTypeVisitor(int verbose, boolean debug, SymbolTableVisitor symbolTableVisitor, org.smallpearl.compiler.AST ast) {
 
         m_verbose = verbose;
         m_debug = debug;
 
         m_symbolTableVisitor = symbolTableVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
+        m_ast = ast;
 
-        if (m_verbose > 0) {
-            System.out.println("Semantic Check: Attributing parse tree with expression type information");
-        }
-
-        if (m_debug) {
-            System.out.println("Semantic Check: Enabled debugging information");
-        }
+        Log.info("=============================================================================");
+        Log.info("Semantic Check: Attributing parse tree with expression type information");
 
         LinkedList<ModuleEntry> listOfModules = this.m_symboltable.getModules();
 
@@ -72,28 +66,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         m_module = listOfModules.get(0);
         m_currentSymbolTable = m_module.scope;
-        m_properties = new ParseTreeProperty<ASTAttribute>();
         m_calculateRealFixedLength = false;
-    }
-
-    public TypeDefinition lookupType(ParserRuleContext ctx) {
-        return m_properties.get(ctx).getType();
-    }
-
-    public ASTAttribute lookup(ParserRuleContext ctx) {
-        return m_properties.get(ctx);
     }
 
     @Override
     public Void visitBaseExpression(SmallPearlParser.BaseExpressionContext ctx) {
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitBaseExpression");
+        Log.debug("ExpressionTypeVisitor:visitBaseExpression:ctx" + CommonUtils.printContext(ctx));
 
         if (ctx.primaryExpression() != null) {
             visitPrimaryExpression(ctx.primaryExpression());
-            ASTAttribute expressionResult = m_properties.get(ctx.primaryExpression());
+            ASTAttribute expressionResult = m_ast.lookup(ctx.primaryExpression());
             if (expressionResult != null) {
-                m_properties.put(ctx, expressionResult);
+                m_ast.put(ctx, expressionResult);
 
                 if (m_debug) {
                     System.out.println("ExpressionTypeVisitor: visitBaseExpression: exp=" + ctx.primaryExpression().getText());
@@ -101,20 +85,19 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                 }
             }
         }
+
         return null;
     }
 
     @Override
     public Void visitPrimaryExpression(SmallPearlParser.PrimaryExpressionContext ctx) {
-        if (m_debug) {
-            System.out.println("ExpressionTypeVisitor: visitPrimaryExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitPrimaryExpression:ctx" + CommonUtils.printContext(ctx));
 
         if (ctx.literal() != null) {
             visitLiteral(ctx.literal());
-            ASTAttribute expressionResult = m_properties.get(ctx.literal());
+            ASTAttribute expressionResult = m_ast.lookup(ctx.literal());
             if (expressionResult != null) {
-                m_properties.put(ctx, expressionResult);
+                m_ast.put(ctx, expressionResult);
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
@@ -137,13 +120,13 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                     expressionResult = new ASTAttribute(variable.getType(), variable.getAssigmentProtection(), variable);
                 }
 
-                m_properties.put(ctx, expressionResult);
+                m_ast.put(ctx, expressionResult);
             } else if (entry instanceof ProcedureEntry) {
                 ProcedureEntry proc = (ProcedureEntry) entry;
                 TypeDefinition resultType = proc.getResultType();
                 if (resultType != null) {
                     ASTAttribute expressionResult = new ASTAttribute(resultType);
-                    m_properties.put(ctx, expressionResult);
+                    m_ast.put(ctx, expressionResult);
                 } else {
                     throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
@@ -152,15 +135,19 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             }
         } else if (ctx.semaTry() != null) {
             visit(ctx.semaTry());
-            ASTAttribute expressionResult= m_properties.get(ctx.semaTry());
+            ASTAttribute expressionResult= m_ast.lookup(ctx.semaTry());
             if (expressionResult != null) {
-                m_properties.put(ctx, expressionResult);
+                m_ast.put(ctx, expressionResult);
+            } else {
+                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else if (ctx.stringSlice() != null) {
             visit(ctx.stringSlice());
-            ASTAttribute expressionResult= m_properties.get(ctx.stringSlice());
+            ASTAttribute expressionResult= m_ast.lookup(ctx.stringSlice());
             if (expressionResult != null) {
-                m_properties.put(ctx, expressionResult);
+                m_ast.put(ctx, expressionResult);
+            } else {
+                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else if (ctx.expression() != null) {
             if (ctx.expression().size() > 1) {
@@ -168,9 +155,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             }
 
             visit(ctx.expression(0));
-            ASTAttribute expressionResult = m_properties.get(ctx.expression(0));
+            ASTAttribute expressionResult = m_ast.lookup(ctx.expression(0));
             if (expressionResult != null) {
-                m_properties.put(ctx, expressionResult);
+                m_ast.put(ctx, expressionResult);
             }
         }
 
@@ -179,13 +166,12 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitTaskFunction(SmallPearlParser.TaskFunctionContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitTaskFunction");
-        }
+        Log.debug("ExpressionTypeVisitor:visitTaskFunction");
+        Log.debug("ExpressionTypeVisitor:visitTaskFunction:ctx" + CommonUtils.printContext(ctx));
 
         TypeTask type = new TypeTask();
         ASTAttribute expressionResult = new ASTAttribute(type);
-        m_properties.put(ctx, expressionResult);
+        m_ast.put(ctx, expressionResult);
 
         return null;
     }
@@ -211,17 +197,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitAdditiveExpression");
+        Log.debug("ExpressionTypeVisitor:visitAdditiveExpression");
+        Log.debug("ExpressionTypeVisitor:visitAdditiveExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -229,47 +215,47 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFixed(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#1");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFloat) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFloat) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#2");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFloat) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#3");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
             Integer precision = Math.max(((TypeFloat) op1.getType()).getPrecision(), ((TypeFloat) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#4");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeDuration(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#5");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeClock) {
-            res = new ASTAttribute(new TypeClock(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeClock(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#6");
         } else if (op1.getType() instanceof TypeClock && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeClock(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeClock(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#7");
@@ -301,17 +287,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitSubtractiveExpression");
+        Log.debug("ExpressionTypeVisitor:visitSubtractiveExpression");
+        Log.debug("ExpressionTypeVisitor:visitSubtractiveExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -319,47 +305,47 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFixed(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SubtractiveExpression: rule#1");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFloat) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFloat) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SubtractiveExpression: rule#2");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFloat) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SubtractiveExpression: rule#3");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
             Integer precision = Math.max(((TypeFloat) op1.getType()).getPrecision(), ((TypeFloat) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SubtractiveExpression: rule#4");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeDuration(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SubtractiveExpression: rule#5");
         } else if (op1.getType() instanceof TypeClock && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeClock(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeClock(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SubtractiveExpression: rule#6");
         } else if (op1.getType() instanceof TypeClock && op2.getType() instanceof TypeClock) {
-            res = new ASTAttribute(new TypeDuration(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SubtractiveExpression: rule#7");
@@ -387,11 +373,11 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitUnaryAdditiveExpression");
+        Log.debug("ExpressionTypeVisitor:visitUnaryAdditiveExpression");
+        Log.debug("ExpressionTypeVisitor:visitUnaryAdditiveExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op1 = m_properties.get(ctx.expression());
+        op1 = m_ast.lookup(ctx.expression());
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -399,19 +385,19 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op1.getType() instanceof TypeFixed) {
             res = new ASTAttribute(new TypeFixed(((TypeFixed) op1.getType()).getPrecision()));
-            m_properties.put(ctx, res);
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: UnaryAdditiveExpression: rule#1");
         } else if (op1.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op1.getType()).getPrecision()), op1.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op1.getType()).getPrecision()), op1.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: UnaryAdditiveExpression: rule#2");
         } else if (op1.getType() instanceof TypeDuration) {
             res = new ASTAttribute(new TypeDuration());
-            m_properties.put(ctx, res);
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: UnaryAdditiveExpression: rule#3");
@@ -438,11 +424,11 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitUnarySubtractiveExpression");
+        Log.debug("ExpressionTypeVisitor:visitUnarySubtractiveExpression");
+        Log.debug("ExpressionTypeVisitor:visitUnarySubtractiveExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -450,19 +436,19 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op.getType() instanceof TypeFixed) {
             res = new ASTAttribute(new TypeFixed(((TypeFixed) op.getType()).getPrecision()));
-            m_properties.put(ctx, res);
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: UnarySubtractiveExpression: rule#1");
         } else if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: UnarySubtractiveExpression: rule#2");
         } else if (op.getType() instanceof TypeDuration) {
             res = new ASTAttribute(new TypeDuration());
-            m_properties.put(ctx, res);
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: UnarySubtractiveExpression: rule#3");
@@ -487,19 +473,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitNotExpression");
+        Log.debug("ExpressionTypeVisitor:visitNotExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeBit) {
-            res = new ASTAttribute(new TypeBit(((TypeBit) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(((TypeBit) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: NotExpression: rule#1");
@@ -526,31 +511,30 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitAbsExpression");
+        Log.debug("ExpressionTypeVisitor:visitAbsExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeFixed(((TypeFixed) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(((TypeFixed) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AbsExpression: rule#1");
         } else if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AbsExpression: rule#2");
         } else if (op.getType() instanceof TypeDuration) {
             res = new ASTAttribute(new TypeDuration());
-            m_properties.put(ctx, res);
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AbsExpression: rule#3");
@@ -578,31 +562,30 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitSignExpression");
+        Log.debug("ExpressionTypeVisitor:visitSignExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeFixed(1), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(1), op.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SignExpression: rule#1");
         } else if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFixed(1), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(1), op.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SignExpression: rule#2");
         } else if (op.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeFixed(1), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(1), op.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SignExpression: rule#3");
@@ -636,18 +619,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitMultiplicativeExpression");
+        Log.debug("ExpressionTypeVisitor:visitMultiplicativeExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -655,54 +637,54 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFixed(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#1");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFloat) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFloat) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#2");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFloat) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#3");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
             Integer precision = Math.max(((TypeFloat) op1.getType()).getPrecision(), ((TypeFloat) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#4");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeDuration(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#5");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeDuration(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#6");
 
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeDuration(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#7");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeDuration(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#8");
@@ -734,17 +716,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitDivideExpression");
+        Log.debug("ExpressionTypeVisitor:visitDivideExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -752,53 +733,53 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideExpression: rule#1");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFloat) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFloat) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideExpression: rule#2");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFloat) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideExpression: rule#3");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
             Integer precision = Math.max(((TypeFloat) op1.getType()).getPrecision(), ((TypeFloat) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideExpression: rule#4");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeDuration(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideExpression: rule#5");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeDuration(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideExpression: rule#6");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeDuration(), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideExpression: rule#7");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeFloat(24), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(24), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideExpression: rule#7");
@@ -826,17 +807,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitDivideIntegerExpression");
+        Log.debug("ExpressionTypeVisitor:visitDivideIntegerExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -844,8 +824,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFixed(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideIntegerExpression: rule#1");
@@ -874,17 +854,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitRemainderExpression");
+        Log.debug("ExpressionTypeVisitor:visitRemainderExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -892,15 +871,15 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFixed(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitRemainderExpression: rule#1");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
             Integer precision = Math.max(((TypeFloat) op1.getType()).getPrecision(), ((TypeFloat) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitRemainderExpression: rule#1");
@@ -928,17 +907,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitExponentiationExpression");
+        Log.debug("ExpressionTypeVisitor:visitExponentiationExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -946,14 +924,14 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
             Integer precision = Math.max(((TypeFixed) op1.getType()).getPrecision(), ((TypeFixed) op2.getType()).getPrecision());
-            res = new ASTAttribute(new TypeFixed(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: ExponentiationExpression: rule#1");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op1.getType()).getPrecision()), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op1.getType()).getPrecision()), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: ExponentiationExpression: rule#1");
@@ -983,11 +961,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitFitExpression");
+        Log.debug("ExpressionTypeVisitor:visitFitExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -995,7 +972,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         visit(ctx.expression(1));
 
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -1003,15 +980,15 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
             Integer precision = ((TypeFixed) op2.getType()).getPrecision();
-            res = new ASTAttribute(new TypeFixed(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: FitExpression: rule#1");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
             Integer precision = ((TypeFloat) op2.getType()).getPrecision();
-            res = new ASTAttribute(new TypeFloat(precision), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: FitExpression: rule#2");
@@ -1033,7 +1010,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     // SIN op     |             |           |             | sine of operand
     // COS op     |             |           |             | cosine of operand
     // EXP op     |             |           |             | e^op with e=2.718281828459
-    // LN op      |             |           |             | natural logarithm of operand
+    // LN op      |             |           |             | natural loarithm of operand
     // TAN op     |             |           |             | tangent of operand
     // ATAN op    |             |           |             | arcus tangent of operand
     // TANH op    |             |           |             | tangent hyperbolicus of operand
@@ -1044,19 +1021,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitSqrtExpression");
+        Log.debug("ExpressionTypeVisitor:visitSqrtExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SqrtExpression: rule#2");
         } else {
@@ -1071,19 +1047,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitSinExpression");
+        Log.debug("ExpressionTypeVisitor:visitSinExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SinExpression: rule#2");
         } else {
@@ -1098,19 +1073,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitCosExpression");
+        Log.debug("ExpressionTypeVisitor:visitCosExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: CosExpression: rule#2");
         } else {
@@ -1125,19 +1099,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitExpExpression");
+        Log.debug("ExpressionTypeVisitor:visitExpExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: ExpExpression: rule#2");
         } else {
@@ -1152,19 +1125,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitLnExpression");
+        Log.debug("ExpressionTypeVisitor:visitLnExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: LnExpression: rule#2");
         } else {
@@ -1179,19 +1151,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitTanExpression");
+        Log.debug("ExpressionTypeVisitor:visitTanExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: TanExpression: rule#2");
         } else {
@@ -1206,19 +1177,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitATanExpression");
+        Log.debug("ExpressionTypeVisitor:visitAtanExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: ATanExpression: rule#2");
         } else {
@@ -1233,19 +1203,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitTanhExpression");
+        Log.debug("ExpressionTypeVisitor:visitTanhExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: TanhExpression: rule#2");
         } else {
@@ -1280,19 +1249,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitTOFIXEDExpression");
+        Log.debug("ExpressionTypeVisitor:visitTOFIXEDExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeBit) {
-            res = new ASTAttribute(new TypeFixed(((TypeBit) op.getType()).getPrecision() - 1), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(((TypeBit) op.getType()).getPrecision() - 1), op.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug) {
                 System.out.println("ExpressionTypeVisitor: TOFIXED: rule#1");
@@ -1311,7 +1279,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             }
 
             res = new ASTAttribute(new TypeFixed(1));
-            m_properties.put(ctx, res);
+            m_ast.put(ctx, res);
         } else {
             throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
@@ -1324,11 +1292,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitTOFLOATExpression");
+        Log.debug("ExpressionTypeVisitor:visitTOFLOATExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -1346,7 +1313,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             }
 
             res = new ASTAttribute(new TypeFloat(precision));
-            m_properties.put(ctx, res);
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: TOFLOAT: rule#1");
@@ -1362,19 +1329,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitTOBITExpression");
+        Log.debug("ExpressionTypeVisitor:visitTOBITExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(((TypeFixed) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(((TypeFixed) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: TOBIT: rule#1");
         } else {
@@ -1399,11 +1365,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitTOCHARExpression");
+        Log.debug("ExpressionTypeVisitor:visitTOCHARExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -1411,7 +1376,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op.getType() instanceof TypeFixed) {
             res = new ASTAttribute(new TypeChar(1));
-            m_properties.put(ctx, res);
+            m_ast.put(ctx, res);
         } else {
             throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
@@ -1433,19 +1398,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitEntierExpression");
+        Log.debug("ExpressionTypeVisitor:visitEntierExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFixed(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: ENTIER: rule#1");
         } else {
@@ -1469,19 +1433,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitRoundExpression");
+        Log.debug("ExpressionTypeVisitor:visitRoundExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFixed(((TypeFloat) op.getType()).getPrecision()), op.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeFixed(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+            m_ast.put(ctx, res);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: ROUND: rule#1");
         } else {
@@ -1493,11 +1456,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitUnaryExpression(SmallPearlParser.UnaryExpressionContext ctx) {
-        // TODO:
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitUnaryExpression");
+        Log.debug("ExpressionTypeVisitor:visitUnaryExpression:ctx" + CommonUtils.printContext(ctx));
         throw new NotYetImplementedException("ExpressionTypeVisitor:visitUnaryExpression", ctx.start.getLine(), ctx.start.getCharPositionInLine());
-
     }
 
     //
@@ -1514,15 +1474,14 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     public Void visitSemaTry(SmallPearlParser.SemaTryContext ctx) {
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitSemaTry");
+        Log.debug("ExpressionTypeVisitor:visitSemaTry:ctx" + CommonUtils.printContext(ctx));
 
         if (ctx.ID() == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         res = new ASTAttribute(new TypeBit(1));
-        m_properties.put(ctx, res);
+        m_ast.put(ctx, res);
 
         if (m_debug)
             System.out.println("ExpressionTypeVisitor: TRY: rule#1");
@@ -1532,30 +1491,29 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitLiteral(SmallPearlParser.LiteralContext ctx) {
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitLiteral");
+        Log.debug("ExpressionTypeVisitor:visitLiteral:ctx" + CommonUtils.printContext(ctx));
 
         if (ctx.durationConstant() != null) {
             ASTAttribute expressionResult = new ASTAttribute(new TypeDuration(), true);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
         } else if (ctx.floatingPointConstant() != null) {
             try {
                 double value = Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
                 Integer precision = 24;
                 ASTAttribute expressionResult = new ASTAttribute( new TypeFloat(precision),true);
-                m_properties.put(ctx, expressionResult);
+                m_ast.put(ctx, expressionResult);
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else if (ctx.timeConstant() != null) {
             ASTAttribute expressionResult = new ASTAttribute( new TypeClock(getTime(ctx.timeConstant())),true);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
         } else if (ctx.StringLiteral() != null) {
             ASTAttribute expressionResult = new ASTAttribute(new TypeChar(), true);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
         } else if (ctx.BitStringLiteral() != null) {
             ASTAttribute expressionResult = new ASTAttribute(  new TypeBit(CommonUtils.getBitStringLength(ctx.BitStringLiteral().getText())), true);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
         } else if (ctx.fixedConstant() != null) {
             try {
                 int precision = m_currentSymbolTable.lookupDefaultFixedLength();
@@ -1579,10 +1537,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                 }
 
                 m_calculateRealFixedLength = false;
-
-//                System.out.println( "ExpressionTypeVisitor:visitLiteral:Fixed: ctx="+ctx.toStringTree()+" precision="+precision);
                 ASTAttribute expressionResult = new ASTAttribute(new TypeFixed(precision), true);
-                m_properties.put(ctx, expressionResult);
+                m_ast.put(ctx, expressionResult);
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
@@ -1616,9 +1572,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("SymbolTableVisitor: visitModule");
-        }
+        Log.debug("ExpressionTypeVisitor:visitModule:ctx" + CommonUtils.printContext(ctx));
 
 //        this.m_currentSymbolTable = this.symbolTable.newLevel(moduleEntry);
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -1630,9 +1584,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: vistTaskDeclaration");
-        }
+        Log.debug("ExpressionTypeVisitor:visitTaskDeclaration:ctx" + CommonUtils.printContext(ctx));
 
         SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(ctx.ID().getText());
 
@@ -1653,9 +1605,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitProcedureDeclaration");
-        }
+        Log.debug("ExpressionTypeVisitor:visitProcedureDeclaration:ctx" + CommonUtils.printContext(ctx));
 
         SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(ctx.ID().getText());
 
@@ -1677,9 +1627,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitBlock_statement");
-        }
+        Log.debug("ExpressionTypeVisitor:visitBlock_statement:ctx" + CommonUtils.printContext(ctx));
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
         visitChildren(ctx);
@@ -1689,9 +1637,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitLoopStatement");
-        }
+        Log.debug("ExpressionTypeVisitor:visitLoopStatement:ctx" + CommonUtils.printContext(ctx));
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
 
@@ -1703,9 +1649,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitLoopStatement_from(SmallPearlParser.LoopStatement_fromContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitLoopStatement_From");
-        }
+        Log.debug("ExpressionTypeVisitor:visitLoopStatement_from:ctx" + CommonUtils.printContext(ctx));
 
         m_calculateRealFixedLength = true;
         visitChildren(ctx);
@@ -1716,9 +1660,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitLoopStatement_to(SmallPearlParser.LoopStatement_toContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitLoopStatement_to");
-        }
+        Log.debug("ExpressionTypeVisitor:visitLoopStatement_to:ctx" + CommonUtils.printContext(ctx));
 
         m_calculateRealFixedLength = true;
         visitChildren(ctx);
@@ -1729,9 +1671,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitLoopStatement_by(SmallPearlParser.LoopStatement_byContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitLoopStatement_By");
-        }
+        Log.debug("ExpressionTypeVisitor:visitLoopStatement_by:ctx" + CommonUtils.printContext(ctx));
 
         m_calculateRealFixedLength = true;
         visitChildren(ctx);
@@ -1744,12 +1684,12 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     public Void visitAssignment_statement(SmallPearlParser.Assignment_statementContext ctx) {
         String id = null;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitAssignment_statement");
-        }
+        Log.debug("ExpressionTypeVisitor:visitAssignment_statement:ctx" + CommonUtils.printContext(ctx));
+
         if ( ctx.stringSelection() != null ) {
             if (ctx.stringSelection().charSelection() != null) {
                 id = ctx.stringSelection().charSelection().ID().getText();
+                visitStringSelection(ctx.stringSelection());
             }
             else  if (ctx.stringSelection().bitSelection() != null) {
                 id = ctx.stringSelection().bitSelection().ID().getText();
@@ -1781,26 +1721,22 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitNowFunction(SmallPearlParser.NowFunctionContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitNowFunction");
-        }
+        Log.debug("ExpressionTypeVisitor:visitNowFunction:ctx" + CommonUtils.printContext(ctx));
 
         TypeClock type = new TypeClock();
         ASTAttribute expressionResult = new ASTAttribute(type);
-        m_properties.put(ctx, expressionResult);
+        m_ast.put(ctx, expressionResult);
 
         return null;
     }
 
     @Override
     public Void visitSizeofExpression(SmallPearlParser.SizeofExpressionContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitSizeofExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitSizeofExpression:ctx" + CommonUtils.printContext(ctx));
 
         TypeFixed type = new TypeFixed(Defaults.FIXED_LENGTH);
         ASTAttribute expressionResult = new ASTAttribute(type);
-        m_properties.put(ctx, expressionResult);
+        m_ast.put(ctx, expressionResult);
 
         return null;
     }
@@ -1827,69 +1763,67 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitEqRelationalExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitEqRelationalExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitEqRelationalExpression: rule#1");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitEqRelationalExpression: rule#2");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitEqRelationalExpression: rule#3");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitEqRelationalExpression: rule#4");
         } else if (op1.getType() instanceof TypeClock && op2.getType() instanceof TypeClock) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitEqRelationalExpression: rule#5");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitEqRelationalExpression: rule#6");
         } else if (op1.getType() instanceof TypeChar && op2.getType() instanceof TypeChar) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitEqRelationalExpression: rule#7");
         } else if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeBit) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitEqRelationalExpression: rule#7");
@@ -1931,63 +1865,61 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitLtRelationalExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitLtRelationalExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLtRelationalExpression: rule#1");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLtRelationalExpression: rule#2");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLtRelationalExpression: rule#3");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLtRelationalExpression: rule#4");
         } else if (op1.getType() instanceof TypeClock && op2.getType() instanceof TypeClock) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLtRelationalExpression: rule#5");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLtRelationalExpression: rule#6");
         } else if (op1.getType() instanceof TypeChar && op2.getType() instanceof TypeChar) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLtRelationalExpression: rule#7");
@@ -2020,69 +1952,67 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitNeRelationalExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitNeRelationalExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitNeRelationalExpression: rule#1");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitNeRelationalExpression: rule#2");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitNeRelationalExpression: rule#3");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitNeRelationalExpression: rule#4");
         } else if (op1.getType() instanceof TypeClock && op2.getType() instanceof TypeClock) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitNeRelationalExpression: rule#5");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitNeRelationalExpression: rule#6");
         } else if (op1.getType() instanceof TypeChar && op2.getType() instanceof TypeChar) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitNeRelationalExpression: rule#7");
         } else if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeBit) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitNeRelationalExpression: rule#7");
@@ -2123,63 +2053,61 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitLeRelationalExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitLeRelationalExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLeRelationalExpression: rule#1");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLeRelationalExpression: rule#2");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLeRelationalExpression: rule#3");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLeRelationalExpression: rule#4");
         } else if (op1.getType() instanceof TypeClock && op2.getType() instanceof TypeClock) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLeRelationalExpression: rule#5");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLeRelationalExpression: rule#6");
         } else if (op1.getType() instanceof TypeChar && op2.getType() instanceof TypeChar) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitLeRelationalExpression: rule#7");
@@ -2219,63 +2147,61 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitGtRelationalExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitGtRelationalExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGtRelationalExpression: rule#1");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGtRelationalExpression: rule#2");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGtRelationalExpression: rule#3");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGtRelationalExpression: rule#4");
         } else if (op1.getType() instanceof TypeClock && op2.getType() instanceof TypeClock) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGtRelationalExpression: rule#5");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGtRelationalExpression: rule#6");
         } else if (op1.getType() instanceof TypeChar && op2.getType() instanceof TypeChar) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGtRelationalExpression: rule#7");
@@ -2315,63 +2241,61 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitGeRelationalExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitGeRelationalExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGeRelationalExpression: rule#1");
         } else if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGeRelationalExpression: rule#2");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGeRelationalExpression: rule#3");
         } else if (op1.getType() instanceof TypeFloat && op2.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGeRelationalExpression: rule#4");
         } else if (op1.getType() instanceof TypeClock && op2.getType() instanceof TypeClock) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGeRelationalExpression: rule#5");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGeRelationalExpression: rule#6");
         } else if (op1.getType() instanceof TypeChar && op2.getType() instanceof TypeChar) {
-            res = new ASTAttribute(new TypeBit(1), op1.isConstant() && op2.isConstant());
-            m_properties.put(ctx, res);
+            res = new ASTAttribute(new TypeBit(1), op1.isReadOnly() && op2.isReadOnly());
+            m_ast.put(ctx, res);
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: visitGeRelationalExpression: rule#7");
@@ -2384,12 +2308,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitStringSelection(SmallPearlParser.StringSelectionContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitStringSelection");
-        }
-
+        Log.debug("ExpressionTypeVisitor:visitStringSelection:ctx" + CommonUtils.printContext(ctx));
+        visitChildren(ctx);
         return null;
-//        throw new NotSupportedFeatureException("visitStringSelection", ctx.start.getLine(), ctx.start.getCharPositionInLine(), "???");
     }
 
 
@@ -2398,18 +2319,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op1;
         ASTAttribute op2;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitCshiftExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitCshiftExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2418,7 +2337,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeFixed) {
             TypeBit type = new TypeBit(((TypeBit)op1.getType()).getPrecision());
             ASTAttribute expressionResult = new ASTAttribute(type);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
 
             if (m_debug) {
                 System.out.println("ExpressionTypeVisitor: Dyadic Boolean and shift operators");
@@ -2436,18 +2355,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op1;
         ASTAttribute op2;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitShiftExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitShiftExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2456,7 +2373,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeFixed) {
             TypeBit type = new TypeBit(((TypeBit)op1.getType()).getPrecision());
             ASTAttribute expressionResult = new ASTAttribute(type);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
 
             if (m_debug) {
                 System.out.println("ExpressionTypeVisitor: Dyadic Boolean and shift operators");
@@ -2473,18 +2390,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op1;
         ASTAttribute op2;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitCatExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitCatExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2493,11 +2408,11 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeBit) {
             TypeBit type = new TypeBit(((TypeBit) op1.getType()).getPrecision() + ((TypeBit) op2.getType()).getPrecision());
             ASTAttribute expressionResult = new ASTAttribute(type);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
         } else if (op1.getType() instanceof TypeChar && op2.getType() instanceof TypeChar) {
             TypeChar type = new TypeChar(((TypeChar)op1.getType()).getSize() + ((TypeChar)op2.getType()).getSize());
             ASTAttribute expressionResult = new ASTAttribute(type);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
         } else {
             throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
@@ -2510,17 +2425,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op1;
         ASTAttribute op2;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitAndExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitAndExpression:ctx" + CommonUtils.printContext(ctx));
+
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2529,7 +2443,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeBit) {
             TypeBit type = new TypeBit( Math.max( ((TypeBit)op1.getType()).getPrecision(),((TypeBit)op2.getType()).getPrecision()));
             ASTAttribute expressionResult = new ASTAttribute(type);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
         }
         else {
             throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2543,17 +2457,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op1;
         ASTAttribute op2;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitOrExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitOrExpression:ctx" + CommonUtils.printContext(ctx));
+
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2562,7 +2475,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeBit) {
             TypeBit type = new TypeBit( Math.max( ((TypeBit)op1.getType()).getPrecision(),((TypeBit)op2.getType()).getPrecision()));
             ASTAttribute expressionResult = new ASTAttribute(type);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
         }
         else {
             throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2576,19 +2489,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op1;
         ASTAttribute op2;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitExorExpression");
-        }
+        Log.debug("ExpressionTypeVisitor:visitExorExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression(0));
-        op1 = m_properties.get(ctx.expression(0));
+        op1 = m_ast.lookup(ctx.expression(0));
 
         if (op1 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         visit(ctx.expression(1));
-        op2 = m_properties.get(ctx.expression(1));
+        op2 = m_ast.lookup(ctx.expression(1));
 
         if (op2 == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2597,7 +2508,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeBit) {
             TypeBit type = new TypeBit( Math.max( ((TypeBit)op1.getType()).getPrecision(),((TypeBit)op2.getType()).getPrecision()));
             ASTAttribute expressionResult = new ASTAttribute(type);
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
         }
         else {
             throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2611,11 +2522,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitCONTExpression");
+        Log.debug("ExpressionTypeVisitor:visitCONTExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
-        op = m_properties.get(ctx.expression());
+        op = m_ast.lookup(ctx.expression());
 
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2623,7 +2533,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (op.getType() instanceof TypeReference) {
             ASTAttribute expressionResult = new ASTAttribute(op.getType());
-            m_properties.put(ctx, expressionResult);
+            m_ast.put(ctx, expressionResult);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: CONT: rule#1");
         } else {
@@ -2635,11 +2545,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitStringSlice(SmallPearlParser.StringSliceContext ctx) {
-        ASTAttribute res;
+        ASTAttribute res = null;
 
-        if (m_debug) {
-            System.out.println("ExpressionTypeVisitor: visitStringSlice");
-        }
+        Log.debug("ExpressionTypeVisitor:visitStringSlice:ctx" + CommonUtils.printContext(ctx));
 
         if ( ctx.bitSlice() != null ) {
             int bits = 0;
@@ -2672,13 +2580,38 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
            res = new ASTAttribute(new TypeBit(bits));
         }
         else if ( ctx.charSlice() != null ) {
-            res = new ASTAttribute(new TypeChar(1));
+
+            if ( ctx.charSlice() instanceof SmallPearlParser.Case1CharSliceContext) {
+                 visitCase1CharSlice((SmallPearlParser.Case1CharSliceContext)ctx.charSlice());
+                 ASTAttribute expressionResult = m_ast.lookup(ctx.charSlice());
+                if (expressionResult != null) {
+                    m_ast.put(ctx, expressionResult);
+                } else {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+            }
+            else if ( ctx.charSlice() instanceof SmallPearlParser.Case2CharSliceContext) {
+                visitCase2CharSlice((SmallPearlParser.Case2CharSliceContext) ctx.charSlice());
+                ASTAttribute expressionResult = m_ast.lookup(ctx.charSlice());
+                if (expressionResult != null) {
+                    m_ast.put(ctx, expressionResult);
+                } else {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+            }
+            else if ( ctx.charSlice() instanceof SmallPearlParser.Case3CharSliceContext) {
+                visitCase3CharSlice((SmallPearlParser.Case3CharSliceContext) ctx.charSlice());
+            }
+            else if ( ctx.charSlice() instanceof SmallPearlParser.Case4CharSliceContext) {
+                visitCase4CharSlice((SmallPearlParser.Case4CharSliceContext) ctx.charSlice());
+            }
+//            HIER FEHLT NOCH ETWAS!!!!
         }
         else {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
-        m_properties.put(ctx, res);
+        m_ast.put(ctx, res);
 
         return null;
     }
@@ -2688,19 +2621,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op1;
         ASTAttribute op2;
 
-        if (m_verbose > 0) {
-            System.out.println("ExpressionTypeVisitor: visitConstantFixedExpressionFit");
-        }
+        Log.debug("ExpressionTypeVisitor:visitConstantFixedExpressionFit:ctx" + CommonUtils.printContext(ctx));
 
 //        visit(ctx.expression(0));
-//        op1 = m_properties.get(ctx.expression(0));
+//        op1 = m_ast.lookup(ctx.expression(0));
 //
 //        if (op1 == null) {
 //            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
 //        }
 //
 //        visit(ctx.expression(1));
-//        op2 = m_properties.get(ctx.expression(1));
+//        op2 = m_ast.lookup(ctx.expression(1));
 //
 //        if (op2 == null) {
 //            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2709,7 +2640,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 //        if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeBit) {
 //            TypeBit type = new TypeBit( Math.max( ((TypeBit)op1.getType()).getPrecision(),((TypeBit)op2.getType()).getPrecision()));
 //            ASTAttribute expressionResult = new ASTAttribute(type);
-//            m_properties.put(ctx, expressionResult);
+//            m_ast.put(ctx, expressionResult);
 //        }
 //        else {
 //            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2720,12 +2651,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     @Override
     public Void visitInitElement(SmallPearlParser.InitElementContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitInitElement:ctx" + CommonUtils.printContext(ctx));
+
         visitChildren(ctx);
         return null;
     }
 
     @Override
     public Void visitConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitConstantExpression:ctx" + CommonUtils.printContext(ctx));
+
         visitChildren(ctx);
         return null;
     }
@@ -2752,11 +2687,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitLwbDyadicExpression");
+        Log.debug("ExpressionTypeVisitor:visitLwbDyadicExpression:ctx" + CommonUtils.printContext(ctx));
 
         res = new ASTAttribute(new TypeFixed(31), false);
-        m_properties.put(ctx, res);
+        m_ast.put(ctx, res);
 
         return null;
     }
@@ -2767,11 +2701,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op2;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitUpbDyadicExpression");
+        Log.debug("ExpressionTypeVisitor:visitUpbDyadicExpression:ctx" + CommonUtils.printContext(ctx));
 
         res = new ASTAttribute(new TypeFixed(31), false);
-        m_properties.put(ctx, res);
+        m_ast.put(ctx, res);
 
         return null;
     }
@@ -2797,11 +2730,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitLwbMonadicExpression");
+        Log.debug("ExpressionTypeVisitor:visitLwbMonadicExpression:ctx" + CommonUtils.printContext(ctx));
 
         res = new ASTAttribute(new TypeFixed(31), false);
-        m_properties.put(ctx, res);
+        m_ast.put(ctx, res);
 
         return null;
     }
@@ -2811,14 +2743,115 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute op;
         ASTAttribute res;
 
-        if (m_debug)
-            System.out.println("ExpressionTypeVisitor: visitUpbMonadicExpression");
+        Log.debug("ExpressionTypeVisitor:visitUpbMonadicExpression:ctx" + CommonUtils.printContext(ctx));
 
         res = new ASTAttribute(new TypeFixed(31), false);
-        m_properties.put(ctx, res);
+        m_ast.put(ctx, res);
 
         return null;
     }
+
+    @Override
+    public Void visitCase1CharSlice(SmallPearlParser.Case1CharSliceContext ctx) {
+        ASTAttribute op;
+        ASTAttribute res;
+        ASTAttribute attr = m_ast.lookup(ctx);
+
+        Log.debug("ExpressionTypeVisitor:visitCase1CharSlice:ctx" + CommonUtils.printContext(ctx));
+        Log.debug("ExpressionTypeVisitor:visitCase1CharSlice:id=" + ctx.ID().getText());
+
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().getText());
+
+        visit(ctx.expression());
+
+        ASTAttribute expressionResult = m_ast.lookup(ctx.expression());
+        if (expressionResult != null) {
+            if ( expressionResult.isReadOnly()) {
+                if (expressionResult.getType() instanceof TypeFixed ) {
+                    m_ast.put(ctx, new ASTAttribute(new TypeChar(1)));
+                }
+                else {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+            }
+            else {
+                if ( entry instanceof VariableEntry) {
+                    VariableEntry var = (VariableEntry) entry;
+                    if ( var.getType() instanceof TypeChar) {
+                        m_ast.put(ctx, new ASTAttribute(new TypeChar(1)));
+                    }
+                    else {
+                        throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                    }
+                } else {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+            }
+        } else {
+            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitCase2CharSlice(SmallPearlParser.Case2CharSliceContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitCase3CharSlice:ctx" + CommonUtils.printContext(ctx));
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().getText());
+
+        visitChildren(ctx);
+
+        ASTAttribute lwb = m_ast.lookup(ctx.expression(0));
+        ASTAttribute uwb = m_ast.lookup(ctx.expression(0));
+
+        if ( lwb.isReadOnly() && uwb.isReadOnly()) {
+            Log.debug("ExpressionTypeVisitor:visitCase3CharSlice:ctx" + CommonUtils.printContext(ctx));
+        }
+
+        if ( entry instanceof VariableEntry) {
+            VariableEntry var = (VariableEntry) entry;
+            if ( var.getType() instanceof TypeChar) {
+                m_ast.put(ctx, new ASTAttribute(new TypeChar(((TypeChar) var.getType()).getSize())));
+            }
+            else {
+                throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            }
+        } else {
+            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+
+        return null;
+    }
+    @Override
+    public Void visitCase3CharSlice(SmallPearlParser.Case3CharSliceContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitCase3CharSlice:ctx" + CommonUtils.printContext(ctx));
+        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+    }
+    @Override
+    public Void visitCase4CharSlice(SmallPearlParser.Case4CharSliceContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitCase4CharSlice:ctx" + CommonUtils.printContext(ctx));
+        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+    }
+
+
+    @Override
+    public Void visitCharSelection(SmallPearlParser.CharSelectionContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitCharSelection:ctx" + CommonUtils.printContext(ctx));
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitCharSelectionSlice(SmallPearlParser.CharSelectionSliceContext ctx) {
+
+        Log.debug("ExpressionTypeVisitor:visitCharSelectionSlice:ctx" + CommonUtils.printContext(ctx));
+
+        visitChildren(ctx);
+
+        return null;
+    }
+
+
 
     private ConstantValue getConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
         ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
@@ -2826,5 +2859,4 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         return constant;
     }
-
 }

@@ -84,7 +84,6 @@ javac:
 	                            org/smallpearl/compiler/SymbolTable/*.class \
 	                            org/smallpearl/compiler/SemanticAnalysis/*.class \
 	                            org/smallpearl/compiler/Exception/*.class \
-	                            org/smallpearl/compiler/AST/*.class \
 				    SmallPearlCpp.stg IMC.stg
 
 ##############################################################################

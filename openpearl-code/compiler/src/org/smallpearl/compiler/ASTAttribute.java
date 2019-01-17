@@ -33,33 +33,102 @@ import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
 public class ASTAttribute {
     public TypeDefinition  m_type;
-    public boolean         m_constant;
+    public boolean m_readonly;
     public VariableEntry   m_variable;
+    public ConstantValue m_constant;
+    public ConstantSlice m_slice;
 
     ASTAttribute(TypeDefinition type) {
         m_type = type;
-        m_constant = false;
+        m_readonly = false;
         m_variable = null;
+        m_constant = null;
+        m_slice    = null;
+    }
+
+    ASTAttribute(ConstantSlice slice) {
+        m_type     = null;
+        m_readonly = false;
+        m_variable = null;
+        m_constant = null;
+        m_slice    = slice;
     }
 
     ASTAttribute(TypeDefinition type, boolean constant) {
         m_type = type;
-        m_constant = constant;
+        m_readonly = constant;
         m_variable = null;
+        m_slice    = null;
     }
 
     ASTAttribute(TypeDefinition type, boolean constant, VariableEntry variable ) {
         m_type = type;
-        m_constant = constant;
         m_variable = variable;
+        m_constant = null;
+        m_slice    = null;
+
+        if ( variable.getLoopControlVariable()) {
+            m_readonly = false;
+        }
+        else {
+            m_readonly = constant;
+        }
     }
 
-    public boolean isConstant() { return this.m_constant; }
-    public boolean isNotConstant() { return !this.isConstant(); }
+    public boolean isReadOnly() {
+        return this.m_readonly;
+    }
+
+    public boolean isLoopControlVariable() {
+        return ( m_variable != null && m_variable.getLoopControlVariable());
+    }
+
+
+    public boolean isWritable() { return !this.isReadOnly(); }
     public TypeDefinition getType() { return this.m_type; }
     public VariableEntry getVariable() { return this.m_variable; }
 
+    public ConstantValue getConstant() { return this.m_constant; }
+
+    public Void setConstant(ConstantValue val) {
+        m_constant = val;
+        m_readonly = true;
+        return null;
+    }
+
+    public Void setConstantFixedValue(ConstantFixedValue val) {
+        m_constant = val;
+        m_readonly = true;
+        return null;
+    }
+
+    public ConstantFixedValue getConstantFixedValue() {
+        if (m_constant instanceof ConstantFixedValue) {
+            return (ConstantFixedValue) this.m_constant;
+        } else {
+            return null;
+        }
+    }
+
+    public Void setConstantFloatValue(ConstantFloatValue val) {
+        m_constant = val;
+        m_readonly = true;
+        return null;
+    }
+
+    public ConstantFloatValue getConstantFloatValue() {
+        if (m_constant instanceof ConstantFloatValue) {
+            return (ConstantFloatValue) this.m_constant;
+        } else {
+            return null;
+        }
+    }
+
+    public ConstantSlice getConstantSlice() {
+        return this.m_slice;
+    }
+
     public String toString() {
-        return "ASTAttribute: " + this.m_type + " " + this.isConstant() + " " + this.m_variable;
+        return "(" + this.m_type + " " + this.isReadOnly() + " " + this.m_variable + " " + this.m_constant + " " + this.m_slice + ")";
     }
 }

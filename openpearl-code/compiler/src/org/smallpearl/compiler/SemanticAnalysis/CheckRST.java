@@ -48,12 +48,14 @@ public class CheckRST extends SmallPearlBaseVisitor<Void> implements SmallPearlV
     private SymbolTable m_symboltable;
     private SymbolTable m_currentSymbolTable;
     private ModuleEntry m_module;
+    private AST m_ast = null;
 
     public CheckRST(String sourceFileName,
                     int verbose,
                     boolean debug,
                     SymbolTableVisitor symbolTableVisitor,
-                    ExpressionTypeVisitor expressionTypeVisitor) {
+                    ExpressionTypeVisitor expressionTypeVisitor,
+                    AST ast) {
 
         m_debug = debug;
         m_verbose = verbose;
@@ -62,10 +64,9 @@ public class CheckRST extends SmallPearlBaseVisitor<Void> implements SmallPearlV
         m_expressionTypeVisitor = expressionTypeVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
+        m_ast = ast;
 
-        if (m_verbose > 0) {
-            System.out.println( "    Check RST");
-        }
+        Log.debug( "    Check RST");
     }
 
     @Override
