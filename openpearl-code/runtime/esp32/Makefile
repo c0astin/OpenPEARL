@@ -184,18 +184,18 @@ phony += setuplinks
 setuplinks:
 	@echo [ setup links from/to esp-idf ]
 	@# to avoid spurious other links
-	@rm -f esp-idf
-	@ln -s $(ESP_IDF_PATH) esp-idf
-	@rm -f openpearlComponent/common
-	@ln -s $(CURRENT_DIR)../common  openpearlComponent/common
-	@rm -f $(ESP_IDF_PATH)/components/openpearl
-	@ln -s $(CURRENT_DIR)openpearlComponent $(ESP_IDF_PATH)/components/openpearl
-	@rm -f $(ESP_IDF_PATH)/components/freertos_specific
-	@ln -s $(CURRENT_DIR)FreeRTOSspecificComponent $(ESP_IDF_PATH)/components/freertos_specific
-	@rm -f FreeRTOSspecificComponent/PEARL
-	@ln -s $(CURRENT_DIR)../FreeRTOS/PEARL $(CURRENT_DIR)/FreeRTOSspecificComponent/PEARL
-	@rm -f FreeRTOSspecificComponent/addOns
-	@ln -s $(CURRENT_DIR)../FreeRTOS/addOns $(ESP_IDF_PATH)/components/freertos_specific/addOns
+	rm -f esp-idf
+	ln -s $(ESP_IDF_PATH) esp-idf
+	rm -f openpearlComponent/common
+	ln -s $(CURRENT_DIR)../common  openpearlComponent/common
+	rm -f $(ESP_IDF_PATH)/components/openpearl
+	ln -s $(CURRENT_DIR)openpearlComponent $(ESP_IDF_PATH)/components/openpearl
+	rm -f $(ESP_IDF_PATH)/components/freertos_specific
+	ln -s $(CURRENT_DIR)FreeRTOSspecificComponent $(ESP_IDF_PATH)/components/freertos_specific
+	rm -f FreeRTOSspecificComponent/PEARL
+	ln -s $(CURRENT_DIR)../FreeRTOS/PEARL $(CURRENT_DIR)/FreeRTOSspecificComponent/PEARL
+	rm -f FreeRTOSspecificComponent/addOns
+	ln -s $(CURRENT_DIR)../FreeRTOS/addOns $(ESP_IDF_PATH)/components/freertos_specific/addOns
 
 phony += prepare
 prepare:
