@@ -2,6 +2,8 @@
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
 
+$(warning PATH=$(PATH))
+
 # read system configuration setting from menuconfig
 # this must be done after the path extractions, since include 
 # modifies MAKEFILE_PATH
