@@ -2,6 +2,8 @@
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
 
+$(warning PATH=$(PATH))
+
 # read system configuration setting from menuconfig
 # this must be done after the path extractions, since include 
 # modifies MAKEFILE_PATH
@@ -113,7 +115,6 @@ tests/testStackOverflow.s: tests/testStackOverflow.cc
 
 esp-idf-build: ../common/Signals.hh ../common/Signals.hcc
 	@echo "[create] $@"
-	cp --preserve=timestamps FreeRTOSConfig.h $(ESP_IDF_PATH)/components/freertos/include/freertos
 	export IDF_PATH=$(ESP_IDF_PATH)
 	$(call esp32build)
 
@@ -199,6 +200,8 @@ setuplinks:
 	ln -s $(CURRENT_DIR)../FreeRTOS/PEARL $(CURRENT_DIR)/FreeRTOSspecificComponent/PEARL
 	rm -f FreeRTOSspecificComponent/addOns
 	ln -s $(CURRENT_DIR)../FreeRTOS/addOns $(ESP_IDF_PATH)/components/freertos_specific/addOns
+	rm -f $(ESP_IDF_PATH)/components/freertos/include/freertos/FreeRTOSConfig.h
+	ln -s $(CURRENT_DIR)/FreeRTOSConfig.h $(ESP_IDF_PATH)/components/freertos/include/freertos
 
 phony += prepare
 prepare:
