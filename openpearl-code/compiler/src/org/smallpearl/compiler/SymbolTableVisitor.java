@@ -32,6 +32,7 @@ package org.smallpearl.compiler;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -169,7 +170,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
         String globalId = null;
         LinkedList<FormalParameter> formalParameters = null;
-        ExpressionResult resultType = null;
+        ASTAttribute resultType = null;
 
         if (m_verbose > 0) {
             System.out.println("SymbolTableVisitor: visitProcedureDeclaration");
@@ -177,7 +178,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
         for (ParseTree c : ctx.children) {
             if (c instanceof SmallPearlParser.ResultAttributeContext) {
-                resultType = new ExpressionResult(getResultAttribute((SmallPearlParser.ResultAttributeContext) c));
+                resultType = new ASTAttribute(getResultAttribute((SmallPearlParser.ResultAttributeContext) c));
             } else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
                 SmallPearlParser.GlobalAttributeContext globalCtx = (SmallPearlParser.GlobalAttributeContext) c;
                 globalId = ctx.ID().getText();

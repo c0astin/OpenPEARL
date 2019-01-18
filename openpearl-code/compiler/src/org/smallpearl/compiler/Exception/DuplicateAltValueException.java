@@ -27,14 +27,15 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NoDeclarationException extends RuntimeException {
+public class DuplicateAltValueException extends RuntimeException {
 
-/*
-    public NoDeclarationException(Symbol s) {
-        super("Error at line " + s.getLine() + ":" + s.getColumn() + ": Symbol " + s.getName() +
-                " has not been declared.");
+    public DuplicateAltValueException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Duplicate value for alternative.");
     }
-*/
+
+    public DuplicateAltValueException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Duplicate value for alternative: " + sReason);
+    }
 }

@@ -64,6 +64,7 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
         m_constantPoolVisitor = constantPoolVisitor;
         m_properties = new ParseTreeProperty<ConstantValue>();
         m_enterResultinConstantPool = true;
+        m_debug=true;
     }
 
     public ConstantValue lookup(ParserRuleContext ctx) {
@@ -186,7 +187,7 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
         return null;
     }
 
-        @Override
+    @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {
         org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable.lookupLocal(ctx.ID().getText());
         m_currentSymbolTable = ((ModuleEntry)symbolTableEntry).scope;

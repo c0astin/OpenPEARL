@@ -29,9 +29,10 @@
 
 package org.smallpearl.compiler;
 
+import org.smallpearl.compiler.Exception.*;
+import org.smallpearl.compiler.SymbolTable.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
-import org.smallpearl.compiler.SymbolTable.*;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
@@ -57,6 +58,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     private ModuleEntry m_module;
     private Integer m_currFixedLength = null;
     private int m_sign = 1;
+    private AST m_ast = null;
 
     public enum Type {BIT, CHAR, FIXED}
 
@@ -68,7 +70,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                                    boolean debug,
                                    SymbolTableVisitor symbolTableVisitor,
                                    ExpressionTypeVisitor expressionTypeVisitor,
-                                   ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor) {
+                                   ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor,
+                                   AST ast) {
 
         m_debug = debug;
         m_verbose = verbose;
@@ -78,6 +81,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         m_constantExpressionEvaluatorVisitor = constantExpressionEvaluatorVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
+        m_ast = ast;
 
         LinkedList<ModuleEntry> listOfModules = this.m_currentSymbolTable.getModules();
 
@@ -1850,7 +1854,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitIf_statement(SmallPearlParser.If_statementContext ctx) {
         ST stmt = m_group.getInstanceOf("if_statement");
 
-        TypeDefinition typeDef = m_expressionTypeVisitor.lookupType(ctx.expression());
+        TypeDefinition typeDef = m_ast.lookupType(ctx.expression());
 
 //        if ( typeDef instanceof TypeBit ) {
 //            TypeBit typeBit = (TypeBit) typeDef;
@@ -2081,7 +2085,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
-        TypeDefinition rhs_type = m_expressionTypeVisitor.lookupType(ctx.expression());
+        TypeDefinition rhs_type = m_ast.lookupType(ctx.expression());
 
 //        if ( variable.getType() instanceof TypeReference ) {
 //            TypeReference lhs_type = (TypeReference) variable.getType();
@@ -2436,10 +2440,16 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitAdditiveExpression(SmallPearlParser.AdditiveExpressionContext ctx) {
         ST expr = m_group.getInstanceOf("expression");
 
-        expr.add("code", visit(ctx.expression(0)));
-        expr.add("code", ctx.op.getText());
-        expr.add("code", visit(ctx.expression(1)));
+        ASTAttribute attr = m_ast.lookup(ctx);
 
+        if ( attr.isReadOnly() && attr.getConstantFixedValue() != null ) {
+            expr.add("code", attr.getConstantFixedValue());
+        }
+        else {
+            expr.add("code", visit(ctx.expression(0)));
+            expr.add("code", ctx.op.getText());
+            expr.add("code", visit(ctx.expression(1)));
+        }
         return expr;
     }
 
@@ -2447,10 +2457,16 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitSubtractiveExpression(SmallPearlParser.SubtractiveExpressionContext ctx) {
         ST expr = m_group.getInstanceOf("expression");
 
-        expr.add("code", visit(ctx.expression(0)));
-        expr.add("code", ctx.op.getText());
-        expr.add("code", visit(ctx.expression(1)));
+        ASTAttribute attr = m_ast.lookup(ctx);
 
+        if ( attr.isReadOnly() && attr.getConstantFixedValue() != null ) {
+            expr.add("code", attr.getConstantFixedValue());
+        }
+        else {
+            expr.add("code", visit(ctx.expression(0)));
+            expr.add("code", ctx.op.getText());
+            expr.add("code", visit(ctx.expression(1)));
+        }
         return expr;
     }
 
@@ -2458,9 +2474,16 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitMultiplicativeExpression(SmallPearlParser.MultiplicativeExpressionContext ctx) {
         ST expr = m_group.getInstanceOf("expression");
 
-        expr.add("code", visit(ctx.expression(0)));
-        expr.add("code", ctx.op.getText());
-        expr.add("code", visit(ctx.expression(1)));
+        ASTAttribute attr = m_ast.lookup(ctx);
+
+        if ( attr.isReadOnly() && attr.getConstantFixedValue() != null ) {
+            expr.add("code", attr.getConstantFixedValue());
+        }
+        else {
+            expr.add("code", visit(ctx.expression(0)));
+            expr.add("code", ctx.op.getText());
+            expr.add("code", visit(ctx.expression(1)));
+        }
 
         return expr;
     }
@@ -2478,11 +2501,19 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitDivideIntegerExpression(SmallPearlParser.DivideIntegerExpressionContext ctx) {
-        ST expr = m_group.getInstanceOf("expression");
+        ST expr = null;
 
-        expr.add("code", visit(ctx.expression(0)));
-        expr.add("code", "/");
-        expr.add("code", visit(ctx.expression(1)));
+        ASTAttribute attr = m_ast.lookup(ctx);
+
+        if ( attr.isReadOnly() && attr.getConstantFixedValue() != null ) {
+            expr = m_group.getInstanceOf("IntegerConstant");
+            expr.add("value", attr.getConstantFixedValue());
+        }
+        else {
+            expr = m_group.getInstanceOf("FixedDivisionExpression");
+            expr.add("lhs", visit(ctx.expression(0)));
+            expr.add("rhs", visit(ctx.expression(1)));
+        }
 
         return expr;
     }
@@ -2573,7 +2604,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitNotExpression(SmallPearlParser.NotExpressionContext ctx) {
-        TypeDefinition typ = m_expressionTypeVisitor.lookupType(ctx);
+        TypeDefinition typ = m_ast.lookupType(ctx);
         ST expr = null;
 
         // TODO: bitwise
@@ -2591,7 +2622,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitAndExpression(SmallPearlParser.AndExpressionContext ctx) {
-        TypeDefinition typ = m_expressionTypeVisitor.lookupType(ctx);
+        TypeDefinition typ = m_ast.lookupType(ctx);
         ST expr = null;
 
         if ( typ instanceof TypeBit) {
@@ -2609,7 +2640,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitOrExpression(SmallPearlParser.OrExpressionContext ctx) {
-        TypeDefinition typ = m_expressionTypeVisitor.lookupType(ctx);
+        TypeDefinition typ = m_ast.lookupType(ctx);
         ST expr = null;
 
         if ( typ instanceof TypeBit) {
@@ -2627,7 +2658,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitExorExpression(SmallPearlParser.ExorExpressionContext ctx) {
-        TypeDefinition typ = m_expressionTypeVisitor.lookupType(ctx);
+        TypeDefinition typ = m_ast.lookupType(ctx);
         ST expr = null;
 
         if ( typ instanceof TypeBit) {
@@ -2667,9 +2698,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitCatExpression(SmallPearlParser.CatExpressionContext ctx) {
         ST st;
 
-        TypeDefinition resultType = m_expressionTypeVisitor.lookupType(ctx);
-        TypeDefinition op1Type = m_expressionTypeVisitor.lookupType(ctx.expression(0));
-        TypeDefinition op2Type = m_expressionTypeVisitor.lookupType(ctx.expression(1));
+        TypeDefinition resultType = m_ast.lookupType(ctx);
+        TypeDefinition op1Type = m_ast.lookupType(ctx.expression(0));
+        TypeDefinition op2Type = m_ast.lookupType(ctx.expression(1));
 
 
         if ( resultType instanceof TypeChar) {
@@ -5050,7 +5081,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if ( ctx.loopStatement_from() != null) {
             boolean old_map_to_const = m_map_to_const;
 
-            fromType = m_expressionTypeVisitor.lookupType(ctx.loopStatement_from().expression());
+            fromType = m_ast.lookupType(ctx.loopStatement_from().expression());
 
             m_map_to_const = true;
             st.add("from", getExpression(ctx.loopStatement_from().expression()));
@@ -5060,7 +5091,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if ( ctx.loopStatement_to() != null) {
             boolean old_map_to_const = m_map_to_const;
 
-            toType = m_expressionTypeVisitor.lookupType(ctx.loopStatement_to().expression());
+            toType = m_ast.lookupType(ctx.loopStatement_to().expression());
 
             m_map_to_const = true;
             st.add( "to", getExpression(ctx.loopStatement_to().expression()));
@@ -5090,7 +5121,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if ( ctx.loopStatement_by() != null) {
             boolean old_map_to_const = m_map_to_const;
 
-            byType = m_expressionTypeVisitor.lookupType(ctx.loopStatement_by().expression());
+            byType = m_ast.lookupType(ctx.loopStatement_by().expression());
 
             m_map_to_const = true;
             st.add("by", getExpression(ctx.loopStatement_by().expression()));
@@ -5337,7 +5368,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitTOFIXEDExpression(SmallPearlParser.TOFIXEDExpressionContext ctx) {
-        TypeDefinition op = m_expressionTypeVisitor.lookupType(ctx.expression());
+        TypeDefinition op = m_ast.lookupType(ctx.expression());
 
         if ( op instanceof TypeBit) {
             ST st = m_group.getInstanceOf("BITSTOFIXED");
@@ -5356,7 +5387,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitTOFLOATExpression(SmallPearlParser.TOFLOATExpressionContext ctx) {
         ST st = m_group.getInstanceOf("TOFLOAT");
-        TypeDefinition op = m_expressionTypeVisitor.lookupType(ctx.expression());
+        TypeDefinition op = m_ast.lookupType(ctx.expression());
 
         st.add("operand",  getExpression(ctx.expression()));
 
@@ -5381,7 +5412,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitTOBITExpression(SmallPearlParser.TOBITExpressionContext ctx) {
-        TypeDefinition op = m_expressionTypeVisitor.lookupType(ctx.expression());
+        TypeDefinition op = m_ast.lookupType(ctx.expression());
 
         ST st = m_group.getInstanceOf("TOBIT");
         st.add("operand",  getExpression(ctx.expression()));
@@ -5398,7 +5429,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitTOCHARExpression(SmallPearlParser.TOCHARExpressionContext ctx) {
-        TypeDefinition op = m_expressionTypeVisitor.lookupType(ctx.expression());
+        TypeDefinition op = m_ast.lookupType(ctx.expression());
 
         if ( op instanceof TypeFixed) {
             ST st = m_group.getInstanceOf("FIXEDTOCHARACTER");
@@ -5411,7 +5442,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitCONTExpression(SmallPearlParser.CONTExpressionContext ctx) {
-        TypeDefinition op = m_expressionTypeVisitor.lookupType(ctx.expression());
+        TypeDefinition op = m_ast.lookupType(ctx.expression());
 
         ST st = m_group.getInstanceOf("CONT");
         st.add("operand",  getExpression(ctx.expression()));
@@ -5610,7 +5641,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             System.out.println("CppCodeGeneratorVisitor: visitCase3CharSlice");
         }
 
-        throw new NotYetImplementedException("Char Slice Case#3", 0, 0);
+        throw new NotYetImplementedException("Char ConstantSlice Case#3", 0, 0);
 
 //        return st;
     }
@@ -5623,7 +5654,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             System.out.println("CppCodeGeneratorVisitor: visitCase4CharSlice");
         }
 
-        throw new NotYetImplementedException("Char Slice Case4", 0, 0);
+        throw new NotYetImplementedException("Char ConstantSlice Case4", 0, 0);
 
         // return st;
     }

@@ -45,18 +45,21 @@ public class SemanticCheck {
     private SymbolTable m_currentSymbolTable;
     private ModuleEntry m_module;
     private ParserRuleContext m_parseTree;
+    private AST m_ast = null;
 
     public SemanticCheck(String sourceFileName,
                          int verbose,
                          boolean debug,
                          ParserRuleContext tree,
                          SymbolTableVisitor symbolTableVisitor,
-                         ExpressionTypeVisitor expressionTypeVisitor) {
+                         ExpressionTypeVisitor expressionTypeVisitor,
+                         AST ast) {
         m_debug = debug;
         m_verbose = verbose;
         m_sourceFileName = sourceFileName;
         m_symbolTableVisitor = symbolTableVisitor;
         m_expressionTypeVisitor = expressionTypeVisitor;
+        m_ast = ast;
         m_symboltable = symbolTableVisitor.symbolTable;
         m_parseTree = tree;
 
@@ -64,15 +67,14 @@ public class SemanticCheck {
             System.out.println( "Performing semantic check");
         }
 
-        new CheckVariableDeclaration(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor).visit(m_parseTree);
-        new CheckAssignment(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor).visit(m_parseTree);
-        new CheckProcedureCall(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor).visit(m_parseTree);
-        new CheckCondition(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor).visit(m_parseTree);
-        new CheckSwitchCase(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor).visit(m_parseTree);
-        new CheckInterrupt(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor).visit(m_parseTree);
-        new CheckDeclarationScope(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor).visit(m_parseTree);
-        new CheckRST(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor).visit(m_parseTree);
+        new CheckVariableDeclaration(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        new CheckAssignment(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        new CheckProcedureCall(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        new CheckCondition(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        new CheckSwitchCase(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        new CheckInterrupt(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        new CheckDeclarationScope(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        new CheckRST(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
 
     }
-
 }

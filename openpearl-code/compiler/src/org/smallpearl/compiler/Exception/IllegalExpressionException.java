@@ -27,22 +27,15 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class DoubleDeclarationException extends RuntimeException {
+public class IllegalExpressionException extends RuntimeException {
 
-    public DoubleDeclarationException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Double declaration error.");
+    public IllegalExpressionException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Illegal expression error.");
     }
 
-    public DoubleDeclarationException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Double declaration error: " + sReason);
+    public IllegalExpressionException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Illegal expression error: " + sReason);
     }
-
-/* TODO
-    public DoubleDeclarationException(Definition d, Definition dOld) {
-        super("Error at line " + d.getPosition().getLocation() + ": Symbol " + d.getName() +
-                " has already been defined at line " + dOld.getPosition().getLocation() + ".");
-    }
-*/
 }

@@ -27,15 +27,13 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class DuplicateAltValueException extends RuntimeException {
+public class OperationMismatchException extends RuntimeException {
 
-    public DuplicateAltValueException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Duplicate value for alternative.");
+/* TODO   public OperationMismatchException(String s) {
+        super(s);
     }
+*/
 
-    public DuplicateAltValueException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Duplicate value for alternative: " + sReason);
-    }
 }

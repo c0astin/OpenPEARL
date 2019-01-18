@@ -27,16 +27,14 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NoValueException extends RuntimeException {
+public class NoProcedureException extends RuntimeException {
 
-/* TODO
-    public NoValueException(String name, int line, int column, int type) {
+/* TODO    public NoProcedureException(String name, int line, int column, int type) {
         super("Error at line " + line + ":" + column +
-                ": A variable or a constant was expected, but " + Symbol.SYMBOLNAME_LC[type] + " " + name +
+                ": A procedure was expected, but " + Symbol.SYMBOLNAME_LC[type] + " " + name +
                 " has been found.");
     }
-     */
-
+*/
 }

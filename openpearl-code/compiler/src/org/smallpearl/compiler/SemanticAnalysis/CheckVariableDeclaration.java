@@ -31,6 +31,9 @@ package org.smallpearl.compiler.SemanticAnalysis;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.DationDeclarationNotAllowedHereException;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
+import org.smallpearl.compiler.Exception.NumberOfInitializerMismatchException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
@@ -44,23 +47,24 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void> implem
     private int m_verbose;
     private boolean m_debug;
     private String m_sourceFileName;
-    private ExpressionTypeVisitor m_expressionTypeVisitor;
     private SymbolTableVisitor m_symbolTableVisitor;
     private SymbolTable m_symboltable;
     private SymbolTable m_currentSymbolTable;
     private ModuleEntry m_module;
+    private AST m_ast;
 
     public CheckVariableDeclaration(String sourceFileName,
                                     int verbose,
                                     boolean debug,
                                     SymbolTableVisitor symbolTableVisitor,
-                                    ExpressionTypeVisitor expressionTypeVisitor) {
+                                    ExpressionTypeVisitor expressionTypeVisitor,
+                                    AST ast) {
 
         m_debug = debug;
         m_verbose = verbose;
         m_sourceFileName = sourceFileName;
         m_symbolTableVisitor = symbolTableVisitor;
-        m_expressionTypeVisitor = expressionTypeVisitor;
+        m_ast = ast;
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
 

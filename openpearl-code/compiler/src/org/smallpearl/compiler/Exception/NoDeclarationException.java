@@ -27,40 +27,14 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-import org.smallpearl.compiler.SymbolTable.VariableEntry;
+public class NoDeclarationException extends RuntimeException {
 
-public class ExpressionResult {
-    public TypeDefinition  m_type;
-    public boolean         m_constant;
-    public VariableEntry   m_variable;
-
-    ExpressionResult(TypeDefinition type) {
-        m_type = type;
-        m_constant = false;
-        m_variable = null;
+/*
+    public NoDeclarationException(Symbol s) {
+        super("Error at line " + s.getLine() + ":" + s.getColumn() + ": Symbol " + s.getName() +
+                " has not been declared.");
     }
-
-    ExpressionResult(TypeDefinition type, boolean constant) {
-        m_type = type;
-        m_constant = constant;
-        m_variable = null;
-
-    }
-
-    ExpressionResult(TypeDefinition type, boolean constant, VariableEntry variable ) {
-        m_type = type;
-        m_constant = constant;
-        m_variable = variable;
-    }
-
-    public boolean isConstant() { return this.m_constant; }
-    public boolean isNotConstant() { return !this.isConstant(); }
-    public TypeDefinition getType() { return this.m_type; }
-    public VariableEntry getVariable() { return this.m_variable; }
-
-    public String toString() {
-        return "ExpressionResult: " + this.m_type + " " + this.isConstant() + " " + this.m_variable;
-    }
+*/
 }

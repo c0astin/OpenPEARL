@@ -29,15 +29,13 @@
 
 package org.smallpearl.compiler.SemanticAnalysis;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
+import org.smallpearl.compiler.Exception.TypeMismatchException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
-import org.stringtemplate.v4.ST;
-import org.stringtemplate.v4.STGroup;
 
 public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
 
@@ -49,13 +47,14 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
     private SymbolTable m_symboltable;
     private SymbolTable m_currentSymbolTable;
     private ModuleEntry m_module;
-
+    private AST m_ast = null;
 
     public CheckAssignment(String sourceFileName,
                            int verbose,
                            boolean debug,
                            SymbolTableVisitor symbolTableVisitor,
-                           ExpressionTypeVisitor expressionTypeVisitor) {
+                           ExpressionTypeVisitor expressionTypeVisitor,
+                           AST ast) {
 
         m_debug = debug;
         m_verbose = verbose;
@@ -64,11 +63,9 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
         m_expressionTypeVisitor = expressionTypeVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
+        m_ast = ast;
 
-        if (m_verbose > 0) {
-            System.out.println( "    Check Assignments");
-        }
-    }
+        Log.info("Semantic Check: Check assignment statements");    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // The type of the variable given to the left of the assignment sign has to match the type of the  value of the
@@ -82,9 +79,7 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
 
     @Override
     public Void visitAssignment_statement(SmallPearlParser.Assignment_statementContext ctx) {
-        if (m_debug) {
-            System.out.println("Semantic: visitAssignment_statement");
-        }
+        Log.debug("CheckAssignment:visitAssignment_statement:ctx" + CommonUtils.printContext(ctx));
 
         String id = null;
 
@@ -105,8 +100,12 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
 
         SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
 
-        TypeDefinition rhs = m_expressionTypeVisitor.lookupType(ctx.expression());
-        ExpressionResult rhs1 = m_expressionTypeVisitor.lookup(ctx.expression());
+        Log.debug("CheckAssignment:visitAssignment_statement:ctx.expression" + CommonUtils.printContext(ctx.expression()));
+
+        SmallPearlParser.ExpressionContext expr = ctx.expression();
+
+        TypeDefinition rhs = m_ast.lookupType(ctx.expression());
+        ASTAttribute rhs1 = m_ast.lookup(ctx.expression());
 
         if ( lhs instanceof VariableEntry) {
             VariableEntry variable = (VariableEntry) lhs;
@@ -159,7 +158,7 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
                 int p2 = ((TypeFixed)rhs).getPrecision();
 
                 if ( ((TypeFixed) variable.getType()).getPrecision() < ((TypeFixed)rhs).getPrecision() ) {
-                  throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+      //TODO            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
             }
             else if ( variable.getType() instanceof TypeClock ) {

@@ -30,6 +30,8 @@
 package org.smallpearl.compiler.SemanticAnalysis;
 
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.DuplicateAltValueException;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 
@@ -46,12 +48,14 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
     private SymbolTable m_currentSymbolTable;
     private ModuleEntry m_module;
     private ArrayList<FixedRange> m_listOfAlternatives = null;
+    private AST m_ast = null;
 
     public CheckSwitchCase(String sourceFileName,
                            int verbose,
                            boolean debug,
                            SymbolTableVisitor symbolTableVisitor,
-                           ExpressionTypeVisitor expressionTypeVisitor) {
+                           ExpressionTypeVisitor expressionTypeVisitor,
+                           AST ast) {
 
         m_debug = debug;
         m_verbose = verbose;
@@ -60,11 +64,11 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
         m_expressionTypeVisitor = expressionTypeVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
+        m_ast = ast;
+
         m_listOfAlternatives = new ArrayList<FixedRange>();
 
-        if (m_verbose > 0) {
-            System.out.println( "    Check Case");
-        }
+        Log.debug( "    Check Case");
     }
 
     @Override

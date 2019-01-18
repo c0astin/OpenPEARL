@@ -27,14 +27,15 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-/**
- * Created by marcel on 30.07.14.
- */
-public class NumberOfInitializerMismatchException extends RuntimeException {
-    public NumberOfInitializerMismatchException(String name, int line, int column) {
-        super("Error at line " + line + ":" + column +
-                ": Number of Initializer does not match number of variable declarations.");
+public class ResultDiscardedException extends RuntimeException {
+
+    public ResultDiscardedException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Result discarded!");
+    }
+
+    public ResultDiscardedException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Result discarded:" + sReason);
     }
 }

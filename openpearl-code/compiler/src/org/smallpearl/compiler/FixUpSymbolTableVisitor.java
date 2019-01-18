@@ -29,8 +29,10 @@
 
 package org.smallpearl.compiler;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
+import org.smallpearl.compiler.Exception.LoopByOutOfRangeException;
+import org.smallpearl.compiler.Exception.NotYetImplementedException;
 import org.smallpearl.compiler.SymbolTable.*;
 
 import java.util.LinkedList;
@@ -45,19 +47,22 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
     private ExpressionTypeVisitor m_expressionTypeVisitor;
     private ConstantPoolVisitor m_constantPoolVisitor;
     private ModuleEntry m_module;
-    private ParseTreeProperty<ExpressionResult> m_properties = null;
+    private ParseTreeProperty<ASTAttribute> m_properties = null;
+    private AST m_ast = null;
 
     public FixUpSymbolTableVisitor(int verbose,
                                    boolean debug,
                                    SymbolTableVisitor symbolTableVisitor,
                                    ExpressionTypeVisitor expressionTypeVisitor,
-                                   ConstantPoolVisitor   constantPoolVisitor) {
+                                   ConstantPoolVisitor   constantPoolVisitor,
+                                   AST ast) {
 
         m_verbose = verbose;
         m_debug = debug;
 
         m_symbolTableVisitor = symbolTableVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
+        m_ast =  ast;
 
         m_expressionTypeVisitor = expressionTypeVisitor;
         m_constantPoolVisitor  = constantPoolVisitor;
@@ -70,7 +75,7 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
 
         m_module = listOfModules.get(0);
         m_currentSymbolTable = m_module.scope;
-        m_properties = new ParseTreeProperty<ExpressionResult>();
+        m_properties = new ParseTreeProperty<ASTAttribute>();
     }
 
 
@@ -178,28 +183,28 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
         TypeFixed toType = null;
         TypeFixed byType = null;
 
-        ExpressionResult fromRes = null;
-        ExpressionResult toRes = null;
-        ExpressionResult byRes = null;
+        ASTAttribute fromRes = null;
+        ASTAttribute toRes = null;
+        ASTAttribute byRes = null;
 
         int fromPrecision = 1;
         int toPrecision   = Defaults.FIXED_LENGTH;
         int byPrecision   = 1;
 
         if (ctx.loopStatement_from() != null) {
-            fromRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_from().expression());
+            fromRes = m_ast.lookup(ctx.loopStatement_from().expression());
             fromPrecision = ((TypeFixed)fromRes.getType()).getPrecision();
             fromType = new TypeFixed(fromPrecision);
         }
 
         if (ctx.loopStatement_to() != null) {
-            toRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_to().expression());
+            toRes = m_ast.lookup(ctx.loopStatement_to().expression());
             toPrecision = ((TypeFixed)toRes.getType()).getPrecision();
             toType = new TypeFixed(toPrecision);
         }
 
         if (ctx.loopStatement_by() != null) {
-            byRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_by().expression());
+            byRes = m_ast.lookup(ctx.loopStatement_by().expression());
             byPrecision = ((TypeFixed)byRes.getType()).getPrecision();
             byType = new TypeFixed(byPrecision);
         }

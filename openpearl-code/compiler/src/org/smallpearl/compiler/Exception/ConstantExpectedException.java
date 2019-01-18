@@ -27,15 +27,13 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class ArgumentMismatchException extends RuntimeException {
+public class ConstantExpectedException extends RuntimeException {
 
-    public ArgumentMismatchException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Argument Mismatch!");
+    public ConstantExpectedException(String name, int line, int column) {
+        super("Error at line " + line + ":" + column +
+                ": A constant is expected.");
     }
 
-    public ArgumentMismatchException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Argument Mismatch:" + sReason);
-    }
 }

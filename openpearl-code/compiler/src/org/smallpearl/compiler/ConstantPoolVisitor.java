@@ -31,6 +31,10 @@ package org.smallpearl.compiler;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
+import org.smallpearl.compiler.Exception.NumberOutOfRangeException;
+import org.smallpearl.compiler.Exception.UnknownIdentifierException;
+import org.smallpearl.compiler.Exception.ValueOutOfBoundsException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
@@ -50,13 +54,15 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
     private ParseTreeProperty<TypeDefinition> m_properties = null;
     private Integer m_currFixedLength = null;
     private ExpressionTypeVisitor m_expressionTypeVisitor = null;
+    private AST m_ast = null;
 
     public ConstantPoolVisitor(String sourceFileName,
                                int verbose,
                                boolean debug,
                                SymbolTableVisitor symbolTableVisitor,
                                ConstantPool constantPool,
-                               ExpressionTypeVisitor expressionTypeVisitor) {
+                               ExpressionTypeVisitor expressionTypeVisitor,
+                               AST ast) {
 
 
         m_debug = debug;
@@ -64,6 +70,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         m_sourceFileName = sourceFileName;
         m_symbolTableVisitor = symbolTableVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
+        m_ast = ast;
         m_currentSymbolTable = m_symboltable;
         m_constantPool = constantPool;
         m_properties = new ParseTreeProperty<TypeDefinition>();
@@ -148,6 +155,28 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
         return null;
 
+    }
+
+    @Override
+    public Void visitBaseExpression(SmallPearlParser.BaseExpressionContext ctx) {
+        Log.debug("ConstantPoolVisitor:visitBaseExpression:ctx" + CommonUtils.printContext(ctx));
+
+        if (ctx.primaryExpression() != null) {
+            visitPrimaryExpression(ctx.primaryExpression());
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitPrimaryExpression(SmallPearlParser.PrimaryExpressionContext ctx) {
+        Log.debug("visitBaseExpression:visitPrimaryExpression");
+
+        ASTAttribute primaryExpr = m_ast.lookup(ctx);
+
+        visitChildren(ctx);
+
+        return null;
     }
 
     @Override
@@ -298,6 +327,46 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         }
         return null;
     }
+
+    @Override
+    public Void visitAdditiveExpression(SmallPearlParser.AdditiveExpressionContext ctx) {
+        Log.debug("ConstantPoolVisitor:visitAdditiveExpression:ctx" + CommonUtils.printContext(ctx));
+
+        if( !addFixedConstant(ctx)) {
+            visitChildren(ctx);
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitSubtractiveExpression(SmallPearlParser.SubtractiveExpressionContext ctx) {
+        Log.debug("ConstantPoolVisitor:visitSubtractiveExpression:ctx" + CommonUtils.printContext(ctx));
+
+        if( !addFixedConstant(ctx)) {
+            visitChildren(ctx);
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitDivideExpression(SmallPearlParser.DivideExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitDivideIntegerExpression(SmallPearlParser.DivideIntegerExpressionContext ctx) {
+        Log.debug("ConstantPoolVisitor:visitDivideIntegerExpression:ctx" + CommonUtils.printContext(ctx));
+
+        if( !addFixedConstant(ctx)) {
+            visitChildren(ctx);
+        }
+
+        return null;
+    }
+
 
     @Override
     public Void visitConstant(SmallPearlParser.ConstantContext ctx) {
@@ -496,9 +565,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {
-        if (m_debug) {
-            System.out.println("ConstantPoolVisitor: visitModule");
-        }
+        Log.debug("ConstantPoolVisitor:visitModule:ctx" + CommonUtils.printContext(ctx));
 
         org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable.lookupLocal(ctx.ID().getText());
         m_currentSymbolTable = ((ModuleEntry) symbolTableEntry).scope;
@@ -509,10 +576,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
-        if (m_debug) {
-            System.out.println("ConstantPoolVisitor: visitProcedureDeclaration");
-        }
-
+        Log.debug("ConstantPoolVisitor:visitProcedureDeclaration:ctx" + CommonUtils.printContext(ctx));
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
         visitChildren(ctx);
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
@@ -521,10 +585,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
-        if (m_debug) {
-            System.out.println("ConstantPoolVisitor: visitTaskDeclaration");
-        }
-
+        Log.debug("ConstantPoolVisitor:visitTaskDeclaration:ctx" + CommonUtils.printContext(ctx));
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
         visitChildren(ctx);
         m_currentSymbolTable = m_currentSymbolTable.ascend();
@@ -533,10 +594,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
-        if (m_debug) {
-            System.out.println("ConstantPoolVisitor: visitBlock_statement");
-        }
-
+        Log.debug("ConstantPoolVisitor:visitBlock_statement:ctx" + CommonUtils.printContext(ctx));
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
         visitChildren(ctx);
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
@@ -545,10 +603,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
-        if (m_debug) {
-            System.out.println("ConstantPoolVisitor: visitLoopStatement");
-        }
-
+        Log.debug("ConstantPoolVisitor:visitLoopStatement:ctx" + CommonUtils.printContext(ctx));
         int precision;
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -567,11 +622,11 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             TypeFixed fromType = null;
             TypeFixed toType = null;
 
-            ExpressionResult fromRes = null;
-            ExpressionResult toRes = null;
+            ASTAttribute fromRes = null;
+            ASTAttribute toRes = null;
             if (ctx.loopStatement_from() != null) {
                 visit(ctx.loopStatement_from().expression());
-                fromRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_from().expression());
+                fromRes = m_ast.lookup(ctx.loopStatement_from().expression());
                 TypeDefinition typ = var.getType();
                 if (typ instanceof TypeFixed) {
                     fromType = (TypeFixed) typ;
@@ -581,7 +636,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             }
 
             if (ctx.loopStatement_to() != null) {
-                toRes = m_expressionTypeVisitor.lookup(ctx.loopStatement_to().expression());
+                toRes = m_ast.lookup(ctx.loopStatement_to().expression());
                 TypeDefinition typ = var.getType();
 
                 visit(ctx.loopStatement_to().expression());
@@ -616,11 +671,9 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitAssignment_statement(SmallPearlParser.Assignment_statementContext ctx) {
-        String id = null;
+        Log.debug("ConstantPoolVisitor:visitAssignment_statement:ctx" + CommonUtils.printContext(ctx));
 
-        if (m_verbose > 0) {
-            System.out.println("ConstantPoolVisitor: visitAssignment_statement");
-        }
+        String id = null;
 
         if (ctx.stringSelection() != null) {
             if (ctx.stringSelection().charSelection() != null) {
@@ -656,6 +709,327 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitCase_list(SmallPearlParser.Case_listContext ctx) {
+        Log.debug("ConstantPoolVisitor:visitCase_list:ctx" + CommonUtils.printContext(ctx));
+        visitChildren(ctx);
         return null;
+    }
+
+    @Override
+    public Void visitUnaryAdditiveExpression(SmallPearlParser.UnaryAdditiveExpressionContext ctx) {
+        Log.debug("ConstantPoolVisitor:visitUnaryAdditiveExpression:ctx" + CommonUtils.printContext(ctx));
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitNotExpression(SmallPearlParser.NotExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitAbsExpression(SmallPearlParser.AbsExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitSignExpression(SmallPearlParser.SignExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitMultiplicativeExpression(SmallPearlParser.MultiplicativeExpressionContext ctx) {
+        Log.debug("ConstantPoolVisitor:visitMultiplicativeExpression:ctx" + CommonUtils.printContext(ctx));
+
+        if( !addFixedConstant(ctx)) {
+            visitChildren(ctx);
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitRemainderExpression(SmallPearlParser.RemainderExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitExponentiationExpression(SmallPearlParser.ExponentiationExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitFitExpression(SmallPearlParser.FitExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitSqrtExpression(SmallPearlParser.SqrtExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitSinExpression(SmallPearlParser.SinExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitCosExpression(SmallPearlParser.CosExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitExpExpression(SmallPearlParser.ExpExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitLnExpression(SmallPearlParser.LnExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitTanExpression(SmallPearlParser.TanExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitAtanExpression(SmallPearlParser.AtanExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitTanhExpression(SmallPearlParser.TanhExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+
+    @Override
+    public Void visitTOFIXEDExpression(SmallPearlParser.TOFIXEDExpressionContext ctx) {
+        Log.debug("ConstantPoolVisitor:visitTOFIXEDExpression:ctx" + CommonUtils.printContext(ctx));
+
+        visitChildren(ctx);
+
+        return null;
+    }
+
+    @Override
+    public Void visitTOFLOATExpression(SmallPearlParser.TOFLOATExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitTOBITExpression(SmallPearlParser.TOBITExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitTOCHARExpression(SmallPearlParser.TOCHARExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitEntierExpression(SmallPearlParser.EntierExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitRoundExpression(SmallPearlParser.RoundExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitUnaryExpression(SmallPearlParser.UnaryExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitSemaTry(SmallPearlParser.SemaTryContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitNowFunction(SmallPearlParser.NowFunctionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitSizeofExpression(SmallPearlParser.SizeofExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitEqRelationalExpression(SmallPearlParser.EqRelationalExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitLtRelationalExpression(SmallPearlParser.LtRelationalExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitNeRelationalExpression(SmallPearlParser.NeRelationalExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+
+    @Override
+    public Void visitLeRelationalExpression(SmallPearlParser.LeRelationalExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitGtRelationalExpression(SmallPearlParser.GtRelationalExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitGeRelationalExpression(SmallPearlParser.GeRelationalExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitStringSelection(SmallPearlParser.StringSelectionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitCshiftExpression(SmallPearlParser.CshiftExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitShiftExpression(SmallPearlParser.ShiftExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitCatExpression(SmallPearlParser.CatExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitAndExpression(SmallPearlParser.AndExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitOrExpression(SmallPearlParser.OrExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitExorExpression(SmallPearlParser.ExorExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitCONTExpression(SmallPearlParser.CONTExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitStringSlice(SmallPearlParser.StringSliceContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitConstantFixedExpressionFit(SmallPearlParser.ConstantFixedExpressionFitContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitInitElement(SmallPearlParser.InitElementContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitLwbDyadicExpression(SmallPearlParser.LwbDyadicExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitUpbDyadicExpression(SmallPearlParser.UpbDyadicExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitLwbMonadicExpression(SmallPearlParser.LwbMonadicExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitUpbMonadicExpression(SmallPearlParser.UpbMonadicExpressionContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
+    private boolean addFixedConstant(ParserRuleContext ctx) {
+        ASTAttribute attr = null;
+
+        Log.debug("ConstantPoolVisitor:addFixedConstant:ctx" + CommonUtils.printContext(ctx));
+
+        attr = m_ast.lookup(ctx);
+
+        if ( attr != null && attr.isReadOnly() && attr.getType() instanceof TypeFixed ) {
+            ConstantFixedValue value = attr.getConstantFixedValue();
+
+            if ( value != null) {
+                m_constantPool.add(value);
+                Log.debug("ConstantPoolVisitor:addFixedConstant:added value=" + value);
+                return true;
+            }
+        }
+
+        return false;
     }
 }

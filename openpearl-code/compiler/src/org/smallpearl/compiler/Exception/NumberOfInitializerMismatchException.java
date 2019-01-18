@@ -27,15 +27,14 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NotSupportedFeatureException extends RuntimeException {
-
-    public NotSupportedFeatureException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Feature not supported!");
-    }
-
-    public NotSupportedFeatureException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Feature not supported:" + sReason);
+/**
+ * Created by marcel on 30.07.14.
+ */
+public class NumberOfInitializerMismatchException extends RuntimeException {
+    public NumberOfInitializerMismatchException(String name, int line, int column) {
+        super("Error at line " + line + ":" + column +
+                ": Number of Initializer does not match number of variable declarations.");
     }
 }

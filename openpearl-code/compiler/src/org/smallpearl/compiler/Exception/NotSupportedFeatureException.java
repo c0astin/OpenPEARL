@@ -27,15 +27,15 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class TypeMismatchException extends RuntimeException {
-    public TypeMismatchException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Type mismatch");
+public class NotSupportedFeatureException extends RuntimeException {
+
+    public NotSupportedFeatureException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Feature not supported!");
     }
 
-    public TypeMismatchException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Type mismatch: " + sReason);
+    public NotSupportedFeatureException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Feature not supported:" + sReason);
     }
-
 }

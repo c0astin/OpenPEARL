@@ -27,13 +27,13 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NotSupportedTypeException extends RuntimeException {
+public class NoTaskException extends RuntimeException {
 
-    public NotSupportedTypeException(String sNumber, int line, int column) {
+    public NoTaskException(String name, int line, int column) {
         super("Error at line " + line + ":" + column +
-                ": Datatype is not supported.");
-
+                ": A task was expected.");
     }
+
 }

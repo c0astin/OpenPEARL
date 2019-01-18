@@ -30,17 +30,11 @@
 package org.smallpearl.compiler;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.smallpearl.compiler.Exception.NotSupportedTypeException;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import javax.xml.parsers.*;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.*;
-import javax.xml.transform.stream.*;
-import org.xml.sax.*;
-import org.w3c.dom.*;
 
 public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements SmallPearlVisitor<ST> {
 

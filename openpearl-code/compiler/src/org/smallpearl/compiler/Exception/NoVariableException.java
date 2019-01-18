@@ -27,13 +27,16 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class OperationMismatchException extends RuntimeException {
+public class NoVariableException extends RuntimeException {
 
-/* TODO   public OperationMismatchException(String s) {
-        super(s);
+/* TODO
+    public NoVariableException(String name, int line, int column, int type) {
+        super("Error at line " + line + ":" + column +
+                ": A variable was expected, but " + Symbol.SYMBOLNAME_LC[type] + " " + name +
+                " has been found.");
     }
-*/
+     */
 
 }

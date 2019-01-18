@@ -541,6 +541,10 @@ expression(code,id,bitstring,operator,functionCall) ::= <%
 <if(functionCall)><functionCall><endif>
 %>
 
+FixedDivisionExpression(lhs,rhs) ::= <%
+  <lhs>/<rhs>
+%>
+
 NotBitwiseExpression(rhs) ::= <%
   <rhs>.bitNot()
 %>
@@ -1588,12 +1592,10 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,rangePrecision,from,fromPreci
 
             me->setLocation(<srcLine>, filename);
 
-            if (((s_value > CONST_FIXED_P_0_<rangePrecision>).getBoolean() &&
-                 (a_value \<= (e_value - s_value)).getBoolean()) ||
-                ((s_value \< CONST_FIXED_P_0_<rangePrecision>).getBoolean() &&
-                (a_value >= (e_value - s_value)).getBoolean())) {
+            try {
                 a_value = a_value + s_value;
-            } else {
+            }
+            catch(pearlrt::FixedRangeSignal *ex) {
                 break;
             }
         }
@@ -1617,7 +1619,14 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,rangePrecision,from,fromPreci
                me->setLocation(<srcLine>, filename);
             <endif>
 
-            <if(countLoopPass)>a_value = a_value + s_value;<endif>
+            <if(countLoopPass)>
+            try {
+                a_value = a_value + s_value;
+            }
+            catch(pearlrt::FixedRangeSignal *ex) {
+                break;
+            }
+            <endif>
         }
     <endif>
 

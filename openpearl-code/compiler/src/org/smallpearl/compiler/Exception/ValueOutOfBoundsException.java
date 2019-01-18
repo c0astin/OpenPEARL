@@ -27,12 +27,11 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class DeclarationScopeException extends RuntimeException {
+public class ValueOutOfBoundsException extends RuntimeException {
 
-    public DeclarationScopeException(String name, int line, int column) {
-        super("Error at line " + line + ":" + column +
-                ": This kind of declaration is not allowed in this scope.");
+    public ValueOutOfBoundsException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Value out of bounds");
     }
 }

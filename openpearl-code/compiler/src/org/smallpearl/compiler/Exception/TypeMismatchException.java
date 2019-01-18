@@ -27,15 +27,15 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class PrecisionNotSupportedException extends RuntimeException {
-    public PrecisionNotSupportedException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Precison not supported");
+public class TypeMismatchException extends RuntimeException {
+    public TypeMismatchException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column + ": Type mismatch");
     }
 
-    public PrecisionNotSupportedException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Precison not supported: " + sReason);
+    public TypeMismatchException(String sNumber, int line, int column, String sReason) {
+        super("Error at line " + line + ":" + column + ": Type mismatch: " + sReason);
     }
 
 }

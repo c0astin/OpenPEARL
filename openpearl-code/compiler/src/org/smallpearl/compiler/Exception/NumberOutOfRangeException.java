@@ -27,13 +27,14 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NotAssignableException extends OperationMismatchException {
-/* TODO
-    public NotAssignableException(Definition d) {
-        super("Error at line " + d.getPosition().getLocation() + ": Cannot assign a value to " +
-                d.toString() + ".");
+public class NumberOutOfRangeException extends RuntimeException {
+
+    public NumberOutOfRangeException(String sNumber, int line, int column) {
+        super("Error at line " + line + ":" + column +
+                ": Numbers may range from -2147483648 to 2147483647, but " +
+                sNumber + " has been found.");
+
     }
-*/
 }

@@ -27,13 +27,13 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
+package org.smallpearl.compiler.Exception;
 
-public class NoTaskException extends RuntimeException {
-
-    public NoTaskException(String name, int line, int column) {
-        super("Error at line " + line + ":" + column +
-                ": A task was expected.");
+public class NotAssignableException extends OperationMismatchException {
+/* TODO
+    public NotAssignableException(Definition d) {
+        super("Error at line " + d.getPosition().getLocation() + ": Cannot assign a value to " +
+                d.toString() + ".");
     }
-
+*/
 }

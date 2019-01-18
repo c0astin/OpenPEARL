@@ -30,6 +30,7 @@
 package org.smallpearl.compiler.SemanticAnalysis;
 
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.DeclarationScopeException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 
@@ -53,12 +54,14 @@ public class CheckDeclarationScope extends SmallPearlBaseVisitor<Void> implement
     private SymbolTable m_currentSymbolTable;
     private ModuleEntry m_module;
     private Scope m_currentScope;
+    private AST m_ast = null;
 
     public CheckDeclarationScope(String sourceFileName,
                                  int verbose,
                                  boolean debug,
                                  SymbolTableVisitor symbolTableVisitor,
-                                 ExpressionTypeVisitor expressionTypeVisitor) {
+                                 ExpressionTypeVisitor expressionTypeVisitor,
+                                 AST ast) {
 
         m_debug = debug;
         m_verbose = verbose;
@@ -67,11 +70,11 @@ public class CheckDeclarationScope extends SmallPearlBaseVisitor<Void> implement
         m_expressionTypeVisitor = expressionTypeVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
+        m_ast = ast;
+
         m_currentScope = Scope.UNKNOWN;
 
-        if (m_verbose > 0) {
-            System.out.println( "    Check Declaration Scope");
-        }
+        Log.debug( "    Check Declaration Scope");
     }
 
     @Override
