@@ -1,77 +1,39 @@
 /*
-    FreeRTOS V8.2.1 - Copyright (C) 2015 Real Time Engineers Ltd.
-    All rights reserved
-
-    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
-
-    This file is part of the FreeRTOS distribution.
-
-    FreeRTOS is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
-
-    ***************************************************************************
-    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
-    >>!   distribute a combined work that includes FreeRTOS without being   !<<
-    >>!   obliged to provide the source code for proprietary components     !<<
-    >>!   outside of the FreeRTOS kernel.                                   !<<
-    ***************************************************************************
-
-    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  Full license text is available on the following
-    link: http://www.freertos.org/a00114.html
-
-    ***************************************************************************
-     *                                                                       *
-     *    FreeRTOS provides completely free yet professionally developed,    *
-     *    robust, strictly quality controlled, supported, and cross          *
-     *    platform software that is more than just the market leader, it     *
-     *    is the industry's de facto standard.                               *
-     *                                                                       *
-     *    Help yourself get started quickly while simultaneously helping     *
-     *    to support the FreeRTOS project by purchasing a FreeRTOS           *
-     *    tutorial book, reference manual, or both:                          *
-     *    http://www.FreeRTOS.org/Documentation                              *
-     *                                                                       *
-    ***************************************************************************
-
-    http://www.FreeRTOS.org/FAQHelp.html - Having a problem?  Start by reading
-    the FAQ page "My application does not run, what could be wrong?".  Have you
-    defined configASSERT()?
-
-    http://www.FreeRTOS.org/support - In return for receiving this top quality
-    embedded software for free we request you assist our global community by
-    participating in the support forum.
-
-    http://www.FreeRTOS.org/training - Investing in training allows your team to
-    be as productive as possible as early as possible.  Now you can receive
-    FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
-    Ltd, and the world's leading authority on the world's leading RTOS.
-
-    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
-    compatible FAT file system, and our tiny thread aware UDP/IP stack.
-
-    http://www.FreeRTOS.org/labs - Where new FreeRTOS products go to incubate.
-    Come and try FreeRTOS+TCP, our new open source TCP/IP stack for FreeRTOS.
-
-    http://www.OpenRTOS.com - Real Time Engineers ltd. license FreeRTOS to High
-    Integrity Systems ltd. to sell under the OpenRTOS brand.  Low cost OpenRTOS
-    licenses offer ticketed support, indemnification and commercial middleware.
-
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
-    engineered and independently SIL3 certified version for use in safety and
-    mission critical applications that require provable dependability.
-
-    1 tab == 4 spaces!
-*/
+ * FreeRTOS Kernel V10.1.1
+ * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * http://www.FreeRTOS.org
+ * http://aws.amazon.com/freertos
+ *
+ * 1 tab == 4 spaces!
+ */
 
 /*-----------------------------------------------------------
  * Implementation of functions defined in portable.h for the PIC32MZ port.
   *----------------------------------------------------------*/
 
+/* Microchip specific headers. */
 #include <xc.h>
+
+/* Standard headers. */
+#include <string.h>
 
 /* Scheduler include files. */
 #include "FreeRTOS.h"
@@ -93,6 +55,8 @@
 #define portIE_BIT					( 0x00000001 )
 #define portEXL_BIT					( 0x00000002 )
 #define portMX_BIT					( 0x01000000 ) /* Allow access to DSP instructions. */
+#define portCU1_BIT					( 0x20000000 ) /* enable CP1 for parts with hardware. */
+#define portFR_BIT					( 0x04000000 ) /* Enable 64 bit floating point registers. */
 
 /* Bits within the CAUSE register. */
 #define portCORE_SW_0				( 0x00000100 )
@@ -100,7 +64,16 @@
 
 /* The EXL bit is set to ensure interrupts do not occur while the context of
 the first task is being restored. */
-#define portINITIAL_SR				( portIE_BIT | portEXL_BIT | portMX_BIT )
+#if ( __mips_hard_float == 1 )
+    #define portINITIAL_SR			( portIE_BIT | portEXL_BIT | portMX_BIT | portFR_BIT | portCU1_BIT )
+#else
+    #define portINITIAL_SR			( portIE_BIT | portEXL_BIT | portMX_BIT )
+#endif
+
+/* The initial value to store into the FPU status and control register. This is
+ only used on parts that support a hardware FPU. */
+#define portINITIAL_FPSCR			(0x1000000) /* High perf on denormal ops */
+
 
 /*
 By default port.c generates its tick interrupt from TIMER1.  The user can
@@ -129,7 +102,7 @@ override this behaviour by:
 #endif
 
 /* Let the user override the pre-loading of the initial RA with the address of
-prvTaskExitError() in case is messes up unwinding of the stack in the
+prvTaskExitError() in case it messes up unwinding of the stack in the
 debugger - in which case configTASK_RETURN_ADDRESS can be defined as 0 (NULL). */
 #ifdef configTASK_RETURN_ADDRESS
 	#define portTASK_RETURN_ADDRESS	configTASK_RETURN_ADDRESS
@@ -178,11 +151,19 @@ volatile UBaseType_t uxInterruptNesting = 0x01;
 UBaseType_t uxSavedTaskStackPointer = 0;
 
 /* The stack used by interrupt service routines that cause a context switch. */
-StackType_t xISRStack[ configISR_STACK_SIZE ] = { 0 };
+__attribute__ ((aligned(8))) StackType_t xISRStack[ configISR_STACK_SIZE ] = { 0 };
 
 /* The top of stack value ensures there is enough space to store 6 registers on
-the callers stack, as some functions seem to want to do this. */
-const StackType_t * const xISRStackTop = &( xISRStack[ configISR_STACK_SIZE - 7 ] );
+the callers stack, as some functions seem to want to do this.  8 byte alignment
+is required to allow double word floating point stack pushes generated by the
+compiler. */
+const StackType_t * const xISRStackTop = &( xISRStack[ ( configISR_STACK_SIZE & ~portBYTE_ALIGNMENT_MASK ) - 8 ] );
+
+/* Saved as part of the task context. Set to pdFALSE if the task does not
+ require an FPU context. */
+#if ( __mips_hard_float == 1 ) && ( configUSE_TASK_FPU_SUPPORT == 1 )
+	uint32_t ulTaskHasFPUContext = 0;
+#endif
 
 /*-----------------------------------------------------------*/
 
@@ -191,7 +172,8 @@ const StackType_t * const xISRStackTop = &( xISRStack[ configISR_STACK_SIZE - 7 
  */
 StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 {
-	/* Ensure byte alignment is maintained when leaving this function. */
+	/* Ensure 8 byte alignment is maintained when leaving this function. */
+	pxTopOfStack--;
 	pxTopOfStack--;
 
 	*pxTopOfStack = (StackType_t) 0xDEADBEEF;
@@ -207,16 +189,18 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	pxTopOfStack--;
 
 	*pxTopOfStack = (StackType_t) pxCode; 		/* CP0_EPC */
-	pxTopOfStack -= 7;  							/* Includes space for AC1 - AC3. */
+	pxTopOfStack--;
 
 	*pxTopOfStack = (StackType_t) 0x00000000;	/* DSPControl */
-	pxTopOfStack--;
+	pxTopOfStack -= 7;  						/* Includes space for AC1 - AC3. */
 
 	*pxTopOfStack = (StackType_t) portTASK_RETURN_ADDRESS;	/* ra */
 	pxTopOfStack -= 15;
 
 	*pxTopOfStack = (StackType_t) pvParameters; /* Parameters to pass in. */
 	pxTopOfStack -= 15;
+
+	*pxTopOfStack = (StackType_t) pdFALSE; /*by default disable FPU context save on parts with FPU */
 
 	return pxTopOfStack;
 }
@@ -247,7 +231,7 @@ static void prvTaskExitError( void )
  */
 __attribute__(( weak )) void vApplicationSetupTickTimerInterrupt( void )
 {
-const uint32_t ulCompareMatch = ( (configPERIPHERAL_CLOCK_HZ / portTIMER_PRESCALE) / configTICK_RATE_HZ ) - 1;
+const uint32_t ulCompareMatch = ( (configPERIPHERAL_CLOCK_HZ / portTIMER_PRESCALE) / configTICK_RATE_HZ ) - 1UL;
 
 	T1CON = 0x0000;
 	T1CONbits.TCKPS = portPRESCALE_BITS;
@@ -361,6 +345,27 @@ void vPortClearInterruptMaskFromISR( UBaseType_t uxSavedStatusRegister )
 }
 /*-----------------------------------------------------------*/
 
+#if ( __mips_hard_float == 1 ) && ( configUSE_TASK_FPU_SUPPORT == 1 )
+
+	void vPortTaskUsesFPU(void)
+	{
+	extern void vPortInitialiseFPSCR( uint32_t uxFPSCRInit );
+
+		portENTER_CRITICAL();
+
+		/* Initialise the floating point status register. */
+		vPortInitialiseFPSCR(portINITIAL_FPSCR);
+
+		/* A task is registering the fact that it needs a FPU context. Set the
+		FPU flag (saved as part of the task context). */
+		ulTaskHasFPUContext = pdTRUE;
+
+		portEXIT_CRITICAL();
+	}
+
+#endif /* __mips_hard_float == 1 */
+
+/*-----------------------------------------------------------*/
 
 
 
