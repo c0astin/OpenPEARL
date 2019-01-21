@@ -44,11 +44,15 @@
 #include "service.h"
 
 
-//seting for lpc1768
-//#define SERVICE_STACK_SIZE 400
-//#define STACKLIMIT 100	// limit of minimum free stack for the service task
+#ifdef OPENPEARL_LPC1768
+#define SERVICE_STACK_SIZE 400
+#define STACKLIMIT 100	// limit of minimum free stack for the service task
+#endif
+
+#ifdef OPENPEARL_ESP32
 #define SERVICE_STACK_SIZE 4000
 #define STACKLIMIT 500	// limit of minimum free stack for the service task
+#endif
 
 static TaskHandle_t xServiceTaskHandle;
 static void serviceTask(void *);
@@ -83,8 +87,13 @@ void add_service_from_ISR(ServiceJob * s) {
       //The yield is _very_ important for performance
       // esp32 version of FreeRTOS provides portYIELD_FROM_ISR without
       // parameters
-      //portYIELD_FROM_ISR(xServiceTaskHandle);
+#ifdef OPENPEARL_LPC1768
+      portYIELD_FROM_ISR(xServiceTaskHandle);
+#elif defined OPENPEARL_ESP32
       portYIELD_FROM_ISR();
+#else
+#error missing platform definition 
+#endif
    }
 }
 

@@ -72,7 +72,7 @@ struct tm *localtime(const time_t *_time) {
 }
 
 /* prototype in <time.h>  */
-#ifdef __ARMCC_VERSION__
+#ifdef OPENPEARL_LPC1768
 extern int clock_gettime(clockid_t clock_id, struct timespec *ts) {
    uint64_t now;
 
@@ -81,8 +81,6 @@ extern int clock_gettime(clockid_t clock_id, struct timespec *ts) {
    ts->tv_sec = now / 1000000000;
    return (0);  // return success
 }
-#else
-#pragma message "clock_gettime removed"
 #endif
 
 /*

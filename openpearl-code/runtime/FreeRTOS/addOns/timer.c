@@ -292,11 +292,12 @@ static void insert_timer_into_active_list(timer_t t) {
 }
 
 static inline void DMB(void) {
-#ifdef __ARMCC_VERSION__
-#pragma message "ARM-gcc detected" __ARMCC_VERSION__
+#ifdef OPENPEARL_LPC1768
    asm volatile("dmb" ::: "memory");
-#else
+#elif defined OPENPEARL_ESP32
    asm volatile("" ::: "memory");
+#else
+#error "missing platform definition"
 #endif
 }
 

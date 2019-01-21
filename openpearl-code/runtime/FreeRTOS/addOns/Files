@@ -13,4 +13,6 @@ ADDONCSRC += Retarget.cc
 # testStackOverFlow is added to BOARDSUPPORT to enforce the linkage
 # of the required functions in tasks.c
 
+ADDONCSRC += idleAndTimerTaskData.c
+
 ADDONINCS = .
