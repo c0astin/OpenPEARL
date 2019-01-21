@@ -63,10 +63,10 @@ namespace pearlrt {
    }
 
    void CSema::request() {
-      xSemaphoreTake(sem, portMAX_DELAY);
+      xSemaphoreTake((SemaphoreHandle_t)sem, portMAX_DELAY);
    }
 
    void CSema::release() {
-      xSemaphoreGive(sem);
+      xSemaphoreGive((SemaphoreHandle_t)sem);
    }
 }

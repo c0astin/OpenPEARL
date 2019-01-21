@@ -53,13 +53,13 @@ namespace pearlrt {
    }
 
    void Mutex::lock() {
-      if (xSemaphoreTake(mutex, portMAX_DELAY) != pdTRUE) {
+      if (xSemaphoreTake((SemaphoreHandle_t)mutex, portMAX_DELAY) != pdTRUE) {
          Log::error("error locking mutex");
       }
    }
 
    void Mutex::unlock() {
-      if (xSemaphoreGive(mutex) != pdTRUE) {
+      if (xSemaphoreGive((SemaphoreHandle_t)mutex) != pdTRUE) {
          Log::error("error unlocking mutex");
       }
    }

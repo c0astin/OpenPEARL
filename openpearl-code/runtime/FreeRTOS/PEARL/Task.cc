@@ -122,16 +122,6 @@ namespace pearlrt {
          cp = switchToThreadPrioMax();
       }
 
-#ifdef USE_FREERTOS_8_0
-      taskParams.pvParameter = (void*) this;
-      taskParams.tcb = &tcb;
-      taskParams.stack = stack;
-
-      taskCreation = xTaskCreate(&tskfunc,
-                                 (const char*) this->name,
-                                 this->stackDepth, &taskParams,
-                                 freeRtosPrio, &xth);
-#else
       xth = xTaskCreateStatic(
                         &wrapperTskfunc,
                         (const char*) this->name,
@@ -141,7 +131,6 @@ namespace pearlrt {
                         stack,
                         ((StaticTask_t*) &tcb));
 
-#endif
 
       if (!taskCreation) {
          DEBUG("%s: started", name);
@@ -198,7 +187,7 @@ namespace pearlrt {
 
 
    void Task::terminateMySelf() {
-      TaskHandle_t oldTaskHandle = xth;
+      TaskHandle_t oldTaskHandle = (TaskHandle_t)xth;
       DEBUG("%s: terminateSelf", name);
 
       // set the calling tasks priority to maximum to be shure that
@@ -267,7 +256,7 @@ namespace pearlrt {
 
 
       taskState = TERMINATED;
-      vTaskDelete(this->xth);
+      vTaskDelete((TaskHandle_t)(this->xth));
       DEBUG("%s: terminateRunning .. done", name);
 
       // test if the a scheduled activation was not performed due to 
@@ -399,7 +388,7 @@ namespace pearlrt {
       cp = switchToThreadPrioMax();
       mutexUnlock();
 DEBUG("suspendMySelf: go into suspend state");
-      vTaskSuspend(xth);
+      vTaskSuspend((TaskHandle_t)xth);
 DEBUG("suspended - got continue");
       mutexLock();
 
@@ -416,7 +405,7 @@ DEBUG("suspended - got continue");
 
          cp = switchToThreadPrioMax();
          taskState = SUSPENDED;
-         vTaskSuspend(this->xth);
+         vTaskSuspend((TaskHandle_t)(this->xth));
          switchToThreadPrioCurrent(cp);
    }
 
@@ -577,7 +566,7 @@ DEBUG("suspended - got continue");
       }
 #endif
       DEBUG("%s: continue suspended", name);
-      vTaskResume(xth);
+      vTaskResume((TaskHandle_t)xth);
       DEBUG("%s: continue suspended ... done",name);
       // update of taskState and release of mutexTask is done in
       // continued task
@@ -587,7 +576,7 @@ DEBUG("suspended - got continue");
       currentPrio = prio;
 
       int p = PrioMapper::getInstance()->fromPearl(prio);
-      vTaskPrioritySet(xth, p);
+      vTaskPrioritySet((TaskHandle_t)xth, p);
    }
 
    int Task::switchToThreadPrioMax() {
@@ -601,14 +590,15 @@ DEBUG("suspended - got continue");
       vTaskPrioritySet(NULL, cp);
    }
 
+#ifdef unused
    TaskHandle_t Task::getFreeRTOSTaskHandle() {
       if (taskState != TERMINATED) {
-         return xth;
+         return (TaskHandle_t)xth;
       }
 
       return NULL;
    }
-
+#endif
    void Task::restartTaskStatic(Task * t) {
       t->restartTask();
    }

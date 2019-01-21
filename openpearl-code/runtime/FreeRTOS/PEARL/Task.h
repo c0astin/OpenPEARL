@@ -51,7 +51,12 @@
 #include "Signals.h"
 #include "FakeTypes.h"
 
+#ifdef OPENPEARL_LPC1768
+#define STACK_SIZE 1000
+#endif
+#ifdef OPENPEARL_ESP32
 #define STACK_SIZE 8000
+#endif
 
 namespace pearlrt {
    /** \addtogroup tasking_freertos
@@ -248,6 +253,7 @@ namespace pearlrt {
       */
       void switchToThreadPrioCurrent(int cp) ;
 
+#ifdef unused
       /**
       return the FreeRTOS handle for diagnosic purpuses 
       \return the FreeRTOS handle of the current task, if the task is not
@@ -255,6 +261,7 @@ namespace pearlrt {
       \return NULL else
       */
       FakeTaskHandle_t getFreeRTOSTaskHandle();
+#endif
    };
    /** @} */
 }
