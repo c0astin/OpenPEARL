@@ -206,7 +206,7 @@ namespace pearlrt {
          internalUart->interruptEnable(true);
          // uart interrupt enabled --> wait until data are ready
 
-         xSemaphoreTake(recvCommand.blockSema, portMAX_DELAY);
+         xSemaphoreTake((SemaphoreHandle_t)recvCommand.blockSema, portMAX_DELAY);
          internalUart->interruptEnable(false);
       }
 
@@ -254,7 +254,7 @@ namespace pearlrt {
       internalUart->interruptEnable(true);
       internalUart->triggerOutput();
 
-      xSemaphoreTake(sendCommand.blockSema, portMAX_DELAY);
+      xSemaphoreTake((SemaphoreHandle_t)sendCommand.blockSema, portMAX_DELAY);
       internalUart->interruptEnable(false);
 
       errorStatus = internalUart->getErrorStatus();
