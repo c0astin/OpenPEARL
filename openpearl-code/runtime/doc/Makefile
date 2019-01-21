@@ -2,6 +2,7 @@ TEXFILES = runtime.tex changeLog.tex codeGen.tex dataTypes.tex\
 	struct_type_array.tex inOutput.tex \
 	intro.tex log.tex semaphore.tex bolt.tex signals.tex task.tex \
 	procedures.tex literature.tex interrupt.tex\
+	addPlatform.tex \
 	../linux/doc/os.tex ../linux/doc/tasking.tex  \
 	../linux/doc/interrupts.tex \
 	../common/signallist.tex \
