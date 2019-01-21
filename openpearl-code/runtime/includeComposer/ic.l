@@ -428,10 +428,12 @@ int main(int narg, char **argv) {
     strcpy(fileStack.stack[0].fn,"<stdin>");
     fileStack.stack[0].line = 1;
     /* read options */
-    while ((i=getopt(narg,argv,"cI:?")) != -1) {
+    while ((i=getopt(narg,argv,"cD:I:?")) != -1) {
        switch (i) {
            case 'c': keepComment = 0;
                      break;
+	   case 'D': addToDefines(optarg); 
+		     break;
            case 'I': add2IncList(optarg);
                      break;
            case '?':
@@ -439,6 +441,8 @@ int main(int narg, char **argv) {
              fprintf(stderr," usage: %s [option]\n", argv[0]);
              fprintf(stderr,
                     "     -c          : remove comments (default keep) \n");
+             fprintf(stderr,
+                    "     -D <CPP-Identifier> : define CPP identifier \n");
              fprintf(stderr,
                     "     -I <folder> : additional include folder \n");
              return 1;
