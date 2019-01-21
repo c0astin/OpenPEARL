@@ -3,6 +3,8 @@ include $(OPENPEARL_DIR)/runtime/FreeRTOS/PEARL/Files
 COMPONENT_OBJS := \
 	$(addsuffix .o,$(basename $(addprefix PEARL/,$(PEARL_FREERTOS_SRC))))
 
+CPPFLAGS+=-DOPENPEARL_ESP32
+
 # these are in freertos.a
 #ringbuf.o xtensa_intr.o queue.o croutine.o \
 #                list.o xtensa_init.o port.o event_groups.o \
@@ -33,6 +35,8 @@ COMPONENT_EXTRA_INCLUDES := $(OPENPEARL_DIR)/runtime/esp32 \
 		$(OPENPEARL_DIR)/runtime/common
 CXXFLAGS += -frtti
 $(warning $(COMPONENT_EXTRA_INCLUDES))
+
+CPPFLAGS +=-DOPENPEARL_ESP32
 
 #
 # -finstrument-functions is set -- propably due to freeRTOS stck check

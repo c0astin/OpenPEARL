@@ -41,6 +41,7 @@ CC := $(CROSS)$(CC)
 CXX := $(CROSS)$(CXX)
 AR := $(CROSS)$(AR)
 
+
 # make silent compilations
 COMPILE.c = @echo compile $<; $(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.cc = @echo [compile] $<; $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
@@ -218,7 +219,7 @@ install: all cc_bin run_bin
 	@echo [install]
 	@rm -f pearl2.h
 	@echo $(INCS)
-	@$(IC) -c $(INCS)  <PearlIncludes.h | $(DWS) >pearl2.h
+	@$(IC) -c $(INCS) -DOPENPEARL_ESP32  <PearlIncludes.h | $(DWS) >pearl2.h
 	@cat sysincs.h pearl2.h >pearl.h
 	@rm -f pearl2.h sysincs.h
 	#Find and copy all generated esp32 libraries
@@ -276,10 +277,10 @@ run_bin:
 ../common/Signals.hh: ../common/Signals.ods
 	@echo create signal definitions from spreadsheet
 	@(cd ../common; \
-	 perl GenerateSignalDefinitions.pl GENERIC LPC1768 2>signals.log;)
+	 perl GenerateSignalDefinitions.pl GENERIC ESP32 FREERTOS 2>signals.log;)
 
 ../common/Signals.hcc: ../common/Signals.ods
-	(cd ../common; perl GenerateSignalDefinitions.pl GENERIC LPC1768; )
+	(cd ../common; perl GenerateSignalDefinitions.pl GENERIC ESP32 FREERTOS; )
 
 #../Signals.cc: ../Signals.hh ../Signals.hcc
 

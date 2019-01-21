@@ -26,6 +26,8 @@ CXXFLAGS += -frtti
 CXXFLAGS += -finstrument-functions
 #endif
 
+CPPFLAGS += -DOPENPEARL_ESP32
+
 #COMPONENT_PRIV_INCLUDEDIRS := ../freertos/include/freertos ../freertos/PEARL ../lwip/inlcude/lwip
 #COMPONENT_SRCDIRS := . ../freertos/addOns
 #COMPONENT_OBJS +=  main.o  \
