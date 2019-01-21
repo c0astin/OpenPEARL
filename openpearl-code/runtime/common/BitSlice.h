@@ -129,6 +129,11 @@ namespace pearlrt {
       void *data;
 
       /**
+         copy of the primary data if passed by value
+      */
+      uint64_t copyOfData;
+
+      /**
          at the end, we need the length of the primary data string.
          The number of bytes is enough.
       */
@@ -155,9 +160,10 @@ namespace pearlrt {
       template <int S>
       BitSlice(BitString<S> source) {
          length = Fixed<15>(S);
-         data   = &source.x;
          primaryDataLength = sizeof(source);
          firstSelectedBit = Fixed<15>(1);
+         memcpy(&copyOfData, &source.x, primaryDataLength);
+	 data = &copyOfData;
       }
 
       template <int S>
@@ -186,7 +192,6 @@ namespace pearlrt {
             Log::error("assignment to smaller bit string");
             throw theInternalDatatypeSignal;
          }
-
          if (primaryDataLength == 1) {
             // create a BitString for the result
             // with the primary data shifted to the right side
@@ -214,7 +219,7 @@ namespace pearlrt {
          } else {
             // no other length is supported
             BitString<RESLEN> result(
-               (*(uint32_t*)data) >> (64 - firstSelectedBit.x - length.x + 1)
+               (*(uint64_t*)data) >> (64 - firstSelectedBit.x - length.x + 1)
                << (RESLEN - length.x));
             return result;
          }
