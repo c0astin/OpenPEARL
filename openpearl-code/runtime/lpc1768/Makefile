@@ -32,6 +32,7 @@ LPCOPEN_FS= ../cortexM/LPCOpen/software/filesystems
 
 targets := OpenPEARLlpc1768_board.o libOpenPEARLlpc1768.a lpc1768.xml
 
+CPPFLAGS +=-DOPENPEARL_LPC1768
 # -------------------- add CMSIS support to project
 INCS += ../cortexM/CMSIS/Include
 
@@ -296,7 +297,7 @@ phony += install
 install: all cc_bin run_bin
 	@echo [install]
 	@rm -f pearl2.h
-	@$(IC) -c $(INCS)  <PearlIncludes.h | $(DWS) >pearl2.h
+	@$(IC) -c $(INCS) -DOPENPEARL_LPC1768  <PearlIncludes.h | $(DWS) >pearl2.h
 	@cat sysincs.h pearl2.h >pearl.h
 	@rm -f pearl2.h sysincs.h
 	@cp libOpenPEARLlpc1768.a $(CONFIG_INSTALL_Target)/lib
@@ -323,10 +324,10 @@ run_bin:
 ../common/Signals.hh: ../common/Signals.ods
 	@echo create signal definitions from spreadsheet
 	@(cd ../common; \
-	 perl GenerateSignalDefinitions.pl GENERIC LPC1768 2>signals.log;)
+	 perl GenerateSignalDefinitions.pl GENERIC FREERTOS LPC1768 2>signals.log;)
 
 ../common/Signals.hcc: ../common/Signals.ods
-	(cd ../common; perl GenerateSignalDefinitions.pl GENERIC LPC1768; )
+	(cd ../common; perl GenerateSignalDefinitions.pl GENERIC FREERTOS LPC1768; )
 
 ../Signals.cc: ../Signals.hh ../Signals.hcc
 
