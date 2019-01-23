@@ -17,10 +17,10 @@ export IDF_PATH=$(ESP_IDF_PATH)
 
 #and have a look into this folder
 ifeq (,$(wildcard $(ESP_IDF_PATH)/add_path.sh))
-     $(error ESP_IDF_PATH seems to be wrong)
+     $(error ESP_IDF_PATH seems to be wrong ($(ESP_IDF_PATH)))
 endif
 ifeq (,$(wildcard $(ESP_IDF_PATH)/components))
-     $(error ESP_IDF_PATH seems to be wrong)
+     $(error ESP_IDF_PATH seems to be wrong ($(ESP_IDF_PATH)))
 endif
 
 $(warning ESP_IDF_PATH: $(ESP_IDF_PATH))
@@ -109,7 +109,7 @@ CHECK_FILES := $(sort $(CHECK_FILES))
 #$(warning BOARDSUPPORT_OBJ=$(BOARDSUPPORT_OBJ))
 #$(warning XMLFILES=$(XMLFILES))
 
-all: setuplinks esp-idf-build $(targets)
+all: setuplinks patch esp-idf-build $(targets)
 
 tests/testStackOverflow.s: tests/testStackOverflow.cc
 	$(CXX) $^ -S $(CXXFLAGS)  $(PURECXXFLAGS)
@@ -204,13 +204,15 @@ setuplinks:
 	rm -f $(ESP_IDF_PATH)/components/freertos/include/freertos/FreeRTOSConfig.h
 	ln -s $(CURRENT_DIR)/FreeRTOSConfig.h $(ESP_IDF_PATH)/components/freertos/include/freertos
 
+phony += patch
+patch:
+	(cd patchFiles; ./patch.sh $(ESP_IDF_PATH))
+
 phony += prepare
 prepare:
 	@mkdir -p $(CONFIG_INSTALL_Target)/lib/ldscripts
-	#@mkdir -p $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
-	#chmod 777 $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
-	#@touch $(CONFIG_INSTALL_Target)/lib/ldscripts/OpenPEARLesp32.ld
-	#@chmod 666 $(CONFIG_INSTALL_Target)/lib/ldscripts/OpenPEARLesp32.ld
+	@mkdir -p $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
+	@chmod 777 $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
 	@touch $(CONFIG_INSTALL_Target)/lib/esp32.xml
 	@chmod 666 $(CONFIG_INSTALL_Target)/lib/esp32.xml
 
@@ -232,8 +234,6 @@ install: all cc_bin run_bin
 	@find $(ESP_IDF_PATH)/components/ -regex ".*\.ld" -exec cp {} $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32 \;
 	cp esp-idf-project/build/bootloader/bootloader.bin $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
 	cp esp-idf-project/build/partitions_singleapp.bin $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
-	@mkdir -p $(CONFIG_INSTALL_Target)/lib/ldscripts
-	#@cp OpenPEARLesp32.ld $(CONFIG_INSTALL_Target)/lib/ldscripts
 	@cp esp32.xml $(CONFIG_INSTALL_Target)/lib
 
 ####### TODO
