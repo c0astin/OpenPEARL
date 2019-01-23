@@ -152,15 +152,15 @@ int main() {
    fprintf(fp,"typedef void* FakeTaskHandle_t;\n");
    fprintf(fp,"typedef struct {uint32_t assertAlign; char data[%d];}"
               " FakeTCB_t;\n",
-               sizeTCB_T-sizeof(uint32_t));
+               (int)(sizeTCB_T-sizeof(uint32_t)));
 
    if (sizeFATFS > 0 && sizeFIL >0 && sizeVOLUMES > 0) {
       fprintf(fp,"\n// Chan's FatFS stuff\n");
       fprintf(fp,"typedef struct {uint32_t asserAlign; char data[%d];}"
-                 " FakeFATFS;\n", sizeFATFS-sizeof(int32_t));
+                 " FakeFATFS;\n", (int)(sizeFATFS-sizeof(int32_t)));
 
       fprintf(fp,"typedef struct {uint32_t asserAlign; char data[%d];}"
-                 " FakeFIL;\n", sizeFIL-sizeof(int32_t));
+                 " FakeFIL;\n", (int)(sizeFIL-sizeof(int32_t)));
 
       fprintf(fp,"#define FAKE_VOLUMES %d\n", sizeVOLUMES);
    }
