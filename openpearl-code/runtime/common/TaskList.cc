@@ -91,7 +91,7 @@ namespace pearlrt {
    Task * TaskList::getTaskByIndex(unsigned int i) {
       Task * t;
 
-      if (i < 0 || i > taskList.size()) {
+      if (i > taskList.size()) {
          Log::error((char*)"getTaskByIndex: index out of bounds");
          throw theInternalTaskSignal;
       }
