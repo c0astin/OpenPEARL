@@ -1,118 +1,74 @@
-/*
- [A "BSD license"]
- Copyright (c) 2016 Rainer Mueller
- Copyright (c) 2018 Michael Kotzjan
- All rights reserved.
+/**
+  * ESP32 UART Comms Driver Wrapper
+  * Author: Patrick Scherer
+  *
+  * This driver serves as a wrapper for communication via uartComms.
+  */
 
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
+  /*
+   [The "BSD license"]
+   Copyright (c) 2018-2019 Patrick Scherer
+   All rights reserved.
 
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
- 3. The name of the author may not be used to endorse or promote products
-    derived from this software without specific prior written permission.
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
 
- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+   1. Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+   2. Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+   3. The name of the author may not be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR
+   IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+   OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+   IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+   NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+
+  /* 2019 (rm) migrated to Esp32Uart with integration of 
+               Esp32UartCommsDriver and the required 
+               elements of the previous uartComms module
+  */
+
 
 #ifndef ESP32UART_INCLUDED
 #define ESP32UART_INCLUDED
 
 #include "SystemDationNB.h"
-#include "Esp32UartInternal.h"
-#include "GenericUartDation.h"
-
-//#include "chip.h"
-//#include "RingBuffer.h"
-#include "CSema.h"
 #include "Mutex.h"
 
 namespace pearlrt {
-   /**
-   \file
-
-   \brief uart support for Esp32
-   */
 
    /**
-   This class provides uart support for the Esp32
+   driver for the Uarts of the Esp32 systems
 
-   The interrupt is only enabled if the device is opened.
-
-   There is no check if more than one userdation is opened
-   on the device. It should no problem, since the operations
-   are secured by a mutex.
-
-
-   As connection to a terminal with line edit functions.
-
-   console: LineEdit(80) --- Esp32Uart(....)
-
-   The LineEdit class uses a different interface as the pur dation
-   operation, which supplies a raw mode. All data are transfered as specified.
-   No early termination on input is possible.
-   The line may be used in full duplex
-   mode.
-
-   Besides these modes of operation, the communication protocol xon/xoff
-   may be selected. This operates in both directions.
-   On output, the reception of an XOFF will stop the transmission of more
-   characters until an XON is received.
-   On input, an XOFF is emitted in case of the reception of a data byte
-   with no active input request. The next input action (dationRead()) will
-   take the buffered input character and sends an XON.
-   The implementation of XonXoff is provided plattform indepoendent in
-   GenericUart
-
-   To achieve mutual exclusion between interrupt service routine and
-   API function calls, the specific NVI interrupt is cleared and
-   set accordingly.
-
-   The UART dation allows multiple open and close operations.
-   This provied the possibility to have a normal USERDATION on the
-   interface as well as the logging output.
-
+   UART0 is currently reserved for the ESP-Logging stuff
    */
-   class Esp32Uart : public GenericUartDation, public SystemDationNB {
+   class Esp32Uart : public SystemDationNB {
    private:
-      Mutex mutex; 	// mutex for objects data
-      CSema writeSema;  // semaphore to resume operation from interrupt
-      CSema readSema;  	// semaphore to resume operation from interrupt
-      int nbrOpenUserDations; // multiple dations counter
-      int status;  	// status of the current operation
-      // for details see enum Esp32UartStatus
-
-      Esp32UartInternal * internalUart;
-      struct Job4Isr {
-         char * data;
-         int nbr;
-         int nbrReceived;
-         FakeSemaphoreHandle_t blockSema;
-      } sendCommand, recvCommand;
-
-      char bufferedInputChar;	// one char may be buffered even if no
-      // input is active to run xon/xoff protocol
-      // this stores the last received character
-      char unGetChar;		// character for unget
-
+      Mutex inMutex;  //dationRead exclusion
+      Mutex outMutex; //dationWrite exclusion
+      Mutex devMutex; //device access exclusion
+      int openUserDationsCount;
+      char unGetChar;
+      bool hasUnGetChar;
+      static bool doNewLineTranslation; //This is required, apparently
+      static bool setupComplete;
+      int uartNumber;  // the number of the UART
    public:
-      /**
+     /**
       define the uart device
 
-      \param port the number (0 or 2)
+      \param port the number (1 or 2)
       \param baudRate the baud rate; all usual values from 300 to 115200 are
         accepted
       \param bitsPerCharacter  5-8  is allowed
@@ -122,30 +78,29 @@ namespace pearlrt {
       \throws theInternalDationSignal in case of illegal parameter values
                                or if the rxbuffer could not be allocated
       */
+
       Esp32Uart(int port, int baudRate, int bitsPerCharacter,
                   int stopBits, char* parity, bool xon);
 
       /**
-       open the system dation
+      open the system dation
 
-       the dation may be opened multiple times in order to
-       use it in different configurations. Eg. as error log and
-       user console.
-       If the device is used for multiple purposes the operations
-       may mix.
-
-       \param idfValue is not supported should be NULL
-       \param openParam nothing supported; should be 0
-       \returns pointer to this object as working object
+      \param idf must be null, since no named files aree supported here
+      \param openParam must be 0, since no open params are supported here
+      \returns pointer to this object as working object
       */
-      Esp32Uart * dationOpen(const char * idfValue, int openParam);
+      Esp32Uart* dationOpen(const char * idf, int openParam);
 
-      void  dationClose(int closeParam);
+      /**
+      close the systen dation
 
-      int capabilities();
+      \param closeParam mut be 0, since no parameters are supported
+      */
+      void dationClose(int closeParam);
       void dationRead(void * destination, size_t size);
       void dationWrite(void * destination, size_t size);
       void dationUnGetChar(const char c);
+      int capabilities();
 
       /**
       translate newline<br>
@@ -155,19 +110,14 @@ namespace pearlrt {
       \param doNewLineTranslation true enables the translation, <br>
               false disables the translation
       */
-      void translateNewLine(bool doNewLineTranslation); 
-   private:
-      void treatInterrupt();
-      void doRecvChar();
-      bool sendNextChar();
-      void interruptEnable(bool on);
-      void logError(int status);
+      void translateNewLine(bool doNewLineTranslation);
 
-      bool getNextTransmitChar(char * ch);
-      bool addReceivedChar(char ch);
-
+      //The following is only included due to esp-idf compiler
+      // complaints (pure virtual functions from Dation)
+      void suspend();
+      void terminate();
    };
 }
 
-#endif
 
+#endif

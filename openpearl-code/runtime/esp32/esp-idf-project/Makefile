@@ -5,7 +5,7 @@
 
 include ../../../configuration/.config
 
-PROJECT_NAME := esp_library
+PROJECT_NAME := OpenPEARL
 
 ifeq ($(CONFIG_ESP32_CHECK_STACK_OVERFLOW),y)
 EXTRA_CXXFLAGS += -finstrument-functions 

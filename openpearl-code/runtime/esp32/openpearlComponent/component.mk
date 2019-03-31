@@ -13,6 +13,9 @@ COMMON_SRCS := $(addprefix common/,$(CXX_COMMON))
 COMPONENT_OBJS := $(addsuffix .o,$(basename $(COMMON_SRCS)))
 
 COMPONENT_OBJS += main.o StdOut.o Log.o Esp32Clock.o
+#COMPONENT_OBJS += Console.o Esp32UartCommsDriver.o uartComms.o
+COMPONENT_OBJS += Esp32Uart.o
+#COMPONENT_OBJS += Console
 
 $(warning $(COMPONENT_OBJS))
 
