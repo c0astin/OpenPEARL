@@ -1,0 +1,32 @@
+/*
+Demonstration application 'Hello World'
+*/
+
+MODULE(mhello);
+
+SYSTEM;
+   con: Console;
+
+PROBLEM;
+    SPC con DATION INOUT SYSTEM ALPHIC GLOBAL;
+    DCL term DATION INOUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(con);
+
+x: PROC;
+  DCL f FIXED(15) INIT(30000);
+   PUT 'f=',f TO term BY A,F(6), SKIP;
+   f := f + f;
+   PUT 'f=',f TO term BY A,F(6), SKIP;
+END;
+
+! the task hello is started automatically due to the attribute 'MAIN'
+hello: TASK MAIN;
+__cpp__("printf(\"los\\n\");");
+   OPEN term;
+__cpp__("printf(\"open done\\n\");");
+   PUT 'Hello World from PEARL' TO term BY A, SKIP;
+   CALL x;
+   CLOSE term;
+END;
+
+MODEND;
+
