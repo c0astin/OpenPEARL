@@ -81,7 +81,7 @@ namespace pearlrt {
       and support for retarget on stdin and stdout (see parameter _isConsole).
 
       \param xon XON/XOFF protocol selected (true = enable, false no protocol)
-      \param _isConsole is true, if stdout operates on this uart
+      \param _isConsole is true, if stdout operates parallel on this uart
    */ 
    GenericUart(bool xon, bool _isConsole);
    
