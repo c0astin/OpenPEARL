@@ -79,7 +79,9 @@ LPCOpen_CSRC += $(LPCOpen)/rtc_17xx_40xx.c
 LPCOpen_CSRC += $(LPCOpen)/iocon_17xx_40xx.c
 
 CXXSRCS += main.cc Log.cc
+CXXSRCS += Retarget.cc
 CHECK_FILES += main.cc Log.cc
+CHECK_FILES += Retarget.cc Retarget.h
 
 ifeq ($(CONFIG_LPC1768_HY32A),y)
 CSRC += Hy32.cc Hy32LowLevel.cc SmallFont.c BigFont.c
@@ -92,6 +94,7 @@ endif
 BOARDSUPPORT := 
 #BOARDSUPPORT += lpc17_uart_retarget.c
 BOARDSUPPORT += lpc17_oscillators.c
+BOARDSUPPORT += lpc17_FaultHandler.cc
 BOARDSUPPORT += lpc17_SystemInit.c
 BOARDSUPPORT += Lpc17xxRTC.cc
 BOARDSUPPORT += Post.cc
