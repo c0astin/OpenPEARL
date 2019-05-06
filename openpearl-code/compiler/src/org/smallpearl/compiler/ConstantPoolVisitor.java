@@ -181,8 +181,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitLiteral(SmallPearlParser.LiteralContext ctx) {
-        if (m_debug)
-            System.out.println("ConstantPoolVisitor: visitLiteral");
+        Log.debug("ConstantPoolVisitor: visitLiteral");
 
         if (ctx.durationConstant() != null) {
             int hours = 0;
@@ -422,8 +421,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
-        } else if (ctx.StringLiteral() != null) {
-            m_constantPool.add(new ConstantCharacterValue(ctx.StringLiteral().toString()));
+        } else if (ctx.stringConstant() != null) {
+            m_constantPool.add(new ConstantCharacterValue(ctx.stringConstant().StringLiteral().toString()));
         } else if (ctx.durationConstant() != null) {
             Integer hours = 0;
             Integer minutes = 0;
@@ -683,6 +682,10 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
+        } else if (ctx.selector() != null ) {
+            Log.debug("ExpressionTypeVisitor:visitAssignment_statement:selector:ctx" + CommonUtils.printContext(ctx.selector()));
+            visitSelector(ctx.selector());
+            id = ctx.selector().ID().getText();
         } else {
             id = ctx.ID().getText();
         }

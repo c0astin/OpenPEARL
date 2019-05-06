@@ -96,6 +96,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         }
 
         this.ReadTemplate(filename);
+
+
+        LinkedList<StructureEntry> listOfStructureDeclarations = this.m_currentSymbolTable.getStructureDeclarations();
+
+
+
         generatePrologue();
     }
 
@@ -549,7 +555,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 v.add("inv", var.getAssigmentProtection());
 
                 if (var.getInitializer() != null) {
-                    v.add("InitElement", var.getInitializer().getConstant());
+                    if ( var.getInitializer() instanceof SimpleInitializer) {
+                        v.add("InitElement", ((SimpleInitializer)var.getInitializer()).getConstant());
+                    }
+                    else {
+                        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                    }
                 }
 
                 variableDenotation.add("decl", v);
@@ -765,9 +776,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 }
 
                 constant.add("FloatingPointConstant", value);
-            } else if (ctx.StringLiteral() != null) {
+            } else if (ctx.stringConstant() != null) {
                 ST stringConstant = m_group.getInstanceOf("StringConstant");
-                String s = ctx.StringLiteral().toString();
+                String s = ctx.stringConstant().StringLiteral().toString();
 
                 if (s.startsWith("'")) {
                     s = s.substring(1, s.length());
@@ -2076,6 +2087,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             else if ( ctx.stringSelection().bitSelection() != null ) {
                 id = ctx.stringSelection().bitSelection().ID().getText();
             }
+        } else if (ctx.selector() != null ) {
+            Log.debug("ExpressionTypeVisitor:visitAssignment_statement:selector:ctx" + CommonUtils.printContext(ctx.selector()));
+            visitSelector(ctx.selector());
+            id = ctx.selector().ID().getText();
         }
 
         SymbolTableEntry entry = m_currentSymbolTable.lookup(id);

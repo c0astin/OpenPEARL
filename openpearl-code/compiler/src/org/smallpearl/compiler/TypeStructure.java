@@ -35,18 +35,96 @@ import org.smallpearl.compiler.SymbolTable.SemaphoreEntry;
 import java.util.LinkedList;
 
 public class TypeStructure extends TypeDefinition {
-    private LinkedList<StructureComponent> m_listOfComponents;
+    public LinkedList<StructureComponent> m_listOfComponents;
 
     TypeStructure() {
-        super("STRUCTURE");
+        super("STRUCT");
+        m_listOfComponents = new LinkedList<StructureComponent>();
     }
 
     public String toString() {
-        return "Type:" + this.getName() ;
+        String line = this.getName() + " [ ";
+
+        for (int i = 0; i < m_listOfComponents.size(); i++) {
+            String prefix = " ";
+            if ( i > 0 ) {
+                prefix = ",";
+            }
+
+            line += prefix + m_listOfComponents.get(i).toString();
+        }
+        return line + " ] ";
     }
 
-    public boolean addComponent(StructureComponent component) {
+    public int noOfEntries() {
+        return this.m_listOfComponents.size();
+    }
+
+    public boolean add(StructureComponent component) {
         m_listOfComponents.add(component);
         return true;
     }
+
+    public boolean add(TypeStructure typeStructure) {
+        StructureComponent component = new StructureComponent();
+        component.m_type = typeStructure;
+        m_listOfComponents.add(component);
+        return true;
+    }
+
+        /*
+        Datatype      letter   REF
+        --------------------------
+        FIXED         A        a
+        FLOAT         B        b
+        BIT           C        c
+        CHARACTER     D        d
+        CLOCK         E        e
+        DURATION      F        f
+        TASK                   g
+        PROC                   h
+        SEMA          I        i
+        BOLT          J        j
+        STRUCT        S        s
+     */
+
+    private String getDataTypeEncoding(TypeDefinition type) {
+        if ( type instanceof TypeFixed)           return "A" + type.getPrecision().toString();
+        if ( type instanceof TypeFloat)           return "B" + type.getPrecision().toString();
+        if ( type instanceof TypeBit)             return "C" + type.getPrecision().toString();
+        if ( type instanceof TypeChar)            return "D" + type.getPrecision().toString();
+        if ( type instanceof TypeClock)           return "E" + type.getPrecision().toString();
+        if ( type instanceof TypeDuration)        return "F" + type.getPrecision().toString();
+        if ( type instanceof TypeSemaphore)       return "I" + type.getPrecision().toString();
+        if ( type instanceof TypeBolt)            return "J" + type.getPrecision().toString();
+        if ( type instanceof TypeStructure)       return "S" + type.getPrecision().toString();
+
+        if ( type instanceof TypeReference) {
+            TypeReference reftype = (TypeReference) type;
+
+            if ( reftype.getBaseType() instanceof TypeFixed)           return "a" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeFloat)           return "b" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeBit)             return "c" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeChar)            return "d" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeClock)           return "e" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeDuration)        return "f" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeTask)            return "g";
+            if ( reftype.getBaseType() instanceof TypeProcedure)       return "h";
+            if ( reftype.getBaseType() instanceof TypeSemaphore)       return "i";
+            if ( reftype.getBaseType() instanceof TypeBolt)            return "j";
+            if ( reftype.getBaseType() instanceof TypeStructure)       return "s";
+        }
+
+        return "~?~";
+    }
+
+    public String getStructureName() {
+        String sname = "";
+        for (int i = 0; i < m_listOfComponents.size(); i++ ) {
+            TypeDefinition typ = m_listOfComponents.get(i).m_type;
+            sname += getDataTypeEncoding(typ);
+        }
+        return sname;
+    }
+
 }

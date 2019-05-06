@@ -30,10 +30,7 @@
 
 package org.smallpearl.compiler.SymbolTable;
 
-import org.smallpearl.compiler.Defaults;
-import org.smallpearl.compiler.TypeFixed;
-import org.smallpearl.compiler.TypeFloat;
-import org.smallpearl.compiler.TypeBit;
+import org.smallpearl.compiler.*;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -134,6 +131,7 @@ public class SymbolTable {
     }
 
     public SymbolTableEntry lookupLocal(String name) {
+        Log.debug("SymbolTable:lookupLocal: name=" + name);
         return (SymbolTableEntry) m_entries.get(name);
     }
 
@@ -193,7 +191,7 @@ public class SymbolTable {
     public void dump() {
         System.out.println();
         System.out.println("Symboltable:");
-        System.out.println(toString());
+        System.out.println(toString()+"\n");
     }
 
     public String toString() {
@@ -216,7 +214,6 @@ public class SymbolTable {
 
         return output;
     }
-
 
     public LinkedList<TaskEntry> getTaskDeclarations() {
         LinkedList<TaskEntry>  listOfTaskEntries = new  LinkedList<TaskEntry>();
@@ -302,6 +299,50 @@ public class SymbolTable {
 
         return listOfModules;
     }
+
+    public LinkedList<StructureEntry> getStructureDeclarations() {
+        LinkedList<StructureEntry>  listOfStructureEntries = new  LinkedList<StructureEntry>();
+        SymbolTableEntry e;
+
+        for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
+            if (symbolTableEntry instanceof StructureEntry) {
+                StructureEntry structEntry = (StructureEntry) symbolTableEntry;
+                listOfStructureEntries.add(structEntry);
+            }
+            else if (symbolTableEntry instanceof ModuleEntry) {
+                getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope, listOfStructureEntries);
+            }
+        }
+
+        return listOfStructureEntries;
+    }
+
+    private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable, LinkedList<StructureEntry> list) {
+        SymbolTableEntry e;
+
+        for (Iterator it = symbolTable.m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
+
+            if (symbolTableEntry instanceof StructureEntry) {
+                StructureEntry structEntry = (StructureEntry) symbolTableEntry;
+                list.add(structEntry);
+            }
+            else if (symbolTableEntry instanceof ModuleEntry) {
+                ModuleEntry entry = (ModuleEntry)symbolTableEntry;
+                getStructureDeclarationsForSymboltable(entry.scope, list);
+            }
+            else if (symbolTableEntry instanceof VariableEntry) {
+                VariableEntry entry = (VariableEntry)symbolTableEntry;
+                if ( entry.getType() instanceof TypeStructure ) {
+                    System.out.println("**" + ((TypeStructure) entry.getType()).getStructureName());
+
+                }
+            }
+
+        }
+    }
+
 
     public int lookupDefaultFixedLength() {
         SymbolTableEntry entry = this.lookup("~LENGTH_FIXED~");

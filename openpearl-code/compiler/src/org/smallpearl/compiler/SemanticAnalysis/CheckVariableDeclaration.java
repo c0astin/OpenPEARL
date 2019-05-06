@@ -291,9 +291,9 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void> implem
 //                new org.smallpearl.compiler.ConstantFloatValue(f11);
                 return null;
             }
-            else if (ctx.StringLiteral() != null)
+            else if (ctx.stringConstant() != null)
             {
-                String s = ctx.StringLiteral().toString();
+                String s = ctx.stringConstant().StringLiteral().toString();
 
                 if (s.startsWith("'"))
                 {

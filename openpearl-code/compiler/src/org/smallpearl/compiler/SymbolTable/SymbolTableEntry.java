@@ -66,7 +66,7 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
             indent += "  ";
         }
 
-        return indent;
+        return "";
     }
 
     @Override

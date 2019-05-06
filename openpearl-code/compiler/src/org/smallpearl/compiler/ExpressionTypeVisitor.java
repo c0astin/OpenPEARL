@@ -55,7 +55,6 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         m_symboltable = symbolTableVisitor.symbolTable;
         m_ast = ast;
 
-        Log.info("=============================================================================");
         Log.info("Semantic Check: Attributing parse tree with expression type information");
 
         LinkedList<ModuleEntry> listOfModules = this.m_symboltable.getModules();
@@ -79,10 +78,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             if (expressionResult != null) {
                 m_ast.put(ctx, expressionResult);
 
-                if (m_debug) {
-                    System.out.println("ExpressionTypeVisitor: visitBaseExpression: exp=" + ctx.primaryExpression().getText());
-                    System.out.println("ExpressionTypeVisitor: visitBaseExpression: res=(" + expressionResult + ")");
-                }
+                Log.debug("ExpressionTypeVisitor: visitBaseExpression: exp=" + ctx.primaryExpression().getText());
+                Log.debug("ExpressionTypeVisitor: visitBaseExpression: res=(" + expressionResult + ")");
             }
         }
 
@@ -155,10 +152,13 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             }
 
             visit(ctx.expression(0));
+
             ASTAttribute expressionResult = m_ast.lookup(ctx.expression(0));
             if (expressionResult != null) {
                 m_ast.put(ctx, expressionResult);
             }
+        } else if (ctx.name() != null ) {
+            visitName(ctx.name());
         }
 
         return null;
@@ -1274,7 +1274,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
             typeChar = (TypeChar) op.getType();
 
-            if ( typeChar.getSize() != 1 ) {
+            if ( typeChar.getPrecision() != 1 ) {
                 throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
@@ -1696,6 +1696,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
+        } else if (ctx.selector() != null ) {
+            Log.debug("ExpressionTypeVisitor:visitAssignment_statement:selector:ctx" + CommonUtils.printContext(ctx.selector()));
+            visitSelector(ctx.selector());
+            id = ctx.selector().ID().getText();
         } else {
             id = ctx.ID().getText();
         }
@@ -2410,7 +2414,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             ASTAttribute expressionResult = new ASTAttribute(type);
             m_ast.put(ctx, expressionResult);
         } else if (op1.getType() instanceof TypeChar && op2.getType() instanceof TypeChar) {
-            TypeChar type = new TypeChar(((TypeChar)op1.getType()).getSize() + ((TypeChar)op2.getType()).getSize());
+            TypeChar type = new TypeChar(((TypeChar)op1.getType()).getPrecision() + ((TypeChar)op2.getType()).getPrecision());
             ASTAttribute expressionResult = new ASTAttribute(type);
             m_ast.put(ctx, expressionResult);
         } else {
@@ -2811,7 +2815,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         if ( entry instanceof VariableEntry) {
             VariableEntry var = (VariableEntry) entry;
             if ( var.getType() instanceof TypeChar) {
-                m_ast.put(ctx, new ASTAttribute(new TypeChar(((TypeChar) var.getType()).getSize())));
+                m_ast.put(ctx, new ASTAttribute(new TypeChar(((TypeChar) var.getType()).getPrecision())));
             }
             else {
                 throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2851,7 +2855,47 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
 
+    /*
+    selector
+    : ID indices? ( '.' ID indices? )*
+    ;
 
+    indices
+    : '(' expression ( ',' expression )* ')'
+    ;
+     */
+    @Override
+    public Void visitSelector(SmallPearlParser.SelectorContext ctx) {
+        String id = null;
+
+        id = ctx.ID().toString();
+        if ( ctx.indices() != null ) {
+            visitIndices(ctx.indices());
+        }
+
+        SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
+        if (!(entry instanceof VariableEntry)) {
+            throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+
+        VariableEntry var = (VariableEntry)entry;
+
+        for (int i = 0; i < ctx.selectors().size(); i++) {
+            visitSelectors(ctx.selectors(i));
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitIndices(SmallPearlParser.IndicesContext ctx) {
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public Void visitSelectors(SmallPearlParser.SelectorsContext ctx) {
+        return visitChildren(ctx);
+    }
 
     private ConstantValue getConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
         ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);

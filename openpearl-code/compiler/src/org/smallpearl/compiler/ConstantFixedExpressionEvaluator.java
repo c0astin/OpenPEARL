@@ -34,6 +34,7 @@ import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<ConstantFixedValue> implements SmallPearlVisitor<ConstantFixedValue> {
 
@@ -200,13 +201,16 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
 
                 if ( variableEntry.getInitializer() != null ) {
 
-                    if ( variableEntry.getInitializer().getConstant() instanceof ConstantFixedValue ) {
-                        value = (ConstantFixedValue)variableEntry.getInitializer().getConstant();
+                    if ( variableEntry.getInitializer() instanceof SimpleInitializer) {
+                        if ( ((SimpleInitializer)variableEntry.getInitializer()).getConstant() instanceof ConstantFixedValue) {
+                            value = (ConstantFixedValue) ((SimpleInitializer)variableEntry.getInitializer()).getConstant();
+                        } else {
+                            throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                        }
                     }
                     else {
-                        throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                     }
-
 /*
                     if ( variableEntry.getInitializer().getContext() instanceof SmallPearlParser.ConstantExpressionContext) {
                         SmallPearlParser.ConstantExpressionContext c = (SmallPearlParser.ConstantExpressionContext)variableEntry.getInitializer().getContext();

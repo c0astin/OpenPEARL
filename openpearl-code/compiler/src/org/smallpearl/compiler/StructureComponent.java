@@ -36,4 +36,8 @@ import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 public class StructureComponent {
     public String          m_id;
     public TypeDefinition  m_type;
+
+    public String toString() {
+        return m_id + " " +  m_type;
+    }
 }

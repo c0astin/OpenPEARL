@@ -48,7 +48,7 @@ import static org.smallpearl.compiler.Log.LEVEL_DEBUG;
 import static org.smallpearl.compiler.Log.LEVEL_ERROR;
 
 public class Compiler {
-    static String version = "v0.8.9.32";
+    static String version = "v0.8.9.35";
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();
@@ -61,6 +61,7 @@ public class Compiler {
     static String encoding = null;
     static boolean SLL = false;
     static boolean nosemantic = false;
+    static boolean constantfolding = true;
     static int verbose = 0;
     static String groupFile = "SmallPearlCpp.stg";
     static boolean lineSeparatorHasToBeModified = true;
@@ -95,7 +96,6 @@ public class Compiler {
             return;
         }
 
-        // Setup logger
         Log.Logger logger = new Log.Logger();
         Log.setLogger(logger);
         //Log.set(LEVEL_INFO);
@@ -155,8 +155,10 @@ public class Compiler {
                     ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose, debug, symbolTableVisitor, ast);
                     expressionTypeVisitor.visit(tree);
 
-                    ConstantFoldingVisitor constantFoldingVisitor = new ConstantFoldingVisitor(symbolTableVisitor, ast);
-                    constantFoldingVisitor.visit(tree);
+                    if ( constantfolding) {
+                        ConstantFoldingVisitor constantFoldingVisitor = new ConstantFoldingVisitor(symbolTableVisitor, ast);
+                        constantFoldingVisitor.visit(tree);
+                    }
 
                     ConstantPoolVisitor constantPoolVisitor = new ConstantPoolVisitor(lexer.getSourceName(),
                                                                                       verbose,
@@ -251,6 +253,7 @@ public class Compiler {
                 "  --quiet                     Be quiet                              \n" +
                 "  --trace                                                           \n" +
                 "  --nosemantic                Disable semantic checker              \n" +
+                "  --noconstantfolding         Disable constant folding              \n" +
                 "  --printAST                  Print Abtract Syntax Tree             \n" +
                 "  --dumpDFA                   Print DFA                             \n" +
                 "  --dumpSymbolTable           Print the SymbolTable                 \n" +
@@ -296,6 +299,8 @@ public class Compiler {
                 printSysInfo = true;
             } else if (arg.equals("--nosemantic")) {
                 nosemantic = true;
+            } else if (arg.equals("--noconstantfolding")) {
+                constantfolding = false;
             } else if (arg.equals("--diagnostics")) {
                 diagnostics = true;
             } else if (arg.equals("--dumpDFA")) {
