@@ -1,0 +1,27 @@
+   <dation name="BME280">
+      <parameters>
+         <BIT length="8">
+            <VALUES>
+            '76'B4, '77'B4
+            </VALUES>
+         </BIT>
+         <FIXED length="7">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7">
+           <VALUES>0,1,2,3,4</VALUES>
+         </FIXED>
+         <FIXED length="7">
+           <VALUES>0,1,2,3,4,5,6,7,8</VALUES>
+         </FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, IN</attributes>
+      <data>ALL</data>
+      <needAssociation name="I2CBusProvider" />
+   </dation>
