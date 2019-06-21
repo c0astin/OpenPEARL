@@ -124,6 +124,7 @@ Only this file mus be included.
 #ifdef CONFIG_HAS_I2C
 #ifdef CONFIG_LINUX_I2C
 #include "I2CBus.h"
+#include "BME280.h"
 #endif
 #endif
 #ifdef CONFIG_I2C_LM75

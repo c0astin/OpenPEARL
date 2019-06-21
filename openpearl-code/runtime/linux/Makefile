@@ -191,6 +191,7 @@ CHECK_FILES := $(sort $(CHECK_FILES))
 #$(warning src = $(SRC))
 
 PLIB_OBJ = $(SRC:%.cc=%.o)
+PLIB_OBJ := $(PLIB_OBJ:%.c=%.o)
 #$(warning plibobj = $(PLIB_OBJ))
 
 ALL_SRCS = $(SRC) $(TEST_SRCS) $(TEST_DATION_SRCS) $(GTEST_SRCS)
@@ -199,6 +200,7 @@ ALL_SRCS = $(SRC) $(TEST_SRCS) $(TEST_DATION_SRCS) $(GTEST_SRCS)
 
 
 OBJS = $(ALL_SRCS:%.cc=%.o)
+OBJS := $(OBJS:%.c=%.o)
 
 # ------------------------------
 
