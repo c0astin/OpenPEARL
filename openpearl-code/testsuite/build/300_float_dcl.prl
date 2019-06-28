@@ -1,6 +1,9 @@
 MODULE(float_dcl);
 
 PROBLEM;
+DCL y00 FLOAT(24) INIT(0(31));
+                     //^^^^  this should produce a semantic error
+                     // illegal implicit type conversion fixed(31)->float(24)
 DCL y24 FLOAT(24) INIT(1.234);
 DCL y53 FLOAT(53) INIT(1.234);
 ! make automatic test happy
