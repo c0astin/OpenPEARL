@@ -239,7 +239,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             }
 
         } else if (ctx.StringLiteral() != null) {
-            String s = ctx.StringLiteral().toString();
+            String s = CommonUtils.unescapePearlString(CommonUtils.removeQuotes(ctx.StringLiteral().toString()));
             add(new ConstantCharacterValue(s));
         } else if (ctx.fixedConstant() != null) {
             try {

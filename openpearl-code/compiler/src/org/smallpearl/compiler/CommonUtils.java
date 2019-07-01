@@ -35,6 +35,8 @@ import java.util.UUID;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
+import org.smallpearl.compiler.Exception.IllegalCharacterException;
+import org.smallpearl.compiler.Exception.NotSupportedTypeException;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 import org.stringtemplate.v4.ST;
@@ -379,23 +381,23 @@ public class CommonUtils {
                 case 1:
                     if (ch == '\\') {
                         state = 2;
-                    }
-                    else {
-                        state = 0;
-                        sb.append(ch);
+                    } else {
+                        throw new IllegalCharacterException("");
                     }
                     break;
 
                 case 2:
-                    if ( ch == ' ') {
+                    if ( (ch == ' ') || (ch == '\n') ) {
                         state = 2;
+                    }
+                    else if ( (ch == '\\') ) {
+                        state = 5;
                     }
                     else {
                         value += ch;
                         state = 3;
                     }
                     break;
-
 
                 case 3:
                     value += ch;
@@ -410,10 +412,11 @@ public class CommonUtils {
                     break;
 
                 case 4:
-                    if (ch == '\\') {
+                    if ( (ch == ' ') || (ch == '\n') ) {
+                        state = 2;
+                    }
+                    else if ( (ch == '\\') ) {
                         state = 5;
-                    } else if ( ch == ' ') {
-                        state = 4;
                     }
                     else {
                         value += ch;
@@ -435,7 +438,7 @@ public class CommonUtils {
     }
 
     public static
-    String remopveQuotes(String st) {
+    String removeQuotes(String st) {
         st = st.replaceAll("^'", "");
         st = st.replaceAll("'$", "");
         return st;

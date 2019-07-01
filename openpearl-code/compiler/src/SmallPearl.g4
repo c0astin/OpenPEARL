@@ -2298,8 +2298,8 @@ charSlice
 literal
     : fixedConstant
     | floatingPointConstant
-    | StringLiteral
     | BitStringLiteral
+    | StringLiteral
     | timeConstant
     | durationConstant
     ;
@@ -2326,30 +2326,29 @@ fixedNumberPrecision
 ////////////////////////////////////////////////////////////////////////////////
 
 StringLiteral
-    :  '\'' SCharSequence? '\''
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
+	:	'\'' StringCharacters? '\''
+	;
 
 fragment
-SCharSequence
-    :   SChar+
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
+StringCharacters
+	:	StringCharacter+
+	;
 
 fragment
-SChar
-    :   ~['\\\r\n]
-    | ControlCharacterSequence
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
+StringCharacter
+	:	~['\\\r\n]
+	|	EscapeSequence
+	;
 
 fragment
-ControlCharacterSequence
-    : '\'\\' Whitespace? (B4Digit B4Digit) (Whitespace B4Digit B4Digit)* Whitespace? '\\\''
-    ;
+EscapeSequence
+	: '\'\\' (HexEscape| ' ' | [\r\n])* '\\\''
+	;
+
+fragment
+HexEscape
+	:  B4Digit B4Digit
+	;
 
 ////////////////////////////////////////////////////////////////////////////////
 

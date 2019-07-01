@@ -2751,7 +2751,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             literal.add("time", getTime(ctx.timeConstant()));
         } else if (ctx.StringLiteral() != null) {
             String s = ctx.StringLiteral().getText();
-            s = CommonUtils.remopveQuotes(s);
+            s = CommonUtils.removeQuotes(s);
             ST constantCharacterValue = m_group.getInstanceOf("ConstantCharacterValue");
             ConstantCharacterValue value = ConstantPool.lookupCharacterValue(s);
 
