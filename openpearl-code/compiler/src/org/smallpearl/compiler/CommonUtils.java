@@ -373,6 +373,9 @@ public class CommonUtils {
                 case 0:
                     if (ch == '\'') {
                         state = 1;
+                    } else if ( ch == '"') {
+                        sb.append("\\");
+                        sb.append("\"");
                     } else {
                         sb.append(ch);
                     }
