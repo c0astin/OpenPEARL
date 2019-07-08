@@ -48,7 +48,7 @@ import static org.smallpearl.compiler.Log.LEVEL_DEBUG;
 import static org.smallpearl.compiler.Log.LEVEL_ERROR;
 
 public class Compiler {
-    static String version = "v0.8.9.32";
+    static String version = "v0.8.9.33";
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();

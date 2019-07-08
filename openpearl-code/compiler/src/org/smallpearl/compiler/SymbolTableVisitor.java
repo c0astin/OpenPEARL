@@ -1,6 +1,6 @@
 /*
 * [The "BSD license"]
-*  Copyright (c) 2012-2016 Marcel Schaible
+*  Copyright (c) 2012-2019 Marcel Schaible
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -527,7 +527,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         if (ctx.IntegerConstant() != null) {
             size = Integer.parseInt(ctx.IntegerConstant().getText());
 
-            if (size < 1 || size > 255) {
+            if (size < 1 || size > Defaults.CHARACTER_MAX_LENGTH) {
                 throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         }
@@ -1460,3 +1460,5 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     }
 
 }
+
+

@@ -30,6 +30,7 @@
 package org.smallpearl.compiler;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 import java.util.UUID;
 
@@ -451,6 +452,7 @@ public class CommonUtils {
     int getStringLength(String st) {
         int state = 0;
         int len   = 0;
+        String s = "";
 
         for (int i = 0; i < st.length(); i++) {
             char ch = st.charAt(i);
@@ -460,6 +462,7 @@ public class CommonUtils {
                     if (ch == '\\') {
                         state = 1;
                     } else {
+                        s += ch;
                         len++;
                     }
                     break;
@@ -470,6 +473,7 @@ public class CommonUtils {
                     }
                     else {
                         state = 0;
+                        s += ch;
                         len++;
                     }
                     break;
@@ -480,22 +484,47 @@ public class CommonUtils {
                     }
                     else {
                         state = 0;
+                        s += ch;
                         len++;
                     }
                     break;
 
                 case 3:
                     if ( ch >= '0' && ch <= '7') {
+                        state = 4;
+                    }
+                    else {
                         state = 0;
+                        s += ch;
+                        len++;
+                    }
+                    break;
+
+                case 4:
+                    if ( ch >= '0' && ch <= '7') {
+                        state = 0;
+                        s += ch;
                         len++;
                     }
                     else {
                         state = 0;
+                        s += ch;
                         len++;
                     }
                     break;
 
             }
+        }
+
+        try {
+            byte arr[] = s.getBytes("UTF8");
+            len = arr.length;
+        }
+        catch(UnsupportedEncodingException ex) {
+        }
+
+        if ( len == 0) {
+            len = 1;
         }
 
         return len;

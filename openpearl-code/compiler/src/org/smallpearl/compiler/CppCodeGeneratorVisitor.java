@@ -37,6 +37,7 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -171,6 +172,20 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 entry.add("value", s);
 
                 pool.add("constants", entry);
+
+                Log.debug("CppCodeGeneratorVisitor:generateConstantPool:");
+                try {
+                    StringBuilder sb = new StringBuilder();
+                    byte[] ptext = s.getBytes("UTF-8");
+
+                    for (byte b : ptext) {
+                        sb.append(String.format(" %02X", b));
+                    }
+                    Log.debug("[" + sb.toString() + " ]");
+                }
+                catch (UnsupportedEncodingException ex) {
+                    Log.debug("[ ??? ]");
+                }
             }
         }
 
@@ -1165,7 +1180,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx.IntegerConstant() != null) {
             size = Integer.parseInt(ctx.IntegerConstant().getText());
 
-            if (size < 1 || size > 255) {
+            if (size < 1 || size > Defaults.CHARACTER_MAX_LENGTH) {
                 throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         }
