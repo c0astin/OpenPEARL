@@ -179,8 +179,11 @@ DCL c_7F CHAR INIT(''\7F\'');     ! 127     7F      177     DEL     Delete (DEL)
 !---------------------------------------------------------------------------------------------
 DCL charset1 CHAR(20) INIT('äöüßÄÖÜµ€@');
 DCL charset2 CHAR(20) INIT('1Ä2'\1B\'');
-DCL charset3 CHAR(20) INIT('äöüßÄÖÜµ€@');
-DCL charset4 CHAR(4) INIT('xäx');
+DCL charset3 CHAR(20) INIT(''\1B\'1Ä2');
+DCL charset4 CHAR(20) INIT('1Ä'\1B\'2');
+DCL charset5 CHAR(20) INIT(''\1B\''\1B\''\1B\''\1B\''\1B\'');
+DCL charset6 CHAR(20) INIT('äöüßÄÖÜµ€@');
+DCL charset7 CHAR(4) INIT('xäx');
 
 ! make automatic test happy
 main: TASK MAIN;
@@ -202,7 +205,6 @@ all := c_00 >< c_01 >< c_02 >< c_03 >< c_04 >< c_05 >< c_06 >< c_07 ><
        c_68 >< c_69 >< c_6A >< c_6B >< c_6C >< c_6D >< c_6E >< c_6F ><
        c_70 >< c_71 >< c_72 >< c_73 >< c_74 >< c_75 >< c_76 >< c_77 ><
        c_78 >< c_79 >< c_7A >< c_7B >< c_7C >< c_7D >< c_7E;
-
 END;
 
 MODEND;

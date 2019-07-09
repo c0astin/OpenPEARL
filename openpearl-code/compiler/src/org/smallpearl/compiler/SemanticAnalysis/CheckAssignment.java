@@ -153,12 +153,16 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
                     throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
+                int rhs_precision = 0;
+                if (rhs instanceof TypeReference) {
+                    rhs_precision = ((TypeFixed) ((TypeReference) rhs).getBaseType()).getPrecision();
+                }
+                else {
+                    rhs_precision = ((TypeFixed) rhs).getPrecision();
+                }
 
-                int p1 = ((TypeFixed) variable.getType()).getPrecision();
-                int p2 = ((TypeFixed)rhs).getPrecision();
-
-                if ( ((TypeFixed) variable.getType()).getPrecision() < ((TypeFixed)rhs).getPrecision() ) {
-      //TODO            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                if ( ((TypeFixed) variable.getType()).getPrecision() < rhs_precision ) {
+                    throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
             }
             else if ( variable.getType() instanceof TypeClock ) {

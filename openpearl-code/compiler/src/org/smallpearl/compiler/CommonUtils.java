@@ -409,7 +409,7 @@ public class CommonUtils {
                     if ( val.length() == 1) {
                         val = "0" + val;
                     }
-                    octalValue = "\\0" + val;
+                    octalValue = "\\" + val;
                     sb.append(octalValue);
                     value = "";
                     state = 4;
@@ -468,8 +468,10 @@ public class CommonUtils {
                     break;
 
                 case 1:
-                    if (ch == '0') {
+                    if ( ch >= '0' && ch <= '7') {
                         state = 2;
+                        s += '?';
+                        len++;
                     }
                     else {
                         state = 0;
@@ -491,28 +493,16 @@ public class CommonUtils {
 
                 case 3:
                     if ( ch >= '0' && ch <= '7') {
-                        state = 4;
+                        state = 0;
                     }
-                    else {
+                    else if (ch == '\\') {
+                        state = 1;
+                    } else {
                         state = 0;
                         s += ch;
                         len++;
                     }
                     break;
-
-                case 4:
-                    if ( ch >= '0' && ch <= '7') {
-                        state = 0;
-                        s += ch;
-                        len++;
-                    }
-                    else {
-                        state = 0;
-                        s += ch;
-                        len++;
-                    }
-                    break;
-
             }
         }
 
