@@ -969,7 +969,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable );
 
         if ( ctx.loopStatement_for() != null) {
-            VariableEntry controlVariable = new VariableEntry(ctx.loopStatement_for().ID().getText(), new TypeFixed(31), true, null, null);
+            VariableEntry controlVariable = new VariableEntry(ctx.loopStatement_for().ID().getText(), new TypeFixed(Defaults.LOOP_INDEX_LENGTH), true, null, null);
             controlVariable.setLoopControlVariable();
             m_currentSymbolTable.enter(controlVariable);
         }

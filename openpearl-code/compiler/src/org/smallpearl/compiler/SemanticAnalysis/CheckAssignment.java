@@ -155,7 +155,8 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
 
                 int rhs_precision = 0;
                 if (rhs instanceof TypeReference) {
-                    rhs_precision = ((TypeFixed) ((TypeReference) rhs).getBaseType()).getPrecision();
+                    TypeFixed typ = (TypeFixed) ((TypeReference) rhs).getBaseType();
+                    rhs_precision = typ.getPrecision();
                 }
                 else {
                     rhs_precision = ((TypeFixed) rhs).getPrecision();
