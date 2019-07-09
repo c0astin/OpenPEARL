@@ -17,6 +17,7 @@
  
 DONOTBUILD= 030_signals 031_signalsInduce  \
 	043_switch \
+	110_sizeof \
 	151_array_procParam \
 	224_bit_slice \
 	701_dation_pg \
