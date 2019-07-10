@@ -1595,7 +1595,7 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,rangePrecision,from,fromPreci
             try {
                 a_value = a_value + s_value;
             }
-            catch(pearlrt::FixedRangeSignal *ex) {
+            catch(pearlrt::FixedRangeSignal &ex) {
                 break;
             }
         }
@@ -1623,7 +1623,7 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,rangePrecision,from,fromPreci
             try {
                 a_value = a_value + s_value;
             }
-            catch(pearlrt::FixedRangeSignal *ex) {
+            catch(pearlrt::FixedRangeSignal &ex) {
                 break;
             }
             <endif>
