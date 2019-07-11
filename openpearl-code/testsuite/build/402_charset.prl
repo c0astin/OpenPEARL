@@ -188,6 +188,7 @@ DCL charset7 CHAR(4) INIT('xäx');
 ! make automatic test happy
 main: TASK MAIN;
 DCL all CHAR(128) INIT('');
+DCL ch CHAR;
 
 all := c_00 >< c_01 >< c_02 >< c_03 >< c_04 >< c_05 >< c_06 >< c_07 ><
        c_08 >< c_09 >< c_0A >< c_0B >< c_0C >< c_0D >< c_0E >< c_0F ><
@@ -205,6 +206,19 @@ all := c_00 >< c_01 >< c_02 >< c_03 >< c_04 >< c_05 >< c_06 >< c_07 ><
        c_68 >< c_69 >< c_6A >< c_6B >< c_6C >< c_6D >< c_6E >< c_6F ><
        c_70 >< c_71 >< c_72 >< c_73 >< c_74 >< c_75 >< c_76 >< c_77 ><
        c_78 >< c_79 >< c_7A >< c_7B >< c_7C >< c_7D >< c_7E;
+
+
+      ch = charset4.CHAR(4);
+      IF TOFIXED ch EQ 27 THEN
+      __cpp__("printf(\"ok\\n\");");
+      ELSE
+          ch = charset4.CHAR(4);
+      __cpp__("printf(\"fail expect: 27 is %d\\n\",_ch.data[0]);"
+              "pearlrt::Control::setExitCode(1);"
+
+      );
+      FIN;
+
 END;
 
 MODEND;
