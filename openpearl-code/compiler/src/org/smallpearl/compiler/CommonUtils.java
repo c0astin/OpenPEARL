@@ -406,7 +406,7 @@ public class CommonUtils {
                 case 3:
                     value += ch;
                     val = Integer.toString(Integer.parseInt(value, 16), 8);
-                    if ( val.length() == 1) {
+                    while (val.length() < 3) {
                         val = "0" + val;
                     }
                     octalValue = "\\" + val;
