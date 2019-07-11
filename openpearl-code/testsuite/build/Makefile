@@ -20,6 +20,7 @@ DONOTBUILD= 030_signals 031_signalsInduce  \
 	110_sizeof \
 	151_array_procParam \
 	224_bit_slice \
+	350_conversions \
 	701_dation_pg \
 	706_convert \
 	707_dation_pg_formats \
@@ -27,6 +28,7 @@ DONOTBUILD= 030_signals 031_signalsInduce  \
 
 DONOTRUN=000_empty \
 	050_interrupt \
+	402_charset \
 	450_struct_dcl \
         703_userdation_dcl \
 	704_dation_open \
