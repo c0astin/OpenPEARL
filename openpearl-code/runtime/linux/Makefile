@@ -137,6 +137,14 @@ ifeq ($(CONFIG_LINUX_Raspberry),y)
       rpiVersion = V3B
    else ifeq ($(ver),a22082)
       rpiVersion = V3B
+   else ifeq ($(ver),a020d3)
+      rpiVersion = V3B		# is a V 3B+, but this doues not matter up to now
+   else ifeq ($(ver),a03111)
+      rpiVersion = V4B		# 1GB
+   else ifeq ($(ver),b03111)
+      rpiVersion = V4B		# 2GB
+   else ifeq ($(ver),c03111)
+      rpiVersion = V4B		# 4GB
    else
       $(error raspberry revision $(ver) not known by auto detection)
    endif 
