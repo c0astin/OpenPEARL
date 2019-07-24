@@ -138,13 +138,17 @@ ifeq ($(CONFIG_LINUX_Raspberry),y)
    else ifeq ($(ver),a22082)
       rpiVersion = V3B
    else ifeq ($(ver),a020d3)
-      rpiVersion = V3B		# is a V 3B+, but this doues not matter up to now
+      # is a V 3B+, but this doues not matter up to now
+      rpiVersion = V3B
    else ifeq ($(ver),a03111)
-      rpiVersion = V4B		# 1GB
+      # 1GB
+      rpiVersion = V4B
    else ifeq ($(ver),b03111)
-      rpiVersion = V4B		# 2GB
+      # 2GB
+      rpiVersion = V4B
    else ifeq ($(ver),c03111)
-      rpiVersion = V4B		# 4GB
+      # 4GB
+      rpiVersion = V4B
    else
       $(error raspberry revision $(ver) not known by auto detection)
    endif 
@@ -205,6 +209,7 @@ PLIB_OBJ := $(PLIB_OBJ:%.c=%.o)
 ALL_SRCS = $(SRC) $(TEST_SRCS) $(TEST_DATION_SRCS) $(GTEST_SRCS)
 #$(warning allsrc = $(ALL_SRCS))
 
+$(warning XML_FILES = $(XML_FILES))
 
 
 OBJS = $(ALL_SRCS:%.cc=%.o)
