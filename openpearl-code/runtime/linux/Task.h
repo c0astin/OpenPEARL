@@ -123,10 +123,6 @@ namespace pearlrt {
       int terminateWaiters;
 #endif
 
-      /** Semaphor for completion message of activate
-          (inits by default to 0)   */
-      CSema activateDone;
-
       /** for Thread suspend resume
           the suspended thread waits for data on this pipe
           to continue a 'c' is written to the pipe
@@ -341,7 +337,7 @@ namespace pearlrt {
          \param p the best priority in the system - in system internal
                   representation
       */
-      static void setSchedPrioMax(int p);
+      static void setThreadPrioMax(int p);
 
       /**
          set the threads priority to the best priority in the system
@@ -351,7 +347,7 @@ namespace pearlrt {
          priority, if SCHED_RR is avaliable. To reduce the number
          of system calls, the maximum priority is stored internally.
       */
-      void switchToSchedPrioMax();
+      void switchToThreadPrioMax();
 
       /**
          (re-)set the threads priority to the current priority
@@ -361,7 +357,7 @@ namespace pearlrt {
          priority, if SCHED_RR is avaliable. At the end of these
          segments, the priority must be adjusted.
       */
-      void switchToSchedPrioCurrent();
+      void switchToThreadPrioCurrent();
 
       /**
       set the threads priority
@@ -409,6 +405,17 @@ namespace pearlrt {
       The mutex becomes unlocked in case of trmination.
       */
       void treatCancelIO(void);
+
+      /**
+      delay the current task by the given amount of time.
+      This method must be implemented by the platform specific code
+      in Task.cc
+
+      \param usec  number of micro seconds to delay
+      \return true, if the delay was interrupted<br>
+              false, if the delay passed without disturbion
+      */
+      static bool delayUs(uint64_t usecs);
 
    private:
       void enableCancelIOSignalHandler(void);
@@ -489,9 +496,9 @@ static void x ## _entry (pearlrt::Task * me) { 		\
       } catch (pearlrt::Signal & p) {			\
          char line[256];                                \
          printf("++++++++++++++++++++++++++++++\n");	\
-         sprintf(line,"%s:%d Task: %s   terminated due to: %s",\
+         sprintf(line,"%s:%d Task: %s   terminated due to: (%d) %s",\
              me->getLocationFile(), me->getLocationLine(), \
-             me->getName(), p.which());			\
+             me->getName(), p.whichRST(), p.which());			\
          printf("%s\n",line);				\
          pearlrt::Log::error(line);			\
          printf("++++++++++++++++++++++++++++++\n");	\

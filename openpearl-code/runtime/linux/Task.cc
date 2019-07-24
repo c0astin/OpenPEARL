@@ -149,7 +149,7 @@ namespace pearlrt {
       continueWaiters++;
 
       // be not disturbed by application threads
-      switchToSchedPrioMax();
+      switchToThreadPrioMax();
       {
          write(pipeResume[1], &dummy, 1);
          mutexUnlock();
@@ -161,7 +161,7 @@ namespace pearlrt {
       // perhaps the just continued task has terminated in the interval
       // between sending the continuation data and this point
       if (taskState != TERMINATED) {
-         switchToSchedPrioCurrent();
+         switchToThreadPrioCurrent();
       }
    }
 
@@ -183,7 +183,7 @@ namespace pearlrt {
 
       suspendWaiters ++;
       // be not disturbed by application threads
-      switchToSchedPrioMax();
+      switchToThreadPrioMax();
       {
 
          while (asyncSuspendRequested) {
@@ -194,7 +194,7 @@ namespace pearlrt {
 
          suspendDone.request();
       }
-      switchToSchedPrioCurrent();
+      switchToThreadPrioCurrent();
       DEBUG("%s: suspendIO: done", name);
    }
 
@@ -205,13 +205,13 @@ namespace pearlrt {
       suspendWaiters ++;
 
       // be not disturbed by application threads
-      switchToSchedPrioMax();
+      switchToThreadPrioMax();
       {
          mutexUnlock();
          suspendDone.request();
          mutexLock();
       }
-      switchToSchedPrioCurrent();
+      switchToThreadPrioCurrent();
    }
 
    void Task::suspendMySelf() {
@@ -227,7 +227,7 @@ namespace pearlrt {
       taskState = SUSPENDED;
 
       // be not disturbed by application threads
-      switchToSchedPrioMax();
+      switchToThreadPrioMax();
       {
          mutexUnlock();
          result = read(pipeResume[0], &dummy, 1);
@@ -238,7 +238,7 @@ namespace pearlrt {
          }
          mutexLock();
       }
-      switchToSchedPrioCurrent();
+      switchToThreadPrioCurrent();
       DEBUG("%s:   suspendMySelf: got data %c", name, dummy);
 
       switch (dummy) {
@@ -266,7 +266,7 @@ namespace pearlrt {
          }
 
          DEBUG("%s:  continue from suspend done", name);
-         switchToSchedPrioCurrent();
+         switchToThreadPrioCurrent();
          break;
 
       default:
@@ -276,11 +276,11 @@ namespace pearlrt {
       }
    }
 
-   void Task::switchToSchedPrioMax() {
+   void Task::switchToThreadPrioMax() {
       setThreadPrio(schedPrioMax);
    }
 
-   void Task::switchToSchedPrioCurrent() {
+   void Task::switchToThreadPrioCurrent() {
       changeThreadPrio(currentPrio);
    }
 
@@ -367,7 +367,7 @@ namespace pearlrt {
       mySelf = this;
 
       activateDone.release();
-      switchToSchedPrioCurrent();
+      switchToThreadPrioCurrent();
       DEBUG("%s: task activation completed", name);
    }
 
@@ -419,10 +419,6 @@ namespace pearlrt {
                     name, strerror(errno));
          throw theInternalTaskSignal;
       }
-
-      Log::debug("wait for activateDone.request");
-      activateDone.request();
-      Log::debug("got activateDone.request");
 
       return;
    }
@@ -615,7 +611,7 @@ namespace pearlrt {
 
    int Task::schedPrioMax = 0;
 
-   void Task::setSchedPrioMax(int p) {
+   void Task::setThreadPrioMax(int p) {
       schedPrioMax = p;
    }
 
@@ -684,5 +680,16 @@ namespace pearlrt {
          mutexUnlock();
          throw theTerminateRequestSignal;
       }
+   }
+
+   bool Task::delayUs(uint64_t usecs) {
+      int returncode;
+
+      returncode = usleep(usecs);
+
+      if (returncode == EINTR) {
+          return true;
+      }
+      return false;
    }
 }
