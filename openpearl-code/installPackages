@@ -23,6 +23,7 @@ then
    AptPackageList+=" openjdk-8-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -43,6 +44,7 @@ then
    AptPackageList+=" openjdk-8-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -61,6 +63,7 @@ then
    AptPackageList+=" openjdk-8-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -79,6 +82,7 @@ then
    AptPackageList+=" gcc g++ git make gawk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -95,6 +99,7 @@ then
    AptPackageList+=" gcc g++ git make gawk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -125,6 +130,7 @@ then
    #AptPackageList+=" openjdk-8-jdk" # raspbian comes with a javac
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -134,7 +140,7 @@ then
    SystemKnown=1
 fi
 
-grep "PRETTY_NAME=\"Raspbian GNU/Linux 10 \(buster\)\"" /etc/os-release >/dev/null
+grep "PRETTY_NAME=\"Raspbian GNU/Linux 10 (buster)\"" /etc/os-release >/dev/null
 rc=$?
 if [ $rc -eq 0 ]
 then
@@ -142,6 +148,7 @@ then
    AptPackageList+=" openjdk-8-jdk" # raspbian 10 comes without a javac
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
