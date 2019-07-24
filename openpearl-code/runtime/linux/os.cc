@@ -488,7 +488,7 @@ int main() {
    }
 
    param.sched_priority = max;
-   Task::setSchedPrioMax(max);
+   Task::setThreadPrioMax(max);
 
    //set prio and schedulingpolicy for the main thread
    if (pthread_setschedparam(pthread_self(), SCHED_RR, &param) != 0) {
