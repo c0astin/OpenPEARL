@@ -37,7 +37,6 @@
 \brief tasking functionality interface towards the compiler
 
 */
-
 #include "Dation.h"
 
 namespace pearlrt {
@@ -211,7 +210,12 @@ namespace pearlrt {
       void testScheduleCondition(int condition, Duration during, Duration all);
    private:
       static CSema mutexTasks;
+
    protected:
+      /** Semaphor for completion message of activate
+          (inits by default to 0)   */
+      CSema activateDone;
+
       /** scheduled structure for activate and continue
 
       this struct contains all data which are required for a timed
@@ -891,6 +895,7 @@ public:
              exception.
       */
       virtual void setPearlPrio(const Fixed<15>& prio) = 0;
+
    };
 
 

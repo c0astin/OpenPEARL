@@ -332,6 +332,7 @@ namespace pearlrt {
             throw;
          }
 
+         activateDone.request();
          TaskMonitor::Instance().incPendingTasks();
          mutexUnlock();
       }
@@ -384,6 +385,7 @@ namespace pearlrt {
             break;
 
          case IO:
+Log::debug("teminateFromOther: %s dation->terminate",name);
             blockParams.why.u.io.dation->terminate(this);
             break;
 
@@ -449,7 +451,7 @@ namespace pearlrt {
    }
 
    void TaskCommon::terminate(TaskCommon * me) {
-      Log::debug("task %s: terminate %s request: received (taskState=%d)",
+      Log::debug("%s: terminate request: received for task %s (with taskState=%d)",
                  me->getName(), name, taskState);
       mutexLock();
 
@@ -943,7 +945,7 @@ namespace pearlrt {
       if (taskState == Task::TERMINATED) {
          Log::debug("%s: scheduled activate: starts", name);
          directActivate(schedActivateData.prio);
-//         activateDone.request();
+         activateDone.request();
       } else {
          if (schedActivateOverrun) {
             // warn that this activation is skipped
@@ -1023,6 +1025,7 @@ namespace pearlrt {
          if (taskState == Task::TERMINATED) {
             Log::debug("%s: scheduled activate (when): starts", name);
             directActivate(schedActivateData.prio);
+            activateDone.request();
          } else {
             if (schedActivateOverrun) {
                // warn that this activation is skipped
