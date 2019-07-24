@@ -34,6 +34,7 @@
 #include "Log.h"
 #include "Signals.h"
 #include "Fixed.h"
+#include "Task.h"
 #include <iostream>
 
 #include "bosch/bme280.h"
@@ -55,7 +56,9 @@ static int8_t user_i2c_read(void * provider, uint8_t id, uint8_t reg_addr, uint8
 
 static void user_delay_ms(uint32_t period)
 {
-  usleep(period*1000);
+  if ( Task::delayUs(period*1000) ) {
+      printf("interrupted in delayUs\n");
+  }
 }
 
 static int8_t user_i2c_write(void* provider, uint8_t id, uint8_t reg_addr, uint8_t *data, uint16_t len)
@@ -132,7 +135,7 @@ printf("fake dev %d bytes\n", sizeof(dev));
 
    BME280* BME280::dationOpen(const char * idf, int params) {
       int8_t rslt = BME280_OK;
-  uint8_t settings_sel;
+
       struct bme280_dev *bme = (struct bme280_dev*)&dev;
 
       if (idf) {
