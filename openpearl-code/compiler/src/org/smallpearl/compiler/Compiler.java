@@ -52,6 +52,7 @@ public class Compiler {
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();
+    static String m_sourceFilename = "";
     static boolean printAST = false;
     static String psFile = null;
     static String outputFilename = null;
@@ -104,13 +105,15 @@ public class Compiler {
             OpenPearlLexer lexer = null;
             AST ast = new AST();
 
-            logger.setLogFilename(getBaseName(inputFiles.get(i)) + ".log");
+            m_sourceFilename = inputFiles.get(i);
+
+            logger.setLogFilename(getBaseName(m_sourceFilename) + ".log");
             Log.info("OpenPEARL compiler version " + version);
-            Log.info("Start compiling of:" + inputFiles.get(i));
+            Log.info("Start compiling of:" + m_sourceFilename);
             Log.debug("Performing syntax check");
 
             try {
-                lexer = new OpenPearlLexer(new ANTLRFileStream(inputFiles.get(i)));
+                lexer = new OpenPearlLexer(new ANTLRFileStream(m_sourceFilename));
             }
             catch(IOException ex) {
                 System.out.println("Error:" + ex.getMessage());
@@ -193,7 +196,11 @@ public class Compiler {
             }
             catch(Exception ex) {
                 System.err.println(ex.getMessage());
-                System.err.println("Compilation aborted.");
+
+
+                if ( verbose > 0 ) {
+                    System.err.println("Compilation aborted.");
+                }
 
                 if (dumpSymbolTable) {
                     symbolTableVisitor.symbolTable.dump();
@@ -469,4 +476,11 @@ public class Compiler {
 
         return basename;
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static String getSourceFilename() {
+        return m_sourceFilename;
+    }
+
 }

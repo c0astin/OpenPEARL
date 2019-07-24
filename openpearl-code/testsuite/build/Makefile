@@ -20,7 +20,6 @@ DONOTBUILD= 030_signals 031_signalsInduce  \
 	110_sizeof \
 	151_array_procParam \
 	224_bit_slice \
-	350_conversions \
 	701_dation_pg \
 	706_convert \
 	707_dation_pg_formats \

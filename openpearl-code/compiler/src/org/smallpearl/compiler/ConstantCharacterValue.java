@@ -29,6 +29,10 @@
 
 package org.smallpearl.compiler;
 
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
+
+import java.io.UnsupportedEncodingException;
+
 public class ConstantCharacterValue  extends ConstantValue {
     private String m_value;
     private String m_uuid;
@@ -46,7 +50,14 @@ public class ConstantCharacterValue  extends ConstantValue {
         m_uuid = CommonUtils.getUUIDString();
     }
 
-    public int getLength() { return m_value.length(); }
+    public int getLength() {
+        try{
+            byte[] ptext = m_value.getBytes("UTF-8");
+            return ptext.length;
+        }catch(UnsupportedEncodingException ex){
+            throw new InternalCompilerErrorException("Unsupported character encoding.");
+        }
+    }
 
     public String getValue() {
         return m_value;

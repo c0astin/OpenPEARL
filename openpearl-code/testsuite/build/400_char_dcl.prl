@@ -1,6 +1,7 @@
 MODULE(char_dcl);
 
 PROBLEM;
+
 DCL c CHAR;
 DCL x4a CHARACTER(4);
 DCL x4 CHAR(4);
@@ -22,6 +23,8 @@ DCL control4 CHAR(14) INIT('A '\ 1B \' BC'); ! should produce "A \033 BC"
 DCL control6 CHAR(14) INIT('A '\ 1B
                   12 \' BC'); ! should produce "A \033\022 BC"
 DCL x8 CHAR(8);
+
+
 
 /*
 should compile into:
