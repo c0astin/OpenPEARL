@@ -1,18 +1,5 @@
 MODULE(empty);
 
-PROBLEM;
-
-iso646: PROC;
-    DCL c_00 CHAR INIT(''\00\''); ! NUL
-    DCL c_01 CHAR INIT(''\01\''); ! SOH
-    DCL c_02 CHAR INIT(''\02\''); ! STX
-END;
-
-T1: TASK MAIN;
-    DCL iso646 CHAR(32767) INIT('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ß`^°!"§$%&/()=?`{[]}~*+.;,<>#_-');
-
-
-END;
 
 MODEND;
 
