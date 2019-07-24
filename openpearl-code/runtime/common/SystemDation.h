@@ -146,6 +146,10 @@ namespace pearlrt {
       This implementation must be overwritten for devices which block
       during io. This will platform dependent.
 
+      The default implementation is that the termination happens at the next
+      synchronisation point (end-of-record, end of i/o statement)
+
+
       \param ioPerformingTask  pointer to the task, which performs the
              io statement
       */
@@ -158,8 +162,11 @@ namespace pearlrt {
       become TERMINATEd while doing an i/o-operation
       This is the default implementation for devices which do non blocking
       i/o. 
-      This implementation must be overwritten for devices which block
+      This implementation should be overwritten for devices which blocks
       during io. This will platform dependent.
+    
+      The default implementation is that the termination happens at the next
+      synchronisation point (end-of-record, end of i/o statement)
 
 
       \param ioPerformingTask  pointer to the task, which performs the

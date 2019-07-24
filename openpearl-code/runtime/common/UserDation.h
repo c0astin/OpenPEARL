@@ -319,7 +319,27 @@ namespace pearlrt {
       virtual void endSequenceHook(void) = 0;
 
    public:
+      /**
+      suspend i/o operation
+
+      the given task shall suspend all i/o operation until it 
+      becomes continued or terminated
+
+      The userdation must delegate this to the corresponding system dation
+
+      \param ioPerformingTask pointer to the task which becomes suspended
+      */
       void suspend(TaskCommon * ioPerformingTask);
+
+      /**
+      terminate task during an i/o operation
+
+      the given task shall stop all i/o operation end terminate
+
+      The userdation must delegate this to the corresponding system dation
+
+      \param ioPerformingTask pointer to the task which becomes terminated
+      */
       void terminate(TaskCommon * ioPerformingTask);
    };
 }
