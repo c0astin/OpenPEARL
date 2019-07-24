@@ -13,8 +13,7 @@ DCL control12 CHAR(14) INIT('A '\1B
 DCL control CHAR(4) INIT(''\ 1B
 \'ABC'); ! should produce "\033ABC"
 
-! the next line produces an c++ error message
-!DCL charWithDoubleQuote CHAR(10) INIT('abc"de');
+DCL charWithDoubleQuote CHAR(10) INIT('abc"de');
 
 ! the next lines do not compile
 DCL control2 CHAR(14) INIT('A '\1B 01\' BC'); ! should produce "A \033\001 BC"
