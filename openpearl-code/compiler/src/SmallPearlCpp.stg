@@ -1362,7 +1362,7 @@ BITSTOFIXED(operand) ::= <%
 %>
 
 CHARACTERSTOFIXED(operand) ::= <%
-<operand>.toFixed()
+(<operand>).toFixed()
 %>
 
 FIXEDTOCHARACTER(operand) ::= <%
