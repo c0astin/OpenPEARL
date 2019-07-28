@@ -101,6 +101,11 @@ install: gen javac prl_cc.inc
 #	cp prl_c $(INSTALL_DIR)
 #	cp smallpearl_compiler.jar $(INSTALL_DIR)
 	cp $(OUTPUT_DIR)/smallpearl_compiler.jar $(CONFIG_INSTALL_Target)/bin
+	@echo 
+	@echo '========================================='
+	@echo '==             SUCCESS                 =='
+	@echo '========================================='
+	@echo 
 
 .PHONY: prl_cc.inc
 prl_cc.inc:

@@ -29,7 +29,6 @@
 
 package org.smallpearl.compiler;
 
-
 import java.util.ArrayList;
 
 public class TypeArray extends TypeDefinition {
@@ -86,7 +85,7 @@ public class TypeArray extends TypeDefinition {
     }
 
     public String toString() {
-        return this.getName() + " " + this.m_baseType + " " + this.m_dimensions;
+        return this.getName() + " " + this.m_dimensions + " " + this.m_baseType;
     }
 
     @Override

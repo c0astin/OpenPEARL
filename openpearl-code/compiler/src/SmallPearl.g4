@@ -666,14 +666,13 @@ listOfFormalParameters :
    ;
 
 ////////////////////////////////////////////////////////////////////////////////
-// TODO: FormalParameter ::=
+// FormalParameter ::=
 //   Identifier or IdentifierList [ VirtualDimensionList ] [ AssignmentProtection ] ParameterType [ IDENTICAL | IDENT ]
 ////////////////////////////////////////////////////////////////////////////////
 
 formalParameter :
-    ( ID | '(' ID ( ',' ID)* ')' ) assignmentProtection? parameterType passIdentical?
+    ( ID | '(' ID ( ',' ID)* ')' ) virtualDimensionList2?  assignmentProtection? parameterType passIdentical?
     ;
-
 
 assignmentProtection :
     'INV'
@@ -684,8 +683,11 @@ passIdentical:
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-// TODO: VirtualDimensionList ::= ([,... ])
+// VirtualDimensionList ::= ([,... ])
 ////////////////////////////////////////////////////////////////////////////////
+virtualDimensionList2:
+    '(' (',')* ')'
+    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO: ParameterType ::=
@@ -2076,7 +2078,7 @@ numericLiteralNegative
 ////////////////////////////////////////////////////////////////////////////////
 
 name
-    : ID ( '(' index ( ',' index )? ')' )? ( '.' ID )?
+    : ID ( '(' index ( ',' index )? ')' )? ( '.' name )?
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
