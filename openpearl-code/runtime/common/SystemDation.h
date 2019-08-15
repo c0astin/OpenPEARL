@@ -153,7 +153,7 @@ namespace pearlrt {
       \param ioPerformingTask  pointer to the task, which performs the
              io statement
       */
-      void suspend(TaskCommon * ioPerformingTask);
+      virtual void suspend(TaskCommon * ioPerformingTask);
 
       /**
       terminate in an i/o operation

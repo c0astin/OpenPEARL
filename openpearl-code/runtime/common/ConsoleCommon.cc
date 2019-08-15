@@ -28,6 +28,8 @@
 */
 
 #include "ConsoleCommon.h"
+#include "TaskMonitor.h"
+#include "TaskList.h"
 
 namespace pearlrt {
 
@@ -44,6 +46,9 @@ namespace pearlrt {
 #define NL '\n'
 #define BEL '\a'  // alarm code
 #define SPACE ' '
+
+  static bool treat_command(char * line) ;
+   static char* task_state(enum Task::TaskState t);
 
    ConsoleCommon::ConsoleCommon() {
       insertMode = false;
@@ -101,7 +106,6 @@ namespace pearlrt {
          cursor = 0;       // no cursor position code detected
          ch = getChar();   // wait passive until character is received
          inputStarted = true;
-
          // test for combined character
          if (ch == ESC) {
             ch = getChar();
@@ -267,10 +271,14 @@ namespace pearlrt {
 
       }
 
+      // input line ready
+      //   preset return values with complete line
+      //   this may be truncates if a taskname was detected
       *length = nbrEnteredCharacters;
+      *inputBuffer = inputLine;
       inputStarted = false;
 
-      // check if line starts with new task name
+      // check if line starts with (new) task name
       if (inputLine[0] == ':') {
          // let's search the next colon
          for (i = 1; i < nbrEnteredCharacters; i++) {
@@ -288,25 +296,17 @@ namespace pearlrt {
                   // removal operation
                   for (t = waitingForInput;
                         t != NULL; t = t->getNext()) {
+printf("search target task %s\n", t->getName());
                      // ignore leading underscore in task name
                      if (strcmp(t->getName()+1, inputLine + 1) == 0) {
                         // found adressed task
-
-                        // remove this task from wait queue
-                        if (previousTaskInList) {
-                           previousTaskInList->setNext(t->getNext());
-                           t->setNext(NULL);
-                        } else {
-                           waitingForInput = t->getNext();
-                        }
+printf("search target (%s), (%s)\n", t->getName()+1, inputLine+1);
 
                         // and set the return parameters
                         *inputBuffer = inputLine + i + 1;
                         lastTaskEntered = t;
-                        return lastTaskEntered;
+                        break;
                      }
-
-                     previousTaskInList = t;
                   }
 
                   if (t == NULL) {
@@ -315,7 +315,11 @@ namespace pearlrt {
                      // return the complete input line
                      *length = nbrEnteredCharacters;
                      inputLine[i] = ':'; //restore 2nd colon
-                     *inputBuffer = inputLine;
+//                     *inputBuffer = inputLine;
+ //                    *length = nbrEnteredCharacters;
+                     startNextWriter();
+printf("@2\n");
+                     // discard this input line for further processing
                      return NULL;
                   }
                }
@@ -324,36 +328,51 @@ namespace pearlrt {
 
          // no 2nd task name delimiter found
          // will be treated as if no colon is at the first position
+      } else if (inputLine[0] == '/') {
+          if (treat_command(inputLine)) {
+             startNextWriter();
+             // nothing to do -- command was treated
+             return 0;
+          }
       }
 
-      *inputBuffer = inputLine;
-      *length = nbrEnteredCharacters;
 
+printf("lastTaskEntered = %p\n", lastTaskEntered);
+printf("... %s\n", lastTaskEntered->getName());
       // remove this task from wait queue
-      if (lastTaskEntered) {
-         if (previousTaskInList) {
-            previousTaskInList->setNext(lastTaskEntered->getNext());
-            lastTaskEntered->setNext(NULL);
-         } else {
-            waitingForInput = lastTaskEntered->getNext();
+      previousTaskInList = NULL;
+      for (t = waitingForInput; t != NULL; t = t->getNext()) {
+printf("remove target task %s\n", t->getName());
+         if (lastTaskEntered == t) {
+            if (previousTaskInList) {
+               previousTaskInList->setNext(lastTaskEntered->getNext());
+               t->setNext(NULL);
+            } else {
+               waitingForInput = lastTaskEntered->getNext();
+            }
+            break;
          }
-      } else {
-         putString("\n:???: no default task\n");
       }
 
+      startNextWriter();  
       return lastTaskEntered;
    }
 
+   void ConsoleCommon::startNextWriter() {
+      TaskCommon * nextWriter = waitingForOutput.getHead();
+      if (nextWriter) {
+          waitingForOutput.remove(nextWriter);
+          nextWriter->unblock();
+      }
+   }
 
    void ConsoleCommon::registerWaitingTask(void * task, int direction) {
       TaskCommon * t = (TaskCommon*) task;
-
+//printf("ConsoleCommon: registerWaiting: %p dir=%d\n", task, direction);
       if (direction == Dation::IN) {
          t->setNext(waitingForInput);
          waitingForInput = t;
-      }
-
-      if (direction == Dation::OUT) {
+      } else if (direction == Dation::OUT) {
          if (inputStarted || waitingForOutput.getHead()) {
             // queue not empty --> add task as waiter
             waitingForOutput.insert(t);
@@ -361,7 +380,113 @@ namespace pearlrt {
             // let the task do its output
             t->unblock();
          }
+      } else {
+          Log::error("ConsoleCommon::registerWaitung: illegal direction=%d",
+          direction);
+         throw theInternalDationSignal;
       }
    }
+  
+   void ConsoleCommon::suspend(TaskCommon * ioPerformingTask) {
+      printf("ConsoleCommon::suspend called\n");
+      terminate(ioPerformingTask);
+   }
+
+   bool ConsoleCommon::removeFromInputList(TaskCommon* taskToRemove) {
+       TaskCommon * previousTaskInList = NULL;
+       TaskCommon * t;
+
+       for (t = waitingForInput; t != NULL; t = t->getNext()) {
+          if ( t == taskToRemove) {
+              // remove this task from wait queue
+              if (previousTaskInList) {
+                 previousTaskInList->setNext(t->getNext());
+                 t->setNext(NULL);
+             } else {
+                 waitingForInput = t->getNext();
+             }
+             return true;
+          }
+          previousTaskInList = t; 
+      }
+      return false;
+   }
+
+   bool ConsoleCommon::removeFromOutputList(TaskCommon* taskToRemove) {
+      TaskCommon * next = waitingForOutput.getHead();
+      while (next) {
+          if (next == taskToRemove) {
+               waitingForOutput.remove(next);
+               return true;
+          }
+          next=waitingForOutput.getNext(next);
+      }
+      return false;
+   }
+
+
+   void ConsoleCommon::terminate(TaskCommon * ioPerformingTask) {
+      // let's check wether the task is doing input or output
+      if (removeFromInputList(ioPerformingTask)) {
+printf("removed %s from input list\n", ioPerformingTask->getName());
+      for (TaskCommon * t=waitingForInput; t != NULL; t=t->getNext()) {
+       printf("still waiting: %s\n", t->getName());
+     }
+      } else if (removeFromOutputList(ioPerformingTask)) {
+printf("removed %s from output list\n", ioPerformingTask->getName());
+      } else {
+         Log::error("ConsoleCommon: task %s was nether in input nor in output list", ioPerformingTask->getName());
+         throw theInternalTaskSignal;
+      }
+   }
+
+  static bool treat_command(char * line) {
+      Task * t;
+      int j, n;
+      char line1[80], line2[80], line3[80], line4[80];
+      char* detailedState[] = {line1, line2, line3, line4};
+
+      if (strcasecmp(line, "/PRLI\n") == 0) {
+         printf("Number of pending tasks: %d\n",
+                TaskMonitor::Instance().getPendingTasks());
+
+         for (int i = 0; i < TaskList::Instance().size();  i++) {
+            t = TaskList::Instance().getTaskByIndex(i);
+            printf("%-10.10s  %3d  %2d  %-20.20s (%s:%d)\n", t->getName(),
+                   (t->getPrio()).x,
+                   t->getIsMain(),
+                   task_state(t->getTaskState()),
+                   t->getLocationFile(), t->getLocationLine());
+            n = t->detailedTaskState(detailedState);
+
+            for (j = 0; j < n ; j++) {
+               printf("\t%s\n", detailedState[j]);
+            }
+         }
+         return true;
+      }
+      return false;
+   }
+   static char* task_state(enum Task::TaskState t) {
+      switch (t) {
+      case Task::TERMINATED:
+         return ((char*)"TERMINATED");
+
+      case Task::SUSPENDED:
+         return ((char*)"SUSPENDED");
+
+      case Task::RUNNING:
+         return ((char*)"RUNNING");
+
+      case Task::BLOCKED:
+         return ((char*)"SEMA/BOLT/IO_BLOCKED");
+
+      case Task::SUSPENDED_BLOCKED:
+         return ((char*)"SEMA/BOLT/IO_SUSP_BLOCKED");
+
+      default:
+         return ((char*)"unknown state");
+      }
+   };
 
 }

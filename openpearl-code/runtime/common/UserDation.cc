@@ -72,7 +72,7 @@ namespace pearlrt {
 
    void UserDation::restart(TaskCommon * me,
                                   Dation::DationParams direction) {
-       // to be called from when the task was suspended while beeing
+       // to be called from when the task was suspended while being
        // registered in the wait queue
        // test if the device is free --> start i/o processing
        // else add to the wait queue
@@ -83,17 +83,22 @@ namespace pearlrt {
      // for testing purpose it is possible to use
      // without a task object
       if (me) {
-
-         if (isBusy) {
-             // user dation is busy --> add current task to wait queue
-             // and wait for end of the i/o operation
-             waitQueue.insert(me);
-          
-             Log::info("%s: added to wait queue and waits...", me->getName());
+         if (systemDation->allowMultipleIORequests()) {
+            // register current task in system dation
+            systemDation->registerWaitingTask(me, direction);
+            Log::debug("%s: added to wait queue", me->getName());
          } else {
-            me->enterIO(this);
-            isBusy = true;
-            me->unblock();
+            if (isBusy) {
+                // user dation is busy --> add current task to wait queue
+                // and wait for end of the i/o operation
+                waitQueue.insert(me);
+             
+                Log::debug("%s: added to wait queue", me->getName());
+            } else {
+               me->enterIO(this);
+               isBusy = true;
+               me->unblock();
+            }
          }
       }
    }
@@ -120,28 +125,29 @@ namespace pearlrt {
          // more than one task is affected
          // lock the global task lock, and treat async requests 
          // if pending, after the lock is gained
-         //TaskCommon::mutexLock();
+         TaskCommon::mutexLock();
 
          rstVoidPointer = NULL;
+         currentDirection = direction;
 
          me->enterIO(this);
 
          if (systemDation->allowMultipleIORequests()) {
             // register current task in system dation
-            //TaskCommon::mutexLock(); // we need access to the global task lock
             systemDation->registerWaitingTask(me, direction);
             bd.reason = IO_MULTIPLE_IO;
             bd.u.io.dation = this;
+            bd.u.io.direction = direction;
             blockThread = true;
          } else if (isBusy) {
               // user dation is busy --> add current task to wait queue
                // and wait for end of the i/o operation
                waitQueue.insert(me);
                bd.reason = IOWAITQUEUE;
-               bd.u.ioWaitQueue.dation = this;
-               bd.u.ioWaitQueue.direction = direction;
+               bd.u.io.dation = this;
+               bd.u.io.direction = direction;
           
-               Log::info("%s: added to wait queue and waits...", me->getName());
+               Log::debug("%s: added to wait queue and waits...", me->getName());
                blockThread = true;
          } else {
             isBusy = true;
@@ -152,57 +158,52 @@ namespace pearlrt {
          if (blockThread) {
             // aquired task block sema, since unblock expects this
             mutexUserDation.unlock();
-            TaskCommon::mutexLock(); // we need access to the global task lock
             me->block(&bd);    // block releases the global task lock
             mutexUserDation.lock();
-
+            TaskCommon::mutexLock(); // we need access to the global task lock
          }
 
+
+         beginSequenceHook(me);       // deal with TFU stuff
+
+         mutexUserDation.unlock();
+         TaskCommon::mutexUnlock(); // we need no longer access to task data
+         me->scheduleCallback();
       }
-
-      currentDirection = direction;
-      //rstValue = NULL;
-      rstVoidPointer = NULL;
-
-      // if multiple IO-requests are allowed, the beginSequenceHook
-      // must deal with the task blocking
-      beginSequenceHook(me);
-      //TaskCommon::mutexUnlock();
-      mutexUserDation.unlock();
    }
 
    void UserDation::endSequence(TaskCommon * me) {
       TaskCommon* pendingTask;
 
-      // gain global task lock, since the task state of at least one
-      // task changes
-      //TaskCommon::mutexLock();
       mutexUserDation.lock();
 
-      endSequenceHook();
+      endSequenceHook();   // deal with TFU stuff
 
+      // for testing purpose it it possible to use
+      // without a task object
       if (me) {
-         // for testing purpose it it possible to use
-         // without a task object
+         // gain global task lock, since the task state of at least one
+         // task changes
+         TaskCommon::mutexLock();
+
          me->leaveIO();
      
 
          // check whether another task waits for this user dation
-         Log::info("%s: check wait queue", me->getName());
+         Log::debug("%s: check wait queue", me->getName());
          pendingTask = waitQueue.getHead();
          if (pendingTask == NULL) {
-            Log::info("nobody waits --> done");
+            Log::debug("nobody waits --> done");
             isBusy = false;
          } else {
-            Log::info("%s waits --> goon", pendingTask->getName());
+            Log::debug("%s waits --> goon", pendingTask->getName());
             waitQueue.remove(pendingTask);
             //currentTask = pendingTask;
             pendingTask->unblock();
-         } 
-      }
-      //TaskCommon::mutexUnlock();
-      mutexUserDation.unlock();
-      if (me) {
+         }
+ 
+         TaskCommon::mutexUnlock();
+         mutexUserDation.unlock();
          me->scheduleCallback();
       }
    }
@@ -224,8 +225,11 @@ namespace pearlrt {
    }
 
    void UserDation::terminate(TaskCommon * ioPerformingTask) {
-printf("Userdation: delegate to %p\n" , systemDation);
       systemDation->terminate(ioPerformingTask);
+   }
+
+   Dation::DationParams UserDation::getCurrentDirection() {
+      return currentDirection;
    }
 
 }

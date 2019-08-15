@@ -80,6 +80,7 @@ CXX_COMMON = \
 	SoftInt.cc \
 	Control.cc \
 	ConsoleCommon.cc \
+	FullDuplexDationAbortNB.cc\
 	SampleBasicDation.cc 
 
 ifeq ($(CONFIG_HAS_I2C),y)

@@ -60,7 +60,9 @@ namespace pearlrt {
       void putString(const char* string);
       void goLeft(int n);
       void goRight(int n);
-
+      void startNextWriter();
+      bool removeFromInputList(TaskCommon * t);
+      bool removeFromOutputList(TaskCommon * t);
    public:
       /**
       ctor: initialize private data and memorize the in and out-dations
@@ -101,6 +103,10 @@ namespace pearlrt {
        \param direction is ether Dation::IN or Dation::OUT
        */
       void registerWaitingTask(void * task, int direction);
+
+      void terminate(TaskCommon * ioPerformingTask);
+      void suspend(TaskCommon * ioPerformingTask);
+
    };
 }
 #endif

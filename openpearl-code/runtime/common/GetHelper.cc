@@ -424,7 +424,7 @@ endSampling:
          }
       } catch (TerminateRequestSignal s) {
          throw;
-      }
+      } 
 
       if ((delimiter & DoubleSpace) && retVal == ' ') {
          try {

@@ -95,9 +95,9 @@ namespace pearlrt {
 //      TaskCommon* currentTask;
 
       /** current transfer direction.
-          This is eather Dation::IN or Dation::OUT
+          This is either Dation::IN or Dation::OUT
       */
-      int currentDirection;
+      DationParams currentDirection;
 
       /** the system dation which performs the io processing
       */
@@ -341,6 +341,13 @@ namespace pearlrt {
       \param ioPerformingTask pointer to the task which becomes terminated
       */
       void terminate(TaskCommon * ioPerformingTask);
+
+      /** obtain the current i/0 directiontransfer direction.
+
+          \return the current transfer direction.
+          This is either Dation::IN or Dation::OUT
+      */
+      DationParams getCurrentDirection();
    };
 }
 #endif
