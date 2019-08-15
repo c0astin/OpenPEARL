@@ -1,4 +1,6 @@
 include $(OPENPEARL_DIR)/runtime/FreeRTOS/PEARL/Files
+TMPVAR := $(PEARL_FREERTOS_SRC)
+PEARL_FREERTOS_SRC = $(filter-out GenericUart.cc, $(TMPVAR))
 
 COMPONENT_OBJS := \
 	$(addsuffix .o,$(basename $(addprefix PEARL/,$(PEARL_FREERTOS_SRC))))
@@ -26,7 +28,7 @@ COMPONENT_OBJS += \
 COMPONENT_OBJS += addOns/testStackOverflow.o
 #endif
 
- $(warning $(COMPONENT_OBJS))
+$(warning $(COMPONENT_OBJS))
 
 COMPONENT_SRCDIRS := . addOns PEARL
 COMPONENT_ADD_LDFLAGS += -Wl,--undefined=uxTopUsedPriority

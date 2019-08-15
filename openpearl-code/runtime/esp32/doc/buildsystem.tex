@@ -4,7 +4,7 @@ The ESP32 is provided and supported by Espressif (www.espressif.com).
 An IoT debelopment Framework (IDF) and a c/c++ buildsystem are provided. 
 
 The IDF is structured in socalled {\em components}. An IDF-Project contains
-the project specific files which are conbined by the framework with the 
+the project specific files which are combined by the framework with the 
 framework components. The build of an ESP-IDF application is done 
 {\em out of place} --- in the build folder of the application folder.
 
@@ -15,7 +15,7 @@ For the usage of the ESP-IDF by OpenPEARL, the files of the IDF should NOT
 become compiled for each PEARL application build.
 
 \subsection{Integration of the ESP-IDF with the OpenPEARL-Repostory}
-The ESP-IDF is extended in high speed. Thus we do not copy a specific
+The ESP-IDF is extended in high rate. Thus we do not copy a specific
 version of the ESP-IDF in our repository.
 
 The OpenPEARL build system is based on \verb|make|. The build is done 
@@ -67,5 +67,30 @@ If a new release of ESP-IDF should be used, several checks must be done:
 \item check changes in the ESP-IDF \verb|FreeRTOSConfig.h|
 \item update the xtensa compiler to the new version
 \item the FreeRTOS implementation of tasks.c and tasks.h was extended by one
-  funktion. This must be added by includinf taskAddOns.c.inc and taskAddOns.h
+  funktion. This must be added by include in taskAddOns.c.inc and taskAddOns.h
 \end{itemize}
+
+\section{Open Issues}
+\subsection{Core Usage}
+Currently only one core is used.
+In future, the second core should be used also.
+The automatic restart of an application task assumes that only one processor core ist 
+available.
+There are two possibilities to overcome this obstancle:
+\begin{enumerate}
+\item enshure that all application tasks are on the same core and use the othr core for i/o-tasks
+\item add a patch to FreeRTOS to restart an overrun task automatically at its termination.
+\end{enumerate}
+
+\subsection{Suspend and Terminate during i/o Operation}
+
+\subsection{Add Device Drivers}
+\begin{enumerate}
+\item Uart
+\item Console
+\item I2C
+\item Ethernet
+\item ...
+\end{enumerate}
+
+

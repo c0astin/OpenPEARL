@@ -3,7 +3,7 @@
 A task implementation is very specific for each platform.
 
 The language report indicates the task state diagram from 
-fig. \ref{taskStatesPEARL90}. There is not difference made between {\em running} and {\em runable}. The switching between these two states is done by the
+fig. \ref{taskStatesPEARL90}. There is no difference made between {\em running} and {\em runable}. The switching between these two states is done by the
 operating system automatically --- not visible to the PEARL application.
 
 \begin{figure}[bpht]
@@ -21,7 +21,7 @@ This behavior is reasonable and may be applied for termination and
 suspending a task. 
 
 OpenPEARL uses an implementation which is more close to the language report.
-All tasking statements which are executed be the task itself are executed 
+All tasking statements which are executed by the task itself are executed 
 obviously synchronously.
 Tasking statements concerning other tasks are a little 
 bit more difficult, because the runtime system uses internally semaphore
@@ -31,7 +31,9 @@ During such a critical region,
 no task termination must occur. So the  {\em remote suspend request} and 
 {\em remote termination request} just set a flag and wait for the fulfilling
  of the 
-tasking statement from the adressed task. Each task has synchronisation points,
+tasking statement from the adressed task. The priority of the 
+task to be suspended or terminated is set to the best priority in the system.
+Each task has synchronisation points,
 which are
 \begin{itemize}
 \item  after each source statement and
@@ -43,7 +45,9 @@ methods in the task implementation to SUSPEND and TERMIATE a task while
 performing i/o operations.
 For the list of specialized tasking methods please refer the
 {\em pure virtual} methods of \verb|TaskCommon| in the Doxygen
-part of the documentation.
+part of the documentation. The implementation on linux systems is described 
+in section \ref{linux_suspend,linux_terminate} and for FreeRTOS based systems 
+in section \ref{freertos_tasking}.
 
 During i/o-operation it is a little bit more complicated. OpenPEARL
 recommends like stated in the language report that suspend and terminate
@@ -80,7 +84,7 @@ is ether:
 \item[IO], which means that the task is currently doing an i/o-operation
    on an user dation
 \item[IOWaitQueue], which means that the task is waiting in a priority based
-   queue to start ist i/o-operation
+   queue to start it's i/o-operation
 \end{description}
 
 Several classes support the tasking operations:
@@ -102,6 +106,17 @@ Several classes support the tasking operations:
     rerequest the mutex in the target specific job --- e.g. suspend,
     which has to block the task until it is continued by another task
     or a scheduded continue.
+
+   Scheduled operations are possible in combination of ACTIVATE, 
+   CONTINUE and RESUME.
+   The schedule (like AT, ALL, AFTER, WHEN,..) is passed to the 
+   tasks methods. The way of treatment (by timers, specific timer threads, ... )
+   is decided by the platform code.
+
+   For details about the API of the provided methods, please check the doxygen 
+   version of the documentation.
+   Please run  the command \verb|make doc| in the base dirtectory of the
+   desired platform.
 
 \item[class TaskList] provides a list of all defined PEARL tasks
 \item[class TaskMonitor] keeps track of all scheduled and active tasks and
@@ -194,191 +209,6 @@ If the concrete target system (like linux) does not support 255
  application priorities, the method \verb|fromPearl()| must throw
 an exception.
 
-\section{Tasking Methods (class TaskCommon)}
-For task objects there are methods defined to do the tasking actions like
-ACTIVATE, TERMINATE, SUSPEND, CONTINUE , RESUME and PREVENT.
-
-Scheduled operations are possible in combination of ACTIVATE, 
-CONTINUE and RESUME.
-The schedule (like AT, ALL, AFTER, WHEN,..) is passed to the 
-tasks methods. The way of treatment (by timers, specific timer threads, ... )
-is decided by the platform code.
-
-For details about the API of the provided methods, please check the doxygen 
-version of the documentation.
-Please run  the command \verb|make doc| in the base dirtectory of the
-desired platform.
-
-\if0
-The parameter {\em condition} of the methods for ACTIVATE, CONTINUE and RESUME
-codes bit by bit, which additional parameters are really used.
-The enumeration {\em TaskScheduling} defines the constants:
-Only marked parameters are treated by the runtime system.
-Illegal combinations are rejected by an exception.
-\begin{CppCode}
-      enum TaskScheduling {
-         AT = 1, AFTER = 2, WHEN = 4, ALL = 8,
-         DURING = 16, UNTIL = 32, PRIO = 64
-      };
-\end{CppCode}
-
-The API of tasks is defined in {\em TaskCommon}.
-
-The default parameters enshure proper values, in case the compiler omits 
-parameters, which are not required for the current runtime system call.
-Omitting parameters has no effect on the execution speed.
-The default parameters are useful when using the runtime system
-directly from C++ for e.g. testing purpose.
-
-\subsection{Task Activation}
-The task activation may be done immediatelly or scheduled. 
-In case of immediate activation the task must be in {\em terminated} state or
-a signal is induced.
-In case of scheduled activation - only the last scheduled activation job is
-valid. If the task is not terminated when the schedule condition becomes valid,
-the scheduled operation is ignored this time.
-
-A \verb|WHEN|-condition requires to pass the pointer to the interrupt source
-as last parameter. Due to the up-cast in the interrupt specification, this
-is just the user supplied identifier at this point.
-
-\begin{CppCode}
-void activate(TaskCommon* me,
-              int condition = 0,
-              Prio prio = Prio(),
-              Clock at = Clock(),
-              Duration after = Duration(),
-              Duration all = Duration(),
-              Clock until = Clock(),
-              Duration during = Duration(),
-              Interrupt *when = 0);
-\end{CppCode}
-
-This method delegates the concrete tasks activation to the method
-\verb|directActivate(...)|, which must be provided in the platform specific
-part.
-
-\subsection{Task termination}
-The task termination may be called from the task self, or from another task.
-The task shall terminate immediatelly.
- In case an I/O-operation or running state
-the task termination is delay until a suitable point is reached.
-
-\begin{CppCode}
-virtual void terminate(TaskCommon* me) = 0;
-\end{CppCode}
-
-This method delegates the concrete tasks termination to the methods
-\verb|terminateMySelf(...)| and \verb|terminateFromOtherTask()|,
-which must be provided in the platform specific part.
-
-\subsection{Task Suspending}
-A task may suspend itself or suspend another task.
-The task to be suspended must be in running state. If the task state
-is different, a signal is induced.
-The suspend call shall 
-stop the execution of the task immediatelly with the possiblity to 
-continue later.
-In case an I/O-operation is in progress the task suspending is delayed
-until a suitable point is reached (e.g. end-of-record),. 
-If the task is blocked on e.g. a semaphore it does no longer try to get 
-the semaphore.
- 
-\begin{CppCode}
-void suspend(TaskCommon* me);
-\end{CppCode}
-
-This method delegates the concrete tasks suspend operation to the methods
-\verb|suspendMySelf(...)| and \verb|suspendFromOtherTask()|,
-which must be provided in the platform specific part.
-
-\subsection{Task Continuation}
-A task may be continued if it is running or suspended.
-Since \verb|continue| is a revered key word, the method is named \verb|cont|.
-
-A \verb|WHEN|-condition requires to pass the pointer to the interrupt source
-as last parameter. Due to the up-cast in the interrupt specification, this
-is just the user supplied identifier at this point.
-
-\begin{CppCode}
-void cont(TaskCommon* me,
-          int condition = 0,
-          Prio prio = Prio(),
-          Clock at = Clock(),
-          Duration after = Duration(),
-          Duration all = Duration(),
-          Clock until = Clock(),
-          Duration during = Duration(),
-          Interrupt *when = 0) = 0;
-\end{CppCode}
-
-This method delegates the concrete tasks continuation to the methods
-\verb|continueSuspended(...)| and \verb|continueFromOtherTask()|,
-which must be provided in the platform specific part.
-
-\subsection{Task Delay}
-The execution of a task may be suspended for a while.
-Only one value from {\em at}, {\em after} and {\em when} may be selected
-in the condition field. 
-
-
-\begin{CppCode}
-void resume( int condition = 0,
-             Clock at = Clock(),
-             Duration after = Duration(),
-             Interrupt * when = 0);
-\end{CppCode}
-This method delegates the concrete tasks continuation to the method
-\verb|resume2(...)|,
-which must be provided in the platform specific part.
-
-
-\subsection{Delete Task Schedules}
-To remove scheduled operations for a task the method {\em prevent} is supplied.
-
-\begin{CppCode}
-void prevent(TaskCommon* me);
-\end{CppCode}
-
-\section{Example}
-\begin{PEARLCode}
-T1: TASK PRIO 10;
-   SUSPEND;
-END;
-
-T2: TASK MAIN;
-   AFTER 5 SEC ALL 1 SEC ACTIVATE T1;
-   AFTER 7 SEC RESUME;
-   CONTINUE T1;
-   PREVENT T1;
-   
-END;
-\end{PEARLCode}
-
-\begin{CppCode}
-SPCTASK(T1);
-SPCTASK(T2);
-
-DCLTASK(T1, Prio(Fixed<15>(10)), BitString<1>(0)) {
-  me->suspend(me);
-}
-
-DCLTASK(T2, Prio(255), BitString<1>(1)) {
-  Fixed<31> y;
-
-  T1.activate(me,
-              Task::AFTER | Task::ALL,
-              Prio(),
-              Clock(),
-              Duration(5.0),
-              Duration(1.0) );
-  me->resume(Task::AFTER, Duration(7.0) );
-  T1.cont(me);
-  T1.prevent(me);
-}
-
-\end{CppCode}
-\fi
 
 \section{Error Tracing}
 The error handling of PEARL is done with SIGNALs.
