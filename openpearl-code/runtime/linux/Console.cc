@@ -51,11 +51,12 @@ DCLTASK(stbp, pearlrt::Prio(1), pearlrt::BitString<1>(1)) {
    console = pearlrt::Console::getInstance();
    console->openSubDations();
 
-   while (1) {
+   while (console->keepRunning()) {
       taskEntered = console->treat();
 
       if (taskEntered) {
          TaskCommon::mutexLock();
+printf("Console: %s\n", taskEntered->getName());
          taskEntered->unblock();
          TaskCommon::mutexUnlock();
       }
@@ -89,6 +90,7 @@ namespace pearlrt {
       /* ctor is called before multitasking starts --> no mutex required */
       consoleMutex.name("ConsoleX");
       inUse = false;
+      keepRunningFlag = true;
       cap = FORWARD;
       cap |= PRM;
       cap |= ANY;
@@ -136,15 +138,21 @@ namespace pearlrt {
 
    void Console::dationClose(int closeParams) {
       //(int ret;
-
+printf("Console::close...\n");
+      keepRunningFlag = false;
+      ungetc('\n',stdin); 
       //
       consoleMutex.lock();
+printf("Console:: @1\n");
       inUse = false;
       tcsetattr(0, TCSANOW, &oldTerminalSetting);  // 0=STDIN
 
+printf("Console:: @2\n");
       stdIn.dationClose(0);
+printf("Console:: @3\n");
       stdOut.dationClose(0);
 
+printf("Console:: @4\n");
       if (closeParams & Dation::CAN) {
          Log::error("Console: CAN not supported");
          consoleMutex.unlock();
@@ -152,6 +160,7 @@ namespace pearlrt {
       }
 
       consoleMutex.unlock();
+printf("Console::... done\n");
    }
 
    void Console::dationRead(void * destination, size_t size) {
@@ -197,8 +206,16 @@ namespace pearlrt {
    }
 
    void Console::suspend(TaskCommon * ioPerformingTask) {
-   }
-   void Console::terminate(TaskCommon * ioPerformingTask) {
+      printf("Console::suspend called\n");
+      consoleCommon.suspend(ioPerformingTask);
    }
 
+   void Console::terminate(TaskCommon * ioPerformingTask) {
+      consoleCommon.terminate(ioPerformingTask);
+   }
+
+
+   bool Console::keepRunning() {
+      return keepRunningFlag;
+   }
 }

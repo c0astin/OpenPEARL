@@ -123,7 +123,6 @@ namespace pearlrt {
             if (ret < 1) {
                if (errnoCopy == EINTR) {
                   Task::currentTask()->treatCancelIO();
-//                  Log::debug("StdIn: treatCancelIO finished");
                } else if (feof(fp)) {
                   Log::error("StdIn: error read across EOF");
                   mutex.unlock();
@@ -141,8 +140,8 @@ namespace pearlrt {
          mutex.unlock();
          throw;
       }
-//       Log::debug("StdIn::dationRead normal end size=%d data=%x",
-//          size, *(char*)destination);
+      Log::debug("StdIn::dationRead normal end size=%d data=%x",
+          size, *(char*)destination);
       mutex.unlock();
    }
 

@@ -84,6 +84,7 @@ START: TASK PRIO 10 MAIN;
     CALL suspendSelfContinue;
     CALL semaBlockedSuspendContinue;
     CALL boltBlockedSuspendContinue;
+
     CALL suspendIoBlocked;
 
     CLOSE so;
@@ -93,7 +94,7 @@ END;
 DCL goon BIT(1);
 activateRunning: PROC;
    DCL ok BIT(1) INIT('0'B1);
-   PUT 'avitaveRunning' TO so BY A, SKIP;
+   PUT 'activateRunning' TO so BY A, SKIP;
    goon = '1'B1;
    ACTIVATE T2activateRunning;
    __cpp__(
@@ -327,7 +328,7 @@ END;
 terminateSemaBlocked: PROC ;
    __cpp__("int ts;");
 
-   PUT 'terminateSemaBlocked started -- do 10 slow terminates' TO so BY A, SKIP;
+   PUT 'terminateSemaBlocked started -- do 10 slow (100ms) terminates (100ms)' TO so BY A, SKIP;
 
    FOR i TO 10 REPEAT
       PUT 'Test #',i TO so BY A, F(3), SKIP;
@@ -382,7 +383,7 @@ END;
 
 terminateBoltBlocked :PROC;
    __cpp__("int ts;");
-   PUT 'terminateBoltBlocked started -- do 10 slow terminates' TO so BY A, SKIP;
+   PUT 'terminateBoltBlocked started -- do 10 slow (100ms) terminates' TO so BY A, SKIP;
    ACTIVATE T2BoltBlocker;
    AFTER 0.2 SEC RESUME;
 
@@ -460,7 +461,7 @@ END;
 terminateRunning: PROC;
    __cpp__("int ts;");
    goon = '1'B1;
-   PUT 'terminateRunning started -- do 10 slow terminates' TO so BY A, SKIP;
+   PUT 'terminateRunning started -- do 10 slow (100ms) terminates' TO so BY A, SKIP;
   
    FOR i TO 10 REPEAT 
       PUT 'Test #',i TO so BY A, F(3), SKIP;
@@ -519,7 +520,7 @@ END;
 terminateSuspended: PROC;
   __cpp__("int ts;");
 
-   PUT 'terminateSuspended started -- do 10 slow terminates' TO so BY A, SKIP;
+   PUT 'terminateSuspended started -- do 10 slow (100ms) terminates' TO so BY A, SKIP;
    FOR i TO 10 REPEAT
       PUT 'Test #',i TO so BY A, F(3), SKIP;
 
@@ -571,7 +572,7 @@ END;
 terminateIoBlocked: PROC;
   __cpp__("int ts;");
 
-   PUT 'terminateIoBlocked started -- do 10 slow terminates' TO so BY A, SKIP;
+   PUT 'terminateIoBlocked started -- do 10 slow (3.3s) terminates' TO so BY A, SKIP;
    FOR i TO 10 REPEAT
       PUT 'Test #',i TO so BY A, F(3), SKIP;
 
@@ -604,7 +605,7 @@ END;
 suspendIoBlocked: PROC;
   __cpp__("int ts;");
 
-   PUT 'suspendIoBlocked started -- do 10 suspend continue' TO so BY A, SKIP;
+   PUT 'suspendIoBlocked started -- do 10 suspend continue (1s)' TO so BY A, SKIP;
    ACTIVATE T2IoSuspended;
    FOR i TO 10 REPEAT
       PUT 'Test #',i TO so BY A, F(3), SKIP;

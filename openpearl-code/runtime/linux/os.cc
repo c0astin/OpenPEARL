@@ -545,7 +545,7 @@ int main() {
       char* ret = 0;
 
       if (StdIn::isDefined()) {
-         //sleep all the time. if a timer expire, he will be awaked
+         //sleep all the time. if a timer expire, he will be restarted
          sleep(20);
       } else {
          ret = fgets(line, 70, stdin);

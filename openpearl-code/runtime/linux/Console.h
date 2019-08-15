@@ -43,6 +43,7 @@
 #include "ConsoleCommon.h"
 #include "StdIn.h"
 #include "StdOut.h"
+#include "FullDuplexDationAbortNB.h"
 
 #include <termios.h>
 
@@ -88,6 +89,7 @@ namespace pearlrt {
       */
       int capacity;
 
+      bool keepRunningFlag;
       static Console * instance;
       ConsoleCommon consoleCommon;
       StdIn stdIn;
@@ -243,6 +245,8 @@ namespace pearlrt {
 
       void suspend(TaskCommon * ioPerformingTask);
       void terminate(TaskCommon * ioPerformingTask);
+
+      bool keepRunning();
    };
    /** @} */
 }

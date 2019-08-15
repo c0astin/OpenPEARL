@@ -374,14 +374,6 @@ namespace pearlrt {
       void setThreadPrio(int p);
 
       /**
-        deliver detailed information about this task
-
-        \param lines array of buffers for the information ( type char [3][80] )
-        \returns number of information lines
-      */
-      int detailedTaskState(char * lines[3]);
-
-      /**
       deliver pointer to current task object
 
       This feature is solved via a static  task local data element

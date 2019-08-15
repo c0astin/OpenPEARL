@@ -55,6 +55,8 @@ START: TASK PRIO 10 MAIN;
 END;
 
 ioQueuePrioTest: PROC;
+   PUT 'ioQueuePrioTest' TO so BY A, SKIP;
+__cpp__("pearlrt::Log::info(\"****** ioQueuePrioTest1 \");");
    ACTIVATE ioTask1;
    ACTIVATE ioTask2;
    ACTIVATE ioTask3;
@@ -79,26 +81,26 @@ ioQueuePrioTest: PROC;
    REQUEST done;
    REQUEST done;
    AFTER 0.2 SEC RESUME;  ! wait for other tasks to terminate
+   PUT 'ioQueuePrioTest done' TO so BY A, SKIP;
 END;
 
 ioQueueSuspendTest1: PROC;
+   PUT 'ioQueueSuspendTest1' TO so BY A, SKIP;
 __cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest1 \");");
    ACTIVATE ioTask1;
    ACTIVATE ioTask2;
    ACTIVATE ioTask3;
    AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
    ! with priority scheduling: 
-   !    ioTask1 blocked on input from si
-   !    waitqueue: ioTask3, ioTask2
+   !    ioTask3 blocked on input from si
+   !    waitqueue: ioTask1, ioTask2
    !    after CONTINUE
-   !    waitqueue: ioTask2, ioTask3
+   !    waitqueue: ioTask2, ioTask1
    ! with normal linux scheduling undefined - propably: 
    !    ioTask1 blocked on input from si
    !    waitqueue: ioTask2, ioTask3
    !    after CONTINUE
    !    waitqueue: ioTask2, ioTask3
-   ! expected output: 
-   !  nothing
    CONTINUE ioTask2 PRIO 10;
    SUSPEND ioTask2;
    AFTER 0.1 SEC RESUME;  ! give all task time to reach the io-operation
@@ -119,11 +121,14 @@ __cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest1 \");");
    IF TRY done THEN
       PUT 'failed - at least one task terminated' TO so BY A, SKIP;
    FIN;
+   PUT 'expected output: task3: 1; task2: 2; task1:3' TO so BY A, SKIP;
+   PUT 'ioQueueSuspendTest1 done' TO so BY A, SKIP;
 
 END;
 
 
 ioQueueSuspendTest2: PROC;
+   PUT 'ioQueueSuspendTest2' TO so BY A, SKIP;
 __cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest \");");
    ACTIVATE ioTask1;
    ACTIVATE ioTask2;
@@ -161,10 +166,11 @@ __cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest \");");
    IF TRY done THEN
       PUT 'failed - at least one task terminated' TO so BY A, SKIP;
    FIN;
-
+   PUT 'ioQueueSuspendTest2 done' TO so BY A, SKIP;
 END;
 
 ioQueueSuspendTest3: PROC;
+   PUT 'ioQueueSuspendTest3' TO so BY A, SKIP;
 __cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest \");");
    ACTIVATE ioTask1;
    ACTIVATE ioTask2;
@@ -202,9 +208,11 @@ __cpp__("pearlrt::Log::info(\"****** ioQueueSuspendTest \");");
    IF TRY done THEN
       PUT 'failed - at least one task terminated' TO so BY A, SKIP;
    FIN;
+   PUT 'ioQueueSuspendTest3 done' TO so BY A, SKIP;
 END;
 
 ioQueueTerminateTest: PROC;
+   PUT 'ioQueueTerminateTest' TO so BY A, SKIP;
 __cpp__("pearlrt::Log::info(\"****** ioQueueTerminateTest \");");
    ACTIVATE ioTask1;
    ACTIVATE ioTask2;
@@ -235,6 +243,7 @@ __cpp__("pearlrt::Log::info(\"****** ioQueueTerminateTest \");");
    IF TRY done THEN
       PUT 'failed - at least one task terminated' TO so BY A, SKIP;
    FIN;
+   PUT 'ioQueueTerminateTest done' TO so BY A, SKIP;
 
 END;
 
