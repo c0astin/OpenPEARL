@@ -94,7 +94,8 @@ namespace pearlrt {
       default:
          Log::error("Esp32Clock: Illegal selector %d", typeOfClock);
          throw 0;
-         //throw theInternalConfigurationSignal;
+
+      //throw theInternalConfigurationSignal;
 
       case 0: // only systick
          // no absolute time from RTC desired
@@ -113,4 +114,3 @@ namespace pearlrt {
       clockSelected = true;
    }
 }
-

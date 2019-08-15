@@ -55,6 +55,7 @@ namespace pearlrt {
          if (!provider) {
             usePrintf = true;
          }
+
          /*
          if (lpc17_isInterrupt()) {
             usePrintf = true;

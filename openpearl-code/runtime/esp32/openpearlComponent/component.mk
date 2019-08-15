@@ -12,10 +12,13 @@ COMPONENT_EXTRA_INCLUDES := . $(OPENPEARL_DIR)/runtime/common \
 COMMON_SRCS := $(addprefix common/,$(CXX_COMMON))
 COMPONENT_OBJS := $(addsuffix .o,$(basename $(COMMON_SRCS)))
 
-COMPONENT_OBJS += main.o StdOut.o Log.o Esp32Clock.o
+COMPONENT_OBJS += main.o  Log.o Esp32Clock.o
+# StdOut.o
 #COMPONENT_OBJS += Console.o Esp32UartCommsDriver.o uartComms.o
-COMPONENT_OBJS += Esp32Uart.o
-#COMPONENT_OBJS += Console
+#COMPONENT_OBJS += Retarget.o
+COMPONENT_OBJS +=  Esp32Uart.o 
+#COMPONENT_OBJS += Esp32UartInternal.o Esp32Uart.o 
+#COMPONENT_OBJS += Console.o
 
 $(warning $(COMPONENT_OBJS))
 
