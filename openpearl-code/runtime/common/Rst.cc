@@ -60,6 +60,10 @@ namespace pearlrt {
 //      }
 
       if (rstVoidPointer != NULL) {
+         if (s->whichRST() < 100) {
+            // internal signals are not catchable 
+            return false;
+         }
          /* is in Fixed.h */
          assignIntToFixedViaVoidPointer(rstVoidPointer, rstLength,
                                         s->whichRST());
