@@ -48,6 +48,10 @@
 #include <time.h>
 
 namespace pearlrt {
+   /** \addtogroup tasking_freertos
+       @{
+   */
+
    /**
    \brief timer facility for task scheduling
 
@@ -223,8 +227,7 @@ namespace pearlrt {
       void detailedStatus(char * id, char * line);
    };
 
-
-
+   /** @} */
 
 }
 #endif

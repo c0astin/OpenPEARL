@@ -20,6 +20,8 @@ int sizeTCB_T = -1;
 int sizeSTACKTYPE = -1;
 int sizePORTSHORT = -1;
 int sizeUBASETYPE = -1;
+int sizeStaticSemaphoreTYPE = -1;
+
 int sizeFATFS = -1;
 int sizeFIL = -1;
 int sizeVOLUMES = -1;
@@ -36,6 +38,7 @@ int main() {
     char* shorttype="";
     char* stacktype="";
     char* ubasetype="";
+    char* uStaticSemaphoreType="";
     fp = fopen(FILENAME,"r");
 
     // discard the first two lines
@@ -82,6 +85,9 @@ int main() {
        }     
        if (strcmp(name,"UBASETYPE") == 0) {
           sizeUBASETYPE = len;
+       }     
+       if (strcmp(name,"StaticSemaphoreType") == 0) {
+          sizeStaticSemaphoreTYPE = len;
        }     
        if (strcmp(name,"FATFS") == 0) {
           sizeFATFS = len;
@@ -148,6 +154,9 @@ int main() {
    fprintf(fp,"typedef %s FakeStackType_t;\n", stacktype);
    fprintf(fp,"typedef void* FakeSemaphoreHandle_t;\n"
               "#define FakexSemaphoreHandle FakeSemaphoreHandle_t\n\n");
+
+   fprintf(fp,"typedef char FakeSemaphoreBuffer_t [%d];\n",
+              sizeStaticSemaphoreTYPE );
 
    fprintf(fp,"typedef void* FakeTaskHandle_t;\n");
    fprintf(fp,"typedef struct {uint32_t assertAlign; char data[%d];}"

@@ -69,7 +69,12 @@
 #include "allTaskPriorities.h"
 #include "service.h"
 
-#define MAXTIMER configTIMER_QUEUE_LENGTH
+//#define MAXTIMER configTIMER_QUEUE_LENGTH
+// there is no reason visible to use the number of FreeRTOS timr queue 
+// entries for the number of timers of this module
+// the number of required timers is two times the number of tasks
+// lets asume 25 tasks are enough for the microcontroller
+#define MAXTIMER 50
 #define ENTERCRITICAL taskDISABLE_INTERRUPTS();DMB();
 #define LEAVECRITICAL DMB();taskENABLE_INTERRUPTS()
 

@@ -40,6 +40,9 @@
  */
 
 namespace pearlrt {
+  /** \addtogroup tasking_freertos
+       @{
+   */
 
    /**
     \brief priority mapper
@@ -91,6 +94,7 @@ namespace pearlrt {
        */
       int getSystemPrio();
    };
+   /** @} */
 }
 
 #endif

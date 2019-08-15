@@ -5,7 +5,7 @@ PEARL_FREERTOS_SRC += \
 	Task.cc \
 	TaskMonitor.cc  \
 	TaskTimer.cc \
-	GenericUart.cc
+	GenericUart.cc 
 
 #	Log.cc \
 

@@ -85,16 +85,18 @@ namespace pearlrt {
 
    void TaskTimer::create(TaskCommon * task, int signalNumber,
                           TimerCallback cb) {
+      int e; // error code for timer_create
 
       this->timer_callback.cb = (void *)&freeRtosTimerCallback;
       this->timer_callback.th = (void *)this;
       this->signalNumber = signalNumber;
       this->callback = cb;
       this->task = task;
-
-      if (timer_create(CLOCK_REALTIME,
+  
+      e = timer_create(CLOCK_REALTIME,
                        (sigevent *)&timer_callback,
-                       &timer) == -1) {
+                       &timer);
+      if (e == -1) {
          Log::error("task %s: could not create timer for signal %d",
                     task->getName(), signalNumber);
          throw theInternalTaskSignal;
