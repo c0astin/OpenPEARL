@@ -2767,6 +2767,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (ctx.StringLiteral() != null) {
             String s = ctx.StringLiteral().getText();
             s = CommonUtils.removeQuotes(s);
+            s = CommonUtils.unescapePearlString(s);
+
             ST constantCharacterValue = m_group.getInstanceOf("ConstantCharacterValue");
             ConstantCharacterValue value = ConstantPool.lookupCharacterValue(s);
 
