@@ -1150,6 +1150,26 @@ namespace pearlrt {
       terminateDone.request();
    }
 
+   char* TaskCommon:: getTaskStateAsString() {
+      switch (taskState) {
+      case TERMINATED:
+         return ((char*)"TERMINATED");
+
+      case SUSPENDED:
+         return ((char*)"SUSPENDED");
+
+      case RUNNING:
+         return ((char*)"RUNNING");
+
+      case BLOCKED:
+         return ((char*)"BLOCKED");
+
+      case SUSPENDED_BLOCKED:
+         return ((char*)"SUSPENDED+BLOCKED");
+      }
+      return ((char*)"unknown state");
+   }
+
    int TaskCommon::detailedTaskState(char * line[3]) {
       int i = 0;
       char help[20];
@@ -1171,7 +1191,7 @@ namespace pearlrt {
       if (taskState == BLOCKED) {
          switch (blockParams.why.reason) {
          case REQUEST:
-            sprintf(line[i], "REQUESTing %d SEMAs:",
+            sprintf(line[i], "REQUEST %d SEMA(s):",
                     blockParams.why.u.sema.nsemas);
 
             for (int j = 0; j < blockParams.why.u.sema.nsemas; j++) {
@@ -1186,7 +1206,7 @@ namespace pearlrt {
             break;
 
          case RESERVE:
-            sprintf(line[i], "RESERVEing %d BOLTs:",
+            sprintf(line[i], "RESERVE %d BOLT(s):",
                     blockParams.why.u.bolt.nbolts);
 
             for (int j = 0; j < blockParams.why.u.bolt.nbolts; j++) {
@@ -1201,7 +1221,7 @@ namespace pearlrt {
             break;
 
          case ENTER:
-            sprintf(line[i], "ENTERing %d BOLTs:",
+            sprintf(line[i], "ENTER %d BOLT(s):",
                     blockParams.why.u.bolt.nbolts);
 
             for (int j = 0; j < blockParams.why.u.bolt.nbolts; j++) {
@@ -1216,10 +1236,10 @@ namespace pearlrt {
             break;
 
          case IOWAITQUEUE:
-            sprintf(line[i], "IO-WaitQueue");
+            sprintf(line[i], "IO-waiting");
             break;
          case IO:
-            sprintf(line[i], "IO-active");
+            sprintf(line[i], "IO-processing");
             break;
          case IO_MULTIPLE_IO:
             sprintf(line[i], "IO-multiple");

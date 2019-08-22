@@ -169,14 +169,6 @@ namespace pearlrt {
 
    public:
 
-#if 0
-      /**
-         Perform a scheduled RESUME
-
-         The plattform indepened part is done in TaskCommon
-      */
-      void resume2();
-#endif
 
    private:
       /**
@@ -224,36 +216,7 @@ namespace pearlrt {
 
       void suspendRunning();
       void suspendIO();
-      //void continueSuspendedIO(int condition, Prio p);
-   private:
-#if 0
-      /**
-         suspend a task
 
-         The pthread library does not support thread suspending.
-         To realize the same behavior, the thread requests a read
-         from a pipe.
-         The continuation is performed by writing a 'c' to that pipe.
-
-         If the calling thread is different from the tasks thread,
-         a flag is set for the thread to suspend. This flag is polled
-         at each setLocation()-call and each blocking methog call.
-
-
-      */
-      void suspendFromOtherTask();
-
-      /**
-        change the threads priority to the new PEARL prio
-
-        the method returns after setting the new priority
-
-        \param prio the new PEARL priority of the task
-      */
-      void changeThreadPrio(const Fixed<15>& prio);
-#endif
-
-   public:
       /**
         fullfill the suspend request of the current task
 

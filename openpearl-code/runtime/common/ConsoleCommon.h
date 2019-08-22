@@ -30,6 +30,8 @@
 #include "SystemDationNB.h"
 #include "TaskCommon.h"
 #include "PriorityQueue.h"
+#include "Mutex.h"
+
 #ifndef CONSOLECOMMON_INCLUDED
 #define CONSOLECOMMON_INCLUDED
 
@@ -40,9 +42,15 @@ namespace pearlrt {
    text input to individual tasks
    This class provides the target independent stuff like
    input data processing, task name lookup, ...
+
+   The input is accepted as UTF-8. Internally all input data is stzored
+   as 16 bit. At the end of the input, the data is compressed to
+   deliver a UTF8-string.
    */
    class ConsoleCommon {
    private:
+      Mutex mutex;
+
       PriorityQueue waitingForOutput;
       TaskCommon* waitingForInput;
       SystemDationNB * systemIn;
@@ -53,17 +61,39 @@ namespace pearlrt {
       size_t  nbrEnteredCharacters;
       size_t  cursorPosition;
       bool inputStarted;
-      char inputLine[80];
+      struct Wchar {
+         char page;     // ether 0 or UTF8_part1 or UTF8_Part2
+         char ch;       // the index in the page
+      };
+      union InputLine {
+         struct Wchar wLine[80];
+         char compressedLine[160];
+      } inputLine;
 
+      int compress(InputLine& inputLine, int nbrCharactersEntered);
       int getChar(void);
       void putChar(char ch);
+      void putChar(Wchar ch);
+      void putString(const Wchar* string);
       void putString(const char* string);
       void goLeft(int n);
       void goRight(int n);
-      void startNextWriter();
       bool removeFromInputList(TaskCommon * t);
       bool removeFromOutputList(TaskCommon * t);
+      bool treatCommand(char* line);
+      const char* helpHelp();
+      void printHelp();
+      const char* helpPrli();
+      void printPrli();
+
+      struct Commands {
+          const char* command;
+          const char* (ConsoleCommon:: *help)();
+          void        (ConsoleCommon:: *doIt)();
+      } commands[3];
+
    public:
+      void startNextWriter();
       /**
       ctor: initialize private data and memorize the in and out-dations
       */

@@ -44,28 +44,34 @@
 #include "Signals.h"
 #include "BitString.h"
 
-DCLTASK(stbp, pearlrt::Prio(1), pearlrt::BitString<1>(1)) {
-   pearlrt::Console * console;
+//DCLTASK(stbp, pearlrt::Prio(1), pearlrt::BitString<1>(1)) {
+namespace pearlrt {
+void Console::consoleLoop() {
    pearlrt::TaskCommon * taskEntered;
 
-   console = pearlrt::Console::getInstance();
-   console->openSubDations();
+   openSubDations();
 
-   while (console->keepRunning()) {
-      taskEntered = console->treat();
+   while (1) {
+      // the method returns to adress and length of the input record
+      taskEntered =
+         consoleCommon.treatLine(&bufferFromConsoleCommon,
+                                 &lengthOfConsoleCommonBuffer);
+      deliveredCharacters = 0;
 
       if (taskEntered) {
          TaskCommon::mutexLock();
-printf("Console: %s\n", taskEntered->getName());
          taskEntered->unblock();
          TaskCommon::mutexUnlock();
       }
    }
 }
 
-namespace pearlrt {
 
    Console* Console::instance = NULL;
+
+   bool Console::isDefined() {
+       return instance != NULL;
+   }
 
    Console* Console::getInstance() {
       return instance;
@@ -76,21 +82,12 @@ namespace pearlrt {
       stdOut.dationOpen(NULL, 0);
    }
 
-   TaskCommon* Console::treat() {
-      TaskCommon* taskEntered;
-      // the method returns to adress and length of the input record
-      taskEntered =
-         consoleCommon.treatLine(&bufferFromConsoleCommon,
-                                 &lengthOfConsoleCommonBuffer);
-      deliveredCharacters = 0;
-      return taskEntered;
-   }
-
    Console::Console() : SystemDationNB() {
-      /* ctor is called before multitasking starts --> no mutex required */
+      struct termios newSetting;
+
+
       consoleMutex.name("ConsoleX");
       inUse = false;
-      keepRunningFlag = true;
       cap = FORWARD;
       cap |= PRM;
       cap |= ANY;
@@ -104,11 +101,10 @@ namespace pearlrt {
          throw theInternalDationSignal;
       }
 
-
-   }
-   Console::~Console() {
-      tcsetattr(0, TCSANOW, &oldTerminalSetting);  // 0=STDIN
-      instance = NULL;
+      tcgetattr(0, &oldTerminalSetting);  // 0 = STDIN
+      newSetting = oldTerminalSetting;
+      newSetting.c_lflag &= ~(ICANON | ECHO);   // no echo, no line edit
+      tcsetattr(0, TCSANOW, &newSetting);   // 0 = STDIN
    }
 
    int Console::capabilities() {
@@ -116,7 +112,6 @@ namespace pearlrt {
    }
 
    Console* Console::dationOpen(const char * idf, int openParams) {
-      struct termios newSetting;
 
       if (openParams & (Dation::IDF | Dation::CAN)) {
          Log::error("Console: does not support IDF and CAN");
@@ -126,33 +121,30 @@ namespace pearlrt {
       consoleMutex.lock();
       inUse = true;
 
-      tcgetattr(0, &oldTerminalSetting);  // 0 = STDIN
-      newSetting = oldTerminalSetting;
-      newSetting.c_lflag &= ~(ICANON | ECHO);   // no echo, no line edit
-      tcsetattr(0, TCSANOW, &newSetting);   // 0 = STDIN
-//      setbuf(stdin, NULL);    // work unbuffered
-
       consoleMutex.unlock();
       return this;
    }
 
-   void Console::dationClose(int closeParams) {
-      //(int ret;
-printf("Console::close...\n");
-      keepRunningFlag = false;
-      ungetc('\n',stdin); 
-      //
-      consoleMutex.lock();
-printf("Console:: @1\n");
-      inUse = false;
+   Console::~Console() {
       tcsetattr(0, TCSANOW, &oldTerminalSetting);  // 0=STDIN
 
-printf("Console:: @2\n");
-      stdIn.dationClose(0);
-printf("Console:: @3\n");
-      stdOut.dationClose(0);
+      // the console thread is still waiting for input and has
+      // the lock of StdIn aquired - let's unlock the mutex for
+      // silent termination 
+      stdIn.abortRead();
 
-printf("Console:: @4\n");
+      // forget about closing the system dations. This is done
+      // automatically by the operating system
+      instance = NULL;
+   }
+
+
+   void Console::dationClose(int closeParams) {
+      //(int ret;
+      //
+      consoleMutex.lock();
+      inUse = false;
+
       if (closeParams & Dation::CAN) {
          Log::error("Console: CAN not supported");
          consoleMutex.unlock();
@@ -160,14 +152,13 @@ printf("Console:: @4\n");
       }
 
       consoleMutex.unlock();
-printf("Console::... done\n");
    }
 
    void Console::dationRead(void * destination, size_t size) {
       // int ret;
       char * dest = (char*) destination;
 
-      consoleMutex.lock();
+//      consoleMutexIn.lock();
 
       for (size_t i = 0;
             i < size && deliveredCharacters < lengthOfConsoleCommonBuffer;
@@ -176,24 +167,22 @@ printf("Console::... done\n");
          deliveredCharacters ++;
       }
 
-      consoleMutex.unlock();
+//      consoleMutexIn.unlock();
    }
 
 
    void Console::dationWrite(void * source, size_t size) {
       stdOut.dationWrite(source, size);
+      consoleCommon.startNextWriter();
    }
 
    void Console::dationUnGetChar(const char x) {
-      printf("Console:dationUnGetChar called but not really implemented\n");
-      consoleMutex.lock();
       ungetc(x, stdin);
-      consoleMutex.unlock();
    }
 
 
    void Console::translateNewLine(bool doNewLineTranslation) {
-      // do nothing
+      // This is treated in ConsoleCommon
    }
 
    bool Console::allowMultipleIORequests() {
@@ -202,11 +191,12 @@ printf("Console::... done\n");
 
    void Console::registerWaitingTask(void * task, int direction) {
       // just delegate to the platform independent part
+      consoleMutex.lock();
       consoleCommon.registerWaitingTask(task, direction);
+      consoleMutex.unlock();
    }
 
    void Console::suspend(TaskCommon * ioPerformingTask) {
-      printf("Console::suspend called\n");
       consoleCommon.suspend(ioPerformingTask);
    }
 
@@ -214,8 +204,4 @@ printf("Console::... done\n");
       consoleCommon.terminate(ioPerformingTask);
    }
 
-
-   bool Console::keepRunning() {
-      return keepRunningFlag;
-   }
 }

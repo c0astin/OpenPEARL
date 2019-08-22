@@ -756,7 +756,12 @@ namespace pearlrt {
       until the task terminates self.
       */
       void doAsyncTerminate();
-   
+  
+      /** deliver the taskState as string 
+          \return the task state
+      */
+      char* getTaskStateAsString();
+
       /**
         deliver detailed information about this task
 

@@ -39,6 +39,8 @@ namespace pearlrt {
 #define BRACKETOPEN '['
 #define RIGHT 67
 #define LEFT  68
+#define UP   0x41      // not used yet
+#define DOWN   0x42    // not used yet
 #define INSERT 50
 #define DELETE 51
 #define HOME   'H'    // ESC O H
@@ -46,14 +48,28 @@ namespace pearlrt {
 #define NL '\n'
 #define BEL '\a'  // alarm code
 #define SPACE ' '
-
-  static bool treat_command(char * line) ;
-   static char* task_state(enum Task::TaskState t);
+#define UTF8_Part1 0xc2
+//static const int UTF8_Part1 = (int)0xFFc2;
+//static const int UTF8_Part2 = 0xc3;
+#define UTF8_Part2 0xc3
 
    ConsoleCommon::ConsoleCommon() {
       insertMode = false;
       lastAdressedTask = NULL;
       waitingForInput = NULL;
+      mutex.name("ConsoleCommon");
+
+      // setup command list
+      commands[0].command = "/HELP";
+      commands[0].help = &ConsoleCommon::helpHelp;
+      commands[0].doIt = &ConsoleCommon::printHelp;
+      commands[1].command = "/?";
+      commands[1].help = &ConsoleCommon::helpHelp;
+      commands[1].doIt = &ConsoleCommon::printHelp;
+      commands[2].command = "/PRLI";
+      commands[2].help = &ConsoleCommon::helpPrli;
+      commands[2].doIt = &ConsoleCommon::printPrli;
+
    }
 
    void ConsoleCommon::setSystemDations(SystemDationNB* in,
@@ -72,13 +88,43 @@ namespace pearlrt {
       systemOut->dationWrite(&ch, 1);
    }
 
+   void ConsoleCommon::putChar(Wchar ch) {
+      if (ch.page == 0) {
+         systemOut->dationWrite(&(ch.ch), 1);
+      } else {
+         systemOut->dationWrite(&ch, 2);
+      }
+   }
+
+   int ConsoleCommon::compress(InputLine& inputLine, int nbrCharactersEntered) {
+      char* writePointer = inputLine.compressedLine;
+      int i;
+
+      for (i=0; i<nbrCharactersEntered; i++) {
+         if (inputLine.wLine[i].page != 0) {
+            *writePointer++ = inputLine.wLine[i].page;
+         } 
+         *writePointer++ = inputLine.wLine[i].ch;
+      }
+      return (int)(writePointer-inputLine.compressedLine);
+   }
+
    void ConsoleCommon::putString(const char* string) {
       systemOut->dationWrite((void*)string, strlen(string));
    }
 
+   void ConsoleCommon::putString(const Wchar* string) {
+      int i;
+
+      for (i=0; string[i].ch != 0; i++) {
+          putChar(string[i]);
+      }
+   }
+
+
    void ConsoleCommon::goRight(int n) {
       while (n--) {
-         putChar(inputLine[cursorPosition]);
+         putChar(inputLine.wLine[cursorPosition]);
          cursorPosition++;
       }
    }
@@ -94,9 +140,12 @@ namespace pearlrt {
       static TaskCommon * lastTaskEntered = NULL;
       TaskCommon * previousTaskInList = NULL;
       int ch;
+      Wchar wch;
+      static const Wchar wnull={0,0};
       size_t i;
       int cursor = 0;
       bool endOfLineReceived = false;
+      bool taskIsInList;
 
       nbrEnteredCharacters = 0;
       cursorPosition = 0;
@@ -105,7 +154,6 @@ namespace pearlrt {
       while (!endOfLineReceived) {
          cursor = 0;       // no cursor position code detected
          ch = getChar();   // wait passive until character is received
-         inputStarted = true;
          // test for combined character
          if (ch == ESC) {
             ch = getChar();
@@ -119,7 +167,6 @@ namespace pearlrt {
                   cursor = LEFT;
                } else if (ch == INSERT) {
                   insertMode = ! insertMode;
-//printf("INSERTnmode = %d\n", insertMode);
                   ch = getChar(); // discard trailing ~ character
                   cursor = -1;  // discard ch
                } else if (ch == DELETE) {
@@ -127,27 +174,32 @@ namespace pearlrt {
                   cursor = DELETE;
                } else {
                   // ignore all other
-                  printf("ignore ESC [ %x\n", ch);
+                  Log::debug("ignore ESC [ %x", ch);
 
                   cursor = -1;  // discard ch
                }
 
-//               printf("cursor control: %d ch=%x\n", cursor, ch);
             } else if (ch == 'O') { // ESC O sequences for HOME and END
                ch = getChar();
 
                if (ch == HOME) {
                   cursor = HOME;
-//printf("HOME\n");
                } else if (ch == END) {
                   cursor = END;
-//printf("END\n");
                } else {
                   // ignore all other
-                  printf("ignore ESC O %x\n", ch);
+                  Log::debug("ignore ESC O %x", ch);
                   cursor = -1;  // discard ch
                }
             }
+         } else if ((ch&0x0ff ) == UTF8_Part1 || (ch&0x0ff) == UTF8_Part2) {
+            inputStarted = true;
+            wch.page = ch;
+            wch.ch = getChar();
+         } else {
+            inputStarted = true;
+            wch.ch=ch;
+            wch.page=0;
          }
 
          switch (cursor) {
@@ -155,19 +207,19 @@ namespace pearlrt {
             continue;
 
          case 0: // normal input
-            if (ch == NL) {
-               putChar(ch);
+            if (wch.ch == NL && wch.page==0) {
+               putChar(wch);
                // always add NL at the end and the NIL also
-               inputLine[nbrEnteredCharacters++] = ch;
-               inputLine[nbrEnteredCharacters] = 0;
+               inputLine.wLine[nbrEnteredCharacters++] = wch;
+               inputLine.wLine[nbrEnteredCharacters++] = wnull;
 //     printf("end-of-record found cp=%zu nbr=%zu\n>%s<\n",
 //             cursorPosition, nbrEnteredCharacters, inputLine);
                endOfLineReceived = true;
-            } else if (ch == 0x07f) {
+            } else if (wch.ch == 0x07f && wch.page==0) {
                // del to left
                if (cursorPosition > 0) {
                   for (i = cursorPosition; i < nbrEnteredCharacters; i++) {
-                     inputLine[i - 1] = inputLine[i];
+                     inputLine.wLine[i - 1] = inputLine.wLine[i];
                   }
 
                   nbrEnteredCharacters--;
@@ -175,63 +227,70 @@ namespace pearlrt {
                   cursorPosition --;
 
                   for (i = cursorPosition; i < nbrEnteredCharacters; i++) {
-                     putChar(inputLine[i]);
-                     cursorPosition++;
+                     putChar(inputLine.wLine[i]);
+                  //   cursorPosition++;
                   }
 
                   putChar(SPACE);
                   goLeft(nbrEnteredCharacters - cursorPosition + 1);
                }
-            } else if (ch >= ' ' && ch < 0x7f) {
+            } else if ((wch.page == 0 && (ch >= ' ' && ch < 0x7f)) ||
+                       wch.page != 0) {
                // reserve space for NL and NIL
-               if (nbrEnteredCharacters < sizeof(inputLine) - 2) {
+               if (nbrEnteredCharacters < sizeof(inputLine)/2 - 2) {
                   if (insertMode) {
-                     for (i = nbrEnteredCharacters; i >= cursorPosition; i--) {
-                        inputLine[i + 1] = inputLine[i];
+                     if (nbrEnteredCharacters > cursorPosition) {
+                        for (i = nbrEnteredCharacters; 
+		 	     i >= cursorPosition; i--) {
+                           inputLine.wLine[i + 1] = inputLine.wLine[i];
+                        }
                      }
 
-                     inputLine[cursorPosition] = ch;
+                     inputLine.wLine[cursorPosition] = wch;
                      nbrEnteredCharacters++;
-                     putChar(ch);
+                     putChar(wch);
                      cursorPosition ++;
 
                      for (i = cursorPosition; i < nbrEnteredCharacters; i++) {
-                        putChar(inputLine[i]);
+                        putChar(inputLine.wLine[i]);
                      }
 
                      goLeft(nbrEnteredCharacters - cursorPosition);
                   } else {
-                     inputLine[cursorPosition] = ch;
+                     inputLine.wLine[cursorPosition] = wch;
 
                      if (cursorPosition == nbrEnteredCharacters) {
                         nbrEnteredCharacters++;
                      }
 
-                     putChar(ch);
+                     putChar(wch);
                      cursorPosition ++;
                   }
                } else {
                   putChar(BEL);
                }
             } else {
-               printf("character %x found - not treated  yet\n", ch);
+               Log::info("ConsoleCommon::character %x found - not treated yet",
+                       ch&0x0ff);
             }
 
             break;
 
          case DELETE: // del key --> delete from right
+//printf("DELETE: cp=%d nbr=%d\n", cursorPosition, nbrEnteredCharacters);
             if (cursorPosition < nbrEnteredCharacters) {
                nbrEnteredCharacters--;
 
                for (i = cursorPosition; i < nbrEnteredCharacters; i++) {
-                  inputLine[i] = inputLine[i + 1];
+                  inputLine.wLine[i] = inputLine.wLine[i + 1];
                }
 
                for (i = cursorPosition; i < nbrEnteredCharacters; i++) {
-                  putChar(inputLine[i]);
+                  putChar(inputLine.wLine[i]);
                }
 
                putChar(SPACE);
+
                goLeft(nbrEnteredCharacters - cursorPosition + 1);
             }
 
@@ -240,13 +299,13 @@ namespace pearlrt {
          case RIGHT: // position to right if possible
             if (cursorPosition < nbrEnteredCharacters) {
                goRight(1);
+            } else {
+               putChar(BEL);
             }
 
             break;
 
          case LEFT: // position to left if possible
-
-            // printf("cursor left  - not treated  yet\n");
             if (cursorPosition > 0) {
                goLeft(1);
                cursorPosition--;
@@ -267,22 +326,23 @@ namespace pearlrt {
             }
 
             break;
-         }
-
+ 
+        }
       }
 
       // input line ready
       //   preset return values with complete line
       //   this may be truncates if a taskname was detected
+      nbrEnteredCharacters= compress(inputLine, nbrEnteredCharacters);
       *length = nbrEnteredCharacters;
-      *inputBuffer = inputLine;
+      *inputBuffer = inputLine.compressedLine;
       inputStarted = false;
 
       // check if line starts with (new) task name
-      if (inputLine[0] == ':') {
+      if (inputLine.compressedLine[0] == ':') {
          // let's search the next colon
          for (i = 1; i < nbrEnteredCharacters; i++) {
-            if (inputLine[i] == ':') {
+            if (inputLine.compressedLine[i] == ':') {
                if (i > 2) {
                   // task name found
                   // update length information
@@ -290,35 +350,30 @@ namespace pearlrt {
                   // let's check if the task waits for input
                   // and pass the effecitive input to the input processing
                   // and quit this function
-                  inputLine[i] = '\0';
+                  inputLine.compressedLine[i] = '\0';
 
-                  // pointer to predecessor in list for easy
-                  // removal operation
+                  mutex.lock();
                   for (t = waitingForInput;
                         t != NULL; t = t->getNext()) {
-printf("search target task %s\n", t->getName());
                      // ignore leading underscore in task name
-                     if (strcmp(t->getName()+1, inputLine + 1) == 0) {
+                     if (strcmp(t->getName()+1, inputLine.compressedLine + 1) == 0) {
                         // found adressed task
-printf("search target (%s), (%s)\n", t->getName()+1, inputLine+1);
 
                         // and set the return parameters
-                        *inputBuffer = inputLine + i + 1;
+                        *inputBuffer = inputLine.compressedLine + i + 1;
                         lastTaskEntered = t;
                         break;
                      }
                   }
+                  mutex.unlock();
 
                   if (t == NULL) {
                      lastTaskEntered = NULL; // forget last valid task
                      putString("\n:???: not waiting\n");
                      // return the complete input line
                      *length = nbrEnteredCharacters;
-                     inputLine[i] = ':'; //restore 2nd colon
-//                     *inputBuffer = inputLine;
- //                    *length = nbrEnteredCharacters;
+                     inputLine.compressedLine[i] = ':'; //restore 2nd colon
                      startNextWriter();
-printf("@2\n");
                      // discard this input line for further processing
                      return NULL;
                   }
@@ -328,22 +383,22 @@ printf("@2\n");
 
          // no 2nd task name delimiter found
          // will be treated as if no colon is at the first position
-      } else if (inputLine[0] == '/') {
-          if (treat_command(inputLine)) {
-             startNextWriter();
-             // nothing to do -- command was treated
-             return 0;
-          }
+      } else if (inputLine.compressedLine[0] == '/') {
+          treatCommand(inputLine.compressedLine);
+          startNextWriter();
+          // nothing to do -- command was treated
+          return 0;
       }
 
 
-printf("lastTaskEntered = %p\n", lastTaskEntered);
-printf("... %s\n", lastTaskEntered->getName());
       // remove this task from wait queue
+      taskIsInList = false;
       previousTaskInList = NULL;
+      mutex.lock();
+
       for (t = waitingForInput; t != NULL; t = t->getNext()) {
-printf("remove target task %s\n", t->getName());
          if (lastTaskEntered == t) {
+            taskIsInList = true;
             if (previousTaskInList) {
                previousTaskInList->setNext(lastTaskEntered->getNext());
                t->setNext(NULL);
@@ -352,27 +407,41 @@ printf("remove target task %s\n", t->getName());
             }
             break;
          }
+         previousTaskInList = t;
       }
 
+      mutex.unlock();
       startNextWriter();  
-      return lastTaskEntered;
+      if (taskIsInList) {
+         return lastTaskEntered;
+      }
+      // no task name given and task is not in list
+      putString("\n:???: not waiting\n");
+      return NULL;
+
    }
 
    void ConsoleCommon::startNextWriter() {
+      mutex.lock();
+      if (!inputStarted) {
       TaskCommon * nextWriter = waitingForOutput.getHead();
       if (nextWriter) {
           waitingForOutput.remove(nextWriter);
           nextWriter->unblock();
       }
+      }
+      mutex.unlock();
    }
 
    void ConsoleCommon::registerWaitingTask(void * task, int direction) {
       TaskCommon * t = (TaskCommon*) task;
-//printf("ConsoleCommon: registerWaiting: %p dir=%d\n", task, direction);
+
+      mutex.lock();
       if (direction == Dation::IN) {
          t->setNext(waitingForInput);
          waitingForInput = t;
       } else if (direction == Dation::OUT) {
+
          if (inputStarted || waitingForOutput.getHead()) {
             // queue not empty --> add task as waiter
             waitingForOutput.insert(t);
@@ -383,12 +452,13 @@ printf("remove target task %s\n", t->getName());
       } else {
           Log::error("ConsoleCommon::registerWaitung: illegal direction=%d",
           direction);
+          mutex.unlock();
          throw theInternalDationSignal;
       }
+      mutex.unlock();
    }
   
    void ConsoleCommon::suspend(TaskCommon * ioPerformingTask) {
-      printf("ConsoleCommon::suspend called\n");
       terminate(ioPerformingTask);
    }
 
@@ -396,6 +466,7 @@ printf("remove target task %s\n", t->getName());
        TaskCommon * previousTaskInList = NULL;
        TaskCommon * t;
 
+       mutex.lock();
        for (t = waitingForInput; t != NULL; t = t->getNext()) {
           if ( t == taskToRemove) {
               // remove this task from wait queue
@@ -405,22 +476,27 @@ printf("remove target task %s\n", t->getName());
              } else {
                  waitingForInput = t->getNext();
              }
+             mutex.unlock();
              return true;
           }
           previousTaskInList = t; 
       }
+      mutex.unlock();
       return false;
    }
 
    bool ConsoleCommon::removeFromOutputList(TaskCommon* taskToRemove) {
+      mutex.lock();
       TaskCommon * next = waitingForOutput.getHead();
       while (next) {
           if (next == taskToRemove) {
                waitingForOutput.remove(next);
+               mutex.unlock();
                return true;
           }
           next=waitingForOutput.getNext(next);
       }
+      mutex.unlock();
       return false;
    }
 
@@ -428,65 +504,92 @@ printf("remove target task %s\n", t->getName());
    void ConsoleCommon::terminate(TaskCommon * ioPerformingTask) {
       // let's check wether the task is doing input or output
       if (removeFromInputList(ioPerformingTask)) {
-printf("removed %s from input list\n", ioPerformingTask->getName());
       for (TaskCommon * t=waitingForInput; t != NULL; t=t->getNext()) {
-       printf("still waiting: %s\n", t->getName());
+        Log::debug("ConsoleCommon: still waiting: %s", t->getName());
      }
       } else if (removeFromOutputList(ioPerformingTask)) {
-printf("removed %s from output list\n", ioPerformingTask->getName());
+        Log::debug("ConsoleCommon: removed %s from output list",
+              ioPerformingTask->getName());
       } else {
-         Log::error("ConsoleCommon: task %s was nether in input nor in output list", ioPerformingTask->getName());
+         Log::error("ConsoleCommon: task %s was nether in input"
+		    " nor in output list", ioPerformingTask->getName());
          throw theInternalTaskSignal;
       }
    }
 
-  static bool treat_command(char * line) {
+
+   const char* ConsoleCommon::helpHelp() {
+     static const char* help="show available commands";
+     return help;
+   } 
+
+   void ConsoleCommon::printHelp() {
+      size_t i;
+      char line[80];
+
+      putString("supported commands\n");
+      for (i=0; i<sizeof(commands)/sizeof(commands[0]); i++) {
+          sprintf(line,"  %-10.10s: ", commands[i].command);
+          putString(line);
+          putString( (this->*(commands[i].help))() );
+          putChar('\n');
+      }        
+   }
+
+   const char* ConsoleCommon::helpPrli() {
+     static const char* help="show task stati";
+     return help;
+   } 
+
+   void ConsoleCommon::printPrli() {
       Task * t;
       int j, n;
       char line1[80], line2[80], line3[80], line4[80];
       char* detailedState[] = {line1, line2, line3, line4};
 
-      if (strcasecmp(line, "/PRLI\n") == 0) {
-         printf("Number of pending tasks: %d\n",
+         sprintf(line1,"Number of pending tasks: %d\n",
                 TaskMonitor::Instance().getPendingTasks());
+         putString(line1);
 
          for (int i = 0; i < TaskList::Instance().size();  i++) {
             t = TaskList::Instance().getTaskByIndex(i);
-            printf("%-10.10s  %3d  %2d  %-20.20s (%s:%d)\n", t->getName(),
-                   (t->getPrio()).x,
-                   t->getIsMain(),
-                   task_state(t->getTaskState()),
-                   t->getLocationFile(), t->getLocationLine());
+            sprintf(line1, "%-10.10s  %3d  %2d  %-20.20s (%s:%d)\n",
+                           t->getName()+1, (t->getPrio()).x, t->getIsMain(),
+                           t->getTaskStateAsString(),
+                           t->getLocationFile(), t->getLocationLine());
+            putString(line1);
             n = t->detailedTaskState(detailedState);
 
             for (j = 0; j < n ; j++) {
-               printf("\t%s\n", detailedState[j]);
+               putChar('\t');
+               putString(detailedState[j]);
+               putChar('\n');
             }
-         }
-         return true;
-      }
-      return false;
+        }
    }
-   static char* task_state(enum Task::TaskState t) {
-      switch (t) {
-      case Task::TERMINATED:
-         return ((char*)"TERMINATED");
 
-      case Task::SUSPENDED:
-         return ((char*)"SUSPENDED");
 
-      case Task::RUNNING:
-         return ((char*)"RUNNING");
 
-      case Task::BLOCKED:
-         return ((char*)"SEMA/BOLT/IO_BLOCKED");
+  bool ConsoleCommon::treatCommand(char * line) {
+      size_t i;
+      bool cmdFound = false;
 
-      case Task::SUSPENDED_BLOCKED:
-         return ((char*)"SEMA/BOLT/IO_SUSP_BLOCKED");
-
-      default:
-         return ((char*)"unknown state");
+      // remove trailing newline
+      if (line[strlen(line)-1] == '\n') {
+         line[strlen(line)-1] = '\0';
       }
-   };
+
+      for (i=0; i<sizeof(commands)/sizeof(commands[0]); i++) {
+
+         if (strcasecmp(line, commands[i].command) == 0) {
+            (this->*(commands[i].doIt))();
+            cmdFound = true;
+         }
+      }
+      if (cmdFound == false) {
+         printf("illegal command\n");
+      }
+      return cmdFound;
+   }
 
 }

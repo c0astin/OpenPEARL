@@ -76,6 +76,8 @@ namespace pearlrt {
       mutex for  class data
       */
       Mutex consoleMutex;
+      Mutex consoleMutexIn;
+      Mutex consoleMutexOut;
 
       /** access capabilities */
       int cap;
@@ -91,17 +93,22 @@ namespace pearlrt {
 
       bool keepRunningFlag;
       static Console * instance;
+     
       ConsoleCommon consoleCommon;
       StdIn stdIn;
       StdOut stdOut;
       struct termios oldTerminalSetting;
-      pid_t consoleThread;
       TaskCommon* currentTask;
       char * bufferFromConsoleCommon;
       size_t lengthOfConsoleCommonBuffer;
       size_t deliveredCharacters;
-
    public:
+
+      /**
+        all input operations of the console device are located in this
+        method, which never returns.
+      */
+      void consoleLoop();
 
       /**
       there is only one Console device in the system
@@ -111,11 +118,15 @@ namespace pearlrt {
       static Console* getInstance();
 
       /**
-      treat one line of input
-      \returns pointer to the waiting task<br>
-               NULL, if no task was waiting
+         check if there is a console-device defined.
+
+         If yes, os.cc will do the command line processing,
+         else there is no interaction in os.cc
+
+         \returns true if a Console device is defined
+         \returns false if no Console device  is defined
       */
-      TaskCommon* treat();
+      static bool isDefined();
 
       /**
        Constructor to setup the system device
@@ -125,10 +136,12 @@ namespace pearlrt {
       */
       Console();
 
-      /** destructor
-      reset terminal attributes
+      /**
+      explicit destuctor to reset terminal settings and
+      close of system dations
       */
       ~Console();
+
 
       /**
          return capabilities of the folder objects
@@ -246,7 +259,6 @@ namespace pearlrt {
       void suspend(TaskCommon * ioPerformingTask);
       void terminate(TaskCommon * ioPerformingTask);
 
-      bool keepRunning();
    };
    /** @} */
 }
