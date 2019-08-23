@@ -46,31 +46,31 @@
 
 //DCLTASK(stbp, pearlrt::Prio(1), pearlrt::BitString<1>(1)) {
 namespace pearlrt {
-void Console::consoleLoop() {
-   pearlrt::TaskCommon * taskEntered;
+   void Console::consoleLoop() {
+      pearlrt::TaskCommon * taskEntered;
 
-   openSubDations();
+      openSubDations();
 
-   while (1) {
-      // the method returns to adress and length of the input record
-      taskEntered =
-         consoleCommon.treatLine(&bufferFromConsoleCommon,
-                                 &lengthOfConsoleCommonBuffer);
-      deliveredCharacters = 0;
+      while (1) {
+         // the method returns to adress and length of the input record
+         taskEntered =
+            consoleCommon.treatLine(&bufferFromConsoleCommon,
+                                    &lengthOfConsoleCommonBuffer);
+         deliveredCharacters = 0;
 
-      if (taskEntered) {
-         TaskCommon::mutexLock();
-         taskEntered->unblock();
-         TaskCommon::mutexUnlock();
+         if (taskEntered) {
+            TaskCommon::mutexLock();
+            taskEntered->unblock();
+            TaskCommon::mutexUnlock();
+         }
       }
    }
-}
 
 
    Console* Console::instance = NULL;
 
    bool Console::isDefined() {
-       return instance != NULL;
+      return instance != NULL;
    }
 
    Console* Console::getInstance() {
@@ -130,7 +130,7 @@ void Console::consoleLoop() {
 
       // the console thread is still waiting for input and has
       // the lock of StdIn aquired - let's unlock the mutex for
-      // silent termination 
+      // silent termination
       stdIn.abortRead();
 
       // forget about closing the system dations. This is done

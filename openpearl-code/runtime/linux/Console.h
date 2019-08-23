@@ -93,7 +93,7 @@ namespace pearlrt {
 
       bool keepRunningFlag;
       static Console * instance;
-     
+
       ConsoleCommon consoleCommon;
       StdIn stdIn;
       StdOut stdOut;
