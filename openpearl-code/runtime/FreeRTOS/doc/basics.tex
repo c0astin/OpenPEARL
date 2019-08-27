@@ -21,8 +21,7 @@ The FreeRTOS system has the following disadvantages:
    will lead into a hard system crash.
 \end{enumerate}
 
-Item 1 is treated by a modification of FreeRTOS with static TCB and stack
-and an user supplied heap manager, with implements a pool allocation pattern.
+Item 1 is obsolete with FreeRTOS version 10.
 Since version 10, FreeRTOS support static TCB and stacks.
 
 Item2 is solved by adding a new task parallel  to the idle task 
@@ -130,7 +129,8 @@ SystemDationNB call, which realizes a serial system dation.
 
 The launchpad toolchain required the implementation of several
 low level glibc-function like  \verb|_read| and \verb|_write|.
-The interface for the retarget job is realized in the platform specific Retarget object.
+The interface for the retarget job is realized in the platform
+ specific Retarget object.
 The interface may delegate the action  to a plattform specific class SystemConsole, which
 is a singleton. 
 E.g. in the Lpc1768 platform, the implementation of \verb|_read| and 
@@ -287,17 +287,6 @@ Other time sources are plattform specific and described there.
 \section{Modification in FreeRTOS}
 FreeRTOS was modified in the following points:
 \begin{description}
-\item[static tcb and stack:]  Normally FreeRTOS places task control blocks (tcb)
-   and task stack in the heap storage. This may produce memory fragmentation,
-   when application tasks are deleted and restarted in a random sequence.
-
-   A new configuration item in \texttt{FreeRTOSConfig.h}  changes this
-   behavior. If \texttt{configUSE\_STATIC\_STACK\_AND\_TCB} is set to 1
-   the function \texttt{xTaskCreate} assumes a pointer to a struct with
-   pointers to the previous applications parameters and two new pointers
-   to the tasks control block (with type \texttt{TCB\_t}) and tasks stack
-   (type \texttt{StackEntry\_t *}). The application is expected to be
-   responsible to pass valid pointers.
 \item[getTaskCurrentFreeStack] is a new function, which returns the number
    of free stack element (of size 32 bit) on the current active tasks stack.
    This feature is enabled by the option
@@ -476,7 +465,7 @@ the semaphore becomes released:
 xSemaphoreGiveFromISR(recvCommand.blockSema, NULL);
 \end{verbatim}
 
-A device driver is ether derived from \verb|UserdationNB|,
+A device driver is ether derived from \verb|SystemDationNB|,
  \verb|SystemdationB| or \verb|Interrupt|.
 It must implement the virtual methods according their
 expected behavior. For details please check the doxygen documentation

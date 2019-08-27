@@ -53,8 +53,8 @@ There are some parameters for the OpenPEARL configuration.
 More item may be available in future.
 
 \section{FreeRTOS}
-The ESP32-IDF provides a modifies FreeRTOS which supports a kind of 
-symetric multithreading.
+The ESP32-IDF provides a modified version of FreeRTOS which supports a kind of 
+symetric multiprocessing.
 This ESP-IDF component needs a \verb|FreeRTOSConfig.h| file.
 OpenPEARL needs some setting in the \verb|FreeRTOSConfig.h|. 
 This configuration is part of the OpenPEARL repository. The ESP-IDF provided
@@ -82,11 +82,20 @@ There are two possibilities to overcome this obstancle:
 \item add a patch to FreeRTOS to restart an overrun task automatically at its termination.
 \end{enumerate}
 
-\subsection{Suspend and Terminate during i/o Operation}
+\subsection{Esp32Uart Device}
+The ESP-IDF is subject of rapid changes. Therefore it is not 
+useful to modify any provides code for usage of the internal devices.
 
-\subsection{Add Device Drivers}
+Especially the uart is very complicated. Thus a separate FreeRTOS thread 
+is used for the write operation. The read operation uses the 
+provided mechanism with an event queue.
+
+Suspend and terminate during i/o operations are treated by a simulation
+of an receive event or semaphore unlocking for send done.
+
+
+\subsection{missing Device Drivers}
 \begin{enumerate}
-\item Uart
 \item Console
 \item I2C
 \item Ethernet

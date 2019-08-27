@@ -17,8 +17,7 @@ semaphore operations}
 
 RTOS-UH used a different model, where termination while an active i/o statement
 is delayed until the next end-of-record. 
-This behavior is reasonable and may be applied for termination and
-suspending a task. 
+ 
 
 OpenPEARL uses an implementation which is more close to the language report.
 All tasking statements which are executed by the task itself are executed 
@@ -40,27 +39,29 @@ which are
 \item  in each synchronisation statement and 
 \item in each i/o operation on the system device.
 \end{itemize}
-In order to interrupt a blocked i/o operation, each platform MUST implement 
-methods in the task implementation to SUSPEND and TERMIATE a task while 
-performing i/o operations.
-For the list of specialized tasking methods please refer the
-{\em pure virtual} methods of \verb|TaskCommon| in the Doxygen
-part of the documentation. The implementation on linux systems is described 
-in section \ref{linux_suspend,linux_terminate} and for FreeRTOS based systems 
-in section \ref{freertos_tasking}.
 
 During i/o-operation it is a little bit more complicated. OpenPEARL
 recommends like stated in the language report that suspend and terminate
-effect the task state immediatelly. Thus the platform specific implementation
-must inform the system device driver to stop the i/o operation.
-The system device driver must invoke a platform dependend method
-\verb|treatCancelIo| which will throw ether an exception
+effect the task state immediatelly.
+In order to interrupt a blocked i/o operation, each platform MUST implement 
+methods in the system dation's implementation to SUSPEND and TERMINATE a task while 
+performing i/o operations.
+
+The system device driver must invoke a platform dependent method
+\verb|treatCancelIO| which will throw ether an exception
 (\verb|TerminateRequestSignal|) in case of a termination request
  or just suspends itself.
 The TerminateRequestSignal is caught and rethrown at each block which 
 locks internal mutexes or semaphores. These variables are unlocked in
 the exception handler and the exception is rethrown up to the upmost i/o-API
 function.
+
+For the list of specialized tasking methods please refer the
+{\em pure virtual} methods of \verb|TaskCommon| in the Doxygen
+part of the documentation. The implementation on linux systems is described 
+in sections \ref{linux_suspend}, \ref{linux_terminate} and for FreeRTOS based systems 
+in section \ref{freertos_tasking}.
+
 
 The new state diagram is shown in 
 fig. \ref{taskStatesOpenPEARL}.
@@ -85,6 +86,9 @@ is ether:
    on an user dation
 \item[IOWaitQueue], which means that the task is waiting in a priority based
    queue to start it's i/o-operation
+\item[IO\_MULT\_IO], which means that the task is waiting in a 
+   queue to start it's i/o-operation. The queue is treated by the 
+   system dation like in the Console device.
 \end{description}
 
 Several classes support the tasking operations:
