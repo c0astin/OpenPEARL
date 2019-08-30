@@ -1,4 +1,3 @@
-menu Linux
 config LINUX
 	boolean "Select the generic Linux runtime system"
 	default y
@@ -8,8 +7,10 @@ config LINUX
         systems.
 	Usually select this.
 
-config LINUX_Raspberry
+menu "Linux system specific options"
 	depends on LINUX
+
+config LINUX_Raspberry
 	boolean "Target is Raspberry Pi"
 	default n
 	help
