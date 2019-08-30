@@ -154,7 +154,7 @@ namespace pearlrt {
          throw theInternalTaskSignal;
       }
 
-      vTaskSetThreadLocalStoragePointer(xth,TASK_SELF_TLS,this);
+      vTaskSetThreadLocalStoragePointer((TaskHandle_t)xth,TASK_SELF_TLS,this);
 
       DEBUG("%s::activated ", name);
 
@@ -281,7 +281,7 @@ Log::debug("%s: terminateIO called", name);
       cp = switchToThreadPrioMax();
 
          {
-            int f = uxTaskGetStackHighWaterMark(this->xth);
+            int f = uxTaskGetStackHighWaterMark((TaskHandle_t)this->xth);
             printf("Task stack usage: %d\n", f);
          }
 
