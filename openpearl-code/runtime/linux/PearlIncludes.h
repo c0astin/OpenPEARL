@@ -126,6 +126,8 @@ Only this file mus be included.
 #include "I2CBus.h"
 #include "BME280.h"
 #endif
+#include "PCF9685.h"
+#include "PCF9685Channel.h"
 #endif
 #ifdef CONFIG_I2C_LM75
 #include "LM75.h"
