@@ -83,18 +83,16 @@ CXX_COMMON = \
 	FullDuplexDationAbortNB.cc\
 	SampleBasicDation.cc 
 
+#CONFIG_HAC_I2C must be set manually by the makefile of
+# the platform, which is build now
 ifeq ($(CONFIG_HAS_I2C),y)
    HDR_COMMON += I2CProvider.h
-   ifeq ($(CONFIG_I2C_LM75),y)
-      CXX_COMMON += LM75.cc
-      XML_COMMON += LM75.xml
-   endif
+   CXX_COMMON += LM75.cc
+   XML_COMMON += LM75.xml
    CXX_COMMON += ADS1015SE.cc
    XML_COMMON += ADS1015SE.xml
-   ifeq ($(CONFIG_I2C_PCF8574),y)
-      CXX_COMMON += PCF8574Pool.cc PCF8574In.cc PCF8574Out.cc
-      XML_COMMON += PCF8574In.xml PCF8574Out.xml
-   endif
+   CXX_COMMON += PCF8574Pool.cc PCF8574In.cc PCF8574Out.cc
+   XML_COMMON += PCF8574In.xml PCF8574Out.xml
    CXX_COMMON += BME280.cc bosch/bme280.c
    XML_COMMON += BME280.xml
    CXX_COMMON += PCF9685.cc PCF9685Channel.cc
