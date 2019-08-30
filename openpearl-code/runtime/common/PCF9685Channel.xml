@@ -1,0 +1,10 @@
+   <dation name="PCF9685Channel">
+      <parameters>
+         <FIXED length="31">
+            <FIXEDRANGE>0,15</FIXEDRANGE>
+         </FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, OUT</attributes>
+      <data>FIXED(15)</data>
+      <needAssociation name="PCF9685Provider" />
+   </dation>
