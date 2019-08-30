@@ -110,10 +110,9 @@ namespace pearlrt {
       }
 
       if (!(system->capabilities() & (OUT | INOUT))) {
-         Log::error("DationTS: device does not support read");
+         Log::error("DationTS: device does not support write");
          throw theInternalDationSignal;
       }
-printf("DationPG::dationWrite: work=%p\n", work);
       work->dationWrite(data, size);
    }
 
