@@ -173,6 +173,8 @@ Synopsis: PCF9685Channel(channel) --- PCF9685(address, prescaler) \\
 \paragraph{Notes:}\ 
 \begin{itemize}
 \item The PCF9685 needs an I2C-device for operation
+\item The outputs are configured as totem pole. This 
+    setting may not set channel specific.
 \item Check the requirements of your actor for maximum freqency
     and maximum duty cycle.
 \end{itemize}
