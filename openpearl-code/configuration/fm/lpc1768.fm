@@ -131,7 +131,7 @@ config LPC1768_CAN
 
 endmenu
 
-config CONFIG_LPC1768_FLASHINTERFACE
+config LPC1768_FLASH_INTERFACE
         depends on LPC1768
         string "Name of Interface for serial flashing"
         default "/dev/ttyUSB0"
