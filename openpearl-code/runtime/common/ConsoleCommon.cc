@@ -37,24 +37,27 @@ namespace pearlrt {
 #define BS 0x08
 #define ESC 27
 #define BRACKETOPEN '['
+// prefixed with ESC [
 #define RIGHT 67
 #define LEFT  68
 #define UP   0x41      // not used yet
 #define DOWN   0x42    // not used yet
-#define INSERT 50
-#define DELETE 51
-#define HOME   'H'    // ESC O H
-#define END    'F'    // ESC O F
+#define INSERT 50	// change insert mode
+#define DELETE 51	// delete from right
+
+// prefixed with ESC O
+#define HOME   'H'
+#define END    'F'
+
 #define NL '\n'
 #define BEL '\a'  // alarm code
 #define SPACE ' '
 #define UTF8_Part1 0xc2
-//static const int UTF8_Part1 = (int)0xFFc2;
-//static const int UTF8_Part2 = 0xc3;
 #define UTF8_Part2 0xc3
 
    ConsoleCommon::ConsoleCommon() {
       insertMode = false;
+      inputStarted = false;
       lastAdressedTask = NULL;
       waitingForInput = NULL;
       mutex.name("ConsoleCommon");
@@ -69,7 +72,6 @@ namespace pearlrt {
       commands[2].command = "/PRLI";
       commands[2].help = &ConsoleCommon::helpPrli;
       commands[2].doIt = &ConsoleCommon::printPrli;
-
    }
 
    void ConsoleCommon::setSystemDations(SystemDationNB* in,
@@ -149,6 +151,7 @@ namespace pearlrt {
       bool endOfLineReceived = false;
       bool taskIsInList;
 
+
       nbrEnteredCharacters = 0;
       cursorPosition = 0;
       inputStarted = false;
@@ -196,11 +199,9 @@ namespace pearlrt {
                }
             }
          } else if ((ch & 0x0ff) == UTF8_Part1 || (ch & 0x0ff) == UTF8_Part2) {
-            inputStarted = true;
             wch.page = ch;
             wch.ch = getChar();
          } else {
-            inputStarted = true;
             wch.ch = ch;
             wch.page = 0;
          }
@@ -218,7 +219,7 @@ namespace pearlrt {
 //     printf("end-of-record found cp=%zu nbr=%zu\n>%s<\n",
 //             cursorPosition, nbrEnteredCharacters, inputLine);
                endOfLineReceived = true;
-            } else if (wch.ch == 0x07f && wch.page == 0) {
+            } else if ((wch.ch == 0x07f || wch.ch == BS) && wch.page == 0) {
                // del to left
                if (cursorPosition > 0) {
                   for (i = cursorPosition; i < nbrEnteredCharacters; i++) {
@@ -332,6 +333,15 @@ namespace pearlrt {
             break;
 
          }
+
+         if (nbrEnteredCharacters > 0) {
+            inputStarted = true;
+         } else {
+            if (inputStarted) {
+               inputStarted = false;
+               startNextWriter();
+            }
+         }
       }
 
       // input line ready
@@ -362,6 +372,7 @@ namespace pearlrt {
                   for (t = waitingForInput;
                         t != NULL; t = t->getNext()) {
                      // ignore leading underscore in task name
+
                      if (strcmp(t->getName() + 1,
                                 inputLine.compressedLine + 1) == 0) {
                         // found adressed task

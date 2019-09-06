@@ -61,11 +61,18 @@ namespace pearlrt {
    it is set again.
    */
    class TaskTimerCommon {
-   public:
+   protected:
       /**
       pointer to a callback function defined for easier coding
       */
       typedef void (*TimerCallback)(TaskCommon*);
+
+      int counts;   //remaining number of timer periods to repeat the action
+      int countsBackup;  //number of timer periods to repeat the action
+      TaskCommon* task;
+      TimerCallback callback;
+      timer_t timer;     // the timer
+      struct itimerspec its;  // the timer data required in triggered when
 
    public:
 
@@ -137,10 +144,20 @@ namespace pearlrt {
       \returns true, if the time is set <br>false else
       */
       virtual bool isSet() = 0;
+
+      /**
+       print detailed status of timer into given string
+
+       \param id short form of the time 'ACT' or 'CONT'. This
+              parameter is set by the calling function and passed
+              to the resulting string
+       \param line string which receives the details about the timer
+              status
+       */
+      void detailedStatus(char * id, char * line);
    };
-/**
-@}
-*/
+   /**
+   @}
+   */
 }
 #endif
-

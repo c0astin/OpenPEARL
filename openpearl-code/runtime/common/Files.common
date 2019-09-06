@@ -61,6 +61,7 @@ CXX_COMMON = \
 	TaskCommon.cc \
 	TaskList.cc \
 	TaskMonitor.cc \
+	TaskTimerCommon.cc \
 	MutexCommon.cc CSemaCommon.cc \
 	Semaphore.cc PriorityQueue.cc \
 	Rst.cc \
@@ -111,7 +112,6 @@ HDR_COMMON = $(CXX_COMMON:%.cc=%.h) \
 	Device.h UserDation.h \
 	PutCharacter.h \
 	Float.h \
-	TaskTimerCommon.h \
 	Ref.h 
 
 

@@ -417,6 +417,24 @@ int timer_delete(timer_t thatindex) {
    return 0;
 }
 
+int timer_gettime(timer_t timerid, struct itimerspec * itimer) {
+   uint64_t now, next;
+   clock_gettime_nsec(&now);
+
+   if (timerid > MAXTIMER) {
+      errno = EINVAL;
+      return -1;
+   }
+
+   next = timerTable[timerid].value.nsec_value - now;
+
+   itimer->it_value.tv_sec = next/1e9;
+   itimer->it_value.tv_nsec = next % 10000000000;
+   itimer->it_interval.tv_sec = timerTable[timerid].value.nsec_interval / 1e9;
+   itimer->it_interval.tv_nsec = timerTable[timerid].value.nsec_interval % 10000000000;
+   return 0;
+}
+
 int timer_settime(const timer_t timerid, const int flags,
                   const struct itimerspec *const value,
                   struct itimerspec *const ovalue) {

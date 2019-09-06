@@ -89,7 +89,7 @@ namespace pearlrt {
 
       this->timer_callback.cb = (void *)&freeRtosTimerCallback;
       this->timer_callback.th = (void *)this;
-      this->signalNumber = signalNumber;
+//      this->signalNumber = signalNumber;
       this->callback = cb;
       this->task = task;
   

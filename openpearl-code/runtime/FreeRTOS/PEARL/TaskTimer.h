@@ -79,13 +79,12 @@ namespace pearlrt {
       */
       typedef void (*TimerCallback)(TaskCommon*);
    private:
-      int counts;   //remaining number of timer periods to repeat the action
-      int countsBackup;  //number of timer periods to repeat the action
-      TaskCommon* task;
-      TimerCallback callback;
+//      int counts;   //remaining number of timer periods to repeat the action
+//      TaskCommon* task;
+//      TimerCallback callback;
       int signalNumber;
-      timer_t timer;     // the timer
-      struct itimerspec its;  // the timer data required in triggered when
+//      timer_t timer;     // the timer
+//      struct itimerspec its;  // the timer data required in triggered when
       struct {
       		  void *cb;
       		  void *th;
@@ -214,7 +213,7 @@ namespace pearlrt {
       must call this method on each timer event.
       */
       void update();
-
+#if 0
       /**
       print detailed status of timer into given string
 
@@ -225,6 +224,7 @@ namespace pearlrt {
              status
       */
       void detailedStatus(char * id, char * line);
+#endif
    };
 
    /** @} */

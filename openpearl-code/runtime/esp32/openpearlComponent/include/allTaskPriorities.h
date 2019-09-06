@@ -79,4 +79,5 @@ to PRIO_PEARL_PRIO_MAX
 /*-------------------------------*/
 /* Priorities on the PRO-CPU     */
 #define PRIO_UART_SEND_TASK    100
+#define PRIO_CONSOLE_TASK    100
 #endif

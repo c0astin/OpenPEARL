@@ -1,7 +1,7 @@
 /**
   \file
 
-  
+
 */
 
 /*
@@ -76,28 +76,30 @@ namespace pearlrt {
    until the output is completed.
 
 
-  The UART device of the ESP32 platform is implemented upon the ESP32 api.
-  The GenericUart implementation from other FreeRTOS based system does
-  not fit, since GenericUart depends on a own implementation of the
-  interrupt service routine. This would be possible for the ESP32, but
-  we would loose contact to improvements in the rapidly growing esp32 api. 
+   The UART device of the ESP32 platform is implemented upon the ESP32 api.
+   The GenericUart implementation from other FreeRTOS based system does
+   not fit, since GenericUart depends on a own implementation of the
+   interrupt service routine. This would be possible for the ESP32, but
+   we would loose contact to improvements in the rapidly growing esp32 api.
 
    */
    class Esp32Uart : public FullDuplexDationAbortNB {
 
-   /** the esp32 api for the uart requires a longer receive buffer than
-      the internal FIFO length of 128 bytes
-      lets add 2 Bytes to make the api happy
-   */
+      /** the esp32 api for the uart requires a longer receive buffer than
+         the internal FIFO length of 128 bytes
+         lets add 2 Bytes to make the api happy
+      */
 #define ESP32_UART_BUFFSIZE  130
 
-/**
- stack of for uartSendTask: configMINIMAL_STACK_SIZE is sufficient
-*/
-#define ESP32_UART_STACK_SIZE 768 
+      /**
+       stack of for uartSendTask: configMINIMAL_STACK_SIZE is sufficient
+      */
+#define ESP32_UART_STACK_SIZE 768
 
    private:
       Mutex mutex;      // mutex for objects data
+      Mutex mutexRead;      // mutex for objects data
+      Mutex mutexWrite;      // mutex for objects data
 
       enum {writeAbort = 1, writeAborted = 2} UartOutTaskCommandStatus;
 
@@ -105,25 +107,25 @@ namespace pearlrt {
          const char * data;
          size_t nbr;
          CSema done;
-	 Mutex mutex;
+         Mutex mutex;
 
          /**
          the status field is used to abort a write operation.
          <ul>
          <li>Initially set to 0
-         <li> bit 0 ist set by the application if an abort request 
+         <li> bit 0 ist set by the application if an abort request
               is set
-         <li> bit 1 is set when theabort request is detected. This 
+         <li> bit 1 is set when theabort request is detected. This
               bit indicates that there a an write job still in progres.
               Before the next write job we must wait for the completion
               of the previous write job.
          <li> If we get a new abort request during wait for completion of the
               previous write bon, we set bit 0 and clear bit 1 and
-              we call treatCancelIO and wait until 
+              we call treatCancelIO and wait until
               we get terminated or the previous write job succeeds.
          </ul>
          */
-         int status;   
+         int status;
       } sendCommand;
       FakeStackType_t uartSendTaskStack[ESP32_UART_STACK_SIZE];
       FakeTCB_t       uartSendTaskTCB;

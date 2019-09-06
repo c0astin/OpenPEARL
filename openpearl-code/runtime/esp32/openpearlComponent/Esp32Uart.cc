@@ -47,8 +47,8 @@
 #include "TaskCommon.h"
 #include "Signals.h"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
+//#include "freertos/FreeRTOS.h"
+//#include "freertos/semphr.h"
 #include "esp_log.h"
 #include "driver/uart.h"
 #include "soc/uart_struct.h"
@@ -108,6 +108,10 @@ namespace pearlrt {
 
       found = false;
       isOpen = false;
+      hasUnGetChar = false;
+      doNewLineTranslation = false;
+      rxDataPending = 0;
+      rxReadPointer = 0;
 
       for (i = 0;
             i < (int)(sizeof(validBaudRates) / sizeof(validBaudRates[0]));
@@ -171,6 +175,8 @@ namespace pearlrt {
 
 
       uartConfig.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
+      // the esp-uart.c needs this value even if HW-FLOW ist disabled
+      uartConfig.rx_flow_ctrl_thresh = 120;
 
       ESP_ERROR_CHECK(uart_param_config((uart_port_t)uartNum, &uartConfig));
       ESP_ERROR_CHECK(uart_set_pin((uart_port_t)uartNum,
@@ -187,11 +193,11 @@ namespace pearlrt {
            filter each received byte and enable/disable the
            transmission according xoff/xon reception.
            The generic ISR does not allow this.
-           Thus we need a own isr for the uart. 
+           Thus we need a own isr for the uart.
            The ISR of the api may be reduced to the relevant parts.
           */
-          Log::error("Esp32Uart: xon/xoff not supported yet");
-          throw theInternalDationSignal;
+         Log::error("Esp32Uart: xon/xoff not supported yet");
+         throw theInternalDationSignal;
       }
 
       uart_driver_install(
@@ -203,7 +209,14 @@ namespace pearlrt {
          0
       );			//interrupt allocation flags
 
+      // initialize some attributes ..
+      rxReadPointer = 0;
+      rxDataPending = 0;
+
       sendCommand.status = 0;
+
+      uart_flush_input((uart_port_t)uartNum);
+
       uartSendTaskHandle = xTaskCreateStatic(
                               uartSendTask,
                               "uartSendTask",
@@ -256,12 +269,15 @@ namespace pearlrt {
       size_t readPending = 0;
       int i;
 
-      mutex.lock();
       char* dataPointer = (char*) destination;
+
+      mutexRead.lock();
+//     mutex.lock();
 
       if (!isOpen) {
          Log::error("Esp32Uart: not opened");
-         mutex.unlock();
+         mutexRead.unlock();
+//         mutex.unlock();
          throw theDationNotOpenSignal;
       }
 
@@ -278,6 +294,8 @@ namespace pearlrt {
          size--;
          dataPointer++;
       }
+
+//     mutex.unlock();
 
       try {
          while (size > 0) {
@@ -311,22 +329,27 @@ namespace pearlrt {
                // if data or ABORT is detected, the return value is 0
                if (uartRecv()) {
                   setReaderTask(NULL);
-                  mutex.unlock();
+                  mutexRead.unlock();
                   throw theReadingFailedSignal;
                }
 
-               Task::currentTask()->treatCancelIO();
+               Task* ct = Task::currentTask();
+
+               if (ct) {
+                  ct->treatCancelIO();
+               }
+
             }
          }
       } catch (TerminateRequestSignal s) {
          setReaderTask(NULL);
-         mutex.unlock();
+         mutexRead.unlock();
          throw;
       }
 
 
       setReaderTask(NULL);
-      mutex.unlock();
+      mutexRead.unlock();
 
    }
 
@@ -335,6 +358,7 @@ namespace pearlrt {
       static const char cr = '\r';
       char * source = (char*) src;
 
+      mutexWrite.lock();
       mutex.lock();
 
       if (!isOpen) {
@@ -342,6 +366,8 @@ namespace pearlrt {
          mutex.unlock();
          throw theDationNotOpenSignal;
       }
+
+      mutex.unlock();
 
       setWriterTask(Task::currentTask());
 
@@ -351,28 +377,28 @@ namespace pearlrt {
       // which contains mutex and semaphore operations which must
       // be unlocked
       try {
-      if (doNewLineTranslation) {
-         for (i = 0; i < size; i++) {
-            if (*source == '\n') {
-               writeBytes(&cr, 1);
+         if (doNewLineTranslation) {
+            for (i = 0; i < size; i++) {
+               if (*source == '\n') {
+                  writeBytes(&cr, 1);
+               }
+
+               writeBytes(source, 1);
+               source ++;
             }
-
-            writeBytes(source, 1);
-            source ++;
+         } else {
+            writeBytes(source, size);
          }
-      } else {
-         writeBytes(source, size);
-      }
-      } catch(TerminateRequestSignal & s) {
-          setWriterTask(NULL);
-          mutex.unlock();
-          throw;
+      } catch (TerminateRequestSignal & s) {
+         setWriterTask(NULL);
+         mutexWrite.unlock();
+         throw;
       }
 
-      uart_wait_tx_done((uart_port_t)(uartNum),(portTickType)100 /*portMAX_DELAY*/);
+      uart_wait_tx_done((uart_port_t)(uartNum), (portTickType)portMAX_DELAY);
 
       setWriterTask(NULL);
-      mutex.unlock();
+      mutexWrite.unlock();
 
    }
 
@@ -381,6 +407,7 @@ namespace pearlrt {
       // invocation of this method - if yes - let#s wait
       // until the previous output command was compeleted
       sendCommand.mutex.lock();
+
       while (sendCommand.status & writeAborted) {
          sendCommand.status &= ~writeAborted;
          sendCommand.mutex.unlock();
@@ -391,14 +418,22 @@ namespace pearlrt {
          // if yes, we must repeat in case of suspend as
          // long we are no longer aborted
          sendCommand.mutex.lock();
-	 if (sendCommand.status & writeAbort) {
+
+         if (sendCommand.status & writeAbort) {
             sendCommand.status |= writeAborted;
             sendCommand.status &= ~writeAbort;
             sendCommand.mutex.unlock();
-            Task::currentTask()->treatCancelIO();
+
+            Task* ct = Task::currentTask();
+
+            if (ct) {
+               ct->treatCancelIO();
+            }
+
             sendCommand.mutex.lock();
-         } 
+         }
       }
+
       sendCommand.mutex.unlock();
 
       sendCommand.data = data;
@@ -408,11 +443,18 @@ namespace pearlrt {
 
       // check if the write was aborted
       sendCommand.mutex.lock();
+
       if (sendCommand.status & writeAbort) {
          sendCommand.status &= ~writeAbort;
          sendCommand.status |= writeAborted;
          sendCommand.mutex.unlock();
-         Task::currentTask()->treatCancelIO();
+
+         Task* ct = Task::currentTask();
+
+         if (ct) {
+            ct->treatCancelIO();
+         }
+
          // if we reach this line, than we had a write abort and
          // no TerminateRequestSignal
          // the last job may be still in progress
@@ -422,7 +464,6 @@ namespace pearlrt {
    }
 
    void Esp32Uart::dationUnGetChar(const char c) {
-
       mutex.lock();
 
       if (!isOpen) {
@@ -546,8 +587,8 @@ namespace pearlrt {
          ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
          transmitted = uart_write_bytes((uart_port_t)(uartObject->uartNum),
-                          uartObject->sendCommand.data,
-                          uartObject->sendCommand.nbr);
+                                        uartObject->sendCommand.data,
+                                        uartObject->sendCommand.nbr);
 
          // inform PEARL application that the write was compeleted
          // maybe only sent into the transmit fifo
