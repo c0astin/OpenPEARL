@@ -88,7 +88,7 @@ namespace pearlrt {
                         const Fixed<31> w,
                         const Fixed<31> d,
                         Source & source) {
-         Float<53> value;
+         Float<52> value;
 
          if (w.x <= 0 || d.x < 0 || w.x < d.x) {
             throw theFixedFormatSignal;
@@ -135,7 +135,7 @@ namespace pearlrt {
                         const Fixed<31> d,
 			const Fixed<31> s,
                         Source & source) {
-         Float<53> value;
+         Float<52> value;
 
          if (w.x <= 0 || d.x < 0 || s.x < 1) {
             throw theExpFormatSignal;

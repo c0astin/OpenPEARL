@@ -293,7 +293,7 @@ namespace pearlrt {
       \throws FixedValueSignal if illegal characters were found
       \throws FixedFormatSignal if parameters were wrong
       */
-      void readFloatByF(Float<53> * value, int d);
+      void readFloatByF(Float<52> * value, int d);
 
       /**
       read float variable
@@ -305,7 +305,7 @@ namespace pearlrt {
       \throws FixedValueSignal if illegal characters were found
       \throws FixedFormatSignal if parameters were wrong
       */
-      void readFloatByE(Float<53> * value);
+      void readFloatByE(Float<52> * value);
    };
    /** @} */
 }

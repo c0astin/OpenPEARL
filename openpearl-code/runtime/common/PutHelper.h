@@ -82,7 +82,7 @@ namespace pearlrt {
       /**
       the values of the exponents with only one bit set
       */
-      const static Float<53> binExpValues[];
+      const static Float<52> binExpValues[];
 
       /**
       the length of the array binExpValues

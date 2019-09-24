@@ -127,7 +127,7 @@ namespace pearlrt {
    STRUCTs must be rolled out by the compiler downto the simple types.
 
    Example:<br>
-    x and width are FIXED(15) and y is a FLOAT(53)
+    x and width are FIXED(15) and y is a FLOAT(52)
 
     \code
     PUT 'X=',x, 'Y=', y+1 TO so BY A,F(5), X(width+2),A(4), E(13,6),SKIP;
@@ -152,7 +152,7 @@ namespace pearlrt {
           .dataPtr{.outData=&CONST_CHAR_4567}
        },
        { // index 3
-          .datatype={IODataEntry::FLOAT,53},
+          .datatype={IODataEntry::FLOAT,52},
           .dataPtr{.outData=&resultOfExpr1}
        },
     };
@@ -202,7 +202,7 @@ namespace pearlrt {
    please refer to their documentation.
 
    Example:
-    Assume x and width as FIXED(15), and y as FLOAT(53)
+    Assume x and width as FIXED(15), and y as FLOAT(52)
 
     \code
     PUT 'X=',x, 'Y=', y+1 TO so BY A,F(5), X(width+2),A(4), E(13,6),SKIP;
@@ -284,11 +284,11 @@ namespace pearlrt {
    \brief specification of a data element inside of an io job.
 
    Example:
-   reading a value into the FLOAT(53) variable.
+   reading a value into the FLOAT(52) variable.
    Note that the variable one with type size_t has the value 1.
    \code
    {
-      .dataType={IODataEntry::FLOAT,53},
+      .dataType={IODataEntry::FLOAT,52},
       .dataPtr.inData = _x,
       .numberOfElements = & one,
    }
@@ -405,7 +405,7 @@ namespace pearlrt {
    \brief specification of a format element inside of an io job.
 
    Example:
-   reading a value into the FLOAT(53) variable x with the
+   reading a value into the FLOAT(52) variable x with the
    format F(13,6)
    \code
    {

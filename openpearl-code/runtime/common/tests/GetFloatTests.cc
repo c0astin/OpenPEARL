@@ -61,25 +61,25 @@ TEST(GetFloat, conversions) {
    pearlrt::RefCharacter rc;
    rc.setWork(d);
    pearlrt::RefCharSource source(rc);
-   pearlrt::Float<53> f53;
+   pearlrt::Float<52> f53;
    // normal operations
    {
       //                        123456789012345678901234567890
       pearlrt::Character<30> d(" 12        X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<53>::fromF(f53, 6, 0, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(12)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<52>::fromF(f53, 6, 0, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(12)).getBoolean());
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<53>::fromF(f53, 3, 0, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(12)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<52>::fromF(f53, 3, 0, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(12)).getBoolean());
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<53>::fromF(f53, 2, 0, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(1)).getBoolean());
-      EXPECT_NO_THROW(pearlrt::GetFloat<53>::fromF(f53, 2, 0, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(2)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<52>::fromF(f53, 2, 0, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(1)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<52>::fromF(f53, 2, 0, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(2)).getBoolean());
       // empty input
-      EXPECT_THROW(pearlrt::GetFloat<53>::fromF(f53, 2, 0, source),
+      EXPECT_THROW(pearlrt::GetFloat<52>::fromF(f53, 2, 0, source),
           pearlrt::FixedValueSignal);
    }
    // illegal w,d
@@ -89,13 +89,13 @@ TEST(GetFloat, conversions) {
       rc.setWork(d);
       source.rewind();
       EXPECT_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, 0, 0, source),
+         pearlrt::GetFloat<52>::fromF(f53, 0, 0, source),
          pearlrt::FixedFormatSignal);
       EXPECT_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, -1, 0, source),
+         pearlrt::GetFloat<52>::fromF(f53, -1, 0, source),
          pearlrt::FixedFormatSignal);
       EXPECT_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, 6, -1, source),
+         pearlrt::GetFloat<52>::fromF(f53, 6, -1, source),
          pearlrt::FixedFormatSignal);
    }
    // inplicit decimal
@@ -104,8 +104,8 @@ TEST(GetFloat, conversions) {
       pearlrt::Character<30> d(" 12345    X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<53>::fromF(f53, 6, 1, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(1234.5)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<52>::fromF(f53, 6, 1, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(1234.5)).getBoolean());
    }
    // negative and implicit decimal
    {
@@ -113,8 +113,8 @@ TEST(GetFloat, conversions) {
       pearlrt::Character<30> d("-12345    X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<53>::fromF(f53, 6, 1, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(-1234.5)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<52>::fromF(f53, 6, 1, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(-1234.5)).getBoolean());
    }
    // skip wrong field
    {
@@ -123,11 +123,11 @@ TEST(GetFloat, conversions) {
       rc.setWork(d);
       source.rewind();
       EXPECT_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, 4, 0, source),
+         pearlrt::GetFloat<52>::fromF(f53, 4, 0, source),
          pearlrt::FixedValueSignal);
       EXPECT_NO_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, 2, 0, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(69)).getBoolean());
+         pearlrt::GetFloat<52>::fromF(f53, 2, 0, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(69)).getBoolean());
    }
    // skip remaining after field
    {
@@ -136,11 +136,11 @@ TEST(GetFloat, conversions) {
       rc.setWork(d);
       source.rewind();
       EXPECT_NO_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, 5, 0, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(27)).getBoolean());
+         pearlrt::GetFloat<52>::fromF(f53, 5, 0, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(27)).getBoolean());
       EXPECT_NO_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, 2, 0, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(69)).getBoolean());
+         pearlrt::GetFloat<52>::fromF(f53, 2, 0, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(69)).getBoolean());
    }
    // precision with given decimal point
    {
@@ -149,8 +149,8 @@ TEST(GetFloat, conversions) {
       rc.setWork(d);
       source.rewind();
       EXPECT_NO_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, 6, 2, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(12.34)).getBoolean());
+         pearlrt::GetFloat<52>::fromF(f53, 6, 2, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(12.34)).getBoolean());
    }
    // precision  without given decimal point
    {
@@ -159,8 +159,8 @@ TEST(GetFloat, conversions) {
       rc.setWork(d);
       source.rewind();
       EXPECT_NO_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, 6, 2, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(12.34)).getBoolean());
+         pearlrt::GetFloat<52>::fromF(f53, 6, 2, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(12.34)).getBoolean());
    }
    // long mantissa
    {
@@ -169,9 +169,9 @@ TEST(GetFloat, conversions) {
       rc.setWork(d);
       source.rewind();
       EXPECT_NO_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, 26, 2, source));
-      EXPECT_TRUE((f53 > pearlrt::Float<53>(1.234567890e24)).getBoolean());
-      EXPECT_TRUE((f53 < pearlrt::Float<53>(1.234567891e24)).getBoolean());
+         pearlrt::GetFloat<52>::fromF(f53, 26, 2, source));
+      EXPECT_TRUE((f53 > pearlrt::Float<52>(1.234567890e24)).getBoolean());
+      EXPECT_TRUE((f53 < pearlrt::Float<52>(1.234567891e24)).getBoolean());
    }
    // long mantissa with leading zeros
    {
@@ -180,8 +180,8 @@ TEST(GetFloat, conversions) {
       rc.setWork(d);
       source.rewind();
       EXPECT_NO_THROW(
-         pearlrt::GetFloat<53>::fromF(f53, 27, 2, source));
-      EXPECT_TRUE((f53 == pearlrt::Float<53>(1.234567e4)).getBoolean());
+         pearlrt::GetFloat<52>::fromF(f53, 27, 2, source));
+      EXPECT_TRUE((f53 == pearlrt::Float<52>(1.234567e4)).getBoolean());
    }
    // wrong data in field 
    {
@@ -189,7 +189,7 @@ TEST(GetFloat, conversions) {
       pearlrt::Character<30> d("-.A                           ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW( pearlrt::GetFloat<53>::fromF(f53, 7, 2, source),
+      EXPECT_THROW( pearlrt::GetFloat<52>::fromF(f53, 7, 2, source),
          pearlrt::FixedValueSignal);
    }
 
@@ -201,15 +201,15 @@ TEST(GetFloat, f24) {
    pearlrt::RefCharacter rc;
    rc.setWork(d);
    pearlrt::RefCharSource source(rc);
-   pearlrt::Float<24> f24;
+   pearlrt::Float<23> f24;
    // normal operations
    {
       //                        123456789012345678901234567890
       pearlrt::Character<30> d(" 12           X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<24>::fromF(f24, 6, 1, source));
-      EXPECT_TRUE((f24 == pearlrt::Float<24>(1.2)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<23>::fromF(f24, 6, 1, source));
+      EXPECT_TRUE((f24 == pearlrt::Float<23>(1.2)).getBoolean());
    }
    // overflow 
    {
@@ -217,7 +217,7 @@ TEST(GetFloat, f24) {
       pearlrt::Character<50> d("1234567890123456789012345678901234567890.0");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromF(f24, 45, 0, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromF(f24, 45, 0, source),
           pearlrt::FloatIsINFSignal);
    }
 }
@@ -228,39 +228,39 @@ TEST(getFloat, EFormat) {
    pearlrt::RefCharacter rc;
    rc.setWork(d);
    pearlrt::RefCharSource source(rc);
-   pearlrt::Float<24> f24;
+   pearlrt::Float<23> f24;
    // normal operations
    {
       //                        123456789012345678901234567890
       pearlrt::Character<30> d(" 12E3           X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, 1, 4, source));
-      EXPECT_TRUE((f24 == pearlrt::Float<24>(1.2E4)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, 1, 4, source));
+      EXPECT_TRUE((f24 == pearlrt::Float<23>(1.2E4)).getBoolean());
    }
    {
       //                        123456789012345678901234567890
       pearlrt::Character<30> d(" 12             X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, 1, 4,source));
-      EXPECT_TRUE((f24 == pearlrt::Float<24>(1.2E1)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, 1, 4,source));
+      EXPECT_TRUE((f24 == pearlrt::Float<23>(1.2E1)).getBoolean());
    }
    {
       //                        123456789012345678901234567890
       pearlrt::Character<30> d(" 12E-4             X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, 1, 4, source));
-      EXPECT_TRUE((f24 == pearlrt::Float<24>(1.2E-3)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, 1, 4, source));
+      EXPECT_TRUE((f24 == pearlrt::Float<23>(1.2E-3)).getBoolean());
    }
    {
       //                        123456789012345678901234567890
       pearlrt::Character<30> d("-12E-4             X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, 1, 4, source));
-      EXPECT_TRUE((f24 == pearlrt::Float<24>(-1.2E-3)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, 1, 4, source));
+      EXPECT_TRUE((f24 == pearlrt::Float<23>(-1.2E-3)).getBoolean());
    }
    // exotic values
    {
@@ -268,8 +268,8 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d("1E-4             X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, 1, 4, source));
-      EXPECT_TRUE((f24 == pearlrt::Float<24>(1E-4)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, 1, 4, source));
+      EXPECT_TRUE((f24 == pearlrt::Float<23>(1E-4)).getBoolean());
    }
    // exotic values
    {
@@ -277,8 +277,8 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d(".1E-4             X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, 1, 4, source));
-      EXPECT_TRUE((f24 == pearlrt::Float<24>(1E-5)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, 1, 4, source));
+      EXPECT_TRUE((f24 == pearlrt::Float<23>(1E-5)).getBoolean());
    }
    // exotic values
    {
@@ -286,8 +286,8 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d("-.1E-4             X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_NO_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, 1, 4, source));
-      EXPECT_TRUE((f24 == pearlrt::Float<24>(-1E-5)).getBoolean());
+      EXPECT_NO_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, 1, 4, source));
+      EXPECT_TRUE((f24 == pearlrt::Float<23>(-1E-5)).getBoolean());
    }
 
 
@@ -297,11 +297,11 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d("                    ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 0, 1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 0, 1, 4, source),
         pearlrt::ExpFormatSignal);
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, -1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, -1, 4, source),
         pearlrt::ExpFormatSignal);
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, 1, 0, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, 1, 0, source),
         pearlrt::ExpFormatSignal);
    }
    // error: no data
@@ -310,7 +310,7 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d("                    ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, 1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, 1, 4, source),
         pearlrt::ExpValueSignal);
    }
    // error: illegal value only -
@@ -319,7 +319,7 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d(" -                  ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 6, 1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 6, 1, 4, source),
         pearlrt::ExpValueSignal);
    }
    // error: illegal value only no mantissa
@@ -328,7 +328,7 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d(" E10                  ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 16, 1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 16, 1, 4, source),
         pearlrt::ExpValueSignal);
    }
    // error: illegal value only no mantissa
@@ -337,7 +337,7 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d(" +.E10                  ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 16, 1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 16, 1, 4, source),
         pearlrt::ExpValueSignal);
    }
    // error: illegal value only no mantissa
@@ -346,7 +346,7 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d(" .E10                  ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 16, 1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 16, 1, 4, source),
         pearlrt::ExpValueSignal);
    }
    // error: illegal value no exponent
@@ -355,7 +355,7 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d(" 1E                  ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 16, 1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 16, 1, 4, source),
         pearlrt::ExpValueSignal);
    }
    // error: illegal value no exponent
@@ -364,7 +364,7 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d(" 1E+                  ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 16, 1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 16, 1, 4, source),
         pearlrt::ExpValueSignal);
    }
    // error: illegal value no exponent
@@ -373,7 +373,7 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d(" 1e+3                  ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 16, 1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 16, 1, 4, source),
         pearlrt::ExpValueSignal);
    }
    // error: illegal value too large exponent
@@ -382,7 +382,7 @@ TEST(getFloat, EFormat) {
       pearlrt::Character<30> d(" 1E+333                ");
       rc.setWork(d);
       source.rewind();
-      EXPECT_THROW(pearlrt::GetFloat<24>::fromE(f24, 16, 1, 4, source),
+      EXPECT_THROW(pearlrt::GetFloat<23>::fromE(f24, 16, 1, 4, source),
         pearlrt::FloatIsINFSignal);
    }
 }

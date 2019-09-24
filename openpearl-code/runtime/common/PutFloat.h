@@ -228,9 +228,9 @@ namespace pearlrt {
          Fixed<31> eSize,
          Sink & sink) {
 
-         Float<53> x, y, testExponent; // internal workspace
-         static const Float<53> one(1.0); // internal workspace
-         static const Float<53> two(2.0); // internal workspace
+         Float<52> x, y, testExponent; // internal workspace
+         static const Float<52> one(1.0); // internal workspace
+         static const Float<52> two(2.0); // internal workspace
          
          int32_t leadingSpaces;
          int32_t expValue; // value of the exponent field
@@ -264,7 +264,7 @@ namespace pearlrt {
 
          x = floatValue;
 
-         if ((x < (Float<53>)0).getBoolean()) {
+         if ((x < (Float<52>)0).getBoolean()) {
             x = -x;
             sign = -1;
             leadingSpaces --;
@@ -307,7 +307,7 @@ namespace pearlrt {
 
          // scale x to the desired exponent base according s and expValue
          if (expValue < -99) {
-            x = (Float<53>)0.0;
+            x = (Float<52>)0.0;
             expValue = 0;
             prePointDigits = 1;
             postPointDigits = d.x;
@@ -329,24 +329,24 @@ namespace pearlrt {
          }
 
 
-         x = x / Float<53>(GetHelper::pow10(expValue));
+         x = x / Float<52>(GetHelper::pow10(expValue));
          y = GetHelper::pow10(prePointDigits-1);
 
          while (prePointDigits > 0) {
             ch = (x / y).x;
             sink.putChar(ch+'0');
-            x = x - (Float<53>)ch * y;
-            y = y / (Float<53>)10.0;
+            x = x - (Float<52>)ch * y;
+            y = y / (Float<52>)10.0;
             prePointDigits --;
          }
          sink.putChar('.');
 
-         y = (Float<53>)10.0;
+         y = (Float<52>)10.0;
          while (postPointDigits > 0) {
             x  = (x * y);
             ch = x.x;
             sink.putChar(ch+'0');
-            x = x - (Float<53>)ch;
+            x = x - (Float<52>)ch;
             postPointDigits --;
          }
          sink.putChar('E');

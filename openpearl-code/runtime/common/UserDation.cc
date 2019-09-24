@@ -166,10 +166,10 @@ namespace pearlrt {
 
          beginSequenceHook(me);       // deal with TFU stuff
 
-         mutexUserDation.unlock();
          TaskCommon::mutexUnlock(); // we need no longer access to task data
          me->scheduleCallback();
       }
+      mutexUserDation.unlock();
    }
 
    void UserDation::endSequence(TaskCommon * me) {
@@ -203,9 +203,10 @@ namespace pearlrt {
          }
  
          TaskCommon::mutexUnlock();
-         mutexUserDation.unlock();
          me->scheduleCallback();
       }
+
+      mutexUserDation.unlock();
    }
 
    PriorityQueue* UserDation::getWaitQueue() {

@@ -39,7 +39,7 @@
 /**
 \file
 
-\brief The data types Float(x)  only x=24 and x=53 are supported
+\brief The data types Float(x)  only x=23 and x=52 are supported
 
 
 \author R. Mueller
@@ -47,7 +47,7 @@
 
 The data type FLOAT(x) is realized with templates.
 Depending on the length of the requested FLOAT-value,
-the intrinsic type float (Float<24>) or double (Float<53>) is used.
+the intrinsic type float (Float<23>) or double (Float<52>) is used.
 Other lengths are not supported and will lead to c++-compile errors.
 
 */
@@ -71,22 +71,22 @@ namespace pearlrt {
    template < int T > struct InternalFloatType;
 
    /**
-   the internal type of the Float(24) is float
+   the internal type of the Float(23) is float
 
    */
-   template < > struct InternalFloatType<24> {
+   template < > struct InternalFloatType<23> {
       /**
-      The internal type of a Float(24) is float
+      The internal type of a Float(23) is float
       */
       typedef float InternalType;
    };
 
    /**
-   the internal type of the Float(53) is double
+   the internal type of the Float(52) is double
    */
-   template < > struct InternalFloatType<53> {
+   template < > struct InternalFloatType<52> {
       /**
-      The internal type of a Float(24) is double
+      The internal type of a Float(52) is double
       */
       typedef double InternalType;
    };
@@ -102,7 +102,7 @@ namespace pearlrt {
 
 
    Floats are specified with the number of mantissa bits.
-   Only 24 bit (float) and 53 bit (double) are provided in this
+   Only 23 bit (float) and 52 bit (double) are provided in this
    implementation.
 
    \tparam S length of the mantissa. The hidden one is included in this
@@ -118,25 +118,25 @@ namespace pearlrt {
       template<int fixedSize, int floatSize> struct FloatResult;
 
       /**
-      template specialisation for FLOAT(x),FLOAT(24)-operations
+      template specialisation for FLOAT(x),FLOAT(23)-operations
       
-      - All sizes <= 24 deliver FLOAT(24).
-      - All sizes > 24 deliver FLOAT(53).
+      - All sizes <= 23 deliver FLOAT(23).
+      - All sizes > 23 deliver FLOAT(52).
 
       */
-      template<int fixedSize > struct FloatResult<fixedSize, 24> {
-         typedef Float < fixedSize <= 24 ? 24 : 53 > ResultType;
+      template<int fixedSize > struct FloatResult<fixedSize, 23> {
+         typedef Float < fixedSize <= 23 ? 23 : 52 > ResultType;
       };
 
       /**
-      template specialisation for FLOAT(x),FLOAT(53)-operations
-      delivers always FLOAT(53).
+      template specialisation for FLOAT(x),FLOAT(52)-operations
+      delivers always FLOAT(52).
       */
-      template<int fixedSize> struct FloatResult<fixedSize, 53> {
+      template<int fixedSize> struct FloatResult<fixedSize, 52> {
          /**
-         the result type of mixed operations with Float(53)
+         the result type of mixed operations with Float(52)
          */
-         typedef  Float<53>  ResultType;
+         typedef  Float<52>  ResultType;
       };
 
       /**
@@ -180,7 +180,7 @@ namespace pearlrt {
 
       Since this is common floating point type in c++ covering all
       values of both supported Float(x) types.
-      If the given value does not fit into a Float<24> a signal
+      If the given value does not fit into a Float<23> a signal
       is created.
 
       \param xx the preset value

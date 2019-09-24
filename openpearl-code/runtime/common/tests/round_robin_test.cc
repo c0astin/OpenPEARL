@@ -225,7 +225,7 @@ printf("rr_test func %d\n",id);
            rc.clear();        
            PutDuration::toD(max,30,6, sink);
            printf("%s \n", rc.getCstring());
-      sum = sum / (Float<24>)(loopcounter);
+      sum = sum / (Float<23>)(loopcounter);
       printf("    RR%d: time slice size: avg=" , id);
            rc.clear();        
            PutDuration::toD(sum,30,6, sink);

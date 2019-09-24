@@ -311,7 +311,7 @@ namespace pearlrt {
 
       \throws DurationDivideByZeroSignal
       */
-      Float<24> operator/=(const Duration& rhs);
+      Float<23> operator/=(const Duration& rhs);
 
       /**
        divide two durations
@@ -323,7 +323,7 @@ namespace pearlrt {
 
        \throws DurationDivideByZeroSignal
        */
-      Float<24> operator/(const Duration& rhs) const;
+      Float<23> operator/(const Duration& rhs) const;
 
       /**
        compare operation

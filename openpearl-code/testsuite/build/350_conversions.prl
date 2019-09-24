@@ -20,8 +20,8 @@ T1: TASK MAIN;
    DCL ch CHAR;
    DCL b16 BIT(16);
    DCL f15 FIXED(15) INIT(48);
-   DCL x FLOAT(24);
-   DCL x53 FLOAT(53);
+   DCL x FLOAT(23);
+   DCL x52 FLOAT(52);
    DCL f31 FIXED(31) INIT(100000);
    DCL f50 FIXED(50) INIT(4000000000);
 
@@ -49,8 +49,8 @@ T1: TASK MAIN;
        __cpp__("printf(\"fail at 4: f15 = %d\\n\",_f15.x);");
    FIN;
 
-   x53 = TOFLOAT(f50);
-   x53 = TOFLOAT(f31);
+   x52 = TOFLOAT(f50);
+   x52 = TOFLOAT(f31);
    x = TOFLOAT(f15);
    IF x NE 48.0 THEN
        __cpp__("printf(\"fail at 5: x = %f\\n\",_x.x);");
