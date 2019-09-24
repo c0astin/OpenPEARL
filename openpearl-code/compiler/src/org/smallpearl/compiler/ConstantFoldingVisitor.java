@@ -115,7 +115,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
         } else if (ctx.floatingPointConstant() != null) {
             try {
                 double value = Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
-                Integer precision = 24;
+                Integer precision = 23;
                 ASTAttribute expressionResult = new ASTAttribute( new TypeFloat(precision),true);
 
                 ASTAttribute attr = m_ast.lookup(ctx);
