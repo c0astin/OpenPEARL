@@ -307,7 +307,7 @@ pearlrt::Duration
 >>
 
 TypeReferenceSimpleType(BaseType) ::= <<
-<BaseType> *
+pearlrt::Ref \< <BaseType> > 
 >>
 
 TypeReferenceTask(Task) ::= <<
@@ -1757,7 +1757,7 @@ TOFLOAT(precision,operand) ::= <%
 %>
 
 CONT(operand) ::= <%
-pearlrt::cont(<operand>)
+(*(<operand>))
 %>
 
 /* --------------------------- ARRAYS -------------------------------------------*/
