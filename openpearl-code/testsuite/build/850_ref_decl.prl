@@ -82,8 +82,8 @@ p1 : PROC;
 !   k   := CONT rx;              /* wrong, type unequal */
 !   rk2 := 3;                    /* wrong, 3 is no variable */
 
-!   CONT rk2 := 3;               /* l obtains value 3 */
-/*
+   CONT rk2 := 3;               /* l obtains value 3 */
+
   __cpp__ (
        "if ((_l == pearlrt::Fixed<31>(3)).getBoolean()) {                         "
        "   printf(\"l equal 3: ok\n\");        "
@@ -93,7 +93,7 @@ p1 : PROC;
        "} "
   );
 
-*/
+
 
    CONT rk2 := k;               /* l obtains value 2 */
 
