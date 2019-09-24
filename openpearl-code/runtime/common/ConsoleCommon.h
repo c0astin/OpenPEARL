@@ -43,6 +43,17 @@ namespace pearlrt {
    This class provides the target independent stuff like
    line edit data processing, task name lookup, ...
 
+   The following cursor keys are treated:
+   <ul>
+    <li> LEFT  ESC [ D
+    <li> RIGHT ESC [ E
+    <li> POS1  ESC O H
+    <li> END   ESC O F
+    <li> INS   ESC [ 2
+    <li> DEL   ESC [ 3
+    <li> BS    0x08
+   </ul>
+
    The input is accepted as UTF-8. Internally all input data is stored
    with 16 bit. At the end of the input, the data is compressed to
    deliver a UTF-8 string.
