@@ -1030,7 +1030,7 @@ get_statement_fixed_format(element,fieldwidth,decimalPositions,scaleFactor) ::= 
  %>
 
 get_statement_float_format_E(element,fieldwidth,decimalPositions,significance,esize) ::= <%
-    fromE(<user_variable(element)>, (pearlrt::Fixed\<31>)(<fieldwidth>), <decimalPositions>, <significance>, <esize>)
+    fromE(<user_variable(element)>, (pearlrt::Fixed\<31>)(<fieldwidth>), (pearlrt::Fixed\<31>)(<decimalPositions>),(pearlrt::Fixed\<31>)(<significance>))
 %>
 
 get_statement_duration_format(element,fieldwidth,decimalPositions) ::= <%

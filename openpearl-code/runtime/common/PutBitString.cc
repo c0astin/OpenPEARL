@@ -57,8 +57,8 @@ namespace pearlrt {
         BitString<32>::DataType b;
         b = bits;
         b <<= 24; 
-//printf("as Bit(32): %x len=%d, width=%d base=%d\n", b, len, width, base);
-        PutBits<4>::toBit(b, len+24, width, base, sink);
+// printf("as Bit(32): %x len=%d, width=%d base=%d\n", b, len, width, base);
+        PutBits<4>::toBit(b, len, width, base, sink);
    }
 
    void PutBits<2>::toBit(BitString<16>::DataType bits, int len, int width,
@@ -66,7 +66,7 @@ namespace pearlrt {
         BitString<32>::DataType b;
         b = bits;
         b <<= 16; 
-        PutBits<4>::toBit(b, len+16, width, base, sink);
+        PutBits<4>::toBit(b, len, width, base, sink);
    }
 
    void PutBits<4>::toBit(BitString<32>::DataType bits, int len, int width,
@@ -81,9 +81,12 @@ namespace pearlrt {
          throw theBitFormatSignal;
       }
 
-      digits = (len+base-1)/base;
-      shiftSize = (digits-1)*base+(32-len)/base;
+      // lets calculate the number of digits ...
+      // base is 1,2,3 or 4 corresponding B1, B2, B3 or B4
+      digits = (len-1+base-1)/base +1;
+      shiftSize = 32 - base;
       mask = dataMask[base-1] << shiftSize;
+//printf("PutBits<4>: digits=%d shiftSize=%d mask=%x\n", digits,shiftSize, mask);
      
      for (int i=0; i<width; i++) {
         if (digits > 0) {
