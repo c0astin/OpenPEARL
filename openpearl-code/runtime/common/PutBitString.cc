@@ -39,6 +39,7 @@ for B1,B2,B3 and B4-format.
 */
 
 #include <stdint.h>
+//#include <inttypes.h>     // for PRI64-macros
 
 #include "Sink.h"
 #include "BitString.h"
@@ -109,14 +110,19 @@ namespace pearlrt {
       int digits;
       int shiftSize;
 
+// printf("as Bit(64): 0x%" PRIx64 " len=%d, width=%d base=%d\n", bits, len, width, base);
       if (width <= 0) {
          Log::error("toBit: illegal width (%d)", width);
          throw theBitFormatSignal;
       }
 
-      digits = (len+base-1)/base;
-      shiftSize = (digits-1)*base+(64-len)/base;
-      mask = dataMask[base-1] << shiftSize;
+      digits = (len-1+base-1)/base +1;
+      shiftSize = 64 - base;
+      //digits = (len+base-1)/base;
+      //shiftSize = (digits-1)*base+(64-len)/base;
+      mask = dataMask[base-1];    
+      mask <<= shiftSize;       // shift the uint64_t
+//printf("PutBits<8>: digits=%d shiftSize=%d mask=0x%" PRIx64 "\n", digits,shiftSize, mask);
      
      for (int i=0; i<width; i++) {
         if (digits > 0) {
