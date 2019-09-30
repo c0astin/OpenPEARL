@@ -3761,18 +3761,46 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         st.add("fieldwidth", getExpression(ctx.fieldWidth().expression()));
         st.add("esize", 2);
 
-        if ( ctx.decimalPositions() != null ) {
-            st.add("decimalPositions", getExpression(ctx.decimalPositions().expression()));
+// type checks will become moved to semantic analysis
+       TypeDefinition op = m_ast.lookupType(ctx.fieldWidth().expression());
+        if (!(op instanceof TypeFixed)) {
+            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), 
+                                            ctx.start.getCharPositionInLine(),
+                                        "type of fieldwidth must be integer"); 
         }
-        else {
-            st.add("decimalPositions", 15);
+        op = m_ast.lookupType(ctx.decimalPositions().expression());
+        if (!(op instanceof TypeFixed)) {
+            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), 
+                                            ctx.start.getCharPositionInLine(),
+                                        "type of decimal positions must be integer"); 
         }
+        if (ctx.expression() != null) {
+           op = m_ast.lookupType(ctx.expression());
+           if (!(op instanceof TypeFixed)) {
+               throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), 
+                                               ctx.start.getCharPositionInLine(),
+                                           "type of significance must be integer"); 
+           }
+	}
+// end of type checks
 
-        if ( ctx.expression() != null ) {
-            st.add( "significance", getExpression(ctx.expression()));
-        }
-        else {
-            st.add("significance", 15);
+        // apply default values according language report
+        // E(w) == E(w,0)
+        // E(w,d) == W(w,d,d+1)
+
+        if ( ctx.decimalPositions() == null ) {
+            st.add("decimalPositions", 0);
+        } else {
+            st.add("decimalPositions", getExpression(ctx.decimalPositions().expression()));
+
+            if ( ctx.expression() != null ) {
+                st.add( "significance", getExpression(ctx.expression()));
+            }
+            else {
+                st.add("significance", 
+                   "("+  getExpression(ctx.decimalPositions().expression()).render() + " + CONST_FIXED_P_1_31)"
+                  ); 
+            }
         }
 
         return st;
