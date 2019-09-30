@@ -1,3 +1,69 @@
+\section{Console}
+The system device \verb|Console| allows adressing in input tasks
+and some system diagnostics.
+
+The device operates upon \verb|StdOut| and \verb|StdIn|. 
+It is recommended that theses devices are not used simultaneously.
+
+\begin{tabular}{ll}
+Synopsis: & \verb|Console| \\
+\end{tabular}
+
+Sample usage:
+\begin{PEARLCode}
+...
+SYSTEM;
+  console: Console;
+
+PROBLEM;
+   SPC console DATION INOUT SYSTEM ALPHIC;
+   DCL con     DATION INOUT ALPHIC DIM(*,80) CREATED(console);
+
+ttt: TASK;
+   PUT 'hallo' TO con BY A, SKIP;
+...
+END;
+
+input1: TASK;
+   DCL x FIXED;
+   ...
+   GET x FROM con BY F(6), SKIP;
+END
+
+input2: TASK;
+   DCL x CHAR(6);
+   ...
+   GET x FROM con BY A(6), SKIP;
+END
+
+...
+\end{PEARLCode}
+
+
+\paragraph{Note:}\ 
+\begin{itemize}
+\item Supported attributes: FORWARD, INOUT
+\item The first input at all must be prefixed with the task name
+ quoted with colons. Eg. \verb|:input1:13|. Otherwise the error message
+ \verb|:???: no default task| is emitted.
+\item subsequent input are directed automatically to the same task
+\item if the adressed task is not waiting for input from the console an
+  error message is shown \verb|:???: not waiting|. The next input must be 
+  prefixed with a task name.
+\item outputs are blocked and queued as long as an input is in progress
+\item system control is possible via input lines startinmg with slash (/).
+  The available commands may be obtained with the command \verb|/HELP|
+\item if adata with leading slash should  be entered to an appilication
+   the taskname must be prefixed quoted with colons (e.g. \verb|:input2:/foo|)
+\item line edit features are supported with 
+   insert on/off, cursor movement left and right, delete, backspace keys
+\item UTF-8 characters are processed. The user is responsible that 
+   the two byte characters are not separated by too small input buffers.
+   Regard, that e.g. the character "a consists of  two characters in the 
+   scope of OpenPEARL.
+\item try \verb|consoleDemo.prl|  in the OpenPEARL demo folder of your installation
+\end{itemize}
+
 \section{Disc}
 The system device \verb|Disc| allows the access of files in the system.
 
