@@ -189,6 +189,11 @@ public class CheckIOFormats extends SmallPearlBaseVisitor<Void> implements Small
             System.out.println( "Semantic: Check IOFormats: visitFloatFormatE");
         }
 
+        ErrorEnvironment eEnv=new ErrorEnvironment(ctx, "E-format");
+        ErrorStack.enter(eEnv);
+        ErrorStack.add("dummy");
+
+
         // check the types of all children
         visitChildren(ctx);
       
