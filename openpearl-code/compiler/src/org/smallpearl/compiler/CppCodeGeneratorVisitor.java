@@ -3761,29 +3761,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         st.add("fieldwidth", getExpression(ctx.fieldWidth().expression()));
         st.add("esize", 2);
 
-// type checks will become moved to semantic analysis
-       TypeDefinition op = m_ast.lookupType(ctx.fieldWidth().expression());
-        if (!(op instanceof TypeFixed)) {
-            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), 
-                                            ctx.start.getCharPositionInLine(),
-                                        "type of fieldwidth must be integer"); 
-        }
-        op = m_ast.lookupType(ctx.decimalPositions().expression());
-        if (!(op instanceof TypeFixed)) {
-            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), 
-                                            ctx.start.getCharPositionInLine(),
-                                        "type of decimal positions must be integer"); 
-        }
-        if (ctx.expression() != null) {
-           op = m_ast.lookupType(ctx.expression());
-           if (!(op instanceof TypeFixed)) {
-               throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), 
-                                               ctx.start.getCharPositionInLine(),
-                                           "type of significance must be integer"); 
-           }
-	}
-// end of type checks
-
         // apply default values according language report
         // E(w) == E(w,0)
         // E(w,d) == W(w,d,d+1)
@@ -3793,8 +3770,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else {
             st.add("decimalPositions", getExpression(ctx.decimalPositions().expression()));
 
-            if ( ctx.expression() != null ) {
-                st.add( "significance", getExpression(ctx.expression()));
+            if ( ctx.significance() != null ) {
+                st.add( "significance", getExpression(ctx.significance().expression()));
             }
             else {
                 st.add("significance", 
@@ -3820,8 +3797,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             st.add("decimalPositions", 15);
         }
 
-        if ( ctx.expression() != null ) {
-            st.add( "significance", getExpression(ctx.expression()));
+        if ( ctx.significance() != null ) {
+            st.add( "significance", getExpression(ctx.significance().expression()));
         }
         else {
             st.add("significance", 15);
@@ -3932,8 +3909,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             st.add("decimalPositions", 15);
         }
 
-        if ( ctx.expression() != null ) {
-            st.add( "significance", getExpression(ctx.expression()));
+        if ( ctx.significance() != null ) {
+            st.add( "significance", getExpression(ctx.significance().expression()));
         }
         else {
             st.add("significance", 15);
@@ -3956,8 +3933,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             st.add("decimalPositions", 15);
         }
 
-        if ( ctx.expression() != null ) {
-            st.add( "significance", getExpression(ctx.expression()));
+        if ( ctx.significance().expression() != null ) {
+            st.add( "significance", getExpression(ctx.significance().expression()));
         }
         else {
             st.add("significance", 15);

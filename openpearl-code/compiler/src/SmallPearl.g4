@@ -1482,10 +1482,13 @@ fieldWidth :
 // Significance ::= Expression§WithIntegerAsValue
 ////////////////////////////////////////////////////////////////////////////////
 
+significance :
+	expression
+	;
 
 floatFormat:
-      'E'  '(' fieldWidth ( ',' decimalPositions ( ',' expression )? )? ')'   # floatFormatE
-    | 'E3' '(' fieldWidth ( ',' decimalPositions ( ',' expression )? )? ')'   # floatFormatE3
+      'E'  '(' fieldWidth ( ',' decimalPositions ( ',' significance )? )? ')'   # floatFormatE
+    | 'E3' '(' fieldWidth ( ',' decimalPositions ( ',' significance )? )? ')'   # floatFormatE3
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
