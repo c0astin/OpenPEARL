@@ -318,9 +318,9 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                             throw new NumberOutOfRangeException(ctx.getText(), literal_ctx.start.getLine(), literal_ctx.start.getCharPositionInLine());
                         }
                     } else if (literal_ctx.timeConstant() != null) {
-                        System.out.println("time:(" + ")");
+                        System.out.println("ConstantPoolVisitor:unarySubstractive for CLOCK: not supported");
                     } else if (literal_ctx.durationConstant() != null) {
-                        System.out.println("duration:(" + ")");
+                        System.out.println("ConstantPoolVisitor:unarySubstractive for DURATION: not supported");
                     }
                 }
             }

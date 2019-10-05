@@ -33,8 +33,24 @@ import org.smallpearl.compiler.Exception.DivisionByZeroException;
 import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
 import org.smallpearl.compiler.Exception.NumberOutOfRangeException;
 import org.smallpearl.compiler.Exception.UnknownIdentifierException;
+import org.smallpearl.compiler.SmallPearlParser.FloatingPointConstantContext;
+import org.smallpearl.compiler.SmallPearlParser.SecondsContext;
 import org.smallpearl.compiler.SymbolTable.*;
 
+/**
+ * 
+ * evaluate constant expression parts and substitute them by new created constants.
+ * These new constants are attached as ASTAttributes to the expression node.
+ * 
+ *  @note The implementation is not complete. 
+ *  Some vistor methods are present are still empty. 
+ *  They emit Log.error() with a suitable message  
+ *  
+ *  Support for FIXED seems to be complete,
+ *  FLOAT for some operations
+ *  DURATION started to implement
+ *  BIT,CHAR and CLOCK are not treated
+ */
 public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
 
     private String m_sourceFileName;
@@ -112,6 +128,43 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
         Log.debug("ConstantFoldingVisitor:visitLiteral:ctx" + CommonUtils.printContext(ctx));
 
         if (ctx.durationConstant() != null) {
+            try {
+            	int hours=0;
+                int minutes=0;
+                double seconds=0;
+
+            	if (ctx.durationConstant().hours() != null) {
+            	   hours = Integer.parseInt(ctx.durationConstant().hours().IntegerConstant().toString());
+            	}
+            	if (ctx.durationConstant().minutes() != null) {
+             	   minutes = Integer.parseInt(ctx.durationConstant().minutes().IntegerConstant().toString());
+             	}
+            	if (ctx.durationConstant().seconds() != null) {
+            		String s = "";
+            		SecondsContext s_ctx = ctx.durationConstant().seconds();
+            		 if (ctx.durationConstant().seconds().floatingPointConstant() != null) {
+            		 	 s = ctx.durationConstant().seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString();
+            		 } else if (ctx.durationConstant().seconds().IntegerConstant() != null) {
+            			 s = ctx.durationConstant().seconds().IntegerConstant().toString();
+            		 }
+          		 
+             	     seconds = Integer.parseInt(s);
+             	}
+                ASTAttribute expressionResult = new ASTAttribute( new TypeDuration(),true);
+
+                ASTAttribute attr = m_ast.lookup(ctx);
+
+                if ( attr == null ) {
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                }
+                
+                attr.setConstantDurationValue( new ConstantDurationValue (hours, minutes, seconds));
+                m_ast.put(ctx, expressionResult);
+
+            	} catch (NumberFormatException ex) {
+                throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            }
+        	
         } else if (ctx.floatingPointConstant() != null) {
             try {
                 double value = Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
@@ -130,8 +183,11 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else if (ctx.timeConstant() != null) {
+        	Log.error("missing code for timeConstant");
         } else if (ctx.StringLiteral() != null) {
+        	Log.error("missing code for StringLiteral");
         } else if (ctx.BitStringLiteral() != null) {
+        	Log.error("missing code for BitStringLiteral");
         } else if (ctx.fixedConstant() != null) {
             try {
                 int precision = m_currentSymbolTable.lookupDefaultFixedLength();
@@ -265,36 +321,92 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitLwbDyadicExpression(SmallPearlParser.LwbDyadicExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitLwbDyadicExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for LWB expression");
         return null;
     }
 
     @Override
     public Void visitUpbDyadicExpression(SmallPearlParser.UpbDyadicExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitUpbDyadicExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for UPB expression");
         return null;
     }
 
     @Override
     public Void visitLwbMonadicExpression(SmallPearlParser.LwbMonadicExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitLwbMonadicExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for LWB expression");
         return null;
     }
 
     @Override
     public Void visitUpbMonadicExpression(SmallPearlParser.UpbMonadicExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitUpbMonadicExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for UPB expression");
         return null;
     }
 
     @Override
     public Void visitUnaryAdditiveExpression(SmallPearlParser.UnaryAdditiveExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitUnaryAdditiveExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for unary additive expression");
         return null;
     }
 
     @Override
     public Void visitUnarySubtractiveExpression(SmallPearlParser.UnarySubtractiveExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitUnarySubtractiveExpression:ctx" + CommonUtils.printContext(ctx));
+        ASTAttribute op2 = null;
+        ASTAttribute res = null;
+
+        Log.debug("ConstantFoldingVisitor:visitUnarySubtractiveExpression:ctx" + CommonUtils.printContext(ctx));
+
+        if (ctx.expression() != null) {
+            visit(ctx.expression());
+            op2 = m_ast.lookup(ctx.expression());
+            Log.debug("ConstantFoldingVisitor:visitUnarySubtractiveExpression:op2=" + op2);            
+        }
+
+        res = m_ast.lookup(ctx);
+
+        if (res == null) {
+            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+
+        
+        if (op2 != null) {
+            if (op2.isReadOnly()) {
+            	if ( op2.m_type instanceof TypeFixed) {
+                   ConstantFixedValue op2Value = op2.getConstantFixedValue();
+
+                   if (op2Value != null) {
+                       ConstantFixedValue value = new ConstantFixedValue(0 - op2.getConstantFixedValue().getValue());
+                       res.setConstantFixedValue(value);
+                   }
+            	} else if ( op2.m_type instanceof TypeFloat) {
+                    ConstantFloatValue op2Value = op2.getConstantFloatValue();
+                    
+                    if (op2Value != null) {
+                        ConstantFloatValue value = new ConstantFloatValue(0 - op2.getConstantFloatValue().getValue(),
+                        													23);
+                        res.setConstantFloatValue(value);
+                    }
+                   
+               	} else if ( op2.m_type instanceof TypeDuration) {
+                    ConstantDurationValue op2Value = op2.getConstantDurationValue();
+                    if (op2Value != null) {
+                       int sign = op2Value.getSign();
+                       sign = -sign;
+                       ConstantDurationValue value = new ConstantDurationValue(
+                    		op2Value.getHours(), op2Value.getMinutes(),op2Value.getSeconds(),sign);
+                       res.setConstantDurationValue(value);
+                    }
+			
+            	} else {
+            		System.out.println("visitUnarySubtractiveExpression: untreated type: "+op2.m_type.getName());
+            	}
+            }
+        }        
         return null;
     }
 
@@ -328,7 +440,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
         if (op1 != null && op2 != null) {
             if (op1.isReadOnly() && op2.isReadOnly()) {
                 ConstantFixedValue op1Value = op1.getConstantFixedValue();
-                ConstantFixedValue op2Value = op1.getConstantFixedValue();
+                ConstantFixedValue op2Value = op2.getConstantFixedValue();
 
                 if (op1Value != null && op2Value != null) {
                     ConstantFixedValue value = new ConstantFixedValue(op1.getConstantFixedValue().getValue() - op2.getConstantFixedValue().getValue());
@@ -343,18 +455,21 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitNotExpression(SmallPearlParser.NotExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitNotExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for NOT expression");
         return null;
     }
 
     @Override
     public Void visitAbsExpression(SmallPearlParser.AbsExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitAbsExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for ABS expression");
         return null;
     }
 
     @Override
     public Void visitSignExpression(SmallPearlParser.SignExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitSignExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for SIGN expression");
         return null;
     }
 
@@ -495,6 +610,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitRemainderExpression(SmallPearlParser.RemainderExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitRemainderExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for REM expression");
         visitChildren(ctx);
         return null;
     }
@@ -502,6 +618,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitExponentiationExpression(SmallPearlParser.ExponentiationExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitExponentiationExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for ** expression");
         visitChildren(ctx);
         return null;
     }
@@ -509,6 +626,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitFitExpression(SmallPearlParser.FitExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitFitExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for FIT expression");
         visitChildren(ctx);
         return null;
     }
@@ -516,6 +634,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitSqrtExpression(SmallPearlParser.SqrtExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitSqrtExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for SQRT expression");
         visitChildren(ctx);
         return null;
     }
@@ -523,6 +642,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitSinExpression(SmallPearlParser.SinExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitSinExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for SIN expression");
         visitChildren(ctx);
         return null;
     }
@@ -530,6 +650,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitCosExpression(SmallPearlParser.CosExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitCosExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for COS expression");
         visitChildren(ctx);
         return null;
     }
@@ -537,6 +658,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitExpExpression(SmallPearlParser.ExpExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitExpExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for EXP expression");
         visitChildren(ctx);
         return null;
     }
@@ -544,6 +666,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitLnExpression(SmallPearlParser.LnExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitLnExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for LN expression");
         visitChildren(ctx);
         return null;
     }
@@ -551,6 +674,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitTanExpression(SmallPearlParser.TanExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitTanExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for TAN expression");
         visitChildren(ctx);
         return null;
     }
@@ -558,6 +682,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitAtanExpression(SmallPearlParser.AtanExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitAtanExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for ATAN expression");
         visitChildren(ctx);
         return null;
     }
@@ -565,6 +690,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitTanhExpression(SmallPearlParser.TanhExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitTanhExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for TANH expression");
         visitChildren(ctx);
         return null;
     }
@@ -573,6 +699,8 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitTOFIXEDExpression(SmallPearlParser.TOFIXEDExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitTOFIXEDExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for TOFIXED expression");
+
         ASTAttribute op = null;
 
         if (ctx.expression() != null) {
@@ -603,6 +731,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitTOFLOATExpression(SmallPearlParser.TOFLOATExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitTOFLOATExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for TOFLOAT expression");
         visitChildren(ctx);
         return null;
     }
@@ -610,6 +739,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitTOBITExpression(SmallPearlParser.TOBITExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitTOBITExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for TOBIT expression");
         visitChildren(ctx);
         return null;
     }
@@ -617,6 +747,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitTOCHARExpression(SmallPearlParser.TOCHARExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitTOCHARExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for TOCHAR expression");
         visitChildren(ctx);
         return null;
     }
@@ -624,6 +755,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitEntierExpression(SmallPearlParser.EntierExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitEntierExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for ENTIER expression");
         visitChildren(ctx);
         return null;
     }
@@ -631,6 +763,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitRoundExpression(SmallPearlParser.RoundExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitRoundExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for ROUND expression");
         visitChildren(ctx);
         return null;
     }
@@ -645,6 +778,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitSemaTry(SmallPearlParser.SemaTryContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitSemaTry:ctx" + CommonUtils.printContext(ctx));
+        // TRY is never constant!
         visitChildren(ctx);
         return null;
     }
@@ -652,6 +786,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitNowFunction(SmallPearlParser.NowFunctionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitNowFunction:ctx" + CommonUtils.printContext(ctx));
+        // NOW is never constant!
         visitChildren(ctx);
         return null;
     }
@@ -659,6 +794,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitSizeofExpression(SmallPearlParser.SizeofExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitSizeofExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for SIZEOF expression");
         visitChildren(ctx);
         return null;
     }
@@ -673,6 +809,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitLtRelationalExpression(SmallPearlParser.LtRelationalExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitLtRelationalExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for LT expression");
         visitChildren(ctx);
         return null;
     }
@@ -680,6 +817,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitNeRelationalExpression(SmallPearlParser.NeRelationalExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitNeRelationalExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for NE expression");
         visitChildren(ctx);
         return null;
     }
@@ -687,6 +825,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitLeRelationalExpression(SmallPearlParser.LeRelationalExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitLeRelationalExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for LE expression");
         visitChildren(ctx);
         return null;
     }
@@ -694,6 +833,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitGtRelationalExpression(SmallPearlParser.GtRelationalExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitGtRelationalExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for GT expression");
         visitChildren(ctx);
         return null;
     }
@@ -701,6 +841,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitGeRelationalExpression(SmallPearlParser.GeRelationalExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitGeRelationalExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for GE expression");
         visitChildren(ctx);
         return null;
     }
@@ -708,6 +849,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitStringSelection(SmallPearlParser.StringSelectionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitStringSelection:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for string selection expression");
         visitChildren(ctx);
         return null;
     }
@@ -715,6 +857,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitCshiftExpression(SmallPearlParser.CshiftExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitCshiftExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for CSHIFT expression");
         visitChildren(ctx);
         return null;
     }
@@ -722,6 +865,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitShiftExpression(SmallPearlParser.ShiftExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitShiftExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for SHIFT expression");
         visitChildren(ctx);
         return null;
     }
@@ -729,6 +873,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitCatExpression(SmallPearlParser.CatExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitCatExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for CAT expression");
         visitChildren(ctx);
         return null;
     }
@@ -736,6 +881,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitAndExpression(SmallPearlParser.AndExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitAndExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for AND expression");        
         visitChildren(ctx);
         return null;
     }
@@ -743,6 +889,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitOrExpression(SmallPearlParser.OrExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitOrExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for OR expression");        
         visitChildren(ctx);
         return null;
     }
@@ -750,6 +897,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitExorExpression(SmallPearlParser.ExorExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitExorExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for EXOR expression");
         visitChildren(ctx);
         return null;
     }
@@ -757,6 +905,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitCONTExpression(SmallPearlParser.CONTExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitCONTExpression:ctx" + CommonUtils.printContext(ctx));
+        // CONT is never constant!
         visitChildren(ctx);
         return null;
     }
@@ -764,6 +913,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitStringSlice(SmallPearlParser.StringSliceContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitStringSlice:ctx" + CommonUtils.printContext(ctx));
+        Log.error("missing code for StringSlice expression");        
         visitChildren(ctx);
         return null;
     }
@@ -771,6 +921,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitConstantFixedExpressionFit(SmallPearlParser.ConstantFixedExpressionFitContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitConstantFixedExpressionFit:ctx" + CommonUtils.printContext(ctx));
+        // is code missing or is this treated in visitChildren()?
         visitChildren(ctx);
         return null;
     }
@@ -778,6 +929,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitInitElement(SmallPearlParser.InitElementContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitInitElement:ctx" + CommonUtils.printContext(ctx));
+        // is code missing or is this treated in visitChildren()?
         visitChildren(ctx);
         return null;
     }
@@ -785,6 +937,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitConstantExpression:ctx" + CommonUtils.printContext(ctx));
+        // is code missing or is this treated in visitChildren()?
         visitChildren(ctx);
         return null;
     }

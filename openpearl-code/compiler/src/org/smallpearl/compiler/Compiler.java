@@ -77,6 +77,7 @@ public class Compiler {
     static int     noOfWarnings = 0;
     static int     warninglevel = 255;
     static int     lineWidth = 80;
+    static boolean coloured = false;
 
     public static void main(String[] args) {
         int i, j;
@@ -96,6 +97,8 @@ public class Compiler {
             return;
         }
 
+        ErrorStack.useColors(coloured);
+        
         // Setup logger
         Log.Logger logger = new Log.Logger();
         Log.setLogger(logger);
@@ -271,6 +274,7 @@ public class Compiler {
                 " --imc                        Enable Inter Module Checker           \n" +
                 "                              file                                  \n" +
                 "  --sysinfo                   Print system information              \n" +
+                "  --coloured                  mark errors with colour               \n" +
                 "  --output <filename>         Filename of the generated code        \n" +
                 "  infile ...                                                        \n");
     }
@@ -320,6 +324,8 @@ public class Compiler {
                 stacktrace = true;
             } else if (arg.equals("--imc")) {
                 imc = true;
+            } else if (arg.equals("--coloured")) {
+            	coloured = true;
             } else if (arg.equals("--output")) {
                 if (i >= args.length) {
                     System.err.println("missing filename on --output");

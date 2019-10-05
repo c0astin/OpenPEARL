@@ -31,6 +31,11 @@ package org.smallpearl.compiler.Exception;
 
 public class NotYetImplementedException extends RuntimeException {
 
+	public NotYetImplementedException(String name, int line, int column, String msg) {
+	        super("Error at line " + line + ":" + column +
+	                ": Feature not yet implemented: " + name + ": " + msg );
+	}
+	
     public NotYetImplementedException(String name, int line, int column) {
         super("Error at line " + line + ":" + column +
                 ": Feature not yet implemented: " + name);
