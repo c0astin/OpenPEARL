@@ -144,11 +144,15 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
             		SecondsContext s_ctx = ctx.durationConstant().seconds();
             		 if (ctx.durationConstant().seconds().floatingPointConstant() != null) {
             		 	 s = ctx.durationConstant().seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString();
+            		 	 seconds = Double.parseDouble(s);
             		 } else if (ctx.durationConstant().seconds().IntegerConstant() != null) {
             			 s = ctx.durationConstant().seconds().IntegerConstant().toString();
+            			 seconds = Integer.parseInt(s);
+            		 } else {
+            			 System.out.println("***error missing alternative ConstantFolding duration");
             		 }
           		 
-             	     seconds = Integer.parseInt(s);
+             	   
              	}
                 ASTAttribute expressionResult = new ASTAttribute( new TypeDuration(),true);
 

@@ -239,6 +239,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             }
 
         } else if (ctx.StringLiteral() != null) {
+            String s1 =CommonUtils.removeQuotes(ctx.StringLiteral().toString());
+            String s2 = ctx.StringLiteral().toString();
             String s = CommonUtils.unescapePearlString(CommonUtils.removeQuotes(ctx.StringLiteral().toString()));
             add(new ConstantCharacterValue(s));
         } else if (ctx.fixedConstant() != null) {
@@ -423,7 +425,11 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             }
 
         } else if (ctx.StringLiteral() != null) {
-            m_constantPool.add(new ConstantCharacterValue(ctx.StringLiteral().toString()));
+        	String s = ctx.StringLiteral().toString();
+        	String s1 = CommonUtils.removeQuotes(s);
+        	String s2 = CommonUtils.unescapePearlString(s1);
+            //m_constantPool.add(new ConstantCharacterValue(ctx.StringLiteral().toString()));
+        	m_constantPool.add(new ConstantCharacterValue(s2));
         } else if (ctx.durationConstant() != null) {
             Integer hours = 0;
             Integer minutes = 0;

@@ -1364,7 +1364,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             constant = new ConstantClockValue(hours, minutes, seconds);
         }
         else if ( ctx.StringLiteral() != null) {
-            constant = new ConstantCharacterValue(ctx.StringLiteral().toString());
+        	String s = ctx.StringLiteral().toString();
+        	String s1 = CommonUtils.removeQuotes(s);
+        	String s2 = CommonUtils.unescapePearlString(s1);
+           // constant = new ConstantCharacterValue(ctx.StringLiteral().toString());
+        	  constant = new ConstantCharacterValue(s2);
         }
 
         return constant;

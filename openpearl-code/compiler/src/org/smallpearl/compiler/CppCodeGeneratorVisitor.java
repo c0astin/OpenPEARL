@@ -3121,7 +3121,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 				literal.add("string", value);
 			} else {
 				throw new InternalCompilerErrorException(ctx.getText(),
-						ctx.start.getLine(), ctx.start.getCharPositionInLine());
+						ctx.start.getLine(), ctx.start.getCharPositionInLine(),
+						"ConstantCharacter not found in pool");
 			}
 		} else if (ctx.BitStringLiteral() != null) {
 			String s = ctx.BitStringLiteral().getText();
