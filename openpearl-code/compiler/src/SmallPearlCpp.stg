@@ -957,7 +957,7 @@ put_statement_time_format(element,fieldwidth,decimalPositions) ::= <%
 %>
 
 put_statement_float_format_E(element,fieldwidth,decimalPositions,significance,esize) ::= <%
-    toE(<element>, (pearlrt::Fixed\<31>)(<fieldwidth>),(pearlrt::Fixed\<31>)(<decimalPositions>),(pearlrt::Fixed\<31>)(<significance>),(pearlrt::Fixed\<31>)(<esize>))
+    toE(<element>, <fieldwidth>,<decimalPositions>,<significance>,(pearlrt::Fixed\<31>)(<esize>))
 %>
 
 put_statement_character_string_format(element,fieldwidth) ::= <%
