@@ -1,6 +1,6 @@
 /*
- * [The "BSD license"]
- *  Copyright (c) 2012-2017 Marcel Schaible
+ * [A "BSD license"]
+ *  Copyright (c) 2019 Raier Müller
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,21 @@ import org.smallpearl.compiler.*;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
+
+/* ToDo: 
+  Ticket 268
+This should become extended to formats as wells as
+X, SKIP, PAGE, ADV, POS, COL, SOP
+
+Done: E3,F, A, B, B1, B2, B3, B4,   D, T, 
+*/
+
+/**
+check types and constant values of format statements
+
+Errors are forwarded to the ErrorStack class
+
+*/
 
 public class CheckIOFormats extends SmallPearlBaseVisitor<Void> implements
 		SmallPearlVisitor<Void> {
@@ -146,24 +161,40 @@ public class CheckIOFormats extends SmallPearlBaseVisitor<Void> implements
 		if (m_debug) {
 			System.out.println("Semantic: Check IOFormats: visitFieldWidth");
 		}
-		/*
-		System.out.println("ctx is: " + ctx);
-		
-		System.out.println("ctx.expression is: " + ctx.expression());
-		if (ctx.expression() instanceof SmallPearlParser.BaseExpressionContext) {
-			System.out.println("BaseExpressionContext");
-		} else if (ctx.expression() instanceof SmallPearlParser.SubtractiveExpressionContext) {
-			System.out.println("SubstractiveExpressionContext");
-		} else if (ctx.expression() instanceof SmallPearlParser.UnarySubtractiveExpressionContext) {
-			System.out.println("UnarySubstractionExpressionContext");
-		} else if (ctx.expression() instanceof SmallPearlParser.UnaryAdditiveExpressionContext) {
-			System.out.println("UnaryAdditiveExpressionContext");
-		} else {
-			System.out.println("nix");
-		}
-		*/
 		
 		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "fieldwidth");
+		ErrorStack.enter(eEnv);
+
+		// check, if we have ASTattributes for this node
+		TypeDefinition type = m_ast.lookupType(ctx.expression());
+
+		if (!(type instanceof TypeFixed)) {
+			ErrorStack.add("type must be FIXED");
+		} else {
+			ASTAttribute attr = m_ast.lookup(ctx.expression());
+			// width is mandatory, which is definied in the grammar
+			ConstantFixedValue cfv = getConstantValue(attr);	
+			if (cfv != null) 
+			{
+				long value = cfv.getValue();
+				if (value <= 0) {
+					ErrorStack.add("must be >0 ");
+				}
+			}
+		}
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitNumberOfCharacters(
+			SmallPearlParser.NumberOfCharactersContext ctx) {
+
+		if (m_debug) {
+			System.out.println("Semantic: Check IOFormats: visitNumberOfCharacters");
+		}
+		
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "numberOfCharacters");
 		ErrorStack.enter(eEnv);
 
 		// check, if we have ASTattributes for this node
@@ -252,6 +283,7 @@ public class CheckIOFormats extends SmallPearlBaseVisitor<Void> implements
 		return null;
 	}
 
+	
 	@Override
 	public Void visitFloatFormatE(SmallPearlParser.FloatFormatEContext ctx) {
 		boolean checkWidth = false;
@@ -325,24 +357,6 @@ public class CheckIOFormats extends SmallPearlBaseVisitor<Void> implements
 					+ "decimalPositions=" + decimalPositions + " (check="
 					+ checkDecimalPositions + ")" + "significance="
 					+ significance + " (check=" + checkSignificance + ")");
-  			
-			if (checkWidth) {
-				if (width < 0) {
-					ErrorStack.add("width must be non negative");
-				}
-			}
-
-			if (checkDecimalPositions) {
-				if (decimalPositions < 0) {
-					ErrorStack.add("decimal positions must be non negative");
-				}
-			}
-
-			if (checkSignificance) {
-				if (significance < 0) {
-					ErrorStack.add("significance must be positive");
-				}
-			}
 			*/
 			
 			if (checkWidth && checkDecimalPositions && checkSignificance) {
@@ -352,8 +366,6 @@ public class CheckIOFormats extends SmallPearlBaseVisitor<Void> implements
 				}
 
 				// add 5 to significance due to decimal point and "E+xx"
-				// if the output value is <0, there may still occur a
-				// problem during run time, since the sign is not mandatory
 				// add 6 to decimal positions due to
 				// leading digit, decimal point and "E+xx"
 				// if the output value is <0, there may still occur a
@@ -374,6 +386,7 @@ public class CheckIOFormats extends SmallPearlBaseVisitor<Void> implements
 				// add 6 to decimal positions due to
 				// leading digit, decimal point and "E+xx"
 				// if the output value is <0, there may still occur a
+				// problem during run time, since the sign is not mandatory
 				if (width < decimalPositions + 6) {
 					ErrorStack.add("field width too small (at least "
 							+ (decimalPositions + 6) + " required)");
@@ -382,7 +395,6 @@ public class CheckIOFormats extends SmallPearlBaseVisitor<Void> implements
 
 				// add 5 to significance due to decimal point and "E+xx"
 				// if the output value is <0, there may still occur a
-				// problem during run time, since the sign is not mandatory
 				// problem during run time, since the sign is not mandatory
 				if (width < significance + 5) {
 					ErrorStack.add("field width too small (at least "
@@ -394,15 +406,469 @@ public class CheckIOFormats extends SmallPearlBaseVisitor<Void> implements
 		return null;
 	}
 
-	/*
-	 * @Override public Void
-	 * visitFloatFormatE3(SmallPearlParser.FloatFormatE3Context ctx) { if
-	 * (m_debug) { System.out.println(
-	 * "Semantic: Check IOFormats: visitFloatFormatE3"); }
-	 * 
-	 * // CheckPrecision(ctx.ID().getText(), ctx); return null; }
-	 */
+	@Override
+	public Void visitFloatFormatE3(SmallPearlParser.FloatFormatE3Context ctx) {
+		boolean checkWidth = false;
+		boolean checkDecimalPositions = false;
+		boolean checkSignificance = false;
+		long width = 0;
+		long decimalPositions = 0;
+		long significance = 0;
 
+		if (m_debug) {
+			System.out.println("Semantic: Check IOFormats: visitFloatFormatE3");
+		}
+
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "E3-format");
+		ErrorStack.enter(eEnv);
+
+		// check the types of all children
+		visitChildren(ctx);
+		if (ErrorStack.getLocalCount() == 0) {
+
+			// check of the parameters is possible if they are
+			// of type ConstantFixedValue
+			// or not given
+
+			ASTAttribute attr = m_ast.lookup(ctx.fieldWidth().expression());
+			// width is mandatory, which is definied in the grammar
+			ConstantFixedValue cfv = getConstantValue(attr);
+			if (cfv != null) {
+				width = cfv.getValue();
+				checkWidth = true;
+			}
+
+			if (ctx.decimalPositions() != null) {
+				// we have the attribute given
+				attr = m_ast.lookup(ctx.decimalPositions().expression());
+				cfv = getConstantValue(attr);
+				if (cfv != null) {
+					// is of type ConstantFixedValue
+					// --> get value and use it for checks
+					decimalPositions = cfv.getValue();
+					checkDecimalPositions = true;
+				}
+			} else {
+				// decimalPositions not given --> used default value
+				decimalPositions = 0;
+				checkDecimalPositions = true;
+			}
+
+			if (ctx.significance() != null) {
+				// we have the attribute given
+				attr = m_ast.lookup(ctx.significance().expression());
+				cfv = getConstantValue(attr);
+				if (cfv != null) {
+					// is of type ConstantFixedValue
+					// --> get value and use it for checks
+					significance = cfv.getValue();
+					checkSignificance = true;
+				}
+			} else {
+				// significance not given --> used default value
+				// which need the dicimalPositions to be kwnown
+				if (checkDecimalPositions) {
+					significance = decimalPositions + 1;
+					checkSignificance = true;
+				}
+			}
+
+			// analysis complete --> let's apply the checks
+			/*
+			System.out.println("width=" + width + " (check=" + checkWidth + ")"
+					+ "decimalPositions=" + decimalPositions + " (check="
+					+ checkDecimalPositions + ")" + "significance="
+					+ significance + " (check=" + checkSignificance + ")");
+  			
+			*/
+			
+			if (checkWidth && checkDecimalPositions && checkSignificance) {
+				if (significance <= decimalPositions) {
+					ErrorStack
+							.add("significance must be larger than decimal positions");
+				}
+
+				// add 6 to significance due to decimal point and "E+xxx"
+				// add 7 to decimal positions due to
+				// leading digit, decimal point and "E+xxx"
+				// if the output value is <0, there may still occur a
+				// problem during run time, since the sign is not mandatory
+				if ((width < significance + 6)
+						|| (width < decimalPositions + 7)) {
+					ErrorStack.add("field width too small (at least "
+							+ Math.max((significance + 5),
+									(decimalPositions + 6)) + " required)");
+				}
+			} else if (!checkWidth && checkDecimalPositions
+					&& checkSignificance) {
+				if (significance <= decimalPositions) {
+					ErrorStack
+							.add("significance must be larger than decimal positions");
+				}
+			} else if (checkWidth && checkDecimalPositions) {
+				// add 7 to decimal positions due to
+				// leading digit, decimal point and "E+xxx"
+				// if the output value is <0, there may still occur a
+				// problem during run time, since the sign is not mandatory
+				if (width < decimalPositions + 7) {
+					ErrorStack.add("field width too small (at least "
+							+ (decimalPositions + 7) + " required)");
+				}
+			} else if (checkWidth && checkSignificance) {
+
+				// add 6 to significance due to decimal point and "E+xxx"
+				// if the output value is <0, there may still occur a
+				// problem during run time, since the sign is not mandatory
+				if (width < significance + 6) {
+					ErrorStack.add("field width too small (at least "
+							+ (significance + 6) + " required)");
+				}
+			}
+		}
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitFixedFormat(SmallPearlParser.FixedFormatContext ctx) {
+		boolean checkWidth = false;
+		boolean checkDecimalPositions = false;
+		long width = 0;
+		long decimalPositions = 0;
+
+		if (m_debug) {
+			System.out.println("Semantic: Check IOFormats: visitFixedFormat");
+		}
+
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "F-format");
+		ErrorStack.enter(eEnv);
+
+		// check the types of all children
+		visitChildren(ctx);
+		if (ErrorStack.getLocalCount() == 0) {
+
+			// check of the parameters is possible if they are
+			// of type ConstantFixedValue
+			// or not given
+
+			ASTAttribute attr = m_ast.lookup(ctx.fieldWidth().expression());
+			// width is mandatory, which is defined in the grammar
+			ConstantFixedValue cfv = getConstantValue(attr);
+			if (cfv != null) {
+				width = cfv.getValue();
+				checkWidth = true;
+			}
+
+			if (ctx.decimalPositions() != null) {
+				// we have the attribute given
+				attr = m_ast.lookup(ctx.decimalPositions().expression());
+				cfv = getConstantValue(attr);
+				if (cfv != null) {
+					// is of type ConstantFixedValue
+					// --> get value and use it for checks
+					decimalPositions = cfv.getValue();
+					checkDecimalPositions = true;
+				}
+			}
+
+
+			// analysis complete --> let's apply the checks
+			/*
+			System.out.println("width=" + width + " (check=" + checkWidth + ")"
+					+ "decimalPositions=" + decimalPositions + " (check="
+					+ checkDecimalPositions + ")" + 
+					")");
+  			
+			*/
+			
+			if (checkWidth && checkDecimalPositions) {
+				// add 2 to decimal positions due to
+				// leading digit, decimal point
+				// if the output value is <0, there may still occur a
+				// problem during run time, since the sign is not mandatory
+				if (width < decimalPositions + 2) {
+					ErrorStack.add("field width too small (at least "
+							+ (decimalPositions + 2) + " required)");
+				}
+			} //else if (checkWidth) {
+
+				// at least 1 digit required
+				// if the output value is <0, there may still occur a
+				// problem during run time, since the sign is not mandatory
+				// this is already checkes in visitFieldWidth!
+				//if (width < 1) {
+				//	ErrorStack.add("field width too small (at least 1 required)");
+				//}
+			//}
+		}
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitDurationFormat(SmallPearlParser.DurationFormatContext ctx) {
+		boolean checkWidth = false;
+		boolean checkDecimalPositions = false;
+		long width = 0;
+		long decimalPositions = 0;
+
+		if (m_debug) {
+			System.out.println("Semantic: Check IOFormats: visitDurationFormat");
+		}
+
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "D-format");
+		ErrorStack.enter(eEnv);
+
+		// check the types of all children
+		visitChildren(ctx);
+		if (ErrorStack.getLocalCount() == 0) {
+
+			// check of the parameters is possible if they are
+			// of type ConstantFixedValue
+			// or not given
+
+			ASTAttribute attr = m_ast.lookup(ctx.fieldWidth().expression());
+			// width is mandatory, which is defined in the grammar
+			ConstantFixedValue cfv = getConstantValue(attr);
+			if (cfv != null) {
+				width = cfv.getValue();
+				checkWidth = true;
+			}
+
+			if (ctx.decimalPositions() != null) {
+				// we have the attribute given
+				attr = m_ast.lookup(ctx.decimalPositions().expression());
+				cfv = getConstantValue(attr);
+				if (cfv != null) {
+					// is of type ConstantFixedValue
+					// --> get value and use it for checks
+					decimalPositions = cfv.getValue();
+					checkDecimalPositions = true;
+				}
+			}
+
+
+			// analysis complete --> let's apply the checks
+			/*
+			System.out.println("width=" + width + " (check=" + checkWidth + ")"
+					+ "decimalPositions=" + decimalPositions + " (check="
+					+ checkDecimalPositions + ")" + 
+					")");
+  			
+			*/
+			
+			if (checkWidth && checkDecimalPositions) {
+				// add 6 to decimal positions due to
+				// leading digit, decimal point ans 'SEC'
+				// if the output value is <0 or the value is larger than 1 sec,
+				// there may still occur a problem during run time
+				if (width < decimalPositions + 6) {
+					ErrorStack.add("field width too small (at least "
+							+ (decimalPositions + 6) + " required)");
+				}
+			} else if (checkWidth) {
+				// at least 'x_SEC' required
+				// if the output value is <0 or > 9, there may still occur a
+				// problem during run time, since the sign is not mandatory
+				// this is already checkes in visitFieldWidth!
+				if (width < 5) {
+					ErrorStack.add("field width too small (at least 5 required)");
+				}
+			}
+		}
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitTimeFormat(SmallPearlParser.TimeFormatContext ctx) {
+		boolean checkWidth = false;
+		boolean checkDecimalPositions = false;
+		long width = 0;
+		long decimalPositions = 0;
+
+		if (m_debug) {
+			System.out.println("Semantic: Check IOFormats: visitTimeFormat");
+		}
+
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "T-format");
+		ErrorStack.enter(eEnv);
+
+		// check the types of all children
+		visitChildren(ctx);
+		if (ErrorStack.getLocalCount() == 0) {
+
+			// check of the parameters is possible if they are
+			// of type ConstantFixedValue
+			// or not given
+
+			ASTAttribute attr = m_ast.lookup(ctx.fieldWidth().expression());
+			// width is mandatory, which is defined in the grammar
+			ConstantFixedValue cfv = getConstantValue(attr);
+			if (cfv != null) {
+				width = cfv.getValue();
+				checkWidth = true;
+			}
+
+			if (ctx.decimalPositions() != null) {
+				// we have the attribute given
+				attr = m_ast.lookup(ctx.decimalPositions().expression());
+				cfv = getConstantValue(attr);
+				if (cfv != null) {
+					// is of type ConstantFixedValue
+					// --> get value and use it for checks
+					decimalPositions = cfv.getValue();
+					checkDecimalPositions = true;
+				}
+			}
+
+
+			// analysis complete --> let's apply the checks
+			/*
+			System.out.println("width=" + width + " (check=" + checkWidth + ")"
+					+ "decimalPositions=" + decimalPositions + " (check="
+					+ checkDecimalPositions + ")" + 
+					")");
+  			
+			*/
+			
+			if (checkWidth && checkDecimalPositions) {
+				// add 8 to decimal positions due to
+				// x:xx:xx.xxx
+				// if the output value is <0 or the value is larger than 9:59:59.99,
+				// there may still occur a problem during run time
+				if (width < decimalPositions + 8) {
+					ErrorStack.add("field width too small (at least "
+							+ (decimalPositions + 8) + " required)");
+				}
+			} else if (checkWidth) {
+				// at least 'x:xx:xx' required
+				// if the output value is > 9:59:59.999, there may still occur a
+				// problem during run time, since the sign is not mandatory
+				// this is already checkes in visitFieldWidth!
+				if (width < 7) {
+					ErrorStack.add("field width too small (at least 7 required)");
+				}
+			}
+		}
+		ErrorStack.leave();
+		return null;
+	}
+
+	
+	@Override
+	public Void visitCharacterStringFormatA(SmallPearlParser.CharacterStringFormatAContext ctx) {
+			if (m_debug) {
+			System.out.println("Semantic: Check IOFormats: visitCharacterStringFormat");
+		}
+
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "A-format");
+		ErrorStack.enter(eEnv);
+
+		// check the types of all children
+		visitChildren(ctx);
+		if (ErrorStack.getLocalCount() == 0) {
+
+			// check of the parameters is possible if they are
+			// of type ConstantFixedValue
+			// or not given
+			// check of the value oof width is already done
+		}
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitBitFormat1(SmallPearlParser.BitFormat1Context ctx) {
+			if (m_debug) {
+			System.out.println("Semantic: Check IOFormats: visitBitFormat1");
+		}
+
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "B/B1-format");
+		ErrorStack.enter(eEnv);
+
+		// check the types of all children
+		visitChildren(ctx);
+		if (ErrorStack.getLocalCount() == 0) {
+
+			// check of the parameters is possible if they are
+			// of type ConstantFixedValue
+			// or not given
+			// check of the value oof width is already done
+		}
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitBitFormat2(SmallPearlParser.BitFormat2Context ctx) {
+			if (m_debug) {
+			System.out.println("Semantic: Check IOFormats: visitBitFormat2");
+		}
+
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "B2-format");
+		ErrorStack.enter(eEnv);
+
+		// check the types of all children
+		visitChildren(ctx);
+		if (ErrorStack.getLocalCount() == 0) {
+
+			// check of the parameters is possible if they are
+			// of type ConstantFixedValue
+			// or not given
+			// check of the value oof width is already done
+		}
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitBitFormat3(SmallPearlParser.BitFormat3Context ctx) {
+			if (m_debug) {
+			System.out.println("Semantic: Check IOFormats: visitBitFormat3");
+		}
+
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "B3-format");
+		ErrorStack.enter(eEnv);
+
+		// check the types of all children
+		visitChildren(ctx);
+		if (ErrorStack.getLocalCount() == 0) {
+
+			// check of the parameters is possible if they are
+			// of type ConstantFixedValue
+			// or not given
+			// check of the value oof width is already done
+		}
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitBitFormat4(SmallPearlParser.BitFormat4Context ctx) {
+			if (m_debug) {
+			System.out.println("Semantic: Check IOFormats: visitBitFormat4");
+		}
+
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "B4-format");
+		ErrorStack.enter(eEnv);
+
+		// check the types of all children
+		visitChildren(ctx);
+		if (ErrorStack.getLocalCount() == 0) {
+
+			// check of the parameters is possible if they are
+			// of type ConstantFixedValue
+			// or not given
+			// check of the value oof width is already done
+		}
+		ErrorStack.leave();
+		return null;
+	}
+
+
+	/* ----------------------------------------------------_ */
+	
 	private ConstantFixedValue getConstantValue(ASTAttribute formatAttribute) {
 		//System.out.println("formatAttribute=" + formatAttribute);
 		if (formatAttribute.isReadOnly()) {

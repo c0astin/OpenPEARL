@@ -141,7 +141,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
              	}
             	if (ctx.durationConstant().seconds() != null) {
             		String s = "";
-            		SecondsContext s_ctx = ctx.durationConstant().seconds();
+            		
             		 if (ctx.durationConstant().seconds().floatingPointConstant() != null) {
             		 	 s = ctx.durationConstant().seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString();
             		 	 seconds = Double.parseDouble(s);

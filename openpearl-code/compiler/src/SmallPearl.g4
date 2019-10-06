@@ -1462,9 +1462,13 @@ position :
 //   F (FieldWidth [ , DecimalPositions [ , ScaleFactor ] ] )
 ////////////////////////////////////////////////////////////////////////////////
 
+// no scaleFactor in OpenPEARL
+//fixedFormat :
+//    'F' '(' fieldWidth ( ',' decimalPositions ( ',' scaleFactor )? )? ')'
+//    ;
 
 fixedFormat :
-    'F' '(' fieldWidth ( ',' decimalPositions ( ',' scaleFactor )? )? ')'
+    'F' '(' fieldWidth ( ',' decimalPositions )? ')'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1550,7 +1554,7 @@ scaleFactor :
 ////////////////////////////////////////////////////////////////////////////////
 
 characterStringFormat :
-      'A' ( '(' expression ')' )?       # characterStringFormatA
+      'A' ( '(' fieldWidth ')' )?       # characterStringFormatA
     | 'S' '(' ID ')'                    # characterStringFormatS
     ;
 

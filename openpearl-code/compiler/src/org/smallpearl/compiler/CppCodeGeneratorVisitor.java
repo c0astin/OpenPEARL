@@ -4196,15 +4196,15 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 	private ST getCharacterStringFormatForPut(
 			SmallPearlParser.CharacterStringFormatContext ctx,
 			SmallPearlParser.ExpressionContext expression) {
+		
 		ST st = m_group.getInstanceOf("put_statement_character_string_format");
-
 		st.add("element", getExpression(expression));
 
 		if (ctx instanceof SmallPearlParser.CharacterStringFormatAContext) {
 			SmallPearlParser.CharacterStringFormatAContext c = (SmallPearlParser.CharacterStringFormatAContext) ctx;
 
-			if (c.expression() != null) {
-				st.add("fieldwidth", getExpression(c.expression()));
+			if (c.fieldWidth() != null) {
+				st.add("fieldwidth", getExpression(c.fieldWidth().expression()));
 			}
 		}
 
@@ -4219,8 +4219,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 		if (ctx instanceof SmallPearlParser.CharacterStringFormatAContext) {
 			SmallPearlParser.CharacterStringFormatAContext c = (SmallPearlParser.CharacterStringFormatAContext) ctx;
 
-			if (c.expression() != null) {
-				st.add("fieldwidth", getExpression(c.expression()));
+			if (c.fieldWidth() != null) {
+				st.add("fieldwidth", getExpression(c.fieldWidth().expression()));
 			}
 		}
 
@@ -4237,27 +4237,27 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 		if (ctx.decimalPositions() != null) {
 			st.add("decimalPositions", getExpression(ctx.decimalPositions()
 					.expression()));
-
+/* xxxxxxxxxxxxxxx
 			if (ctx.scaleFactor() != null) {
 				st.add("scaleFactor", getExpression(ctx.scaleFactor()
 						.expression()));
 			}
+			*/
 		}
 
 		return st;
 	}
-
+	
 	private ST getFloatFormatEForPut(SmallPearlParser.FloatFormatEContext ctx,
-			SmallPearlParser.ExpressionContext expression) {
+		SmallPearlParser.ExpressionContext expression) {
 		ST st = m_group.getInstanceOf("put_statement_float_format_E");
-
 		st.add("element", getExpression(expression));
 		st.add("fieldwidth", getExpression(ctx.fieldWidth().expression()));
 		st.add("esize", 2);
 
 		// apply default values according language report
-		// E(w) == E(w,0)
-		// E(w,d) == E(w,d,d+1)
+		// E3(w) == E3(w,0)
+		// E3(w,d) == E3(w,d,d+1)
 
 		if (ctx.decimalPositions() == null) {
 			st.add("decimalPositions", "(pearlrt::Fixed<31>)0");
@@ -4285,27 +4285,36 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 			SmallPearlParser.FloatFormatE3Context ctx,
 			SmallPearlParser.ExpressionContext expression) {
 		ST st = m_group.getInstanceOf("put_statement_float_format_E");
-
 		st.add("element", getExpression(expression));
 		st.add("fieldwidth", getExpression(ctx.fieldWidth().expression()));
 		st.add("esize", 3);
 
-		if (ctx.decimalPositions() != null) {
+		// apply default values according language report
+		// E3(w) == E3(w,0)
+		// E3(w,d) == E3(w,d,d+1)
+
+		if (ctx.decimalPositions() == null) {
+			st.add("decimalPositions", "(pearlrt::Fixed<31>)0");
+			st.add("significance", "(pearlrt::Fixed<31>)1");
+		} else {
 			st.add("decimalPositions", getExpression(ctx.decimalPositions()
 					.expression()));
-		} else {
-			st.add("decimalPositions", 15);
-		}
 
-		if (ctx.significance() != null) {
-			st.add("significance", getExpression(ctx.significance()
-					.expression()));
-		} else {
-			st.add("significance", 15);
+			if (ctx.significance() != null) {
+				st.add("significance", getExpression(ctx.significance()
+						.expression()));
+			} else {
+				st.add("significance",
+						"("
+								+ getExpression(
+										ctx.decimalPositions().expression())
+										.render() + " + CONST_FIXED_P_1_31)");
+			}
 		}
 
 		return st;
 	}
+
 
 	private ST getBitFormat1ForPut(SmallPearlParser.BitFormat1Context ctx,
 			SmallPearlParser.ExpressionContext expression) {
@@ -4408,11 +4417,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 		if (ctx.decimalPositions() != null) {
 			st.add("decimalPositions", getExpression(ctx.decimalPositions()
 					.expression()));
-
+/* xxxxxxxxxxx
 			if (ctx.scaleFactor() != null) {
 				st.add("scaleFactor", getExpression(ctx.scaleFactor()
 						.expression()));
 			}
+			*/
 		}
 
 		return st;
@@ -4420,49 +4430,69 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
 	private ST getFloatFormatEForGet(SmallPearlParser.FloatFormatEContext ctx,
 			String element) {
+		
 		ST st = m_group.getInstanceOf("get_statement_float_format_E");
-
 		st.add("element", element);
-		st.add("fieldwidth", getExpression(ctx.fieldWidth().expression()));
 		st.add("esize", 2);
+		
+		st.add("fieldwidth", getExpression(ctx.fieldWidth().expression()));
 
-		if (ctx.decimalPositions() != null) {
+		// apply default values according language report
+		// E(w) == E(w,0)
+		// E(w,d) == E(w,d,d+1)
+
+		if (ctx.decimalPositions() == null) {
+			st.add("decimalPositions", "(pearlrt::Fixed<31>)0");
+			st.add("significance", "(pearlrt::Fixed<31>)1");
+		} else {
 			st.add("decimalPositions", getExpression(ctx.decimalPositions()
 					.expression()));
-		} else {
-			st.add("decimalPositions", 15);
-		}
 
-		if (ctx.significance() != null) {
-			st.add("significance", getExpression(ctx.significance()
-					.expression()));
-		} else {
-			st.add("significance", 15);
+			if (ctx.significance() != null) {
+				st.add("significance", getExpression(ctx.significance()
+						.expression()));
+			} else {
+				st.add("significance",
+						"("
+								+ getExpression(
+										ctx.decimalPositions().expression())
+										.render() + " + CONST_FIXED_P_1_31)");
+			}
 		}
-
+		
 		return st;
 	}
 
+	
 	private ST getFloatFormatE3ForGet(
 			SmallPearlParser.FloatFormatE3Context ctx, String element) {
 		ST st = m_group.getInstanceOf("get_statement_float_format_E");
-
+		
 		st.add("element", element);
 		st.add("fieldwidth", getExpression(ctx.fieldWidth().expression()));
 		st.add("esize", 3);
+		
+		// apply default values according language report
+		// E(w) == E(w,0)
+		// E(w,d) == E(w,d,d+1)
 
-		if (ctx.decimalPositions() != null) {
+		if (ctx.decimalPositions() == null) {
+			st.add("decimalPositions", "(pearlrt::Fixed<31>)0");
+			st.add("significance", "(pearlrt::Fixed<31>)1");
+		} else {
 			st.add("decimalPositions", getExpression(ctx.decimalPositions()
 					.expression()));
-		} else {
-			st.add("decimalPositions", 15);
-		}
 
-		if (ctx.significance().expression() != null) {
-			st.add("significance", getExpression(ctx.significance()
-					.expression()));
-		} else {
-			st.add("significance", 15);
+			if (ctx.significance() != null) {
+				st.add("significance", getExpression(ctx.significance()
+						.expression()));
+			} else {
+				st.add("significance",
+						"("
+								+ getExpression(
+										ctx.decimalPositions().expression())
+										.render() + " + CONST_FIXED_P_1_31)");
+			}
 		}
 
 		return st;

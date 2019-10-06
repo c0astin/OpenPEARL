@@ -1365,10 +1365,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         }
         else if ( ctx.StringLiteral() != null) {
         	String s = ctx.StringLiteral().toString();
-        	String s1 = CommonUtils.removeQuotes(s);
-        	String s2 = CommonUtils.unescapePearlString(s1);
+        	s = CommonUtils.removeQuotes(s);
+        	s = CommonUtils.unescapePearlString(s);
+      	    constant = new ConstantCharacterValue(s);
            // constant = new ConstantCharacterValue(ctx.StringLiteral().toString());
-        	  constant = new ConstantCharacterValue(s2);
         }
 
         return constant;
