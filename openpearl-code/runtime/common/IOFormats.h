@@ -139,7 +139,7 @@ namespace pearlrt {
          PutHelper::doPutChar(w.x, &rc, sink);
       }
 
-      
+
       /**
       output formats A and A(w) for the IOJob interface
 
@@ -198,7 +198,7 @@ namespace pearlrt {
       \tparam S size of the string
       */
       template<int S>
-      void toB1(BitString<S>  s, Fixed<31> w) {
+      void toB1(BitString<S>  s, Fixed<31> w = (Fixed<31>)S) {
          checkCapacity(w);
          PutBitString<S>::toB1(s, w, *sink);
       }
@@ -211,7 +211,7 @@ namespace pearlrt {
       \tparam S size of the string
       */
       template<int S>
-      void fromB1(BitString<S> & s, Fixed<31> w) {
+      void fromB1(BitString<S> & s, Fixed<31> w = (Fixed<31>)S) {
          checkCapacity(w);
          GetBitString<S>::fromB123(s, w, 1, *source);
          return;
@@ -225,7 +225,7 @@ namespace pearlrt {
       \tparam S size of the string
       */
       template<int S>
-      void toB2(BitString<S>  s, Fixed<31> w) {
+      void toB2(BitString<S>  s, Fixed<31> w = (Fixed<31>)((S + 1) / 2)) {
          checkCapacity(w);
          PutBitString<S>::toB2(s, w, *sink);
       }
@@ -238,11 +238,12 @@ namespace pearlrt {
       \tparam S size of the string
       */
       template<int S>
-      void fromB2(BitString<S> & s, Fixed<31> w) {
+      void fromB2(BitString<S> & s, Fixed<31> w = (Fixed<31>)((S + 1) / 2)) {
          checkCapacity(w);
          GetBitString<S>::fromB123(s, w, 2, *source);
          return;
       }
+
 
       /**
       output format B3(w)
@@ -252,7 +253,7 @@ namespace pearlrt {
       \tparam S size of the string
       */
       template<int S>
-      void toB3(BitString<S>  s, Fixed<31> w) {
+      void toB3(BitString<S>  s, Fixed<31> w = (Fixed<31>)((S + 2) / 3)) {
          checkCapacity(w);
          PutBitString<S>::toB3(s, w, *sink);
       }
@@ -265,11 +266,12 @@ namespace pearlrt {
       \tparam S size of the string
       */
       template<int S>
-      void fromB3(BitString<S> & s, Fixed<31> w) {
+      void fromB3(BitString<S> & s, Fixed<31> w = (Fixed<31>)((S + 2) / 3)) {
          checkCapacity(w);
          GetBitString<S>::fromB123(s, w, 3, *source);
          return;
       }
+
 
       /**
       output format B4(w)
@@ -279,7 +281,7 @@ namespace pearlrt {
       \tparam S size of the string
       */
       template<int S>
-      void toB4(BitString<S>  s, Fixed<31> w) {
+      void toB4(BitString<S>  s, Fixed<31> w = (Fixed<31>)((S + 3) / 4)) {
          checkCapacity(w);
          PutBitString<S>::toB4(s, w, *sink);
       }
@@ -292,7 +294,7 @@ namespace pearlrt {
       \tparam S size of the string
       */
       template<int S>
-      void fromB4(BitString<S> & s, Fixed<31> w) {
+      void fromB4(BitString<S> & s, Fixed<31> w = (Fixed<31>)((S + 3) / 4)) {
          checkCapacity(w);
          GetBitString<S>::fromB4(s, w, *source);
          return;
@@ -339,7 +341,7 @@ namespace pearlrt {
        \tparam  S width of the fixed value type
        */
       void fromFloatF(void *f, size_t len, size_t index, const Fixed<31> w,
-                    const Fixed<31> d = 0) ;
+                      const Fixed<31> d = 0) ;
 
       /**
        output format F with Fixed with the IOJob interface
@@ -365,7 +367,7 @@ namespace pearlrt {
        \tparam  S width of the fixed value type
        */
       void fromFixedF(void *f, size_t len, size_t index, const Fixed<31> w,
-                    const Fixed<31> d = 0) ;
+                      const Fixed<31> d = 0) ;
 
       /**
       input format F with FIXED
@@ -523,9 +525,9 @@ namespace pearlrt {
                 1, if record wasd left
        */
       int putDataFormat(TaskCommon * me,
-             IODataEntry * dataEntry, size_t index,
-             size_t loopOffset,
-             IOFormatEntry * format);
+                        IODataEntry * dataEntry, size_t index,
+                        size_t loopOffset,
+                        IOFormatEntry * format);
 
       /**
        treat one input job entry, which must be a data format element
@@ -539,9 +541,9 @@ namespace pearlrt {
                 1, if record wasd left
        */
       int getDataFormat(TaskCommon * me,
-             IODataEntry * dataEntry, size_t index,
-             size_t loopOffset,
-             IOFormatEntry * format);
+                        IODataEntry * dataEntry, size_t index,
+                        size_t loopOffset,
+                        IOFormatEntry * format);
 
    };
    /** @} */
