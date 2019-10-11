@@ -1,6 +1,6 @@
 \htgt{GetStatement} ::=\\
-\x \kw{GET} [ \{ \hlink{Name}$\S $Variable $\mid$ \hlink{Slice} \}	
-	 [ \kw{,} \{ \hlink{Name}$\S $Variable $\mid$ \hlink{Slice} \} ] $^{...}$ ]\\
+\x \kw{GET} [ \{ \hlink{Name}$\S $Variable $\mid$ \hlink{ArraySlice} \}	
+	 [ \kw{,} \{ \hlink{Name}$\S $Variable $\mid$ \hlink{ArraySlice} \} ] $^{...}$ ]\\
 \x \kw{FROM} \hlink{Name}$\S $Dation 
 	[ \kw{BY} \hlink{FormatOrPosition}
 	 [ \kw{,} \hlink{FormatOrPosition} ] $^{...}$ ] \kw{;}
