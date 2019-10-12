@@ -319,6 +319,27 @@ namespace pearlrt {
       */
       void sop(Fixed<31>* page, Fixed<31>* row, Fixed<31>* element);
 
+      /**
+        position to the given column in the current row
+ 
+        \param element contains current position of element after
+               execution
+
+        \throws InternalDationSignal if the dimension of the dation is
+                smaller than three, or if the dation is not DIRECT
+      */
+      void col(Fixed<31> element);
+
+      /**
+        position to the given first poistion of the given row
+ 
+        \param element contains current position of element after
+               execution
+
+        \throws InternalDationSignal if the dimension of the dation is
+                smaller than three, or if the dation is not DIRECT
+      */
+      void line(Fixed<31> r);
 
       /**
         Method for 1-dimensional relative positioning

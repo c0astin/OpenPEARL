@@ -178,6 +178,14 @@ namespace pearlrt {
       doTfuAndSeekStuff();
    }
 
+   void UserDationNB::col(Fixed<31> element) {
+        pos(element);
+   }
+
+   void UserDationNB::line(Fixed<31> r) {
+        pos(r, one);
+   }
+
    void UserDationNB::pos(Fixed<31> row, Fixed<31> element) {
 //printf("pos(%d, %d) dp=%x\n", row.x, element.x,dationParams);
       assertOpenDirect();
