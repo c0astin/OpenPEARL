@@ -672,12 +672,20 @@ try {
 // READ STATEMENT END
 >>
 
-read_expression(dation,id) ::= <%
-<dation>.dationRead( &<id>, sizeof(<id>));
+read_take_expression(dation,id,isArray) ::= <%
+<if(isArray)>
+   <dation>.dationRead( <id>, sizeof(<id>));
+<else>
+   <dation>.dationRead( &<id>, sizeof(<id>));
+<endif>
 %>
 
-write_expression(dation,expression) ::= <%
-<dation>.dationWrite( &<expression>, sizeof(<expression>));
+write_send_expression(dation,expression,isArray) ::= <%
+<if(isArray)>
+	<dation>.dationWrite( data<expression>, sizeof(data<expression>));
+<else>
+	<dation>.dationWrite( &<expression>, sizeof(<expression>));
+<endif>
 %>
 
 read_write_col_position(dation,expression) ::= <%
@@ -761,10 +769,13 @@ try {
 // TAKE STATEMENT END
 >>
 
-take_id(dation,id) ::= <%
+/*
+obsolete: mapped to read_tage_expression
+
+take_id(dation,id,isArray) ::= <%
 <dation>.dationRead(&<id>, sizeof(<id>));
 %>
-
+*/
 send_statement(dation,elements) ::= <<
 // SEND STATEMENT BEGIN
 try {
@@ -784,10 +795,18 @@ try {
 // SEND STATEMENT END
 >>
 
-send_expression(dation,expression) ::= <%
+/*
+obsolete --> mapped to write_send_expression
+send_expression(dation,expression,isArray) ::= <%
 <dation>.dationWrite(&<expression>, sizeof(<expression>));
 %>
+*/
+take_send_rst(dation,id) ::= <%
+<dation>.rst(<id>);
+%>
 
+/*
+obsolete 2019-10-11 TAKE/SEND support only RST
 take_send_rst_position(dation,id) ::= <%
 <dation>.rst(<id>);
 %>
@@ -809,6 +828,7 @@ take_send_control_position(dation,expression1,expression2,expression3) ::= <%
 <endif>
 <endif>
 %>
+*/
 
 open_statement(id,paramlist,declFileName,refFileName,flen,rst_var) ::= <<
 {
@@ -920,6 +940,11 @@ try {
 // PUT STATEMENT END
 >>
 
+/* ---------------------------------------------------------- */
+/* put_statement_*
+   get_statement_*
+   replaced with ioformat_* or iopostion_*
+
 put_statement_factor_format(dation,format) ::= <%
     <dation>.<format>;
 %>
@@ -936,12 +961,45 @@ put_statement_factor_position_skip(element) ::= <%
     toSkip((pearlrt::Fixed\<31>)(<element>))
 %>
 
+put_statement_factor_position_page(element) ::= <%
+    toPage((pearlrt::Fixed\<31>)(<element>))
+%>
+
 put_statement_factor_position_x(element) ::= <%
     toX((pearlrt::Fixed\<31>)(<element>))
 %>
 
 put_statement_factor_position_eof() ::= <%
     eof()
+%>
+
+put_statement_factor_position_adv(expression1,expression2,expression3) ::= <%
+    adv(<expression1>
+	<if(expression2)>,<expression2>
+		<if(expression3)>,<expression3><endif>
+	<endif>)
+%>
+
+put_statement_factor_position_col(expression) ::= <%
+    col(<expression>)
+%>
+
+put_statement_factor_position_line(expression) ::= <%
+    line(<expression>)
+%>
+
+put_statement_factor_position_pos(expression1,expression2,expression3) ::= <%
+    pos(<expression1>
+	<if(expression2)>,<expression2>
+		<if(expression3)>,<expression3><endif>
+	<endif>)
+%>
+
+put_statement_factor_position_sop(element1,element2,element3) ::= <%
+    sop(&<element1>
+	<if(element2)>,&<element2>
+		<if(element3)>,&<element3><endif>
+	<endif>)
 %>
 
 put_statement_fixed_format(element,fieldwidth,decimalPositions,scaleFactor) ::= <%
@@ -980,6 +1038,8 @@ put_statement_bit_format_4(element,numberOfCharacters) ::= <%
     toB4(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
 %>
 
+-------------- end of removed block -----------------------
+*/
 /************************* GET STATEMENT *************************/
 
 get_statement(dation,elements) ::= <<
@@ -1001,9 +1061,10 @@ try {
 // GET STATEMENT END
 >>
 
-get_statement_factor_format(dation,format) ::= <%
-    <dation>.<format>;
-%>
+/* -------------------------------------------------- */
+/* put_statement_*
+   get_statement_*
+   replaced with ioformat_* or iopostion_*
 
 get_statement_factor_position(dation,format) ::= <%
     <dation>.<format>;
@@ -1015,6 +1076,10 @@ get_statement_factor_position_rst(element) ::= <%
 
 get_statement_factor_position_skip(element) ::= <%
     fromSkip((pearlrt::Fixed\<31>)(<element>))
+%>
+
+get_statement_factor_position_page(element) ::= <%
+    fromPage((pearlrt::Fixed\<31>)(<element>))
 %>
 
 get_statement_factor_position_x(element) ::= <%
@@ -1060,6 +1125,108 @@ get_statement_bit_format_4(element,numberOfCharacters) ::= <%
 get_statement_character_string_format(element,fieldwidth) ::= <%
 fromA(<element><if(fieldwidth)>,<fieldwidth><endif>)
  %>
+ ---------------- end of removed block -------------------------- */
+/*
+   replaced io_postion_*
+*/
+
+get_factor_format(dation,format,direction) ::= <%
+    <dation>.<format>;
+%>
+
+put_factor_format(dation,format,direction) ::= <%
+    <dation>.<format>;
+%>
+
+io_factor_position(dation,format,direction) ::= <%
+    <dation>.<format>;
+%>
+
+io_rst(dation,element,direction) ::= <%
+    rst(<element>)
+%>
+
+io_position_skip(element,direction) ::= <%
+    <direction>Skip((pearlrt::Fixed\<31>)(<element>))
+%>
+
+io_position_page(element,direction) ::= <%
+    <direction>Page((pearlrt::Fixed\<31>)(<element>))
+%>
+
+io_position_x(element,direction) ::= <%
+    <direction>X((pearlrt::Fixed\<31>)(<element>))
+%>
+
+io_position_eof(direction) ::= <%
+    eof()
+%>
+
+io_position_adv(expression1,expression2,expression3,direction) ::= <%
+    adv(<expression1>
+	<if(expression2)>,<expression2>
+		<if(expression3)>,<expression3><endif>
+	<endif>)
+%>
+
+io_position_col(expression,direction) ::= <%
+    col(<expression>)
+%>
+
+io_position_line(expression,direction) ::= <%
+    line(<expression>)
+%>
+
+io_position_pos(expression1,expression2,expression3,direction) ::= <%
+    pos(<expression1>
+	<if(expression2)>,<expression2>
+		<if(expression3)>,<expression3><endif>
+	<endif>)
+%>
+
+io_position_sop(element1,element2,element3,direction) ::= <%
+    sop(&<element1>
+	<if(element2)>,&<element2>
+		<if(element3)>,&<element3><endif>
+	<endif>)
+%>
+
+io_fixed_format(element,fieldwidth,decimalPositions,direction) ::= <%
+    <direction>F(<element>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
+%>
+
+io_duration_format(element,fieldwidth,decimalPositions,direction) ::= <%
+    <direction>D(<element>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
+%>
+
+io_time_format(element,fieldwidth,decimalPositions,direction) ::= <%
+    <direction>T(<element>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
+%>
+
+io_float_format_E(element,fieldwidth,decimalPositions,significance,esize,direction) ::= <%
+    <direction>E(<element>, <fieldwidth>,<decimalPositions>,<significance>
+	<if(esize)>,(pearlrt::Fixed\<31>)(<esize>)<endif>)
+%>
+
+io_character_string_format(element,fieldwidth,direction) ::= <%
+	<direction>A(<element><if(fieldwidth)>,<fieldwidth><endif>)
+ %>
+
+io_bit_format_1(element,numberOfCharacters,direction) ::= <%
+    <direction>B1(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
+%>
+
+io_bit_format_2(element,numberOfCharacters,direction) ::= <%
+    <direction>B2(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
+%>
+
+io_bit_format_3(element,numberOfCharacters,direction) ::= <%
+    <direction>B3(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
+%>
+
+io_bit_format_4(element,numberOfCharacters,direction) ::= <%
+    <direction>B4(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
+%>
 
 /******************************** CALL Statement *********************************/
 
@@ -1145,7 +1312,7 @@ pearlrt::Duration
 >>
 
 
-TypeTime() ::= <%
+eypeTime() ::= <%
 *** TypeTime ***
 %>
 TypeBitString(length) ::= <<
@@ -1434,14 +1601,23 @@ extern pearlrt::DationRW <user_variable(name)>;
 
 >>
 
+/*
+renamed from DationSpecificationBasic to SystemDationSpecificationBasic
 
 DationSpecificationBasic(name,TypeDation,global) ::= <<
+*/
+SystemDationSpecificationBasic(name,TypeDation,global) ::= <<
 extern pearlrt::Device *d_<name>;
 static pearlrt::SystemDationB* _<name> = static_cast\<pearlrt::SystemDationB*>(d_<name>); <\n>
 
 >>
 
+/*
+renamed from DationSpecificationBasic to SystemDationSpecificationBasic
+
 DationSpecificationNonBasic(name,TypeDation,global) ::= <<
+*/
+SystemDationSpecificationNonBasic(name,TypeDation,global) ::= <<
 extern pearlrt::Device *d_<name>;
 static pearlrt::SystemDationNB* _<name> = static_cast\<pearlrt::SystemDationNB*>(d_<name>); <\n>
 

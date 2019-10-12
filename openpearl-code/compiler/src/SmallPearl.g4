@@ -1376,24 +1376,23 @@ close_parameterlist:
 ////////////////////////////////////////////////////////////////////////////////
 
 getStatement :
-    'GET' ( ID ( ',' ID )* )?  getFrom 'BY' formatPosition ( ',' formatPosition )* ';'
-    ;
-
-
- getFrom :
-    'FROM' ID
+    'GET' ( ID ( ',' ID )* )?  'FROM' dationName  'BY' formatPosition ( ',' formatPosition )* ';'
     ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // PutStatement ::=
-//   PUT [ { Expression | Segment } [ , { Expression | Segment } ] ... ] TO Name§Dation [ BY FormatPosition [ , FormatPosition ] ... ] ;
+//   PUT [ { Expression | ArraySlice } [ , { Expression | ArraySlice } ] ... ] TO Name§Dation [ BY FormatPosition [ , FormatPosition ] ... ] ;
 ////////////////////////////////////////////////////////////////////////////////
 
 putStatement :
-    'PUT' ( expression ( ',' expression )* )? 'TO' ID
+    'PUT' ( expression ( ',' expression )* )? 'TO' dationName
     ( 'BY' formatPosition ( ',' formatPosition )* )? ';'
     ;
+
+dationName : 
+	ID
+	;
 
 ////////////////////////////////////////////////////////////////////////////////
 // FormatPosition ::=
@@ -1446,14 +1445,83 @@ format :
 //   | { COL | LINE } ( Expression )
 //   | SOP ( Name [ , Name [ , Name ] ] /∗ PositionVariables-FIXED ∗/ )
 ////////////////////////////////////////////////////////////////////////////////
+absolutePosition :
+       positionCOL
+     | positionLINE
+     | positionPOS
+     | positionSOP
+     ;
 
+positionCOL :
+       'COL' '(' expression ')'
+	;
+
+positionLINE :
+     'LINE' '(' expression ')'                           
+     ;
+
+positionPOS :
+     'POS' '(' ( (  expression ',' )? expression ',' )?
+       expression ')'
+     ;
+
+positionSOP :
+     'SOP' '(' ( ( ID ',' )? ID ',' )? ID ')'     
+     ;
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Position ::=
+//   RST ( Name§ErrorVariable-FIXED )
+//   | { X | SKIP | PAGE } [ ( Expression ) ]
+//   | { POS | ADV } ( Expression [ , Expression [ , Expression ] ] )
+//   | { COL | LINE } ( Expression )
+//   | SOP ( Name [ , Name [ , Name ] ] /∗ PositionVariables-FIXED ∗/ )
+////////////////////////////////////////////////////////////////////////////////
 position :
-      'RST' ( '(' ID ')' )               # positionRST
-    | 'SKIP' ( '(' expression ')' )?     # positionSKIP
-    | 'X' ( '(' expression ')' )?        # positionX
-    | 'EOF'                              # positionEOF
+      positionRST
+    | relativePosition
+    | absolutePosition
     ;
 
+////////////////////////////////////////////////////////////////////////////////
+// RelativePosition ::=
+//   { X | SKIP | PAGE } [ (Expression) ] |
+//   ADV ( [ [ Expression , ] Expression , ] Expression )
+////////////////////////////////////////////////////////////////////////////////
+relativePosition :
+    | positionX
+    | positionSKIP
+    | positionPAGE
+    | positionADV
+    | positionEOF
+    ;
+
+
+positionRST :
+	'RST' ( '(' ID ')' )
+	;
+
+positionPAGE :
+	'PAGE' ( '(' expression ')' )?
+	;
+
+positionSKIP :
+	'SKIP' ( '(' expression ')' )?
+	;
+
+positionX :
+	'X' ( '(' expression ')' )?
+	;
+
+positionADV :
+    | 'ADV' '(' ( ( expression ',' )? expression ',' )?
+      expression ')'                                     
+    ;
+
+positionEOF:
+	'EOF'
+	;
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1564,10 +1632,10 @@ channel: ID;
 
 ////////////////////////////////////////////////////////////////////////////////
 // WriteStatement ::=
-//  WRITE [ { Expression | Segment } [ , { Expression | Segment } ] ... ]
+//  WRITE [ { Expression | ArraySlice } [ , { Expression | ArraySlice } ] ... ]
 //     TO Name§Dation [ BY Position [ , Position ] ... ] ;
 //
-// Segment ::=
+// ArraySlice ::=
 //   Name§Field ( [ Index , ] ... Index : Index)
 //
 // Index ::=
@@ -1575,28 +1643,50 @@ channel: ID;
 ////////////////////////////////////////////////////////////////////////////////
 
 writeStatement :
-    'WRITE' ( expression ( ',' expression )* )? 'TO' ID
-    ( 'BY' writePosition ( ',' writePosition )* )? ';'
+    'WRITE' ( expression ( ',' expression )* )? 
+	'TO' dationName
+	(  'BY' position ( ',' position )* )? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // ReadStatement ::=
-//   READ [ { Name§Variable | Segment } [ , { Name§Variable | Segment } ] ... ] FROM Name§Dation [ BY Position [ , Position ] ... ] ;
+//   READ [ { Name§Variable | ArraySlice } [ , { Name§Variable | ArraySlice } ] ... ] FROM Name§Dation [ BY Position [ , Position ] ... ] ;
 ////////////////////////////////////////////////////////////////////////////////
 
-readStatement
-    : 'READ' ID (',' ID)* read_from     ( 'BY' readPosition ( ',' readPosition )* )? ';'
+readStatement :
+    'READ' ID  (','  ID  )* 
+	'FROM' dationName  
+	(  'BY' position ( ',' position )* )? ';'
     ;
 
- read_from :
-    'FROM' ID
+// this rule is not acepted by ANTLR
+index_array :
+	expression
+	;
+
+// 2019-10-11 r.m.
+// array slice added to grammar in PUT/GET/READ/WRITE
+// but the definition of the '('(index',')* index':'index)
+// causes lot of errors when compiling the grammar
+ArraySlice :
+    ID '(' 
+//	index_array (',' index_array )* ':' index_array 
+//	index_array  ':' index_array 
+//	expression ':' expression
+	')' 
     ;
+
+// read_from :
+//    'FROM' ID
+//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Position ::=
 //   AbsolutePosition | RelativePosition | RST (Name§ErrorVariable-FIXED)
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
+obsolete --> mapped to io_position_*
 readPosition :
       readWriteAbsolutePosition                             # readAbsPosition
     | readWriteRelativePosition                             # readRelPosition
@@ -1638,6 +1728,7 @@ readWriteRelativePosition :
       expression ')'                                          # readWriteRelativePositionADV
     | 'EOF'                                                   # readWriteRelativePositionEOF
     ;
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // TakeStatement ::=
@@ -1646,12 +1737,14 @@ readWriteRelativePosition :
 ////////////////////////////////////////////////////////////////////////////////
 
 takeStatement:
-    'TAKE' ID?  takeFrom ( 'BY'  take_send_rst_s_ctrl_format ( ',' take_send_rst_s_ctrl_format)* )? ';'
+    //'TAKE' ID?  takeFrom ( 'BY'  take_send_rst_s_ctrl_format ( ',' take_send_rst_s_ctrl_format)* )? ';'
+    'TAKE' ID?  'FROM' dationName( 'BY'  take_send_rst )? ';'
     ;
 
-takeFrom :
-    'FROM' ID
-    ;
+// obsolete
+//takeFrom :
+//    'FROM' ID
+//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // SendStatement ::=
@@ -1660,13 +1753,21 @@ takeFrom :
 ////////////////////////////////////////////////////////////////////////////////
 
 sendStatement :
-    'SEND' expression? sendTo ( 'BY'  take_send_rst_s_ctrl_format ( ',' take_send_rst_s_ctrl_format)* )? ';'
+    //'SEND' expression? sendTo ( 'BY'  take_send_rst_s_ctrl_format ( ',' take_send_rst_s_ctrl_format)* )? ';'
+    'SEND' expression? 'TO' dationName ( 'BY'  take_send_rst )? ';'
     ;
 
-sendTo :
-    'TO' ID
-    ;
+// obsolete
+//sendTo :
+//    'TO' ID
+//    ;
 
+take_send_rst :
+      'RST' '(' ID ')' 
+	;
+
+/*
+obsolete 2019-10-11 rm
 ////////////////////////////////////////////////////////////////////////////////
 // RST-S-CTRL-Format ::=
 //     RST ( Name§ErrorVariable-FIXED )
@@ -1680,6 +1781,7 @@ take_send_rst_s_ctrl_format :
     | 'CONTROL' '(' expression (',' expression
         (',' expression)?)? ')'                         # take_send_rst_s_ctrl_format_CONTROL
     ;
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1787,14 +1889,29 @@ interruptSpecification
 ////////////////////////////////////////////////////////////////////////////////
 
 dationSpecification
-    : ( 'SPECIFY' | 'SPC' ) identifierDenotation specifyTypeDation globalAttribute? ';'
+//    : ( 'SPECIFY' | 'SPC' ) identifierDenotation specifyTypeDation globalAttribute? ';'
+    : ( 'SPECIFY' | 'SPC' ) identifierDenotation typeDation globalAttribute? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+/*
+
+change in grammar 2019-10-12
+dationSpoecification and dationDeclaration 
+  - uses typeDation and specifyTypeDation, resp.
+  - typeDation and specifyTapeDation were identical
+  - classAttribute had an optional element 'SYSTEM' which is only possible 
+    in dationSecification
+  -> remove specifyTypeDation and use typeDation even in dationSpecification
+  -> leave the classAttribute unchanged and filter this in the semantic
+     analysis
+
 specifyTypeDation
     : 'DATION' sourceSinkAttribute classAttribute
     ;
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // DationDeclaration ::=
@@ -1878,12 +1995,15 @@ accessAttribute
 // Typology ::=
 //      DIM( {⇤ |pi} [,pi[,pi]] ) [TFU[MAX]]
 ////////////////////////////////////////////////////////////////////////////////
+/* grammar changed for easier parsing
+ 'TFU' ( 'MAX' )?  --> rule rule
+*/
 
 typology :
     'DIM'
     '('
         dimension1 ( ( ',' dimension2 ) ( ',' dimension3 )? )?
-    ')' ( ('TFU')? ('MAX')? )?
+    ')' ( tfu )?
     ;
 
 dimension1
@@ -1899,10 +2019,20 @@ dimension3
     : IntegerConstant          # dimension3Integer
     ;
 
+tfu
+   : 'TFU' ( tfuMax )?
+   ;
+
+tfuMax 
+   : 'MAX'
+   ;
+
+	
+/* remove unused rule 
 typologyAttribute
     : ('TFU')? ('MAX')?
     ;
-
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // DimensionAttribute ::=
