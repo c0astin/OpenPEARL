@@ -12,7 +12,25 @@ public class VariableEntry extends SymbolTableEntry {
     private Boolean           m_loopControlVariable;
     private Initializer       m_initializer;
 
-    public VariableEntry() {
+    
+    public VariableEntry()
+    {
+        super("");
+        this.m_ctx = null;
+        this.m_type = null;
+        this.m_hasAssigmentProtection = false;
+        this.m_loopControlVariable = false;
+        this.m_initializer = null;
+    }
+
+    public VariableEntry(String name)
+    {
+        super(name);
+        this.m_ctx = null;
+        this.m_type = null;
+        this.m_hasAssigmentProtection = false;
+        this.m_loopControlVariable = false;
+        this.m_initializer = null;
     }
 
     public VariableEntry(String name, TypeDefinition type, org.antlr.v4.runtime.ParserRuleContext ctx)
@@ -25,6 +43,7 @@ public class VariableEntry extends SymbolTableEntry {
         this.m_initializer = null;
     }
 
+    
     public VariableEntry(String name, TypeDefinition type, Boolean hasAssigmentProtection, org.antlr.v4.runtime.ParserRuleContext ctx, Initializer initializer)
     {
         super(name);

@@ -1,5 +1,4 @@
 /*
-* [The "BSD license"]
 *  Copyright (c) 2012-2019 Marcel Schaible
 *  All rights reserved.
 *
@@ -32,12 +31,20 @@ package org.smallpearl.compiler;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.smallpearl.compiler.SmallPearlParser.*;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Collections;
 
+/**
+ * 
+ * run through the complete AST and create symbols for all elements which are need by 
+ * - semantic checks
+ * - code generation
+ * - additional ASTAttributes may become generated suitable imformation 
+ */
 
 public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
 
@@ -99,6 +106,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         }
 
 
+
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;
     }
@@ -132,7 +140,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 }
             }
         }
-
+       
         return null;
     }
 
@@ -1158,12 +1166,151 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
     @Override
     public Void visitDationDeclaration(SmallPearlParser.DationDeclarationContext ctx) {
+    	// the TypeDation may have lot of parameters depending on user/system dation
+    	// so we just create an object and set the attributes while scanning the context
+    	
+    	TypeDation d = new TypeDation();
+    	d.setIsDeclaration(true);
+    	
         if (m_verbose > 0) {
             System.out.println("SymbolTableVisitor: visitDationDeclaration");
         }
-
+        
+        ErrorEnvironment env = new ErrorEnvironment(ctx, "DationDCL");
+        ErrorStack.enter(env);
+        
+        treatIdentifierDenotation(ctx.identifierDenotation(), d);
+                
+        treatTypeDation(ctx.typeDation(), d);
+        
+        // in progress treat typologgy
+        if (ctx.typology() != null) {
+        	TypologyContext c = ctx.typology();
+        	if (c.dimension1()!= null) {
+        	   d.setDimension1(treatDimension(c.dimension1().getText()));
+        	}
+        	if (c.dimension2()!= null) {
+         	   d.setDimension2(treatDimension(c.dimension2().getText()));
+         	}
+        	if (c.dimension3()!= null) {
+         	   d.setDimension3(treatDimension(c.dimension3().getText()));
+         	}
+        	
+        	if (c.tfu() != null ) {
+        		d.setTfu(true);
+        		if (c.tfu().tfuMax() != null) {
+        			ErrorEnvironment envTfu= new ErrorEnvironment(c.tfu(),  "TFU MAX");
+        			ErrorStack.enter(envTfu);
+        			ErrorStack.add("is deprecated");
+        			ErrorStack.leave();
+        		}
+        	}
+          	
+        } else {
+        	System.out.println("*** error???: how did you reach this point?");
+        }
+        
+        if (ctx.accessAttribute()!= null) {
+        	ErrorEnvironment e2 = new ErrorEnvironment(ctx.accessAttribute(), "accessAttributes");
+        	ErrorStack.enter(e2);
+        	for (ParseTree c1 : ctx.accessAttribute().children) {
+        		if (c1.getText().equals("DIRECT")) d.setDirect(true); 
+        		else if (c1.getText().equals("FORWARD")) d.setDirect(true);
+        		else if (c1.getText().equals("FORBACK")) {
+        			ErrorStack.add("FORBACK is not supported");
+        		} else if (c1.getText().equals("CYCLIC")) d.setCyclic(true);
+        		else if (c1.getText().equals("NOCYCL")) d.setCyclic(false);
+        		else if (c1.getText().equals("STREAM")) d.setStream(true);
+        		else if (c1.getText().equals("NOSTREAM")) d.setStream(false);
+        		else {
+        			throw new InternalCompilerErrorException("DationDCL untreated accessAttribute"+c1.getText());
+        		}
+        	}
+        	ErrorStack.leave();
+       	
+        }
+        
+        if (ctx.globalAttribute() != null) {
+        	treatGlobalAttribute(ctx.globalAttribute(), d);
+        }
+        
+        // 
+        ErrorStack.leave();
         return null;
     }
+
+    /* -------------------------------------------------------------------  */
+    /* START of common for dationDeclaration and dationSpecification 	    */
+    /* -------------------------------------------------------------------  */
+    private void treatIdentifierDenotation(IdentifierDenotationContext ctx, TypeDation d) {
+    for (int i = 0; i<ctx.ID().size(); i++) {
+    	String dationName = ctx.ID(i).toString();
+        System.out.println("DationName: "+ dationName);
+    	
+    	SymbolTableEntry entry1 = this.m_currentSymbolTable.lookup(dationName);
+
+        if (entry1 != null) {
+        	ErrorStack.add("symbol "+dationName+" already defined");
+            //throw new DoubleDeclarationException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+    	
+        VariableEntry ve = new VariableEntry(dationName,d,ctx);
+        if (!m_currentSymbolTable.enter(ve)) {
+        	throw new InternalCompilerErrorException("",0,0,"SymbolTableVisitor- could not add symbol");
+        }
+    }
+    }
+    
+    private void treatTypeDation(TypeDationContext ctx, TypeDation d) {
+    	if (ctx != null) {
+        	// let's have a look on the type of the dation
+        	if (ctx.sourceSinkAttribute() != null) {
+        		if (ctx.sourceSinkAttribute() instanceof SourceSinkAttributeINContext) {
+        			d.setIn(true);
+        		} else if (ctx.sourceSinkAttribute() instanceof SourceSinkAttributeOUTContext) {
+        			d.setOut(true);
+        		} else if (ctx.sourceSinkAttribute() instanceof SourceSinkAttributeINOUTContext) {
+    			   d.setIn(true);
+    			   d.setOut(true);
+    		    } else {
+    	        	throw new InternalCompilerErrorException("",0,0,"SymbolTableVisitor-untreated SourSinkAttribute");
+    		    }
+        	}
+        	if (ctx.classAttribute() != null) {
+        		if (ctx.classAttribute().systemDation() != null) {
+        			d.setSystemDation(true);
+        		}		
+        		if (ctx.classAttribute().alphicDation() != null) {
+        			d.setAlphic(true);
+        		}
+        		if (ctx.classAttribute().basicDation() != null) {
+        			d.setBasic(true);
+        		}
+        		if (ctx.classAttribute().typeOfTransmissionData() != null) {
+        		    TypeOfTransmissionDataContext c = ctx.classAttribute().typeOfTransmissionData();
+        		    // maybe we need somne treatment for STRUCT
+        			d.setTypeOfTransmission(c.getText());
+        		}
+        	}
+        }
+    }
+    
+    int treatDimension(String s) {
+    		if (s.equals("*")) {
+    			return 0;  // '*'
+    		}
+    		else {
+    			return(Integer.parseInt(s)); 	
+    		}
+    }
+    void treatGlobalAttribute(GlobalAttributeContext ctx, TypeDation d) {
+    	if (ctx.ID() != null) {
+    		d.setGlobal(ctx.ID().getText());
+    	}
+    }
+    /* -------------------------------------------------------------------  */
+    /* END of common for dationDeclaration and dationSpecification 			*/
+    /* -------------------------------------------------------------------  */
 
     @Override
     public Void visitLengthDefinition(SmallPearlParser.LengthDefinitionContext ctx) {
@@ -1394,6 +1541,31 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         SymbolTable symbolTable = moduleEntry.scope;
 
         symbolTable.setUsesSystemElements();
+        
+        /* ---------------- */
+    	TypeDation d = new TypeDation();
+    	d.setIsDeclaration(false);
+    	
+        if (m_verbose > 0) {
+            System.out.println("SymbolTableVisitor: visitDationSpecification");
+        }
+        
+        ErrorEnvironment env = new ErrorEnvironment(ctx, "DationSPC");
+        ErrorStack.enter(env);
+        
+        treatIdentifierDenotation(ctx.identifierDenotation(), d);
+                
+        treatTypeDation(ctx.typeDation(), d);
+        
+        
+        if (ctx.globalAttribute() != null) {
+        	treatGlobalAttribute(ctx.globalAttribute(), d);
+        }
+        
+        // 
+        ErrorStack.leave();
+         
+        /* ---------------- */
         return null;
     }
 

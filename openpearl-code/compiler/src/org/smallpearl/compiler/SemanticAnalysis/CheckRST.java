@@ -160,7 +160,13 @@ public class CheckRST extends SmallPearlBaseVisitor<Void> implements SmallPearlV
         return null;
     }
 
+  
+    /**
+     * should become removed when the grammar does not supply the formats for READ/WRITE/PUT/GET  
+      obsolete 2019-10-11
+      
     @Override
+    @Deprecated
     public Void visitReadRSTPosition(SmallPearlParser.ReadRSTPositionContext ctx) {
         if (m_debug) {
             System.out.println( "Semantic: Check RST: ReadRSTPosition");
@@ -169,8 +175,13 @@ public class CheckRST extends SmallPearlBaseVisitor<Void> implements SmallPearlV
         CheckPrecision(ctx.ID().getText(), ctx);
         return null;
     }
-
+*/
+    /**
+     * should become removed when the grammar does not supply the formats for READ/WRITE/PUT/GET  
+    obolete 2019-10-11
+    
     @Override
+    @Deprecated
     public Void visitWriteRSTPosition(SmallPearlParser.WriteRSTPositionContext ctx) {
         if (m_debug) {
             System.out.println( "Semantic: Check RST: WriteRSTPosition");
@@ -180,7 +191,11 @@ public class CheckRST extends SmallPearlBaseVisitor<Void> implements SmallPearlV
         return null;
     }
 
+    /**
+     * should become removed when the grammar does not supply the formats for READ/WRITE/PUT/GET  
+    
     @Override
+    @Deprecated
     public Void visitTake_send_rst_s_ctrl_format_RST(SmallPearlParser.Take_send_rst_s_ctrl_format_RSTContext ctx) {
         if (m_debug) {
             System.out.println( "Semantic: Check RST: visitTake_send_rst_s_ctrl_format_RST");
@@ -189,8 +204,12 @@ public class CheckRST extends SmallPearlBaseVisitor<Void> implements SmallPearlV
         CheckPrecision(ctx.ID().getText(), ctx);
         return null;
     }
-
+*/
+    /**
+     * should become removed when the grammar does not supply the formats for READ/WRITE/PUT/GET  
+     */
     @Override
+    @Deprecated
     public Void visitPositionConvertRST(SmallPearlParser.PositionConvertRSTContext ctx) {
         if (m_debug) {
             System.out.println( "Semantic: Check RST: visitPositionConvertRST");
@@ -204,20 +223,28 @@ public class CheckRST extends SmallPearlBaseVisitor<Void> implements SmallPearlV
         SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
         VariableEntry var = null;
 
+
+		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "RST");
+		ErrorStack.enter(eEnv);
+		
         if (entry != null && entry instanceof VariableEntry) {
-            var = (VariableEntry) entry;
+        	// it would be got to set a new error environment to the 
+        	// context of the 'entry'
+    		var = (VariableEntry) entry;
 
             if ( var.getType() instanceof TypeFixed) {
                 TypeFixed type = (TypeFixed) var.getType();
                 if (type.getPrecision() < 15) {
-                    throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                	ErrorStack.add("RST variable must be at least FIXED(15)");
                 }
             } else {
-                throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            	ErrorStack.add("RST variable must be FIXED");
             }
         } else {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            ErrorStack.add("RST needs a variable");
         }
+
+        ErrorStack.leave();
 
         return null;
     }

@@ -137,6 +137,12 @@ public class SymbolTable {
         return (SymbolTableEntry) m_entries.get(name);
     }
 
+    /**
+     * 
+     * @param se
+     * @return false, if the symbol was already in the symbol table
+     * <br> true, if the symbol was added
+     */
     public boolean enter(SymbolTableEntry se) {
         if (lookupLocal(se.getName()) != null) {
             return false;

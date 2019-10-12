@@ -157,50 +157,64 @@ public class Compiler {
                     if (dumpSymbolTable) {
                         symbolTableVisitor.symbolTable.dump();
                     }
+                }
+                    
 
-                    ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose, debug, symbolTableVisitor, ast);
-                    expressionTypeVisitor.visit(tree);
+                ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose, debug, symbolTableVisitor, ast);
+                if (ErrorStack.getTotalErrorCount()<=0) {
+                       expressionTypeVisitor.visit(tree);
+                }
 
+                if (ErrorStack.getTotalErrorCount()<=0) {
                     ConstantFoldingVisitor constantFoldingVisitor = new ConstantFoldingVisitor(symbolTableVisitor, ast);
                     constantFoldingVisitor.visit(tree);
-
-                    ConstantPoolVisitor constantPoolVisitor = new ConstantPoolVisitor(lexer.getSourceName(),
-                                                                                      verbose,
-                                                                                      debug,
-                                                                                      symbolTableVisitor,
-                                                                                      constantPool,
-                                                                                      expressionTypeVisitor,
-                                                                                      ast);
+                }
+                    
+                ConstantPoolVisitor constantPoolVisitor = new ConstantPoolVisitor(lexer.getSourceName(),
+                        verbose,
+                        debug,
+                        symbolTableVisitor,
+                        constantPool,
+                        expressionTypeVisitor,
+                        ast);
+                if (ErrorStack.getTotalErrorCount()<=0) {
                     constantPoolVisitor.visit(tree);
+                }
+                    
 
-                    ConstantExpressionEvaluatorVisitor constantExpressionVisitor = new ConstantExpressionEvaluatorVisitor(verbose, debug, symbolTableVisitor, constantPoolVisitor);
-                    constantExpressionVisitor.visit(tree);
+                ConstantExpressionEvaluatorVisitor constantExpressionVisitor = new ConstantExpressionEvaluatorVisitor(verbose, debug, symbolTableVisitor, constantPoolVisitor);
+                if (ErrorStack.getTotalErrorCount()<=0) {
+                    	constantExpressionVisitor.visit(tree);
+                }
 
+                if (ErrorStack.getTotalErrorCount()<=0) {
                     FixUpSymbolTableVisitor fixUpSymbolTableVisitor = new FixUpSymbolTableVisitor(verbose,debug,symbolTableVisitor,expressionTypeVisitor,constantPoolVisitor,ast);
                     fixUpSymbolTableVisitor.visit(tree);
-
+                }
+                    
                     // expressionTypeVisitor.visit(tree);
 
-                    if (dumpConstantPool) {
+                if (dumpConstantPool) {
                         ConstantPool.dump();
-                    }
+                }
 
-                    if (!nosemantic) {
+                if (ErrorStack.getTotalErrorCount() <= 0 && !nosemantic) {
                         SemanticCheck semanticCheck = new SemanticCheck(lexer.getSourceName(), verbose, debug, tree, symbolTableVisitor, expressionTypeVisitor, ast);
-                    }
-
-                    if (imc) {
-                        SystemPartExport(lexer.getSourceName(), tree);
-                    }
-
-                    CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor, expressionTypeVisitor, constantExpressionVisitor, ast);
-
+                }
+                if (ErrorStack.getTotalErrorCount() <= 0 && imc) {
+                    	SystemPartExport(lexer.getSourceName(), tree);
+                }
+                if (ErrorStack.getTotalErrorCount() <= 0) {
+                       CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor, expressionTypeVisitor, constantExpressionVisitor, ast);
                 }
             }
             catch(Exception ex) {
                 System.err.println(ex.getMessage());
 
-
+                if (debug) {
+                	ex.printStackTrace();
+                }
+                
                 if ( verbose > 0 ) {
                     System.err.println("Compilation aborted.");
                 }
@@ -220,6 +234,25 @@ public class Compiler {
                 System.exit(-1);
             }
 
+            if (ErrorStack.getTotalErrorCount()>0) {
+            	System.out.println("compilation aborted with errors");
+                
+                if ( verbose > 0 ) {
+                    System.err.println("Compilation aborted.");
+                }
+
+                if (dumpSymbolTable) {
+                    symbolTableVisitor.symbolTable.dump();
+                }
+
+                if (dumpConstantPool) {
+                    ConstantPool.dump();
+                }
+            	
+                System.exit(-1);
+            	
+            }
+            
             noOfErrors = parser.getNumberOfSyntaxErrors();
 
             System.out.flush();

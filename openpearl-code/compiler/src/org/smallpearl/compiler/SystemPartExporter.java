@@ -274,41 +274,41 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
                 dationSpecification.add( "name", identifierDenotationList.get(i));
             }
 
-            if ( ctx.specifyTypeDation() != null ) {
+            if ( ctx.typeDation() != null ) {
                 ST datalist = group.getInstanceOf("DataList");
                 ST attributes = group.getInstanceOf("Attributes");
 
-                if (ctx.specifyTypeDation().classAttribute() != null) {
-                    if (ctx.specifyTypeDation().classAttribute().alphicDation() != null) {
+                if (ctx.typeDation().classAttribute() != null) {
+                    if (ctx.typeDation().classAttribute().alphicDation() != null) {
                         ST data = group.getInstanceOf("Data");
                         data.add("name", "ALPHIC");
                         datalist.add("data",data);
                     }
 
-                    if (ctx.specifyTypeDation().classAttribute().basicDation() != null) {
+                    if (ctx.typeDation().classAttribute().basicDation() != null) {
                         ST attribute = group.getInstanceOf("Attribute");
                         attribute.add("name", "BASIC");
                         attributes.add("attributes", attribute);
                     }
 
-                    if (ctx.specifyTypeDation().classAttribute().systemDation() != null) {
+                    if (ctx.typeDation().classAttribute().systemDation() != null) {
                         ST attribute = group.getInstanceOf("Attribute");
                         attribute.add("name", "SYSTEM");
                         attributes.add("attributes", attribute);
                     }
 
-                    if ( ctx.specifyTypeDation().classAttribute() != null ) {
-                        if ( ctx.specifyTypeDation().classAttribute().typeOfTransmissionData() != null) {
+                    if ( ctx.typeDation().classAttribute() != null ) {
+                        if ( ctx.typeDation().classAttribute().typeOfTransmissionData() != null) {
                             ST data = group.getInstanceOf("Data");
-                            data.add("name", ctx.specifyTypeDation().classAttribute().typeOfTransmissionData().getText());
+                            data.add("name", ctx.typeDation().classAttribute().typeOfTransmissionData().getText());
                             datalist.add("data",data);
                         }
                     }
                 }
 
-                if ( ctx.specifyTypeDation().sourceSinkAttribute() != null) {
+                if ( ctx.typeDation().sourceSinkAttribute() != null) {
                     ST attribute = group.getInstanceOf("Attribute");
-                    attribute.add("name", ctx.specifyTypeDation().sourceSinkAttribute().getText());
+                    attribute.add("name", ctx.typeDation().sourceSinkAttribute().getText());
                     attributes.add("attributes",attribute);
                 }
 
