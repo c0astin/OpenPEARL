@@ -40,7 +40,9 @@ import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
 
 /**
-check types and constant values of format statements
+check types the io-statatements
+with respect to the dation declaration
+and constant values of format statements
 
 Errors are forwarded to the ErrorStack class
 
