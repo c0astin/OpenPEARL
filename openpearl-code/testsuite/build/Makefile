@@ -14,9 +14,10 @@
 #     as build only test cases
 # the result of make build is ok, if all test cases work
 # the result of make doesnotbuild is ok, if no test cases work
+
+#	043_switch \
  
 DONOTBUILD= 030_signals 031_signalsInduce  \
-	043_switch \
 	110_sizeof \
 	151_array_procParam \
 	224_bit_slice \
