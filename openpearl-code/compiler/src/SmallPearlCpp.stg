@@ -854,7 +854,9 @@ open_statement(id,paramlist,declFileName,refFileName,flen,rst_var) ::= <<
 >>
 
 declare_idf_filename(variable,stringConstant,lengthOfStringConstant) ::= <<
-<if(stringConstant)>static pearlrt::Character\<<lengthOfStringConstant>\> idf_filename("<stringConstant>"); <\n> <endif>
+<if(stringConstant)>
+   static pearlrt::Character\<<lengthOfStringConstant>\> idf_filename("<stringConstant>"); <\n>
+<endif>
 >>
 
 reference_idf_filename(variable,stringConstant) ::= <<
@@ -878,7 +880,7 @@ open_parameter_any(attribute) ::= <%
     pearlrt::Dation::ANY
 %>
 
-open_parameter_rst(id) ::= <%
+open_close_parameter_rst(id) ::= <%
     pearlrt::Dation::RST
 %>
 

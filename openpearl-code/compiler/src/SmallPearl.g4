@@ -1325,23 +1325,32 @@ open_parameterlist:
 ////////////////////////////////////////////////////////////////////////////////
 
 open_parameter:
-    'IDF' '(' ( ID | StringLiteral ) ')'  # open_parameter_idf
-    | 'RST' '(' ID ')'                    # open_parameter_rst
-    | open_parameter_old_new_any          # open_parameter_old_or_new_or_any
-    | open_parameter_can_prm              # open_parameter_can_or_prm
+    open_parameter_idf
+    | open_close_RST                  
+    | open_parameter_old_new_any         
+    | open_close_parameter_can_prm      
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-open_parameter_old_new_any:
-      'OLD'                                # open_parameter_old
-    | 'NEW'                                # open_parameter_new
-    | 'ANY'                                # open_parameter_any
+open_parameter_idf:
+    'IDF' '(' ( ID | StringLiteral ) ')'  	
     ;
 
-open_parameter_can_prm:
-      'CAN'                                 # open_parameter_can
-    | 'PRM'                                 # open_parameter_prm
+open_close_RST :
+	'RST' ( '(' ID ')' )
+	;
+
+
+open_parameter_old_new_any:
+      'OLD'                    
+    | 'NEW'                   
+    | 'ANY'                 
+    ;
+
+open_close_parameter_can_prm:
+      'CAN'                
+    | 'PRM'              
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1364,10 +1373,9 @@ close_parameterlist:
 //   CAN | PRM | RST (Name§ErrorVariable-FIXED)
 ////////////////////////////////////////////////////////////////////////////////
 
- close_parameter :
-       'CAN'                  # close_parameter_can
-     | 'PRM'                  # close_parameter_prm
-     | 'RST' '(' ID ')'       # close_parameter_rst
+close_parameter :
+      open_close_parameter_can_prm
+    | open_close_RST                  
      ;
 
 ////////////////////////////////////////////////////////////////////////////////
