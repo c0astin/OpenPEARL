@@ -351,7 +351,7 @@ SmallPearlVisitor<Void> {
 	
 		if (!d.isAlphic()) {
 			ErrorStack.enter(ctx.dationName());
-			ErrorStack.add("need ALPHIC dation")
+			ErrorStack.add("need ALPHIC dation");
 			ErrorStack.leave();
 		}
 
