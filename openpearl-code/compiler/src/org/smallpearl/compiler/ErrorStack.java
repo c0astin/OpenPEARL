@@ -30,6 +30,8 @@
 package org.smallpearl.compiler;
 
 import java.io.*;
+
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.smallpearl.compiler.Exception.*;
 
 /**
@@ -60,21 +62,32 @@ public class ErrorStack {
 	/**
 	 * enter a new sub-part
 	 * 
-	 * @param env
-	 *            describes the new environment
+	 * @param ctx ParserRuleContext of the element
+	 * @param errorPrefix  tag for the error message
 	 */
-	public static Void enter(ErrorEnvironment env) {
+	public static Void enter(ParserRuleContext ctx, String errorPrefix ) {
 		//System.out.println("ErrorStack.enter: " + env.getErrorPrefix()
 		//		+ "  level=" + m_sp);
-
+		ErrorEnvironment env = new ErrorEnvironment(ctx, errorPrefix);
+		
 		m_sp++;
 		if (m_sp >= maxStackSize) {
-			throw new InternalCompilerErrorException("", 0, 0,
-					"ErrorStack overflow");
+			throw new InternalCompilerErrorException("ErrorStack overflow");
 		}
 
 		m_stack[m_sp] = env;
 		env.resetLocalCount();
+		return null;
+	}
+
+	/**
+	 * enter a new sub-part
+	 * 
+	 * @param ctx ParserRuleContext of the element
+	 *           
+	 */
+	public static Void enter(ParserRuleContext ctx) {
+		enter(ctx,null);
 		return null;
 	}
 
@@ -102,8 +115,7 @@ public class ErrorStack {
 	public static Void leave() {
 		m_sp--;
 		if (m_sp < -1) {
-			throw new InternalCompilerErrorException("", 0, 0,
-					"ErrorStack underflow");
+			throw new InternalCompilerErrorException("ErrorStack underflow");
 		}
 		return null;
 	}
@@ -124,6 +136,35 @@ public class ErrorStack {
 	 * @param msg the concrete error message
 	 */
 	public static Void add(String msg) {
+		m_stack[m_sp].incLocalCount();
+		m_totalErrorCount++;
+		printMessage(msg,"error");
+		return null;
+	}
+
+	/**
+	 * add a new warning
+	 * 
+	 * emits an warning message to System.err with
+	 * <ul>
+	 * <li>the corresponding source code
+	 * <li>colored region for the error
+	 * <li>complete hierarchy of the error stack and the error message<br>
+	 * like PUT:E-format:fieldWidth: must be positive
+	 * </ul>
+	 * 
+	 * The error counters are NOT incremented
+	 * 
+	 * @param msg the concrete warning message
+	 */
+	public static Void warn(String msg) {
+		printMessage(msg,"warning");
+		return null;
+	}
+
+	
+	
+	private static Void printMessage(String msg, String typeOfMessage) {
 
 		int startLineNumber;
 		int startColNumber;
@@ -176,14 +217,14 @@ public class ErrorStack {
 		System.err.println(sb.toString());
 		String prefix = "";
 		for (int i = 0; i <= m_sp; i++) {
-			prefix += m_stack[i].getErrorPrefix() + ":";
+			if (m_stack[i].getErrorPrefix() != null) {
+			   prefix += m_stack[i].getErrorPrefix() + ":";
+			}
 		}
 		System.err.println(
 				Compiler.getSourceFilename() + ":" + startLineNumber + ":"
-						+ startColNumber + ": " + prefix + " " + msg);
+						+ startColNumber + ": " + typeOfMessage + ": "+prefix + " " + msg);
 
-		m_stack[m_sp].incLocalCount();
-		m_totalErrorCount++;
 		return null;
 	}
 

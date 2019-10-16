@@ -31,12 +31,18 @@ package org.smallpearl.compiler.SemanticAnalysis;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.SmallPearlParser.*;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
+import org.stringtemplate.v4.ST;
+
 
 
 /**
@@ -46,10 +52,10 @@ and constant values of format statements
 
 Errors are forwarded to the ErrorStack class
 
-*/
+ */
 
 public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
-		SmallPearlVisitor<Void> {
+SmallPearlVisitor<Void> {
 
 	private int m_verbose;
 	private boolean m_debug;
@@ -82,7 +88,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 	@Override
 	public Void visitModule(SmallPearlParser.ModuleContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitModule");
+			System.out.println("Semantic: Check IOStatements: visitModule");
 		}
 
 		org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable
@@ -98,7 +104,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 			SmallPearlParser.ProcedureDeclarationContext ctx) {
 		if (m_debug) {
 			System.out
-					.println("Semantic: Check IOFormats: visitProcedureDeclaration");
+			.println("Semantic: Check IOStatements: visitProcedureDeclaration");
 		}
 
 		this.m_currentSymbolTable = m_symbolTableVisitor
@@ -112,7 +118,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 	public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
 		if (m_debug) {
 			System.out
-					.println("Semantic: Check IOFormats: visitTaskDeclaration");
+			.println("Semantic: Check IOStatements: visitTaskDeclaration");
 		}
 
 		this.m_currentSymbolTable = m_symbolTableVisitor
@@ -126,7 +132,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 	public Void visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
 		if (m_debug) {
 			System.out
-					.println("Semantic: Check IOFormats: visitBlock_statement");
+			.println("Semantic: Check IOStatements: visitBlock_statement");
 		}
 
 		this.m_currentSymbolTable = m_symbolTableVisitor
@@ -139,7 +145,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 	@Override
 	public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitLoopStatement");
+			System.out.println("Semantic: Check IOStatements: visitLoopStatement");
 		}
 
 		this.m_currentSymbolTable = m_symbolTableVisitor
@@ -152,53 +158,410 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 	/* ------------------------------------------------ */
 	/* start of check specific code */
 	/* ------------------------------------------------ */
+
+	@Override public Void visitOpen_statement(SmallPearlParser.Open_statementContext ctx) {
+		ErrorStack.enter(ctx, "OPEN");
+		boolean hasRST = false;
+		boolean hasIDF = false;
+		boolean hasOLD = false;
+		boolean hasNEW = false;
+		boolean hasANY = false;
+		boolean hasCAN = false;
+		boolean hasPRM = false;
+
+		
+		lookupDation(ctx.ID().toString());
+
+		if (ctx.open_parameterlist() != null && ctx.open_parameterlist().open_parameter() != null) {
+
+			for (int i=0; i<ctx.open_parameterlist().open_parameter().size(); i++) {
+				//System.out.println("openParam: "+ ctx.open_parameterlist().open_parameter(i).getText());
+				if (ctx.open_parameterlist().open_parameter(i).open_parameter_idf() != null ) {
+					if (hasIDF) ErrorStack.add("multiple IDF attributes");
+					hasIDF = true;
+					// let's check the type of the IDF-variable. It must be of type CHAR
+					if (ctx.open_parameterlist().open_parameter(i).open_parameter_idf().ID() != null) {
+						String name = ctx.open_parameterlist().open_parameter(i).open_parameter_idf().ID().toString();
+						SymbolTableEntry se = m_currentSymbolTable.lookup(name);
+						if (se == null) {
+							ErrorStack.add("'" + name+"' is not defined");
+						} else if (  (se instanceof VariableEntry) &&
+								! ((((VariableEntry)se).getType() instanceof TypeChar))) {
+							ErrorStack.add("'"+ name + "' must be of type CHAR -- has type "+ (((VariableEntry)se).getType().toString()));
+						}
+					}
+					/*
+					 it's ok for the moment
+					 if there is a StringLiteral, this should be in the ConstantPool 
+					 if not, it must be a character variable
+					 both information should be places as ASTAttributes
+					*/
+				}
+				if (ctx.open_parameterlist().open_parameter(i).open_close_RST() != null) {
+					Open_close_RSTContext c = (Open_close_RSTContext)(ctx.open_parameterlist().open_parameter(i).open_close_RST() );
+					if (hasRST) ErrorStack.warn("multiple RST attributes");
+					hasRST=true;
+					CheckPrecision(c.ID().toString(), c);
+				}
+
+				if (ctx.open_parameterlist().open_parameter(i).open_parameter_old_new_any() != null ) {
+					Open_parameter_old_new_anyContext c = (Open_parameter_old_new_anyContext)(ctx.open_parameterlist().open_parameter(i).open_parameter_old_new_any() );
+
+					if (c.getText().equals("OLD")) {
+						if (hasOLD) ErrorStack.warn("multiple OLD attributes");
+						hasOLD=true;
+					}
+
+
+					if (c.getText().equals("NEW")) {
+						if (hasNEW) ErrorStack.warn("multiple NEW attributes");
+						hasNEW=true;
+					}
+
+					if (c.getText().equals("ANY")) {
+						if (hasANY) ErrorStack.warn("multiple ANY attributes");
+						hasANY=true;
+					}
+				}
+
+				if (ctx.open_parameterlist().open_parameter(i).open_close_parameter_can_prm() != null ) {
+					Open_close_parameter_can_prmContext c = (Open_close_parameter_can_prmContext)(ctx.open_parameterlist().open_parameter(i).open_close_parameter_can_prm() );
+					if (c.getText().equals("CAN")) {
+						if (hasCAN) ErrorStack.add("multiple CAN attributes");
+						hasCAN=true;
+					}
+
+
+					if (c.getText().equals("PRM")) {
+						if (hasPRM) ErrorStack.add("multiple PRM attributes");
+						hasPRM=true;
+					}
+				}
+
+
+			}
+			if (hasCAN && hasPRM) {
+				ErrorStack.add("ether CAN or PRM allowed");
+			}
+
+			int nbrOfPreviousStati = 0;
+			if (hasOLD) nbrOfPreviousStati ++;
+			if (hasNEW) nbrOfPreviousStati ++;
+			if (hasANY) nbrOfPreviousStati ++;
+			if (nbrOfPreviousStati > 1) ErrorStack.add("only one of OLD/NEW/ANY allowed");
+		}
+
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override public Void visitClose_statement(SmallPearlParser.Close_statementContext ctx) {
+
+		ErrorStack.enter(ctx, "CLOSE");
+
+		boolean hasRST = false;
+		boolean hasCAN = false;
+		boolean hasPRM = false;
+
+
+		lookupDation(ctx.ID().toString());
+		if (ctx.close_parameterlist() != null && ctx.close_parameterlist().close_parameter() != null) {
+			for (int i=0; i<ctx.close_parameterlist().close_parameter().size(); i++) {
+
+				if (ctx.close_parameterlist().close_parameter(i).open_close_RST() != null) {
+					Open_close_RSTContext c = (Open_close_RSTContext)(ctx.close_parameterlist().close_parameter(i).open_close_RST());
+					if (hasRST) ErrorStack.warn("multiple RST attributes");
+					hasRST=true;
+					CheckPrecision(c.ID().toString(), c);
+				}
+
+
+				if (ctx.close_parameterlist().close_parameter(i).open_close_parameter_can_prm() != null ) {
+					Open_close_parameter_can_prmContext c = (Open_close_parameter_can_prmContext)(ctx.close_parameterlist().close_parameter(i).open_close_parameter_can_prm() );
+					if (c.getText().equals("CAN")) {
+						if (hasCAN) ErrorStack.add("multiple CAN attributes");
+						hasCAN=true;
+					}
+
+
+					if (c.getText().equals("PRM")) {
+						if (hasPRM) ErrorStack.add("multiple PRM attributes");
+						hasPRM=true;
+					}
+				}
+
+
+			}
+			if (hasCAN && hasPRM) {
+				ErrorStack.add("ether CAN or PRM allowed");
+			}
+		}
+
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitPutStatement(SmallPearlParser.PutStatementContext ctx) {
+		if (m_debug) {
+			System.out.println( "Semantic: Check IOStatements: visitPositionPUT");
+		}
+
+		// enshure that the dation id of type ALPHIC
+		ErrorStack.enter(ctx, "PUT");
+
+		TypeDation d = lookupDation(ctx.dationName());
+		
+		if (!d.isAlphic()) {
+			ErrorStack.enter(ctx.dationName());
+			ErrorStack.add("need ALPHIC dation");
+			ErrorStack.leave();
+		}
+
+
+		if (ctx.expression().size() > 0) {
+			// count number of format(without positions) 
+			int nbr = 0;
+			for (int i = 0; i<ctx.formatPosition().size(); i++) {
+				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatContext) {
+					nbr ++;
+				}
+			}
+			if (nbr == 0) {
+				ErrorStack.add("need at least 1 format element");
+			}
+		}
+
+		visitChildren(ctx);
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitGetStatement(SmallPearlParser.GetStatementContext ctx) {
+		if (m_debug) {
+			System.out.println( "Semantic: Check IOStatements: visitPositionGET");
+		}
+
+		// enshure that the dation id of type ALPHIC
+		ErrorStack.enter(ctx, "GET");
+
+		TypeDation d = lookupDation(ctx.dationName());
+		
 	
+		if (!d.isAlphic()) {
+			ErrorStack.enter(ctx.dationName());
+			ErrorStack.add("need ALPHIC dation")
+			ErrorStack.leave();
+		}
 
-	   @Override
-	    public Void visitPositionRST(SmallPearlParser.PositionRSTContext ctx) {
-	        if (m_debug) {
-	            System.out.println( "Semantic: Check RST: visitPositionRST");
-	        }
+		for (int i=0; i<ctx.ID().size(); i++) {
+			// it should be checked if the ID is not INV - this is not provied in the 
+			// symbol table yet (2019-10-12)
+		}
 
-	        CheckPrecision(ctx.ID().getText(), ctx);
-	        return null;
-	    }
-	   
+		if (ctx.ID().size() > 0) {
+			// count number of format(without positions) 
+			int nbr = 0;
+			for (int i = 0; i<ctx.formatPosition().size(); i++) {
+				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatContext) {
+					nbr ++;
+				}
+			}
+			if (nbr == 0) {
+				ErrorStack.add("need at least 1 format element");
+			}
+		}
+
+		visitChildren(ctx);
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitReadStatement(SmallPearlParser.ReadStatementContext ctx) {
+		if (m_debug) {
+			System.out.println( "Semantic: Check IOStatements: visitPositionREAD");
+		}
+
+		// enshure that the dation id of type 'type'
+		ErrorStack.enter(ctx, "READ");
+
+		TypeDation d = lookupDation(ctx.dationName());
+
+		if (d.isAlphic() || d.isBasic()) {
+			ErrorStack.enter(ctx.dationName());
+			ErrorStack.add("need 'type' dation");
+			ErrorStack.leave();
+		}
+
+		for (int i=0; i<ctx.ID().size(); i++) {
+			// it should be checked if the ID is not INV - this is not provied in the 
+			// symbol table yet (2019-10-12)
+		}
+
+		// check if absolute positions follow relative positions
+		boolean foundAbsolutePosition= false;
+		boolean foundRelativePosition = false;
+		for (int i = 0; i<ctx.position().size(); i++) {
+			ParseTree child = ctx.position(i).getChild(0); 
+
+			if (child instanceof SmallPearlParser.AbsolutePositionContext && foundRelativePosition) {
+				ErrorStack.warn("relative positioning before absolute positioning is void");
+				foundRelativePosition = false;
+			}
+			if (child instanceof SmallPearlParser.RelativePositionContext) {
+				foundRelativePosition = true;
+			}
+		}
+
+		visitChildren(ctx);
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitWriteStatement(SmallPearlParser.WriteStatementContext ctx) {
+		if (m_debug) {
+			System.out.println( "Semantic: Check IOStatements: visitPositionWRITE");
+		}
+
+		// enshure that the dation id of type ALPHIC
+		ErrorStack.enter(ctx, "WRITE");
+
+		TypeDation d = lookupDation(ctx.dationName());
+
+		if (d.isAlphic() || d.isBasic()) {
+			ErrorStack.enter(ctx.dationName());
+			ErrorStack.add("need 'type' dation");
+			ErrorStack.leave();
+		}
+
+		// check if absolute positions follow relative positions
+		boolean foundAbsolutePosition= false;
+		boolean foundRelativePosition = false;
+		for (int i = 0; i<ctx.position().size(); i++) {
+			ParseTree child = ctx.position(i).getChild(0); 
+
+			if (child instanceof SmallPearlParser.AbsolutePositionContext && foundRelativePosition) {
+				ErrorStack.enter(ctx.position(i));
+				ErrorStack.warn("relative positioning before absolute positioning is void");
+				foundRelativePosition = false;
+				ErrorStack.leave();
+			}
+			if (child instanceof SmallPearlParser.RelativePositionContext) {
+				foundRelativePosition = true;
+			}
+		}
+
+		visitChildren(ctx);
+		ErrorStack.leave();
+		return null;
+	}
+	@Override
+	public Void visitTakeStatement(SmallPearlParser.TakeStatementContext ctx) {
+		if (m_debug) {
+			System.out.println( "Semantic: Check IOStatements: visitPositionTAKE");
+		}
+
+		// enshure that the dation id of type BASIC
+		ErrorStack.enter(ctx, "TAKE");
+
+		TypeDation d = lookupDation(ctx.dationName());
+		if (!d.isBasic()) {
+			ErrorStack.enter(ctx.dationName());
+			ErrorStack.add("need BASIC dation");
+			ErrorStack.leave();
+		}
+
+		if(ctx.ID() == null) {
+			ErrorStack.add("OpenPEARL needs one variable");
+		} else {
+			SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID().getText());
+			if (se == null) {
+				ErrorStack.add("'" + ctx.ID().getText()+"' not defined");
+			} else {
+				if (se instanceof VariableEntry) {
+					if (d.getTypeOfTransmission() != null &&
+							!d.getTypeOfTransmission().equals("ALL") ) {
+
+						if (!((VariableEntry)se).getType().toString().equals(d.getTypeOfTransmission())) {
+							ErrorStack.add("type mismatch: expected "+d.getTypeOfTransmission()+ " -- got "+
+									((VariableEntry)se).getType().toString());
+						}
+					}
+				}
+			}
+		}
+		if (ctx.take_send_rst() != null) {
+			ErrorStack.enter(ctx.take_send_rst(), "RST");
+			CheckPrecision(ctx.take_send_rst().ID().getText(), ctx.take_send_rst());
+			ErrorStack.leave();
+		}
+		visitChildren(ctx);
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitSendStatement(SmallPearlParser.SendStatementContext ctx) {
+		if (m_debug) {
+			System.out.println( "Semantic: Check IOStatements: visitPositionSEND");
+		}
+
+		// enshure that the dation id of type BASIC
+		ErrorStack.enter(ctx, "SEND");
+
+		TypeDation d = lookupDation(ctx.dationName());
+		
+		if (!d.isBasic()) {
+			ErrorStack.add("need BASIC dation");
+		}	   
+
+		if(ctx.expression() == null) {
+			ErrorStack.add("OpenPEARL needs one expression");
+		} else {
+			String typeOfExpression = lookupTypeOfExpressionOrConstant(ctx.expression());
+			if (d.getTypeOfTransmission() != null &&
+					!d.getTypeOfTransmission().equals(typeOfExpression) ) {
+				ErrorStack.add("type mismatch: expected "+d.getTypeOfTransmission()+ " -- got "+
+						typeOfExpression);
+
+
+
+			}
+		}
+
+		if (ctx.take_send_rst() != null) {
+			ErrorStack.enter(ctx.take_send_rst(), "RST");
+			CheckPrecision(ctx.take_send_rst().ID().getText(), ctx.take_send_rst());
+			ErrorStack.leave();
+		}
+		visitChildren(ctx);
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitPositionRST(SmallPearlParser.PositionRSTContext ctx) {
+		if (m_debug) {
+			System.out.println( "Semantic: Check IOStatements: visitPositionRST");
+		}
+
+		CheckPrecision(ctx.ID().getText(), ctx);
+		return null;
+	}
+
 	@Override
 	public Void visitFieldWidth(SmallPearlParser.FieldWidthContext ctx) {
-		String userDation = null;
-		
+
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitFieldWidth");
+			System.out.println("Semantic: Check IOStatements: visitFieldWidth");
 		}
-		
-		/*
-		// walk grammar up to put_statement
-		RuleContext p= (RuleContext)ctx;
-		while ( p != null ) {
-			p=p.parent;
-			if (p instanceof SmallPearlParser.PutStatementContext) {
-				SmallPearlParser.PutStatementContext stmnt = (SmallPearlParser.PutStatementContext) p;
-				userDation = stmnt.dationName().ID().toString();
-				p=null;
-			}
-			if (p instanceof SmallPearlParser.GetStatementContext) {
-				SmallPearlParser.GetStatementContext stmnt = (SmallPearlParser.GetStatementContext) p;
-				userDation = stmnt.dationName().ID().toString();
-				p=null;
-			}
-		} 
-		if (userDation == null) {
-			ErrorStack.add("no userdation found");
-		} else {
-		   System.out.println("type check for userdation missing: "+ userDation);
-		   // name of userdation found -- now we should check the type 
-		}
-		*/
-		
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "fieldwidth");
-		ErrorStack.enter(eEnv);
-		
+
+
+		ErrorStack.enter(ctx, "fieldwidth");
+
 		ASTAttribute attr = m_ast.lookup(ctx.expression());
 		// width is mandatory, which is definied in the grammar
 		ConstantFixedValue cfv = getConstantValue(attr);	
@@ -217,11 +580,10 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 			SmallPearlParser.NumberOfCharactersContext ctx) {
 
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitNumberOfCharacters");
+			System.out.println("Semantic: Check IOStatements: visitNumberOfCharacters");
 		}
-		
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "numberOfCharacters");
-		ErrorStack.enter(eEnv);
+
+		ErrorStack.enter(ctx, "numberOfCharacters");
 
 		// check, if we have ASTattributes for this node
 		TypeDefinition type = m_ast.lookupType(ctx.expression());
@@ -249,11 +611,10 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 			SmallPearlParser.DecimalPositionsContext ctx) {
 		if (m_debug) {
 			System.out
-					.println("Semantic: Check IOFormats: visitDecimalPositions");
+			.println("Semantic: Check IOStatements: visitDecimalPositions");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "decimal positions");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "decimal positions");
 
 		TypeDefinition type = m_ast.lookupType(ctx.expression());
 		if (!(type instanceof TypeFixed)) {
@@ -278,11 +639,10 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 	@Override
 	public Void visitSignificance(SmallPearlParser.SignificanceContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitSignificance");
+			System.out.println("Semantic: Check IOStatements: visitSignificance");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "significance");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "significance");
 
 		TypeDefinition type = m_ast.lookupType(ctx.expression());
 		if (!(type instanceof TypeFixed)) {
@@ -309,7 +669,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 		return null;
 	}
 
-	
+
 	@Override
 	public Void visitFloatFormatE(SmallPearlParser.FloatFormatEContext ctx) {
 		boolean checkWidth = false;
@@ -320,11 +680,12 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 		long significance = 0;
 
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitFloatFormatE");
+			System.out.println("Semantic: Check IOStatements: visitFloatFormatE");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "E-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "E-format");
+
+		enshureAlphicDation(ctx);
 
 		// check the types of all children
 		visitChildren(ctx);
@@ -383,12 +744,12 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 					+ "decimalPositions=" + decimalPositions + " (check="
 					+ checkDecimalPositions + ")" + "significance="
 					+ significance + " (check=" + checkSignificance + ")");
-			*/
-			
+			 */
+
 			if (checkWidth && checkDecimalPositions && checkSignificance) {
 				if (significance <= decimalPositions) {
 					ErrorStack
-							.add("significance must be larger than decimal positions");
+					.add("significance must be larger than decimal positions");
 				}
 
 				// add 5 to significance due to decimal point and "E+xx"
@@ -406,7 +767,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 					&& checkSignificance) {
 				if (significance <= decimalPositions) {
 					ErrorStack
-							.add("significance must be larger than decimal positions");
+					.add("significance must be larger than decimal positions");
 				}
 			} else if (checkWidth && checkDecimalPositions) {
 				// add 6 to decimal positions due to
@@ -442,11 +803,12 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 		long significance = 0;
 
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitFloatFormatE3");
+			System.out.println("Semantic: Check IOStatements: visitFloatFormatE3");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "E3-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "E3-format");
+
+		enshureAlphicDation(ctx);
 
 		// check the types of all children
 		visitChildren(ctx);
@@ -505,13 +867,13 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 					+ "decimalPositions=" + decimalPositions + " (check="
 					+ checkDecimalPositions + ")" + "significance="
 					+ significance + " (check=" + checkSignificance + ")");
-  			
-			*/
-			
+
+			 */
+
 			if (checkWidth && checkDecimalPositions && checkSignificance) {
 				if (significance <= decimalPositions) {
 					ErrorStack
-							.add("significance must be larger than decimal positions");
+					.add("significance must be larger than decimal positions");
 				}
 
 				// add 6 to significance due to decimal point and "E+xxx"
@@ -529,7 +891,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 					&& checkSignificance) {
 				if (significance <= decimalPositions) {
 					ErrorStack
-							.add("significance must be larger than decimal positions");
+					.add("significance must be larger than decimal positions");
 				}
 			} else if (checkWidth && checkDecimalPositions) {
 				// add 7 to decimal positions due to
@@ -563,11 +925,12 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 		long decimalPositions = 0;
 
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitFixedFormat");
+			System.out.println("Semantic: Check IOStatements: visitFixedFormat");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "F-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "F-format");
+
+		enshureAlphicDation(ctx);
 
 		// check the types of all children
 		visitChildren(ctx);
@@ -597,16 +960,15 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 				}
 			}
 
-
 			// analysis complete --> let's apply the checks
 			/*
 			System.out.println("width=" + width + " (check=" + checkWidth + ")"
 					+ "decimalPositions=" + decimalPositions + " (check="
 					+ checkDecimalPositions + ")" + 
 					")");
-  			
-			*/
-			
+
+			 */
+
 			if (checkWidth && checkDecimalPositions) {
 				// add 2 to decimal positions due to
 				// leading digit, decimal point
@@ -618,13 +980,13 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 				}
 			} //else if (checkWidth) {
 
-				// at least 1 digit required
-				// if the output value is <0, there may still occur a
-				// problem during run time, since the sign is not mandatory
-				// this is already checkes in visitFieldWidth!
-				//if (width < 1) {
-				//	ErrorStack.add("field width too small (at least 1 required)");
-				//}
+			// at least 1 digit required
+			// if the output value is <0, there may still occur a
+			// problem during run time, since the sign is not mandatory
+			// this is already checkes in visitFieldWidth!
+			//if (width < 1) {
+			//	ErrorStack.add("field width too small (at least 1 required)");
+			//}
 			//}
 		}
 		ErrorStack.leave();
@@ -639,11 +1001,12 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 		long decimalPositions = 0;
 
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitDurationFormat");
+			System.out.println("Semantic: Check IOStatements: visitDurationFormat");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "D-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "D-format");
+
+		enshureAlphicDation(ctx);
 
 		// check the types of all children
 		visitChildren(ctx);
@@ -680,9 +1043,9 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 					+ "decimalPositions=" + decimalPositions + " (check="
 					+ checkDecimalPositions + ")" + 
 					")");
-  			
-			*/
-			
+
+			 */
+
 			if (checkWidth && checkDecimalPositions) {
 				// add 6 to decimal positions due to
 				// leading digit, decimal point ans 'SEC'
@@ -714,11 +1077,12 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 		long decimalPositions = 0;
 
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitTimeFormat");
+			System.out.println("Semantic: Check IOStatements: visitTimeFormat");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "T-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "T-format");
+
+		enshureAlphicDation(ctx);
 
 		// check the types of all children
 		visitChildren(ctx);
@@ -755,9 +1119,9 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 					+ "decimalPositions=" + decimalPositions + " (check="
 					+ checkDecimalPositions + ")" + 
 					")");
-  			
-			*/
-			
+
+			 */
+
 			if (checkWidth && checkDecimalPositions) {
 				// add 8 to decimal positions due to
 				// x:xx:xx.xxx
@@ -781,15 +1145,16 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 		return null;
 	}
 
-	
+
 	@Override
 	public Void visitCharacterStringFormatA(SmallPearlParser.CharacterStringFormatAContext ctx) {
-			if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitCharacterStringFormat");
+		if (m_debug) {
+			System.out.println("Semantic: Check IOStatements: visitCharacterStringFormat");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "A-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "A-format");
+
+		enshureAlphicDation(ctx);
 
 		// check the types of all children
 		visitChildren(ctx);
@@ -806,12 +1171,13 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 
 	@Override
 	public Void visitBitFormat1(SmallPearlParser.BitFormat1Context ctx) {
-			if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitBitFormat1");
+		if (m_debug) {
+			System.out.println("Semantic: Check IOStatements: visitBitFormat1");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "B/B1-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "B/B1-format");
+
+		enshureAlphicDation(ctx);
 
 		// check the types of all children
 		visitChildren(ctx);
@@ -828,12 +1194,13 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 
 	@Override
 	public Void visitBitFormat2(SmallPearlParser.BitFormat2Context ctx) {
-			if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitBitFormat2");
+		if (m_debug) {
+			System.out.println("Semantic: Check IOStatements: visitBitFormat2");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "B2-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "B2-format");
+
+		enshureAlphicDation(ctx);
 
 		// check the types of all children
 		visitChildren(ctx);
@@ -842,7 +1209,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 			// check of the parameters is possible if they are
 			// of type ConstantFixedValue
 			// or not given
-			// check of the value oof width is already done
+			// check of the value of width is already done
 		}
 		ErrorStack.leave();
 		return null;
@@ -850,12 +1217,13 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 
 	@Override
 	public Void visitBitFormat3(SmallPearlParser.BitFormat3Context ctx) {
-			if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitBitFormat3");
+		if (m_debug) {
+			System.out.println("Semantic: Check IOStatements: visitBitFormat3");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "B3-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "B3-format");
+
+		enshureAlphicDation(ctx);
 
 		// check the types of all children
 		visitChildren(ctx);
@@ -864,7 +1232,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 			// check of the parameters is possible if they are
 			// of type ConstantFixedValue
 			// or not given
-			// check of the value oof width is already done
+			// check of the value of width is already done
 		}
 		ErrorStack.leave();
 		return null;
@@ -872,12 +1240,13 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 
 	@Override
 	public Void visitBitFormat4(SmallPearlParser.BitFormat4Context ctx) {
-			if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitBitFormat4");
+		if (m_debug) {
+			System.out.println("Semantic: Check IOStatements: visitBitFormat4");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "B4-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "B4-format");
+
+		enshureAlphicDation(ctx);
 
 		// check the types of all children
 		visitChildren(ctx);
@@ -886,7 +1255,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 			// check of the parameters is possible if they are
 			// of type ConstantFixedValue
 			// or not given
-			// check of the value oof width is already done
+			// check of the value of width is already done
 		}
 		ErrorStack.leave();
 		return null;
@@ -897,18 +1266,17 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 	@Override
 	public Void visitPositionX(SmallPearlParser.PositionXContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitPositionX");
+			System.out.println("Semantic: Check IOStatements: visitPositionX");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "X-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "X-format");
 
 		// check the types of all children
 		// check, if we have ASTattributes for this node
 		if (ctx.expression() != null) {
-		   enshureTypeFixed(ctx.expression());
+			enshureTypeFixed(ctx.expression());
 		}
-		
+
 		ErrorStack.leave();
 		return null;
 	}
@@ -916,17 +1284,19 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 	@Override
 	public Void visitPositionSKIP(SmallPearlParser.PositionSKIPContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitPositionSkip");
+			System.out.println("Semantic: Check IOStatements: visitPositionSkip");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "SKIP-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "SKIP-format");
 
 		// check the types of all children
 		// check, if we have ASTattributes for this node
 		if (ctx.expression() != null) {
-		   enshureTypeFixed(ctx.expression());
+			enshureTypeFixed(ctx.expression());
 		}
+
+		enshureDimensionsFit(ctx,2);
+
 		ErrorStack.leave();
 		return null;
 	}
@@ -934,113 +1304,125 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 	@Override
 	public Void visitPositionPAGE(SmallPearlParser.PositionPAGEContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitPositionPAGE");
+			System.out.println("Semantic: Check IOStatements: visitPositionPAGE");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "PAGE-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "PAGE-format");
 
 		// check the types of all children
 		// check, if we have ASTattributes for this node
 		if (ctx.expression() != null) {
-		   enshureTypeFixed(ctx.expression());
+			enshureTypeFixed(ctx.expression());
 		}
-		
+		enshureDimensionsFit(ctx,3);
+
 		ErrorStack.leave();
 		return null;
 	}
-	
+
 	@Override
 	public Void visitPositionADV(SmallPearlParser.PositionADVContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitPositionADV");
+			System.out.println("Semantic: Check IOStatements: visitPositionADV");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "ADV-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "ADV-format");
 
 		// check the types of all children
 		// check, if we have ASTattributes for this node
 		for (int i=0; i< ctx.expression().size(); i++) {
-		   enshureTypeFixed(ctx.expression(i));
+			enshureTypeFixed(ctx.expression(i));
 		}
+
+		enshureDimensionsFit(ctx,ctx.expression().size());
+
 		ErrorStack.leave();
 		return null;
 	}
-	
+
 	@Override
 	public Void visitPositionPOS(SmallPearlParser.PositionPOSContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitPositionPOS");
+			System.out.println("Semantic: Check IOStatements: visitPositionPOS");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "POS-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "POS-format");
+
+		enshureDirectDation(ctx);
 
 		// check the types of all children
 		// check, if we have ASTattributes for this node
 		for (int i=0; i< ctx.expression().size(); i++) {
-		   enshureTypeFixed(ctx.expression(i));
-		   enshureGreaterZero(ctx.expression(i));
+			enshureTypeFixed(ctx.expression(i));
+			enshureGreaterZero(ctx.expression(i));
 		}
+		enshureDimensionsFit(ctx,ctx.expression().size());
+
 		ErrorStack.leave();
 		return null;
 	}
-	
+
 	@Override
 	public Void visitPositionSOP(SmallPearlParser.PositionSOPContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitPositionSOP");
+			System.out.println("Semantic: Check IOStatements: visitPositionSOP");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "SOP-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "SOP-format");
+
+		enshureDirectDation(ctx);
 
 		// check the types of all children
 		// check, if we have ASTattributes for this node
 		for (int i=0; i< ctx.ID().size(); i++) {
-		       CheckFixedVariable(ctx.ID(i).getText(), ctx);
+			CheckFixedVariable(ctx.ID(i).getText(), ctx);
 		}
+		enshureDimensionsFit(ctx,ctx.ID().size());
+
 		ErrorStack.leave();
 		return null;
 	}
 	@Override
 	public Void visitPositionCOL(SmallPearlParser.PositionCOLContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitPositionCOL");
+			System.out.println("Semantic: Check IOStatements: visitPositionCOL");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "COL-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "COL-format");
+
+		enshureDirectDation(ctx);
 
 		// check the types of all children
 		// check, if we have ASTattributes for this node
-		   enshureTypeFixed(ctx.expression());
-		   enshureGreaterZero(ctx.expression());
+		enshureTypeFixed(ctx.expression());
+		enshureGreaterZero(ctx.expression());
+
 		ErrorStack.leave();
 		return null;
 	}
-	
+
 	@Override
 	public Void visitPositionLINE(SmallPearlParser.PositionLINEContext ctx) {
 		if (m_debug) {
-			System.out.println("Semantic: Check IOFormats: visitPositionLINE");
+			System.out.println("Semantic: Check IOStatements: visitPositionLINE");
 		}
 
-		ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "LINE-format");
-		ErrorStack.enter(eEnv);
+		ErrorStack.enter(ctx, "LINE-format");
+
+		enshureDirectDation(ctx);
+		enshureDimensionsFit(ctx,2);
 
 		// check the types of all children
 		// check, if we have ASTattributes for this node
-		   enshureTypeFixed(ctx.expression());
-		   enshureGreaterZero(ctx.expression());
+		enshureTypeFixed(ctx.expression());
+		enshureGreaterZero(ctx.expression());
 		ErrorStack.leave();
 		return null;
 	}
-	
-	
+
+
 	/* ----------------------------------------------------_ */
-	
+
 	private ConstantFixedValue getConstantValue(ASTAttribute formatAttribute) {
 		//System.out.println("formatAttribute=" + formatAttribute);
 		if (formatAttribute.isReadOnly()) {
@@ -1054,7 +1436,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 					System.out.println("width=" + cfv.getValue());
 					System.out.println("precision=" + cfv.getPrecision());
 				}
-				*/
+				 */
 				return cfv;
 			}
 		} else {
@@ -1065,90 +1447,208 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 	}
 
 	private Void enshureTypeFixed(SmallPearlParser.ExpressionContext ctx){
-		   TypeDefinition type = m_ast.lookupType(ctx);
-		   ErrorEnvironment eEnvType = new ErrorEnvironment(ctx, "expression");
-		   ErrorStack.enter(eEnvType);
-		   if (!(type instanceof TypeFixed)) {
-			   ErrorStack.add("must be FIXED");
-		   }
-		   ErrorStack.leave();		
+		TypeDefinition type = m_ast.lookupType(ctx);
+
+		ErrorStack.enter(ctx, "expression");
+		if (!(type instanceof TypeFixed)) {
+			ErrorStack.add("must be FIXED");
+		}
+		ErrorStack.leave();		
 		return null;
 	}
-	
+
 	private Void enshureGreaterZero(SmallPearlParser.ExpressionContext ctx){
-		   ErrorEnvironment eEnvType = new ErrorEnvironment(ctx, "expression");
-		   ErrorStack.enter(eEnvType);
+		ErrorStack.enter(ctx, "expression");
 		ASTAttribute attr = m_ast.lookup(ctx);
+
 		ConstantFixedValue cfv = getConstantValue(attr);
 		if (cfv != null) {
 			// is of type ConstantFixedValue
 			// --> get value and use it for checks
 			if (cfv.getValue() <= 0) {
-				   ErrorStack.add("must be > 0");
+				ErrorStack.add("must be > 0");
 			}
 		}
-		  ErrorStack.leave();	
+		ErrorStack.leave();	
 		return null;
 	}
 
-	   private Void CheckPrecision(String id, ParserRuleContext ctx) {
+	private Void CheckPrecision(String id, ParserRuleContext ctx) {
 
-	        SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
-	        VariableEntry var = null;
+		SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
+		VariableEntry var = null;
 
 
-			ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "RST");
-			ErrorStack.enter(eEnv);
-			
-	        if (entry != null && entry instanceof VariableEntry) {
-	        	// it would be got to set a new error environment to the 
-	        	// context of the 'entry'
-	    		var = (VariableEntry) entry;
+		ErrorStack.enter(ctx, "RST");
 
-	            if ( var.getType() instanceof TypeFixed) {
-	                TypeFixed type = (TypeFixed) var.getType();
-	                if (type.getPrecision() < 15) {
-	                	ErrorStack.add("RST variable must be at least FIXED(15)");
-	                }
-	            } else {
-	            	ErrorStack.add("RST variable must be FIXED");
-	            }
-	        } else {
-	            ErrorStack.add("RST needs a variable");
-	        }
+		if (entry != null && entry instanceof VariableEntry) {
+			// it would be got to set a new error environment to the 
+			// context of the 'entry'
+			var = (VariableEntry) entry;
 
-	        ErrorStack.leave();
+			if ( var.getType() instanceof TypeFixed) {
+				TypeFixed type = (TypeFixed) var.getType();
+				if (type.getPrecision() < 15) {
+					ErrorStack.add("must be at least FIXED(15) -- got FIXED("+type.getPrecision()+")");
+				}
+			} else {
+				ErrorStack.add("variable must be FIXED");
+			}
+		} else {
+			ErrorStack.add(id + " is not defined"); 
+		}
 
-	        return null;
-	    }
-	   
-	   private Void CheckFixedVariable(String id, ParserRuleContext ctx) {
+		ErrorStack.leave();
 
-	        SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
-	        VariableEntry var = null;
+		return null;
+	}
 
-			ErrorEnvironment eEnv = new ErrorEnvironment(ctx, "variable");
-			ErrorStack.enter(eEnv);
-			
-	        if (entry != null && entry instanceof VariableEntry) {
-	        	// it would be got to set a new error environment to the 
-	        	// context of the 'entry'
-	    		var = (VariableEntry) entry;
+	private Void CheckFixedVariable(String id, ParserRuleContext ctx) {
 
-	            if ( var.getType() instanceof TypeFixed) {
-	                TypeFixed type = (TypeFixed) var.getType();
-	                if (type.getPrecision() != 31) {
-	                	ErrorStack.add("must be FIXED(31)");
-	                }	                
-	            } else {
-	            	ErrorStack.add("must be of type FIXED");
-	            }
-	        } else {
-	            ErrorStack.add("must be a variable");
-	        }
+		SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
+		VariableEntry var = null;
 
-	        ErrorStack.leave();
-	        
-	        return null;
-	    }
+		ErrorStack.enter(ctx, "variable");
+
+		if (entry != null && entry instanceof VariableEntry) {
+			// it would be got to set a new error environment to the 
+			// context of the 'entry'
+			var = (VariableEntry) entry;
+
+			if ( var.getType() instanceof TypeFixed) {
+				TypeFixed type = (TypeFixed) var.getType();
+				if (type.getPrecision() != 31) {
+					ErrorStack.add("must be FIXED(31)");
+				}	                
+			} else {
+				ErrorStack.add("must be of type FIXED");
+			}
+		} else {
+			ErrorStack.add("must be a variable");
+		}
+
+		ErrorStack.leave();
+
+		return null;
+	}
+
+	private void enshureAlphicDation(RuleContext ctx) {
+		TypeDation d = lookupDation(ctx);
+		if (!d.isAlphic()) {
+			ErrorStack.add("applies only on ALPHIC dations");
+		}
+	}
+
+	private void enshureDirectDation(RuleContext ctx) {
+		TypeDation d = lookupDation(ctx);
+		if (!d.isDirect()) {
+			ErrorStack.add("format applies only on DIRECT dations");
+		}
+	}
+
+	private void allowBackwardPositioning(RuleContext ctx) {
+		TypeDation d = lookupDation(ctx);
+		if (!d.isDirect() && !d.isForback()){
+			ErrorStack.add("backward positioning need DIRECT or FORBACK");
+		}
+	}
+
+	private void enshureDimensionsFit(RuleContext ctx, int nbr) {
+		TypeDation d = lookupDation(ctx);
+
+		if (d.getNumberOfDimensions() < nbr) {
+			ErrorStack.add("too many dimensions used (dation provides "+d.getNumberOfDimensions()+")"); 
+		}
+	}
+
+	private TypeDation lookupDation(String userDation) {
+		SymbolTableEntry se = m_currentSymbolTable.lookup(userDation);
+		if (se == null) {
+			ErrorStack.add("'" + userDation+"' is not defined");
+		} else if (  (se instanceof VariableEntry) &&
+				((((VariableEntry)se).getType() instanceof TypeDation))) {
+
+			TypeDation sd = (TypeDation)(((VariableEntry)se).getType());
+			if (sd.isSystemDation()) {
+				ErrorStack.add("need user dation");
+			}
+			return sd;
+		} else {
+			ErrorStack.add("'"+ userDation + "' must be DATION -- has type "+ (((VariableEntry)se).getType().toString()));
+		}
+		return null;
+	}
+
+
+	private TypeDation lookupDation(RuleContext ctx) {
+		String userDation = "";
+
+		// walk grammar up to put_statement
+		RuleContext p= (RuleContext)ctx;
+		while ( p != null ) {
+			p=p.parent;
+			if (p instanceof SmallPearlParser.PutStatementContext) {
+				SmallPearlParser.PutStatementContext stmnt = (SmallPearlParser.PutStatementContext) p;
+				userDation = stmnt.dationName().ID().toString();
+				p=null;
+			}
+			if (p instanceof SmallPearlParser.GetStatementContext) {
+				SmallPearlParser.GetStatementContext stmnt = (SmallPearlParser.GetStatementContext) p;
+				userDation = stmnt.dationName().ID().toString();
+				p=null;
+			}
+			if (p instanceof SmallPearlParser.ReadStatementContext) {
+				SmallPearlParser.ReadStatementContext stmnt = (SmallPearlParser.ReadStatementContext) p;
+				userDation = stmnt.dationName().ID().toString();
+				p=null;
+			}
+			if (p instanceof SmallPearlParser.WriteStatementContext) {
+				SmallPearlParser.WriteStatementContext stmnt = (SmallPearlParser.WriteStatementContext) p;
+				userDation = stmnt.dationName().ID().toString();
+				p=null;
+			}
+			if (p instanceof SmallPearlParser.TakeStatementContext) {
+				SmallPearlParser.TakeStatementContext stmnt = (SmallPearlParser.TakeStatementContext) p;
+				userDation = stmnt.dationName().ID().toString();
+				p=null;
+			}
+			if (p instanceof SmallPearlParser.SendStatementContext) {
+				SmallPearlParser.SendStatementContext stmnt = (SmallPearlParser.SendStatementContext) p;
+				userDation = stmnt.dationName().ID().toString();
+				p=null;
+			}
+		}
+
+		if (userDation == null) {
+			ErrorStack.add("no userdation found");
+		} else {
+			TypeDation sd = lookupDation(userDation);
+			return sd;
+		}
+		return null;
+	}
+
+	private String lookupTypeOfExpressionOrConstant(ExpressionContext ctx) {
+
+		ASTAttribute attr = m_ast.lookup(ctx);
+		boolean isArray = false;
+
+		if (attr != null) {
+			String s = attr.getType().toString();
+
+			if (attr.isReadOnly()) {
+			} else {
+				VariableEntry ve = attr.getVariable();
+
+				if (ve != null && ve.getType() instanceof TypeArray) {
+					isArray = true;
+					s = ve.getType().toString();
+				}
+			}
+			return s;
+		}
+		return null;
+	}
+
+
 }

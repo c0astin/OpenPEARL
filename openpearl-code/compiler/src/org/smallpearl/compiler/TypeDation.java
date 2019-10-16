@@ -48,6 +48,7 @@ public class TypeDation extends TypeDefinition {
 	private int m_dimension2;
 	private int m_dimension3;
 	private boolean m_tfu;
+	private String m_created_on;
 	
 	
 	// typology not added yet
@@ -68,10 +69,11 @@ public class TypeDation extends TypeDefinition {
         m_stream = true;   // default value from language report
         m_isDeclaration = false;
         m_global = null;
-        m_dimension1 = -1;  // not set
-        m_dimension2 = -1;  // not set
-        m_dimension3 = -1;  // not set
+        m_dimension1 = -2;  // -2: not set; -1: *
+        m_dimension2 = -2;  // -2: not set; -1: *
+        m_dimension3 = -2;  // -2: not set; -1: *
         m_tfu = false;      // default from language report
+        m_created_on=null;
     }
 
     public String toString() {
@@ -100,8 +102,8 @@ public class TypeDation extends TypeDefinition {
     	else s+= " NOCYCL";
     	if (m_stream) s+= " STREAM";
     	else s+=" NOSTREAM";
-    		
-    	// typology still missing
+    	if (m_global != null) s+= " GLOBAL("+m_global+")";	
+    	if (m_created_on != null) s+= " CREATED("+m_created_on+")";
         return s;
     }
     
@@ -210,10 +212,16 @@ public class TypeDation extends TypeDefinition {
 	public String getGlobal() {
 		return m_global;
 	}
+	public void setCreatedOn(String c) {
+	   this.m_created_on = c;
+	}
+	
+	public String getCreatedOn() {
+		return m_created_on;
+	}
 	public void setGlobal(String moduleName) {
 	   this.m_global = moduleName;
 	}
-	
 	public int getDimension1() {
 		return m_dimension1;
 	}
@@ -238,10 +246,12 @@ public class TypeDation extends TypeDefinition {
 	}
 	
 	public int getNumberOfDimensions() {
-		if (m_dimension1 >= 0) return (3);
-		if (m_dimension2 >= 0) return (2);
-		if (m_dimension3 >= 0) return (1);
-		return 0;
+		int nbr = 0;
+		
+		if (m_dimension1 != -2) nbr ++;
+		if (m_dimension2 != -2) nbr ++;
+		if (m_dimension3 != -2) nbr ++;
+		return nbr;
 	}
 	public void setTfu(boolean tfu) {
 		m_tfu = tfu;
@@ -271,7 +281,12 @@ public class TypeDation extends TypeDefinition {
         if (this.m_cyclic != that.m_cyclic) return false;
         if (this.m_stream != that.m_stream) return false;
         if (this.m_isDeclaration != that.m_isDeclaration) return false;
-   
+        if (this.m_global != that.m_global) return (false);
+        if (this.m_global != null && that.m_global != null &&
+        	!this.m_global.equals(that.m_global)) return (false);	
+        if (this.m_created_on != that.m_created_on) return (false);
+        if (this.m_created_on != null && that.m_created_on != null &&
+        	!this.m_created_on.equals(that.m_created_on)) return (false);	
 
         return true;
     }

@@ -29,8 +29,8 @@
 
 package org.smallpearl.compiler;
 
-import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
-import org.smallpearl.compiler.SmallPearlParser.FormatPositionContext;
+import org.smallpearl.compiler.SmallPearlParser.Open_close_parameter_can_prmContext;
+import org.smallpearl.compiler.SmallPearlParser.*;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -3654,6 +3654,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 			stmt.add("paramlist",
 					visitClose_parameterlist(ctx.close_parameterlist()));
 
+			/*
 			ArrayList<String> rstVars = getCloseRstVariables(ctx
 					.close_parameterlist());
 
@@ -3668,6 +3669,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
 				stmt.add("rst_var", var);
 			}
+			*/
 		} else {
 			ST st = m_group.getInstanceOf("close_parameterlist");
 			st.add("parameter", m_group.getInstanceOf("close_parameter_none"));
@@ -3678,6 +3680,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 		return stmt;
 	}
 
+	/*
 	private boolean isRSTSpecified(
 			SmallPearlParser.Close_parameterlistContext ctx) {
 		boolean rstFound = false;
@@ -3691,16 +3694,19 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
 		return rstFound;
 	}
-
+*/
+	
 	@Override
 	public ST visitOpen_statement(SmallPearlParser.Open_statementContext ctx) {
 		ST stmt = m_group.getInstanceOf("open_statement");
 
 		stmt.add("id", ctx.ID());
+
 		if (ctx.open_parameterlist() != null) {
 			stmt.add("paramlist",
 					visitOpen_parameterlist(ctx.open_parameterlist()));
 
+			/* obsolte: semantic analsyis enshures <= 1 IDF
 			ArrayList<String> idfFilenames = getIdfFilenames(ctx
 					.open_parameterlist());
 
@@ -3711,30 +3717,88 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 			}
 
 			if (idfFilenames.size() == 1) {
-				String fname = idfFilenames.get(0);
-				// fname = fname.substring(1, fname.length() - 1);
+			 */
+			Open_parameter_idfContext idfName = null;
+			Open_close_RSTContext rstVar = null;
 
+			if (ctx.open_parameterlist() != null) {
+				for (int i=0; i<ctx.open_parameterlist().open_parameter().size(); i++) {
+					if (ctx.open_parameterlist().open_parameter(i).open_parameter_idf() != null) {
+						idfName = ctx.open_parameterlist().open_parameter(i).open_parameter_idf() ;
+					}
+
+					
+					if (ctx.open_parameterlist().open_parameter(i).open_close_RST() != null){
+						rstVar = ctx.open_parameterlist().open_parameter(i).open_close_RST();
+					}
+				}
+			
+			}
+			if (idfName != null) {
+				String  fname=null;
 				ST declFilename = m_group.getInstanceOf("declare_idf_filename");
 				ST refFilename = m_group
 						.getInstanceOf("reference_idf_filename");
 
-				SymbolTableEntry entry = m_currentSymbolTable.lookup(fname);
+				if (idfName.ID() != null) {
+					fname = idfName.ID().toString();
+					SymbolTableEntry entry = m_currentSymbolTable.lookup(fname);
 
-				if (entry instanceof VariableEntry) {
-					declFilename.add("variable", fname);
-					refFilename.add("variable", fname);
-				} else {
+					if (entry instanceof VariableEntry) {
+						declFilename.add("variable", fname);
+						refFilename.add("variable", fname);
+					} else {
+				    declFilename.add("stringConstant", fname);
+				    declFilename.add("lengthOfStringConstant", fname.length());
+				    refFilename.add("stringConstant", fname);
+								    
+					}
+				}
+				if (idfName.StringLiteral() != null){
+					fname = idfName.StringLiteral().toString();
+					fname = fname.substring(1, fname.length()-1);
 					declFilename.add("stringConstant", fname);
 					declFilename.add("lengthOfStringConstant", fname.length());
 					refFilename.add("stringConstant", fname);
 				}
-
 				stmt.add("declFileName", declFilename);
 				stmt.add("refFileName", refFilename);
+				
+			}
+			if (rstVar != null) {
+				stmt.add("rst_var", rstVar.ID());
+			}
+		}
+		//String fname = idfFilenames.get(0);
+		// fname = fname.substring(1, fname.length() - 1);
+		/*
+			ST declFilename = m_group.getInstanceOf("declare_idf_filename");
+			ST refFilename = m_group
+					.getInstanceOf("reference_idf_filename");
 
+			SymbolTableEntry entry = m_currentSymbolTable.lookup(fname);
+
+			if (entry instanceof VariableEntry) {
+				declFilename.add("variable", fname);
+				refFilename.add("variable", fname);
+			} else {
+				declFilename.add("stringConstant", fname);
+				declFilename.add("lengthOfStringConstant", fname.length());
+				refFilename.add("stringConstant", fname);
 			}
 
-			ArrayList<String> rstVars = getOpenRstVariables(ctx
+			stmt.add("declFileName", declFilename);
+			stmt.add("refFileName", refFilename);
+
+			if (rstVar != null) {
+				stmt.add("rst_var", rstVar.ID());
+			}
+
+
+		}
+		/* obsolete semantic analysis enshure <=1 IDF <=1 RST
+ 	 		ArrayList<String> rstVars = getOpenRstVariables(ctx
+
 					.open_parameterlist());
 
 			if (rstVars.size() > 1) {
@@ -3749,10 +3813,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 				stmt.add("rst_var", var);
 			}
 		}
-
+		 */
 		return stmt;
-	}
+	}	
 
+
+
+	/* obsolete -- Sematic check enshure <= 1 IDF statement 
 	private ArrayList<String> getIdfFilenames(
 			SmallPearlParser.Open_parameterlistContext ctx) {
 		ArrayList<String> filenames = new ArrayList<String>();
@@ -3791,7 +3858,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
 		return filenames;
 	}
-
+*/
+	/* obsolete semantic analysis enshure <=1 RST attributes 
 	private ArrayList<String> getOpenRstVariables(
 			SmallPearlParser.Open_parameterlistContext ctx) {
 		ArrayList<String> vars = new ArrayList<String>();
@@ -3832,12 +3900,54 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
 		return vars;
 	}
-
+*/
 	@Override
 	public ST visitOpen_parameterlist(
 			SmallPearlParser.Open_parameterlistContext ctx) {
 		ST st = m_group.getInstanceOf("open_parameterlist");
+		
+		if (ctx.open_parameter() != null) {
+			for (int i=0; i<ctx.open_parameter().size(); i++) {
+				if (ctx.open_parameter(i).open_parameter_old_new_any() != null){
+					Open_parameter_old_new_anyContext ctxTmp = (Open_parameter_old_new_anyContext) ctx.open_parameter(i).open_parameter_old_new_any() ;
+					st.add("parameter",
+							visitOpen_parameter_old_new_any(ctxTmp));
+				}
 
+				if (ctx.open_parameter(i).open_close_parameter_can_prm() != null ){
+					Open_close_parameter_can_prmContext ctxTmp = (Open_close_parameter_can_prmContext) ctx.open_parameter(i).open_close_parameter_can_prm() ;
+					st.add("parameter",
+							visitOpen_close_parameter_can_prm(ctxTmp));
+				}
+				if (ctx.open_parameter(i).open_parameter_idf() != null) {
+					Open_parameter_idfContext ctxTemp = (Open_parameter_idfContext)(ctx.open_parameter(i).open_parameter_idf());
+					st.add("parameter",
+							visitOpen_parameter_idf(ctxTemp));
+				}
+
+				if (ctx.open_parameter(i).open_close_RST() != null) {
+					ST rst = m_group.getInstanceOf("open_close_parameter_rst");
+					rst.add("id",
+							ctx.open_parameter(i).open_close_RST().ID().toString());
+					st.add("parameter", rst);			
+				}
+				/*
+				if (ctx.open_parameter(i).open_close_RST() != null){
+					Open_close_RSTContext ctxTmp = (Open_close_RSTContext)(ctx.open_parameter(i).open_close_RST() );
+					ST stTmp = m_group.getInstanceOf("open_close_parameter_rst");
+
+					if (ctxTmp.ID() != null) {
+						stTmp.add("id", ctxTmp.ID().getText());
+					}
+
+					st.add("parameter", stTmp);
+					st.add("parameter",
+							visitOpen_close_RST(ctxTmp));	
+				
+				}*/
+			}
+		}
+/*
 		for (ParseTree c : ctx.children) {
 			if (c instanceof SmallPearlParser.Open_parameter_old_or_new_or_anyContext) {
 				SmallPearlParser.Open_parameter_old_or_new_or_anyContext ctxTmp = (SmallPearlParser.Open_parameter_old_or_new_or_anyContext) c;
@@ -3865,7 +3975,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 			}
 
 		}
-
+*/
 		return st;
 	}
 
@@ -3883,17 +3993,17 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 	}
 
 	@Override
-	public ST visitOpen_parameter_old_or_new_or_any(
-			SmallPearlParser.Open_parameter_old_or_new_or_anyContext ctx) {
-		if (ctx.open_parameter_old_new_any() instanceof SmallPearlParser.Open_parameter_oldContext) {
+	public ST visitOpen_parameter_old_new_any(
+			Open_parameter_old_new_anyContext ctxTmp) {
+		if (ctxTmp.getText().equals("OLD")) {
 			ST st = m_group.getInstanceOf("open_parameter_old");
 			st.add("attribute", 1);
 			return st;
-		} else if (ctx.open_parameter_old_new_any() instanceof SmallPearlParser.Open_parameter_newContext) {
+		} else 		if (ctxTmp.getText().equals("NEW")) {
 			ST st = m_group.getInstanceOf("open_parameter_new");
 			st.add("attribute", 1);
 			return st;
-		} else if (ctx.open_parameter_old_new_any() instanceof SmallPearlParser.Open_parameter_anyContext) {
+		} else 		if (ctxTmp.getText().equals("ANY")) {
 			ST st = m_group.getInstanceOf("open_parameter_any");
 			st.add("attribute", 1);
 			return st;
@@ -3903,12 +4013,42 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 	}
 
 	@Override
+	public ST visitOpen_close_RST(SmallPearlParser.Open_close_RSTContext ctx){
+		ST st = m_group.getInstanceOf("open_close_parameter_rst");
+		st.add("id",
+				ctx.ID());
+
+		return st;
+	}
+	@Override
 	public ST visitClose_parameterlist(
 			SmallPearlParser.Close_parameterlistContext ctx) {
 		ST st = m_group.getInstanceOf("close_parameterlist");
 
-		for (ParseTree c : ctx.children) {
-			if (c instanceof SmallPearlParser.Close_parameter_canContext) {
+		if (ctx.close_parameter()!= null) {
+			for (int i=0; i<ctx.close_parameter().size(); i++) {
+				if (ctx.close_parameter(i).open_close_RST() != null) {
+					ST rst = m_group.getInstanceOf("close_parameter_rst");
+					rst.add("id",
+							ctx.close_parameter(i).open_close_RST().ID());
+					st.add("parameter", rst);			
+				}
+				if (ctx.close_parameter(i).open_close_parameter_can_prm() != null ) {
+					Open_close_parameter_can_prmContext c = (Open_close_parameter_can_prmContext)ctx.close_parameter(i).open_close_parameter_can_prm();
+					if (c.getText().equals("CAN")) {
+						ST can = m_group.getInstanceOf("close_parameter_can");
+						can.add("attribute", 1);
+						st.add("parameter", can);
+					}
+					if (c.getText().equals("PRM")) {
+						ST prm = m_group.getInstanceOf("close_parameter_prm");
+						prm.add("attribute", 1);
+						st.add("parameter", prm);
+					}
+				}
+			}
+		}
+/*			if (c instanceof SmallPearlParser.Open_close_parameter_canContext) {
 				ST can = m_group.getInstanceOf("close_parameter_can");
 				can.add("attribute", 1);
 				st.add("parameter", can);
@@ -3923,7 +4063,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 				st.add("parameter", rst);
 			}
 		}
-
+*/
 		return st;
 	}
 
@@ -3958,8 +4098,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 						stmt.add("elements", e);
 					} else if (ctx.formatPosition(j) instanceof SmallPearlParser.FactorFormatPositionContext) {
 						
-							ErrorEnvironment env = new ErrorEnvironment(ctx.formatPosition(j), "factor");
-							ErrorStack.enter(env);
+							ErrorStack.enter(ctx.formatPosition(j), "factor");
 							ErrorStack.add("not supported");
 							ErrorStack.leave();
 			
@@ -4063,8 +4202,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 								ctx.dationName().ID().getText(), "to");
 						stmt.add("elements", e);
 					} else if (ctx.formatPosition(j) instanceof SmallPearlParser.FactorFormatPositionContext) {
-						ErrorEnvironment env = new ErrorEnvironment(ctx.formatPosition(j), "factor");
-						ErrorStack.enter(env);
+						ErrorStack.enter(ctx.formatPosition(j), "factor");
 						ErrorStack.add("not supported");
 						ErrorStack.leave();
 						//System.out.println("*** error?: FormatFactorPositionContext not treated");

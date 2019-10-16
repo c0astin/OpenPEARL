@@ -159,7 +159,7 @@ public class Compiler {
                     }
                 }
                     
-
+                
                 ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose, debug, symbolTableVisitor, ast);
                 if (ErrorStack.getTotalErrorCount()<=0) {
                        expressionTypeVisitor.visit(tree);
