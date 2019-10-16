@@ -438,16 +438,23 @@ SmallPearlVisitor<Void> {
 		}
 
 		// check if absolute positions follow relative positions
+		
 		boolean foundAbsolutePosition= false;
 		boolean foundRelativePosition = false;
 		for (int i = 0; i<ctx.position().size(); i++) {
 			ParseTree child = ctx.position(i).getChild(0); 
 
-			if (child instanceof SmallPearlParser.AbsolutePositionContext && foundRelativePosition) {
+			if (child instanceof SmallPearlParser.AbsolutePositionContext) {
 				ErrorStack.enter(ctx.position(i));
-				ErrorStack.warn("relative positioning before absolute positioning is void");
-				foundRelativePosition = false;
+				if (foundRelativePosition) {
+					ErrorStack.warn("relative positioning before absolute positioning is void");
+					foundRelativePosition = false;
+				}
+				if (foundAbsolutePosition) {
+					ErrorStack.warn("previous absolute positioning is void");
+				}
 				ErrorStack.leave();
+				foundAbsolutePosition = true;
 			}
 			if (child instanceof SmallPearlParser.RelativePositionContext) {
 				foundRelativePosition = true;
