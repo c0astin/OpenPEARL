@@ -2223,7 +2223,7 @@ primaryExpression
 
 constantExpression
     : floatingPointConstant
-    | Sign? durationConstant
+    | sign? durationConstant
     | constantFixedExpression
     ;
 
@@ -2320,7 +2320,8 @@ convertStatement
 ////////////////////////////////////////////////////////////////////////////////
 
 convertToStatement
-    : 'CONVERT' expression (',' expression)* 'TO' ID ( 'BY' formatOrPositionConvert (',' formatOrPositionConvert)* )?
+    //: 'CONVERT' expression (',' expression)* 'TO' ID ( 'BY' formatOrPositionConvert (',' formatOrPositionConvert)* )?
+    : 'CONVERT' expression (',' expression)* 'TO' idCharacterString ( 'BY' formatPosition (',' formatPosition)* )?
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2329,7 +2330,12 @@ convertToStatement
 //   [ BY FormatOrPositionConvert [ , FormatOrPositionConvert ] ... ] ;
 ////////////////////////////////////////////////////////////////////////////////
 convertFromStatement
-    : 'CONVERT'  ID (',' ID)* 'FROM' expression ( 'BY' formatOrPositionConvert (',' formatOrPositionConvert)* )?
+//    : 'CONVERT'  ID (',' ID)* 'FROM' expression ( 'BY' formatOrPositionConvert (',' formatOrPositionConvert)* )?
+    : 'CONVERT'  ID (',' ID)* 'FROM' idCharacterString ( 'BY' formatPosition (',' formatPosition)* )?
+    ;
+
+idCharacterString :
+    ID
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
