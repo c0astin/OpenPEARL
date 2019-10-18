@@ -191,30 +191,45 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
         int toPrecision   = Defaults.FIXED_LENGTH;
         int byPrecision   = 1;
 
+        precision = 0;
+        
         if (ctx.loopStatement_from() != null) {
             fromRes = m_ast.lookup(ctx.loopStatement_from().expression());
             fromPrecision = ((TypeFixed)fromRes.getType()).getPrecision();
             fromType = new TypeFixed(fromPrecision);
+            precision = Math.max(precision, fromPrecision);
         }
 
         if (ctx.loopStatement_to() != null) {
             toRes = m_ast.lookup(ctx.loopStatement_to().expression());
             toPrecision = ((TypeFixed)toRes.getType()).getPrecision();
             toType = new TypeFixed(toPrecision);
+            precision = Math.max(precision, toPrecision);
         }
 
         if (ctx.loopStatement_by() != null) {
             byRes = m_ast.lookup(ctx.loopStatement_by().expression());
             byPrecision = ((TypeFixed)byRes.getType()).getPrecision();
             byType = new TypeFixed(byPrecision);
-        }
+            precision = Math.max(precision, byPrecision);
+         }
 
-        precision = m_currentSymbolTable.lookupDefaultFixedLength();
+        
 
-        if ( byPrecision > fromPrecision || byPrecision > toPrecision) {
+        // this is not correct!
+        // FOR i FROM 1 BY 10 TO 100 REPEAT ... END
+        // is ok! 1 is FIXED(1) 10 is FIXED(4) 100 is FIXED(7)
+        // we need the maximum of all given parameters!
+        /*if ( byPrecision > fromPrecision || byPrecision > toPrecision) {
             throw new LoopByOutOfRangeException(null, ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
-
+		*/
+        if (precision == 0) {
+        	precision = m_currentSymbolTable.lookupDefaultFixedLength();	
+        }
+          
+  
+        /*
         if ( fromType != null) {
             if ( toType != null ) {
                 precision = Math.max(((TypeFixed)fromRes.getType()).getPrecision(),((TypeFixed)toRes.getType()).getPrecision());
@@ -234,7 +249,8 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
                 typ.setPrecision(precision);
             }
         }
-
+         */
+        
         m_constantPoolVisitor.add(new ConstantFixedValue(0, precision));
         m_constantPoolVisitor.add(new ConstantFixedValue(1, precision));
 
