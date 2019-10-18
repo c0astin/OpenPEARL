@@ -54,7 +54,7 @@ public class TypeDation extends TypeDefinition {
 	// typology not added yet
 	
 	
-    TypeDation() {
+    public TypeDation() {
         super("DATION");
         m_in = false;
         m_out = false;
