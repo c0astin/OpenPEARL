@@ -178,13 +178,13 @@ TEST(Fixed, Fixed_3_5_Operations) {
    EXPECT_EQ(x.pow(y).x, 4);
    x = (pearlrt::Fixed<3>)1;
    y = (pearlrt::Fixed<5>) - 2;
-   EXPECT_EQ(x.pow(y).x, 1);
+   EXPECT_EQ(x.pow(y).x, 0);
    x = (pearlrt::Fixed<3>) - 1;
    y = (pearlrt::Fixed<5>) - 2;
-   EXPECT_EQ(x.pow(y).x, 1);
+   EXPECT_EQ(x.pow(y).x, 0);
    x = (pearlrt::Fixed<3>)1;
    y = (pearlrt::Fixed<5>) - 3;
-   EXPECT_EQ(x.pow(y).x, 1);
+   EXPECT_EQ(x.pow(y).x, 0);
    x = (pearlrt::Fixed<3>)2;
    y = (pearlrt::Fixed<5>) - 2;
    EXPECT_EQ(x.pow(y).x, 0);
@@ -196,8 +196,9 @@ TEST(Fixed, Fixed_3_5_Operations) {
    EXPECT_EQ(x.pow(y).x, 1);
    x = (pearlrt::Fixed<3>)0;
    y = (pearlrt::Fixed<5>)0;
-   ASSERT_THROW(x.pow(y).x,
-                pearlrt::FixedRangeSignal);
+   EXPECT_EQ(x.pow(y).x, 1);
+   //ASSERT_THROW(x.pow(y).x,
+   //             pearlrt::FixedRangeSignal);
    x = (pearlrt::Fixed<3>)2;
    y = (pearlrt::Fixed<5>)2;
    ASSERT_NO_THROW(x.pow(y));
@@ -319,13 +320,13 @@ TEST(Fixed, Fixed_30_50_Operations) {
    EXPECT_EQ(x.pow(y).x, -8);
    x = (pearlrt::Fixed<30>)1;
    y = (pearlrt::Fixed<50>) - 2;
-   EXPECT_EQ(x.pow(y).x, 1);
+   EXPECT_EQ(x.pow(y).x, 0);
    x = (pearlrt::Fixed<30>) - 1;
    y = (pearlrt::Fixed<50>) - 2;
-   EXPECT_EQ(x.pow(y).x, 1);
+   EXPECT_EQ(x.pow(y).x, 0);
    x = (pearlrt::Fixed<30>)1;
    y = (pearlrt::Fixed<50>) - 3;
-   EXPECT_EQ(x.pow(y).x, 1);
+   EXPECT_EQ(x.pow(y).x, 0);
    x = (pearlrt::Fixed<30>)2;
    y = (pearlrt::Fixed<50>) - 2;
    EXPECT_EQ(x.pow(y).x, 0);
@@ -337,8 +338,7 @@ TEST(Fixed, Fixed_30_50_Operations) {
    EXPECT_EQ(x.pow(y).x, 1);
    x = (pearlrt::Fixed<30>)0;
    y = (pearlrt::Fixed<50>)0;
-   ASSERT_THROW(x.pow(y).x,
-                pearlrt::FixedRangeSignal);
+   EXPECT_EQ(x.pow(y).x, 1);
    x = (pearlrt::Fixed<30>)2;
    y = (pearlrt::Fixed<50>)29;
    ASSERT_NO_THROW(x.pow(y));

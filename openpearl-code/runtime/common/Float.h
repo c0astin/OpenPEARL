@@ -482,9 +482,13 @@ namespace pearlrt {
       \returns the exp value of the object
       */
       Float<S> ln() const {
-         Float<S> result;
+         Float<S> result(0);
+         if (x<=0 ) {
+	    throw theFunctionParameterOutOfRangeException;
+         } 
          result.x = std::log(x);
          FloatHelper::testFloatResult(result.x);
+       
          return result;
       }
 

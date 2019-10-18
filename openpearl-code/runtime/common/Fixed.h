@@ -651,7 +651,7 @@ namespace pearlrt {
        <em>|anything| == 1 </em> pow  <em>anything < -1 </em> returns
                   <em>anything</em> pow <em>-exp</em><br>
        <em>|anything| > 1 </em> pow <em>anything < -1</em> returns 0<br>
-       <em>*anything </em> pow <em>-1</em> returns 1/ <em>anything </em><br>
+       <em>anything </em> pow <em>-1</em> returns 1/ <em>anything </em><br>
 
        \param rhs the exponent
        \returns result  of the operation
@@ -663,11 +663,7 @@ namespace pearlrt {
          int64_t exp = rhs.x;
 
          if (exp == 0) {
-            if (x != 0) {
-               result.x = 1;
-            } else {
-               throw  theFixedRangeSignal;
-            }
+            result.x = 1;
          } else  if (exp > 0) {
             try {
                while (exp) {
@@ -688,9 +684,14 @@ namespace pearlrt {
             if (result.x > maxValue || result.x < minValue) {
                throw  theFixedRangeSignal;
             }
-         } else if (exp == -1) {
-            result.x = 1 / x;
-         } else if (exp < -1) {
+         } else if (exp < 0) {
+            if (x != 0) {
+               result.x = 0;
+            } else {
+              throw theFixedDivideByZeroSignal;
+            }
+         }
+/*  else if (exp < -1) {
             if (x ==  1 || x == -1) {  // (+/- 1)**exp
                if (exp & 1) {
                   // -1 ** odd number --> -1
@@ -704,7 +705,7 @@ namespace pearlrt {
                result.x = 0;;
             }
          }
-
+*/
          return result;
       }
 
