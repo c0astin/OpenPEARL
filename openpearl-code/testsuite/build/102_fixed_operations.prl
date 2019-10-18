@@ -12,6 +12,7 @@ T1: TASK MAIN;
    DCL y31 FIXED(31);
    DCL z31 FIXED(31);
    DCL x15 FIXED(15);
+   DCL fl FLOAT(52);
 
    ! assignment
    x31 := 1;
@@ -30,6 +31,8 @@ T1: TASK MAIN;
    y31 := SIZEOF(x31);
    !__cpp__ (' _y31 = _x31.size(); ');
 
+   fl = SIN(x15);
+   fl = SQRT(x15);
    ! dyadic opertions 
    z31 := x31 + y31;
    z31 := x31 - y31;

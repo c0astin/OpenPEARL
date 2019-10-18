@@ -31,7 +31,7 @@ FileTest1: TASK MAIN;
      CLOSE table;
 
      OPEN table BY OLD, IDF('file1.txt');
-     GET text1, f1 FROM table BY  X(3), A,F(3), SKIP;
+     GET text1, f1 FROM table BY  X(3), A,F(3);
      CLOSE table;
 
         
@@ -43,7 +43,8 @@ FileTest1: TASK MAIN;
 
      OPEN table BY OLD, IDF('file1.txt');
      FOR i TO 10 REPEAT
-        GET f1 FROM table BY  X(8),F(3), SKIP;
+        GET f1 FROM table BY X(8),F(3);
+        GET FROM table BY SKIP;
      END;
      CLOSE table;
 
@@ -81,20 +82,20 @@ testFormats: PROC;
    CLOSE table;
 
    OPEN table BY ANY, IDF('file1.txt');
-   GET c1 FROM table BY A,SKIP;
-   GET dur FROM table BY D(13,6),SKIP;
-   GET clk FROM table BY T(13,4),SKIP;
-   GET float FROM table BY F(13),SKIP;
-   GET float FROM table BY F(13,6),SKIP;
-   GET float FROM table BY E(13,6,7),SKIP;
-   GET float FROM table BY E(19,6,7),SKIP;
-   GET float FROM table BY E3(19,6,7),SKIP;
-   GET fixed FROM table BY F(13,6),SKIP;
-   GET fixed FROM table BY F(13),SKIP;
-   GET bit FROM table BY B1(1),SKIP;
-   GET bit FROM table BY B2(1),SKIP;
-   GET bit FROM table BY B3(1),SKIP;
-   GET bit FROM table BY B4(1),SKIP;
+   GET c1 FROM table BY A;
+   GET dur FROM table BY SKIP,D(13,6);
+   GET clk FROM table BY SKIP,T(13,4);
+   GET float FROM table BY SKIP,F(13);
+   GET float FROM table BY SKIP,F(13,6);
+   GET float FROM table BY SKIP,E(13,6,7);
+   GET float FROM table BY SKIP,E(19,6,7);
+   GET float FROM table BY SKIP,E3(19,6,7);
+   GET fixed FROM table BY SKIP,F(13,6);
+   GET fixed FROM table BY SKIP,F(13);
+   GET bit FROM table BY SKIP,B1(1);
+   GET bit FROM table BY SKIP,B2(1);
+   GET bit FROM table BY SKIP,B3(1);
+   GET bit FROM table BY SKIP,B4(1);
    CLOSE table;
 
 END;
