@@ -169,7 +169,7 @@ SmallPearlVisitor<Void> {
 		boolean hasCAN = false;
 		boolean hasPRM = false;
 
-		
+
 		lookupDation(ctx.ID().toString());
 
 		if (ctx.open_parameterlist() != null && ctx.open_parameterlist().open_parameter() != null) {
@@ -195,7 +195,7 @@ SmallPearlVisitor<Void> {
 					 if there is a StringLiteral, this should be in the ConstantPool 
 					 if not, it must be a character variable
 					 both information should be places as ASTAttributes
-					*/
+					 */
 				}
 				if (ctx.open_parameterlist().open_parameter(i).open_close_RST() != null) {
 					Open_close_RSTContext c = (Open_close_RSTContext)(ctx.open_parameterlist().open_parameter(i).open_close_RST() );
@@ -301,6 +301,7 @@ SmallPearlVisitor<Void> {
 		return null;
 	}
 
+
 	@Override
 	public Void visitPutStatement(SmallPearlParser.PutStatementContext ctx) {
 		if (m_debug) {
@@ -311,7 +312,7 @@ SmallPearlVisitor<Void> {
 		ErrorStack.enter(ctx, "PUT");
 
 		TypeDation d = lookupDation(ctx.dationName());
-		
+
 		if (!d.isAlphic()) {
 			ErrorStack.enter(ctx.dationName());
 			ErrorStack.add("need ALPHIC dation");
@@ -337,6 +338,11 @@ SmallPearlVisitor<Void> {
 		return null;
 	}
 
+	/**
+	 * check if the ID-list is not INV
+	 * check type of dation
+	 * no positioning after last format element in position/format list
+	 */
 	@Override
 	public Void visitGetStatement(SmallPearlParser.GetStatementContext ctx) {
 		if (m_debug) {
@@ -347,8 +353,8 @@ SmallPearlVisitor<Void> {
 		ErrorStack.enter(ctx, "GET");
 
 		TypeDation d = lookupDation(ctx.dationName());
-		
-	
+
+
 		if (!d.isAlphic()) {
 			ErrorStack.enter(ctx.dationName());
 			ErrorStack.add("need ALPHIC dation");
@@ -356,9 +362,90 @@ SmallPearlVisitor<Void> {
 		}
 
 		for (int i=0; i<ctx.ID().size(); i++) {
-			// it should be checked if the ID is not INV - this is not provied in the 
-			// symbol table yet (2019-10-12)
+			enshureNotInvVariableForInput(ctx.ID(i).toString());
 		}
+
+		if (ctx.ID().size() > 0) {
+			if (ctx.formatPosition() == null) {
+				ErrorStack.add("need format/position");
+			} else {
+				if (ctx.formatPosition(ctx.formatPosition().size()-1) instanceof FactorPositionContext) {
+					ErrorStack.add("format/position list must end with format");
+				}
+			}
+		}
+
+		if (ctx.ID().size() > 0) {
+			// count number of format(without positions) 
+			int nbr = 0;
+			for (int i = 0; i<ctx.formatPosition().size(); i++) {
+				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatContext) {
+					nbr ++;
+				} 
+			}
+
+			if (nbr != ctx.ID().size()) {
+				ErrorStack.add("number of format elements differs from data elements");
+			}
+		}
+
+
+		visitChildren(ctx);
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitConvertToStatement(SmallPearlParser.ConvertToStatementContext ctx) {
+		if (m_debug) {
+			System.out.println( "Semantic: Check IOStatements: visitConvertTo");
+		}
+
+		// enshure that the dation id of type ALPHIC
+		ErrorStack.enter(ctx, "CONVERT");
+
+
+		if (ctx.expression().size() > 0) {
+			// count number of format(without positions) 
+			int nbr = 0;
+			for (int i = 0; i<ctx.formatPosition().size(); i++) {
+				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatContext) {
+					nbr ++;
+				}
+			}
+			if (nbr == 0) {
+				ErrorStack.add("need at least 1 format element");
+			}
+		}
+
+		// check TO parameter
+		String toName = ctx.idCharacterString().ID().toString();
+
+		SymbolTableEntry se = m_currentSymbolTable.lookup(toName);
+
+		TypeChar c = enshureCharacterString(toName);
+		if (c != null) {
+			// INV check is missing
+			if (((VariableEntry)se).getAssigmentProtection()) {
+				ErrorStack.add(toName+ " is INV");
+			}
+		}
+
+
+		visitChildren(ctx);
+		ErrorStack.leave();
+		return null;
+	}
+
+	@Override
+	public Void visitConvertFromStatement(SmallPearlParser.ConvertFromStatementContext ctx) {
+		if (m_debug) {
+			System.out.println( "Semantic: Check IOStatements: visitConvertFrom");
+		}
+
+		// enshure that the dation id of type ALPHIC
+		ErrorStack.enter(ctx, "CONVERT");
+
 
 		if (ctx.ID().size() > 0) {
 			// count number of format(without positions) 
@@ -371,6 +458,15 @@ SmallPearlVisitor<Void> {
 			if (nbr == 0) {
 				ErrorStack.add("need at least 1 format element");
 			}
+		}
+
+		// check FROM parameter
+		String fromName = ctx.idCharacterString().ID().toString();
+
+		enshureCharacterString(fromName);
+
+		for (int i=0; i<ctx.ID().size(); i++) {
+			enshureNotInvVariableForInput(ctx.ID(i).toString());
 		}
 
 		visitChildren(ctx);
@@ -396,8 +492,7 @@ SmallPearlVisitor<Void> {
 		}
 
 		for (int i=0; i<ctx.ID().size(); i++) {
-			// it should be checked if the ID is not INV - this is not provied in the 
-			// symbol table yet (2019-10-12)
+			enshureNotInvVariableForInput(ctx.ID(i).toString());
 		}
 
 		// check if absolute positions follow relative positions
@@ -438,7 +533,7 @@ SmallPearlVisitor<Void> {
 		}
 
 		// check if absolute positions follow relative positions
-		
+
 		boolean foundAbsolutePosition= false;
 		boolean foundRelativePosition = false;
 		for (int i = 0; i<ctx.position().size(); i++) {
@@ -499,6 +594,7 @@ SmallPearlVisitor<Void> {
 					}
 				}
 			}
+			enshureNotInvVariableForInput(ctx.ID().toString());
 		}
 		if (ctx.take_send_rst() != null) {
 			ErrorStack.enter(ctx.take_send_rst(), "RST");
@@ -520,7 +616,7 @@ SmallPearlVisitor<Void> {
 		ErrorStack.enter(ctx, "SEND");
 
 		TypeDation d = lookupDation(ctx.dationName());
-		
+
 		if (!d.isBasic()) {
 			ErrorStack.add("need BASIC dation");
 		}	   
@@ -1177,6 +1273,31 @@ SmallPearlVisitor<Void> {
 	}
 
 	@Override
+	public Void visitCharacterStringFormatS(SmallPearlParser.CharacterStringFormatSContext ctx) {
+		if (m_debug) {
+			System.out.println("Semantic: Check IOStatements: visitCharacterStringFormatS");
+		}
+
+		ErrorStack.enter(ctx, "S-format");
+
+		enshureAlphicDation(ctx);
+
+		ErrorStack.add("S-format not sopported yet");
+		/*
+		// check the types of all children
+		visitChildren(ctx);
+		if (ErrorStack.getLocalCount() == 0) {
+
+			// check of the parameters is possible if they are
+			// of type ConstantFixedValue
+			// or not given
+			// check of the value oof width is already done
+		}
+		 */
+		ErrorStack.leave();
+		return null;
+	}
+	@Override
 	public Void visitBitFormat1(SmallPearlParser.BitFormat1Context ctx) {
 		if (m_debug) {
 			System.out.println("Semantic: Check IOStatements: visitBitFormat1");
@@ -1568,18 +1689,65 @@ SmallPearlVisitor<Void> {
 		}
 	}
 
+
+
+	private void enshureNotInvVariableForInput(String var) {
+		SymbolTableEntry se = m_currentSymbolTable.lookup(var);
+		if (se == null) {
+			ErrorStack.add("'" + var+"' is not defined");
+		} else if ( (se instanceof VariableEntry) ) {
+			if (((VariableEntry)se).getAssigmentProtection()) {
+				ErrorStack.add("'" + var + "' is INV");
+			}
+		}
+	}
+
+	/**
+	 * check if the given name is defined and of type CHAR
+	 * return the element from thesymbol table
+	 * or return null
+	 * 
+	 * @param convertString
+	 * @return null, if no symbol was found, or symbol is not of typeChar<br>
+	 *    reference to the TypeChar for further analysis
+	 */
+	private TypeChar  enshureCharacterString(String convertString) {
+		SymbolTableEntry se = m_currentSymbolTable.lookup(convertString);
+		if (se == null) {
+			ErrorStack.add("'" + convertString+"' is not defined");
+		} else if ( (se instanceof VariableEntry) ) {
+			if (((VariableEntry)se).getType() instanceof TypeChar) {
+				// maybe we need further details about the variable 
+				// like INV
+				TypeChar c = (TypeChar)((VariableEntry)se).getType();
+				return c;
+			}
+		} else {
+			ErrorStack.add("'"+ convertString + "' must be CHAR -- has type "+ (((VariableEntry)se).getType().toString()));
+		}
+		return null;
+	}
+
 	private TypeDation lookupDation(String userDation) {
 		SymbolTableEntry se = m_currentSymbolTable.lookup(userDation);
 		if (se == null) {
 			ErrorStack.add("'" + userDation+"' is not defined");
-		} else if (  (se instanceof VariableEntry) &&
-				((((VariableEntry)se).getType() instanceof TypeDation))) {
-
-			TypeDation sd = (TypeDation)(((VariableEntry)se).getType());
-			if (sd.isSystemDation()) {
-				ErrorStack.add("need user dation");
+		} else if ( (se instanceof VariableEntry) ) {
+			if (((VariableEntry)se).getType() instanceof TypeDation) {
+				TypeDation sd = (TypeDation)(((VariableEntry)se).getType());
+				if (sd.isSystemDation()) {
+					ErrorStack.add("need user dation");
+				}
+				return sd;
+			} else if (((VariableEntry)se).getType() instanceof TypeChar) {
+				// lets simulate user dation for CONVERT
+				TypeChar c = (TypeChar)((VariableEntry)se).getType();
+				TypeDation sd = new TypeDation();
+				sd.setDimension1(c.getSize());
+				sd.setAlphic(true);
+				sd.setDirect(true);
+				return sd;
 			}
-			return sd;
 		} else {
 			ErrorStack.add("'"+ userDation + "' must be DATION -- has type "+ (((VariableEntry)se).getType().toString()));
 		}
@@ -1589,6 +1757,7 @@ SmallPearlVisitor<Void> {
 
 	private TypeDation lookupDation(RuleContext ctx) {
 		String userDation = "";
+		boolean isConvert = false;
 
 		// walk grammar up to put_statement
 		RuleContext p= (RuleContext)ctx;
@@ -1602,6 +1771,18 @@ SmallPearlVisitor<Void> {
 			if (p instanceof SmallPearlParser.GetStatementContext) {
 				SmallPearlParser.GetStatementContext stmnt = (SmallPearlParser.GetStatementContext) p;
 				userDation = stmnt.dationName().ID().toString();
+				p=null;
+			}
+			if (p instanceof SmallPearlParser.ConvertToStatementContext) {
+				SmallPearlParser.ConvertToStatementContext stmnt = (SmallPearlParser.ConvertToStatementContext) p;
+				userDation = stmnt.idCharacterString().ID().toString();  // name of the string
+				isConvert = true;
+				p=null;
+			}
+			if (p instanceof SmallPearlParser.ConvertFromStatementContext) {
+				SmallPearlParser.ConvertFromStatementContext stmnt = (SmallPearlParser.ConvertFromStatementContext) p;
+				userDation = stmnt.idCharacterString().ID().toString();  // name of the string
+				isConvert = true;
 				p=null;
 			}
 			if (p instanceof SmallPearlParser.ReadStatementContext) {

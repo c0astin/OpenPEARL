@@ -237,9 +237,12 @@ public class CheckDationDeclaration extends SmallPearlBaseVisitor<Void> implemen
                
                // (4) type of transmission must fit, if not set to ALL in system dation
                if (sd.getTypeOfTransmission() == null) {
-            	   System.out.println(sd+" no typeOfTransmission");
-               } else 
-               if (!sd.getTypeOfTransmission().equals("ALL")) {
+            	   if (!sd.isAlphic()) {
+            	      // the system dation misses some data -- this should be detected by the
+            	      // imc in all compilations
+            	      throw new InternalCompilerErrorException(sd+" has no typeOfTransmission");
+            	   }
+               } else if (!sd.getTypeOfTransmission().equals("ALL")) {
             	   if (!sd.getTypeOfTransmission().equals(d.getTypeOfTransmission())) {
             		   ErrorStack.add("type of transmission mismatch (system:"+sd.getTypeOfTransmission()+
             				   " user: "+d.getTypeOfTransmission()+")");

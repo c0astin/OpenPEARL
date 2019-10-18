@@ -29,6 +29,7 @@
 
 package org.smallpearl.compiler;
 
+import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
 
@@ -513,6 +514,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         Log.debug("ExpressionTypeVisitor:visitAbsExpression:ctx" + CommonUtils.printContext(ctx));
 
+        ErrorStack.enter(ctx,"ABS");
+        
         visit(ctx.expression());
         op = m_ast.lookup(ctx.expression());
 
@@ -539,9 +542,12 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: AbsExpression: rule#3");
         } else {
-            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+          	ErrorStack.enter(ctx.expression());
+        	ErrorStack.add("type '" + op.getType().getName()+ "' not allowed");
+        	ErrorStack.leave();
+//            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
-
+        ErrorStack.leave();
         return null;
     }
 
@@ -561,7 +567,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     public Void visitSignExpression(SmallPearlParser.SignExpressionContext ctx) {
         ASTAttribute op;
         ASTAttribute res;
-
+        
+        ErrorStack.enter(ctx,"SIGN");
+        
         Log.debug("ExpressionTypeVisitor:visitSignExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
@@ -590,9 +598,14 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: SignExpression: rule#3");
         } else {
-            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+           // throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        	ErrorStack.enter(ctx.expression());
+        	ErrorStack.add("type '"+op.getType().getName()+"' not allowed");
+            ErrorStack.leave();
         }
-
+        
+        ErrorStack.leave();
+        
         return null;
     }
 
@@ -999,6 +1012,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
 
+    // FIXED(g) is also possible for the monadic arithmetic operators
     //
     // Reference: OpenPEARL Language Report 6.1 Expressions
     //            Table 6.3: Monadic arithmetical operators
@@ -1007,7 +1021,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     //            | operand     |           |             |
     // -----------+-------------+-----------+-------------+---------------------------------
     // SQRT op    | FLOAT(g)    |           | FLOAT(g)    | square root of operand
-    // SIN op     |             |           |             | sine of operand
+    // SIN op     | FIXED(g)    |           |             | sine of operand
     // COS op     |             |           |             | cosine of operand
     // EXP op     |             |           |             | e^op with e=2.718281828459
     // LN op      |             |           |             | natural loarithm of operand
@@ -1019,51 +1033,34 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitSqrtExpression(SmallPearlParser.SqrtExpressionContext ctx) {
         ASTAttribute op;
-        ASTAttribute res;
-
+        
         Log.debug("ExpressionTypeVisitor:visitSqrtExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
         op = m_ast.lookup(ctx.expression());
 
-        if (op == null) {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
+        ErrorStack.enter(ctx.expression(), "SQRT");
+        
+        treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext)ctx, op);
 
-        if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
-            m_ast.put(ctx, res);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: SqrtExpression: rule#2");
-        } else {
-            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
-
+        ErrorStack.leave();
         return null;
     }
 
     @Override
     public Void visitSinExpression(SmallPearlParser.SinExpressionContext ctx) {
         ASTAttribute op;
-        ASTAttribute res;
-
+        
         Log.debug("ExpressionTypeVisitor:visitSinExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
         op = m_ast.lookup(ctx.expression());
 
-        if (op == null) {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
+        ErrorStack.enter(ctx.expression(), "SIN");
+        
+        treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext)ctx, op);
 
-        if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
-            m_ast.put(ctx, res);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: SinExpression: rule#2");
-        } else {
-            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
+        ErrorStack.leave();
 
         return null;
     }
@@ -1071,26 +1068,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitCosExpression(SmallPearlParser.CosExpressionContext ctx) {
         ASTAttribute op;
-        ASTAttribute res;
 
         Log.debug("ExpressionTypeVisitor:visitCosExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
         op = m_ast.lookup(ctx.expression());
 
-        if (op == null) {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
+        ErrorStack.enter(ctx.expression(), "COS");
+        
+        treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext)ctx, op);
 
-        if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
-            m_ast.put(ctx, res);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: CosExpression: rule#2");
-        } else {
-            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
-
+        ErrorStack.leave();
         return null;
     }
 
@@ -1104,44 +1092,28 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         visit(ctx.expression());
         op = m_ast.lookup(ctx.expression());
 
-        if (op == null) {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
+        ErrorStack.enter(ctx.expression(), "EXP");
+        
+        treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext)ctx, op);
 
-        if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
-            m_ast.put(ctx, res);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: ExpExpression: rule#2");
-        } else {
-            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
-
+        ErrorStack.leave();
         return null;
     }
 
     @Override
     public Void visitLnExpression(SmallPearlParser.LnExpressionContext ctx) {
         ASTAttribute op;
-        ASTAttribute res;
 
         Log.debug("ExpressionTypeVisitor:visitLnExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
         op = m_ast.lookup(ctx.expression());
 
-        if (op == null) {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
+        ErrorStack.enter(ctx.expression(), "LN");
+        
+        treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext)ctx, op);
 
-        if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
-            m_ast.put(ctx, res);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: LnExpression: rule#2");
-        } else {
-            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
+        ErrorStack.leave();
 
         return null;
     }
@@ -1149,25 +1121,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitTanExpression(SmallPearlParser.TanExpressionContext ctx) {
         ASTAttribute op;
-        ASTAttribute res;
 
         Log.debug("ExpressionTypeVisitor:visitTanExpression:ctx" + CommonUtils.printContext(ctx));
 
         visit(ctx.expression());
         op = m_ast.lookup(ctx.expression());
+        ErrorStack.enter(ctx.expression(), "TAN");
+        
+        treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext)ctx, op);
 
-        if (op == null) {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
-
-        if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
-            m_ast.put(ctx, res);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: TanExpression: rule#2");
-        } else {
-            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
+        ErrorStack.leave();
 
         return null;
     }
@@ -1182,18 +1145,11 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         visit(ctx.expression());
         op = m_ast.lookup(ctx.expression());
 
-        if (op == null) {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
+        ErrorStack.enter(ctx.expression(), "ATAN");
+        
+        treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext)ctx, op);
 
-        if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
-            m_ast.put(ctx, res);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: ATanExpression: rule#2");
-        } else {
-            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
+        ErrorStack.leave();
 
         return null;
     }
@@ -1208,21 +1164,42 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         visit(ctx.expression());
         op = m_ast.lookup(ctx.expression());
 
+        ErrorStack.enter(ctx.expression(), "TANH");
+        
+        treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext)ctx, op);
+
+        ErrorStack.leave();
+
+        return null;
+    }
+
+    private Void treatFixedFloatParameterForMonadicArithmeticOperators(ExpressionContext ctx, ASTAttribute op) {
+        ASTAttribute res;
+        
         if (op == null) {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
-        if (op.getType() instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
-            m_ast.put(ctx, res);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: TanhExpression: rule#2");
-        } else {
-            throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
-
-        return null;
+    	if (op.getType() instanceof TypeFloat) {
+    		res = new ASTAttribute(new TypeFloat(((TypeFloat) op.getType()).getPrecision()), op.isReadOnly());
+    		m_ast.put(ctx, res);
+    		if (m_debug)
+    			System.out.println("ExpressionTypeVisitor: SqrtExpression: rule#2");
+    	} else if (op.getType() instanceof TypeFixed) {
+    		int precision = ((TypeFixed) op.getType()).getPrecision();
+    		if (precision > Defaults.FLOAT_SHORT_PRECISION) {
+    			precision = Defaults.FIXED_MAX_LENGTH;
+    		} else {
+    			precision = Defaults.FLOAT_SHORT_PRECISION;
+    		}
+    		res = new ASTAttribute(new TypeFloat(precision), op.isReadOnly());
+    		m_ast.put(ctx, res);
+    	} else {
+    		ErrorStack.add("only FIXED and FLOAT are allowed -- got "+op.getType().toString());
+    	}
+    	return null;
     }
+       // throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
 
     //
     // Reference: OpenPEARL Language Report 6.1 Expressions
@@ -1685,7 +1662,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         String id = null;
 
         Log.debug("ExpressionTypeVisitor:visitAssignment_statement:ctx" + CommonUtils.printContext(ctx));
-
+        ErrorStack.enter(ctx,"assigment");
+        
         if ( ctx.stringSelection() != null ) {
             if (ctx.stringSelection().charSelection() != null) {
                 id = ctx.stringSelection().charSelection().ID().getText();
@@ -1702,20 +1680,23 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
         if (!(entry instanceof VariableEntry)) {
-            throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        	//  throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        	ErrorStack.add("'" + id+ "' not defined");
+        } else {
+
+        	VariableEntry var = (VariableEntry)entry;
+        	if ( var.getType() instanceof TypeFixed) {
+        		TypeFixed typ = (TypeFixed)(var.getType());
+        		m_currFixedLength = typ.getPrecision();
+        	}
+
+        	SmallPearlParser.ExpressionContext expr = ctx.expression();
+        	visitChildren(ctx);
         }
-
-        VariableEntry var = (VariableEntry)entry;
-        if ( var.getType() instanceof TypeFixed) {
-            TypeFixed typ = (TypeFixed)(var.getType());
-            m_currFixedLength = typ.getPrecision();
-        }
-
-        SmallPearlParser.ExpressionContext expr = ctx.expression();
-        visitChildren(ctx);
-
         m_currFixedLength = null;
-
+        
+        ErrorStack.leave();
+        
         return null;
     }
 
