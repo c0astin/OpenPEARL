@@ -396,7 +396,9 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
                         res.setConstantFloatValue(value);
                     }
                    
-               	} else if ( op2.m_type instanceof TypeDuration) {
+/* 2019-10-18 rm 
+ does not work -- the new constant must go into the pool 
+                	} else if ( op2.m_type instanceof TypeDuration) {
                     ConstantDurationValue op2Value = op2.getConstantDurationValue();
                     if (op2Value != null) {
                        int sign = op2Value.getSign();
@@ -405,7 +407,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
                     		op2Value.getHours(), op2Value.getMinutes(),op2Value.getSeconds(),sign);
                        res.setConstantDurationValue(value);
                     }
-			
+*/			
             	} else {
             		System.out.println("visitUnarySubtractiveExpression: untreated type: "+op2.m_type.getName());
             	}
