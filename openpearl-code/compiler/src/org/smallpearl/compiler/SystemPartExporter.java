@@ -233,6 +233,8 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
                     st.add("decls", visitIdentification((SmallPearlParser.IdentificationContext) c));
                 } else if (c instanceof SmallPearlParser.DationSpecificationContext) {
                     st.add("decls", visitDationSpecification((SmallPearlParser.DationSpecificationContext) c));
+                } else if (c instanceof SmallPearlParser.InterruptSpecificationContext) {
+                	st.add("decls", visitInterruptSpecification((SmallPearlParser.InterruptSpecificationContext) c));
                 }
             }
         }
@@ -252,6 +254,19 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
         return st;
     }
 
+    @Override
+    public ST visitInterruptSpecification( SmallPearlParser.InterruptSpecificationContext ctx) {
+    	ST interruptSpecification = group.getInstanceOf("Specification");
+    	interruptSpecification.add("type","INTERRUPT");
+    	interruptSpecification.add("lineno",  ctx.start.getLine());
+        
+    	for (int i=0; i<ctx.ID().size(); i++) {
+            interruptSpecification.add( "name", ctx.ID(i).toString());
+        }
+
+    	return interruptSpecification;
+    }
+    
     @Override
     public ST visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
         ST dationSpecification = group.getInstanceOf("DationSpecification");
