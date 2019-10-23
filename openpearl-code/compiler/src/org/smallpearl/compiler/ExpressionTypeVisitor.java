@@ -1472,6 +1472,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (ctx.durationConstant() != null) {
             ASTAttribute expressionResult = new ASTAttribute(new TypeDuration(), true);
+            expressionResult.setConstant(getConstantDurationValue(ctx.durationConstant()));
             m_ast.put(ctx, expressionResult);
         } else if (ctx.floatingPointConstant() != null) {
             try {
@@ -1484,6 +1485,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             }
         } else if (ctx.timeConstant() != null) {
             ASTAttribute expressionResult = new ASTAttribute( new TypeClock(getTime(ctx.timeConstant())),true);
+            expressionResult.setConstant(getConstantClockValue(ctx.timeConstant()));
             m_ast.put(ctx, expressionResult);
         } else if (ctx.StringLiteral() != null) {
             ASTAttribute expressionResult = new ASTAttribute(new TypeChar(), true);
@@ -1546,6 +1548,53 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return hours * 3600 + minutes * 60 + seconds;
     }
 
+    private ConstantClockValue getConstantClockValue(SmallPearlParser.TimeConstantContext ctx) {
+        Integer hours = 0;
+        Integer minutes = 0;
+        Double seconds = 0.0;
+
+        hours = (Integer.valueOf(ctx.IntegerConstant(0).toString()) % 24);
+        minutes = Integer.valueOf(ctx.IntegerConstant(1).toString());
+
+        if (ctx.IntegerConstant().size() == 3) {
+            seconds = Double.valueOf(ctx.IntegerConstant(2).toString());
+        }
+
+        if ( ctx.floatingPointConstant() != null ) {
+            seconds = Double.valueOf(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+        }
+
+        if (hours < 0 || minutes < 0 || minutes > 59) {
+            throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+
+        return new ConstantClockValue(hours,minutes,seconds);
+    }
+
+    private ConstantDurationValue getConstantDurationValue(SmallPearlParser.DurationConstantContext ctx) {
+        Integer hours = 0;
+        Integer minutes = 0;
+        Double seconds = 0.0;
+
+        if (ctx.hours() !=  null) {
+           hours = (Integer.valueOf(ctx.hours().IntegerConstant().toString()) % 24);
+        }
+        
+        if (ctx.minutes()!= null) {
+           minutes = Integer.valueOf(ctx.minutes().IntegerConstant().toString());
+        }
+        
+        if (ctx.seconds() != null && ctx.seconds().floatingPointConstant() != null) {
+        	String s = ctx.seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString();
+            seconds = Double.valueOf(ctx.seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+        }
+
+        if (hours < 0 || minutes < 0 || minutes > 59) {
+            throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+
+        return new ConstantDurationValue(hours,minutes,seconds);
+    }
 
     @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {
@@ -1718,7 +1767,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         TypeFixed type = new TypeFixed(Defaults.FIXED_LENGTH);
         ASTAttribute expressionResult = new ASTAttribute(type);
         m_ast.put(ctx, expressionResult);
-
+        if (ctx.expression() != null) {
+           visit(ctx.expression());
+        }
         return null;
     }
 

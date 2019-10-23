@@ -3425,7 +3425,16 @@ implements SmallPearlVisitor<ST> {
 			if (c.expression() != null) {
 				st.add("after", getExpression(c.expression()));
 			}
+		}  else if (ctx.startCondition() instanceof SmallPearlParser.StartConditionWHENContext) {
+			SmallPearlParser.StartConditionWHENContext c = (SmallPearlParser.StartConditionWHENContext) ctx
+					.startCondition();
+			st.add("Condition", "WHEN");
+		    st.add("when",getUserVariable(c.ID().toString()));
+			if (c.expression() != null) {
+				st.add("after", getExpression(c.expression()));
+			}
 		}
+
 
 		if (ctx.frequency() != null) {
 			SmallPearlParser.FrequencyContext c = ctx.frequency();
@@ -3499,6 +3508,11 @@ implements SmallPearlVisitor<ST> {
 			if (c.expression() != null) {
 				st.add("after", getExpression(c.expression()));
 			}
+		}else if (ctx.startCondition() instanceof SmallPearlParser.StartConditionWHENContext) {
+			SmallPearlParser.StartConditionWHENContext c = (SmallPearlParser.StartConditionWHENContext) ctx
+					.startCondition();
+			st.add("Condition", "WHEN");
+			st.add("when",getUserVariable(c.ID().toString()));
 		}
 
 		if (ctx.priority() != null) {
@@ -3527,7 +3541,13 @@ implements SmallPearlVisitor<ST> {
 			if (c.expression() != null) {
 				st.add("after", getExpression(c.expression()));
 			}
+		} else if (ctx.startCondition() instanceof SmallPearlParser.StartConditionWHENContext) {
+			SmallPearlParser.StartConditionWHENContext c = (SmallPearlParser.StartConditionWHENContext) ctx
+					.startCondition();
+			st.add("Condition", "WHEN");
+			st.add("when",getUserVariable(c.ID().toString()));
 		}
+
 
 		return st;
 	}
@@ -3712,14 +3732,14 @@ implements SmallPearlVisitor<ST> {
 			stmt.add("paramlist",
 					visitOpen_parameterlist(ctx.open_parameterlist()));
 
-			/* obsolte: semantic analsyis enshures <= 1 IDF
+			/* obsolete: semantic analsyis enshures <= 1 IDF
 			ArrayList<String> idfFilenames = getIdfFilenames(ctx
 					.open_parameterlist());
 
 			if (idfFilenames.size() > 1) {
 				throw new NotSupportedFeatureException("open_statement",
 						ctx.start.getLine(), ctx.start.getCharPositionInLine(),
-						"OPEN: Mulitple IDF not supported");
+						"OPEN: Mulitiple IDF not supported");
 			}
 
 			if (idfFilenames.size() == 1) {
@@ -5512,9 +5532,61 @@ implements SmallPearlVisitor<ST> {
 	@Override
 	public ST visitSizeofExpression(SmallPearlParser.SizeofExpressionContext ctx) {
 		ST st = m_group.getInstanceOf("SIZEOF");
-		st.add("operand", visit(ctx.getChild(1)));
-		return st;
+		if (ctx.expression()!= null) {
+			ASTAttribute attr = m_ast.lookup(ctx.expression());
+			if (attr.getVariable() != null) {
+
+				VariableEntry ve = attr.getVariable();
+				String name =  ve.getName();
+				if ( ve.getType() instanceof TypeArray) {
+					st.add("operand","data_"+name);
+				} else {
+					st.add("operand",getUserVariable(name));
+				}
+			}
+		} else if (ctx.simpleType() != null) {
+			String typeName="";
+			if (ctx.simpleType().typeInteger()!=null) {
+				long length = Defaults.FIXED_LENGTH;
+				if (ctx.simpleType().typeInteger().mprecision()!= null) {
+					String s = ctx.simpleType().typeInteger().mprecision().integerWithoutPrecision().getText();
+					length = Integer.parseInt(ctx.simpleType().typeInteger().mprecision().integerWithoutPrecision().getText());
+				}
+				typeName = "pearlrt::Fixed<"+length+">";
+			} else if (ctx.simpleType().typeDuration()!=null) {
+				typeName = "pearlrt::Duration";
+			} else if (ctx.simpleType().typeTime()!=null) {
+				typeName = "pearlrt::Clock";
+			} else if (ctx.simpleType().typeFloatingPointNumber() != null) {
+				long length = Defaults.FLOAT_PRECISION;
+				if (ctx.simpleType().typeFloatingPointNumber().IntegerConstant() != null ) {
+					length =Integer.parseInt(ctx.simpleType().typeFloatingPointNumber().IntegerConstant().toString());
+				}
+				typeName = "pearlrt::Float<"+length+">";
+
+			} else if (ctx.simpleType().typeBitString() != null) {
+				long length = Defaults.BIT_LENGTH;
+				if (ctx.simpleType().typeBitString().IntegerConstant() != null) {
+					length = Integer.parseInt(ctx.simpleType().typeBitString().IntegerConstant().toString());
+				}
+				typeName = "pearlrt::BitString<"+length+">";
+			} else if (ctx.simpleType().typeCharacterString() != null) {
+				long length = Defaults.CHARACTER_LENGTH;
+				if (ctx.simpleType().typeCharacterString().IntegerConstant() != null) {
+					length = Integer.parseInt(ctx.simpleType().typeCharacterString().IntegerConstant().toString());
+				}
+				typeName = "pearlrt::Character<"+length+">";
+				
+			} else {
+				// emergency -- set compiler internal type --> cause c++ errors
+				typeName = ctx.simpleType().getText().toString();
+			}
+	
+		st.add("operand",typeName);
 	}
+	//st.add("operand", visit(ctx.getChild(1)));
+	return st;
+}
 
 	@Override
 	public ST visitEntierExpression(SmallPearlParser.EntierExpressionContext ctx) {

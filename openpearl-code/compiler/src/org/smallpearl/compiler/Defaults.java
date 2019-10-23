@@ -48,4 +48,8 @@ public class Defaults  {
     public static final int DEFAULT_ARRAY_LWB        = 1;
 
     public static final int LOOP_INDEX_LENGTH        = 15;
+    
+    public static final int LOWEST_PRIORITY			= 255;
+    public static final int BEST_PRIORITY			= 1;
+    
 }
