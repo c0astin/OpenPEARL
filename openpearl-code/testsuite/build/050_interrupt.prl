@@ -19,7 +19,7 @@ PROBLEM;
 SPC stdOut DATION OUT SYSTEM ALPHIC ;
 DCL con DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdOut);
 
-SPC ctrlc INTERRUPT;
+!SPC ctrlc INTERRUPT;
 ! extern pearlrt::Interrupt * _ctrlc ;
 SPC int1 INTERRUPT;
 SPC int2 INTERRUPT;
@@ -33,30 +33,21 @@ DCL t3Counter FIXED INIT(0);
 
 T1: TASK MAIN;
 
+
     OPEN con;
+    FOR i TO 10 REPEAT
+       PUT i TO con BY F(3), SKIP;
+    END;
     ENABLE int1;
     ENABLE int2;
 
     WHEN int1 ACTIVATE T2 PRIO 10;
-/*
-__cpp__(
-	"_T2.activate(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,	"
-        "          pearlrt::Prio(10),					"
-        "          pearlrt::Clock(),					"
-        "          pearlrt::Duration(),					"
-        "          pearlrt::Duration(),					"
-        "          pearlrt::Clock(),					"
-        "          pearlrt::Duration(),					"
-        "          _int1);						"
-);
-*/
-
     TRIGGER int1;
     AFTER 0.5 SEC RESUME;
     TO 5 REPEAT 
        TRIGGER int2;
-       PUT NOW, '*** t1 triggered' TO con BY T(13,1), X, A, SKIP;
-       AFTER .5 SEC RESUME;
+       PUT NOW, '*** int2 triggered' TO con BY T(13,1), X, A, SKIP;
+       AFTER 0.5 SEC RESUME;
     END;
     t2KeepRunning := '0'B1;
     TRIGGER int2;
@@ -73,8 +64,6 @@ __cpp__(
     ! remove all schedules for T2
     PREVENT T2;
    
-    ! emergency shutdown of T2
-    CONTINUE T2;
 !....................
 
 
@@ -82,20 +71,6 @@ __cpp__(
        ! T3 Schedule ist nach 5+4.5 sec vorbei, nachdem der Int 
        ! ausgeloest wurde --> nach 10 s
     WHEN int1 AFTER 5 SEC ALL 1 SEC DURING 4.5 SEC ACTIVATE T3 PRIO 30;
-/*
-__cpp__(
-	"_T3.activate(me, pearlrt::Task::PRIO | "
-       "    pearlrt::Task::AFTER | pearlrt::Task::ALL | pearlrt::Task::DURING |"
-       "     pearlrt::Task::WHEN,		"
-       "           pearlrt::Prio(30),		"
-       "           pearlrt::Clock(),		"
-       "           pearlrt::Duration(5.0),	"
-       "           pearlrt::Duration(1.0),	"
-       "           pearlrt::Clock(),		"
-       "           pearlrt::Duration(4.5),	"
-       "           _int1);			"
-);
-*/
     AFTER 0.5 SEC RESUME;
     PUT NOW, '*** trigger int1 for T3 - T3 should start in 5 sec' TO con
         BY T(13,1), X, A , SKIP;
@@ -124,26 +99,21 @@ END;
 T2: TASK;
     t2_run = '1'B1;
     WHILE t2KeepRunning REPEAT
-    WHEN int2 CONTINUE;
-/*
-__cpp__(
-	"me->cont(me, pearlrt::Task::WHEN,			"
-        "         pearlrt::Prio(), pearlrt::Clock(),		"
-        "         pearlrt::Duration(), pearlrt::Duration(),	"
-        "         pearlrt::Clock(), pearlrt::Duration(),	"
-        "         _int2);					"
-);
-*/
+! this delay is necessary to avoid duplicate triggers - this must be solved 
+! in the runtime system
+! if the dalay is preset, the program doies not end
+       AFTER 0.1 SEC RESUME;
+       WHEN int2 CONTINUE;
        SUSPEND;
        t2Counter := t2Counter + 1;
-PUT NOW,'T2: counter=', t2Counter TO con BY T(13,1), X, A, F(6), SKIP;
+       PUT NOW,'T2: counter=', t2Counter TO con BY T(13,1), X, A, F(6), SKIP;
     END;
-PUT '*** t2 terminated' TO con BY A, SKIP;
+    PUT '*** t2 terminated' TO con BY A, SKIP;
 END;
 
 T3: TASK;
        t3Counter := t3Counter + 1;
-PUT NOW,'T3: counter=', t3Counter TO con BY T(13,1),X,A, F(6), SKIP;
+       PUT NOW,'T3: counter=', t3Counter TO con BY T(13,1),X,A, F(6), SKIP;
 END;
 
 MODEND;

@@ -18,7 +18,6 @@
  
 DONOTBUILD= 030_signals 031_signalsInduce  \
 	043_switch \
-	110_sizeof \
 	151_array_procParam \
 	224_bit_slice \
 	300_float_dcl \
@@ -26,7 +25,6 @@ DONOTBUILD= 030_signals 031_signalsInduce  \
 	850_ref_decl
 
 DONOTRUN=000_empty \
-	050_interrupt \
 	450_struct_dcl \
         703_userdation_dcl \
 	704_dation_open \
