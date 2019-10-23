@@ -78,12 +78,12 @@ public class TypeDation extends TypeDefinition {
 
     public String toString() {
     	String s=this.getName()+" ";
-    	if (m_isDeclaration) s+= " (DCL) ";
-    	else s += " (SPC) ";
+    	//if (m_isDeclaration) s+= " (DCL) ";
+    	//else s += " (SPC) ";
     	if (m_in) s += "IN";
     	if (m_out) s += "OUT";
     	if (m_systemDation) s+= " SYSTEM";
-    	else s+= " (userdation)";
+    	//else s+= " (userdation)";
     	if (m_alphic) s+=" ALPHIC";
     	if (m_basic) s+=" BASIC";
     	if (m_typeOfTransmission!= null) {
@@ -96,7 +96,7 @@ public class TypeDation extends TypeDefinition {
     	if (m_dimension2>=0) s+= ","+m_dimension2;
     	if (m_dimension3>=0) s+= "," +m_dimension3;
     	if (m_dimension1>= 0) s+= ")";
-    	s += " (numberOfDimensions="+getNumberOfDimensions()+")";
+    	// s += " (numberOfDimensions="+getNumberOfDimensions()+")";
     	if (m_tfu) s+= " TFU";
     	if (m_cyclic) s+= " CYCLIC";
     	else s+= " NOCYCL";
