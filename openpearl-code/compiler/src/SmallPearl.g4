@@ -1188,7 +1188,7 @@ startCondition
     :
       'AFTER'   expression                                      # startConditionAFTER
     | 'AT'      expression                                      # startConditionAT
-    | 'WHEN'    ID  ( 'AFTER' expression)?  frequency?          # startConditionWHEN
+    | 'WHEN'    ID  ( 'AFTER' expression)?                      # startConditionWHEN
     ;
 
 
@@ -2116,7 +2116,7 @@ expression
     | op='TANH' expression                                  # tanhExpression
     | op='ABS' expression                                   # absExpression
     | op='SIGN' expression                                  # signExpression
-    | op='SIZEOF' expression                                # sizeofExpression
+    | op='SIZEOF' ( expression | simpleType )               # sizeofExpression
     | op='NOT' expression                                   # notExpression
     | op='TOBIT' expression                                 # TOBITExpression
     | op='TOFIXED' expression                               # TOFIXEDExpression
