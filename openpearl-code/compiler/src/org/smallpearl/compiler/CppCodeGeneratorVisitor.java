@@ -5459,7 +5459,7 @@ implements SmallPearlVisitor<ST> {
 		if (op.getType() instanceof TypeFixed) {
 			int precision = ((TypeFixed) op.getType()).getPrecision();
 			if (precision > Defaults.FLOAT_SHORT_PRECISION) {
-				precision = Defaults.FIXED_MAX_LENGTH;
+				precision = Defaults.FLOAT_LONG_PRECISION;
 			} else {
 				precision = Defaults.FLOAT_SHORT_PRECISION;
 			}
@@ -5474,7 +5474,7 @@ implements SmallPearlVisitor<ST> {
 		if (op.getType() instanceof TypeFixed) {
 			int precision = ((TypeFixed) op.getType()).getPrecision();
 			if (precision > Defaults.FLOAT_SHORT_PRECISION) {
-				precision = Defaults.FIXED_MAX_LENGTH;
+				precision = Defaults.FLOAT_LONG_PRECISION;
 			} else {
 				precision = Defaults.FLOAT_SHORT_PRECISION;
 			}
