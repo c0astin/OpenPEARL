@@ -794,12 +794,14 @@ namespace pearlrt {
                          Prio prio,
                          Clock at,
                          Duration after,
-                         Duration all,
-                         Clock until,
-                         Duration during,
                          Interrupt* when) {
       Fixed<15> p;
+
+
       // struct itimerspec its;
+
+      // these conditions are not allowed
+      condition = condition & ~(ALL | UNTIL | DURING);
 
       Log::info("%s: continue task %s: condition=%d",
                 me->getName(), name, condition);
@@ -810,8 +812,7 @@ namespace pearlrt {
       }
 
 
-      if (condition & (AT | AFTER | WHEN | ALL | DURING | UNTIL)) {
-         testScheduleCondition(condition, during, all); // may throw exception
+      if (condition & (AT | AFTER | WHEN )) {
 
          // test calculation of system priority.
          // the return value is discarded - just test if calculation
@@ -837,6 +838,11 @@ namespace pearlrt {
          }
 
          try {
+            // create dummy parameters for the call of set()
+    	    Duration all;
+            Clock until;
+            Duration during;
+
             schedContinueData.taskTimer->set(condition, at, after, all,
                                              until, during);
          } catch (...) {

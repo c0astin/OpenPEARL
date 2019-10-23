@@ -375,12 +375,6 @@ namespace pearlrt {
                	   In case the current time is larger than the
                    given time, the action will occur the next day
            \param after the duration which must pass before the action occurs
-           \param all the duration between two continuations
-           \param until the time which defines the last continuation of
-                  the task.  In case the current time
-               	is larger than the given time it will be interpreted
-          	as the next day
-           \param during the time while the actions may occur
            \param when the (external) interrupt which starts the schedule
 
            \throws InternalTaskSignal if the required system ressources
@@ -391,9 +385,6 @@ namespace pearlrt {
                 Prio prio = Prio(),
                 Clock at = 0.0,
                 Duration after = 0.0,
-                Duration all = 0.0,
-                Clock until = 0.0,
-                Duration during = 0.0,
                 Interrupt* when = 0);
 
       /**
