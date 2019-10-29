@@ -671,9 +671,18 @@ listOfFormalParameters :
 ////////////////////////////////////////////////////////////////////////////////
 
 formalParameter :
-    ( ID | '(' ID ( ',' ID)* ')' ) assignmentProtection? parameterType passIdentical?
+    ( ID | '(' ID ( ',' ID)* ')' ) virtualDimensionList? assignmentProtection? parameterType passIdentical?
     ;
 
+virtualDimensionList :
+	'('  commas  ')'
+       | '(' ')'
+       | '()'
+	;
+
+commas:
+	',' (',')*
+	;
 
 assignmentProtection :
     'INV'
@@ -1667,26 +1676,18 @@ readStatement :
 	(  'BY' position ( ',' position )* )? ';'
     ;
 
-// this rule is not acepted by ANTLR
 index_array :
 	expression
 	;
 
-// 2019-10-11 r.m.
-// array slice added to grammar in PUT/GET/READ/WRITE
-// but the definition of the '('(index',')* index':'index)
-// causes lot of errors when compiling the grammar
-ArraySlice :
+arraySlice :
     ID '(' 
-//	index_array (',' index_array )* ':' index_array 
-//	index_array  ':' index_array 
-//	expression ':' expression
+	index_array (',' index_array )* ':' index_array 
+	index_array  ':' index_array 
+	expression ':' expression
 	')' 
     ;
 
-// read_from :
-//    'FROM' ID
-//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Position ::=

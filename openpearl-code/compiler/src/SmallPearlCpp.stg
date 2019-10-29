@@ -1864,8 +1864,14 @@ FormalParameters(FormalParameter) ::= <%
 <FormalParameter: {param|<param>} ; separator=", ">
 %>
 
-FormalParameter(id,type,assignmentProtection,passIdentical) ::= <%
-<if(assignmentProtection)>const <endif><type>  <if(passIdentical)>&<endif><user_argument(id)>
+FormalParameter(id,type,assignmentProtection,passIdentical,isArray,isArrayDescriptor) ::= <%
+<if(isArrayDescriptor)>pearlrt::Array* ad<user_argument(id)><else>
+<if(isArray)>
+  <if(assignmentProtection)>const <endif><type>  * data<user_argument(id)>
+<else>
+   <if(assignmentProtection)>const <endif><type>  <if(passIdentical)>&<endif> <user_argument(id)>
+<endif>
+<endif>
 %>
 
 ParameterType(type) ::= <%
