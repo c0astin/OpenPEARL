@@ -98,4 +98,8 @@ public class ProcedureEntry extends SymbolTableEntry {
 
     public SymbolTable scope;
     private  SmallPearlParser.ProcedureDeclarationContext m_ctx;
+
+	public LinkedList<FormalParameter> getFormalParameters() {
+		return m_formalParameters;
+	}
 }

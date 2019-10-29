@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.smallpearl.compiler.SmallPearlParser.*;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Collections;
@@ -60,6 +61,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 	private LinkedList<ArrayDescriptor> m_listOfArrayDescriptors;
 
 	private TypeDefinition m_type;
+	
 	private ParseTreeProperty<SymbolTable> m_symboltablePerContext = null;
 	private ConstantPool m_constantPool = null;
 
@@ -136,6 +138,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 					visitStructVariableDeclaration((SmallPearlParser.StructVariableDeclarationContext) c);
 				} else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
 					visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c);
+				} else if (c instanceof SmallPearlParser.InterruptSpecificationContext) {
+					visitInterruptSpecification((SmallPearlParser.InterruptSpecificationContext)c);
 				}
 			}
 		}
@@ -197,13 +201,26 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
 		SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().toString());
 		if (entry != null) {
+			// --------------
+			// the context is the complete procedure - it would be good to have the ID as a separate
+			// context to limit the message to the pure ID
+			// for this - we must change the grammar towards 
+			//     procName ':' 'PROC' ....   instead of 
+			//     ID       ':' 'PROC' 
+			// ------
+			//ErrorStack.enter(ctx,"definition");
+			//ErrorStack.add("'"+ctx.ID().toString()+"' is multiple defined");
+			//ErrorStack.warn("previous definition was at "+((ModuleEntry)(entry)).getSourceLineNo()+":"+
+			//		((ModuleEntry)(entry)).getCharPositionInLine());
+			//ErrorStack.leave();
+			//return null;   // abort treatment
 			throw new DoubleDeclarationException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
 		}
 
 		ProcedureEntry procedureEntry = new ProcedureEntry(ctx.ID().getText(), formalParameters, resultType, globalId, ctx, this.m_currentSymbolTable);
 		this.m_currentSymbolTable = this.m_currentSymbolTable.newLevel(procedureEntry);
 
-		/* Enter formal parameter into the local symboltable of this procedure */
+		/* Enter formal parameter into the local symbol table of this procedure */
 		if (formalParameters != null && formalParameters.size() > 0) {
 			for (FormalParameter formalParameter : formalParameters) {
 				VariableEntry param = new VariableEntry(formalParameter.name, formalParameter.type, formalParameter.assignmentProtection, formalParameter.m_ctx, null);
@@ -239,13 +256,23 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 	private Void getFormalParameter(LinkedList<FormalParameter> listOfFormalParameters, SmallPearlParser.FormalParameterContext ctx) {
 		if (ctx != null) {
 			for (int i = 0; i < ctx.ID().size(); i++) {
-				FormalParameter formalParameter = null;
-				String name = null;
+				int nbrDimensions = 0;  // default to scalar value
+ 				String name = null;
 				Boolean assignmentProtection = false;
 				Boolean passIdentical = false;
-
+				
 				name = ctx.ID(i).getText();
-
+				
+				if (ctx.virtualDimensionList() != null) {
+					
+					// get the number of array dimensions
+					// we count the ',' symbols and add 1,since 0 ',' is dimension 1
+					nbrDimensions = 1;
+					if (ctx.virtualDimensionList().commas() != null) {
+					   nbrDimensions += ctx.virtualDimensionList().commas().getChildCount() ;
+					}				
+				}
+				
 				if (ctx.assignmentProtection() != null) {
 					assignmentProtection = true;
 				}
@@ -255,7 +282,19 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 				}
 
 				getParameterType(ctx.parameterType());
-				listOfFormalParameters.add(new FormalParameter(name, m_type, assignmentProtection, ctx));
+				
+				if (nbrDimensions> 0) {
+					TypeArray array = new TypeArray();
+					array.setBaseType(m_type);
+					for (i=0; i<nbrDimensions; i++) {
+					    // the real dimensions limits are passed via array descriptor	
+					   array.addDimension(new ArrayDimension()); 
+					   
+					}
+					m_type = array;
+				}
+				
+				listOfFormalParameters.add(new FormalParameter(name, m_type, assignmentProtection, passIdentical, ctx));
 			}
 		}
 
@@ -1569,6 +1608,40 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 		ErrorStack.leave();
 
 		/* ---------------- */
+		return null;
+	}
+	
+	/**
+	 * add specified interrupts to the symbol table 
+	 * maybe this would be better placed in SymbolTableVisitor
+	 * 
+	 */
+	@Override
+	public Void visitInterruptSpecification(
+			SmallPearlParser.InterruptSpecificationContext ctx) {
+
+		boolean isGlobal= false;
+
+		if (m_verbose > 0) {
+			System.out
+			.println("Semantic: Check RT-statements: visitInterruptSpecification");
+		}
+
+		if (ctx.globalAttribute()!= null) {
+			isGlobal = true;
+		}
+
+		for (int i = 0; i < ctx.ID().size(); i++) {
+			String iName = ctx.ID(i).toString();
+			SymbolTableEntry se = m_currentSymbolTable.lookup(iName);
+			if (se != null) {
+				ErrorStack.add("'"+iName+"' already defined as "+se.toString());
+			} else {
+				InterruptEntry ie = new InterruptEntry(iName, isGlobal, ctx);
+				m_currentSymbolTable.enter(ie);
+			}
+
+		}
 		return null;
 	}
 

@@ -11,7 +11,7 @@ public class VariableEntry extends SymbolTableEntry {
     private Boolean           m_hasAssigmentProtection;
     private Boolean           m_loopControlVariable;
     private Initializer       m_initializer;
-
+    private boolean 		  m_passByIdent;  // used for formal proc parameters
     
     public VariableEntry()
     {
@@ -41,6 +41,8 @@ public class VariableEntry extends SymbolTableEntry {
         this.m_hasAssigmentProtection = false;
         this.m_loopControlVariable = false;
         this.m_initializer = null;
+        this.m_passByIdent = false;
+
     }
 
     
@@ -52,6 +54,8 @@ public class VariableEntry extends SymbolTableEntry {
         this.m_hasAssigmentProtection = hasAssigmentProtection;
         this.m_loopControlVariable = false;
         this.m_initializer = initializer;
+        this.m_passByIdent = false;
+
     }
 
     public String toString(int level) {
@@ -103,7 +107,11 @@ public class VariableEntry extends SymbolTableEntry {
         return m_ctx.getStart().getCharPositionInLine();
     }
     private org.antlr.v4.runtime.ParserRuleContext m_ctx;
-    public TypeDefinition getType() { return m_type; }
+    public org.antlr.v4.runtime.ParserRuleContext getCtx() {
+		return m_ctx;
+	}
+
+	public TypeDefinition getType() { return m_type; }
  //   public ParserRuleContext getConstantCtx() { return m_constantCtx; }
     public Boolean getAssigmentProtection() { return m_hasAssigmentProtection; }
 
@@ -115,4 +123,5 @@ public class VariableEntry extends SymbolTableEntry {
     public Boolean getLoopControlVariable() { return m_loopControlVariable; }
 
     public Initializer getInitializer() { return m_initializer; }
+
 }

@@ -38,7 +38,7 @@ public class ASTAttribute {
     public ConstantValue m_constant;
     public ConstantSlice m_slice;
 
-    ASTAttribute(TypeDefinition type) {
+    public ASTAttribute(TypeDefinition type) {
         m_type = type;
         m_readonly = false;
         m_variable = null;

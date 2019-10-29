@@ -62,7 +62,7 @@ public class InterruptEntry extends SymbolTableEntry {
 
     public String toString(int level) {
      
-        return  indentString(level) + super.toString(level) + "irupt" +
+        return  indentString(level) + super.toString(level) + "INTERRUPT" +
         		(m_isGlobal ? " global" : "") ;
                 
     }

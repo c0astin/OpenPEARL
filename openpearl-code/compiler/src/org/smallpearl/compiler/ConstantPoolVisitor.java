@@ -244,21 +244,37 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         } else if (ctx.fixedConstant() != null) {
             try {
                 long value;
-                int precision = m_currentSymbolTable.lookupDefaultFixedLength();
+                int precision;
+                
+                if (m_currFixedLength != null) {
+                    precision = m_currFixedLength;
+                } 
+                
+                value = Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
+                int precisionOfLiteral = Long.toBinaryString(Math.abs(value)).length();
+                if ( value <  0) {
+                    precisionOfLiteral++;
+                }
+                
+                // calculate the precision
+                // the language report states:
+                //  the precision is ether explicitly given  
+                //  or the precision is derived from the length statement
+                
+                // the constant fixed expression evaluator is not affected by this
+                // treatment. ConstantFixedExpressions are calculated only upon the
+                // current values
+                
+                precision = precisionOfLiteral; // = m_currentSymbolTable.lookupDefaultFixedLength();
 
                 if (ctx.fixedConstant().fixedNumberPrecision() != null) {
                     precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
-                } else {
-                    if (m_currFixedLength != null) {
-                        precision = m_currFixedLength;
-                    }
                 }
-
-                value = Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
-                precision = Long.toBinaryString(Math.abs(value)).length();
-
-                if ( value <  0) {
-                    precision++;
+                
+                if (precisionOfLiteral > precision) {
+                	ErrorStack.enter(ctx,"constant");
+                	ErrorStack.add("value too large for precision "+ precision);
+                	ErrorStack.leave();
                 }
 
                 m_constantPool.add(new ConstantFixedValue(value, precision));

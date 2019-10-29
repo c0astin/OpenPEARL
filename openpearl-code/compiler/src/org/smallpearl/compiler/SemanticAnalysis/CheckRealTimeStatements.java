@@ -181,39 +181,7 @@ public class CheckRealTimeStatements extends SmallPearlBaseVisitor<Void> impleme
 		return null;
 	}
 
-	/**
-	 * add specified interrupts to the symbol table 
-	 * maybe this would be better placed in SymbolTableVisitor
-	 * 
-	 */
-	@Override
-	public Void visitInterruptSpecification(
-			SmallPearlParser.InterruptSpecificationContext ctx) {
 
-		boolean isGlobal= false;
-
-		if (m_verbose > 0) {
-			System.out
-			.println("Semantic: Check RT-statements: visitInterruptSpecification");
-		}
-
-		if (ctx.globalAttribute()!= null) {
-			isGlobal = true;
-		}
-
-		for (int i = 0; i < ctx.ID().size(); i++) {
-			String iName = ctx.ID(i).toString();
-			SymbolTableEntry se = m_currentSymbolTable.lookup(iName);
-			if (se != null) {
-				ErrorStack.add("'"+iName+"' already defined as "+se.toString());
-			} else {
-				InterruptEntry ie = new InterruptEntry(iName, isGlobal, ctx);
-				m_currentSymbolTable.enter(ie);
-			}
-
-		}
-		return null;
-	}
 
 	/**
      taskStart: startCondition? frequency? 'ACTIVATE' ID  priority? ';'   ;

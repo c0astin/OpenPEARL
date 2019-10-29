@@ -32,6 +32,7 @@ package org.smallpearl.compiler;
 import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
+import org.stringtemplate.v4.ST;
 
 import java.util.LinkedList;
 
@@ -105,17 +106,31 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         } else if (ctx.ID() != null) {
             SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
 
+            String s = ctx.toStringTree();
             if ( entry == null ) {
                 throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
-
+            if (ctx.expression()!= null) {
+            	// if we have array indices or function parameters -- we must visit them to get the ASTAttributes
+            	visitChildren(ctx);
+            }
             if (entry instanceof VariableEntry) {
                 ASTAttribute expressionResult;
 
                 VariableEntry variable = (VariableEntry) entry;
 
                 if ( variable.getType() instanceof TypeArray ) {
-                    expressionResult = new ASTAttribute(((TypeArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
+                	// expressionResult should be TypeArray if no indices are given
+                	if (ctx.expression().size()==0) {
+                	   TypeArray ta = (TypeArray) variable.getType();
+                	   
+                	   expressionResult = new ASTAttribute(ta);
+                	   expressionResult.m_readonly = variable.getAssigmentProtection();
+                	   expressionResult.m_variable=variable;
+                	   
+                	} else {
+                	   expressionResult = new ASTAttribute(((TypeArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
+                	}
                 }
                 else {
                     expressionResult = new ASTAttribute(variable.getType(), variable.getAssigmentProtection(), variable);
@@ -1496,11 +1511,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         } else if (ctx.fixedConstant() != null) {
             try {
                 int precision = m_currentSymbolTable.lookupDefaultFixedLength();
-
-                if ( ctx.fixedConstant().fixedNumberPrecision() != null) {
-                    precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
-                }
-
+                
                 if (m_currFixedLength != null ) {
                     precision = m_currFixedLength;
                 }
@@ -1516,6 +1527,12 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                 }
 
                 m_calculateRealFixedLength = false;
+
+                if ( ctx.fixedConstant().fixedNumberPrecision() != null) {
+                    precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
+                }
+
+
                 ASTAttribute expressionResult = new ASTAttribute(new TypeFixed(precision), true);
                 m_ast.put(ctx, expressionResult);
             } catch (NumberFormatException ex) {

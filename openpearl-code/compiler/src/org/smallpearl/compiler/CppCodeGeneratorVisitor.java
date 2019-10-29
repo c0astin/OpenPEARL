@@ -29,9 +29,11 @@
 
 package org.smallpearl.compiler;
 
+import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
 import org.smallpearl.compiler.SmallPearlParser.*;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
@@ -2439,13 +2441,21 @@ implements SmallPearlVisitor<ST> {
 					ST st = m_group.getInstanceOf("assignment_statement");
 					ST array = m_group.getInstanceOf("ArrayLHS");
 
-					ArrayDescriptor array_descriptor = new ArrayDescriptor(
-							((TypeArray) lhs_type).getNoOfDimensions(),
-							((TypeArray) lhs_type).getDimensions());
+					/*
+					ParserRuleContext c= variable.getCtx();
+					if (c instanceof FormalParameterContext) {
+						array.add("descriptor","ad_"+variable.getName());
+					} else {
+						ArrayDescriptor array_descriptor = new ArrayDescriptor(
+								((TypeArray) lhs_type).getNoOfDimensions(),
+								((TypeArray) lhs_type).getDimensions());
 
-					array.add("name", variable.getName());
-					array.add("descriptor", array_descriptor.getName());
-
+						array.add("descriptor", array_descriptor.getName());
+					}
+					*/
+					array.add("descriptor", getArrayDescriptor(variable));
+					
+					array.add("name",variable.getName());
 					ST indices = m_group.getInstanceOf("ArrayIndices");
 
 					indices.add("indices", visitIndices(ctx.indices()));
@@ -2635,6 +2645,7 @@ implements SmallPearlVisitor<ST> {
 				functionCall.add("callee", ctx.ID().getText());
 
 				if (ctx.expression() != null && ctx.expression().size() > 0) {
+			
 					functionCall.add("ListOfActualParameters",
 							getActualParameters(ctx.expression()));
 				}
@@ -2649,11 +2660,22 @@ implements SmallPearlVisitor<ST> {
 				} else if (variable.getType() instanceof TypeArray) {
 					ST array = m_group.getInstanceOf("ArrayLHS");
 
-					TypeArray type = (TypeArray) variable.getType();
-					ArrayDescriptor array_descriptor = new ArrayDescriptor(
-							type.getNoOfDimensions(), type.getDimensions());
-					array.add("name", variable.getName());
-					array.add("descriptor", array_descriptor.getName());
+					ParserRuleContext c= variable.getCtx();
+					if (c instanceof FormalParameterContext) {
+						array.add("descriptor","ad_"+variable.getName());
+					} else {
+						TypeArray type = (TypeArray) variable.getType();
+						ArrayDescriptor array_descriptor = new ArrayDescriptor(
+								type.getNoOfDimensions(), type.getDimensions());
+						array.add("descriptor", array_descriptor.getName());
+					}
+					array.add("name",variable.getName());
+					
+//					TypeArray type = (TypeArray) variable.getType();
+//					ArrayDescriptor array_descriptor = new ArrayDescriptor(
+//							type.getNoOfDimensions(), type.getDimensions());
+//					array.add("name", variable.getName());
+//					array.add("descriptor", array_descriptor.getName());
 					array.add("indices", getIndices(ctx.expression()));
 
 					expression.add("id", array);
@@ -3149,26 +3171,43 @@ implements SmallPearlVisitor<ST> {
 		} else if (ctx.fixedConstant() != null) {
 			try {
 				long value;
-				int precision = m_currentSymbolTable.lookupDefaultFixedLength();
-
-				if (ctx.fixedConstant().fixedNumberPrecision() != null) {
-					precision = Integer.parseInt(ctx.fixedConstant()
-							.fixedNumberPrecision().IntegerConstant()
-							.toString());
-				} else {
-					if (m_currFixedLength != null) {
-						precision = m_currFixedLength;
-					}
-				}
-
+				int precision;
 				String s = ctx.fixedConstant().IntegerConstant().toString();
 
 				value = Long.parseLong(ctx.fixedConstant().IntegerConstant()
 						.toString());
+			
 				precision = Long.toBinaryString(Math.abs(value)).length();
 				if (value < 0) {
 					precision++;
 				}
+				
+				if (ctx.fixedConstant().fixedNumberPrecision() != null) {
+					int explicitPrecision = Integer.parseInt(ctx.fixedConstant()
+							.fixedNumberPrecision().IntegerConstant()
+							.toString());
+					if (explicitPrecision < precision){
+						ErrorStack.enter(ctx,"integer constant");
+						ErrorStack.add("value exceeds precision");
+						ErrorStack.leave();
+					}
+				} else {
+					if (m_currFixedLength != null) {
+						if (precision > m_currFixedLength) {
+							ErrorStack.enter(ctx,"integer constant");
+							ErrorStack.add("value exceeds current LENGTH");
+							ErrorStack.leave();
+						}
+						//precision = m_currFixedLength;
+					}
+				}
+
+				
+				//int precision = m_currentSymbolTable.lookupDefaultFixedLength();
+
+				
+				
+				
 				if (m_map_to_const) {
 					ConstantFixedValue fixed_value = new ConstantFixedValue(
 							value, precision);
@@ -3201,11 +3240,14 @@ implements SmallPearlVisitor<ST> {
 						VariableEntry var = (VariableEntry) entry;
 
 						if (var.getType() instanceof TypeArray) {
+							/*
 							TypeArray typeArray = (TypeArray) var.getType();
 							ArrayDescriptor array_descriptor = new ArrayDescriptor(
 									typeArray.getNoOfDimensions(),
 									typeArray.getDimensions());
 							st.add("descriptor", array_descriptor.getName());
+							*/
+							st.add("descriptor", getArrayDescriptor(var));
 							st.add("index", getExpression(ctx.expression(0))
 									.render());
 						} else {
@@ -3248,11 +3290,14 @@ implements SmallPearlVisitor<ST> {
 						VariableEntry var = (VariableEntry) entry;
 
 						if (var.getType() instanceof TypeArray) {
+							/*
 							TypeArray typeArray = (TypeArray) var.getType();
 							ArrayDescriptor array_descriptor = new ArrayDescriptor(
 									typeArray.getNoOfDimensions(),
 									typeArray.getDimensions());
 							st.add("descriptor", array_descriptor.getName());
+							*/
+							st.add("descriptor", getArrayDescriptor(var));
 							st.add("index", 1);
 						} else {
 							throw new TypeMismatchException(ctx.getText(),
@@ -3292,13 +3337,16 @@ implements SmallPearlVisitor<ST> {
 				if (entry != null) {
 					if (entry instanceof VariableEntry) {
 						VariableEntry var = (VariableEntry) entry;
-
+						
 						if (var.getType() instanceof TypeArray) {
+							/*
 							TypeArray typeArray = (TypeArray) var.getType();
 							ArrayDescriptor array_descriptor = new ArrayDescriptor(
 									typeArray.getNoOfDimensions(),
 									typeArray.getDimensions());
 							st.add("descriptor", array_descriptor.getName());
+							*/
+							st.add("descriptor", getArrayDescriptor(var));							
 							st.add("index", getExpression(ctx.expression(0))
 									.render());
 						} else {
@@ -3341,11 +3389,14 @@ implements SmallPearlVisitor<ST> {
 						VariableEntry var = (VariableEntry) entry;
 
 						if (var.getType() instanceof TypeArray) {
+							/*
 							TypeArray typeArray = (TypeArray) var.getType();
 							ArrayDescriptor array_descriptor = new ArrayDescriptor(
 									typeArray.getNoOfDimensions(),
 									typeArray.getDimensions());
 							st.add("descriptor", array_descriptor.getName());
+							*/
+							st.add("descriptor", getArrayDescriptor(var));
 							st.add("index", 1);
 						} else {
 							throw new TypeMismatchException(ctx.getText(),
@@ -5331,15 +5382,68 @@ implements SmallPearlVisitor<ST> {
 			SmallPearlParser.ListOfActualParametersContext ctx) {
 		ST stmt = m_group.getInstanceOf("ActualParameters");
 
+		// let's see if we must pass an array
 		if (ctx.expression() != null) {
 			for (int i = 0; i < ctx.expression().size(); i++) {
-				ST param = m_group.getInstanceOf("ActualParameters");
-				param.add("ActualParameter", getExpression(ctx.expression(i)));
-				stmt.add("ActualParameter", param);
+				addParameter2ST(stmt, ctx.expression(i));
 			}
 		}
-
 		return stmt;
+	}
+
+	/**
+	 * add an expression result to the actual parameter list for
+	 * a functionCall or a procedureCall
+	 *  
+	 * In case of the given expression is an array, we must add
+	 * an array descriptor and the array data
+	 * The array descriptor is derived from the variable entry of the expression.
+	 * If the array is already a formal parameter, we pass the formal array descriptor.
+	 * If is is an array variable, the descriptor is derived from the arraqy diemnsions
+	 * 
+	 * 
+	 * @param stmt the ST context which holds all parameters
+	 * @param expression the current parameter
+	 */
+	private void addParameter2ST(ST stmt, ExpressionContext expression) {
+		boolean treatArray = false;
+		SymbolTableEntry se = null;
+		ASTAttribute attr = null;
+		
+		attr = m_ast.lookup(expression);
+		if (attr != null) {
+			if (attr.getType() instanceof TypeArray) {
+				treatArray = true;
+			}
+			if (attr.getVariable()!= null) {
+			   String var = attr.getVariable().getName();
+			   se = m_currentSymbolTable.lookup(var);
+			}
+		} 
+
+
+		if (treatArray) {
+			TypeArray ta = (TypeArray)(((VariableEntry)se).getType());
+
+			ST param = m_group.getInstanceOf("ActualParameters");
+			/*
+			ArrayDescriptor array_descriptor = new ArrayDescriptor(
+					ta.getNoOfDimensions(),
+					ta.getDimensions());						
+			param.add("ActualParameter",array_descriptor.getName());
+			*/
+			param.add("ActualParameter",getArrayDescriptor((VariableEntry)se));
+	
+			stmt.add("ActualParameter",param);
+			param = m_group.getInstanceOf("ActualParameters");
+			param.add("ActualParameter","data_"+attr.getVariable().getName());
+			stmt.add("ActualParameter",param);	
+		} else {
+			// scalar type
+			ST param = m_group.getInstanceOf("ActualParameters");
+			param.add("ActualParameter", getExpression(expression));
+			stmt.add("ActualParameter", param);
+		}
 	}
 
 	private ST getActualParameters(
@@ -5348,9 +5452,10 @@ implements SmallPearlVisitor<ST> {
 
 		if (parameters != null) {
 			for (int i = 0; i < parameters.size(); i++) {
-				ST param = m_group.getInstanceOf("ActualParameters");
-				param.add("ActualParameter", getExpression(parameters.get(i)));
-				stmt.add("ActualParameter", param);
+				addParameter2ST(stmt, parameters.get(i));
+//				ST param = m_group.getInstanceOf("ActualParameters");
+//				param.add("ActualParameter", getExpression(parameters.get(i)));
+//				stmt.add("ActualParameter", param);
 			}
 		}
 
@@ -6219,10 +6324,29 @@ implements SmallPearlVisitor<ST> {
 
 		if (ctx != null) {
 			for (int i = 0; i < ctx.ID().size(); i++) {
+				boolean treatArray = false;
 				ST param = m_group.getInstanceOf("FormalParameter");
+
+				// test if we have an parameter of type array
+				SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID(i).toString());
+				if (se instanceof VariableEntry) {
+					VariableEntry ve = (VariableEntry)se;
+					if (ve.getType() instanceof TypeArray) {
+						treatArray = true;
+					}
+				}
+
+				if (treatArray) {
+					param.add("id", ctx.ID(i).toString());
+					param.add("isArrayDescriptor","");
+					String s = param.toString();
+					st.add("FormalParameter",param);
+					param = m_group.getInstanceOf("FormalParameter");
+					param.add("isArray","");
+				} 
 				param.add("id", ctx.ID(i));
 				param.add("type", visitParameterType(ctx.parameterType()));
-
+		
 				if (ctx.assignmentProtection() != null) {
 					param.add("assignmentProtection", "");
 				}
@@ -6232,6 +6356,7 @@ implements SmallPearlVisitor<ST> {
 				}
 
 				st.add("FormalParameter", param);
+
 			}
 		}
 
@@ -6247,6 +6372,8 @@ implements SmallPearlVisitor<ST> {
 				st.add("type", visitSimpleType(ctx.simpleType()));
 			} else if (c instanceof SmallPearlParser.TypeReferenceContext) {
 				st.add("type", visitTypeReference(ctx.typeReference()));
+			} else {
+				System.err.println("CppCodeGen:visitParameterType: untreated type "+c.getClass().getCanonicalName());
 			}
 		}
 
@@ -6935,6 +7062,36 @@ implements SmallPearlVisitor<ST> {
 		// | 'NIL'
 		return null;
 
+	}
+	
+	/**
+	 * create an array descriptor according the definition of the variable 'array'
+	 * 
+	 * if the variable is a formal parameter, we create an anyonymous array descrptor
+	 * according the formal parameter's name
+	 * x: PROC( abc() FIXED --> data is storedat FIXED* data_abc
+	 *                          array descriptor is named 'Array* ad_abc'
+	 *                          
+	 * if the variable is a real array, the array descriptor is named according the 
+	 * arrays dimension
+	 *  
+	 * @note: array slices are not treated 
+	 * 
+	 * @param array
+	 * @return
+	 */
+	private String getArrayDescriptor(VariableEntry var) {
+		ParserRuleContext c= var.getCtx();
+		String s=null;
+		if (c instanceof FormalParameterContext) {
+			s = "ad_"+var.getName();
+		} else {
+			TypeArray type = (TypeArray) var.getType();
+			ArrayDescriptor array_descriptor = new ArrayDescriptor(
+					type.getNoOfDimensions(), type.getDimensions());
+			s = array_descriptor.getName();
+		}	
+		return s;
 	}
 
 }

@@ -38,7 +38,12 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 import org.smallpearl.compiler.Exception.IllegalCharacterException;
 import org.smallpearl.compiler.Exception.NotSupportedTypeException;
+import org.smallpearl.compiler.SymbolTable.BoltEntry;
+import org.smallpearl.compiler.SymbolTable.InterruptEntry;
+import org.smallpearl.compiler.SymbolTable.SemaphoreEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
+import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
+import org.smallpearl.compiler.SymbolTable.TaskEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 import org.stringtemplate.v4.ST;
 
@@ -535,5 +540,29 @@ public class CommonUtils {
             return ""; // empty extension
         }
         return name.substring(lastIndexOf);
+    }
+    
+    public static String getTypeOf(SymbolTableEntry se) {
+    	
+    	String type=null;
+    	
+    	if (se instanceof VariableEntry) {
+    		VariableEntry ve = (VariableEntry)se;
+    			type = ve.getType().toString();
+    	
+    	} else if (se instanceof SemaphoreEntry){
+    		type = "SEMA";
+    	} else if  (se instanceof BoltEntry){
+    		type = "BOLT";
+    	} else if (se instanceof TaskEntry) {
+    		type = "TASK";
+    	} else if (se instanceof InterruptEntry) {
+    		type = "INTERRUPT";
+    		
+    	} else {
+    		System.err.println("CommonUtils.getTypeOf: untreated type "+se.getName());
+    	}
+    	
+    	return type;
     }
 }
