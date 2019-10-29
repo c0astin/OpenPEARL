@@ -16,8 +16,16 @@ p1: PROC;
    RETURN; 
 END;
 
+p2: PROC (x FIXED IDENT) RETURNS(FIXED);
+   RETURN(x+1);
+END;
+
 ! make automatic test happy
 main: TASK MAIN;
+
+   DCL (x,y) FIXED;
+   x = 2;
+   y = p2(x);
 END;
 
 MODEND;
