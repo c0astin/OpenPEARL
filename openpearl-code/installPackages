@@ -33,8 +33,6 @@ then
    SystemKnown=1
 fi
 
-grep "PRETTY_NAME=\"Linux Mint 18.3\"" /etc/os-release >/dev/null
-rc=$?
 grep "PRETTY_NAME=\"Ubuntu 17.10\"" /etc/os-release >/dev/null
 rc=$?
 if [ $rc -eq 0 ]
@@ -50,6 +48,31 @@ then
       AptPackageList+=" astyle graphviz doxygen"
       AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
       AptPackageList+=" texlive-latex-extra"
+   fi
+   SystemKnown=1
+fi
+
+grep "PRETTY_NAME=\"openSUSE Leap 15.1\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: openSUSE Leap 15.1 "
+   AptPackageList+=" gcc gcc-c++ make"
+   AptPackageList+=" java-1_8_0-openjdk-devel"
+   AptPackageList+=" flex libncurses5"
+   AptPackageList+=" expat libexpat1"
+   AptPackageList+=" libncurses5 ncurses5-devel "
+   AptPackageList+=" zlib-devel "
+   AptPackageList+=" i2c-tools libi2c0-devel"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
+      AptPackageList+=" texlive-latex-extra"
+
+      echo "Error: Developer version not working on openSUSE, because of missing the follwing packages:"
+      echo "       texlive-lang-english texlive-generic-extra texlive-latex-extra"
+      exit 1
    fi
    SystemKnown=1
 fi
