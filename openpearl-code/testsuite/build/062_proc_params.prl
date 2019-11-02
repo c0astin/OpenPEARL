@@ -66,15 +66,13 @@ proc_008: PROC (p1 FIXED) RETURNS(FIXED(8));
 	AFTER 1 SEC RESUME;   !! access of me-pointer
 	p1 := 8;
 !	p1 := 299;    ! this must produce a fixed overflow in the return
-	RETURN(p1);
+	RETURN(8);
 END;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 proc_009: PROC RETURNS(FIXED);
     DCL x FIXED INIT(42);
-!    RETURN 42;    ! does not compile
     RETURN (42);
-!    RETURN x;     ! does not compile
     RETURN (x);
 END;
 
