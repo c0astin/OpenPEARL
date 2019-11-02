@@ -35,7 +35,7 @@ import org.stringtemplate.v4.STGroup;
 
 public class TypeDuration extends TypeDefinition {
 
-    TypeDuration() {
+    public TypeDuration() {
         super("DURATION");
     }
 

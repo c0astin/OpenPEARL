@@ -32,6 +32,8 @@ package org.smallpearl.compiler;
 
 import java.util.ArrayList;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+
 public class TypeArray extends TypeDefinition {
     private TypeDefinition m_baseType;
     private ArrayList<ArrayDimension> m_dimensions;

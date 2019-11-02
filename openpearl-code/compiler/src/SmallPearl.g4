@@ -2017,15 +2017,16 @@ typology :
 
 dimension1
     : '*'                      # dimension1Star
-    | IntegerConstant          # dimension1Integer
+//    | IntegerConstant          # dimension1Integer
+    | constantFixedExpression          # dimension1Integer
     ;
 
 dimension2
-    : IntegerConstant          # dimension2Integer
+    : constantFixedExpression          # dimension2Integer
     ;
 
 dimension3
-    : IntegerConstant          # dimension3Integer
+    : constantFixedExpression          # dimension3Integer
     ;
 
 tfu
@@ -2053,7 +2054,7 @@ dimensionAttribute
     ;
 
 boundaryDenotation
-    : IntegerConstant ( ':' IntegerConstant )?
+    : constantFixedExpression ( ':' constantFixedExpression )?
     ;
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -105,6 +105,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
             if (entry == null) {
                 throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
+            visitChildren(ctx);    // get constants also for array indices in expressions and proc parameters
         } else if (ctx.semaTry() != null) {
             visit(ctx.semaTry());
         } else if (ctx.stringSlice() != null) {

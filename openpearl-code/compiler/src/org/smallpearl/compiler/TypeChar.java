@@ -36,12 +36,12 @@ import org.stringtemplate.v4.STGroup;
 public class TypeChar extends TypeDefinition {
     private int m_size;
 
-    TypeChar() {
+    public TypeChar() {
         super("CHAR");
         this.m_size = Defaults.CHARACTER_LENGTH;
     }
 
-    TypeChar(int size) {
+    public TypeChar(int size) {
         super("CHAR");
         this.m_size = size;
     }

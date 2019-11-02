@@ -32,10 +32,16 @@ package org.smallpearl.compiler.SemanticAnalysis;
 import java.util.LinkedList;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
 import org.smallpearl.compiler.SmallPearlParser.FormatPositionContext;
+import org.smallpearl.compiler.SmallPearlParser.ProcedureBodyContext;
+import org.smallpearl.compiler.SmallPearlParser.ProcedureDeclarationContext;
+import org.smallpearl.compiler.SmallPearlParser.ResultAttributeContext;
+import org.smallpearl.compiler.SmallPearlParser.TaskDeclarationContext;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.FormalParameter;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
@@ -48,9 +54,11 @@ import org.smallpearl.compiler.SymbolTable.VariableEntry;
 /**
  * @author mueller
  *
- * check if all referenced system dations are specified 
- * verify compatibility of system dation attributes with user dation attributes
- * create entry in symbol table with the dations attributes
+ * check if the formal parameters are passed correctly
+ *   - arrays, dations and realtime elements by IDENT,
+ *    
+ * check if the result type is supported (currently no TYPE and no REF)
+ * 
  * 
  */
 public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
@@ -64,7 +72,9 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     private SymbolTable m_currentSymbolTable;
     private ModuleEntry m_module;
     private AST m_ast = null;
-	private TypeDefinition m_type;
+	private TypeDefinition m_typeOfReturns;
+	private TypeDefinition m_typeOfReturnExpression;
+	
 	private ParseTreeProperty<SymbolTable> m_symboltablePerContext = null;
 
     public CheckProcedureDeclaration(String sourceFileName,
@@ -156,7 +166,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 		if (m_verbose > 0) {
 			System.out.println("SymbolTableVisitor: visitProcedureDeclaration");
 		}
-		
+		ErrorStack.enter(ctx,"PROC");
 /*
 		for (ParseTree c : ctx.children) {
 			if (c instanceof SmallPearlParser.ResultAttributeContext) {
@@ -190,13 +200,322 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 			}
 		}
 
-	//	this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
-
+		// reset the attribute before visitChildren()
+		// m_typeOfReturnExpression conatins the type of the last RETURN statement
+		// in the procedure body
+		m_typeOfReturns = null;
+		m_typeOfReturnExpression = null;
+		
 		visitChildren(ctx);
 
+		if (m_typeOfReturns != null) {
+			// check last statement of function to be RETURN
+			// this is easier to implement as to enshure that all paths of control
+			// meet a RETURN(..) statemen
+			ProcedureBodyContext b = ctx.procedureBody();
+			int last = b.statement().size();
+			if (last == 0) {
+				ErrorStack.add("must end with RETURN ("+m_typeOfReturns.toString()+")");
+			} else {
+				SmallPearlParser.StatementContext lastStmnt = b.statement(last-1); 
+				if (lastStmnt.unlabeled_statement() != null) {
+					if (lastStmnt.unlabeled_statement().returnStatement() == null) {
+						ErrorStack.add("must end with RETURN ("+m_typeOfReturns.toString()+")");
+
+					}
+				}
+			}
+		}
 		this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+		ErrorStack.leave();
 		return null;
 	}
+    
+    @Override
+    public Void visitResultAttribute (SmallPearlParser.ResultAttributeContext ctx) {
+    	ErrorStack.enter(ctx.resultType(),"RETURNS");
+    	m_typeOfReturns = null;
+    	if (ctx.resultType().simpleType() != null) {
+        	m_typeOfReturns = CommonUtils.getTypeDefinitionForSimpleType(ctx.resultType().simpleType());
+    	} else if (ctx.resultType().typeReference() != null) {
+    		ErrorStack.add("type reference not supported ");
+    	} else if (ctx.resultType().ID() != null) {
+    		ErrorStack.add("TYPE not supported");
+    	}
+    	ErrorStack.leave();
+    	return null;
+    }
+    
+    @Override
+    public Void visitCallStatement(SmallPearlParser.CallStatementContext ctx) {
+        if (m_debug) {
+            System.out.println( "Semantic: Check ProcedureCall: visitCallStatement");
+        }
+        
+        ErrorStack.enter(ctx,"CALL");
+        String procName = ctx.ID().getText();
+        ProcedureEntry proc = null;
+        
+        SymbolTableEntry entry = m_currentSymbolTable.lookup(procName);
+
+        if (entry != null) {
+        	if (entry instanceof ProcedureEntry) {
+        		if (m_debug)
+        			System.out.println("Semantic: Check ProcedureCall: found call in expression");
+        		proc = (ProcedureEntry) entry;
+        		TypeDefinition resultType = proc.getResultType();
+
+        		if ( resultType != null ) {
+        			ErrorStack.add("result discarded");
+        		}
+        	} else {
+        		ErrorStack.add("'"+ procName+"' is not of type PROC  -- is of type "+ CommonUtils.getTypeOf(entry));
+        	}
+        } else {
+        	ErrorStack.add("'"+ procName+"' is not defined");
+        }
+       
+        if (proc != null && ctx.listOfActualParameters() != null ) {
+        	
+        	int nbrActualParameters = ctx.listOfActualParameters().expression().size();
+        	int nbrFormatParameters = proc.getFormalParameters().size();
+        	
+        	if (nbrActualParameters != nbrFormatParameters) {
+        		ErrorStack.add("number of parameters mismatch: expected "+nbrFormatParameters + " -- got "+nbrActualParameters);
+        	} else {
+        		// check each parameter type
+        		for (int i=0; i<nbrActualParameters; i++) {
+     		       ErrorStack.enter(ctx.listOfActualParameters().expression(i),"param");
+        		   checkParameter(proc, ctx.listOfActualParameters().expression(i), proc.getFormalParameters().get(i));
+        		   ErrorStack.leave();
+        		}
+        	}
+        
+        	// really necessary?
+        	//      visitListOfActualParameters(ctx.listOfActualParameters());
+        }
+
+        ErrorStack.leave();
+        
+        return null;
+    }
+    @Override 
+    public Void visitReturnStatement(SmallPearlParser.ReturnStatementContext ctx) {
+    	RuleContext parent = ctx;
+    	ErrorStack.enter(ctx,"RETURN");
+
+    	while (!(parent instanceof ProcedureDeclarationContext) &&
+    			!(parent instanceof TaskDeclarationContext)) {
+    		parent = parent.parent;
+    	}
+    	if (parent instanceof TaskDeclarationContext) {
+    		ErrorStack.add("only allowed in PROCEDURE");
+    	} else {
+
+    		ResultAttributeContext resultAttribute = ((ProcedureDeclarationContext)parent).resultAttribute();
+    		if (resultAttribute == null && ctx.expression() != null) {
+    			ErrorStack.add("illegal without RETURNS in declaration");
+    		} else if (ctx.expression() != null) {
+    			// we have an expression at RETURN
+    			/*
+    			TypeDefinition resultType = null;
+    			if (resultAttribute.resultType().simpleType() != null) {
+    				resultType = CommonUtils.getTypeDefinitionForSimpleType(resultAttribute.resultType().simpleType());
+    			} else if (resultAttribute.resultType().typeReference() != null) {
+    				ErrorStack.add("typeReference not supported");
+    			} else if (resultAttribute.resultType().ID() != null) {
+    				ErrorStack.add("TYPE definitions not supported");
+    			}
+    			*/
+    			TypeDefinition exprType = m_ast.lookupType(ctx.expression());
+
+    			// can be removed if all possible types are detected
+    			Boolean typeIsCompatible = true;
+    			if (m_typeOfReturns != null) {
+    				if (m_typeOfReturns instanceof TypeFixed && exprType instanceof TypeFixed) {
+    					if (((TypeFixed)m_typeOfReturns).getPrecision() < ((TypeFixed) exprType).getPrecision()) {
+    						typeIsCompatible = false;
+    					}
+    				} else if (m_typeOfReturns instanceof TypeFloat && exprType instanceof TypeFloat) {
+    					if (((TypeFloat)m_typeOfReturns).getPrecision() < ((TypeFloat) exprType).getPrecision()) {
+    						typeIsCompatible = false;
+    					}
+    				} else if (m_typeOfReturns instanceof TypeBit && exprType instanceof TypeBit) {
+    					if (((TypeBit)m_typeOfReturns).getPrecision() < ((TypeBit) exprType).getPrecision()) {
+    						typeIsCompatible = false;
+    					}
+    				} else if (m_typeOfReturns instanceof TypeChar && exprType instanceof TypeChar) {
+    					if (((TypeChar)m_typeOfReturns).getSize() < ((TypeChar) exprType).getSize()) {
+    						typeIsCompatible = false;
+    					}
+    				} else {
+    					typeIsCompatible = false;
+    				}
+
+    				if (!typeIsCompatible) {
+    					ErrorStack.add("expression does not fit to RETURN type: expected "+m_typeOfReturns.toString()+" -- got "+exprType.toString());
+    				}
+    				m_typeOfReturnExpression = exprType;
+    			}
+    		}
+    	}
+    	ErrorStack.leave();
+    	return null;
+    }
+
+
+    private void checkParameter(ProcedureEntry proc,
+    		ExpressionContext expression, FormalParameter formalParameter) {
+    	// check types - must be equal if IDENT is set
+    	//               formalParameter may be larger if IDENT ist NOT SET
+    	// 
+    	// check INV  on actual parameter enforces INV on formal parameter
+    	// check IDENT must be set for array
+
+    	// analyse expression
+    	TypeDefinition actualType = null;
+    	boolean actualIsInv = false;
+    	boolean actualIsArray = false;
+    	int actualArrayDimensions = 0;
+    	boolean passByIdent = false;
+    	TypeDefinition formalBaseType = null;
+    	TypeDefinition actualBaseType = null;
+    	    	
+    	VariableEntry   actualVariableEntry = null;
+    	ASTAttribute attr = m_ast.lookup(expression);
+
+    	if (attr != null) {
+    		actualType = attr.getType();
+    		actualIsInv = attr.isReadOnly();
+
+    		actualVariableEntry = attr.getVariable();
+
+    		if (actualType instanceof TypeArray) {
+    		    actualArrayDimensions = ((TypeArray) actualType).getNoOfDimensions();
+    		    actualBaseType = ((TypeArray) actualType).getBaseType();
+    		    actualIsArray = true;	
+    		}
+    	}
+
+    	if (formalParameter.passIdentical) {
+    		// actual parameter must be LValue
+    		if (actualVariableEntry == null) {
+    			ErrorStack.add("constants may not be passed by IDENT");
+    			return;  // do no further checks on this parameter
+    		} else {
+    			if( actualIsInv && !formalParameter.getAssigmentProtection()) {
+    				ErrorStack.add("pass INV data as non INV parameter");
+    			}
+    		}
+    	}
+    	if (formalParameter.getType() instanceof TypeArray) {
+    		formalBaseType = ((TypeArray)formalParameter.getType()).getBaseType();
+    	} else {
+    		formalBaseType = formalParameter.getType();
+    	}
+
+    	// compare array parameters
+    	if (actualIsArray) {
+    		if (formalParameter.getType() instanceof TypeArray) {
+    			// both are arrays --> nbr of dimensions and baseTypes must fit 
+    			TypeArray ta = ((TypeArray)formalParameter.getType());
+    			if (actualArrayDimensions != ta.getNoOfDimensions()) {
+    				ErrorStack.add("dimension mismatch: expect "+ta.getNoOfDimensions()+
+    						" -- got "+actualArrayDimensions);
+    			} else 	if (!actualBaseType.equals(ta.getBaseType())) {
+    				String s = actualType.getName();
+    				s = actualType.toString();
+    				ErrorStack.add("type mismatch: expect ARRAY of " +((TypeArray)formalParameter.getType()).getBaseType() +
+    						" -- got ARRAY of "+actualType.toString());
+    			}
+    		} else {
+    			ErrorStack.add("expected scalar type");
+    		}
+    	} else {
+    		if (formalParameter.getType() instanceof TypeArray) {
+    			ErrorStack.add("expected array type");
+    		} else {
+    			// treat both scalar types
+
+    			// easy stuff first -- check base types
+    			// if they fit we must check length for FIXED,FLOAT,CHAR,BIT
+    			if (!formalBaseType.getName().equals(actualType.getName())) {
+    				ErrorStack.add("type mismatch: expected "+formalBaseType.toString()+
+    						"  -- got "+actualType.toString());
+    			} else if (formalParameter.getType() instanceof TypeFixed) {
+
+    				TypeFixed fp = (TypeFixed)formalParameter.getType();
+    				TypeFixed ap = (TypeFixed)actualType;
+
+    				if (formalParameter.passIdentical == false && fp.getPrecision().intValue() < ap.getPrecision().intValue()) {
+    					ErrorStack.add("type mismatch: expected (not larger than) " + formalParameter.toString() + " -- got "+actualType.toString());
+    				}
+    				if (formalParameter.passIdentical && fp.getPrecision().intValue() != ap.getPrecision().intValue()) {
+    					ErrorStack.add("type mismatch: expected " + formalParameter.toString() + " -- got "+actualType.toString());
+    				}
+    			} else if (formalParameter.getType() instanceof TypeFloat && actualType instanceof TypeFixed) {
+    				// implicit FIXED->FLOAT conversion is ok if NOT IDENT
+    				TypeFloat fp = (TypeFloat)formalParameter.getType();
+    				TypeFixed ap = (TypeFixed)actualType;
+
+    				if (formalParameter.passIdentical == false && fp.getPrecision().intValue() < ap.getPrecision().intValue()) {
+    					ErrorStack.add("type mismatch: expected (not larger than) " + formalParameter.toString() + " -- got "+actualType.toString());
+    				}
+    				if (formalParameter.passIdentical) {
+    					ErrorStack.add("type mismatch: expected " + formalParameter.toString() + " -- got "+actualType.toString());
+    				}
+    			} else if (formalParameter.getType() instanceof TypeBit) {
+
+    				TypeBit fp = (TypeBit)formalParameter.getType();
+    				TypeBit ap = (TypeBit)actualType;
+
+    				if (formalParameter.passIdentical == false && fp.getPrecision().intValue() < ap.getPrecision().intValue()) {
+    					ErrorStack.add("type mismatch: expected (not larger than) " + formalParameter.toString() + " -- got "+actualType.toString());
+    				}
+    				if (formalParameter.passIdentical && fp.getPrecision().intValue() != ap.getPrecision().intValue()) {
+    					ErrorStack.add("type mismatch: expected " + formalParameter.toString() + " -- got "+actualType.toString());
+    				}
+    			} else if (formalParameter.getType() instanceof TypeChar) {
+
+    				TypeChar fp = (TypeChar)formalParameter.getType();
+    				TypeChar ap = (TypeChar)actualType;
+
+    				if (formalParameter.passIdentical == false && fp.getSize() < ap.getSize()) {
+    					ErrorStack.add("type mismatch: expected (not larger than) " + formalParameter.toString() + " -- got "+actualType.toString());
+    				}
+    				if (formalParameter.passIdentical && fp.getSize() != ap.getSize()) {
+    					ErrorStack.add("type mismatch: expected " + formalParameter.toString() + " -- got "+actualType.toString());
+    				}
+    			}
+    		}
+    	}	
+
+    }
+    
+    
+	@Override
+	public Void visitPrimaryExpression(
+			SmallPearlParser.PrimaryExpressionContext ctx) {
+
+		if (ctx.ID() != null) {
+		    SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
+
+			if (entry instanceof org.smallpearl.compiler.SymbolTable.ProcedureEntry) {
+				org.smallpearl.compiler.SymbolTable.ProcedureEntry proc = (org.smallpearl.compiler.SymbolTable.ProcedureEntry)(entry);
+				
+				if (ctx.expression() != null && ctx.expression().size() > 0) {
+					for (int i=0; i< ctx.expression().size(); i++) {
+			   		   ErrorStack.enter(ctx.expression(i),"param");
+				       checkParameter(proc, ctx.expression(i), proc.getFormalParameters().get(i));
+				       ErrorStack.leave();
+					}
+				}
+			
+			}
+		}
+		return null;
+	}
+	
 
 /*
  	private TypeDefinition getResultAttribute(SmallPearlParser.ResultAttributeContext ctx) {
@@ -217,40 +536,40 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 	}
 */
 	private void checkFormalParameter(FormalParameter formalParameter) {
-		
-				String name = formalParameter.name;
-				Boolean assignmentProtection = formalParameter.assignmentProtection;
+				TypeDefinition type;
+				String name = formalParameter.getName();
+				Boolean assignmentProtection = formalParameter.getAssigmentProtection();
 				Boolean passIdentical = formalParameter.passIdentical;
 
-				m_type = formalParameter.type;
-				ParserRuleContext ctx = formalParameter.m_ctx;
+				type = formalParameter.getType();
+				ParserRuleContext ctx = formalParameter.getCtx();
 				
-				if ((!passIdentical) && m_type instanceof TypeArray) {
+				if ((!passIdentical) && type instanceof TypeArray) {
 					ErrorStack.enter(ctx,"param");
 					ErrorStack.add("arrays must passed by IDENT");
 					ErrorStack.leave();
 				}
-				if ((!passIdentical) && m_type instanceof TypeSemaphore) {
+				if ((!passIdentical) && type instanceof TypeSemaphore) {
 					ErrorStack.enter(ctx,"param");
 					ErrorStack.add("SEMA must passed by IDENT");
 					ErrorStack.leave();
 				}
-				if ((!passIdentical) && m_type instanceof TypeBolt) {
+				if ((!passIdentical) && type instanceof TypeBolt) {
 					ErrorStack.enter(ctx,"param");
 					ErrorStack.add("BOLT must passed by IDENT");
 					ErrorStack.leave();
 				}
-				if ((!passIdentical) && m_type instanceof TypeDation) {
+				if ((!passIdentical) && type instanceof TypeDation) {
 					ErrorStack.enter(ctx,"param");
 					ErrorStack.add("DATION must passed by IDENT");
 					ErrorStack.leave();
 				}				
-				if ((!passIdentical) && m_type instanceof TypeInterrupt) {
+				if ((!passIdentical) && type instanceof TypeInterrupt) {
 					ErrorStack.enter(ctx,"param");
 					ErrorStack.add("INTERRUPT must passed by IDENT");
 					ErrorStack.leave();
 				}				
-				if ((!passIdentical) && m_type instanceof TypeSignal) {
+				if ((!passIdentical) && type instanceof TypeSignal) {
 					ErrorStack.enter(ctx,"param");
 					ErrorStack.add("SIGNAL must passed by IDENT");
 					ErrorStack.leave();

@@ -29,7 +29,6 @@
 
 package org.smallpearl.compiler;
 
-import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
 import org.smallpearl.compiler.SmallPearlParser.*;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
@@ -5975,17 +5974,23 @@ implements SmallPearlVisitor<ST> {
 				st.add("DIM1", -1);
 				st.add("DIM1Unlimited", 1);
 			} else if (c instanceof SmallPearlParser.Dimension1IntegerContext) {
-				st.add("DIM1",
-						Integer.valueOf(((SmallPearlParser.Dimension1IntegerContext) c)
-								.IntegerConstant().toString()));
+				int d1 = CommonUtils.getConstantFixedExpression(((SmallPearlParser.Dimension1IntegerContext) c)
+						.constantFixedExpression(),m_currentSymbolTable);
+				st.add("DIM1",d1);
+//						Integer.valueOf(((SmallPearlParser.Dimension1IntegerContext) c)
+//								.constantFixedExpression();
 			} else if (c instanceof SmallPearlParser.Dimension2IntegerContext) {
-				st.add("DIM2",
-						Integer.valueOf(((SmallPearlParser.Dimension2IntegerContext) c)
-								.IntegerConstant().toString()));
+				int d2 = CommonUtils.getConstantFixedExpression(((SmallPearlParser.Dimension2IntegerContext) c)
+						.constantFixedExpression(),m_currentSymbolTable);
+				st.add("DIM2",d2);
+//						Integer.valueOf(((SmallPearlParser.Dimension2IntegerContext) c)
+//								.IntegerConstant().toString()));
 			} else if (c instanceof SmallPearlParser.Dimension3IntegerContext) {
-				st.add("DIM3",
-						Integer.valueOf(((SmallPearlParser.Dimension3IntegerContext) c)
-								.IntegerConstant().toString()));
+				int d3 = CommonUtils.getConstantFixedExpression(((SmallPearlParser.Dimension3IntegerContext) c)
+						.constantFixedExpression(),m_currentSymbolTable);
+				st.add("DIM3",d3);
+//						Integer.valueOf(((SmallPearlParser.Dimension3IntegerContext) c)
+//								.IntegerConstant().toString()));
 			}
 		}
 
@@ -6697,7 +6702,7 @@ implements SmallPearlVisitor<ST> {
 	 * create code for CONVERT .. TO
 	 * we can use lot of the PUT-stuff.
 	 * We must remove the "dation" tag from the string template,
-	 * since the code template creates an own element for the converions
+	 * since the code template creates an own element for the conversions
 	 */
 	@Override
 	public ST visitConvertToStatement(

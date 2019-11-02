@@ -36,12 +36,12 @@ import org.stringtemplate.v4.STGroup;
 public class TypeFloat extends TypeDefinition {
     private int m_precision;
 
-    TypeFloat() {
+    public TypeFloat() {
         super("FLOAT");
         this.m_precision = Defaults.FLOAT_PRECISION;
     }
 
-    TypeFloat(int precision) {
+    public TypeFloat(int precision) {
         super("FLOAT");
         this.m_precision = precision;
     }

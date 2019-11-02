@@ -565,4 +565,62 @@ public class CommonUtils {
     	
     	return type;
     }
+    
+
+    // we must know that the expression is really of type ConstantFixedExpression!
+    // this should be guaranteed by the grammar
+	public static int getConstantFixedExpression(SmallPearlParser.ConstantFixedExpressionContext ctx, SymbolTable st) {
+		int verbose=0;
+		boolean debug=false;
+		ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(verbose, debug, st,null, null);
+		ConstantFixedValue constant = (ConstantFixedValue)(evaluator.visit(ctx));
+		return (int)(constant.getValue());
+	}
+
+	
+    public static TypeDefinition getTypeDefinitionForSimpleType(SmallPearlParser.SimpleTypeContext simpleType) {
+    	TypeDefinition td = null;
+		if (simpleType.typeInteger()!= null) {
+		  
+			if (simpleType.typeInteger().mprecision()!= null) {
+			   String s = simpleType.typeInteger().mprecision().integerWithoutPrecision().getText();
+			   int precision = Integer.parseInt(s);
+			   td = new TypeFixed(precision);
+			} else {
+				td = new TypeFixed();
+			}
+		} else if (simpleType.typeFloatingPointNumber()!= null) {
+			if (simpleType.typeFloatingPointNumber().IntegerConstant()!= null) {
+			 String s = simpleType.typeFloatingPointNumber().IntegerConstant().getText();
+			 int precision = Integer.parseInt(s);
+			 td = new TypeFloat(precision);
+			} else {
+				td = new TypeFloat();
+			}
+			
+		} else if (simpleType.typeBitString() != null) {
+			if (simpleType.typeBitString().IntegerConstant() != null) {
+			    String s = simpleType.typeBitString().IntegerConstant().getText();
+			    int precision = Integer.parseInt(s);
+			    td = new TypeBit(precision);
+			} else {
+				td = new TypeBit();
+			}
+		} else if (simpleType.typeCharacterString() != null) {
+			if (simpleType.typeCharacterString().IntegerConstant() != null) {
+			    String s = simpleType.typeCharacterString().IntegerConstant().getText();
+			    int precision = Integer.parseInt(s);
+			    td = new TypeChar(precision);
+			} else {
+				td = new TypeChar();
+			}
+		} else if (simpleType.typeDuration() != null) {
+			td = new TypeDuration();
+		} else if (simpleType.typeTime() != null) {
+			td = new TypeTime();
+		}
+		return td;
+	}
+    
+    
 }

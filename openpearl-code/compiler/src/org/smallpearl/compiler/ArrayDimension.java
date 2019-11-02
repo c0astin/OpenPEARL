@@ -29,22 +29,29 @@
 
 package org.smallpearl.compiler;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+
 
 public class ArrayDimension  {
     private int m_lowerBoundary;
     private int m_upperBoundary;
+    private ParserRuleContext m_ctx;
 
     ArrayDimension() {
         this.m_lowerBoundary = 0;
         this.m_upperBoundary = 0;
     }
 
-    ArrayDimension(int lowerBoundary, int upperBoundary) {
+    ArrayDimension(int lowerBoundary, int upperBoundary, ParserRuleContext ctx) {
         this.m_lowerBoundary = lowerBoundary;
         this.m_upperBoundary = upperBoundary;
+        this.m_ctx = ctx;
     }
 
-
+    public ParserRuleContext getCtx() {
+    	return m_ctx;
+    }
+    
     public String toString() {
         return Integer.toString(this.m_lowerBoundary) + ":" + Integer.toString(this.m_upperBoundary);
     }

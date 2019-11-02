@@ -223,8 +223,9 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 		/* Enter formal parameter into the local symbol table of this procedure */
 		if (formalParameters != null && formalParameters.size() > 0) {
 			for (FormalParameter formalParameter : formalParameters) {
-				VariableEntry param = new VariableEntry(formalParameter.name, formalParameter.type, formalParameter.assignmentProtection, formalParameter.m_ctx, null);
-				this.m_currentSymbolTable.enter(param);
+				//VariableEntry param = new VariableEntry(formalParameter.name, formalParameter.type, formalParameter.assignmentProtection, formalParameter.m_ctx, null);
+				//this.m_currentSymbolTable.enter(param);
+				this.m_currentSymbolTable.enter(formalParameter);
 			}
 		}
 
@@ -697,15 +698,17 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
 	@Override
 	public Void visitBoundaryDenotation(SmallPearlParser.BoundaryDenotationContext ctx) {
-		if (ctx.IntegerConstant().size() == 1 ) {
+		if (ctx.constantFixedExpression().size() == 1 ) {
+			int upb = CommonUtils.getConstantFixedExpression(ctx.constantFixedExpression(0),m_currentSymbolTable);
 			((TypeArray)m_type).addDimension(new ArrayDimension(
-					Defaults.DEFAULT_ARRAY_LWB,
-					Integer.parseInt(ctx.IntegerConstant(0).getText())));
+					Defaults.DEFAULT_ARRAY_LWB, upb,ctx ));
+					//Integer.parseInt(ctx.constantFixedExpression(0).getText())));
 		}
 		else {
-			((TypeArray)m_type).addDimension(new ArrayDimension(
-					Integer.parseInt(ctx.IntegerConstant(0).getText()),
-					Integer.parseInt(ctx.IntegerConstant(1).getText())));
+			int lwb = CommonUtils.getConstantFixedExpression(ctx.constantFixedExpression(0),m_currentSymbolTable);
+			int upb = CommonUtils.getConstantFixedExpression(ctx.constantFixedExpression(1),m_currentSymbolTable);
+			((TypeArray)m_type).addDimension(new ArrayDimension(lwb,upb,ctx));
+
 		}
 
 		return null;
@@ -1564,14 +1567,23 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 		return constant;
 	}
 
-
 	private ConstantValue getConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
-		ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
-		ConstantValue constant = evaluator.visit(ctx.constantFixedExpression());
+        ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
+        ConstantValue constant = evaluator.visit(ctx.constantFixedExpression());
+        
+  		return constant;
+	}
+
+
+	/* moved to CommonUtils
+	 private ConstantFixedValue getConstantFixedExpression(SmallPearlParser.ConstantFixedExpressionContext ctx) {
+	 	ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
+		ConstantFixedValue constant = evaluator.visit(ctx);
 
 		return constant;
 	}
-
+	*/
+	
 	@Override
 	public Void visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
 		LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();

@@ -72,13 +72,13 @@ public class SemanticCheck {
         new CheckDationDeclaration(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckProcedureDeclaration(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckAssignment(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
-        new CheckProcedureCall(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+      
         new CheckCondition(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckSwitchCase(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckRealTimeStatements(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckDeclarationScope(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
-        // CheckRST included into CheckIOStatements
-       // new CheckRST(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        new CheckArrayDeclarationAccess(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+      
         new CheckIOStatements(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
     }
 }

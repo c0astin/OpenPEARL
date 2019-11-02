@@ -1503,7 +1503,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             expressionResult.setConstant(getConstantClockValue(ctx.timeConstant()));
             m_ast.put(ctx, expressionResult);
         } else if (ctx.StringLiteral() != null) {
-            ASTAttribute expressionResult = new ASTAttribute(new TypeChar(), true);
+        	ASTAttribute expressionResult = new ASTAttribute(new TypeChar(CommonUtils.getStringLength(
+        			CommonUtils.removeQuotes(ctx.StringLiteral().getText()))), true);
             m_ast.put(ctx, expressionResult);
         } else if (ctx.BitStringLiteral() != null) {
             ASTAttribute expressionResult = new ASTAttribute(  new TypeBit(CommonUtils.getBitStringLength(ctx.BitStringLiteral().getText())), true);
@@ -1757,8 +1758,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         	}
 
         	SmallPearlParser.ExpressionContext expr = ctx.expression();
-        	visitChildren(ctx);
+        
         }
+    	visitChildren(ctx);
         m_currFixedLength = null;
         
         ErrorStack.leave();

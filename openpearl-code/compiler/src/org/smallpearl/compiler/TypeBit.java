@@ -36,12 +36,12 @@ import org.stringtemplate.v4.STGroup;
 public class TypeBit extends TypeDefinition {
     private int m_precision;
 
-    TypeBit() {
+    public TypeBit() {
         super("BIT");
         this.m_precision = Defaults.BIT_LENGTH;
     }
 
-    TypeBit(int precision) {
+    public TypeBit(int precision) {
         super("BIT");
         this.m_precision = precision;
     }

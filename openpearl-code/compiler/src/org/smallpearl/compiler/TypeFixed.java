@@ -36,12 +36,12 @@ import org.stringtemplate.v4.STGroup;
 public class TypeFixed extends TypeDefinition {
     private int m_precision;
 
-    TypeFixed() {
+    public TypeFixed() {
         super("FIXED");
         this.m_precision = Defaults.FIXED_LENGTH;
     }
 
-    TypeFixed(int precision) {
+    public TypeFixed(int precision) {
         super("FIXED");
         this.m_precision = precision;
     }

@@ -56,7 +56,7 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
         m_constantExpressionEvaluatorVisitor = constantExpressionEvaluatorVisitor;
         m_constantPoolVisitor = constantPoolVisitor;
 
-        m_debug = true;
+        //m_debug = true;
 
         if (m_verbose > 0) {
             System.out.println( "    ConstantFixedExpressionEvaluator");
@@ -73,7 +73,9 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
 
         value = visitChildren(ctx);
 
-        System.out.println("ConstantFixedExpressionEvaluator: value="+value);
+        if (m_debug) {
+           System.out.println("ConstantFixedExpressionEvaluator: value="+value);
+        }
 
         return value;
     }

@@ -11,8 +11,7 @@ public class VariableEntry extends SymbolTableEntry {
     private Boolean           m_hasAssigmentProtection;
     private Boolean           m_loopControlVariable;
     private Initializer       m_initializer;
-    private boolean 		  m_passByIdent;  // used for formal proc parameters
-    
+   
     public VariableEntry()
     {
         super("");
@@ -41,8 +40,18 @@ public class VariableEntry extends SymbolTableEntry {
         this.m_hasAssigmentProtection = false;
         this.m_loopControlVariable = false;
         this.m_initializer = null;
-        this.m_passByIdent = false;
+      
 
+    }
+    public VariableEntry(String name, TypeDefinition type, Boolean hasAssignmentProtection, org.antlr.v4.runtime.ParserRuleContext ctx)
+    {
+        super(name);
+        this.m_ctx = ctx;
+        this.m_type = type;
+        this.m_hasAssigmentProtection = hasAssignmentProtection;
+        this.m_loopControlVariable = false;
+        this.m_initializer = null;
+       
     }
 
     
@@ -54,7 +63,7 @@ public class VariableEntry extends SymbolTableEntry {
         this.m_hasAssigmentProtection = hasAssigmentProtection;
         this.m_loopControlVariable = false;
         this.m_initializer = initializer;
-        this.m_passByIdent = false;
+    
 
     }
 

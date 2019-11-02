@@ -64,7 +64,7 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
         m_constantPoolVisitor = constantPoolVisitor;
         m_properties = new ParseTreeProperty<ConstantValue>();
         m_enterResultinConstantPool = true;
-        m_debug=true;
+      //  m_debug=true;
     }
 
     public ConstantValue lookup(ParserRuleContext ctx) {
@@ -85,6 +85,7 @@ public  class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<V
         if (m_debug) {
             System.out.println("ConstantExpressionEvaluatorVisitor: visitConstantExpression");
         }
+     
 
         if ( ctx.constantFixedExpression() != null ) {
             ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable, this, m_constantPoolVisitor);

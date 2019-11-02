@@ -60,7 +60,7 @@ public class ArrayDescriptor {
             name += "_" + Integer.toString(m_listOfDimensions.get(i).getLowerBoundary());
             name += "_" + Integer.toString(m_listOfDimensions.get(i).getUpperBoundary());
         }
-
+        name = name.replace('-', 'N');  // change negative prefix to 'N'
         return name;
     }
 

@@ -33,7 +33,7 @@ package org.smallpearl.compiler;
 public class TypeTime extends TypeDefinition {
     Double m_value = 0.0;
 
-    TypeTime() {
+    public TypeTime() {
         super("TIME");
 
     }
