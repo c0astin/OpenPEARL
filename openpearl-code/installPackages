@@ -52,6 +52,25 @@ then
    SystemKnown=1
 fi
 
+grep "PRETTY_NAME=\"Ubuntu 19.10\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Ubuntu 19.10 "
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" openjdk-8-jdk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
+   AptPackageList+=" zlib1g-dev"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive-full"
+   fi
+   SystemKnown=1
+fi
+
 grep "PRETTY_NAME=\"openSUSE Leap 15.1\"" /etc/os-release >/dev/null
 rc=$?
 if [ $rc -eq 0 ]
@@ -67,12 +86,7 @@ then
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
-      AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
-      AptPackageList+=" texlive-latex-extra"
-
-      echo "Error: Developer version not working on openSUSE, because of missing the follwing packages:"
-      echo "       texlive-lang-english texlive-generic-extra texlive-latex-extra"
-      exit 1
+      AptPackageList+=" texlive-full"
    fi
    SystemKnown=1
 fi
