@@ -98,9 +98,6 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
               pearlrt::Prio(80),
               pearlrt::Clock(),
               pearlrt::Duration(),
-              pearlrt::Duration(),
-              pearlrt::Clock(),
-              pearlrt::Duration(),
               _ctrlc);
 //  } catch (pearlrt::PriorityNotMapableSignal &s) {
 //     caught = 1;
@@ -416,7 +413,6 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
                pearlrt::Clock(), pearlrt::Duration(0.8), 0);
    TASK5.cont(me, pearlrt::Task::WHEN,
               pearlrt::Prio(), pearlrt::Clock(), pearlrt::Duration(),
-              pearlrt::Duration(), pearlrt::Clock(), pearlrt::Duration(),
               _ctrlc);
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
@@ -438,7 +434,6 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 
    TASK5.cont(me, pearlrt::Task::WHEN,
               pearlrt::Prio(), pearlrt::Clock(), pearlrt::Duration(),
-              pearlrt::Duration(), pearlrt::Clock(), pearlrt::Duration(),
               _ctrlc);
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
@@ -458,9 +453,6 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
               pearlrt::Prio(),
               pearlrt::Clock(),
               pearlrt::Duration(1.0), // after
-              pearlrt::Duration(),
-              pearlrt::Clock(),
-              pearlrt::Duration(),
               _ctrlc);
    me ->resume(pearlrt::Task::AFTER,
                pearlrt::Clock(), pearlrt::Duration(0.1), 0);

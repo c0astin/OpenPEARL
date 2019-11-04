@@ -31,6 +31,7 @@
 #define INTERRUPT_INCLUDED
 
 #include "TaskWhenLinks.h"
+#include "Mutex.h"
 
 namespace pearlrt {
    /**
@@ -77,6 +78,7 @@ namespace pearlrt {
       TaskWhenLinks * headContinueTaskQueue;
       TaskWhenLinks * headActivateTaskQueue;
       bool         isEnabled;
+      Mutex		mutex;
 
    public:
       /**

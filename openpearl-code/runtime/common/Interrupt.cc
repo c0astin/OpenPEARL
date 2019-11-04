@@ -66,6 +66,7 @@ namespace pearlrt {
       TaskWhenLinks * current;
 
       Log::info("Interrupt: triggered (enable=%d)", isEnabled);
+      mutex.lock();
 
       if (isEnabled) {
          TaskCommon::mutexLock();
@@ -77,28 +78,34 @@ namespace pearlrt {
          }
 
          for (TaskWhenLinks * h = headActivateTaskQueue;
-               h != 0;
+               h != NULL;
                h = h->getNextActivate()) {
             h->triggeredActivate();
          }
 
          TaskCommon::mutexUnlock();
       }
+      mutex.unlock();
    }
 
    void Interrupt::registerActivate(TaskWhenLinks * t, TaskWhenLinks ** next) {
+      mutex.lock();
       *next = headActivateTaskQueue;
       headActivateTaskQueue = t;
+      mutex.unlock();
    }
 
    void Interrupt::registerContinue(TaskWhenLinks * t, TaskWhenLinks ** next) {
+      mutex.lock();
       *next = headContinueTaskQueue;
       headContinueTaskQueue = t;
+      mutex.unlock();
    }
 
    void Interrupt::unregisterActivate(TaskWhenLinks * t) {
       TaskWhenLinks * last = 0;
 
+      mutex.lock();
       for (TaskWhenLinks * h = headActivateTaskQueue;
             h != 0;
             h = h->getNextActivate()) {
@@ -110,16 +117,18 @@ namespace pearlrt {
                last->setNextActivate(h->getNextActivate());
             }
 
-            return;
+            break;
          }
 
          last = h;
       }
+      mutex.unlock();
    }
 
    void Interrupt::unregisterContinue(TaskWhenLinks * t) {
       TaskWhenLinks * last = 0;
 
+      mutex.lock();
       for (TaskWhenLinks * h = headContinueTaskQueue;
             h != 0;
             h = h->getNextContinue()) {
@@ -131,11 +140,12 @@ namespace pearlrt {
                last->setNextContinue(h->getNextContinue());
             }
 
-            return;
+            break;
          }
 
          last = h;
       }
+      mutex.unlock();
    }
 
 }

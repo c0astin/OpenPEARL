@@ -35,9 +35,6 @@ T1: TASK MAIN;
 
 
     OPEN con;
-    FOR i TO 10 REPEAT
-       PUT i TO con BY F(3), SKIP;
-    END;
     ENABLE int1;
     ENABLE int2;
 
@@ -102,7 +99,7 @@ T2: TASK;
 ! this delay is necessary to avoid duplicate triggers - this must be solved 
 ! in the runtime system
 ! if the dalay is preset, the program doies not end
-       AFTER 0.1 SEC RESUME;
+!       AFTER 0.1 SEC RESUME;
        WHEN int2 CONTINUE;
        SUSPEND;
        t2Counter := t2Counter + 1;
