@@ -49,6 +49,7 @@ namespace pearlrt {
    private:
       Signal* signal;
       int currentHandlerIndex;
+      bool isEnabled;
 
    public:
       /** ctor
@@ -61,7 +62,7 @@ namespace pearlrt {
       in the list of ScheduleSignalActions
 
       \param s pointer to the current signal
-      \param nbrOfActions number of actions in ScheduleSigbalAction[]
+      \param nbrOfActions number of actions in ScheduleSignalAction[]
       \param scheduleSignalAction is an array of scheduled actions on signals
 
       \returns current index of the action of the given signal<br>
@@ -78,6 +79,19 @@ namespace pearlrt {
       \param index number of the currently selected signal handler
       */
       void setActionIndex(int index);
+
+      /**
+      disable the action.
+
+      This method is used after the signal handler to disable the signalAction during a signal handler.
+      */
+      void disable();
+      /**
+      enable the action.
+
+      This method is used after the signal handler to reenable the signalAction again.
+      */
+      void enable();
    };
 }
 

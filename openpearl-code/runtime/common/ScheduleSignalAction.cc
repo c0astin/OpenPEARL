@@ -40,6 +40,7 @@ namespace pearlrt {
    ScheduleSignalAction::ScheduleSignalAction(Signal * s) {
       signal = s;
       currentHandlerIndex = 0;
+      isEnabled = true;
    }
    int ScheduleSignalAction::getAction(
       Signal *s,
@@ -50,16 +51,18 @@ namespace pearlrt {
       int scheduledRST;
 
       for (size_t i = 0; i < nbrOfActions; i++) {
-         scheduledRST = scheduleSignalAction[i].signal->whichRST();
+         if (scheduleSignalAction[i].isEnabled) {
+            scheduledRST = scheduleSignalAction[i].signal->whichRST();
 
-         if (scheduledRST == currentRST &&
-               scheduleSignalAction[i].currentHandlerIndex != 0) {
-            return scheduleSignalAction[i].currentHandlerIndex;
-         }
+            if (scheduledRST == currentRST &&
+                  scheduleSignalAction[i].currentHandlerIndex != 0) {
+               return scheduleSignalAction[i].currentHandlerIndex;
+            }
 
-         /* test for group scheduled group signal */
-         if (scheduledRST == (currentRST / 100) * 100) {
-            indexOfGroup = i;
+            /* test for group scheduled group signal */
+            if (scheduledRST == (currentRST / 100) * 100) {
+               indexOfGroup = i;
+            }
          }
       }
 
@@ -73,4 +76,12 @@ namespace pearlrt {
    void ScheduleSignalAction::setActionIndex(int index) {
       currentHandlerIndex = index;
    }
+
+   void ScheduleSignalAction::enable() {
+      isEnabled = true;
+   }     
+
+   void ScheduleSignalAction::disable() {
+      isEnabled = false;
+   }     
 }
