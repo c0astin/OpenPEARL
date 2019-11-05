@@ -1,0 +1,17 @@
+<!-- Test a good module.xml with a good platform.xml -->
+<?xml version="1.0" encoding="UTF-8" ?>
+<module name="test" file="./tests/004/module_002.prl">
+    <problem>
+        <spc type="dation" name="disc" line="31">
+            <attributes>SYSTEM,INOUT</attributes>
+            <data>ALL</data>
+        </spc>
+        <spc type="dation" name="output" line="32">
+            <attributes>SYSTEM,OUT</attributes>
+            <data>ALPHIC</data>
+        </spc>
+    </problem>
+</module>
+
+
+

@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles/chaiscript"
+		},
+		{
+			"file" : "/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles/chaiscript.rule"
+		},
+		{
+			"file" : "/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles/chaiscript-complete.rule"
+		},
+		{
+			"file" : "/home/mueller/OpenPEARL/openpearl-code/imc2/src/chaiscript-stamp/chaiscript-install.rule"
+		},
+		{
+			"file" : "/home/mueller/OpenPEARL/openpearl-code/imc2/src/chaiscript-stamp/chaiscript-mkdir.rule"
+		},
+		{
+			"file" : "/home/mueller/OpenPEARL/openpearl-code/imc2/src/chaiscript-stamp/chaiscript-download.rule"
+		},
+		{
+			"file" : "/home/mueller/OpenPEARL/openpearl-code/imc2/src/chaiscript-stamp/chaiscript-update.rule"
+		},
+		{
+			"file" : "/home/mueller/OpenPEARL/openpearl-code/imc2/src/chaiscript-stamp/chaiscript-patch.rule"
+		},
+		{
+			"file" : "/home/mueller/OpenPEARL/openpearl-code/imc2/src/chaiscript-stamp/chaiscript-configure.rule"
+		},
+		{
+			"file" : "/home/mueller/OpenPEARL/openpearl-code/imc2/src/chaiscript-stamp/chaiscript-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"chaiscript"
+		],
+		"name" : "chaiscript"
+	}
+}

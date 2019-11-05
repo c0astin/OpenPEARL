@@ -1,0 +1,29 @@
+<!-- Test where username contains nonexistent -->
+<?xml version="1.0" encoding="UTF-8" ?>
+<module name="test" file="./tests/008/module.prl">
+    <system>
+        <username name="LongDationUserName" line="6">
+            <sysname name="nonexistent">
+                <parameters>
+                    <FIXED length="31">
+                        <FIXEDGT>10</FIXEDGT>
+                    </FIXED>
+                    <FIXED length="31">
+                        <FIXEDGT>11</FIXEDGT>
+                    </FIXED>
+                    <FIXED length="31">
+                        <FIXEDGT>11</FIXEDGT>
+                    </FIXED>
+                </parameters>
+            </sysname>
+        </username>
+    </system>
+    <problem>
+        <spc type="dation" name="LongDationUserName" line="31">
+            <attributes>SYSTEM,INOUT</attributes>
+            <data>ALL</data>
+        </spc>
+    </problem>
+</module>
+
+

@@ -1,0 +1,5 @@
+<!-- Test an empty module.xml with an empty platform.xml -->
+<?xml version="1.0" encoding="UTF-8" ?>
+<module name="test" file="./tests/001/module.prl">
+</module>
+

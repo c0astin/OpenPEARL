@@ -1,0 +1,20 @@
+<!-- Test a good module.xml with a good platform.xml -->
+<?xml version="1.0" encoding="UTF-8" ?>
+<module name="test" file="./tests/004/module.prl">
+    <system>
+        <username name="disc"  line="6">
+            <sysname name="Disc">
+                <parameters>
+                    <CHAR>'/tmp/'</CHAR>
+                    <FIXED>10</FIXED>
+                </parameters>
+            </sysname>
+        </username>
+
+        <username name="output"  line="7">
+            <sysname name="StdOut">
+            </sysname>
+        </username>
+    </system>
+</module>
+

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module name="ok"  file="/home/debian/matthias1.prl">
+    <system>
+        <username name="i2cbus1"  line="3">
+            <sysname name="I2CBus">
+                <parameters>
+                    <CHAR>'/dev/i2c-1'</CHAR>
+                </parameters>
+            </sysname>
+        </username>
+
+        <username name="bits1"  line="4">
+            <sysname name="RPiDigitalOut">
+                <parameters>
+                    <FIXED>4</FIXED>
+                    <FIXED>3</FIXED>
+                </parameters>
+            </sysname>
+        </username>
+
+        <username name="remoteBits1"  line="7">
+            <sysname name="PCF8574Out">
+                <parameters>
+                    <BIT>'20'B4</BIT>
+                    <FIXED>7</FIXED>
+                    <FIXED>2</FIXED>
+                </parameters>
+                <association name="i2cbus1">
+                </association>
+            </sysname>
+        </username>
+
+        <username name="remoteBits2"  line="8">
+            <sysname name="PCF8574Out">
+                <parameters>
+                    <BIT>'20'B4</BIT>
+                    <FIXED>5</FIXED>
+                    <FIXED>2</FIXED>
+                </parameters>
+                <association name="i2cbus1">
+                </association>
+            </sysname>
+        </username>
+
+        <username name="remoteBits3"  line="10">
+            <sysname name="PCF8574Out">
+                <parameters>
+                    <BIT>'21'B4</BIT>
+                    <FIXED>7</FIXED>
+                    <FIXED>2</FIXED>
+                </parameters>
+                <association name="i2cbus1">
+                </association>
+            </sysname>
+        </username>
+
+        <username name="remoteBits4"  line="11">
+            <sysname name="PCF8574Out">
+                <parameters>
+                    <BIT>'21'B4</BIT>
+                    <FIXED>5</FIXED>
+                    <FIXED>2</FIXED>
+                </parameters>
+                <association name="i2cbus1">
+                </association>
+            </sysname>
+        </username>
+
+        <username name="i2cbus2"  line="12">
+            <sysname name="I2CBus">
+                <parameters>
+                    <CHAR>'/dev/i2c-2'</CHAR>
+                </parameters>
+            </sysname>
+        </username>
+
+        <username name="remoteBits5"  line="14">
+            <sysname name="PCF8574Out">
+                <parameters>
+                    <BIT>'20'B4</BIT>
+                    <FIXED>7</FIXED>
+                    <FIXED>2</FIXED>
+                </parameters>
+                <association name="i2cbus2">
+                </association>
+            </sysname>
+        </username>
+
+
+    </system>
+</module>

@@ -1,0 +1,18 @@
+# Hashes of file build rules.
+ca4156cb322d4072c053b9ab5a278e80 CMakeFiles/chaiscript
+71d9a14215d8459b67e7cddb0947c276 CMakeFiles/chaiscript-complete
+16ec04504465a036b06ccabc6f979cc7 CMakeFiles/docopt-complete
+7f928c3f6de068633f89cb37119fa425 src/chaiscript-stamp/chaiscript-build
+f2918a44b41b0109fe2b5f10826d62d2 src/chaiscript-stamp/chaiscript-configure
+970d794f1d1258df5a3c7d9b5e82a074 src/chaiscript-stamp/chaiscript-download
+f5275136e22110bae8c9d95b2ee23f50 src/chaiscript-stamp/chaiscript-install
+65d6c4aa1130ff4235fc6d69b599bce5 src/chaiscript-stamp/chaiscript-mkdir
+c0590a9b9e0196f7a270f8d59fd18cba src/chaiscript-stamp/chaiscript-patch
+ca09d096bcd735769f20ccb3ef747559 src/chaiscript-stamp/chaiscript-update
+ca1764bcf6e6d3f0592de7c1b4c7c5d6 src/docopt-stamp/docopt-build
+6b15799a6789655ec2640f0b3fef3208 src/docopt-stamp/docopt-configure
+31684b9d50b7e9469f5a3eb7992a174c src/docopt-stamp/docopt-download
+06c9802877152a34e500a1ad47a81ce4 src/docopt-stamp/docopt-install
+52b05f03346935883f928a47b36c0889 src/docopt-stamp/docopt-mkdir
+359fdaa3b6d89bc423e08e1ae6fecbc8 src/docopt-stamp/docopt-patch
+44bb0b96f8baf015a84fcacec666699c src/docopt-stamp/docopt-update

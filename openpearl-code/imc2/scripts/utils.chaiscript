@@ -1,0 +1,35 @@
+def someHelperFunction(name, addr, bits) {
+    var layout = Layout(name);
+    layout.setAddress(addr);
+    layout.setBits(bits);
+    return layout;
+}
+
+///
+/// Generates an array of `overall_width` integers where x..(x+width) are set
+///
+/// As an example: The call `bitslist_from_width(2, 2, 8)`
+/// generates 8 bit:
+///
+///  array = [ 0, 0, 0, 0, 1, 2, 0, 0 ]
+///
+///  idx   =   7  6  5  4  3  2  1  0
+///
+/// If the `x` parameter is out of range of the `overall_width`, no bits are
+/// set.
+/// If the `width` is negative or zero, no bits are set either.
+///
+def bitslist_from_width(x, width, overall_width) {
+    var list = []
+
+    for (var i = 0; i < overall_width; ++i) {
+        if (i >= x && i < (x + width)) {
+            list.insert_at(0, 1);
+        } else {
+            list.insert_at(0, 0);
+        }
+    }
+
+    return list;
+}
+

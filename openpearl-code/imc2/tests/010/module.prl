@@ -1,0 +1,16 @@
+MODULE(ok);
+SYSTEM;
+   i2cbus1: I2CBus('/dev/i2c-1');  ! benötigt GPIO 2+3
+   bits1 :RPiDigitalOut(4,3);     ! belegt GPIO 4-6
+
+   ! portexpander 1 an i2cbus1
+   remoteBits1 : PCF8574Out('20'B4, 7,2) --- i2cbus1; ! Bit 7+6
+   remoteBits2 : PCF8574Out('20'B4, 5,2) --- i2cbus1; ! Bit 5+4
+   ! portexpander 2 an i2cbus1
+   remoteBits3 : PCF8574Out('21'B4, 7,2) --- i2cbus1; ! Bit 7+6
+   remoteBits4 : PCF8574Out('21'B4, 5,2) --- i2cbus1; ! Bit 5+4
+   i2cbus2: I2CBus('/dev/i2c-2');  !Tiny-USB läuft über USB
+   ! portexpander 1 an i2cbus2
+   remoteBits5 : PCF8574Out('20'B4, 7,2) --- i2cbus2; ! Bit 7+6
+
+MODEND;

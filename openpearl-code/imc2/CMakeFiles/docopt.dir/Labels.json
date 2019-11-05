@@ -1,0 +1,51 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "/home/m/doc/studium/M3/openpearl-code/openpearl-code/imc/CMakeFiles/docopt"
+		},
+		
+		{
+			"file" : "/home/m/doc/studium/M3/openpearl-code/openpearl-code/imc/CMakeFiles/docopt.rule"
+		},
+		
+		{
+			"file" : "/home/m/doc/studium/M3/openpearl-code/openpearl-code/imc/CMakeFiles/docopt-complete.rule"
+		},
+		
+		{
+			"file" : "/home/m/doc/studium/M3/openpearl-code/openpearl-code/imc/src/docopt-stamp/docopt-install.rule"
+		},
+		
+		{
+			"file" : "/home/m/doc/studium/M3/openpearl-code/openpearl-code/imc/src/docopt-stamp/docopt-mkdir.rule"
+		},
+		
+		{
+			"file" : "/home/m/doc/studium/M3/openpearl-code/openpearl-code/imc/src/docopt-stamp/docopt-download.rule"
+		},
+		
+		{
+			"file" : "/home/m/doc/studium/M3/openpearl-code/openpearl-code/imc/src/docopt-stamp/docopt-update.rule"
+		},
+		
+		{
+			"file" : "/home/m/doc/studium/M3/openpearl-code/openpearl-code/imc/src/docopt-stamp/docopt-patch.rule"
+		},
+		
+		{
+			"file" : "/home/m/doc/studium/M3/openpearl-code/openpearl-code/imc/src/docopt-stamp/docopt-configure.rule"
+		},
+		
+		{
+			"file" : "/home/m/doc/studium/M3/openpearl-code/openpearl-code/imc/src/docopt-stamp/docopt-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "docopt" ],
+		"name" : "docopt"
+	}
+}

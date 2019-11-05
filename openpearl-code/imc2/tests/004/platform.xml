@@ -1,0 +1,22 @@
+<!-- Test a good module.xml with a good platform.xml -->
+<?xml version="1.0" encoding="UTF-8" ?>
+<platform file="./tests/004/platform.xml">
+   <dation name="Disc">
+      <parameters>
+        <CHAR length="32767"> <NotEmpty/> </CHAR>
+        <FIXED length="31"> <FIXEDGT>0</FIXEDGT> </FIXED>
+      </parameters>
+      <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+   </dation>
+
+   <dation name="StdOut">
+      <parameters> </parameters>
+      <attributes>FORWARD, OUT, SYSTEM</attributes>
+      <data>ALPHIC</data>
+      <associationProvider>
+         <associationType name="AlphicOutProvider"/>
+      </associationProvider>
+   </dation>
+</platform>
+

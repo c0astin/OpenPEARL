@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module name="test" file="./tests/007/module.prl">
+    <system>
+        <username name="LongDationUserName" line="6">
+            <sysname name="LongDationName">
+                <parameters>
+                    <FIXED length="31">10</FIXED>
+                    <FIXED length="31">11</FIXED>
+                    <FIXED length="31">12</FIXED>
+                </parameters>
+            </sysname>
+        </username>
+    </system>
+    <problem>
+        <spc type="dation" name="LongDationUserName" line="31">
+            <attributes>SYSTEM,INOUT</attributes>
+            <data>ALL</data>
+        </spc>
+    </problem>
+</module>
+
