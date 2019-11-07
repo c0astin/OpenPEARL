@@ -414,9 +414,8 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
 
                     if (op2Value != null) {
                         op2Value.setSign(-1);
-                        res.setConstantDuratemacs ionValue(op2Value);
+                        res.setConstantDurationValue(op2Value);
                     }
-
                 } else {
             		System.out.println("visitUnarySubtractiveExpression: untreated type: "+op2.m_type.getName());
             	}
