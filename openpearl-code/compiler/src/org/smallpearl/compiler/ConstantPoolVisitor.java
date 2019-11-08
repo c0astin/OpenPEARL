@@ -185,23 +185,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             System.out.println("ConstantPoolVisitor: visitLiteral");
 
         if (ctx.durationConstant() != null) {
-            int hours = 0;
-            int minutes = 0;
-            double seconds = 0.0;
-
-            if (ctx.durationConstant().hours() != null) {
-                hours = getHours(ctx.durationConstant().hours());
-            }
-
-            if (ctx.durationConstant().minutes() != null) {
-                minutes = getMinutes(ctx.durationConstant().minutes());
-            }
-
-            if (ctx.durationConstant().seconds() != null) {
-                seconds = getSeconds(ctx.durationConstant().seconds());
-            }
-
-            m_constantPool.add(new ConstantDurationValue(hours, minutes, seconds));
+            m_constantPool.add(CommonUtils.getConstantDurationValue(ctx.durationConstant(),1));
         } else if (ctx.timeConstant() != null) {
             int hours = 0;
             int minutes = 0;
@@ -336,7 +320,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                     } else if (literal_ctx.timeConstant() != null) {
                         System.out.println("ConstantPoolVisitor:unarySubstractive for CLOCK: not supported");
                     } else if (literal_ctx.durationConstant() != null) {
-                        System.out.println("ConstantPoolVisitor:unarySubstractive for DURATION: not supported");
+                        add(CommonUtils.getConstantDurationValue(literal_ctx.durationConstant(),-1));
                     }
                 }
             }
@@ -386,8 +370,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitConstant(SmallPearlParser.ConstantContext ctx) {
-        if (m_debug)
-            System.out.println("ConstantPoolVisitor: visitConstant");
+        Log.debug("ConstantPoolVisitor:visitConstant:ctx" + CommonUtils.printContext(ctx));
 
         int sign = 1;
 
@@ -514,14 +497,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
  }
  ***/
-                value = Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
-
-                if (ctx.sign() != null) {
-                    if (ctx.sign() instanceof SmallPearlParser.SignMinusContext) {
-                        value = -1 * value;
-                    }
-                }
-
+                value = sign * Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
                 m_constantPool.add(new ConstantFloatValue(value, precision));
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -536,52 +512,6 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         return null;
     }
 
-    private Integer getHours(SmallPearlParser.HoursContext ctx) {
-        Integer hours = 0;
-
-        if (ctx.IntegerConstant() != null) {
-            hours = Integer.parseInt(ctx.IntegerConstant().getText());
-            if (hours < 0) {
-                throw new ValueOutOfBoundsException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-        }
-
-        return hours;
-    }
-
-    private Integer getMinutes(SmallPearlParser.MinutesContext ctx) {
-        Integer minutes = 0;
-
-        if (ctx.IntegerConstant() != null) {
-            minutes = Integer.parseInt(ctx.IntegerConstant().getText());
-            if (minutes < 0 || minutes > 59) {
-                throw new ValueOutOfBoundsException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-        }
-
-        return minutes;
-    }
-
-    private Double getSeconds(SmallPearlParser.SecondsContext ctx) {
-        Double seconds = 0.0;
-
-        if (ctx.IntegerConstant() != null) {
-            seconds = (double) Integer.parseInt(ctx.IntegerConstant().getText());
-            if (seconds < 0) {
-                throw new ValueOutOfBoundsException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-        } else if (ctx.floatingPointConstant() != null) {
-            Integer sign = 1;
-
-            seconds = Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().getText());
-
-            if (seconds < 0) {
-                throw new ValueOutOfBoundsException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-        }
-
-        return seconds;
-    }
 
     @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {

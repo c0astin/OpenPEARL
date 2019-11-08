@@ -61,8 +61,21 @@ public class ConstantDurationValue extends ConstantValue {
         m_sign = sign;
     }
 
+    ConstantDurationValue(double seconds) {
+/*
+        m_hours = hours;
+        m_minutes = minutes;
+        m_seconds = seconds;
+        m_sign = sign;
+ */
+    }
+
 
     public int getSign() { return m_sign;}
+
+    public void setSign(int sign) {
+        m_sign = sign;
+    }
 
     public int getHours() { return m_hours;}
 
