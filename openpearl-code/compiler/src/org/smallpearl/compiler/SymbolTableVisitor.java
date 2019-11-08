@@ -535,9 +535,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
 	@Override
 	public Void visitTypeInteger(SmallPearlParser.TypeIntegerContext ctx) {
-		Integer size;
-
-		size = m_currentSymbolTable.lookupDefaultFixedLength();
+		Integer size = m_currentSymbolTable.lookupDefaultFixedLength();
 
 		if (ctx != null) {
 			for (ParseTree c : ctx.children) {
@@ -553,7 +551,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
 	@Override
 	public Void visitTypeBitString(SmallPearlParser.TypeBitStringContext ctx) {
-		int length = Defaults.BIT_LENGTH;
+		int length = m_currentSymbolTable.lookupDefaultBitLength();
 
 		if (ctx.IntegerConstant() != null) {
 			length = Integer.parseInt(ctx.IntegerConstant().getText());
@@ -569,26 +567,24 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
 	@Override
 	public Void visitTypeCharacterString(SmallPearlParser.TypeCharacterStringContext ctx) {
-		int size = Defaults.CHARACTER_LENGTH;
+		int length = m_currentSymbolTable.lookupDefaultCharLength();
 
 		if (ctx.IntegerConstant() != null) {
-			size = Integer.parseInt(ctx.IntegerConstant().getText());
+			length = Integer.parseInt(ctx.IntegerConstant().getText());
 
-			if (size < 1 || size > Defaults.CHARACTER_MAX_LENGTH) {
+			if (length < 1 || length > Defaults.CHARACTER_MAX_LENGTH) {
 				throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
 			}
 		}
 
-		m_type = new TypeChar(size);
+		m_type = new TypeChar(length);
 
 		return null;
 	}
 
 	@Override
 	public Void visitTypeFloatingPointNumber(SmallPearlParser.TypeFloatingPointNumberContext ctx) {
-		int precision = Defaults.FLOAT_PRECISION;
-
-		precision = m_currentSymbolTable.lookupDefaultFloatLength();
+		int precision = m_currentSymbolTable.lookupDefaultFloatLength();
 
 		if (ctx.IntegerConstant() != null) {
 			precision = Integer.parseInt(ctx.IntegerConstant().getText());

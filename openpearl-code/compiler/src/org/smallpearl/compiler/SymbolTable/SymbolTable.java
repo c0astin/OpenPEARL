@@ -30,10 +30,7 @@
 
 package org.smallpearl.compiler.SymbolTable;
 
-import org.smallpearl.compiler.Defaults;
-import org.smallpearl.compiler.TypeFixed;
-import org.smallpearl.compiler.TypeFloat;
-import org.smallpearl.compiler.TypeBit;
+import org.smallpearl.compiler.*;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -351,9 +348,9 @@ public class SymbolTable {
         if ( entry != null ) {
             if ( entry instanceof LengthEntry) {
                 LengthEntry e = (LengthEntry) entry;
-                if (e.getType() instanceof TypeFloat ) {
-                    TypeFloat typ = (TypeFloat) e.getType();
-                    return typ.getPrecision();
+                if (e.getType() instanceof TypeChar) {
+                    TypeChar typ = (TypeChar) e.getType();
+                    return typ.getSize();
                 }
             }
         } else {
