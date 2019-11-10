@@ -606,7 +606,7 @@ SmallPearlVisitor<Void> {
 				ErrorStack.add("need format/position");
 			} else {
 				if (ctx.formatPosition(ctx.formatPosition().size()-1) instanceof FactorPositionContext) {
-					ErrorStack.add("format/position list must end with format");
+					ErrorStack.warn("OpenPEARL allows position elements after last data format");
 				}
 			}
 		}

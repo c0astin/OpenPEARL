@@ -4117,13 +4117,30 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
 
+
         // the language report states that the format/position list must be exhausted after
         // treatment of the last data element
         // thus a tailing SKIP is not allowed!  this must be placedd into another get statement
-
+        // a hint for this rule is in the book of Frevert, p. 97 
+        //   the data transfer was assumed to be after completion of the GET statement
+        //   OpenPEARL transfers immediatelly after a successful READ/GET/TAKE
+        //   subsequent errors lead to a SIGNAL or RST-value setting
+        // --> this error check was temporarily removed until this feature is 
+        //    solved by etehr TFU (no trailing SKIP needed) or other means (2019-11-10)
+        // added due to comment above -> trailing position statements allowed for the moment
+        // apply remaining positioning untikl the format lists end or an FactorFormat appears
+        for (int k = nextFormatPositionIndex; k < ctx.formatPosition().size(); k++) {
+            if (ctx.formatPosition(k) instanceof SmallPearlParser.FactorPositionContext) {
+                ST e = getFactorPositionForIO(
+                        (SmallPearlParser.FactorPositionContext) ctx.formatPosition(k),
+                        ctx.dationName().ID().getText(), "from");
+                stmt.add("elements", e);
+            }
+        }
+        
         if (ctx.ID().size() > 0) {
             if (nextFormatPositionIndex < ctx.formatPosition().size()) {
-                ErrorStack.add("trailing elements in format/position list");
+         //       ErrorStack.add("trailing elements in format/position list");
             }
         } else {
             while (nextFormatPositionIndex < ctx.formatPosition().size()) {
@@ -4149,8 +4166,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                 nextFormatPositionIndex += 1;
             }
+          
         }
-
+ 
         ErrorStack.leave();
 
         return stmt;
