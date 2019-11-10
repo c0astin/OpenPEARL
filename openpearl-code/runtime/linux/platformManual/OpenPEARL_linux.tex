@@ -149,8 +149,8 @@ This version does not support:\footnote{The numbers in braces refer the ticket n
 \item STRUCT
 \item TYPE
 \item no SIGNAL treatment (\#127)
-\item no INTERRUPT support (\#122)
-\item operator SIZEOF not supported (\#109)
+%%% \item no INTERRUPT support (\#122)
+%%% \item operator SIZEOF not supported (\#109)
 %\item length of float constants must be clearified and is subject of 
 %		change(\#120)
 \item REF CHAR
@@ -159,19 +159,18 @@ This version does not support:\footnote{The numbers in braces refer the ticket n
 \item no support for multi modules (\#193)
 \item I/O-related
    \begin{itemize}
-   \item no warning if multiple positions formats are inside a READ/WRITE statement (\#126)
-   \item E-format does not work properly (\#210)
-   \item CONVERT not supported (\#215)
-   \item additional X-elements in some PUT statements (\#221)
-   \item format elements PAGE,ADV,LINE,COL,POS,SOP,EOF not supported(\#216,\#222)
+   %\item no warning if multiple positions formats are inside a READ/WRITE statement (\#126)
+   %\item E-format does not work properly (\#210)
+   %\item CONVERT not supported (\#215)
+   %\item additional X-elements in some PUT statements (\#221)
+   %\item format elements PAGE,ADV,LINE,COL,POS,SOP,EOF not supported(\#216,\#222)
    \item CYCLIC only available on system dations of type DIRECT (\#226)
    \item repetition factor in i/o formats and variable array slices 
       does not work in i/o statements(\#232)
    \item TFU not supported (\#232,\#237)
-   \item loop index not accessible in i/o statements (\#239)
-   \item type of dation element in i/o statements not checked (\#251)
-   \item nether complete arrays nor array slices as i/o element
-     are supported (\#223,\#252)
+%   \item loop index not accessible in i/o statements (\#239)
+%   \item type of dation element in i/o statements not checked (\#251)
+   \item no array slices as i/o element are supported (\#223,\#252)
    \item no R-Format (\#254)
    \end{itemize}
 %\item no constants expressions treated by the compiler (\#248)
