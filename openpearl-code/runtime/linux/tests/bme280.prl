@@ -15,15 +15,15 @@ DCL bme280 DATION IN BASIC ALL CREATED(bme);
 dumpInputs: TASK MAIN;
    DCL v0(3) FIXED(31);
    DCL (temp ,pressure, hum) FIXED(31);
-   DCL (flTemp ,flPressure, flHum) FLOAT(53);
+   DCL (flTemp ,flPressure, flHum) FLOAT(52);
 
    OPEN console;
    OPEN bme280;;
 
    PUT 'BME280 Test started' TO console BY A, SKIP;
    REPEAT
-!      TAKE v0 FROM bme280;
-  __cpp__("_bme280.dationRead(&data_v0, sizeof(data_v0));");
+      TAKE v0 FROM bme280;
+!  __cpp__("_bme280.dationRead(&data_v0, sizeof(data_v0));");
    !   TAKE v1 FROM ch1;
      temp = v0(1);
      pressure = v0(2);
