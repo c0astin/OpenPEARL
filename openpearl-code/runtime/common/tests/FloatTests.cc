@@ -375,8 +375,8 @@ TEST(Float, math_23) {
 
    {
       x = (pearlrt::Float<23>)(-1.0);
-      EXPECT_THROW(x.ln(), pearlrt::FloatIsNaNSignal);
-      EXPECT_THROW(x.sqrt(), pearlrt::FloatIsNaNSignal);
+      EXPECT_THROW(x.ln(), pearlrt::FunctionParameterOutOfRangeException);
+      EXPECT_THROW(x.sqrt(), pearlrt::FunctionParameterOutOfRangeException);
    }
 
 }
@@ -395,125 +395,125 @@ TEST(Float, math_52) {
    pearlrt::Fixed<31> f;
    pearlrt::Float<52> epsilon(5.0e-12);
 
-   x = (pearlrt::Float<23>) - 10.4;
-   y = (pearlrt::Float<23>)10.4;
+   x = (pearlrt::Float<52>) - 10.4;
+   y = (pearlrt::Float<52>)10.4;
    EXPECT_TRUE((x.abs() == y).getBoolean());
    EXPECT_TRUE((x.sign() == pearlrt::Fixed<15>(-1)).getBoolean());
 
-   x = (pearlrt::Float<23>)10.4;
-   y = (pearlrt::Float<23>)10.4;
+   x = (pearlrt::Float<52>)10.4;
+   y = (pearlrt::Float<52>)10.4;
    EXPECT_TRUE((x.abs() == y).getBoolean());
    EXPECT_TRUE((x.sign() == pearlrt::Fixed<15>(1)).getBoolean());
 
-   x = (pearlrt::Float<23>)0;
-   y = (pearlrt::Float<23>)0;
+   x = (pearlrt::Float<52>)0;
+   y = (pearlrt::Float<52>)0;
    EXPECT_TRUE((x.abs() == y).getBoolean());
    EXPECT_TRUE((x.sign() == pearlrt::Fixed<15>(0)).getBoolean());
 
-   x = (pearlrt::Float<23>)10.0;
+   x = (pearlrt::Float<52>)10.0;
    EXPECT_TRUE((x.entier() == pearlrt::Fixed<15>(10)).getBoolean());
    EXPECT_TRUE((x.round() == pearlrt::Fixed<15>(10)).getBoolean());
 
-   x = (pearlrt::Float<23>)10.4;
+   x = (pearlrt::Float<52>)10.4;
    EXPECT_TRUE((x.entier() == pearlrt::Fixed<15>(10)).getBoolean());
    EXPECT_TRUE((x.round() == pearlrt::Fixed<15>(10)).getBoolean());
 
-   x = (pearlrt::Float<23>)10.5;
+   x = (pearlrt::Float<52>)10.5;
    EXPECT_TRUE((x.entier() == pearlrt::Fixed<15>(10)).getBoolean());
    EXPECT_TRUE((x.round() == pearlrt::Fixed<15>(11)).getBoolean());
 
-   x = (pearlrt::Float<23>) - 10.4;
+   x = (pearlrt::Float<52>) - 10.4;
    EXPECT_TRUE((x.entier() == pearlrt::Fixed<15>(-11)).getBoolean());
    EXPECT_TRUE((x.round() == pearlrt::Fixed<15>(-10)).getBoolean());
 
-   x = (pearlrt::Float<23>) - 10.5;
+   x = (pearlrt::Float<52>) - 10.5;
    EXPECT_TRUE((x.entier() == pearlrt::Fixed<15>(-11)).getBoolean());
    EXPECT_TRUE((x.round() == pearlrt::Fixed<15>(-11)).getBoolean());
 
-   x = (pearlrt::Float<23>) - 2;
+   x = (pearlrt::Float<52>) - 2;
    f = (pearlrt::Fixed<31>)0;
-   y = (pearlrt::Float<23>)1;
+   y = (pearlrt::Float<52>)1;
    EXPECT_TRUE((x.pow(f) == y).getBoolean());
 
-   x = (pearlrt::Float<23>) - 1;
+   x = (pearlrt::Float<52>) - 1;
    f = (pearlrt::Fixed<31>)0;
-   y = (pearlrt::Float<23>)1;
+   y = (pearlrt::Float<52>)1;
    EXPECT_TRUE((x.pow(f) == y).getBoolean());
 
-   x = (pearlrt::Float<23>)0;
+   x = (pearlrt::Float<52>)0;
    f = (pearlrt::Fixed<31>)0;
-   y = (pearlrt::Float<23>)1;
+   y = (pearlrt::Float<52>)1;
    EXPECT_TRUE((x.pow(f) == y).getBoolean());
 
-   x = (pearlrt::Float<23>)1;
+   x = (pearlrt::Float<52>)1;
    f = (pearlrt::Fixed<31>)0;
-   y = (pearlrt::Float<23>)1;
+   y = (pearlrt::Float<52>)1;
    EXPECT_TRUE((x.pow(f) == y).getBoolean());
 
-   x = (pearlrt::Float<23>)2;
+   x = (pearlrt::Float<52>)2;
    f = (pearlrt::Fixed<31>)0;
-   y = (pearlrt::Float<23>)1;
+   y = (pearlrt::Float<52>)1;
    EXPECT_TRUE((x.pow(f) == y).getBoolean());
 
-   x = (pearlrt::Float<23>) - 2;
+   x = (pearlrt::Float<52>) - 2;
    f = (pearlrt::Fixed<31>) - 2;
-   y = (pearlrt::Float<23>)0.25;
+   y = (pearlrt::Float<52>)0.25;
    EXPECT_TRUE((x.pow(f) == y).getBoolean());
 
-   x = (pearlrt::Float<23>) - 2;
+   x = (pearlrt::Float<52>) - 2;
    f = (pearlrt::Fixed<31>) - 3;
-   y = (pearlrt::Float<23>) - 0.125;
+   y = (pearlrt::Float<52>) - 0.125;
    EXPECT_TRUE((x.pow(f) == y).getBoolean());
 
-   x = (pearlrt::Float<23>) - 2;
+   x = (pearlrt::Float<52>) - 2;
    f = (pearlrt::Fixed<31>)3;
-   y = (pearlrt::Float<23>) - 8;
+   y = (pearlrt::Float<52>) - 8;
    EXPECT_TRUE((x.pow(f) == y).getBoolean());
 
 
    for (double phi = 0; phi < 6.3; phi += 0.01) {
-      x = (pearlrt::Float<23>)(phi);
-      z = x.sin() * x.sin() + x.cos() * x.cos() - (pearlrt::Float<23>)1;
+      x = (pearlrt::Float<52>)(phi);
+      z = x.sin() * x.sin() + x.cos() * x.cos() - (pearlrt::Float<52>)1;
       EXPECT_TRUE((z.abs() < epsilon).getBoolean());
    }
 
    for (double phi = -3.0; phi < 3.0; phi += 0.01) {
-      x = (pearlrt::Float<23>)(phi);
+      x = (pearlrt::Float<52>)(phi);
       z = x.sin() / x.cos() - x.tan();
       EXPECT_TRUE((z.abs() < epsilon).getBoolean());
    }
 
    for (double phi = -1.5; phi < 1.5; phi += 0.01) {
-      x = (pearlrt::Float<23>)(phi);
+      x = (pearlrt::Float<52>)(phi);
       z = x.tan().atan() - x;
       EXPECT_TRUE((z.abs() < epsilon).getBoolean());
    }
 
    for (double phi = -10.0; phi < 10.; phi += 0.01) {
-      x = (pearlrt::Float<23>)(phi);
+      x = (pearlrt::Float<52>)(phi);
       z = x.exp().ln() - x;
       EXPECT_TRUE((z.abs() < epsilon).getBoolean());
    }
 
    for (double phi = -10.0; phi < 10.; phi += 0.01) {
-      x = (pearlrt::Float<23>)(phi);
+      x = (pearlrt::Float<52>)(phi);
       z = x.tanh() -
-          ((pearlrt::Float<23>)(1) -
-           (pearlrt::Float<23>)(2) /
+          ((pearlrt::Float<52>)(1) -
+           (pearlrt::Float<52>)(2) /
            ((x + x).exp() + (pearlrt::Float<23>)1));
       EXPECT_TRUE((z.abs() < epsilon).getBoolean());
    }
 
    for (double phi = 0.0; phi < 1000.; phi += 0.01) {
-      x = (pearlrt::Float<23>)(phi);
+      x = (pearlrt::Float<52>)(phi);
       z = (x * x).sqrt() - x;
       EXPECT_TRUE((z.abs() < epsilon).getBoolean());
    }
 
    {
-      x = (pearlrt::Float<23>)(-1.0);
-      EXPECT_THROW(x.ln(), pearlrt::FloatIsNaNSignal);
-      EXPECT_THROW(x.sqrt(), pearlrt::FloatIsNaNSignal);
+      x = (pearlrt::Float<52>)(-1.0);
+      EXPECT_THROW(x.ln(), pearlrt::FunctionParameterOutOfRangeException);
+      EXPECT_THROW(x.sqrt(), pearlrt::FunctionParameterOutOfRangeException);
    }
 }
 

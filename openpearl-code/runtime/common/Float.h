@@ -483,6 +483,7 @@ namespace pearlrt {
       */
       Float<S> ln() const {
          Float<S> result(0);
+
          if (x<=0 ) {
 	    throw theFunctionParameterOutOfRangeException;
          } 
@@ -501,6 +502,11 @@ namespace pearlrt {
       */
       Float<S> sqrt() const {
          Float<S> result;
+
+         if (x<0 ) {
+	    throw theFunctionParameterOutOfRangeException;
+         } 
+        
          result.x = std::sqrt(x);
          FloatHelper::testFloatResult(result.x);
          return result;
