@@ -10,6 +10,9 @@ SYSTEM;
   fahr: PCF8574Out('21'B4,5,2) ---  i2cbus; ! (auf, zu)
   hm1_7: PCF8574Out('22'B4,6,7) --- i2cbus;
   i2cbus: I2CBus('/dev/i2c-1');
+  i2cbus1: I2CBus('/dev/i2c-1');
+  xxx: PCF8574Out('22'B4,6,7) --- I2CBUS('xxxx');
+  
   termout: StdOut;
 
 PROBLEM;
@@ -94,7 +97,8 @@ kicker: TASK;
       AFTER 1 SEC RESUME;
       SEND allOff  TO uhm1_7;
       AFTER 1 SEC RESUME;
-      __cpp__('_current = _current.bitCshift(1);');
+      current := current CSHIFT 1;
+!__cpp__('_current = _current.bitCshift(1);');
    END;
 END;
 
@@ -114,7 +118,8 @@ readInputs: TASK PRIO 10;
       TAKE esa FROM uesa;
       TAKE esz FROM uesz;
       TAKE esna FROM uesna;
-      __cpp__('_ls = _b1.bitCat(_b8);');
+	ls = b1 CAT b8;
+!      __cpp__('_ls = _b1.bitCat(_b8);');
       RELEASE commonData;
       AFTER 0.01 SEC RESUME;
    END; 
