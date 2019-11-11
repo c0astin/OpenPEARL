@@ -1,4 +1,4 @@
-\documentclass[10pt]{scrbook}
+\documentclass[oneside,10pt]{scrbook}
 \usepackage{geometry}
 \usepackage{graphicx}
 \usepackage{import}
@@ -222,6 +222,7 @@ This version does not support:\footnote{The numbers in braces refer the ticket n
    \texttt{ulimit -s xx} command of the command shell (bash).
 \end{itemize}
 
+\iffalse
 \section{Execution Times}
 The execution speed of some operations are derived from the system clock.
 The resolution of the system clock depend on the hardware and the 
@@ -260,6 +261,42 @@ Simple Type Operations & CharTests.prl & \\
 Matrix Multiplication & MatMult.prl & ...\\
 \hline
 \end{tabular}
+
+\paragraph{Note:} These times are not realistic, since the complete test fits in the cache of 
+the processor. The development of realistic test programs 
+\fi
+
+\chapter{Usage of the OpenPEARL system}
+
+The principle of operation is very similar to the usage of the \texttt{gcc}.
+
+\begin{enumerate}
+\item create source file
+\item compile and link
+\item run the application
+\end{enumerate}
+
+In order to explain the usage, we start with a copy of the hello.prl demonstration file.
+
+\begin{enumerate}
+\item copy \texttt{hello.prl} into your working directory (e.g. \texttt{/home/userx/prl}) \newline
+   \texttt{cp /home/userx/OpenPEARL/openpearl/demos/hello.prl /home/userx/prl}
+\item set the working directory to \newline
+   \texttt{cd /home/userx/prl}
+\item build the hello world application \newline
+   \texttt{prl hello.prl}
+\item run the hello world application \newline
+   \texttt{./hello}
+\end{enumerate}
+
+For your own applications, just modify the source code of demo.prl according your demands.
+You should not use \texttt{system.prl} as source file - this is a known problem of the current
+build system.
+
+
+\paragraph{Note:}
+Please ignore the intermediate files like:
+hello.cc, hello.log, hello.xml, system.cc
 
 
 
