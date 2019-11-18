@@ -320,13 +320,24 @@ is set afterwards leading to '01'.
 \item Bits 14 and 15 are used by the kernel for the 
   system serial console during system start. If this does not matter,
   they can be used at runtime.
-\item Other bits become not available, if 
+\item Other bits become unavailable, if 
   the i2c and/or spi is enabled in the
   raspberry configuration.
 \item the current user needs to access the system device 
   \verb|/dev/gpiomem|. This may be achieved by running as root, or setting
   the permissions for \verb|/dev/gpiomem| accordingly.
+\item bit numbering\\
+\begin{tabular}{|c|c|c|c|c|c|c|l}
+\multicolumn{3}{l}{MSB}&\multicolumn{4}{r}{LSB}&\\
+\cline{1-7}
+ 32 & 31 & 30 & ... & 2 & 1 & 0 & bit numbers in datasheet\\
+\cline{1-7}
+    &    &    &     &   & x & x & RPIDigitalOut(1,2) \\
+\cline{1-7}
+\end{tabular}
+
 \end{itemize}
+
  
 \section{I2CBus}
 Linux supports normal access to an i2c bus via a device node,
@@ -430,7 +441,7 @@ END;
 ...
 \end{PEARLCode}
 
-\section{Tcp/IP Server Socket}
+\section{TCP/IP Server Socket}
 The device provides a TCP/IP server socket.
 
 \begin{tabular}{ll}
@@ -438,7 +449,7 @@ Synopsis: & \verb|TcpIpServerSocket(port)|\\
 \end{tabular}
 
 \begin{description}
-\item[port] specifies the port numbe to listen (e.g. 1234)
+\item[port] specifies the port number to listen (e.g. 1234)
 \end{description}
 
 The corresponding user dation starts waiting for one (1) connection with {\em OPEN}.

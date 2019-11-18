@@ -95,7 +95,20 @@ as denoted by width.
 \begin{itemize}
 \item The PCF8574In device is read only
 \item The PCF8574Out device is write only
-\item Example: PCF8574In(5,4) will use bits 5,4,3 and 2 
+\item Example: PCF8574In(5,3)  
+\newline
+\begin{tabular}{|c|c|c|c|c|c|c|c|l}
+
+ \multicolumn{4}{l}{MSB}&\multicolumn{4}{r}{LSB}&\\
+\cline{1-8}
+ 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 & bit numbers in datasheet\\
+\cline{1-8}
+% 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & bit numbers in OpenPEARL\\
+%\hline
+   &   & x & x & x &   &   &   & PCF8574In(5,3) \\
+\cline{1-8}
+\end{tabular}
+
 \end{itemize}
 
 \begin{PEARLCode}
