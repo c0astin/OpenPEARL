@@ -1,0 +1,39 @@
+MODULE (UnixSignal);
+SYSTEM;
+   ctrlc: UnixSignal(2);     ! ^C
+   quit: UnixSignal(3);      ! ^\
+   so: StdOut;
+
+PROBLEM;
+
+   SPC ctrlc INTERRUPT;
+   SPC quit INTERRUPT;
+
+   SPC so DATION OUT SYSTEM ALPHIC;
+
+   DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+t1: TASK MAIN;
+
+   OPEN stdout;
+
+   ENABLE quit;
+   ENABLE ctrlc;
+
+   WHEN quit ACTIVATE tQuit;
+   WHEN ctrlc ACTIVATE tCtrlc;
+
+
+
+END;
+
+tQuit: TASK;
+   PUT 'quit received' TO stdout BY A, SKIP;
+END;
+
+tCtrlc: TASK;
+   PUT 'ctrlc received' TO stdout BY A, SKIP;
+END;
+
+MODEND;
+
