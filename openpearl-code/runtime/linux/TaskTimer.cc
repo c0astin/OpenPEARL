@@ -295,6 +295,9 @@ namespace pearlrt {
       sigaddset(&set, SIG_RESUME);    // resume
       sigaddset(&set, SIG_CONTINUE);  // continue
       sigaddset(&set, SIG_SUSPEND);   // suspend
+   
+      // add UnixSignals to the block list
+      UnixSignal::updateSigMask(&set);
 
       if (sigprocmask(SIG_BLOCK, &set, NULL) < 0) {
          Log::error("timerTask: error blocking signals");
