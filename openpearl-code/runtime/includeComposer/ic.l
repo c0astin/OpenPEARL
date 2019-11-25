@@ -351,15 +351,14 @@ void add2IncList(char * p) {
 			"include path element too long (%s) (%d required)\n",
                      fileStack.stack[fileStack.sp].fn, 
                      fileStack.stack[fileStack.sp].line,
-                     p, strlen(p));
+                     p, (int)strlen(p));
            _exit(1);
         }
      } else {
            fprintf(stderr,"%s:%d: ***error  : "
                           "include path list overflow\n",
                      fileStack.stack[fileStack.sp].fn, 
-                     fileStack.stack[fileStack.sp].line,
- 		      p);
+                     fileStack.stack[fileStack.sp].line);
         _exit(1);
      }
 }
