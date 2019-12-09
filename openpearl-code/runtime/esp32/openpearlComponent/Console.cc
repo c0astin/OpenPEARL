@@ -1,7 +1,6 @@
-//Similar implementation to Linux variant
 /*
  [A "BSD license"]
- Copyright (c) 2017 Rainer Mueller
+ Copyright (c) 2019 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -30,13 +29,12 @@
 
 /**
 \file
-\brief Implementation of ESP Console Systemdation
+\brief Implementation of generic non-Basic Linux Systemdation
 
 */
 
 #include <stdio.h>
 #include <errno.h>
-//#include <unistd.h>  // write
 
 #include "Task.h"
 #include "Console.h"
@@ -44,61 +42,66 @@
 #include "Log.h"
 #include "Signals.h"
 #include "BitString.h"
-#include "GenericTask.h"
-#include "TaskCommon.h"
+#include "allTaskPriorities.h"
 
-SPCTASK(stbp);
-
-DCLTASK(stbp, pearlrt::Prio(1), pearlrt::BitString<1>(1)) {
-  //Equivalent to the Linux implementation, open subDations, call treat in a loop and unblock the returned task
-   pearlrt::Console * console;
-   pearlrt::TaskCommon * taskEntered;
-
-   console = pearlrt::Console::getInstance();
-   console->openSubDations();
-
-   while (1) {
-      taskEntered = console->treat();
-
-      if (taskEntered) {
-         pearlrt::TaskCommon::mutexLock();
-         taskEntered->unblock();
-         pearlrt::TaskCommon::mutexUnlock();
-      }
-   }
-}
+#include "FreeRTOSConfig.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 namespace pearlrt {
 
+   static void consoleTask(void * pvParams) {
+      printf("start consoleTask\n");
+      Console::getInstance()->consoleLoop();
+   }
+
+   void Console::consoleLoop() {
+      pearlrt::TaskCommon * taskEntered;
+
+      openSubDations();
+
+      while (1) {
+         // the method returns to adress and length of the input record
+         taskEntered =
+            consoleCommon.treatLine(&bufferFromConsoleCommon,
+                                    &lengthOfConsoleCommonBuffer);
+         deliveredCharacters = 0;
+
+         if (taskEntered) {
+            TaskCommon::mutexLock();
+            taskEntered->unblock();
+            TaskCommon::mutexUnlock();
+         }
+      }
+   }
+
+
    Console* Console::instance = NULL;
+
+#if 0
+   bool Console::isDefined() {
+      return instance != NULL;
+   }
+#endif
 
    Console* Console::getInstance() {
       return instance;
    }
 
    void Console::openSubDations() {
-      uartCommsDevice.dationOpen(NULL, 0);
-   }
-
-   TaskCommon* Console::treat() {
-      TaskCommon* taskEntered;
-      // the method returns to adress and length of the input record
-      taskEntered =
-         consoleCommon.treatLine(&bufferFromConsoleCommon,
-                                 &lengthOfConsoleCommonBuffer);
-      deliveredCharacters = 0;
-      return taskEntered;
+      esp32Uart->dationOpen(NULL, 0);
    }
 
    Console::Console() : SystemDationNB() {
-      /* ctor is called before multitasking starts --> no mutex required */
-      consoleMutex.name("ConsoleESP");
+      consoleMutex.name("ConsoleX");
       inUse = false;
       cap = FORWARD;
       cap |= PRM;
       cap |= ANY;
       cap |= IN | OUT | INOUT;
-      consoleCommon.setSystemDations(&uartCommsDevice, &uartCommsDevice); //uartComms is both our in and out device
+      esp32Uart = new Esp32Uart(0, 115200, 8, 1, (char*)"N", 0);
+
+      consoleCommon.setSystemDations(esp32Uart, esp32Uart);
 
       if (! instance) {
          instance = this;
@@ -107,10 +110,17 @@ namespace pearlrt {
          throw theInternalDationSignal;
       }
 
+      //create FreeRTOS task for the console treatment
 
-   }
-   Console::~Console() {
-      instance = NULL;
+
+      xTaskCreateStatic(consoleTask,
+                        "consoleTask",
+                        ESP32_CONSOLE_STACK_SIZE,
+                        this,
+                        PRIO_CONSOLE_TASK,
+                        consoleTaskStack,
+                        (StaticTask_t*) &consoleTaskTCB
+                       );
    }
 
    int Console::capabilities() {
@@ -118,6 +128,7 @@ namespace pearlrt {
    }
 
    Console* Console::dationOpen(const char * idf, int openParams) {
+
       if (openParams & (Dation::IDF | Dation::CAN)) {
          Log::error("Console: does not support IDF and CAN");
          throw theDationParamSignal;
@@ -126,17 +137,27 @@ namespace pearlrt {
       consoleMutex.lock();
       inUse = true;
 
-      //No need to do anything as the subDation is supposed to stay open.
-
       consoleMutex.unlock();
       return this;
    }
 
+   Console::~Console() {
+      // the console thread is still waiting for input and has
+      // the lock of StdIn aquired - let's unlock the mutex for
+      // silent termination
+//      esp32Uart.abortRead();
+
+      // forget about closing the system dations. This is done
+      // automatically by the operating system
+      instance = NULL;
+   }
+
+
    void Console::dationClose(int closeParams) {
+      //(int ret;
+      //
       consoleMutex.lock();
       inUse = false;
-
-      //No need to close the subDation as the task will always access it anyway
 
       if (closeParams & Dation::CAN) {
          Log::error("Console: CAN not supported");
@@ -148,9 +169,10 @@ namespace pearlrt {
    }
 
    void Console::dationRead(void * destination, size_t size) {
+      // int ret;
       char * dest = (char*) destination;
 
-      consoleMutex.lock();
+//      consoleMutexIn.lock();
 
       for (size_t i = 0;
             i < size && deliveredCharacters < lengthOfConsoleCommonBuffer;
@@ -159,25 +181,24 @@ namespace pearlrt {
          deliveredCharacters ++;
       }
 
-      consoleMutex.unlock();
+//      consoleMutexIn.unlock();
    }
 
 
    void Console::dationWrite(void * source, size_t size) {
-     consoleMutex.lock();
-     uartCommsDevice.dationWrite(source, size);
-     consoleMutex.unlock();
+      esp32Uart->dationWrite(source, size);
+      consoleCommon.startNextWriter();
    }
 
    void Console::dationUnGetChar(const char x) {
-      consoleMutex.lock();
-      uartCommsDevice.dationUnGetChar(x); //Should work without issues
-      consoleMutex.unlock();
+      printf("Console: unget %02x\n", x);
+      esp32Uart->dationUnGetChar(x);
    }
 
 
    void Console::translateNewLine(bool doNewLineTranslation) {
-      // do nothing
+      printf("Console: translateNewLine(%d)\n", doNewLineTranslation);
+      esp32Uart -> translateNewLine(doNewLineTranslation);
    }
 
    bool Console::allowMultipleIORequests() {
@@ -190,8 +211,11 @@ namespace pearlrt {
    }
 
    void Console::suspend(TaskCommon * ioPerformingTask) {
+      consoleCommon.suspend(ioPerformingTask);
    }
+
    void Console::terminate(TaskCommon * ioPerformingTask) {
+      consoleCommon.terminate(ioPerformingTask);
    }
 
 }

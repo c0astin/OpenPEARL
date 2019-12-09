@@ -180,13 +180,6 @@ namespace pearlrt {
       */
       void dationUnGetChar(const char c);
 
-      /** check if at least one dation of the given type is defined
-
-      This is required in the simple console command processor in os.cc
-
-      \return true, if at least one dation of this type exists
-      */
-      static bool isDefined();
 
       /**
       translate newline
@@ -197,6 +190,18 @@ namespace pearlrt {
              (has no effect)
       */
       void translateNewLine(bool doNewLineTranslation);
+
+      /**
+      release dation mutex
+
+      This method is required for proper application termination 
+      with Console device. 
+      The Console waits always on read for data ion StdIn. In case of
+      termination of the last task - we must get the mutex of stdin 
+      unlocked, or an error message for destroy a locked mutex will appear
+      */
+      void abortRead();
+      
 
    };
    /** @} */

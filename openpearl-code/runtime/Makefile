@@ -163,12 +163,18 @@ ifeq ($(CONFIG_LINUX),y)
 endif
 ifeq ($(CONFIG_LPC1768),y) 
 	@echo 'if [ "$$PLATTFORM" = "lpc1768" ] ; then' >>run_bin.inc
+	@echo '  if [ "$$INTERFACE" = "" ] ; then' >>run_bin.inc
+	@echo '    INTERFACE=$(CONFIG_LPC1768_FLASH_INTERFACE)' >>run_bin.inc
+	@echo '  fi' >> run_bin.inc
 	@echo '#include  "runtime/lpc1768/run_bin.inc" ' >>run_bin.inc
 	@echo 'rc=$$?' >>run_bin.inc
 	@echo 'fi' >>run_bin.inc
 endif
 ifeq ($(CONFIG_ESP32),y) 
 	@echo 'if [ "$$PLATTFORM" = "esp32" ] ; then' >>run_bin.inc
+	@echo '  if [ "$$INTERFACE" = "" ] ; then' >>run_bin.inc
+	@echo '    INTERFACE=$(CONFIG_ESP32_FLASH_INTERFACE)' >>run_bin.inc
+	@echo '  fi' >> run_bin.inc
 	@echo '#include  "runtime/esp32/run_bin.inc" ' >>run_bin.inc
 	@echo 'rc=$$?' >>run_bin.inc
 	@echo 'fi' >>run_bin.inc

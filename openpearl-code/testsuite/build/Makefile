@@ -17,10 +17,10 @@
  
 DONOTBUILD= 030_signals 031_signalsInduce  \
 	043_switch \
-        103_fixed_monadic_arith \
+	110_sizeof \
+	151_array_procParam \
 	224_bit_slice \
-	400_char_dcl \
-	701_dation_pg \
+	300_float_dcl \
 	706_convert \
 	707_dation_pg_formats \
 	850_ref_decl

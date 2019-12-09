@@ -70,7 +70,7 @@ namespace pearlrt {
    */
 
    template<class C> class Ref {
-   private:
+   public:
       C * x;   ///< the pointer to the real object
 
    public:

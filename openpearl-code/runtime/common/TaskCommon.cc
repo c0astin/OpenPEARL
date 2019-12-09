@@ -53,7 +53,7 @@
 #include "Bolt.h"
 
 //          remove this vv comment to enable debug messages
-#define DEBUG(fmt, ...) // Log::debug(fmt, ##__VA_ARGS__)
+#define DEBUG(fmt, ...)  Log::debug(fmt, ##__VA_ARGS__)
 
 namespace pearlrt {
 
@@ -210,14 +210,53 @@ namespace pearlrt {
       blockParams.why = *w;
       mutexUnlock();
       blockParams.semaBlock.request();
-      Log::debug("blocked task %s continued", name);
+      DEBUG("blocked task %s continued", name);
    }
 
    void TaskCommon::unblock() {
-//      if (taskState == SEMA_BLOCKED)  {
-      taskState = RUNNING;
+      int oldState = taskState;
+      int oldReason = blockParams.why.reason;
+
+      if (taskState == BLOCKED) {
+         switch (blockParams.why.reason) {
+         default:
+            Log::error("%s: TaskCommon::unblock: untreated task state %d(%d)",
+                       name, taskState, blockParams.why.reason);
+            throw theInternalTaskSignal;
+            break;
+
+         case ENTER:
+         case RESERVE:
+         case REQUEST:
+            taskState = RUNNING;
+            break;
+
+         case IO:
+            // block/unblock is used for suspend@IO
+            // => stay in the same state
+            break;
+
+         case IOWAITQUEUE:
+            blockParams.why.reason = IO;
+            break;
+
+         case IO_MULTIPLE_IO:
+            taskState = RUNNING;
+            break;
+
+         }
+      } else if (taskState == SUSPENDED_BLOCKED) {
+         taskState = Task::SUSPENDED;
+      } else {
+         Log::error("%s: suspendMySelf: unexpected taskState = %d",
+                    name, taskState);
+         mutexUnlock();
+         throw theInternalTaskSignal;
+      }
+
+      DEBUG("TaskCommon::unblock %s taskState %d(%d) -> %d(%d)\n",
+            name, oldState, oldReason, taskState, blockParams.why.reason);
       blockParams.semaBlock.release();
-//      }
    }
 
    void TaskCommon::getBlockingRequest(BlockData *w) {
@@ -235,16 +274,17 @@ namespace pearlrt {
    void TaskCommon::enterIO(UserDation * d) {
       // note: the task lock is already locked by the user dation
       taskState = BLOCKED;
-      Log::info("%s: enterIO: taskstate=%d reason=%d", name, taskState, IO);
       blockParams.why.reason = IO;
       blockParams.why.u.io.dation = d;
+      blockParams.why.u.io.direction = d->getCurrentDirection();
+      Log::info("%s: starts io-operation (reason=%d) direction=%d",
+                name, blockParams.why.reason, d->getCurrentDirection());
    }
 
    void TaskCommon::leaveIO() {
-//      mutexLock();
+      // note: the task lock is already locked by the user dation
       taskState = RUNNING;
-      Log::info("%s: leaveIO: taskstate=%d", name, taskState);
-//      mutexUnlock();
+      DEBUG("%s: leaveIO: taskstate=%d", name, taskState);
    }
 
    bool TaskCommon::isMySelf(TaskCommon  *me) {
@@ -274,7 +314,7 @@ namespace pearlrt {
       mutexLock();
 
       if ((condition & ~ PRIO) != 0) {
-         Log::debug("task %s: delayed activate task %s", me->getName(), name);
+         DEBUG("task %s: delayed activate task %s", me->getName(), name);
 
          try {
             // test calculation of system priority.
@@ -300,8 +340,8 @@ namespace pearlrt {
          mutexUnlock();
          throw theTaskRunningSignal;
       } else {
-         Log::debug("task %s: activate %s with prio %d",
-                    me->getName(), name, p.x);
+         DEBUG("task %s: activate %s with prio %d",
+               me->getName(), name, p.x);
          currentPrio = p;
 
          // kill scheduled activate
@@ -332,6 +372,7 @@ namespace pearlrt {
             throw;
          }
 
+         activateDone.request();
          TaskMonitor::Instance().incPendingTasks();
          mutexUnlock();
       }
@@ -344,8 +385,8 @@ namespace pearlrt {
       asyncTerminateRequested = true;
 
       DEBUG("%s: terminateFromOtherTask: taskState=%d  "
-                 "asyncTerminateRequested = %d",
-                 name, taskState, asyncTerminateRequested);
+            "asyncTerminateRequested = %d",
+            name, taskState, asyncTerminateRequested);
 
       switch (taskState) {
 
@@ -376,7 +417,8 @@ namespace pearlrt {
          case IOWAITQUEUE:
             Log::error("terminateFromOtherTask: IOWAITQUEUE start");
 
-            blockParams.why.u.ioWaitQueue.dation->getWaitQueue()->remove(this);
+            //blockParams.why.u.ioWaitQueue.dation->getWaitQueue()->remove(this);
+            blockParams.why.u.io.dation->getWaitQueue()->remove(this);
             blockParams.semaBlock.release();
             DEBUG("task %s: terminateFromOtherTask: IOWAITQUEUE",
                   name);
@@ -385,6 +427,12 @@ namespace pearlrt {
 
          case IO:
             blockParams.why.u.io.dation->terminate(this);
+            break;
+
+         case IO_MULTIPLE_IO:
+            blockParams.why.u.io.dation->terminate(this);
+            blockParams.semaBlock.release();
+            mutexUnlock();
             break;
 
          default:
@@ -424,6 +472,10 @@ namespace pearlrt {
             terminateSuspendedIO();
             break;
 
+         case IO_MULTIPLE_IO:
+            Log::error("terminateFromOtherTask: IO_MULT_IO (SUSP_IO) not supported yet");
+            throw theInternalTaskSignal;
+
          default:
             Log::error("%s: untreated block reason in terminateFromOtherTask",
                        name);
@@ -443,14 +495,15 @@ namespace pearlrt {
       DEBUG("%s:   terminateRemote: "
             "wait for completion state=%d", name, taskState);
       terminateDone.request();
+      taskState = TERMINATED;
 
       DEBUG("%s:   terminateRemote: done state=%d", name, taskState);
 
    }
 
    void TaskCommon::terminate(TaskCommon * me) {
-      Log::debug("task %s: terminate %s request: received (taskState=%d)",
-                 me->getName(), name, taskState);
+      Log::info("%s: terminate request: received for task %s (with taskState=%d)",
+                me->getName(), name, taskState);
       mutexLock();
 
       if (isMySelf(me)) {
@@ -488,7 +541,8 @@ namespace pearlrt {
    void TaskCommon::suspend(TaskCommon * me) {
       bool doReleaseMutex = true;  // special treatment for blocked at IO
 
-      Log::debug("%s: suspend for %s request: received", me->getName(), name);
+      Log::info("%s: suspend for %s request: received state=%d",
+                me->getName(), name, taskState);
       mutexLock();
 
       switch (taskState) {
@@ -507,16 +561,16 @@ namespace pearlrt {
 
          try {
             if (isMySelf(me)) {
-               Log::debug("   suspendMySelf()");
+               DEBUG("   suspendMySelf()");
                suspendMySelf();
-               Log::debug("   suspendMySelf done");
+               DEBUG("   suspendMySelf done");
             } else {
-               Log::debug("   suspendFrom Other()");
+               DEBUG("   suspendFrom Other()");
                suspendRunning();
-               Log::debug("   suspendFrom Other() done");
+               DEBUG("   suspendFrom Other() done");
             }
          } catch (Signal s) {
-            Log::debug("   got signal ");
+            DEBUG("   got signal ");
             mutexUnlock();
             throw;
          }
@@ -525,8 +579,8 @@ namespace pearlrt {
          break;
 
       case BLOCKED:
-         Log::debug("%s: SUSPEND at BLOCKED ",
-                    name);
+         DEBUG("%s: SUSPEND at BLOCKED ",
+               name);
 
          // leave the task blocked on its block-semaphore
          // and remove it from the wait queue
@@ -542,23 +596,37 @@ namespace pearlrt {
 
          case IOWAITQUEUE:
             Log::error("suspendFromOtherTask: IOWAITQUEUE start");
+//printf("suspend from other IO_MULT dir=%d\n", blockParams.why.u.io.direction);
 
-            blockParams.why.u.ioWaitQueue.dation->getWaitQueue()->remove(this);
+            //blockParams.why.u.ioWaitQueue.dation->getWaitQueue()->remove(this);
+            blockParams.why.u.io.dation->getWaitQueue()->remove(this);
             DEBUG("task %s: suspendFromOtherTask: removed from queue",
                   name);
             break;
 
          case IO:
-            //suspendIO();
+            DEBUG("suspend(fromOtherTask): IO start");
+            asyncSuspendRequested = true;
+            suspendWaiters ++;    // really ok? 10.8.2019
             blockParams.why.u.io.dation->suspend(this);
-            // the global task mutex is unlocked when the targetted task
+            DEBUG("suspend(fromOtherTask): dation->suspend(this) done");
+            // the global task mutex is unlocked when the target task
             // becomes suspended. Thus we must not unlock the mutex now
-	    doReleaseMutex = false;
+            doReleaseMutex = false;
+            suspendDone.request();    // really ok? 10.8.2019
+            DEBUG("suspend(fromOtherTask): acknowledged");
+            break;
+
+         case IO_MULTIPLE_IO:
+            DEBUG("suspend(fromOtherTask) IO_MULTIPLE_IO start");
+//printf("suspend IO_MULT dir=%d\n", blockParams.why.u.io.direction);
+            blockParams.why.u.io.dation->suspend(this);
+            //blockParams.semaBlock.release();
             break;
 
          default:
             Log::error("%s: untreated block reason (%d) in"
-                       " continueFromOtherTask",
+                       " suspend()",
                        name, blockParams.why.reason);
             throw theInternalTaskSignal;
          }
@@ -573,7 +641,8 @@ namespace pearlrt {
          throw theInternalTaskSignal;
       }
 
-      Log::debug("%s:   Task: suspend done", name);
+      DEBUG("%s:   Task: suspend done state=%d", name, taskState);
+
       if (doReleaseMutex) {
          mutexUnlock();
       }
@@ -612,14 +681,33 @@ namespace pearlrt {
 
          case IO:
             continueSuspended();
+            // update of taskState occures in Task::suspendMyself()
             break;
 
          case IOWAITQUEUE:
             taskState = BLOCKED;
             // restart the i/o request
-            blockParams.why.u.ioWaitQueue.dation->restart(
+            blockParams.why.u.io.dation->restart(
                this,
-               blockParams.why.u.ioWaitQueue.direction);
+               blockParams.why.u.io.direction);
+            //blockParams.why.u.ioWaitQueue.dation->restart(
+            //   this,
+            //   blockParams.why.u.ioWaitQueue.direction);
+            DEBUG("task %s: continueFromOtherTask: added to queue", name);
+            break;
+
+         case IO_MULTIPLE_IO:
+            //printf("susp blocked cont dir=%d\n",blockParams.why.u.io.direction );
+            DEBUG("susp_blocked cont IO_MULTIPLE_IO");
+            taskState = BLOCKED;
+            // restart the i/o request
+            //blockParams.why.u.ioWaitQueue.dation->restart(
+            //   this,
+            //   blockParams.why.u.ioWaitQueue.direction);
+            blockParams.why.u.io.dation->restart(
+               this,
+               blockParams.why.u.io.direction);
+            //printf("susp blocked cont after restart\n");
             DEBUG("task %s: continueFromOtherTask: added to queue", name);
             break;
 
@@ -656,11 +744,18 @@ namespace pearlrt {
             // remove and insert the task in the wait queue to enshure
             // proper sorting if the priority has changed
             PriorityQueue *q;
-            q =  blockParams.why.u.ioWaitQueue.dation->getWaitQueue();
+            //q =  blockParams.why.u.ioWaitQueue.dation->getWaitQueue();
+            q =  blockParams.why.u.io.dation->getWaitQueue();
             q->remove(this);
             q->insert(this);
          }
          break;
+
+         case IO_MULTIPLE_IO:
+            Log::error("blocked: cont IO_MULTIPLE_IO not supported yet");
+            throw theInternalTaskSignal;
+            break;
+
 
          default:
             Log::error("in BLOCKED: untreated "
@@ -706,7 +801,8 @@ namespace pearlrt {
       Fixed<15> p;
       // struct itimerspec its;
 
-      Log::debug("%s: cont() called: condition=%d", name, condition);
+      Log::info("%s: continue task %s: condition=%d",
+                me->getName(), name, condition);
       p = currentPrio;
 
       if (condition & PRIO) {
@@ -763,8 +859,8 @@ namespace pearlrt {
 
          mutexUnlock();
       } else {
-         Log::debug("%s: continue task %s with prio %d",
-                    me->getName(), name, p.x);
+         DEBUG("%s: continue task %s with prio %d",
+               me->getName(), name, p.x);
          mutexLock();
 
          // cancel continue schedules if set
@@ -783,8 +879,8 @@ namespace pearlrt {
       }
 
       mutexUnlock();
-      Log::debug("%s: continue task %s completed",
-                 me->getName(), name);
+      DEBUG("%s: continue task %s completed",
+            me->getName(), name);
 
       return;
    }
@@ -798,7 +894,7 @@ namespace pearlrt {
          return;
       }
 
-      Log::debug("%s: resume cond=%d", name, condition);
+      Log::info("%s: resume (cond=%d)", name, condition);
 
       if (condition != Task::AT && condition != Task::AFTER) {
          Log::error("task %s: resume nether AT nor AFTER", name);
@@ -835,7 +931,7 @@ namespace pearlrt {
       }
 
       // do the plattform specific part ... and release the mutexTasks lock
-      Log::debug("%s: call suspendMySelf", name);
+      DEBUG("%s: call suspendMySelf", name);
       suspendMySelf();
       mutexUnlock();
    }
@@ -890,7 +986,7 @@ namespace pearlrt {
       //struct itimerspec its;
       bool schedActivateWasSet = false;
 
-      Log::debug("%s: prevent %s start", me->getName(), name);
+      Log::info("%s: prevent %s", me->getName(), name);
       mutexLock();
 
       // check if number of pending must be reduced
@@ -924,7 +1020,7 @@ namespace pearlrt {
          schedContinueData.whenRegistered = false;
       }
 
-      Log::debug("   task %s: prevent %s done", me->getName(), name);
+      DEBUG("   task %s: prevent %s done", me->getName(), name);
 
       /* still running ? */
       if (taskState == TERMINATED && schedActivateWasSet) {
@@ -941,9 +1037,9 @@ namespace pearlrt {
       mutexLock();
 
       if (taskState == Task::TERMINATED) {
-         Log::debug("%s: scheduled activate: starts", name);
+         DEBUG("%s: scheduled activate: starts", name);
          directActivate(schedActivateData.prio);
-//         activateDone.request();
+         activateDone.request();
       } else {
          if (schedActivateOverrun) {
             // warn that this activation is skipped
@@ -968,7 +1064,7 @@ namespace pearlrt {
       if (taskState == Task::SUSPENDED ||
             taskState == Task::SUSPENDED_BLOCKED ||
             taskState == Task::RUNNING) {
-         Log::debug("%s: scheduled continue: timeout reached", name);
+         DEBUG("%s: scheduled continue: timeout reached", name);
 
          if (schedContinueData.prio.x != 0) {
             continueFromOtherTask(PRIO, Prio(schedContinueData.prio));
@@ -976,7 +1072,7 @@ namespace pearlrt {
             continueFromOtherTask(0, Prio());
          }
 
-         Log::debug("%s: scheduled continue done", name);
+         DEBUG("%s: scheduled continue done", name);
 
       } else {
          Log::warn("%s: scheduled continue: skipped", name);
@@ -992,7 +1088,7 @@ namespace pearlrt {
 
 // call with locked task lock
    void TaskCommon::triggeredContinue() {
-      Log::debug("%s: triggeredContinue called", name);
+      DEBUG("%s: triggeredContinue called", name);
       schedContinueData.whenRegistered = false;  // automatically unregistered
 
       if (schedContinueData.taskTimer->isSet()) {
@@ -1012,7 +1108,7 @@ namespace pearlrt {
 
 // call with locked task lock
    void TaskCommon::triggeredActivate() {
-      Log::debug("%s: triggeredActivate called", name);
+      DEBUG("%s: triggeredActivate called", name);
 
       if (schedActivateData.taskTimer->isSet()) {
          if (schedActivateData.taskTimer->start()) {
@@ -1021,8 +1117,9 @@ namespace pearlrt {
          }
       } else {
          if (taskState == Task::TERMINATED) {
-            Log::debug("%s: scheduled activate (when): starts", name);
+            DEBUG("%s: scheduled activate (when): starts", name);
             directActivate(schedActivateData.prio);
+            activateDone.request();
          } else {
             if (schedActivateOverrun) {
                // warn that this activation is skipped
@@ -1040,12 +1137,124 @@ namespace pearlrt {
    }
 
    void TaskCommon::doAsyncSuspend() {
-       asyncSuspendRequested = true;
-       suspendDone.request();
+      DEBUG("TaskCommon::doAsyncSuspend called");
+      asyncSuspendRequested = true;
+      suspendWaiters ++;
+      suspendDone.request();
    }
 
    void TaskCommon::doAsyncTerminate() {
+      printf("TaskCommon:doAsyncTerminate called\n");
+      terminateWaiters ++;
       asyncTerminateRequested = true;
       terminateDone.request();
+   }
+
+   char* TaskCommon:: getTaskStateAsString() {
+      switch (taskState) {
+      case TERMINATED:
+         return ((char*)"TERMINATED");
+
+      case SUSPENDED:
+         return ((char*)"SUSPENDED");
+
+      case RUNNING:
+         return ((char*)"RUNNING");
+
+      case BLOCKED:
+         return ((char*)"BLOCKED");
+
+      case SUSPENDED_BLOCKED:
+         return ((char*)"SUSPENDED+BLOCKED");
+      }
+      return ((char*)"unknown state");
+   }
+
+   int TaskCommon::detailedTaskState(char * line[3]) {
+      int i = 0;
+      char help[20];
+      mutexLock();
+
+      if (schedActivateData.taskTimer->isActive()) {
+         ((TaskTimer*)(schedActivateData.taskTimer))->detailedStatus(
+            (char*)"ACT", line[i]);
+         i++;
+      }
+
+      if (schedContinueData.taskTimer->isActive()) {
+         ((TaskTimer*)(schedContinueData.taskTimer))->detailedStatus(
+            (char*)"CONT", line[i]);
+         i++;
+      }
+
+
+      if (taskState == BLOCKED) {
+         switch (blockParams.why.reason) {
+         case REQUEST:
+            sprintf(line[i], "REQUEST %d SEMA(s):",
+                    blockParams.why.u.sema.nsemas);
+
+            for (int j = 0; j < blockParams.why.u.sema.nsemas; j++) {
+               Semaphore * s = blockParams.why.u.sema.semas[j] ;
+               sprintf(help, " %s(%d)", s->getName(), s->getValue());
+
+               if (strlen(line[i]) + strlen(help) < 80) {
+                  strcat(line[i], help);
+               }
+            }
+
+            break;
+
+         case RESERVE:
+            sprintf(line[i], "RESERVE %d BOLT(s):",
+                    blockParams.why.u.bolt.nbolts);
+
+            for (int j = 0; j < blockParams.why.u.bolt.nbolts; j++) {
+               Bolt * s = blockParams.why.u.bolt.bolts[j];
+               sprintf(help, " %s(%s)", s->getName(), s->getStateName());
+
+               if (strlen(line[i]) + strlen(help) < 80) {
+                  strcat(line[i], help);
+               }
+            }
+
+            break;
+
+         case ENTER:
+            sprintf(line[i], "ENTER %d BOLT(s):",
+                    blockParams.why.u.bolt.nbolts);
+
+            for (int j = 0; j < blockParams.why.u.bolt.nbolts; j++) {
+               Bolt * s = blockParams.why.u.bolt.bolts[j] ;
+               sprintf(help, " %s(%s)", s->getName(), s->getStateName());
+
+               if (strlen(line[i]) + strlen(help) < 80) {
+                  strcat(line[i], help);
+               }
+            }
+
+            break;
+
+         case IOWAITQUEUE:
+            sprintf(line[i], "IO-waiting");
+            break;
+         case IO:
+            sprintf(line[i], "IO-processing");
+            break;
+         case IO_MULTIPLE_IO:
+            sprintf(line[i], "IO-multiple");
+            break;
+
+         default:
+            sprintf(line[i], "unknown blocking reason(%d)",
+                    blockParams.why.reason);
+            break;
+         }
+
+         i++;
+      }
+
+      mutexUnlock();
+      return i;
    }
 }

@@ -84,13 +84,14 @@ Only this file mus be included.
 #include "DationDim2.h"
 #include "DationDim3.h"
 #include "Semaphore.h"
+#include "Bolt.h"
 
 #include "SystemDationNBSink.h"
 #include "SystemDationNBSource.h"
 
 #include "Control.h"
 
-#include "StdOut.h"
+//#include "StdOut.h"
 #include "SoftInt.h"
 
 #include "Float.h"
@@ -104,7 +105,7 @@ Only this file mus be included.
 //#include "Esp32Wifi.h"
 //#include "TcpIpServer.h"
 
-//#include "Console.h"
+#include "Console.h"
 #include "Esp32Uart.h"
 
 

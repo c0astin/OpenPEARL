@@ -95,9 +95,9 @@ namespace pearlrt {
 //      TaskCommon* currentTask;
 
       /** current transfer direction.
-          This is eather Dation::IN or Dation::OUT
+          This is either Dation::IN or Dation::OUT
       */
-      int currentDirection;
+      DationParams currentDirection;
 
       /** the system dation which performs the io processing
       */
@@ -319,8 +319,35 @@ namespace pearlrt {
       virtual void endSequenceHook(void) = 0;
 
    public:
+      /**
+      suspend i/o operation
+
+      the given task shall suspend all i/o operation until it 
+      becomes continued or terminated
+
+      The userdation must delegate this to the corresponding system dation
+
+      \param ioPerformingTask pointer to the task which becomes suspended
+      */
       void suspend(TaskCommon * ioPerformingTask);
+
+      /**
+      terminate task during an i/o operation
+
+      the given task shall stop all i/o operation end terminate
+
+      The userdation must delegate this to the corresponding system dation
+
+      \param ioPerformingTask pointer to the task which becomes terminated
+      */
       void terminate(TaskCommon * ioPerformingTask);
+
+      /** obtain the current i/0 directiontransfer direction.
+
+          \return the current transfer direction.
+          This is either Dation::IN or Dation::OUT
+      */
+      DationParams getCurrentDirection();
    };
 }
 #endif

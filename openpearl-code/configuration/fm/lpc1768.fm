@@ -8,8 +8,10 @@ config LPC1768
 	This port is in work. Build and execution problems 
         may occur selecting this option. 
 
-config LPC1768_CHECK_STACK_OVERFLOW
+menu "LPC1768 specific options"
 	depends on LPC1768
+
+config LPC1768_CHECK_STACK_OVERFLOW
 	boolean "check stack overflow in application code"
 	default y
 	help
@@ -129,3 +131,19 @@ config LPC1768_CAN
 
 endmenu
 
+config LPC1768_FLASH_INTERFACE
+        depends on LPC1768
+        string "Name of Interface for serial flashing"
+        default "/dev/ttyUSB0"
+        help
+        If more than one tty<->usb-adapter is used, the device name
+        /dev/ttyUSB0 is no longer guaranteed for the device node name.
+        In this case you should set a symlink-rule in your udev-rules
+        to make a symlink depending on the serial number of the
+        tty<->usb-adapter like:
+
+        SUBSYSTEMS=="usb", ATTRS{idVendor]=="0403", ...
+           ATTRS{serial}=="A6008isW", SYMLINK+=ttyUart0
+
+
+endmenu

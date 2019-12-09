@@ -12,12 +12,19 @@ DCL
 DCL t         CLOCK;
 
 /*==========================================================================*/
+p0: PROC;
+   ! we need the explicit dereference (2019-sep-24)
+   ! this will induce a signal 
+   k := CONT rk1;
+END;
+
+/*==========================================================================*/
 
 p1 : PROC;
    rk1 := k;                    /* rk1 points at k */
 
    __cpp__ (
-        "if (_rk1 == &_k) {                         "
+        "if (_rk1.x == &_k) {                         "
         "   printf(\"rk1 point to k: ok\n\");        "
         "} else {                                   "
         "   printf(\"rk1 should point to k\n\");     "
@@ -28,7 +35,7 @@ p1 : PROC;
    rk1 := l;                    /* rk1 points at l */
 
    __cpp__ (
-        "if (_rk1 == &_l) {                         "
+        "if (_rk1.x == &_l) {                         "
         "   printf(\"rk1 point to l: ok\n\");        "
         "} else {                                   "
         "   printf(\"rk1 should point to l\n\");     "
@@ -39,7 +46,7 @@ p1 : PROC;
    rk2 := rk1;                  /* rk2 points at l, pointer assignment */
 
    __cpp__ (
-        "if (_rk1 == _rk2) {                        "
+        "if (_rk1.x == _rk2.x) {                        "
         "   printf(\"rk1 point to rk2: ok\n\");      "  
         "} else {                                   "
         "   printf(\"rk1 should point to rk2\n\");   "
@@ -50,7 +57,7 @@ p1 : PROC;
    rx  := x;                    /* rx points at x */
 
    __cpp__ (
-        "if (_rx == &_x) {                         "
+        "if (_rx.x == &_x) {                         "
         "   printf(\"rx point to x: ok\n\");        "
         "} else {                                   "
         "   printf(\"rx should point to x\n\");     "
@@ -85,6 +92,8 @@ p1 : PROC;
        "   pearlrt::Control::setExitCode(1);       "
        "} "
   );
+
+
 
    CONT rk2 := k;               /* l obtains value 2 */
 
@@ -132,9 +141,9 @@ p5: PROC;
     DCL fixed_ptr     REF FIXED;
     DCL fixed8_ptr    REF FIXED(8);
     DCL float_ptr     REF FLOAT;
-    DCL float24_prt   REF FLOAT(24);
+    DCL float23_prt   REF FLOAT(23);
 
-    DCL task_ptr      REF TASK;
+!    DCL task_ptr      REF TASK;
 
 !    DCL proc_ptr      REF PROC (p REF FIXED);
 !    DCL signal_ptr    REF SIGNAL;
@@ -165,18 +174,20 @@ END;
 
 
 /*==========================================================================*/
-
+/*
 p7: PROC;
     DCL me  REF TASK;
 
     me := TASK;
 
 END;
+*/
 
 /*==========================================================================*/
 
 maintask: TASK  MAIN;
 !   t := NOW;
+    p0;
     p1;
     p5;
     p6;

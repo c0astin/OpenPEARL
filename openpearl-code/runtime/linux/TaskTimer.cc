@@ -421,6 +421,7 @@ namespace pearlrt {
       return NULL;  // never reached
    }
 
+#if 0
    void TaskTimer::detailedStatus(char *id, char * line) {
       struct itimerspec its;
       float next, rept;
@@ -440,5 +441,6 @@ namespace pearlrt {
       }
 
    }
+#endif
 
 }

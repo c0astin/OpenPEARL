@@ -1476,9 +1476,13 @@ position :
 //   F (FieldWidth [ , DecimalPositions [ , ScaleFactor ] ] )
 ////////////////////////////////////////////////////////////////////////////////
 
+// no scaleFactor in OpenPEARL
+//fixedFormat :
+//    'F' '(' fieldWidth ( ',' decimalPositions ( ',' scaleFactor )? )? ')'
+//    ;
 
 fixedFormat :
-    'F' '(' fieldWidth ( ',' decimalPositions ( ',' scaleFactor )? )? ')'
+    'F' '(' fieldWidth ( ',' decimalPositions )? ')'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1496,10 +1500,13 @@ fieldWidth :
 // Significance ::= Expression§WithIntegerAsValue
 ////////////////////////////////////////////////////////////////////////////////
 
+significance :
+	expression
+	;
 
 floatFormat:
-      'E'  '(' fieldWidth ( ',' decimalPositions ( ',' expression )? )? ')'   # floatFormatE
-    | 'E3' '(' fieldWidth ( ',' decimalPositions ( ',' expression )? )? ')'   # floatFormatE3
+      'E'  '(' fieldWidth ( ',' decimalPositions ( ',' significance )? )? ')'   # floatFormatE
+    | 'E3' '(' fieldWidth ( ',' decimalPositions ( ',' significance )? )? ')'   # floatFormatE3
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1561,7 +1568,7 @@ scaleFactor :
 ////////////////////////////////////////////////////////////////////////////////
 
 characterStringFormat :
-      'A' ( '(' expression ')' )?       # characterStringFormatA
+      'A' ( '(' fieldWidth ')' )?       # characterStringFormatA
     | 'S' '(' ID ')'                    # characterStringFormatS
     ;
 
@@ -2334,8 +2341,8 @@ charSlice
 literal
     : fixedConstant
     | floatingPointConstant
-    | StringLiteral
     | BitStringLiteral
+    | StringLiteral
     | timeConstant
     | durationConstant
     ;
@@ -2362,30 +2369,29 @@ fixedNumberPrecision
 ////////////////////////////////////////////////////////////////////////////////
 
 StringLiteral
-    :  '\'' SCharSequence? '\''
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
+	:	'\'' StringCharacters? '\''
+	;
 
 fragment
-SCharSequence
-    :   SChar+
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
+StringCharacters
+	:	StringCharacter+
+	;
 
 fragment
-SChar
-    :   ~['\\\r\n]
-    | ControlCharacterSequence
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
+StringCharacter
+	:	~['\\\r\n]
+	|	EscapeSequence
+	;
 
 fragment
-ControlCharacterSequence
-    : '\'\\' Whitespace? (B4Digit B4Digit) (Whitespace B4Digit B4Digit)* Whitespace? '\\\''
-    ;
+EscapeSequence
+	: '\'\\' (HexEscape| ' ' | [\r\n])* '\\\''
+	;
+
+fragment
+HexEscape
+	:  B4Digit B4Digit
+	;
 
 ////////////////////////////////////////////////////////////////////////////////
 

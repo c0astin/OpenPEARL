@@ -69,7 +69,12 @@
 #include "allTaskPriorities.h"
 #include "service.h"
 
-#define MAXTIMER configTIMER_QUEUE_LENGTH
+//#define MAXTIMER configTIMER_QUEUE_LENGTH
+// there is no reason visible to use the number of FreeRTOS timr queue 
+// entries for the number of timers of this module
+// the number of required timers is two times the number of tasks
+// lets asume 25 tasks are enough for the microcontroller
+#define MAXTIMER 50
 #define ENTERCRITICAL taskDISABLE_INTERRUPTS();DMB();
 #define LEAVECRITICAL DMB();taskENABLE_INTERRUPTS()
 
@@ -409,6 +414,24 @@ int timer_delete(timer_t thatindex) {
    retrigger_timer();
 
    LEAVECRITICAL;
+   return 0;
+}
+
+int timer_gettime(timer_t timerid, struct itimerspec * itimer) {
+   uint64_t now, next;
+   clock_gettime_nsec(&now);
+
+   if (timerid > MAXTIMER) {
+      errno = EINVAL;
+      return -1;
+   }
+
+   next = timerTable[timerid].value.nsec_value - now;
+
+   itimer->it_value.tv_sec = next/1e9;
+   itimer->it_value.tv_nsec = next % 10000000000;
+   itimer->it_interval.tv_sec = timerTable[timerid].value.nsec_interval / 1e9;
+   itimer->it_interval.tv_nsec = timerTable[timerid].value.nsec_interval % 10000000000;
    return 0;
 }
 

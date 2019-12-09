@@ -1,6 +1,6 @@
 /*
  [A "BSD license"]
- Copyright (c) 2017 Rainer Mueller
+ Copyright (c) 2017-2019 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,8 @@
 #include "SystemDationNB.h"
 #include "TaskCommon.h"
 #include "PriorityQueue.h"
+#include "Mutex.h"
+
 #ifndef CONSOLECOMMON_INCLUDED
 #define CONSOLECOMMON_INCLUDED
 
@@ -39,10 +41,31 @@ namespace pearlrt {
    The Console device shall be available for all platform to adress
    text input to individual tasks
    This class provides the target independent stuff like
-   input data processing, task name lookup, ...
+   line edit data processing, task name lookup, ...
+
+   The following cursor keys are treated:
+   <ul>
+    <li> LEFT  ESC [ D
+    <li> RIGHT ESC [ E
+    <li> POS1  ESC O H
+    <li> END   ESC O F
+    <li> INS   ESC [ 2
+    <li> DEL   ESC [ 3
+    <li> BS    0x08
+   </ul>
+
+   The input is accepted as UTF-8. Internally all input data is stored
+   with 16 bit. At the end of the input, the data is compressed to
+   deliver a UTF-8 string.
+   The input length is limited to 80 characters. This size
+   is choosen, since the usual terminal size is 80 columns.
+   Longer input lines will produce problems with the cursor
+   control if a line wrap occurs.
    */
    class ConsoleCommon {
    private:
+      Mutex mutex;
+
       PriorityQueue waitingForOutput;
       TaskCommon* waitingForInput;
       SystemDationNB * systemIn;
@@ -53,15 +76,44 @@ namespace pearlrt {
       size_t  nbrEnteredCharacters;
       size_t  cursorPosition;
       bool inputStarted;
-      char inputLine[80];
+      struct Wchar {
+         char page;     // ether 0 or UTF8_Part1 or UTF8_Part2
+         char ch;       // the index in the page
+      };
+      union InputLine {
+         struct Wchar wLine[82];  // 80 characters+\n+\0
+         char compressedLine[164];
+      } inputLine;
 
+      void compress();
       int getChar(void);
       void putChar(char ch);
+      void putChar(Wchar ch);
+      void putString(const Wchar* string);
       void putString(const char* string);
       void goLeft(int n);
       void goRight(int n);
+      bool removeFromInputList(TaskCommon * t);
+      bool removeFromOutputList(TaskCommon * t);
+      bool treatCommand(char* line);
+      const char* helpHelp();
+      void printHelp();
+      const char* helpPrli();
+      void printPrli();
+
+      struct Commands {
+         const char* command;
+         const char* (ConsoleCommon:: *help)();
+         void (ConsoleCommon:: *doIt)();
+      } commands[3];
 
    public:
+      /**
+      resume operation  the next waiting writer at completion
+      of an input processing
+      */
+      void startNextWriter();
+
       /**
       ctor: initialize private data and memorize the in and out-dations
       */
@@ -101,6 +153,33 @@ namespace pearlrt {
        \param direction is ether Dation::IN or Dation::OUT
        */
       void registerWaitingTask(void * task, int direction);
+
+      /**
+      terminate a task which is registered for console i/o
+
+      This method is invoked from TaskCommon via the SystemDation.
+      The specified task is removed from input or output list.
+      In TaskCommon, the further treatment for termination is
+      started,
+
+      \param ioPerformingTask pointer to the task which should become
+            terminated
+      */
+      void terminate(TaskCommon * ioPerformingTask);
+
+      /**
+      suspend a task which is registered for console i/o
+
+      This method is invoked from TaskCommon via the SystemDation.
+      The specified task is removed from input or output list.
+      In TaskCommon, the further treatment for suspending is
+      started,
+
+      \param ioPerformingTask pointer to the task which should become
+            suspended
+      */
+      void suspend(TaskCommon * ioPerformingTask);
+
    };
 }
 #endif

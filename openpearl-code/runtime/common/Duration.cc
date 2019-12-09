@@ -116,18 +116,18 @@ namespace pearlrt {
    }
 
 
-   Float<24> Duration::operator/=(const Duration& rhs) {
+   Float<23> Duration::operator/=(const Duration& rhs) {
 
       if (rhs.intval.get() == 0) {
          throw theDurationDivideByZeroSignal;
       }
 
-      Float<24> result(intval.get());
-      result = result / Float<24>(rhs.intval.get());
+      Float<23> result(intval.get());
+      result = result / Float<23>(rhs.intval.get());
       return result;
    }
 
-   Float<24> Duration::operator/(const Duration& rhs) const {
+   Float<23> Duration::operator/(const Duration& rhs) const {
       return Duration(*this) /= rhs;
    }
 

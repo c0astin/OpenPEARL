@@ -29,7 +29,6 @@
 
 package org.smallpearl.compiler;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
@@ -565,7 +564,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         if (ctx.IntegerConstant() != null) {
             size = Integer.parseInt(ctx.IntegerConstant().getText());
 
-            if (size < 1 || size > 255) {
+            if (size < 1 || size > Defaults.CHARACTER_MAX_LENGTH) {
                 throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         }
@@ -1018,15 +1017,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     }
 
     public LinkedList<ArrayDescriptor>  getListOfArrayDescriptors() {
-        Log.debug("SymbolTableVisitor:getListOfArrayDescriptors");
-
         return m_listOfArrayDescriptors;
     }
 
     @Override
     public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
-        Log.debug("SymbolTableVisitor:visitLoopStatement:ctx" + CommonUtils.printContext(ctx));
-
         String blockLabel = null;
 
         if (m_verbose > 0) {
@@ -1073,9 +1068,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     @Override
     public Void visitBoltDeclaration( SmallPearlParser.BoltDeclarationContext ctx)
     {
-        Log.debug("SymbolTableVisitor:visitBoltDeclaration:ctx" + CommonUtils.printContext(ctx));
-
         boolean hasGlobalAttribute = false;
+
+        if (m_verbose > 0) {
+            System.out.println("SymbolTableVisitor: visitBoltDeclaration");
+        }
 
         ArrayList<String> identifierDenotationList = null;
 
@@ -1102,8 +1099,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
     @Override
     public Void visitBoltReserve(SmallPearlParser.BoltReserveContext ctx) {
-        Log.debug("SymbolTableVisitor:visitBoltReserve:ctx" + CommonUtils.printContext(ctx));
-
         LinkedList<BoltEntry> listOfBolts = new LinkedList<BoltEntry>();
 
         LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
@@ -1134,8 +1129,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
     @Override
     public Void visitBoltFree(SmallPearlParser.BoltFreeContext ctx) {
-        Log.debug("SymbolTableVisitor:visitBoltFree:ctx" + CommonUtils.printContext(ctx));
-
         LinkedList<BoltEntry> listOfBolts = new LinkedList<BoltEntry>();
 
         LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
@@ -1166,8 +1159,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
     @Override
     public Void visitBoltEnter(SmallPearlParser.BoltEnterContext ctx) {
-        Log.debug("SymbolTableVisitor:visitBoltEnter:ctx" + CommonUtils.printContext(ctx));
-
         LinkedList<BoltEntry> listOfBolts = new LinkedList<BoltEntry>();
 
         LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
@@ -1198,8 +1189,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
     @Override
     public Void visitBoltLeave(SmallPearlParser.BoltLeaveContext ctx) {
-        Log.debug("SymbolTableVisitor:visitBoltLeave:ctx" + CommonUtils.printContext(ctx));
-
         LinkedList<BoltEntry> listOfBolts = new LinkedList<BoltEntry>();
 
         LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
@@ -1234,14 +1223,18 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
     @Override
     public Void visitDationDeclaration(SmallPearlParser.DationDeclarationContext ctx) {
-        Log.debug("SymbolTableVisitor:visitDationDeclaration:ctx" + CommonUtils.printContext(ctx));
+        if (m_verbose > 0) {
+            System.out.println("SymbolTableVisitor: visitDationDeclaration");
+        }
 
         return null;
     }
 
     @Override
     public Void visitLengthDefinition(SmallPearlParser.LengthDefinitionContext ctx) {
-        Log.debug("SymbolTableVisitor:visitLengthDefinition:ctx" + CommonUtils.printContext(ctx));
+        if (m_verbose > 0) {
+            System.out.println("SymbolTableVisitor: visitLengthDefinition");
+        }
 
         if ( ctx.lengthDefinitionType() instanceof SmallPearlParser.LengthDefinitionFixedTypeContext) {
             TypeFixed typ = new TypeFixed( Integer.valueOf((ctx.IntegerConstant().toString())));
@@ -1293,30 +1286,21 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
 
     private ArrayList<Initializer>  getInitialisationAttribute(SmallPearlParser.InitialisationAttributeContext ctx) {
-        Log.debug("SymbolTableVisitor:getInitialisationAttribute:ctx" + CommonUtils.printContext(ctx));
-
         ArrayList<Initializer> initElementList = new ArrayList<>();
 
         if (ctx != null) {
             for (int i = 0; i < ctx.initElement().size(); i++) {
                 ConstantValue  constant = getInitElement(ctx.initElement(i));
-                SimpleInitializer initializer = new SimpleInitializer(ctx.initElement(i),constant);
+                Initializer initializer = new Initializer(ctx.initElement(i),constant);
                 initElementList.add(initializer);
             }
         }
 
-        if ( initElementList.size() > 0) {
-            return initElementList;
-        }
-        else {
-            return null;
-        }
+        return initElementList;
     }
 
     private ConstantValue getInitElement(SmallPearlParser.InitElementContext ctx) {
         ConstantValue constant = null;
-
-        Log.debug("SymbolTableVisitor:getInitElement:ctx" + CommonUtils.printContext(ctx));
 
         if (ctx.constantExpression() != null) {
             constant = getConstantExpression(ctx.constantExpression());
@@ -1334,12 +1318,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 VariableEntry var = (VariableEntry)entry;
 
                 if ( var.getAssigmentProtection()) {
-                    if ( var.getInitializer() instanceof SimpleInitializer) {
-                        constant = ((SimpleInitializer)var.getInitializer()).getConstant();
-                    }
-                    else {
-                        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-                    }
+                    constant = var.getInitializer().getConstant();
                 }
                 else {
                     throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(),(ctx.ID().toString()));
@@ -1364,10 +1343,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             }
         }
 
-        if ( ctx.stringConstant() != null) {
-            constant = new ConstantCharacterValue(ctx.stringConstant().StringLiteral().toString());
-        }
-        else if ( ctx.fixedConstant() != null) {
+        if ( ctx.fixedConstant() != null) {
             long curval = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
             int curlen =   m_currentSymbolTable.lookupDefaultFixedLength();
 
@@ -1377,6 +1353,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 curlen = ((TypeFixed)m_type).getPrecision();
             } else if ( m_type instanceof TypeFloat) {
                     curlen = ((TypeFloat)m_type).getPrecision();
+            } else {
+                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
             constant = new ConstantFixedValue(curval,curlen);
@@ -1450,8 +1428,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
             constant = new ConstantClockValue(hours, minutes, seconds);
         }
-        else if ( ctx.stringConstant() != null) {
-            constant = new ConstantCharacterValue(ctx.stringConstant().StringLiteral().toString());
+        else if ( ctx.StringLiteral() != null) {
+            constant = new ConstantCharacterValue(ctx.StringLiteral().toString());
         }
 
         return constant;
@@ -1459,8 +1437,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
 
     private ConstantValue getConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
-        Log.debug("SymbolTableVisitor:getConstantExpression:ctx" + CommonUtils.printContext(ctx));
-
         ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
         ConstantValue constant = evaluator.visit(ctx.constantFixedExpression());
 
@@ -1470,8 +1446,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     @Override
     public Void visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
         LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
-
-        Log.debug("SymbolTableVisitor:visitDationSpecification:ctx" + CommonUtils.printContext(ctx));
 
         if ( listOfModules.size() > 1 ) {
             throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -1486,58 +1460,51 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
     @Override
     public Void visitStructVariableDeclaration(SmallPearlParser.StructVariableDeclarationContext ctx ) {
-        Log.debug("SymbolTableVisitor:visitStructVariableDeclaration:ctx" + CommonUtils.printContext(ctx));
+        if (m_debug) {
+            System.out.println("SymbolTableVisitor: visitStructVariableDeclaration");
+        }
+
         visitChildren(ctx);
         return null;
     }
 
-    //    ID dimensionAttribute? assignmentProtection? typeStructure globalAttribute? initialisationAttribute?
+    @Override
+    public Void visitStructureComponent(SmallPearlParser.StructureComponentContext ctx) {
+        if (m_debug) {
+            System.out.println("SymbolTableVisitor: visitStructureComponent");
+        }
+
+        if ( ctx.typeAttributeInStructureComponent() != null ) {
+            visitTypeAttributeInStructureComponent(ctx.typeAttributeInStructureComponent());
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitTypeAttributeInStructureComponent(SmallPearlParser.TypeAttributeInStructureComponentContext ctx) {
+        if (m_debug) {
+            System.out.println("SymbolTableVisitor: visitTypeAttributeInStructureComponent");
+        }
+
+        return null;
+    }
 
     @Override
     public Void visitStructureDenotation(SmallPearlParser.StructureDenotationContext ctx) {
-        Log.debug("SymbolTableVisitor:visitStructureDenotation:ctx" + CommonUtils.printContext(ctx));
-
         StructureEntry old_structureEntry = m_currentStructureEntry;
-        ArrayList<Initializer> initElementList = null;
 
-        boolean  hasAssignmentProtection = false;
-        boolean hasGlobalAttribute = false;
-        boolean hasAssigmentProtection = false;
-        ArrayList<String> identifierDenotationList = new ArrayList<String>();
-        TypeDefinition typ = null;
+        if (m_debug) {
+            System.out.println("SymbolTableVisitor: visitStructureDenotation");
+        }
 
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(ctx.ID().toString());
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().toString());
 
         if (entry != null) {
             throw new DoubleDeclarationException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
-        m_typeStructure = null;
-        visitTypeStructure(ctx.typeStructure());
-
-        if ( ctx.dimensionAttribute() != null ) {
-            m_type = new TypeArray();
-            visitDimensionAttribute(ctx.dimensionAttribute());
-            ((TypeArray) m_type).setBaseType(m_typeStructure);
-        } else if ( ctx.typeStructure() != null ) {
-            m_type = m_typeStructure;
-        } else {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
-
-        StructureInitializer structureInitializer = null;
-
-        if ( initElementList != null && initElementList.size() > 0) {
-            structureInitializer = new StructureInitializer(ctx, initElementList);
-        }
-        else {
-            structureInitializer = null;
-        }
-
-        hasAssignmentProtection = ctx.assignmentProtection()!=null;
-
-        VariableEntry variableEntry = new VariableEntry(ctx.ID().toString(), m_type, hasAssignmentProtection, ctx, structureInitializer);
-        m_currentSymbolTable.enter(variableEntry);
+        m_currentStructureEntry = new StructureEntry(ctx.ID().toString(),ctx, m_currentSymbolTable);
 
         // VariableEntry variableEntry = new VariableEntry(ctx.ID().toString(), m_type, hasAllocationProtection, ctx, initElementList.get(j));
 
@@ -1549,6 +1516,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
 
 
+        visitChildren(ctx);
 
 //        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
 
@@ -1556,98 +1524,4 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         return null;
     }
 
-    // ERROR: 2: s0 var STRUCT [  a FIXED(10),b BIT(3),s1 STRUCT [  c FIXED(12),s2 STRUCT [  f FIXED(13),f FIXED(13),f FIXED(13),g BIT(3) ]  ] ,j BIT(17),j BIT(17),j BIT(17) ]
-
-    @Override
-    public Void visitTypeStructure(SmallPearlParser.TypeStructureContext ctx) {
-        Log.debug("SymbolTableVisitor:visitTypeStructure:ctx" + CommonUtils.printContext(ctx));
-
-        m_typeStructure = new TypeStructure();
-        m_type = m_typeStructure;
-
-        for ( int i = 0; i < ctx.structureComponent().size(); i++ ) {
-            visitStructureComponent(ctx.structureComponent(i));
-        }
-
-        return null;
-    }
-
-    @Override
-    public Void visitStructureComponent(SmallPearlParser.StructureComponentContext ctx) {
-        Log.debug("SymbolTableVisitor:visitStructureComponent:ctx" + CommonUtils.printContext(ctx));
-        TypeDefinition type_saved = m_type;
-        TypeArray array = null;
-
-        StructureComponent component = null;
-
-        TypeStructure saved_typeStructure = m_typeStructure;
-
-        if ( ctx.dimensionAttribute() != null ) {
-            Log.debug("SymbolTableVisitor:visitStructureComponent: ARRAY");
-            array = new TypeArray();
-            m_type = array;
-            visitDimensionAttribute(ctx.dimensionAttribute());
-        }
-
-         if ( ctx.typeAttributeInStructureComponent() != null ) {
-             type_saved = m_type;
-             visitTypeAttributeInStructureComponent(ctx.typeAttributeInStructureComponent());
-             m_typeStructure = saved_typeStructure;
-
-             for (int i = 0; i < ctx.ID().size(); i++) {
-                 component = new StructureComponent();
-
-                 if (ctx.dimensionAttribute() != null) {
-                     array.setBaseType(m_type);
-                     component.m_type = array;
-                 } else {
-                     component.m_type = m_type;
-                 }
-
-
-                 component.m_id = ctx.ID(i).getText();
-                 saved_typeStructure.add(component);
-                 m_type = m_typeStructure;
-             }
-         }
-//
-//
-//
-//                if ( type_saved instanceof  TypeArray) {
-//                    ((TypeStructure) ((TypeArray) type_saved).getBaseType()).add(component);
-//                } else {
-//                    ((TypeStructure)type_saved).add(component);
-//                }
-//            }
-
-        return null;
-    }
-
-
-
-//    typeAttributeInStructureComponent :
-//    assignmentProtection? (simpleType | structuredType )
-//    ;
-    @Override
-    public Void visitTypeAttributeInStructureComponent(SmallPearlParser.TypeAttributeInStructureComponentContext ctx) {
-        Log.debug("SymbolTableVisitor:visitTypeAttributeInStructureComponent:ctx" + CommonUtils.printContext(ctx));
-
-        if ( ctx.simpleType() != null ) {
-            visitSimpleType(ctx.simpleType());
-        }
-        else if ( ctx.structuredType() != null ) {
-            visitStructuredType( ctx.structuredType());
-        }
-        else {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
-
-        return null;
-    }
-    @Override
-    public Void visitStructuredType(SmallPearlParser.StructuredTypeContext ctx) {
-        Log.debug("SymbolTableVisitor:visitStructuredType:ctx" + CommonUtils.printContext(ctx));
-        visitChildren(ctx);
-        return null;
-    }
 }

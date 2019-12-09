@@ -41,6 +41,9 @@
 #include "MutexCommon.h"
 
 namespace pearlrt {
+  /** \addtogroup tasking_freertos
+       @{
+   */
 
    /**
    class for mutual exclusion
@@ -74,6 +77,7 @@ namespace pearlrt {
       */
       void unlock();
    };
+   /** @} */
 }
 
 #endif

@@ -250,7 +250,7 @@ List of commands:
 #include "Signals.h"
 #include "Control.h"
 #include "UnixSignal.h"
-#include "StdIn.h"   // for intermediate disabling of system console
+#include "Console.h" 
 
 #include "LogFile.h"
 #include "Disc.h"
@@ -264,8 +264,10 @@ C++ source code.
 namespace pearlrt {
 
 // ------------------------ prototypes of static functions
+#if 0
    static char* task_state(enum Task::TaskState t);
    static void treat_command(char * line);
+#endif
 
 //signal handler for SIGXCPU - cpu time limit exeeded
    static void sigXCPU(int dummy) {
@@ -282,6 +284,7 @@ namespace pearlrt {
       exit(Control::getExitCode());
    }
 
+#if 0
    static char* task_state(enum Task::TaskState t) {
       switch (t) {
       case Task::TERMINATED:
@@ -329,6 +332,7 @@ namespace pearlrt {
          }
       }
    }
+#endif
 
 
    static void set_cores(int n) {
@@ -445,6 +449,7 @@ of the system:
 */
 int main() {
    struct sched_param param;
+   pthread_attr_t attr;
    int max, min;
    char line[80];
    int numberOfCpus;
@@ -488,7 +493,13 @@ int main() {
    }
 
    param.sched_priority = max;
-   Task::setSchedPrioMax(max);
+   Task::setThreadPrioMax(max);
+
+   if (pthread_attr_init(&attr) != 0) {
+      perror("init scheduling attributes");
+      exit(1);
+   }
+
 
    //set prio and schedulingpolicy for the main thread
    if (pthread_setschedparam(pthread_self(), SCHED_RR, &param) != 0) {
@@ -496,6 +507,16 @@ int main() {
       Log::warn("error setting SCHED_RR --> using normal scheduler");
       TaskTimer::init(-1);  // setup timer thread
    } else {
+      if (pthread_attr_setschedpolicy(&attr, SCHED_RR) == 0) {
+         // ok we have access to SCHED_RR
+         param.sched_priority = max; // schedPrioMax;
+
+         if (pthread_attr_setschedparam(&attr, &param) != 0) {
+            perror("error on setting priority");
+            exit(1);
+         }
+      }
+
       TaskTimer::init(max);  // setup timer thread
       PrioMapper::getInstance()->logPriorities();
    }
@@ -541,20 +562,16 @@ int main() {
 
    Log::info("system startup complete");
 
-   while (1) {
-      char* ret = 0;
-
-      if (StdIn::isDefined()) {
-         //sleep all the time. if a timer expire, he will be awaked
+   if (Console::isDefined()) {
+      Console* con;
+      con = Console::getInstance();
+      con->consoleLoop();
+      // returns never !!
+   } else {
+      while (1) {
+         //sleep all the time. if a timer expire, he will be restarted
          sleep(20);
-      } else {
-         ret = fgets(line, 70, stdin);
-
-         if (ret != 0) {
-            line[strlen(line) - 1] = 0;
-            treat_command(line);
-         }
-      }
+      } 
    }
 
    // will never reach this point !

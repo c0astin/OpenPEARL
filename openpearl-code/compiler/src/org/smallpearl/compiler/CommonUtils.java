@@ -30,11 +30,14 @@
 package org.smallpearl.compiler;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 import java.util.UUID;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
+import org.smallpearl.compiler.Exception.IllegalCharacterException;
+import org.smallpearl.compiler.Exception.NotSupportedTypeException;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 import org.stringtemplate.v4.ST;
@@ -371,6 +374,9 @@ public class CommonUtils {
                 case 0:
                     if (ch == '\'') {
                         state = 1;
+                    } else if ( ch == '"') {
+                        sb.append("\\");
+                        sb.append("\"");
                     } else {
                         sb.append(ch);
                     }
@@ -379,16 +385,17 @@ public class CommonUtils {
                 case 1:
                     if (ch == '\\') {
                         state = 2;
-                    }
-                    else {
-                        state = 0;
-                        sb.append(ch);
+                    } else {
+                        throw new IllegalCharacterException("");
                     }
                     break;
 
                 case 2:
-                    if ( ch == ' ') {
+                    if ( (ch == ' ') || (ch == '\n') ) {
                         state = 2;
+                    }
+                    else if ( (ch == '\\') ) {
+                        state = 5;
                     }
                     else {
                         value += ch;
@@ -396,24 +403,24 @@ public class CommonUtils {
                     }
                     break;
 
-
                 case 3:
                     value += ch;
                     val = Integer.toString(Integer.parseInt(value, 16), 8);
-                    if ( val.length() == 1) {
+                    while (val.length() < 3) {
                         val = "0" + val;
                     }
-                    octalValue = "\\0" + val;
+                    octalValue = "\\" + val;
                     sb.append(octalValue);
                     value = "";
                     state = 4;
                     break;
 
                 case 4:
-                    if (ch == '\\') {
+                    if ( (ch == ' ') || (ch == '\n') ) {
+                        state = 2;
+                    }
+                    else if ( (ch == '\\') ) {
                         state = 5;
-                    } else if ( ch == ' ') {
-                        state = 4;
                     }
                     else {
                         value += ch;
@@ -435,7 +442,7 @@ public class CommonUtils {
     }
 
     public static
-    String remopveQuotes(String st) {
+    String removeQuotes(String st) {
         st = st.replaceAll("^'", "");
         st = st.replaceAll("'$", "");
         return st;
@@ -445,6 +452,7 @@ public class CommonUtils {
     int getStringLength(String st) {
         int state = 0;
         int len   = 0;
+        String s = "";
 
         for (int i = 0; i < st.length(); i++) {
             char ch = st.charAt(i);
@@ -454,16 +462,20 @@ public class CommonUtils {
                     if (ch == '\\') {
                         state = 1;
                     } else {
+                        s += ch;
                         len++;
                     }
                     break;
 
                 case 1:
-                    if (ch == '0') {
+                    if ( ch >= '0' && ch <= '7') {
                         state = 2;
+                        s += '?';
+                        len++;
                     }
                     else {
                         state = 0;
+                        s += ch;
                         len++;
                     }
                     break;
@@ -474,6 +486,7 @@ public class CommonUtils {
                     }
                     else {
                         state = 0;
+                        s += ch;
                         len++;
                     }
                     break;
@@ -481,15 +494,27 @@ public class CommonUtils {
                 case 3:
                     if ( ch >= '0' && ch <= '7') {
                         state = 0;
-                        len++;
                     }
-                    else {
+                    else if (ch == '\\') {
+                        state = 1;
+                    } else {
                         state = 0;
+                        s += ch;
                         len++;
                     }
                     break;
-
             }
+        }
+
+        try {
+            byte arr[] = s.getBytes("UTF8");
+            len = arr.length;
+        }
+        catch(UnsupportedEncodingException ex) {
+        }
+
+        if ( len == 0) {
+            len = 1;
         }
 
         return len;

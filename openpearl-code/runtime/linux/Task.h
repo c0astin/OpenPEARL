@@ -123,10 +123,6 @@ namespace pearlrt {
       int terminateWaiters;
 #endif
 
-      /** Semaphor for completion message of activate
-          (inits by default to 0)   */
-      CSema activateDone;
-
       /** for Thread suspend resume
           the suspended thread waits for data on this pipe
           to continue a 'c' is written to the pipe
@@ -173,14 +169,6 @@ namespace pearlrt {
 
    public:
 
-#if 0
-      /**
-         Perform a scheduled RESUME
-
-         The plattform indepened part is done in TaskCommon
-      */
-      void resume2();
-#endif
 
    private:
       /**
@@ -228,36 +216,7 @@ namespace pearlrt {
 
       void suspendRunning();
       void suspendIO();
-      //void continueSuspendedIO(int condition, Prio p);
-   private:
-#if 0
-      /**
-         suspend a task
 
-         The pthread library does not support thread suspending.
-         To realize the same behavior, the thread requests a read
-         from a pipe.
-         The continuation is performed by writing a 'c' to that pipe.
-
-         If the calling thread is different from the tasks thread,
-         a flag is set for the thread to suspend. This flag is polled
-         at each setLocation()-call and each blocking methog call.
-
-
-      */
-      void suspendFromOtherTask();
-
-      /**
-        change the threads priority to the new PEARL prio
-
-        the method returns after setting the new priority
-
-        \param prio the new PEARL priority of the task
-      */
-      void changeThreadPrio(const Fixed<15>& prio);
-#endif
-
-   public:
       /**
         fullfill the suspend request of the current task
 
@@ -341,7 +300,7 @@ namespace pearlrt {
          \param p the best priority in the system - in system internal
                   representation
       */
-      static void setSchedPrioMax(int p);
+      static void setThreadPrioMax(int p);
 
       /**
          set the threads priority to the best priority in the system
@@ -351,7 +310,7 @@ namespace pearlrt {
          priority, if SCHED_RR is avaliable. To reduce the number
          of system calls, the maximum priority is stored internally.
       */
-      void switchToSchedPrioMax();
+      void switchToThreadPrioMax();
 
       /**
          (re-)set the threads priority to the current priority
@@ -361,7 +320,7 @@ namespace pearlrt {
          priority, if SCHED_RR is avaliable. At the end of these
          segments, the priority must be adjusted.
       */
-      void switchToSchedPrioCurrent();
+      void switchToThreadPrioCurrent();
 
       /**
       set the threads priority
@@ -376,14 +335,6 @@ namespace pearlrt {
       \param p the priority for the RR-scheduler
       */
       void setThreadPrio(int p);
-
-      /**
-        deliver detailed information about this task
-
-        \param lines array of buffers for the information ( type char [3][80] )
-        \returns number of information lines
-      */
-      int detailedTaskState(char * lines[3]);
 
       /**
       deliver pointer to current task object
@@ -409,6 +360,17 @@ namespace pearlrt {
       The mutex becomes unlocked in case of trmination.
       */
       void treatCancelIO(void);
+
+      /**
+      delay the current task by the given amount of time.
+      This method must be implemented by the platform specific code
+      in Task.cc
+
+      \param usec  number of micro seconds to delay
+      \return true, if the delay was interrupted<br>
+              false, if the delay passed without disturbion
+      */
+      static bool delayUs(uint64_t usecs);
 
    private:
       void enableCancelIOSignalHandler(void);
@@ -489,9 +451,9 @@ static void x ## _entry (pearlrt::Task * me) { 		\
       } catch (pearlrt::Signal & p) {			\
          char line[256];                                \
          printf("++++++++++++++++++++++++++++++\n");	\
-         sprintf(line,"%s:%d Task: %s   terminated due to: %s",\
+         sprintf(line,"%s:%d Task: %s   terminated due to: (%d) %s",\
              me->getLocationFile(), me->getLocationLine(), \
-             me->getName(), p.which());			\
+             me->getName(), p.whichRST(), p.which());			\
          printf("%s\n",line);				\
          pearlrt::Log::error(line);			\
          printf("++++++++++++++++++++++++++++++\n");	\

@@ -1,6 +1,8 @@
 /*
  [A "BSD license"]
  Copyright (c) 2013-2014 Florian Mahlecke
+ Copyright (c) 2016-2019 Rainer Mueller
+ 
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -33,7 +35,7 @@
  *  Created on: 08.02.2014
  *  Author: Florian Mahlecke
  */
-
+#define TASK_SELF_TLS 1
 
 /**
  \file
@@ -59,7 +61,15 @@
 namespace pearlrt {
 
 //          remove this vv comment to enable debug messages
-#define DEBUG(fmt, ...)  Log::debug(fmt, ##__VA_ARGS__)
+#define DEBUG(fmt, ...) // Log::debug(fmt, ##__VA_ARGS__)
+
+   Task* Task::currentTask(void) {
+      Task* mySelf;
+
+      mySelf = (Task*)(pvTaskGetThreadLocalStoragePointer(NULL,TASK_SELF_TLS));
+
+      return mySelf;
+   }
 
    /*********************************************************************//**
     * @brief		Constructor for FreeRTOS based tasks
@@ -122,6 +132,10 @@ namespace pearlrt {
          cp = switchToThreadPrioMax();
       }
 
+      asyncSuspendRequested = false;
+      asyncTerminateRequested = false;
+      terminateWaiters = 0;
+
       xth = xTaskCreateStatic(
                         &wrapperTskfunc,
                         (const char*) this->name,
@@ -140,18 +154,18 @@ namespace pearlrt {
          throw theInternalTaskSignal;
       }
 
+      vTaskSetThreadLocalStoragePointer((TaskHandle_t)xth,TASK_SELF_TLS,this);
+
       DEBUG("%s::activated ", name);
+
+      activateDone.release();
 
       if (freeRtosRunning) {
          switchToThreadPrioCurrent(cp);
       }
+
    }
 
-#if 0
-   void Task::resume2() {
-      suspendMySelf();
-   }
-#endif
 
    void Task::entry() {
       schedActivateOverrun = false;
@@ -225,19 +239,31 @@ namespace pearlrt {
             // do nothing
          }
       }
-#if 0
+
+      while (terminateWaiters > 0) {
+         terminateWaiters --;
+         terminateDone.release();
+      }
+
       // this block is useful for stack optimizations
       {
          int f = uxTaskGetStackHighWaterMark(NULL);
          printf("Task %s stack usage: %d\n", name, f);
       }
-#endif
+
       mutexUnlock();
       vTaskDelete(oldTaskHandle);
    }
 
    void Task::terminateIO() {
-         Log::warn("terminate remote in i/o blocked not supported");
+Log::debug("%s: terminateIO called", name);
+      asyncTerminateRequested = true;
+      // be not disturbed by application threads
+      switchToThreadPrioMax();
+      {
+
+         blockParams.why.u.io.dation->terminate(this);
+      }
    }
 
    void Task::terminateSuspended() {
@@ -248,12 +274,16 @@ namespace pearlrt {
    void Task::terminateRunning() {
       int cp; // current calling tasks priority
 
-       DEBUG("%s: terminateRunning", name);
+       DEBUG("%s: terminateRunning waiters=%d", name, terminateWaiters);
 
       // set the calling threads priority to maximum priority
       // to enshure the execution of this function without task switch
       cp = switchToThreadPrioMax();
 
+         {
+            int f = uxTaskGetStackHighWaterMark((TaskHandle_t)this->xth);
+            printf("Task stack usage: %d\n", f);
+         }
 
       taskState = TERMINATED;
       vTaskDelete((TaskHandle_t)(this->xth));
@@ -286,96 +316,27 @@ namespace pearlrt {
          Log::warn("terminate remote in suspended i/o blocked not supported");
    }
 
-#if 0
-   void Task::terminateFromOtherTask() {
-      Log::debug("%s: terminateFromOtherTask", name);
-      int cp; // current calling tasks priority
-
-      // set the calling threads priority to maximum priority
-      // to enshure the execution of this function without task switch
-      cp = switchToThreadPrioMax();
-
-      switch (taskState) {
-      case BLOCKED:
-         switch (blockParams.why.reason) {
-
-         case IO:
-         // unlocking of the dations lock is not guaranteed
-         Log::warn("terminate remote in i/o blocked not supported");
-         break;
-
-         case REQUEST:
-         // update the OpenPEARL internal list
-         Semaphore::removeFromWaitQueue(this);
-
-         // in FreeRTOS it is easy to kill a task - even if it waits for
-         // a semaphore. No need to continue and kill it
-         //     blockParams.semaBlock.release(); // this statement is required 
-         // only in the linux environment. I leave this reminder to make
-         // clear that this is no copy error
-         break;
-      }
-
-      case SUSPENDED:
-         // no problem - just kill
-         break;
-
-      case RUNNING:
-         break;
-
-#if 0
-      case SEMA_SUSPENDED_BLOCKED:
-         Log::debug("   task %s: terminateRemote susp_blocked task", name);
-
-         // in FreeRTOS it is easy to kill a task - even if it waits for
-         // a semaphore. No need to continue and kill it
-         //     blockParams.semaBlock.release(); // this statement is required 
-         // only in the linux environment. I leave this reminder to make
-         // clear that this is no copy error
-         break;
-#endif
-      default:
-         Log::error("   task %s: unhandled taskState (%d) at TERMINATE",
-                    name, taskState);
-         mutexUnlock();
-         throw theInternalTaskSignal;
-      }
-
-
-      taskState = TERMINATED;
-      vTaskDelete(this->xth);
-
-      // test if the a scheduled activation was not performed due to 
-      // the task was still active. Restart the task right now
-      if (schedActivateOverrun) {
-         schedActivateOverrun = false;
-         directActivate(schedActivateData.prio);
-      } else {
-         if (schedActivateData.taskTimer->isActive() == false &&
-               schedActivateData.whenRegistered == false) {
-            mutexUnlock();
-            TaskMonitor::Instance().decPendingTasks();
-         } else {
-            mutexUnlock();
-         }
-      }
-
-      switchToThreadPrioCurrent(cp);
-   }
-#endif
 
    void Task::suspendMySelf() {
       int cp; // current calling threads priority
+      TaskState previousTaskState;
+
       DEBUG("%s: suspendMyself  taskState=%d", name, taskState);
+
+      previousTaskState = taskState;
 
       switch (taskState) {
       case RUNNING:
          taskState = Task::SUSPENDED;
          break;
 
+      case BLOCKED:
+         taskState= Task::SUSPENDED_BLOCKED;
+         break;
+
       default:
-         Log::error("   Task::suspendMySelf: unknown taskState =%d",
-                    taskState);
+         Log::error("%s:  suspendMySelf: unknown taskState =%d",
+                    name, taskState);
          mutexUnlock();
          throw theInternalTaskSignal;
       }
@@ -386,188 +347,59 @@ namespace pearlrt {
       // after continuation the thread is executed until the active task
       // state is set again.
       cp = switchToThreadPrioMax();
+   
+      while (suspendWaiters > 0) {
+         suspendWaiters--;
+         suspendDone.release();
+      }
+
       mutexUnlock();
-DEBUG("suspendMySelf: go into suspend state");
+      DEBUG("%s: suspendMySelf: go into suspend state", name);
       vTaskSuspend((TaskHandle_t)xth);
-DEBUG("suspended - got continue");
+      DEBUG("%s: suspended - got continue", name);
       mutexLock();
 
-      taskState = RUNNING;
+      taskState = previousTaskState;
       switchToThreadPrioCurrent(cp);
 
-      DEBUG("   task %s: continue from suspend done", name);
+      DEBUG("%s: suspendMyself: continue done", name);
 
    }
 
    void Task::suspendRunning() {
       int cp; // current calling threads priority
-         DEBUG("   task %s: suspend request in RUNNING mode", name);
-
-         cp = switchToThreadPrioMax();
-         taskState = SUSPENDED;
-         vTaskSuspend((TaskHandle_t)(this->xth));
-         switchToThreadPrioCurrent(cp);
+      DEBUG("%s: suspendrequest in RUNNING mode", name);
+      suspendWaiters ++;
+      cp = switchToThreadPrioMax();
+      taskState = SUSPENDED;
+      vTaskSuspend((TaskHandle_t)(this->xth));
+      switchToThreadPrioCurrent(cp);
+      suspendDone.request();
    }
+
 
    void Task::suspendIO() {
-         Log::warn("suspend remote in i/o blocked not supported");
-   }
+      int cp;
+      DEBUG("%s: suspendIO: started state=%d", name, taskState);
+      asyncSuspendRequested = true;
 
-
-#if 0
-   void Task::suspendFromOtherTask() {
-      int cp; // current calling threads priority
-
-      switch (taskState) {
-      case BLOCKED:
-         switch (blockParams.why.reason) {
-
-         case REQUEST:
-         taskState = SUSPENDED;
-         Semaphore::removeFromWaitQueue(this);
-         break;
-
-         case IO:
-         Log::debug("   task %s: set suspend request flag in IO_BLOCKED",
-                    name);
-//         asyncSuspendRequested = true;
-//         switchToSchedPrioMax();
-//         mutexUnlock();
-         // no jobDoneRequest request here!
-         // the suspending task shall be delayed until the
-         // io-doing task reaches the suspending point
-         // jobDone.request();
-         break;
-      }
-      case RUNNING:
-         Log::debug("   task %s: suspend request in RUNNING mode", name);
-
-         cp = switchToThreadPrioMax();
-         taskState = SUSPENDED;
-         vTaskSuspend(this->xth);
-         switchToThreadPrioCurrent(cp);
-
-         break;
-
-      default:
-         Log::error("   suspendFromOtherTask taskState %d not treated",
-                    taskState);
-         mutexUnlock();
-         throw theInternalTaskSignal;
-      }
-   }
-
-
-   void Task::continueFromOtherTask(int condition, Prio prio) {
-      int cp; // current calling threads priority
-      // this may be the timer-task from FreeRTOS in case
-      // of timed continue
-    
+      suspendWaiters ++;
+      // be not disturbed by application threads
       cp = switchToThreadPrioMax();
+      {
 
-      switch (taskState) {
-      case BLOCKED:
-        switch (blockParams.why.reason) {
-         case  IO:
-               break;
-         default: // treat other reasons missing
-		;
-        } 
-      case SUSPENDED_BLOCKED:
-         // reinsert the task in the semaphores wait queue
-         if (blockParams.why.reason == REQUEST) {
-             taskState = BLOCKED;
-             // setup block-reeason missing !!!!
-             Semaphore::addToWaitQueue(this);
-         }
-         break;
-
-#if 0
-   update later
-         // adjust the tasks position in the semaphores wait queue
-         // according the tasks (new) priority
-         if (condition & PRIO) {
-            currentPrio = prio.get();
-            // this switch block continues in the switch entry RUNNING
-            // updating the threads priority is done there
-         }
-
-         Semaphore::updateWaitQueue(this);
-#endif
-      // no break here! setting the priority is included
-      //    in RUNNING/SUSPENDED
-      case RUNNING:
-
-         // adjust the tasks priority according the tasks (new) priority
-         try {
-            if (condition & PRIO) {
-               changeThreadPrio(prio.get());   // just set new priority
-            }
-         } catch (Signal s) {
-            mutexUnlock();
-            throw;
-         }
-
-         break;
-
-      case SUSPENDED:
-         continueSuspended();
-
-         break;
-
-#if 0
-      case BLOCKED:
-// test for block-reason is missing!
-         Log::debug("   continue in IO_SUSPENDED_BLOCKED detected");
-//
-//         try {
-//            if (condition & PRIO) {
-//               Log::debug("   set new prio in IO_BLOCKED");
-//               changeThreadPrio(prio.get());  // set new priority
-//            }
-//         } catch (Signal s) {
-//         mutexUnlock();
-//         switchToThreadPrioCurrent(cp);
-//            throw;
-//         }
-//
-//         sendContinueCondition();
-         continueSuspended();
-         break;
-#endif
-      case TERMINATED:
-         Log::error("task %s: continue at terminated state", name);
-         mutexUnlock();
-         switchToThreadPrioCurrent(cp);
-         throw theTaskTerminatedSignal;
-
-      default:
-         Log::error("   task %s: continue at untreated state %d",
-                    name, taskState);
-         mutexUnlock();
-         switchToThreadPrioCurrent(cp);
-         throw theInternalTaskSignal;
+         blockParams.why.u.io.dation->suspend(this);
+         suspendDone.request();
       }
-
       switchToThreadPrioCurrent(cp);
+      DEBUG("%s: suspendIO: done, state=%d", name, taskState);
    }
-#endif
+
 
    void Task::continueSuspended() {
-#if 0
-      try {
-         if (schedContinueData.prio.x > 0) {
-            // just set new priority
-            changeThreadPrio(schedContinueData.prio);
-         }
-      } catch (Signal s) {
-         mutexUnlock();
-         throw;
-      }
-#endif
-      DEBUG("%s: continue suspended", name);
+      DEBUG("%s: continue suspended state=%d", name, taskState);
       vTaskResume((TaskHandle_t)xth);
-      DEBUG("%s: continue suspended ... done",name);
+      DEBUG("%s: continue suspended ... done. state=%d",name, taskState);
       // update of taskState and release of mutexTask is done in
       // continued task
    }
@@ -590,6 +422,41 @@ DEBUG("suspended - got continue");
       vTaskPrioritySet(NULL, cp);
    }
 
+  void Task::treatCancelIO(void) {
+      DEBUG("%s: treatCancelIO: termReq=%d suspeReq=%d", name
+             , asyncTerminateRequested, asyncSuspendRequested);
+
+      // we do not need to lock the global task lock, since this
+      // was already done where the signal was raises in suspendFromOtherTask
+      // or terminateFromOtherTask.
+
+
+      if (asyncSuspendRequested) {
+         asyncSuspendRequested = false;
+
+         DEBUG("%s: Task::treatIOCancelIO: suspending ...", name);
+         suspendMySelf();
+         DEBUG("%s: Task::treatIOCancelIO: continued: termReq=%d suspeReq=%d",
+              name , asyncTerminateRequested, asyncSuspendRequested);
+
+         if (! asyncTerminateRequested) {
+            // we must unlock the mutex at this point, due to the asymmetry
+            // at suspendIO().
+            // if there is a terminate request pending, the unlock is done
+            // in the next if statement
+            mutexUnlock();
+         }
+      }
+
+      if (asyncTerminateRequested) {
+         asyncTerminateRequested = false;
+         DEBUG("%s: terminate during system IO device", name);
+         mutexUnlock();
+         throw theTerminateRequestSignal;
+      }
+   }
+
+
 #ifdef unused
    TaskHandle_t Task::getFreeRTOSTaskHandle() {
       if (taskState != TERMINATED) {
@@ -609,5 +476,6 @@ DEBUG("suspended - got continue");
       directActivate(schedActivateData.prio);
       mutexUnlock();
    }
+
 }
 

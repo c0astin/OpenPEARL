@@ -204,7 +204,10 @@ namespace pearlrt {
          } catch (Signal & s)  {
             if (s.whichRST() == theTerminateRequestSignal.whichRST()) {
                throw;
+            } else if (s.whichRST() == theInternalTaskSignal.whichRST()) {
+	       throw;
             }
+            
             throw theNoMoreCharactersSignal;
          }
       }

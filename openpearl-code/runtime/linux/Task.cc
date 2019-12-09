@@ -149,7 +149,7 @@ namespace pearlrt {
       continueWaiters++;
 
       // be not disturbed by application threads
-      switchToSchedPrioMax();
+      switchToThreadPrioMax();
       {
          write(pipeResume[1], &dummy, 1);
          mutexUnlock();
@@ -161,7 +161,7 @@ namespace pearlrt {
       // perhaps the just continued task has terminated in the interval
       // between sending the continuation data and this point
       if (taskState != TERMINATED) {
-         switchToSchedPrioCurrent();
+         switchToThreadPrioCurrent();
       }
    }
 
@@ -183,7 +183,7 @@ namespace pearlrt {
 
       suspendWaiters ++;
       // be not disturbed by application threads
-      switchToSchedPrioMax();
+      switchToThreadPrioMax();
       {
 
          while (asyncSuspendRequested) {
@@ -194,7 +194,7 @@ namespace pearlrt {
 
          suspendDone.request();
       }
-      switchToSchedPrioCurrent();
+      switchToThreadPrioCurrent();
       DEBUG("%s: suspendIO: done", name);
    }
 
@@ -205,13 +205,13 @@ namespace pearlrt {
       suspendWaiters ++;
 
       // be not disturbed by application threads
-      switchToSchedPrioMax();
+      switchToThreadPrioMax();
       {
          mutexUnlock();
          suspendDone.request();
          mutexLock();
       }
-      switchToSchedPrioCurrent();
+      switchToThreadPrioCurrent();
    }
 
    void Task::suspendMySelf() {
@@ -227,7 +227,7 @@ namespace pearlrt {
       taskState = SUSPENDED;
 
       // be not disturbed by application threads
-      switchToSchedPrioMax();
+      switchToThreadPrioMax();
       {
          mutexUnlock();
          result = read(pipeResume[0], &dummy, 1);
@@ -238,7 +238,7 @@ namespace pearlrt {
          }
          mutexLock();
       }
-      switchToSchedPrioCurrent();
+      switchToThreadPrioCurrent();
       DEBUG("%s:   suspendMySelf: got data %c", name, dummy);
 
       switch (dummy) {
@@ -255,18 +255,17 @@ namespace pearlrt {
          } else if (taskState == SUSPENDED_BLOCKED) {
             taskState = Task::BLOCKED;
          } else {
-            Log::error("suspendMySelf: unexpected taskState = %d", taskState);
+            Log::error("%s: suspendMySelf: unexpected taskState = %d", name, taskState);
             mutexUnlock();
             throw theInternalTaskSignal;
          }
-
          while (continueWaiters > 0) {
             continueWaiters --;
             continueDone.release();
          }
 
-         DEBUG("%s:  continue from suspend done", name);
-         switchToSchedPrioCurrent();
+         DEBUG("%s:  continue from suspend done - new state %d", name, taskState);
+         switchToThreadPrioCurrent();
          break;
 
       default:
@@ -276,11 +275,11 @@ namespace pearlrt {
       }
    }
 
-   void Task::switchToSchedPrioMax() {
+   void Task::switchToThreadPrioMax() {
       setThreadPrio(schedPrioMax);
    }
 
-   void Task::switchToSchedPrioCurrent() {
+   void Task::switchToThreadPrioCurrent() {
       changeThreadPrio(currentPrio);
    }
 
@@ -326,7 +325,6 @@ namespace pearlrt {
 
    void Task::scheduleCallback(void) {
       mutexLock();
-
       if (asyncTerminateRequested) {
          asyncTerminateRequested = false;
 
@@ -367,7 +365,7 @@ namespace pearlrt {
       mySelf = this;
 
       activateDone.release();
-      switchToSchedPrioCurrent();
+      switchToThreadPrioCurrent();
       DEBUG("%s: task activation completed", name);
    }
 
@@ -420,89 +418,7 @@ namespace pearlrt {
          throw theInternalTaskSignal;
       }
 
-      Log::debug("wait for activateDone.request");
-      activateDone.request();
-      Log::debug("got activateDone.request");
-
       return;
-   }
-
-   int Task::detailedTaskState(char * line[3]) {
-      int i = 0;
-      char help[20];
-      mutexLock();
-
-      if (schedActivateData.taskTimer->isActive()) {
-         ((TaskTimer*)(schedActivateData.taskTimer))->detailedStatus(
-            (char*)"ACT", line[i]);
-         i++;
-      }
-
-      if (schedContinueData.taskTimer->isActive()) {
-         ((TaskTimer*)(schedContinueData.taskTimer))->detailedStatus(
-            (char*)"CONT", line[i]);
-         i++;
-      }
-
-
-      if (taskState == BLOCKED) {
-         switch (blockParams.why.reason) {
-         case REQUEST:
-            sprintf(line[i], "REQUESTing %d SEMAs:",
-                    blockParams.why.u.sema.nsemas);
-
-            for (int j = 0; j < blockParams.why.u.sema.nsemas; j++) {
-               Semaphore * s = blockParams.why.u.sema.semas[j] ;
-               sprintf(help, " %s(%d)", s->getName(), s->getValue());
-
-               if (strlen(line[i]) + strlen(help) < 80) {
-                  strcat(line[i], help);
-               }
-            }
-
-            break;
-
-         case RESERVE:
-            sprintf(line[i], "RESERVEing %d BOLTs:",
-                    blockParams.why.u.bolt.nbolts);
-
-            for (int j = 0; j < blockParams.why.u.bolt.nbolts; j++) {
-               Bolt * s = blockParams.why.u.bolt.bolts[j];
-               sprintf(help, " %s(%s)", s->getName(), s->getStateName());
-
-               if (strlen(line[i]) + strlen(help) < 80) {
-                  strcat(line[i], help);
-               }
-            }
-
-            break;
-
-         case ENTER:
-            sprintf(line[i], "ENTERing %d BOLTs:",
-                    blockParams.why.u.bolt.nbolts);
-
-            for (int j = 0; j < blockParams.why.u.bolt.nbolts; j++) {
-               Bolt * s = blockParams.why.u.bolt.bolts[j] ;
-               sprintf(help, " %s(%s)", s->getName(), s->getStateName());
-
-               if (strlen(line[i]) + strlen(help) < 80) {
-                  strcat(line[i], help);
-               }
-            }
-
-            break;
-
-         default:
-            sprintf(line[i], "unknown blocking reason(%d)",
-                    blockParams.why.reason);
-            break;
-         }
-
-         i++;
-      }
-
-      mutexUnlock();
-      return i;
    }
 
    void Task::terminateIO() {
@@ -615,7 +531,7 @@ namespace pearlrt {
 
    int Task::schedPrioMax = 0;
 
-   void Task::setSchedPrioMax(int p) {
+   void Task::setThreadPrioMax(int p) {
       schedPrioMax = p;
    }
 
@@ -684,5 +600,16 @@ namespace pearlrt {
          mutexUnlock();
          throw theTerminateRequestSignal;
       }
+   }
+
+   bool Task::delayUs(uint64_t usecs) {
+      int returncode;
+
+      returncode = usleep(usecs);
+
+      if (returncode == EINTR) {
+          return true;
+      }
+      return false;
    }
 }

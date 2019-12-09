@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- *  Copyright (c) 2012-2016 Marcel Schaible
+ *  Copyright (c) 2012-2019 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,15 +34,18 @@ public class Defaults  {
     public static final int FIXED_MIN_LENGTH          = 0;
     public static final int FIXED_MAX_LENGTH          = 63;
 
-    public static final int FLOAT_SHORT_PRECISION    = 24;
-    public static final int FLOAT_LONG_PRECISION     = 53;
+    public static final int FLOAT_SHORT_PRECISION    = 23;
+    public static final int FLOAT_LONG_PRECISION     = 52;
     public static final int FLOAT_PRECISION          = FLOAT_SHORT_PRECISION;
 
     public static final int BIT_LENGTH               =  1;
 
     public static final int CHARACTER_LENGTH         =  1;
+    public static final int CHARACTER_MAX_LENGTH     =  32767;
 
     public static final int DEFAULT_TASK_PRIORITY    = 255;
 
     public static final int DEFAULT_ARRAY_LWB        = 1;
+
+    public static final int LOOP_INDEX_LENGTH        = 15;
 }

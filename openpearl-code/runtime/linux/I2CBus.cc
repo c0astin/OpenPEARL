@@ -31,6 +31,7 @@
 #include "I2CProvider.h"
 #include "Log.h"
 #include "Signals.h"
+#include "Task.h"
 
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
@@ -112,7 +113,7 @@ namespace pearlrt {
                 Log::error("I2CBus::read error: %s", strerror(errno));
                 throw theReadingFailedSignal;
             }
-         } while (ret <= 0);
+         } while (received <= 0);
       } catch (TerminateRequestSignal s) {
          mutex.unlock();
          throw;
@@ -164,7 +165,7 @@ namespace pearlrt {
                 Log::error("I2CBus::write error: %s", strerror(errno));
                 throw theWritingFailedSignal;
             }
-         } while (ret <= 0);
+         } while (written <= 0);
       } catch (TerminateRequestSignal s) {
          mutex.unlock();
          throw;

@@ -963,21 +963,6 @@ namespace pearlrt {
             tfuBuffer.prepare();
          }
       }
-#if 0
-      if (system->allowMultipleIORequests()) {
-         // register current task in system dation
-         TaskCommon::mutexLock(); // we need access to the global task lock
-         bd.reason = IO;
-         bd.u.io.dation = /* (SystemDation*) */ this;
-         system->registerWaitingTask(me, currentDirection);
-
-         // release the user dation lock, if multipl io is supported
-         mutexUserDation.unlock();
-
-         // aquired global task lock, since unblock expects unlocks this
-         me->block(&bd);    // block releases the global task lock
-      }
-#endif
    }
 
    void UserDationNB::endSequenceHook() {

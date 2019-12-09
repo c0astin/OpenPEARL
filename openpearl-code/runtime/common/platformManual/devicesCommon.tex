@@ -70,7 +70,7 @@ END;
 \section{I2c-Device: PCF8574}
 This device acts as port expander with 8 bit numbered from 7
 for the most significant bit down to 0.
-The decive operates via an I2C bus. 
+The decice operates via an I2C bus. 
 Individual bits may be ether as input or as output.
 Input and output are treated in different system elements.
 
@@ -148,6 +148,76 @@ END;
 ...
 \end{PEARLCode}
 
+\section{I2c-Device: PCF9685, PCF9685Channel}
+This device acts as puls width modulation generator.
+The PCF9685 contains 16 independent channels. The duty cycle
+is specified by a 12 bit integer value (0..4095).
+
+The device contains an internal 25MHz oscillator and an 8 bit
+prescaler. Due to hardware restrictions, the prescaler values are
+allowed from 3 to 255. This provides an update frequency between
+$1.526 kHz$ and $24 Hz$.
+
+The decice operates via an I2C bus. 
+
+Synopsis: PCF9685Channel(channel) --- PCF9685(address, prescaler) \\
+
+\begin{description}
+\item[channel] denotes the channel of the PCF9685
+\item[address] is the I2C adress of the sensor on the I2C bus.
+   Valid adresses are: '40'B4 to '7F'B4
+\item[prescaler] defines the dividor of the internal oscillator
+   Valid values: 3 .. 255
+\end{description}
+
+\paragraph{Notes:}\ 
+\begin{itemize}
+\item The PCF9685 needs an I2C-device for operation
+\item The outputs are configured as totem pole. This 
+    setting may not set channel specific.
+\item Check the requirements of your actor for maximum freqency
+    and maximum duty cycle.
+\end{itemize}
+
+\begin{PEARLCode}
+...
+SYSTEM;
+   ! linux specific i2c bus interface definition
+   ic2bus1: I2CBUS('/dev/i2c-0');
+
+   ! connect the PCF9685 to the the I2C bus
+   ! default i2c-adress and default prescaler --> 200Hz
+   pcfProvider: PCF9685('40'B4,30) --- i2cbus1;
+
+   ! select channel 0 and 1 for led 0 and 1
+   led0: PCF9685Channel(0) --- pcfProvider;
+   led1: PCF9685Channel(1) --- pcfProvider;
+
+
+PROBLEM;
+   SPC led0 DATION OUT SYSTEM BASIC FIXED(15);
+   DCL uLed0 DATION OUT BASIC FIXED(15) CREATED (led0);
+
+   SPC led1 DATION OUT SYSTEM BASIC FIXED(15);
+   DCL uLed1 DATION OUT BASIC FIXED(15) CREATED (led1);
+
+t1: TASK;
+   DCL half FIXED(15) INIT(2047);
+   DCL nearlyOff FIXED(15) INIT(2);
+   DCL fullOn FIXED(15) INIT(5000); ! larger than 4095
+
+   OPEN uLed0;
+   OPEN uLed1;
+   SEND half   TO uLed0;  
+   SEND fullOn TO uLed1;  
+
+...
+   CLOSE uLed0;
+   CLOSE uLed1;
+END;
+...
+\end{PEARLCode}
+
 \section{I2c-Device: ADS1015SE}
 The sensor provides four single ended analog inputs via an I2C bus.
 The device  has a programmable gain unit, with modifies the sesibility
@@ -215,4 +285,153 @@ END;
 ...
 \end{PEARLCode}
 
+
+\section{I2c-Device: BME280}
+The sensor delivers the current temperature, pressure and humidity
+ via an I2C-bus interface.
+
+Synopsis: \texttt{BME260(address,tempOS, pressureOS, humOS,iir, tSleep)}
+
+\begin{description}
+\item[address] is the I2C adress of the sensor on the I2C bus.
+   Valid adresses are: 78'B4, '79'B4
+\item[tempOS] oversampling for the temperature measurement
+\item[pressureOS] oversampling for the pressure measurement
+\item[humOS] oversampling for the humidity measurement
+\item[iir] filter for temperature and pressure measurements
+\item [tSleep] if non zero, automatic sleep time between
+ continuous measurements. 
+If zero, the conversion starts at each TAKE  statement
+ in \textit{forced mode}. The sensor needs sone miliseconds depending
+on oversampling and channel selections between measure
+ request and available data. This time is calculated from the
+  datasheet and inserted before data reading.
+\end{description}
+For each oversampling one of the following values are allowed:
+
+\begin{tabular}{|l|l|}
+\hline
+xOS & meaning \\
+\hline
+0 & measurement switched off\\
+1 & no oversampling \\
+2 & average over 2 measurements \\
+3 & average over 4 measurements \\
+4 & average over 8 measurements \\
+5 & average over 16 measurements \\
+\hline
+\end{tabular}
+
+The iir-filter (infinite impulse response filter) may be configured as:
+
+\begin{tabular}{|l|l|}
+\hline
+iir & meaning \\
+\hline
+0 & no filter \\
+1 & 2 measurements \\
+2 & 4 measurements \\
+3 & 8 measurements \\
+4 & 16 measurements \\
+\hline
+\end{tabular}
+
+For tSleep, the following values are supported:
+
+\begin{tabular}{|l|l|}
+\hline
+tSleep & meaning \\
+\hline
+0 & forced mode \\
+1 & 0.5 ms \\
+2 & 62.5 ms \\
+3 & 125 ms \\
+4 & 250 ms \\
+5 & 500 ms \\
+6 & 1000 ms \\
+7 & 10 ms \\
+8 & 20 ms \\
+\hline
+\end{tabular}
+
+The result are passed in a data structure with three \texttt{FIXED(31)} values.
+This may be an array od a struct like:
+\paragraph{Note:}\ 
+\begin{itemize}
+\item the temperatur is returned in hunderdth of degree centigrade as a 
+    FIXED(31) value
+\item the pressure is passed an tenth of Pascal 
+\item the humidity is passed as hunderth of percent
+\end{itemize}
+
+The manufacturer Bosch recommends the following setting according 
+the application:
+\begin{description}
+\item[wether monitoring]
+   \begin{itemize}
+   \item forced mode, 1 measurement per minute
+   \item oversampling: temperature x1, pressure x1, humidity x1 \newline
+     no oversampling at all
+   \item iir: off
+   \item \texttt{BME280('76'B4, 1,1,1,0,0);}
+   \end{itemize}
+\item[Humidity Sensing]
+   \begin{itemize}
+   \item forced mode, 1 measurement per second
+   \item oversampling: temperature x1, pressure x0, humidity x1 \newline
+     no oversampling at all
+   \item iir: off
+   \item \texttt{BME280('76'B4, 1,0,1,0,0);}
+   \end{itemize}
+\item[Indoor Navigation]
+   \begin{itemize}
+   \item normal mode, tSleep = 0,5ms
+   \item oversampling: temperature x2, pressure x16, humidity x1
+   \item iir: 16
+   \item \texttt{BME280('76'B4, 2,5,1,4,1);}
+   \item Data rate: 25 Hz
+   \end{itemize}
+\item[Gaming]
+   \begin{itemize}
+   \item normal mode, tSleep = 0,5ms
+   \item oversampling: temperature x1, pressure x4, humidity x0
+   \item iir: 16
+   \item \texttt{BME280('76'B4, 1,3,0,4,1);}
+   \item Data rate: 83 Hz
+   \end{itemize}
+
+\end{description}
+
+
+Sample Usage:
+\begin{PEARLCode}
+...
+SYSTEM;
+   ! linux specific i2c bus interface definition
+   ic2bus1: I2CBUS('/dev/i2c-0');
+
+   ! connect the sensor to the I2C bus
+   bme: BME280('76'B4,1,2,3,4,5) --- i2cbus1;
+...
+PROBLEM;
+   TYPE STRUCT [ temp     FIXED(31), 
+                 pressure FIXED(31),
+                 hmidity  FIXED(31) ] BmeData;
+   SPC bme DATION IN SYSTEM BASIC BmeData;
+   DCL bme280 DATION IN BASIC BmeData CREATED(bme);
+...
+t1: TASK;
+   DCL bmeData BmeData;
+...
+   OPEN bme280;
+   TAKE bmeData FROM uTemperatur;
+   PUT bmeData.temp/100,' degree C ',
+       bmeData.pressure/100,' Pa' ,
+       bmeData.humidity/100 ,'%'
+    TO console BY F(3),A,F(7),A,F(3),A, SKIP;
+...
+   CLOSE bme280;
+END;
+...
+\end{PEARLCode}
 

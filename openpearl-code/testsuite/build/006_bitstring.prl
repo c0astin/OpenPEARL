@@ -1,8 +1,4 @@
 MODULE(bitstring);
-! test for compilation of bit deklaraions and operations
-! for each statement the expected result is given an __cpp__-insertion
-! as soon as the compiler is capable to to the translation,
-! the comment should be moved to the result line
 
 PROBLEM;
 T1: TASK MAIN;

@@ -94,6 +94,10 @@ SRCONLY =os.cc \
 # ---------------------------------------
 # import lists of common files for all implementations
 # and add prefix of directory common to file lists
+
+# linux contains always i2c support -- maybe no i2c 
+# interface is available
+CONFIG_HAS_I2C=y
 include ../common/Files.common
 CXX_COMMON := $(addprefix ../common/,$(CXX_COMMON))
 HDR_COMMON := $(addprefix ../common/,$(HDR_COMMON))
@@ -102,63 +106,61 @@ XML_FILES += $(addprefix ../common/,$(XML_COMMON))
 # -----------------------------------
 # add driver specific stuff to file lists
 
-ifeq ($(CONFIG_LINUX_Octopus),y) 
-   SRCANDH += drivers/Octopus.cc
-   SRCANDH += drivers/OctopusDigitalOut.cc
-   SRCANDH += drivers/OctopusDigitalIn.cc
-   INCLUDES += -I ./drivers 
-   INCLUDES += -I ../drivers 
-   LDFLAGS +=  -lusb -loctopus
-   XML_FILES += drivers/OctopusDigitalOut.xml
-   XML_FILES += drivers/OctopusDigitalIn.xml
-
-endif
 
 ifeq ($(CONFIG_LINUX_Raspberry),y) 
    # switch off ps_abi warnings
    CXXFLAGS+= -Wno-psabi
 
    ifeq ($(CONFIG_LINUX_Raspberry_Version_Auto),y) 
-   # set CONFIG_LINUX_Raspberry_Version_V1, ..V3 depending of /proc/cpuinfo
-   # raspberry revision numbers are taken from http://www.gtkdb.de/index_36_1831.html
-   # and http://www.raspberrypi-spy.co.uk/2012/09/checking-your-raspberry-pi-board-version/
-   ver := $(shell awk '$$1 == "Revision" {print $$3}' /proc/cpuinfo)
-   ifeq ($(ver),000d)
-      rpiVersion = V1B
-   else ifeq ($(ver),000e)
-      rpiVersion = V1B
-   else ifeq ($(ver),000f)
-      rpiVersion = V1B
-   else ifeq ($(ver),a01041)
-      rpiVersion = V2B
-   else ifeq ($(ver),a21041)
-      rpiVersion = V2B
-   else ifeq ($(ver),a02082)
-      rpiVersion = V3B
-   else ifeq ($(ver),a22082)
-      rpiVersion = V3B
-   else
-      $(error raspberry revision $(ver) not known by auto detection)
-   endif 
-   CXXFLAGS += -DCONFIG_LINUX_Raspberry_Version_$(rpiVersion)
+      # set CONFIG_LINUX_Raspberry_Version_V1, ..V3 depending of /proc/cpuinfo
+      # raspberry revision numbers are taken from http://www.gtkdb.de/index_36_1831.html
+      # and http://www.raspberrypi-spy.co.uk/2012/09/checking-your-raspberry-pi-board-version/
+      ver := $(shell awk '$$1 == "Revision" {print $$3}' /proc/cpuinfo)
+      ifeq ($(ver),000d)
+         rpiVersion = V1B
+      else ifeq ($(ver),000e)
+         rpiVersion = V1B
+      else ifeq ($(ver),000f)
+         rpiVersion = V1B
+      else ifeq ($(ver),a01041)
+         rpiVersion = V2B
+      else ifeq ($(ver),a21041)
+         rpiVersion = V2B
+      else ifeq ($(ver),a02082)
+         rpiVersion = V3B
+      else ifeq ($(ver),a22082)
+         rpiVersion = V3B
+      else ifeq ($(ver),a020d3)
+         # is a V 3B+, but this doues not matter up to now
+         rpiVersion = V3B
+      else ifeq ($(ver),a03111)
+         # 1GB
+         rpiVersion = V4B
+      else ifeq ($(ver),b03111)
+         # 2GB
+         rpiVersion = V4B
+      else ifeq ($(ver),c03111)
+         # 4GB
+         rpiVersion = V4B
+      else
+         $(error raspberry revision $(ver) not known by auto detection)
+      endif 
+      CXXFLAGS += -DCONFIG_LINUX_Raspberry_Version_$(rpiVersion)
 $(warning $(CXXFLAGS))
 
-endif
+   endif
    INCLUDES += -I ./raspberry 
    INCLUDES += -I ../raspberry 
-ifeq ($(CONFIG_LINUX_RPI_DigIO),y) 
+
    SRCANDH += raspberry/RPiGpio.cc
    SRCANDH += raspberry/RPiDigitalOut.cc
    SRCANDH += raspberry/RPiDigitalIn.cc
    XML_FILES += raspberry/RPiDigitalOut_$(rpiVersion).xml
    XML_FILES += raspberry/RPiDigitalIn_$(rpiVersion).xml
 endif
-endif
 
-ifeq ($(CONFIG_LINUX_I2C),y) 
-   SRCANDH += I2CBus.cc
-   XML_FILES += I2CBus.xml
-endif
+SRCANDH += I2CBus.cc
+XML_FILES += I2CBus.xml
 
 ifeq ($(CONFIG_CANSUPPORT),y) 
 ifeq ($(CONFIG_LINUX_PCAN),y) 
@@ -191,14 +193,17 @@ CHECK_FILES := $(sort $(CHECK_FILES))
 #$(warning src = $(SRC))
 
 PLIB_OBJ = $(SRC:%.cc=%.o)
+PLIB_OBJ := $(PLIB_OBJ:%.c=%.o)
 #$(warning plibobj = $(PLIB_OBJ))
 
 ALL_SRCS = $(SRC) $(TEST_SRCS) $(TEST_DATION_SRCS) $(GTEST_SRCS)
 #$(warning allsrc = $(ALL_SRCS))
 
+$(warning XML_FILES = $(XML_FILES))
 
 
 OBJS = $(ALL_SRCS:%.cc=%.o)
+OBJS := $(OBJS:%.c=%.o)
 
 # ------------------------------
 

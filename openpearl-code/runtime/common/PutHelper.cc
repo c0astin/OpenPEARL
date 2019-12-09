@@ -71,10 +71,10 @@ namespace pearlrt {
       return;
    }
 
-   const Float<53> PutHelper::binExpValues[] = {
-      (Float<53>)(1e256), (Float<53>)(1e128), (Float<53>)(1e64),
-      (Float<53>)(1e32), (Float<53>)(1e16), (Float<53>)(1e8),
-      (Float<53>)(1e4), (Float<53>)(1e2), (Float<53>)(1e1)
+   const Float<52> PutHelper::binExpValues[] = {
+      (Float<52>)(1e256), (Float<52>)(1e128), (Float<52>)(1e64),
+      (Float<52>)(1e32), (Float<52>)(1e16), (Float<52>)(1e8),
+      (Float<52>)(1e4), (Float<52>)(1e2), (Float<52>)(1e1)
    };
 
    const int PutHelper::nbrBinExpValues = sizeof(PutHelper::binExpValues) /

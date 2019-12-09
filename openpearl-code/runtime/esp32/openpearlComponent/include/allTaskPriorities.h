@@ -51,15 +51,15 @@ idle task of FreeRTOS runs with prio 0!
 */
 
 /**
-priority range for PEARL tasks is from PRIO_PEARL_PRIO_MIN 
+priority range for PEARL tasks is from PRIO_PEARL_PRIO_MIN
 to PRIO_PEARL_PRIO_MAX
 */
 #define PRIO_PEARL_PRIO_MIN 	1
 #define PRIO_PEARL_PRIO_MAX  	(PRIO_PEARL_PRIO_MIN+255)
 
-/** 
+/**
   the timer task (FreeRTOS/addOns/timer.c) receives the notifications
-  from the interrupt service routine. When a time period expired a 
+  from the interrupt service routine. When a time period expired a
   reschedule may be necessary.
   No application task may run with better priority than this task to enshure
   the correct detection of timeouts
@@ -68,12 +68,16 @@ to PRIO_PEARL_PRIO_MAX
 
 /**
   The startup and shutdown of application task may not be interrupted
-  by other application tasks. This allows a run-to-completion behavior 
+  by other application tasks. This allows a run-to-completion behavior
 */
 #define PRIO_TASK_MAX_PRIO 	(PRIO_TASK_SERVICE+1)
 
-#if (PRIO_TASK_MAX_PRIO >= configMAX_PRIORITIES) 
+#if (PRIO_TASK_MAX_PRIO >= configMAX_PRIORITIES)
 # error "configMAX_PRIORITIES too small"
 #endif
 
+/*-------------------------------*/
+/* Priorities on the PRO-CPU     */
+#define PRIO_UART_SEND_TASK    100
+#define PRIO_CONSOLE_TASK    100
 #endif

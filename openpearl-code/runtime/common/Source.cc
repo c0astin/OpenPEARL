@@ -51,10 +51,12 @@ namespace pearlrt {
          // catch all errors 
          if (e.whichRST() == theDationTFURecordSignal.whichRST()) {
             throw;
-         }
-         if (e.whichRST() == theTerminateRequestSignal.whichRST()) {
+         } else if (e.whichRST() == theTerminateRequestSignal.whichRST()) {
+            throw;
+         } else if (e.whichRST() == theInternalTaskSignal.whichRST()) {
             throw;
          }
+
        printf("map signal %s (%d) to NoMoreCharactersSignal\n", e.which(),
    		   e.whichRST());
          throw theNoMoreCharactersSignal;

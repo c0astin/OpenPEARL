@@ -64,6 +64,7 @@ t1: TASK MAIN;
       success = '0'B1;
    FIN;
 
+   PUT 'abc"de" ' TO con BY A, SKIP;
 
    IF NOT success THEN
       __cpp__(

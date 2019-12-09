@@ -143,17 +143,47 @@ The tuning the installation must be done as administrator:
 The OpenPEARL project aims to support all language elements  as
 described in the language report.
 
-This version does not support:
+This version does not support:\footnote{The numbers in braces refer the ticket numbers.}
+
 \begin{itemize}
 \item STRUCT
 \item TYPE
-\item TFU 
-\item SIGNAL treatment
+\item no SIGNAL treatment (\#127)
+\item no INTERRUPT support (\#122)
+\item operator SIZEOF not supported (\#109)
+%\item length of float constants must be clearified and is subject of 
+%		change(\#120)
 \item REF CHAR
-\item ...??? fehlt noch was
+\item REF used upon inititialized references does not throw a signal (\#217)
+\item REF on TASK,DATION,SIGNAL,INTERRUPT not tested (\#196,\#197)
+\item no support for multi modules (\#193)
+\item I/O-related
+   \begin{itemize}
+   \item no warning if multiple positions formats are inside a READ/WRITE statement (\#126)
+   \item E-format does not work properly (\#210)
+   \item CONVERT not supported (\#215)
+   \item additional X-elements in some PUT statements (\#221)
+   \item format elements PAGE,ADV,LINE,COL,POS,SOP,EOF not supported(\#216,\#222)
+   \item CYCLIC only available on system dations of type DIRECT (\#226)
+   \item repetition factor in i/o formats and variable array slices 
+      does not work in i/o statements(\#232)
+   \item TFU not supported (\#232,\#237)
+   \item loop index not accessible in i/o statements (\#239)
+   \item type of dation element in i/o statements not checked (\#251)
+   \item nether complete arrays nor array slices as i/o element
+     are supported (\#223,\#252)
+   \item no R-Format (\#254)
+   \end{itemize}
+%\item no constants expressions treated by the compiler (\#248)
+\item BIT-slices with size 1 do not work with variable slice index (\#243)
+\item BIT and CHAR-slices not allowed on left hand side and in input statements
+    (\#224)
+%\item control characters in string constants does not work if 
+%    there is a newline in the control character sequence(\#203) 
+
 \item Semantic analysis for good diagnostic error messages.
      In case of problems error messages from the c++ compiler may appear. 
-\item semantic analysis for program quality analysis (e.g. unused variables)
+\item Semantic analysis for program quality analysis (e.g. unused variables)
 \end{itemize}
 
 \section{Restrictions for privileged and unprivileded users}
@@ -168,6 +198,11 @@ This version does not support:
    \verb|/etc/security/limits.conf| by a line like\newline
    \verb|*  - rtprio 99|\newline
    This allows all users to use real-time priorities.
+   \newline
+   If you work via remote desktop protocol you must force pam to
+   recognize the limits.conf by adding the next line to \verb|/etc/pam.d/common-session|
+   \newline
+   \verb|session    required   pam_limits.so|
 \item If the application is run with root priviledges, the socalled 
   round-robin scheduler is used. This provides only 100 priority values.
   For administrative reasons, some priorities are clipped by the OpenPEARL
@@ -199,29 +234,31 @@ other tasks are active. The usual background activity of the linux
 systems was present.
 
 For details about the measurements please consult the corresponding
-source code.
+source code. The benchmark are located in \verb|demos/benchmark/|
 
 \subsection{Execution Timing on Raspberry Pi 3b}
 
 \subsection{Execution Timing on a Desktop Linux System}
 The excecution speed depends on many hardware parameters. 
 The following data are taken from my development machine, which consists of
-......
+Intel(R) Xeon(R) CPU E31270 @ 3.40GHz.
+
 
 \begin{tabular}{|p{5cm}|l|r|}
 \hline
 Parameter & Test Program & Result \\
 \hline
-Task Activation & benchmarks/TaskActivation & ....\\
+Task Activation & Tasking.prl & $59-277 \mu s$\\
 \hline
-Semaphore Operations &  & \\
-REQUEST-RELEASE non blocking & & \\
-RELEASE-waiter CONTINUATION & & \\
+Semaphore Operations & Tasking.prl &  \\
+REQUEST-RELEASE non blocking & & $2 \mu s$\\
+RELEASE-REQUEST with context switch & & $8-18\mu s$\\
 
 \hline
-Simple Type Operations & ... & \\
+Simple Type Operations & CharTests.prl & \\
+                       & BitTests.prl & \\
 \hline
-Matrix Multiplication & .... & ...\\
+Matrix Multiplication & MatMult.prl & ...\\
 \hline
 \end{tabular}
 

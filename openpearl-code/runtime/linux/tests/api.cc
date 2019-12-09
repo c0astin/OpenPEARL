@@ -86,7 +86,7 @@ DCLTASK(t1,pearlrt::Prio(10),pearlrt::BitString<1>(1)) {
    pearlrt::Duration d(5.0);
    me->setLocation(11,filename);
    pearlrt::Duration dur;
-   pearlrt::Float<24> f(10.0);
+   pearlrt::Float<23> f(10.0);
    me->setLocation(12,filename);
    dur = f*d;
    dur = d*f;
@@ -103,7 +103,7 @@ DCLTASK(t1,pearlrt::Prio(10),pearlrt::BitString<1>(1)) {
                pearlrt::Task::AFTER|pearlrt::Task::DURING|pearlrt::Task::ALL, 
 	       pearlrt::Prio(30),
                pearlrt::Clock(), d, pearlrt::Duration(2.0), // at, all 
-               pearlrt::Clock(),d*(pearlrt::Float<24>)6.0) ; 
+               pearlrt::Clock(),d*(pearlrt::Float<23>)6.0) ; 
 }
 
 int t2counter=0;
@@ -113,7 +113,7 @@ DCLTASK(t2,pearlrt::Prio(20),pearlrt::BitString<1>(0)) {
    me->setLocation(18,filename);
    pearlrt::Duration d(10.0);
    me->setLocation(19,filename);
-   d = d / pearlrt::Float<24>(t2counter-2);
+   d = d / pearlrt::Float<23>(t2counter-2);
 }
 
 /**

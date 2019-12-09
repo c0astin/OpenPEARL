@@ -97,6 +97,7 @@
 (setq oprl-events-regexp nil)
 (setq oprl-functions-regexp nil)
 
+
 ;; add the mode to the `features' list
 (provide 'oprl-mode)
 

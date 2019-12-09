@@ -1,7 +1,7 @@
 /*
  [The "BSD license"]
  Copyright (c) 2013-2014 Florian Mahlecke
-               2014-2015 Rainer Mueller
+               2014-2019 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -149,11 +149,26 @@ namespace pearlrt {
       void terminateFromOtherTask();
 #endif
    public:
+      /**
+      deliver pointer to current task object
+
+      This feature is solved via a static  task local data element
+      named 'mySelf' in Task.cc
+
+      \returns the pointer of task object which calling any
+           other method
+      */
+      static Task* currentTask(void);
+
       void terminateIO();
       void terminateSuspended();
       void terminateSuspendedIO();
       void terminateRunning();
-     void suspendRunning();
+
+      /**
+      see comments in TaskCommon::suspendRunning
+      */
+      void suspendRunning();
       void suspendIO();
 
 /* -------- */
@@ -201,6 +216,19 @@ namespace pearlrt {
       */
       void suspendFromOtherTask();
 #endif
+     /**
+      the suspend and terminate while doing an io statement is solved
+      via simulating the i/o progress while the suspend/terminate-request
+      is signalled by two flags. Thus the device driver regains control
+      and calls this method to do all necessary operations
+      for suspend/terminate.
+      This methods return on continuation, dies with the thread
+      on termination.
+
+      The task mutex is locked when the suspendIO/terminateIO are called
+      thus we must unlock it in case of termination.
+      */
+      void treatCancelIO(void);
 
       /**
       the tasks body.

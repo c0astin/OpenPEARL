@@ -73,14 +73,14 @@ namespace pearlrt {
                             const Fixed<31> d) {
       checkCapacity(w);
 
-      if (len == 24) {
-         Float<24> * f = (Float<24>*)s;
+      if (len == 23) {
+         Float<23> * f = (Float<23>*)s;
          f += index;
-         PutFloat<24>::toF(*f, w, d, *sink);
-      } else if (len == 53) {
-         Float<53> * f = (Float<53>*)s;
+         PutFloat<23>::toF(*f, w, d, *sink);
+      } else if (len == 52) {
+         Float<52> * f = (Float<52>*)s;
          f += index;
-         PutFloat<53>::toF(*f, w, d, *sink);
+         PutFloat<52>::toF(*f, w, d, *sink);
       } else {
          Log::error("unsupported length of float F-format (len=%zu)", len);
          throw theInternalDationSignal;
@@ -93,14 +93,14 @@ namespace pearlrt {
                               const Fixed<31> d) {
       checkCapacity(w);
 
-      if (len == 24) {
-         Float<24> * f = (Float<24>*)s;
+      if (len == 23) {
+         Float<23> * f = (Float<23>*)s;
          f += index;
-         GetFloat<24>::fromF(*f, w, d, *source);
-      } else if (len == 53) {
-         Float<53> * f = (Float<53>*)s;
+         GetFloat<23>::fromF(*f, w, d, *source);
+      } else if (len == 52) {
+         Float<52> * f = (Float<52>*)s;
          f += index;
-         GetFloat<53>::fromF(*f, w, d, *source);
+         GetFloat<52>::fromF(*f, w, d, *source);
       } else {
          Log::error("unsupported length of float F-format (len=%zu)", len);
          throw theInternalDationSignal;

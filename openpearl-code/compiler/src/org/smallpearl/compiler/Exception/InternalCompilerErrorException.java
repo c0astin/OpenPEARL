@@ -38,4 +38,9 @@ public class InternalCompilerErrorException extends RuntimeException {
     public InternalCompilerErrorException(String sNumber, int line, int column, String sReason) {
         super("Error at line " + line + ":" + column + ": Internal compiler error: " + sReason + ". Please send a bug report!");
     }
+
+    public InternalCompilerErrorException(String sReason) {
+        super("Error : Internal compiler error: " + sReason + ". Please send a bug report!");
+    }
+
 }

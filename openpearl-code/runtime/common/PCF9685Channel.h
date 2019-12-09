@@ -1,7 +1,6 @@
 /*
  [A "BSD license"]
- Copyright (c) 2015 Rainer Mueller
- Copyright (c) 2018 Michael Kotzjan
+ Copyright (c) 2019 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -27,98 +26,118 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef ESP32WIFI_H_INCLUDED
-#define ESP32WIFI_H_INCLUDED
+#ifndef PCF9685CHANNEL_H_INCLUDED
+#define PCF9685CHANNEL_H_INCLUDED
 /**
 \file
 
-\brief Basic system device for Lpc17xx GPIO Digital Input
+\brief Basic system device for the PCF9685 I2C basic dation
 
 */
 
 #include "SystemDationB.h"
+#include "Fixed.h"
+#include "Signals.h"
+#include "PCF9685.h"
+
+#include <stdint.h>
 
 namespace pearlrt {
+   /**
+   \addtogroup io_common_drivers
+   @{
+   */
 
    /**
-   \file
+   \brief Basic system device for an i2c element pcf9685  basic dation
 
-   \brief Basic system device for Lpc17xx GPIO Digital Input
-
-      This device provides a simple digital input on the
-      port bits
+      This device works only together with PCF9685Channel, which allows
+      single channels to become set.
+      The device PCF9685 treats common stuff for all channels, like
+      ic bus adress and prescler.
 
    */
 
-   class Esp32Wifi: public SystemDationB {
+   class PCF9685Channel: public SystemDationB {
 
    private:
+      int16_t channel;
+
+      PCF9685 * provider;
+
+      void internalDationOpen();
+      void internalDationClose();
 
    public:
       /**
-      constructor to create the bit group and set the
-      bits to output direction
+      constructor to create access to one cghannel of
+      the 16 channels of the PCF9685 device
 
-      \throws InternalDationSignal in case of init failure
+      \param provider reference to the PCF9685 object
+      \param channel the channel
 
-      \param port is the port number (0..4)
-      \param start is the starting bit number (31..0)
-      \param width is the number of bits (1..32)
+      \throws DationParamSignal in case of init failure
+
       */
-      Esp32Wifi(char* ssid, char* password);
-
+      PCF9685Channel(PCF9685 * provider, int channel);
 
       /**
-      Open the DigitalIn
+      Open the  dation
 
       \param openParam open parameters if given
       \param idf pointer to IDF-value if given
-      \returns pointer to this object itself as working object in the 
-               user dation
-      \throws DationParamSignal, if  dation rst od IDF is not given
-      \throws OpenFailedSignal, if  dation is not closed
+      \returns pointer to the SampleDationB object itself as working
+               object in the user dation
+
+      \throws OpenFailedSignal, if  dation is not closed and rst is not given
       */
-      SystemDationB* dationOpen(const char * idf, int openParam);
+      PCF9685Channel* dationOpen(const char* idf = 0, int openParam = 0);
 
       /**
-      Close the DigitalIn
+      Close the sample basic dation
 
       \param closeParam close parameters if given
-
-      \throws CloseFailedSignal, if  dation is not opened
-      \throws DationParamSignal, if close parameters are specified
       */
       void dationClose(int closeParam = 0);
 
       /**
-      read  a Bit<width> value from the device
+      read data from the device
 
-      This method will always throw an exception
+
       \param data points to the storage location of the data
       \param size denotes the number of bytes of the output data
 
-      \throws InternalDationSignal, if size is smaller than the number
-                       of bits of the inout device
-      \throws DationNotOpenSignal, if  dation is not opened
+      \throws DationParamSignal, in any  case
       */
       void dationRead(void * data, size_t size);
 
       /**
-      send  a Bit<width> value to the device
+      send  a  value to the device
+
+      The "onValue" is always 0, only the offValue is used here
+
+      The offValue must be [0..4095]
+
       \param data points to the storage location of the data
       \param size denotes the number of bytes of the output data
 
-      \throws InternalDationSignal, if used at all
+      \throws DationParamSignal, in  case of illegal values
       */
       void dationWrite(void * data, size_t size);
 
       /**
+      obtain the capabilities of the device
+
+      This method returns :
+            OUT
+
+      does not return:
+            IDF  PRM CAN NEW  OLD ANY INOUT IN
+
       \returns available commands of the device
       */
       int capabilities();
-
    };
+   /** @} */
 }
 #endif
-
-

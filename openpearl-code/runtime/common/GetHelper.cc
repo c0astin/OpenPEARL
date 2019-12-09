@@ -424,7 +424,7 @@ endSampling:
          }
       } catch (TerminateRequestSignal s) {
          throw;
-      }
+      } 
 
       if ((delimiter & DoubleSpace) && retVal == ' ') {
          try {
@@ -669,7 +669,7 @@ endSampling:
       throw theFixedValueSignal;
    }
 
-   void GetHelper::readFloatByF(Float<53> * value, int d) {
+   void GetHelper::readFloatByF(Float<52> * value, int d) {
       int sign = 1;
       double x;
 
@@ -728,7 +728,7 @@ endSampling:
       return result;
    }
 
-   void GetHelper::readFloatByE(Float<53> * value) {
+   void GetHelper::readFloatByE(Float<52> * value) {
       int sign = 1;
       int expSign = 0;
       int expValue;

@@ -13,8 +13,8 @@ DCL moduleArray(10,20) FIXED;
 test_data_types: PROC;
    DCL fixed15_10(10) FIXED(15) INIT(1,2,3);
    DCL BIT3_20(20) BIT(3) INIT ('000'B1, '001'B1, '010'B1, '011'B, '100'B, '101'B,'111'B1);
-   DCL float24_5(5) FLOAT(24) INIT(1.0, 2.0,3.0, -1.0);
-   DCL float53_5(5) FLOAT(53) INIT(1.0, 2.0,3.0, -1.0);
+   DCL float24_5(5) FLOAT(23) INIT(1.0, 2.0,3.0, -1.0);
+   DCL float53_5(5) FLOAT(52) INIT(1.0, 2.0,3.0, -1.0);
    DCL dur_10_1(10) DURATION INIT(1HRS, 1 MIN, -1 SEC);
    DCL dur_10_2(10) DURATION INIT(1HRS, 1 MIN, 1 SEC);
    DCL clk_10(10) CLOCK INIT(12:00:01 , 01:01:01);
@@ -191,13 +191,13 @@ T1: TASK MAIN;
     DCL switch_on(1:3)              BIT(4);
     DCL x(10:20)                    FIXED(31);
     DCL y(1:10,10:20)               FIXED;
-    DCL z(1:3,1:3)                  FLOAT(24);
+    DCL z(1:3,1:3)                  FLOAT(23);
     DCL zz(1:10)                    CHAR(1);
     DCL clock_array(1:10)           CLOCK;
     DCL duration_array(10:20)       DURATION;
 
     DCL ref_fixed_array(1:2)        REF FIXED(10);
-    DCL ref_float_array(1:2)        REF FLOAT(24);
+    DCL ref_float_array(1:2)        REF FLOAT(23);
     DCL ref_char_array(1:2)         REF CHAR(10);
     DCL ref_bit_array(1:2)          REF BIT;
 

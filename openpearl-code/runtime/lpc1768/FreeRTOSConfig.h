@@ -80,6 +80,8 @@ void vAssertCalled( char* fn , int line );
 #define configQUEUE_REGISTRY_SIZE		10
 #define configGENERATE_RUN_TIME_STATS	0
 
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 3
+
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 

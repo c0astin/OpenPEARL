@@ -21,8 +21,6 @@ BNFFILES=$(wildcard *.bnf)
 .PHONY: clean final
 include ../configuration/.config
 
-ifeq ($(CONFIG_DOC_PREPORT),y)
-
 p-report.pdf:	p-report.tex $(TEXFILES) $(BNFFILES)
 	pdflatex p-report.tex
 	makeindex p-report.idx
@@ -34,9 +32,6 @@ final:
 	makeindex p-report.idx
 	pdflatex p-report.tex
 	makeindex p-report.idx
-else
-$(warning generation of language report is deselected in 'menuconfig')
-endif
 
 clean:
 	@echo "cleaning temporary files"

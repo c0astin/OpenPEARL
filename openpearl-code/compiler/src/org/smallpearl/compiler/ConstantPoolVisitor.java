@@ -421,8 +421,12 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
-        } else if (ctx.stringConstant() != null) {
-            m_constantPool.add(new ConstantCharacterValue(ctx.stringConstant().StringLiteral().toString()));
+        } else if (ctx.StringLiteral() != null) {
+        	String s = ctx.StringLiteral().toString();
+        	String s1 = CommonUtils.removeQuotes(s);
+        	String s2 = CommonUtils.unescapePearlString(s1);
+            //m_constantPool.add(new ConstantCharacterValue(ctx.StringLiteral().toString()));
+        	m_constantPool.add(new ConstantCharacterValue(s2));
         } else if (ctx.durationConstant() != null) {
             Integer hours = 0;
             Integer minutes = 0;
@@ -682,10 +686,6 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
-        } else if (ctx.selector() != null ) {
-            Log.debug("ExpressionTypeVisitor:visitAssignment_statement:selector:ctx" + CommonUtils.printContext(ctx.selector()));
-            visitSelector(ctx.selector());
-            id = ctx.selector().ID().getText();
         } else {
             id = ctx.ID().getText();
         }

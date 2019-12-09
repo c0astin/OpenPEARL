@@ -1,7 +1,6 @@
-//Similar implementation to Linux variant
 /*
  [A "BSD license"]
- Copyright (c) 2017 Rainer Mueller
+ Copyright (c) 2019 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -42,11 +41,12 @@
 #include "SystemDationNB.h"
 #include "Mutex.h"
 #include "ConsoleCommon.h"
-#include "Esp32UartCommsDriver.h"
+#include "Esp32Uart.h"
+#include "FullDuplexDationAbortNB.h"
 
 namespace pearlrt {
    /**
-   \addtogroup io_esp_driver
+   \addtogroup io_esp32_driver
    @{
    */
 
@@ -67,12 +67,18 @@ namespace pearlrt {
 
    */
    class Console: public SystemDationNB {
+#define ESP32_CONSOLE_STACK_SIZE 4096
 
    private:
+      FakeStackType_t consoleTaskStack[ESP32_CONSOLE_STACK_SIZE];
+      FakeTCB_t       consoleTaskTCB;
+
       /**
       mutex for  class data
       */
       Mutex consoleMutex;
+      Mutex consoleMutexIn;
+      Mutex consoleMutexOut;
 
       /** access capabilities */
       int cap;
@@ -86,16 +92,22 @@ namespace pearlrt {
       */
       int capacity;
 
+      bool keepRunningFlag;
       static Console * instance;
-      ConsoleCommon consoleCommon;
-      Esp32UartCommsDriver uartCommsDevice;
 
+      ConsoleCommon consoleCommon;
+      Esp32Uart *esp32Uart;
       TaskCommon* currentTask;
       char * bufferFromConsoleCommon;
       size_t lengthOfConsoleCommonBuffer;
       size_t deliveredCharacters;
-
    public:
+
+      /**
+        all input operations of the console device are located in this
+        method, which never returns.
+      */
+      void consoleLoop();
 
       /**
       there is only one Console device in the system
@@ -104,12 +116,18 @@ namespace pearlrt {
       */
       static Console* getInstance();
 
+#if 0
       /**
-      treat one line of input
-      \returns pointer to the waiting task<br>
-               NULL, if no task was waiting
+         check if there is a console-device defined.
+
+         If yes, os.cc will do the command line processing,
+         else there is no interaction in os.cc
+
+         \returns true if a Console device is defined
+         \returns false if no Console device  is defined
       */
-      TaskCommon* treat();
+      static bool isDefined();
+#endif
 
       /**
        Constructor to setup the system device
@@ -119,10 +137,12 @@ namespace pearlrt {
       */
       Console();
 
-      /** destructor
-      reset terminal attributes
+      /**
+      explicit destuctor to reset terminal settings and
+      close of system dations
       */
       ~Console();
+
 
       /**
          return capabilities of the folder objects
@@ -204,9 +224,7 @@ namespace pearlrt {
       /**
       translate newline
 
-      this is empty since linux uses \n for newline
-
-      \param doNewLineTranslation enbale/disable the translation
+      \param doNewLineTranslation enable/disable the translation
              (has no effect)
       */
       void translateNewLine(bool doNewLineTranslation);
@@ -239,6 +257,7 @@ namespace pearlrt {
 
       void suspend(TaskCommon * ioPerformingTask);
       void terminate(TaskCommon * ioPerformingTask);
+
    };
    /** @} */
 }

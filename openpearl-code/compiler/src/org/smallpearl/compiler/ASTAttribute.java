@@ -124,6 +124,21 @@ public class ASTAttribute {
         }
     }
 
+    public Void setConstantDurationValue(ConstantDurationValue val) {
+        m_constant = val;
+        m_readonly = true;
+        return null;
+    }
+
+    public ConstantDurationValue getConstantDurationValue() {
+        if (m_constant instanceof ConstantDurationValue) {
+            return (ConstantDurationValue) this.m_constant;
+        } else {
+            return null;
+        }
+    }
+
+    
     public ConstantSlice getConstantSlice() {
         return this.m_slice;
     }

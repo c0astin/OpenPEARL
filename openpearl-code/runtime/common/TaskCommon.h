@@ -37,7 +37,6 @@
 \brief tasking functionality interface towards the compiler
 
 */
-
 #include "Dation.h"
 
 namespace pearlrt {
@@ -93,19 +92,13 @@ namespace pearlrt {
          } bolt;	///< \returns the bolt component of blocking
 
          /**
-         blocking due to IO
+         blocking due to IO, IOWaitQueue or IO_MULTIPLE_IO
          */
          struct BlockIO {
+            //int         direction;
+            Dation::DationParams direction;  ///<  the current io direction
             UserDation* dation;  ///< pointer to the user dation
          } io;         ///< \returns  the io data
-
-         /**
-         blocking due to IO on a busy userdation
-         */
-         struct BlockIOWaitQueue {
-            UserDation* dation;  ///< pointer to the user dation
-            Dation::DationParams direction;  ///<  the current io direction
-         } ioWaitQueue;         ///< \return the io data
       } u;		///< \returns the union containing all blocking requests
    };
 
@@ -191,7 +184,7 @@ namespace pearlrt {
    </ul>
 
    \image html  taskStatesOpenPEARL.jpg
-   \image latex taskStatesOpenPEARL.png
+   \image latex taskStatesOpenPEARL.jpg
 
 
    */
@@ -211,7 +204,12 @@ namespace pearlrt {
       void testScheduleCondition(int condition, Duration during, Duration all);
    private:
       static CSema mutexTasks;
+
    protected:
+      /** Semaphor for completion message of activate
+          (inits by default to 0)   */
+      CSema activateDone;
+
       /** scheduled structure for activate and continue
 
       this struct contains all data which are required for a timed
@@ -246,16 +244,16 @@ namespace pearlrt {
         we terminate a task which is a wait queue by
         <ol>
         <li> setting this flag
-        <li>remove the task from the wait queue
+        <li> remove the task from the wait queue
         <li> unlock the task
         <li> wait until the task detected the flag and terminates self
         </ol>
       */
       volatile bool asyncTerminateRequested;
 
-      /*
+      /**
       for io operations which do not block the calling thread,
-      the io performing task will be suspended at a suitable point 
+      the io performing task will be suspended at a suitable point
       e.g. after the io-statement
       */
       volatile bool asyncSuspendRequested;
@@ -265,15 +263,15 @@ namespace pearlrt {
       */
       enum TaskState {
          /** 0: task is terminated  */
-         TERMINATED,      
+         TERMINATED,
          /** 1: task is running (runnable) */
-         RUNNING,    
+         RUNNING,
          /** 2: task is suspended          */
-         SUSPENDED,  
+         SUSPENDED,
          /** 3: task is suspended and (prev.) sema,bolt or io op. */
          SUSPENDED_BLOCKED,
          /** 4: task is blocked due to sema, bolt or io request   */
-         BLOCKED 
+         BLOCKED
       };
 
       /**
@@ -351,7 +349,7 @@ namespace pearlrt {
       If the task is in blocked state, the task will not try to obtain
       the unblocking condition.
       If the task is blocked at an io-operation, the io-operation
-      must become informed about the suspend request. 
+      must become informed about the suspend request.
       The global task mutex is released, when the suepend-request is
       and nearly treated by the io-operation.
 
@@ -716,7 +714,7 @@ namespace pearlrt {
       /**
         change the threads priority to the new PEARL prio
 
-        this affects the currentPrio as well as the 
+        this affects the currentPrio as well as the
         existing threads priority
 
         the method returns after setting the new priority
@@ -726,40 +724,67 @@ namespace pearlrt {
       void changeThreadPrio(const Fixed<15>& prio);
 
       /**
-      this method is invoked e.g. by a device driver, when
-      the io performing task should become SUSPENDED and the device 
+      this method is invoked by the SystemDation, when
+      the io performing task should become SUSPENDED and the device
       driver would nether block nor take much cpu time.
+      This solution fits for system dations which conatin no
+      blocking statement.
 
-      The method will set the asynSuspendRequested flag and wait 
-      until the task suspends self.      
+      In case of concrete system dations, which block during the
+      i/o operation, the method suspend() must be overwritten
+      by the system dation and implemented in a way to overcome the
+      blocking mechanism.
+
+      The method will set the asynSuspendRequested flag and wait
+      until the task suspends self.
       */
       void doAsyncSuspend();
 
       /**
-      this method is invoked e.g. by a device driver, when
-      the io performing task should become TERMINATED and the device 
+      this method is invoked by a SystemDation driver, when
+      the io performing task should become TERMINATED and the device
       driver would nether block nor take much cpu time.
+      This solution fits for system dations which conatin no
+      blocking statement.
 
-      The method will set the asynSuspendRequested flag and wait 
-      until the task terminates self.      
+      In case of concrete system dations, which block during the
+      i/o operation, the method suspend() must be overwritten
+      by the system dation and implemented in a way to overcome the
+      blocking mechanism.
+
+      The method will set the asynSuspendRequested flag and wait
+      until the task terminates self.
       */
       void doAsyncTerminate();
-
-private:
-    /**
-       perform required operations to adjust priority, semaphore
-       wait queues, .... when the task got the continue condition
-
-       \param condition indicates if a new priority should be set
-       \param prio the new priority for the task
-
-       \note this method expects the tasks mutex to be locked.
-             It releases the tasks mutex only in case of throwing an
-             exception.
+  
+      /** deliver the taskState as string 
+          \return the task state
       */
+      char* getTaskStateAsString();
+
+      /**
+        deliver detailed information about this task
+
+        \param lines array of buffers for the information ( type char [3][80] )
+        \returns number of information lines
+      */
+      int detailedTaskState(char * lines[3]);
+
+   private:
+      /**
+         perform required operations to adjust priority, semaphore
+         wait queues, .... when the task got the continue condition
+
+         \param condition indicates if a new priority should be set
+         \param prio the new priority for the task
+
+         \note this method expects the tasks mutex to be locked.
+               It releases the tasks mutex only in case of throwing an
+               exception.
+        */
       void continueFromOtherTask(int condition,
                                  Prio prio);
-public:
+   public:
       /* -----------------------------------------
       define virtual methods which must be suppiled by plattform
       specific task implementation
@@ -891,6 +916,7 @@ public:
              exception.
       */
       virtual void setPearlPrio(const Fixed<15>& prio) = 0;
+
    };
 
 

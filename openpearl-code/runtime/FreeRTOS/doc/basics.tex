@@ -14,11 +14,22 @@ The FreeRTOS system has the following disadvantages:
 \begin{enumerate}
 \item task control blocks and task stack are allocated on the system
    heap on task creation. This may lead to memory fragmentation
-\item ... and more ?? ... 
+\item FreeRTOS needs another task to clean memory allocation of a task if 
+   the task deletes itself. Normally the idle task does this cleanup.
+   In OpenPEARL is is possible, that no the cpu does not go idle 
+   between a self termination of a task and it new activation. This 
+   will lead into a hard system crash.
 \end{enumerate}
 
-Item 1 is treated by a modification of FreeRTOS with static TCB and stack
-and an user supplied heap manager, with implements a pool allocation pattern.
+Item 1 is obsolete with FreeRTOS version 10.
+Since version 10, FreeRTOS support static TCB and stacks.
+
+Item2 is solved by adding a new task parallel  to the idle task 
+  in the freertos implementation (file tasks.c) with
+  priority=\texttt{configPRIORITY\_MAX} and stack=\texttt{configSTACK\_MINIMAL}.
+  This task wait for a notification. The notification is set, when 
+  a task deletes itself by \texttt{vTaskDelete()}.
+
 
 \section{System Architecture}
 There are some problems with the linker and \texttt{weak} symbols.
@@ -98,24 +109,32 @@ The retarget mechanismn of the glibc needs access to stdin and stdout
 to realize printf and scanf. These functions are nice to use during 
 system debugging.
 An uart is the first choice for this purpose. It is desired to multiplex
-the system console with a normal dation. 
+the system console with a normal dation. The input sources are:
+\begin{itemize}
+\item printf statements
+\item Log-messages from the Log class
+\item local echo characters from a user dation on the uart port
+\end{itemize}
 
 The  architecture consists a GenericUart class, which defines the low 
 level interface 
 of a concrete uart (e.q. Lpc17xxUartInternal). This class is
 realized as singleton to make shure that only 1 instance for a 
-concrete uart is instantiated.
-The GenericUart class performs the multiplexing of retargeting,
+concrete uart port is instantiated.
+The GenericUart class performs the multiplexing of printf data,
 user dation and actions for the xon/xoff-protocol.
 
 The GenericUartDation class defines the additional interface of a
 SystemDationNB call, which realizes a serial system dation. 
 
-The interface for the retarget job is realized in the Retarget class.
-This class implements the basic C functions  \verb|_read| and \verb|_write|,
-which delegates to a plattform specific class SystemConsole, which
+The launchpad toolchain required the implementation of several
+low level glibc-function like  \verb|_read| and \verb|_write|.
+The interface for the retarget job is realized in the platform
+ specific Retarget object.
+The interface may delegate the action  to a plattform specific class SystemConsole, which
 is a singleton. 
-The implementation of \verb|_read| and \verb|_write| starts in polling mode
+E.g. in the Lpc1768 platform, the implementation of \verb|_read| and 
+\verb|_write| starts in polling mode
 and is switch over to interrupt mode, when FreeRTOS is started.
 
 The class SystemConsole contains just the singleton and instantiates 
@@ -126,7 +145,7 @@ must use the low level implementation  of the uart. It must implement
 the interfaces from SystemDationNB and GenericUartDation. 
 
 \paragraph{Summary:}\ \\
-GenericUart, GenericUartDation and Retarget are common to all micro
+GenericUart and GenericUartDation  are common to all micro
  controllers.
 
 The plattform specific classes are very small:
@@ -135,9 +154,80 @@ The plattform specific classes are very small:
 \item SystemDation
 \item the low level uart interface
 \item the complete uart interface
+\item the  required functions of the the retargetr machanism
 \end{itemize}
 
 By this architecture the port to other controllers should be very simple.
+
+\subsection{Sample Interactions for dationRead}
+\begin{enumerate}
+\item \texttt{XxxUart::dationRead()} stores the readcommand in \texttt{recvCommand} struct and 
+     blocks itself on the \texttt{recvCommand.blockSema}
+\item inside the receive interrupt, the \texttt{GenericUart::doReceiveChar()} method
+    desides what to do
+    \begin{enumerate}
+    \item treat XON/XOF
+    \item treat new line translation
+    \item on the console interface the \texttt{Retarget::addNextStdInChar()}, if there is a scanf
+        like function active and the newline translation is done\newline
+    \item if none of the actions above were required the character is passed 
+         \texttt{XxxUart::addReceivedChar()}, which will complete after some cycles the \texttt{recvCommand},
+        which unblocks the \texttt{dationRead()} method
+    \item if no comsumer of input characters is active and xon/xoff is selected, then XOFF will become
+        sent at the next chance.
+        \textbf{This is the action in this case study!}
+    \end{enumerate}
+\end{enumerate}
+
+\subsection{Sample Interactions for dationWrite}
+\begin{enumerate}
+\item \texttt{XxxUart::dationWrite()} stores the transmit command in \texttt{sendCommand} struct and 
+     blocks itself on the \texttt{sendCommand.blockSema}
+\item inside the transmit interrupt, the \texttt{GenericUart::sendNextChar()} method
+    desides what to do 
+    \begin{enumerate}
+    \item treat XON/XOF
+    \item treat new line translation
+    \item on the console interface the \texttt{Retarget::getNextStdOutChar()} 
+        will be treated with newline translation\newline
+    \item if none of the actions above were required the \texttt{XxxUart::getNextTransmitChar()}
+        is checked. If no more transmit characters are available, the \texttt{XxxxUart::sendCommand.blockSema}
+        becomes released.
+        \textbf{This is the action in this case study!}
+    \end{enumerate}
+\item the next transmit character is sent via \texttt{XxxUartInternal::sendChar()} to the 
+    uart transmitter and we wait for the next transmit interrupt
+\end{enumerate}
+
+\subsection{Sample Interactions for printf}
+\begin{enumerate}
+\item \texttt{Retarget::\_write()} checks if interrupts are possible
+  \begin{itemize}
+    \item if no interrupts are possible, the text is sent in polling mode
+    \item if interrupts are possible, the \texttt{StdOutJob} struct is set up \newline
+          and the calling thread waits active until the output is completed
+  \end{itemize}
+\item inside the transmit interrupt, the \texttt{GenericUart::sendNextChar()} method
+    desides what to do 
+    \begin{enumerate}
+    \item treat XON/XOF
+    \item treat new line translation
+    \item on the console interface the \texttt{Retarget::getNextStdOutChar()} 
+        will be treated with newline translation\newline
+        \textbf{This is the action in this case study!}
+    \item if none of the actions above were required the \texttt{SystemDation::getNextTransmitChar()}
+        is checked
+    \end{enumerate}
+\item the next transmit character is sent via \texttt{XxxUartInternal::sendChar()} to the 
+    uart transmitter and we wait for the next transmit interrupt
+\end{enumerate}
+
+\subsection{Sample Interactions for scanf}
+This part is not relevant and not tested. Local echo will be only available 
+at system start. After the start of FreeRTOS no local echo will be available.
+During the excution of the OpenPEARL application only printf-like functions
+are used for debugging.
+
 
 \section{Time Base}
 
@@ -197,17 +287,6 @@ Other time sources are plattform specific and described there.
 \section{Modification in FreeRTOS}
 FreeRTOS was modified in the following points:
 \begin{description}
-\item[static tcb and stack:]  Normally FreeRTOS places task control blocks (tcb)
-   and task stack in the heap storage. This may produce memory fragmentation,
-   when application tasks are deleted and restarted in a random sequence.
-
-   A new configuration item in \texttt{FreeRTOSConfig.h}  changes this
-   behavior. If \texttt{configUSE\_STATIC\_STACK\_AND\_TCB} is set to 1
-   the function \texttt{xTaskCreate} assumes a pointer to a struct with
-   pointers to the previous applications parameters and two new pointers
-   to the tasks control block (with type \texttt{TCB\_t}) and tasks stack
-   (type \texttt{StackEntry\_t *}). The application is expected to be
-   responsible to pass valid pointers.
 \item[getTaskCurrentFreeStack] is a new function, which returns the number
    of free stack element (of size 32 bit) on the current active tasks stack.
    This feature is enabled by the option
@@ -305,7 +384,8 @@ Implementation of FreeRTOS Hooks:
 \item[FreeRTOSHooks.c] provides some error hooks for stack and heap overflow.
 \end{description}
 
-\section{Task Mapping}
+\section{Tasks}
+\label{freertos_tasking}
 
 The task mapping is described in the thesis of
  Florian Mahlecke in detail.
@@ -332,7 +412,9 @@ In short:
       check the doxgen documenation of the class PrioMapper.
   \end{description}
 }
+\item TerminateSuspended, TerminateIo must be described!!
 \end{itemize}
+
 
 \section{Logging}
 The logging is done slightly different to the linux version.
@@ -383,7 +465,7 @@ the semaphore becomes released:
 xSemaphoreGiveFromISR(recvCommand.blockSema, NULL);
 \end{verbatim}
 
-A device driver is ether derived from \verb|UserdationNB|,
+A device driver is ether derived from \verb|SystemDationNB|,
  \verb|SystemdationB| or \verb|Interrupt|.
 It must implement the virtual methods according their
 expected behavior. For details please check the doxygen documentation
@@ -427,6 +509,21 @@ choose an interrupt priority, which fits to the system design.
 \item supply the device description for the IMC as described in the IMC-documentation.
 \end{enumerate}
 
+\subsection{Special Treatment for SUSPEND and TERMINATE during an I/O Operation}
+As described in the platform independend part, the suspend or termination request
+is delegated to the dations methods \texttt{suspend()} and \texttt{terminate()}.
+
+The implementation of these functions depend on the communication mechanism 
+between interrupt service routine and application thread. 
+In case of a semaphore block/unblockFromIsr the methods may set flags for the desired
+operations and unblock the semaphore. 
+The unblocked device driver must check the flags and treat them. In case of suspend, 
+it should suspend the calling thread.
+In case of termination, it must terminate the i/o request with the interrupt service routine
+and throw the \texttt{TerminateRequestSignal}  to free all above locking mechanisms.
+
+If a queue is used a special value may be transmitted to the calling thread to trigger 
+the necessary operations like in the block/unblock case.
 
 \input{interrupt_priorities.tex}
 

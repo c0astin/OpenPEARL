@@ -47,7 +47,6 @@
 #include <sys/stat.h>
 
 namespace pearlrt {
-   bool StdIn::_isDefined = false;
 
    StdIn::StdIn() : InterruptableSystemDationNB() {
       /* ctor is called before multitasking starts --> no mutex required */
@@ -59,7 +58,6 @@ namespace pearlrt {
       cap |= IN;
       fp = stdin;
 
-      _isDefined = true;
    }
 
    int StdIn::capabilities() {
@@ -123,7 +121,6 @@ namespace pearlrt {
             if (ret < 1) {
                if (errnoCopy == EINTR) {
                   Task::currentTask()->treatCancelIO();
-//                  Log::debug("StdIn: treatCancelIO finished");
                } else if (feof(fp)) {
                   Log::error("StdIn: error read across EOF");
                   mutex.unlock();
@@ -141,8 +138,6 @@ namespace pearlrt {
          mutex.unlock();
          throw;
       }
-//       Log::debug("StdIn::dationRead normal end size=%d data=%x",
-//          size, *(char*)destination);
       mutex.unlock();
    }
 
@@ -159,11 +154,9 @@ namespace pearlrt {
    }
 
 
-
-   bool StdIn::isDefined() {
-      return (_isDefined);
+   void StdIn::abortRead() {
+      mutex.unlock();
    }
-
 
    void StdIn::translateNewLine(bool doNewLineTranslation) {
       // do nothing

@@ -26,6 +26,7 @@ help:
 	@echo "+ initially as normal user: make menuconfig"
 	@echo "+ cyclic as normal user:    make install (this includes build)"
 	@echo "*************************************"
+	echo $(CONFIG_ESP32_FLASH_INTERFACE)
 
 all:	build install
 

@@ -146,7 +146,7 @@ namespace pearlrt {
    void doReceiveChar(char ch);
 
    /**
-   Send the given character to the otput data register
+   Send the given character to the output data register
 
    \param ch the character to send
    */

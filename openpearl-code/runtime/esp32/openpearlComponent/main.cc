@@ -74,41 +74,42 @@ independent parts.
 #include "../../configuration/include/autoconf.h"
 
 static void testException() {
-try {
-   printf("check exceptions\n");
-   throw 2;
-   printf("expection not treated\n");
-} catch (int e) {printf("got int exception %d\n", e);
-}
+   try {
+      printf("check exceptions\n");
+      throw 2;
+      printf("expection not treated\n");
+   } catch (int e) {
+      printf("got int exception %d\n", e);
+   }
 }
 extern "C" {
    extern int _write(int fd, char * ptr, int len);
-void blink_task(void *pvParameter)
-{
-   gpio_num_t blink_gpio =  GPIO_NUM_2;
-printf("task:blink started\n");
+   void blink_task(void *pvParameter) {
+      gpio_num_t blink_gpio =  GPIO_NUM_2;
+      printf("task:blink started\n");
 
 
-    testException();
+      testException();
 
-    /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
-       muxed to GPIO on reset already, but some default to other
-       functions and need to be switched to GPIO. Consult the
-       Technical Reference for a list of pads and their default
-       functions.)
-    */
-    gpio_pad_select_gpio(blink_gpio);
-    /* Set the GPIO as a push/pull output */
-    gpio_set_direction(blink_gpio, GPIO_MODE_OUTPUT);
-    while(1) {
-        /* Blink off (output low) */
-        gpio_set_level(blink_gpio, 0);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        /* Blink on (output high) */
-        gpio_set_level(blink_gpio, 1);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
+      /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
+         muxed to GPIO on reset already, but some default to other
+         functions and need to be switched to GPIO. Consult the
+         Technical Reference for a list of pads and their default
+         functions.)
+      */
+      gpio_pad_select_gpio(blink_gpio);
+      /* Set the GPIO as a push/pull output */
+      gpio_set_direction(blink_gpio, GPIO_MODE_OUTPUT);
+
+      while (1) {
+         /* Blink off (output low) */
+         gpio_set_level(blink_gpio, 0);
+         vTaskDelay(1000 / portTICK_PERIOD_MS);
+         /* Blink on (output high) */
+         gpio_set_level(blink_gpio, 1);
+         vTaskDelay(1000 / portTICK_PERIOD_MS);
+      }
+   }
 };
 
 using namespace pearlrt;
@@ -122,98 +123,79 @@ and start FreeRTOS-scheduler
 \returns nothing - will never return!
 */
 extern "C" {
-void  app_main() {
-#if 1
-   char line[40];
+   void  app_main() {
+      char line[40];
 
-   printf("OpenPEARL started \n");
+      printf("OpenPEARL started \n");
 
-   // test for clock initialization
+      // test for clock initialization
 
-   if (!Esp32Clock::isClockSelected()) {
-      printf("set default clock source\n");
-      Esp32Clock dummy(0);  // the object may be discarded immediately
-   }
+      if (!Esp32Clock::isClockSelected()) {
+         printf("set default clock source\n");
+         Esp32Clock dummy(0);  // the object may be discarded immediately
+      }
 
 
-   printf("set log level \n");
-   Log::getInstance()->setLevel(0x0c);
-//   Log::getInstance()->setLevel(0x0f);
+      printf("set log level \n");
+      Log::getInstance()->setLevel(0x0c);
+//      Log::getInstance()->setLevel(0x0f);
 
-   // start background service task
-   init_service();
+      // start background service task
+      init_service();
 
-   /*
-    * This task starts all PEARL90 main tasks, afterwards the
-    * task suspends itself until another task resume it
-    */
-   printf("task list \n");
-   Log::info("Defined Tasks");
-
-   // format with sprintf, since Log does not allow format parameters
-   sprintf(line, "%-10.10s %4s %s", "Name", "Prio", "isMain");
-   printf("%s\n",line);
-   Log::info(line);
-   TaskList::Instance().sort(); // sort taskList
-
-   for (int i = 0; i < TaskList::Instance().size(); i++) {
-      Task *t = TaskList::Instance().getTaskByIndex(i);
+      /*
+       * This task starts all PEARL90 main tasks, afterwards the
+       * task suspends itself until another task resume it
+       */
+      printf("task list \n");
+      Log::info("Defined Tasks");
 
       // format with sprintf, since Log does not allow format parameters
-      sprintf(line, "%-10.10s  %3d  %2d", t->getName(),
-              (t->getPrio()).x,
-              t->getIsMain());
+      sprintf(line, "%-10.10s %4s %s", "Name", "Prio", "isMain");
+      printf("%s\n", line);
       Log::info(line);
-   printf("%s\n",line);
-      t->init();
-   }
+      TaskList::Instance().sort(); // sort taskList
 
+      for (int i = 0; i < TaskList::Instance().size(); i++) {
+         Task *t = TaskList::Instance().getTaskByIndex(i);
 
-   if (TaskList::Instance().size() == 0) {
-      printf("no task defined --> exit.\n");
-      //exit(1); //!! no exit on esp32
-   }
-
-   /*****************init end*******************/
-   //activate all threads which declared with "main"
-   Log::info("start all main-threads");
-   printf("start all main-threads\n");
-
-   for (int i = 0; i < TaskList::Instance().size();  i++) {
-      Task *t = TaskList::Instance().getTaskByIndex(i);
-
-      if (t->getIsMain()) {
-         t->activate(t);
+         // format with sprintf, since Log does not allow format parameters
+         sprintf(line, "%-10.10s  %3d  %2d", t->getName(),
+                 (t->getPrio()).x,
+                 t->getIsMain());
+         Log::info(line);
+         printf("%s\n", line);
+         t->init();
       }
+
+
+      if (TaskList::Instance().size() == 0) {
+         printf("no task defined --> exit.\n");
+         //exit(1); //!! no exit on esp32
+      }
+
+      /*****************init end*******************/
+      //activate all threads which declared with "main"
+      Log::info("start all main-threads");
+      printf("start all main-threads\n");
+
+      for (int i = 0; i < TaskList::Instance().size();  i++) {
+         Task *t = TaskList::Instance().getTaskByIndex(i);
+
+         if (t->getIsMain()) {
+            t->activate(t);
+         }
+      }
+
+      // all heap elements should be allocated now !
+      // dump unused size to log
+      Log::info("Free Heap size: %d byte", xPortGetFreeHeapSize());
+
+
+      xTaskCreate(&blink_task, "blink_task",
+                  5000, //configMINIMAL_STACK_SIZE,
+                  NULL, 5, NULL);
+      printf("blink started\n");
    }
 
-   // all heap elements should be allocated now !
-   // dump unused size to log
-   Log::info("Free Heap size: %d byte", xPortGetFreeHeapSize());
-#endif
-
-printf("blink started\n");
-
-#if 0
-try {
-   printf("check exceptions\n");
-   throw 1;
-   printf("expection not treated\n");
-} catch (int e) {printf("got int exception %d\n", e);
 }
-
-#endif
-
-xTaskCreate(&blink_task, "blink_task", 
-     5000, //configMINIMAL_STACK_SIZE,
- NULL, 5, NULL);
-#if 0
-   Log::info("system startup complete");
-   printf("test scheduler\n");
-   vTaskDelay(10000);
-   printf("10000 ticks passed\n");
-#endif
-}
-
-}
-

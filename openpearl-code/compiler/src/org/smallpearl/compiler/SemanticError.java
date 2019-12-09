@@ -31,6 +31,6 @@ package org.smallpearl.compiler;
 
 public class SemanticError extends RuntimeException {
     public SemanticError(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Semantic Error: " + sReason);
+        super(Compiler.getSourceFilename() + ":" + line + ":" + column + ": Semantic Error: " + sReason);
     }
 }

@@ -41,6 +41,9 @@
 #include "FakeTypes.h"
 
 namespace pearlrt {
+   /** \addtogroup tasking_freertos
+       @{
+   */
 
    /**
    \brief access to posix counting semaphores
@@ -54,10 +57,10 @@ namespace pearlrt {
    private:
       static const FakeUBaseType_t max = 32767;
 
-      FakeSemaphoreHandle_t sem;
       const char * id;
 
    public:
+      FakeSemaphoreHandle_t sem;
       /**
          initialize the semaphore variable
          \param preset initial value - must be >= 0
@@ -86,6 +89,7 @@ namespace pearlrt {
       */
       void release();
    };
+   /** @} */
 }
 
 #endif

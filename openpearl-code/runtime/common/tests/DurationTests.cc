@@ -78,7 +78,7 @@ TEST(Duration, Operations) {
       int test = 0;
 
       try {
-         d2 = d2 + d * pearlrt::Float<24>(preset + pearlrt::Float<24>(0.0));
+         d2 = d2 + d * pearlrt::Float<23>(preset + pearlrt::Float<23>(0.0));
 
          for (i = 0; i < 1000000000; i++) {
             d2 = d2 + d;
@@ -98,7 +98,7 @@ TEST(Duration, Operations) {
       int test = 0;
 
       try {
-         d2 = d2 - d * pearlrt::Float<24>(preset + pearlrt::Float<24>(0.0));
+         d2 = d2 - d * pearlrt::Float<23>(preset + pearlrt::Float<23>(0.0));
 
          for (i = 0; i < 1000000000; i++) {
             d2 = d2 - d;
@@ -142,20 +142,20 @@ TEST(Duration, Operations) {
 
    {
       pearlrt::Duration d(5.0);
-      d = pearlrt::Float<24>(2.5) * d;
+      d = pearlrt::Float<23>(2.5) * d;
       ASSERT_TRUE((d == pearlrt::Duration(12.5)).getBoolean());
    }
    {
       pearlrt::Duration d(5.0);
-      d = d / (pearlrt::Float<24>)(0.5);
+      d = d / (pearlrt::Float<23>)(0.5);
       ASSERT_TRUE((d == pearlrt::Duration(10.0)).getBoolean());
    }
-   ASSERT_THROW(pearlrt::Duration(5.0) / pearlrt::Float<24>(0.0),
+   ASSERT_THROW(pearlrt::Duration(5.0) / pearlrt::Float<23>(0.0),
                 pearlrt::DurationDivideByZeroSignal);
    {
       pearlrt::Duration d(5.0);
       pearlrt::Duration d2(2.5);
-      ASSERT_TRUE((d / d2 == pearlrt::Float<24>(2.0)).getBoolean());
+      ASSERT_TRUE((d / d2 == pearlrt::Float<23>(2.0)).getBoolean());
    }
    {
       pearlrt::Duration d(5.0);
