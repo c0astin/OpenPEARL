@@ -106,7 +106,7 @@ public class Compiler {
         //Log.set(LEVEL_INFO);
 
         for (i = 0; i < inputFiles.size(); i++) {
-            OpenPearlLexer lexer = null;
+            SmallPearlLexer lexer = null;
             AST ast = new AST();
 
             m_sourceFilename = inputFiles.get(i);
@@ -117,7 +117,7 @@ public class Compiler {
             Log.debug("Performing syntax check");
 
             try {
-                lexer = new OpenPearlLexer(new ANTLRFileStream(m_sourceFilename));
+                lexer = new SmallPearlLexer(new ANTLRFileStream(m_sourceFilename));
             }
             catch(IOException ex) {
                 System.out.println("Error:" + ex.getMessage());
