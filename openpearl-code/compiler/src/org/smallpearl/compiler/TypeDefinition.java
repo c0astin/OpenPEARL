@@ -65,4 +65,6 @@ public abstract class TypeDefinition {
     }
 
     public Integer getPrecision() { return 0;}
+
+    public int getNoOfBytes() { return 0;}
 }

@@ -29,52 +29,43 @@
 
 package org.smallpearl.compiler;
 
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.util.LinkedList;
-import java.util.UUID;
-
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
-import org.smallpearl.compiler.Exception.IllegalCharacterException;
-import org.smallpearl.compiler.Exception.NotSupportedTypeException;
-import org.smallpearl.compiler.SymbolTable.SymbolTable;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
-import org.stringtemplate.v4.ST;
+
+import java.io.File;
+import java.util.UUID;
 
 public class CommonUtils {
 
-    public static
-    Long convertBitStringToLong(String bitstring) {
+    public static Long convertBitStringToLong(String bitstring) {
         int base = 0;
         int bitsPerPosition = 0;
         int noOfBits = 0;
         String postfix = "";
 
-        if( bitstring.startsWith("'")) {
+        if (bitstring.startsWith("'")) {
             bitstring = bitstring.substring(1, bitstring.length());
         }
 
-        if( bitstring.endsWith("'")) {
+        if (bitstring.endsWith("'")) {
             bitstring = bitstring.substring(0, bitstring.length() - 1);
         }
 
-        postfix = bitstring.substring(bitstring.indexOf("'") + 1, bitstring.length() );
+        postfix = bitstring.substring(bitstring.indexOf("'") + 1, bitstring.length());
         bitstring = bitstring.substring(0, bitstring.indexOf("'"));
 
-        if ( postfix.equals("B") || postfix.equals("B1")) {
-            base =2;
+        if (postfix.equals("B") || postfix.equals("B1")) {
+            base = 2;
             bitsPerPosition = 1;
-        }
-        else if ( postfix.equals("B2") ) {
+        } else if (postfix.equals("B2")) {
             base = 4;
             bitsPerPosition = 2;
-        }
-        else if ( postfix.equals("B3") ) {
+        } else if (postfix.equals("B3")) {
             base = 8;
             bitsPerPosition = 3;
-        }
-        else if ( postfix.equals("B4") ) {
+        } else if (postfix.equals("B4")) {
             base = 16;
             bitsPerPosition = 4;
         }
@@ -82,25 +73,57 @@ public class CommonUtils {
         noOfBits = bitstring.length() * bitsPerPosition;
 
         Long i = 0L;
-        for( int j = 0; j < bitstring.length(); j++) {
+        for (int j = 0; j < bitstring.length(); j++) {
             int num = 0;
-            switch( bitstring.charAt(j) ) {
-                case '0': num =  0; break;
-                case '1': num =  1; break;
-                case '2': num =  2; break;
-                case '3': num =  3; break;
-                case '4': num =  4; break;
-                case '5': num =  5; break;
-                case '6': num =  6; break;
-                case '7': num =  7; break;
-                case '8': num =  8; break;
-                case '9': num =  9; break;
-                case 'A': num = 10; break;
-                case 'B': num = 11; break;
-                case 'C': num = 12; break;
-                case 'D': num = 13; break;
-                case 'E': num = 14; break;
-                case 'F': num = 15; break;
+            switch (bitstring.charAt(j)) {
+                case '0':
+                    num = 0;
+                    break;
+                case '1':
+                    num = 1;
+                    break;
+                case '2':
+                    num = 2;
+                    break;
+                case '3':
+                    num = 3;
+                    break;
+                case '4':
+                    num = 4;
+                    break;
+                case '5':
+                    num = 5;
+                    break;
+                case '6':
+                    num = 6;
+                    break;
+                case '7':
+                    num = 7;
+                    break;
+                case '8':
+                    num = 8;
+                    break;
+                case '9':
+                    num = 9;
+                    break;
+                case 'A':
+                    num = 10;
+                    break;
+                case 'B':
+                    num = 11;
+                    break;
+                case 'C':
+                    num = 12;
+                    break;
+                case 'D':
+                    num = 13;
+                    break;
+                case 'E':
+                    num = 14;
+                    break;
+                case 'F':
+                    num = 15;
+                    break;
             }
 
             i *= base;
@@ -118,9 +141,7 @@ public class CommonUtils {
 
         int l1 = b.length();
 
-        if (numberOfBits < b.length())
-
-        {
+        if (numberOfBits < b.length()) {
             bres = "";
             for (int i = 0; i < numberOfBits; i++) {
                 bres = bres + b.charAt(i);
@@ -143,8 +164,7 @@ public class CommonUtils {
             } else {
                 bitStringConstant = "0x" + Long.toHexString(r) + "ULL";
             }
-        } else
-        {
+        } else {
             if (Long.toBinaryString(Math.abs(l)).length() < 15) {
                 bitStringConstant = "0x" + Long.toHexString(l);
             } else if (Long.toBinaryString(Math.abs(l)).length() < 31) {
@@ -157,52 +177,80 @@ public class CommonUtils {
         return bitStringConstant;
     }
 
-    public static
-    int getBitStringLength1(String bitstring) {
+    public static int getBitStringLength1(String bitstring) {
         int base = 0;
         StringBuilder sb = new StringBuilder(bitstring.length());
 
-        if( bitstring.startsWith("'")) {
+        if (bitstring.startsWith("'")) {
             bitstring = bitstring.substring(1, bitstring.length());
         }
 
-        if( bitstring.endsWith("'")) {
+        if (bitstring.endsWith("'")) {
             bitstring = bitstring.substring(0, bitstring.length() - 1);
         }
 
-        if ( bitstring.charAt(bitstring.length() -1 ) == '1' ) {
+        if (bitstring.charAt(bitstring.length() - 1) == '1') {
             base = 2;
-        }
-        else if ( bitstring.charAt(bitstring.length() -1 ) == '2' ) {
+        } else if (bitstring.charAt(bitstring.length() - 1) == '2') {
             base = 4;
-        }
-        else if ( bitstring.charAt(bitstring.length() -1 ) == '3' ) {
+        } else if (bitstring.charAt(bitstring.length() - 1) == '3') {
             base = 8;
-        }
-        else if ( bitstring.charAt(bitstring.length() -1 ) == '4' ) {
+        } else if (bitstring.charAt(bitstring.length() - 1) == '4') {
             base = 16;
         }
 
         Long i = 0L;
-        for( int j = 0; j < bitstring.length() - 3; j++) {
+        for (int j = 0; j < bitstring.length() - 3; j++) {
             int num = 0;
-            switch( bitstring.charAt(j) ) {
-                case '0': num =  0; break;
-                case '1': num =  1; break;
-                case '2': num =  2; break;
-                case '3': num =  3; break;
-                case '4': num =  4; break;
-                case '5': num =  5; break;
-                case '6': num =  6; break;
-                case '7': num =  7; break;
-                case '8': num =  8; break;
-                case '9': num =  9; break;
-                case 'A': num = 10; break;
-                case 'B': num = 11; break;
-                case 'C': num = 12; break;
-                case 'D': num = 13; break;
-                case 'E': num = 14; break;
-                case 'F': num = 15; break;
+            switch (bitstring.charAt(j)) {
+                case '0':
+                    num = 0;
+                    break;
+                case '1':
+                    num = 1;
+                    break;
+                case '2':
+                    num = 2;
+                    break;
+                case '3':
+                    num = 3;
+                    break;
+                case '4':
+                    num = 4;
+                    break;
+                case '5':
+                    num = 5;
+                    break;
+                case '6':
+                    num = 6;
+                    break;
+                case '7':
+                    num = 7;
+                    break;
+                case '8':
+                    num = 8;
+                    break;
+                case '9':
+                    num = 9;
+                    break;
+                case 'A':
+                    num = 10;
+                    break;
+                case 'B':
+                    num = 11;
+                    break;
+                case 'C':
+                    num = 12;
+                    break;
+                case 'D':
+                    num = 13;
+                    break;
+                case 'E':
+                    num = 14;
+                    break;
+                case 'F':
+                    num = 15;
+                    break;
             }
 
             i *= base;
@@ -212,71 +260,63 @@ public class CommonUtils {
         return Long.toBinaryString(i).length();
     }
 
-    public static
-    int getBitStringLength(String bitstring) {
+    public static int getBitStringLength(String bitstring) {
         int bitsPerPosition = 0;
         int noOfBits = 0;
         String postfix = "";
 
-        if( bitstring.startsWith("'")) {
+        if (bitstring.startsWith("'")) {
             bitstring = bitstring.substring(1, bitstring.length());
         }
 
-        if( bitstring.endsWith("'")) {
+        if (bitstring.endsWith("'")) {
             bitstring = bitstring.substring(0, bitstring.length() - 1);
         }
 
-        postfix = bitstring.substring(bitstring.indexOf("'") + 1, bitstring.length() );
+        postfix = bitstring.substring(bitstring.indexOf("'") + 1, bitstring.length());
         bitstring = bitstring.substring(0, bitstring.indexOf("'"));
 
-        if ( postfix.equals("B") || postfix.equals("B1")) {
+        if (postfix.equals("B") || postfix.equals("B1")) {
             bitsPerPosition = 1;
-        }
-        else if ( postfix.equals("B2") ) {
+        } else if (postfix.equals("B2")) {
             bitsPerPosition = 2;
-        }
-        else if ( postfix.equals("B3") ) {
+        } else if (postfix.equals("B3")) {
             bitsPerPosition = 3;
-        }
-        else if ( postfix.equals("B4") ) {
+        } else if (postfix.equals("B4")) {
             bitsPerPosition = 4;
         }
 
         noOfBits = bitstring.length() * bitsPerPosition;
-        return  noOfBits;
+        return noOfBits;
     }
 
-    public static
-    String convertBitStringToBitStringLong(String bitstring) {
+    public static String convertBitStringToBitStringLong(String bitstring) {
         int base = 0;
         int bitsPerPosition = 0;
         int noOfBits = 0;
         String postfix = "";
 
-        if( bitstring.startsWith("'")) {
+        if (bitstring.startsWith("'")) {
             bitstring = bitstring.substring(1, bitstring.length());
         }
 
-        if( bitstring.endsWith("'")) {
+        if (bitstring.endsWith("'")) {
             bitstring = bitstring.substring(0, bitstring.length() - 1);
         }
 
-        postfix = bitstring.substring(bitstring.indexOf("'") + 1, bitstring.length() );
+        postfix = bitstring.substring(bitstring.indexOf("'") + 1, bitstring.length());
         bitstring = bitstring.substring(0, bitstring.indexOf("'"));
 
-        if ( postfix.equals("B") || postfix.equals("B1")) {
-            base =2;
+        if (postfix.equals("B") || postfix.equals("B1")) {
+            base = 2;
             bitsPerPosition = 1;
-        }
-        else if ( postfix.equals("B2") ) {
+        } else if (postfix.equals("B2")) {
             base = 4;
             bitsPerPosition = 2;
-        }
-        else if ( postfix.equals("B3") ) {
+        } else if (postfix.equals("B3")) {
             base = 8;
             bitsPerPosition = 3;
-        }
-        else if ( postfix.equals("B4") ) {
+        } else if (postfix.equals("B4")) {
             base = 16;
             bitsPerPosition = 4;
         }
@@ -284,57 +324,86 @@ public class CommonUtils {
         noOfBits = bitstring.length() * bitsPerPosition;
 
         Long i = 0L;
-        for( int j = 0; j < bitstring.length(); j++) {
+        for (int j = 0; j < bitstring.length(); j++) {
             int num = 0;
-            switch( bitstring.charAt(j) ) {
-                case '0': num =  0; break;
-                case '1': num =  1; break;
-                case '2': num =  2; break;
-                case '3': num =  3; break;
-                case '4': num =  4; break;
-                case '5': num =  5; break;
-                case '6': num =  6; break;
-                case '7': num =  7; break;
-                case '8': num =  8; break;
-                case '9': num =  9; break;
-                case 'A': num = 10; break;
-                case 'B': num = 11; break;
-                case 'C': num = 12; break;
-                case 'D': num = 13; break;
-                case 'E': num = 14; break;
-                case 'F': num = 15; break;
+            switch (bitstring.charAt(j)) {
+                case '0':
+                    num = 0;
+                    break;
+                case '1':
+                    num = 1;
+                    break;
+                case '2':
+                    num = 2;
+                    break;
+                case '3':
+                    num = 3;
+                    break;
+                case '4':
+                    num = 4;
+                    break;
+                case '5':
+                    num = 5;
+                    break;
+                case '6':
+                    num = 6;
+                    break;
+                case '7':
+                    num = 7;
+                    break;
+                case '8':
+                    num = 8;
+                    break;
+                case '9':
+                    num = 9;
+                    break;
+                case 'A':
+                    num = 10;
+                    break;
+                case 'B':
+                    num = 11;
+                    break;
+                case 'C':
+                    num = 12;
+                    break;
+                case 'D':
+                    num = 13;
+                    break;
+                case 'E':
+                    num = 14;
+                    break;
+                case 'F':
+                    num = 15;
+                    break;
             }
 
             i *= base;
             i += num;
         }
 
-        String result =  Long.toBinaryString(Math.abs(i));
-        while ( result.length() < noOfBits) {
+        String result = Long.toBinaryString(Math.abs(i));
+        while (result.length() < noOfBits) {
             result = "0" + result;
         }
 
         return result;
     }
 
-    public static
-    String getUUIDString() {
+    public static String getUUIDString() {
         UUID uuid = UUID.randomUUID();
         String s = uuid.toString();
         s = s.replaceAll("-", "_");
         return s;
     }
 
-    public static
-    String getArrayDescriptorName(VariableEntry entry) {
+    public static String getArrayDescriptorName(VariableEntry entry) {
         String name = "ad_";
-        TypeArray type = ((TypeArray)entry.getType());
+        TypeArray type = ((TypeArray) entry.getType());
 
         return name;
     }
 
-    public static
-    String unescapeCppString(String st) {
+    public static String unescapeCppString(String st) {
         StringBuilder sb = new StringBuilder(st.length());
 
         for (int i = 0; i < st.length(); i++) {
@@ -359,8 +428,7 @@ public class CommonUtils {
         return sb.toString();
     }
 
-    public static
-    String unescapePearlString(String st) {
+    public static String unescapePearlString(String st) {
         StringBuilder sb = new StringBuilder(st.length());
         int state = 0;
         String value = "";
@@ -374,9 +442,6 @@ public class CommonUtils {
                 case 0:
                     if (ch == '\'') {
                         state = 1;
-                    } else if ( ch == '"') {
-                        sb.append("\\");
-                        sb.append("\"");
                     } else {
                         sb.append(ch);
                     }
@@ -386,43 +451,41 @@ public class CommonUtils {
                     if (ch == '\\') {
                         state = 2;
                     } else {
-                        throw new IllegalCharacterException("");
+                        state = 0;
+                        sb.append(ch);
                     }
                     break;
 
                 case 2:
-                    if ( (ch == ' ') || (ch == '\n') ) {
+                    if (ch == ' ') {
                         state = 2;
-                    }
-                    else if ( (ch == '\\') ) {
-                        state = 5;
-                    }
-                    else {
+                    } else {
                         value += ch;
                         state = 3;
                     }
                     break;
 
+
                 case 3:
                     value += ch;
                     val = Integer.toString(Integer.parseInt(value, 16), 8);
-                    while (val.length() < 3) {
+                    if (val.length() == 1) {
                         val = "0" + val;
                     }
-                    octalValue = "\\" + val;
+                    octalValue = "\\0" + val;
                     sb.append(octalValue);
                     value = "";
                     state = 4;
                     break;
 
                 case 4:
-                    if ( (ch == ' ') || (ch == '\n') ) {
-                        state = 2;
-                    }
-                    else if ( (ch == '\\') ) {
+                    if (ch == '\\') {
                         state = 5;
-                    }
-                    else {
+                    } else if (ch == ' ') {
+                        state = 4;
+                    } else if (ch == '\n') {
+                        state = 4;
+                    } else {
                         value += ch;
                         state = 3;
                     }
@@ -441,18 +504,15 @@ public class CommonUtils {
         return sb.toString();
     }
 
-    public static
-    String removeQuotes(String st) {
+    public static String removeQuotes(String st) {
         st = st.replaceAll("^'", "");
         st = st.replaceAll("'$", "");
         return st;
     }
 
-    public static
-    int getStringLength(String st) {
+    public static int getStringLength(String st) {
         int state = 0;
-        int len   = 0;
-        String s = "";
+        int len = 0;
 
         for (int i = 0; i < st.length(); i++) {
             char ch = st.charAt(i);
@@ -462,59 +522,39 @@ public class CommonUtils {
                     if (ch == '\\') {
                         state = 1;
                     } else {
-                        s += ch;
                         len++;
                     }
                     break;
 
                 case 1:
-                    if ( ch >= '0' && ch <= '7') {
+                    if (ch == '0') {
                         state = 2;
-                        s += '?';
-                        len++;
-                    }
-                    else {
+                    } else {
                         state = 0;
-                        s += ch;
                         len++;
                     }
                     break;
 
                 case 2:
-                    if ( ch >= '0' && ch <= '7') {
+                    if (ch >= '0' && ch <= '7') {
                         state = 3;
-                    }
-                    else {
+                    } else {
                         state = 0;
-                        s += ch;
                         len++;
                     }
                     break;
 
                 case 3:
-                    if ( ch >= '0' && ch <= '7') {
+                    if (ch >= '0' && ch <= '7') {
                         state = 0;
-                    }
-                    else if (ch == '\\') {
-                        state = 1;
+                        len++;
                     } else {
                         state = 0;
-                        s += ch;
                         len++;
                     }
                     break;
+
             }
-        }
-
-        try {
-            byte arr[] = s.getBytes("UTF8");
-            len = arr.length;
-        }
-        catch(UnsupportedEncodingException ex) {
-        }
-
-        if ( len == 0) {
-            len = 1;
         }
 
         return len;
@@ -535,5 +575,23 @@ public class CommonUtils {
             return ""; // empty extension
         }
         return name.substring(lastIndexOf);
+    }
+
+    /**
+     * Retrieve the rightmost identifier of a name
+     *
+     * @param ctx NameContext
+     * @return ParserRuleContext of rightmost identifier
+     */
+    public static ParserRuleContext getRightMostID(SmallPearlParser.NameContext ctx) {
+        if ( ctx != null ) {
+            String s = ctx.ID().getText();
+            if (ctx.name() != null) {
+                return getRightMostID(ctx.name());
+            } else {
+                return ctx;
+            }
+        }
+        return null;
     }
 }

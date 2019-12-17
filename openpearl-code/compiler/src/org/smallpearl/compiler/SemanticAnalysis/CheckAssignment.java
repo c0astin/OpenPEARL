@@ -101,7 +101,6 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
             id = ctx.ID().getText();
         }
 
-
         SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
 
         Log.debug("CheckAssignment:visitAssignment_statement:ctx.expression" + CommonUtils.printContext(ctx.expression()));

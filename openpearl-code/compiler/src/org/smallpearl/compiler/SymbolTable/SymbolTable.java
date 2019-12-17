@@ -31,6 +31,7 @@
 package org.smallpearl.compiler.SymbolTable;
 
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.NotYetImplementedException;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -415,6 +416,32 @@ public class SymbolTable {
 
         return -1;
     }
+
+    public int getNumberOfComponents(TypeStructure typ) {
+        int numberOfComponents = 0;
+
+        for (int i = 0; i < typ.m_listOfComponents.size(); i++ ) {
+            TypeDefinition componentType = typ.m_listOfComponents.get(i).m_type;
+             numberOfComponents += getNumberOfComponents(componentType);
+        }
+
+        return numberOfComponents;
+    }
+
+    public int getNumberOfComponents(TypeArray typ) {
+        return typ.getTotalNoOfElements() * getNumberOfComponents(typ.getBaseType());
+    }
+
+    public int getNumberOfComponents(TypeDefinition typ) {
+        if ( typ instanceof TypeArray) {
+            return getNumberOfComponents((TypeArray)typ);
+        } else if ( typ instanceof TypeStructure) {
+            return getNumberOfComponents((TypeStructure)typ);
+        } else {
+            return 1;
+        }
+    }
+
 
     public void setUsesSystemElements() { m_usesSystemElements = true;}
     public boolean usesSystemElements() { return m_usesSystemElements;}

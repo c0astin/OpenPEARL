@@ -30,6 +30,7 @@
 package org.smallpearl.compiler;
 
 
+import org.smallpearl.compiler.Exception.NotYetImplementedException;
 import org.smallpearl.compiler.SymbolTable.SemaphoreEntry;
 
 import java.util.LinkedList;
@@ -53,6 +54,7 @@ public class TypeStructure extends TypeDefinition {
 
             line += prefix + m_listOfComponents.get(i).toString();
         }
+
         return line + " ] ";
     }
 
@@ -118,13 +120,40 @@ public class TypeStructure extends TypeDefinition {
         return "~?~";
     }
 
+    private int getNumberOfBytes(TypeDefinition type) {
+        if ( type instanceof TypeFixed)           return type.getNoOfBytes();
+        if ( type instanceof TypeFloat)           return type.getNoOfBytes();
+
+        return 0;
+    }
+
     public String getStructureName() {
         String sname = "";
+        int    length = 0;
+
         for (int i = 0; i < m_listOfComponents.size(); i++ ) {
             TypeDefinition typ = m_listOfComponents.get(i).m_type;
             sname += getDataTypeEncoding(typ);
+            length += getNumberOfBytes(typ);
         }
-        return sname;
+
+        return "S" + String.valueOf(length) + sname;
     }
 
+    /**
+     * Search the given identifier in the list of structure elements.
+     *
+     * @param id Identifier to look for
+     * @return StructureComponent of the identifier
+     *         null if not found
+     */
+    public StructureComponent lookup(String id) {
+        for (int i = 0; i < m_listOfComponents.size(); i++ ) {
+            if ( m_listOfComponents.get(i).m_id.equals(id) ) {
+                return m_listOfComponents.get(i);
+            }
+        }
+
+        return null;
+    }
 }

@@ -76,5 +76,7 @@ public class TypeFixed extends TypeDefinition {
         // Custom equality check here.
         return this.m_precision == that.m_precision;
     }
-
+    public int getNoOfBytes() {
+        return m_precision / 8 + 1;
+    }
 }

@@ -52,7 +52,6 @@ public class StructureEntry extends SymbolTableEntry {
         return indentString(level) + super.toString(level) + "struct" + scopeString(level) + ":" +getStructureName();
     }
 
-
     protected String scopeString(int m_level) {
         return scope == null ? "" : "\n " + indentString(m_level) +
                 scope.toString(m_level);

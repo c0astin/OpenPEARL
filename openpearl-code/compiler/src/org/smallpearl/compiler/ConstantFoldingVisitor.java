@@ -109,6 +109,9 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
             visit(ctx.semaTry());
         } else if (ctx.stringSlice() != null) {
             visit(ctx.stringSlice());
+        } else if (ctx.name() != null) {
+            Log.debug("ConstantFoldingVisitor: visitPrimaryExpression: ctx.name=" + ctx.name().getText());
+            visitName(ctx.name());
         } else if (ctx.expression() != null) {
             if (ctx.expression().size() > 1) {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -946,5 +949,11 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
 
+    @Override
+    public Void visitName(SmallPearlParser.NameContext ctx) {
+        Log.debug("ConstantFoldingVisitor:visitName");
+        Log.debug("ConstantFoldingVisitor:visitName:ctx" + CommonUtils.printContext(ctx));
 
+        return null;
+    }
 }

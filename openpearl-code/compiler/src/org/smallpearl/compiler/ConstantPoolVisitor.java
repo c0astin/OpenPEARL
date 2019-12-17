@@ -40,7 +40,6 @@ import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
-
 public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
     private int m_verbose;
     private boolean m_debug;
@@ -170,9 +169,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitPrimaryExpression(SmallPearlParser.PrimaryExpressionContext ctx) {
-        Log.debug("visitBaseExpression:visitPrimaryExpression");
-
-        ASTAttribute primaryExpr = m_ast.lookup(ctx);
+        Log.debug("ConstantPoolVisitor:visitBaseExpression:visitPrimaryExpression:ctx" + CommonUtils.printContext(ctx));
 
         visitChildren(ctx);
 
@@ -421,8 +418,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
-        } else if (ctx.StringLiteral() != null) {
-        	String s = ctx.StringLiteral().toString();
+        } else if (ctx.stringConstant() != null && ctx.stringConstant().StringLiteral() != null) {
+        	String s = ctx.stringConstant().StringLiteral().toString();
         	String s1 = CommonUtils.removeQuotes(s);
         	String s2 = CommonUtils.unescapePearlString(s1);
             //m_constantPool.add(new ConstantCharacterValue(ctx.StringLiteral().toString()));

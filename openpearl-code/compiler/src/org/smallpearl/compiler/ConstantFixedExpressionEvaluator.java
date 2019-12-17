@@ -34,7 +34,6 @@ import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
-import sun.java2d.pipe.SpanShapeRenderer;
 
 public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<ConstantFixedValue> implements SmallPearlVisitor<ConstantFixedValue> {
 

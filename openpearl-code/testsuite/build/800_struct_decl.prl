@@ -131,6 +131,20 @@ DCL v_35(1:10) STRUCT [
                     c3(41:50,51:60,61:70) FLOAT
                 ];
 
+!!
+!! structures with initialization
+!!
+
+/*
+DCL v_101 STRUCT [
+            c FIXED
+         ] INIT(42);
+*/
+DCL v_102 STRUCT [
+            c1 FIXED,
+            c2 CHAR
+         ] INIT(42,'X');
+
 T1: TASK MAIN;
 END;
 

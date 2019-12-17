@@ -1898,3 +1898,12 @@ DisableStatement(id) ::= <%
 TriggerStatement(id) ::= <%
   <user_variable(id)>->trigger();
 %>
+
+StructureAccess(Elements) ::= <%
+    <Elements>
+%>
+
+StructureElement(id) ::= <%
+<id:{e | <e>} ; separator=".">
+%>
+

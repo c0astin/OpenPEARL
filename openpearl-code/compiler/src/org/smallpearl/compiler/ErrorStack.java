@@ -178,8 +178,7 @@ public class ErrorStack {
 		for (int i = 0; i <= m_sp; i++) {
 			prefix += m_stack[i].getErrorPrefix() + ":";
 		}
-		System.err.println(
-				Compiler.getSourceFilename() + ":" + startLineNumber + ":"
+		System.err.println( "Error at line " + startLineNumber + ":"
 						+ startColNumber + ": " + prefix + " " + msg);
 
 		m_stack[m_sp].incLocalCount();

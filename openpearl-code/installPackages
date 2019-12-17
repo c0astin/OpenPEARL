@@ -13,6 +13,27 @@ fi
 
 SystemKnown=0
 AptPackageList=""
+PackageManager="apt-get"
+
+grep "PRETTY_NAME=\"Fedora 30 (Workstation Edition)\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Fedora 30 (Workstation Edition) "
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" java-1.8.0-openjdk.x86_64"
+   AptPackageList+=" flex ncurses-libs.x86_64"
+   AptPackageList+=" expat expat-devel.x86_64"
+   AptPackageList+=" cpan"
+   PackageManager="dnf"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-collection-langenglish"
+      AptPackageList+=" 3"
+   fi
+   SystemKnown=1
+fi
 
 grep "PRETTY_NAME=\"Ubuntu 18.04.1 LTS\"" /etc/os-release >/dev/null
 rc=$?
@@ -23,7 +44,7 @@ then
    AptPackageList+=" openjdk-8-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
-   AptPackageList+=" i2c-tools libi2c-dev"
+   PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -44,7 +65,7 @@ then
    AptPackageList+=" openjdk-8-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
-   AptPackageList+=" i2c-tools libi2c-dev"
+   PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -63,7 +84,7 @@ then
    AptPackageList+=" openjdk-8-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
-   AptPackageList+=" i2c-tools libi2c-dev"
+   PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -82,7 +103,7 @@ then
    AptPackageList+=" gcc g++ git make gawk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
-   AptPackageList+=" i2c-tools libi2c-dev"
+   PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -99,7 +120,7 @@ then
    AptPackageList+=" gcc g++ git make gawk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
-   AptPackageList+=" i2c-tools libi2c-dev"
+   PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -115,6 +136,7 @@ then
    AptPackageList+=" openjdk-7-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -130,25 +152,7 @@ then
    #AptPackageList+=" openjdk-8-jdk" # raspbian comes with a javac
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
-   AptPackageList+=" i2c-tools libi2c-dev"
-   if [ $Developer -eq 1 ]
-   then
-      AptPackageList+=" astyle graphviz doxygen"
-      AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
-      AptPackageList+=" texlive-latex-extra"
-   fi
-   SystemKnown=1
-fi
-
-grep "PRETTY_NAME=\"Raspbian GNU/Linux 10 (buster)\"" /etc/os-release >/dev/null
-rc=$?
-if [ $rc -eq 0 ]
-then
-   echo "detected: Raspbian 10 buster "
-   AptPackageList+=" openjdk-8-jdk" # raspbian 10 comes without a javac
-   AptPackageList+=" flex libncurses5-dev"
-   AptPackageList+=" expat libexpat1-dev"
-   AptPackageList+=" i2c-tools libi2c-dev"
+   PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
       AptPackageList+=" astyle graphviz doxygen"
@@ -173,7 +177,7 @@ then
    # common for all platforms
    wget http://www.antlr.org/download/antlr-4.5-complete.jar
    mv antlr-4.5-complete.jar /usr/local/lib/
-   apt-get -y install $AptPackageList
+   $PackageManager -y install $AptPackageList
 
    # set automatic 'y' for cpan/cpanm installation
    export PERL_MM_USE_DEFAULT=1

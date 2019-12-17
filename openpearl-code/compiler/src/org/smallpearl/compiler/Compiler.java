@@ -48,7 +48,7 @@ import static org.smallpearl.compiler.Log.LEVEL_DEBUG;
 import static org.smallpearl.compiler.Log.LEVEL_ERROR;
 
 public class Compiler {
-    static String version = "v0.8.9.35";
+    static String version = "v0.8.9.40";
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();
@@ -202,7 +202,6 @@ public class Compiler {
             }
             catch(Exception ex) {
                 System.err.println(ex.getMessage());
-
 
                 if ( verbose > 0 ) {
                     System.err.println("Compilation aborted.");

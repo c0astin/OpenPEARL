@@ -34,7 +34,7 @@ grammar SmallPearl;
 @header
 {
     package org.smallpearl.compiler;
-    import org.smallpearl.compiler.OpenPearlLexer;
+    import org.smallpearl.compiler.SmallPearlLexer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
