@@ -10,7 +10,7 @@
       <attributes>SYSTEM, BASIC, IN</attributes>
       <data>FIXED(15)</data>
       <checks>
-         <check i2cAdrDoesNotCollide="LM75" sharable="$iicAdr" />
+         <check i2cAdrDoesNotCollide="LM75" nonShareable="$iicAdr" />
       </checks>
       <needAssociation name="I2CBusProvider" />
    </dation>

@@ -25,7 +25,6 @@
       <data>ALL</data>
       <needAssociation name="I2CBusProvider" />
       <checks>
-         <check i2cAdrDoesNotCollide="ADS1015SE" sharable="$iicAdr" />
-         <check pinDoesNotCollide="ADS1015SE($iicAdr)" start="$channel" errorText="adc channel" />
+         <check i2cAdrDoesNotCollide="BME280" nonShareable="$iicAdr" />
       </checks>
    </dation>

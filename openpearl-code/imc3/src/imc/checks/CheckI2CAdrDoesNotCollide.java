@@ -16,7 +16,7 @@ import org.w3c.dom.NodeList;
 /**
  * check if an I2C address is not used conflicting with other devices on the same bus
  * 
- * Some devices allow multiple dations (like port expanders) -> their address is "sharable"
+ * Some devices allow multiple dations (like port expanders) -> their address is "shareable"
  * 
  * Other devices allow to be used by one dation -> their address is "nonSharable"
  * 
@@ -91,7 +91,7 @@ public class CheckI2CAdrDoesNotCollide {
 							Node nShare= nl.item(i).getAttributes().getNamedItem("shareable");
 							Node nonShare= nl.item(i).getAttributes().getNamedItem("nonShareable");
 							if ( (nShare == null) == (nonShare==null)) {
-								imc.utilities.Log.internalError(se.getNameOfSystemelement()+" check i2cAdrDoesNotCollide needs ether attribute 'sharable' or 'nonSharable'");
+								imc.utilities.Log.internalError(se.getNameOfSystemelement()+" check i2cAdrDoesNotCollide needs ether attribute 'shareable' or 'nonShareable'");
 								return;
 							}
 							String adr;

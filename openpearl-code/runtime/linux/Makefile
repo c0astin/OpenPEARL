@@ -145,10 +145,20 @@ ifeq ($(CONFIG_LINUX_Raspberry),y)
       else
          $(error raspberry revision $(ver) not known by auto detection)
       endif 
-      CXXFLAGS += -DCONFIG_LINUX_Raspberry_Version_$(rpiVersion)
+   else 
+     ifeq ($(CONFIG_LINUX_Raspberry_Version_V1B),y) 
+         rpiVersion = V1B
+     else ifeq ($(CONFIG_LINUX_Raspberry_Version_V2B),y) 
+         rpiVersion = V2B
+     else ifeq ($(CONFIG_LINUX_Raspberry_Version_V3B),y) 
+         rpiVersion = V3B
+     else ifeq ($(CONFIG_LINUX_Raspberry_Version_V4B),y) 
+         rpiVersion = V4B
+     endif
+   endif
+   CXXFLAGS += -DCONFIG_LINUX_Raspberry_Version_$(rpiVersion)
 $(warning $(CXXFLAGS))
 
-   endif
    INCLUDES += -I ./raspberry 
    INCLUDES += -I ../raspberry 
 

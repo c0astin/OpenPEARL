@@ -47,6 +47,12 @@ config LINUX_Raspberry_Version_V3B
 	help
 	   Raspberry pi version 3 model B with 40 pin p1 connector and quad core cpu
 
+
+config LINUX_Raspberry_Version_V4B
+	bool "Version 4 Model B"
+	help
+	   Raspberry pi version 4 model B with 40 pin p1 connector and quad core cpu
+
 endchoice
 
 

@@ -244,7 +244,10 @@ public class CodeGenerator {
 
 			if (a != null) {
 				ModuleEntrySystemPart mse = a.getUsername();
-				doAllPrerequisites(mse,remainingDepth-1);
+				if (!mse.isCodeGenerated()) {
+				   doAllPrerequisites(mse,remainingDepth-1);
+					mse.setCodeGenerated(true);
+				}
 				addToCodeParts(se);
 				se.setCodeGenerated(true);
 			}
@@ -272,13 +275,18 @@ public class CodeGenerator {
 			nameSpacePrefix = module.getModuleName()+"::";
 		} 
 
-		if (pse.getType().equals(Platform.DATION) || pse.getType().equals(Platform.CONNECTION)) {
+		if (pse.getType().equals(Platform.DATION)) {
 			prototypes.append("\tpearlrt::Device *  d"+userName+";" + locationComment(se));
 
 			functionBody.append("\t// " + module.getSourceFileName()+":"+se.getLine()+"\n");
 			functionBody.append("\tstatic pearlrt::"+se.getNameOfSystemelement()+" "+nameSpacePrefix+"s"+userName
 					+ parameterList(se)+";\n");
 			functionBody.append("\t"+nameSpacePrefix+"d"+userName + "= &"+nameSpacePrefix + "s"+userName+";\n\n");
+		} else if (pse.getType().equals(Platform.CONNECTION)) {
+			
+			functionBody.append("\t// " + module.getSourceFileName()+":"+se.getLine()+"\n");
+			functionBody.append("\tstatic pearlrt::"+se.getNameOfSystemelement()+" "+nameSpacePrefix+"s"+userName
+					+ parameterList(se)+";\n");
 		} else  if (pse.getType().equals(Platform.CONFIGURATION)) {
 			functionBody.append("\t// " + module.getSourceFileName()+":"+se.getLine()+"\n");
 			functionBody.append("\tstatic pearlrt::"+se.getNameOfSystemelement()+" "+
@@ -291,8 +299,8 @@ public class CodeGenerator {
 			functionBody.append("\t"+nameSpacePrefix + userName + "= (pearlrt::Interrupt*) &"+nameSpacePrefix +"sys"+userName+";\n\n");
 
 		} else if (pse.getType().equals(Platform.SIGNAL)) {
-			prototypes.append("\tstatic pearlrt::"+se.getNameOfSystemelement()+ " "+nameSpacePrefix + "sig"+userName+";"+locationComment(se));
-			prototypes.append("\tpearlrt::Signal "+ nameSpacePrefix+userName+"= & "+nameSpacePrefix+"sig"+userName+";\n\n");
+			prototypes.append("\tstatic pearlrt::"+se.getNameOfSystemelement()+ " "+nameSpacePrefix +userName+";"+locationComment(se));
+			prototypes.append("\tpearlrt::Signal "+ nameSpacePrefix+"generalized"+userName+"= & "+nameSpacePrefix+userName+";\n\n");
 		} else {
 			Log.error("unsupported type: "+pse.getType());
 		}
