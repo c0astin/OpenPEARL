@@ -123,8 +123,8 @@ Only this file mus be included.
 
 #include "I2CBus.h"
 #include "BME280.h"
-#include "PCF9685.h"
-#include "PCF9685Channel.h"
+#include "PCA9685.h"
+#include "PCA9685Channel.h"
 #include "LM75.h"
 #include "ADS1015SE.h"
 #include "PCF8574In.h"
