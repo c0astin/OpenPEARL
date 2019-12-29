@@ -69,26 +69,42 @@ namespace imc {
                 return no_bits;
             }
 
-            const std::vector<ParameterInstance>& SystemName::get_parameter_instances(void)
+            const std::vector<ParameterInstance>& SystemElement::get_parameter_instances(void)
                 const noexcept
             {
                 return this->params;
             }
 
-            std::string SystemName::get_name(void) const noexcept {
-                return this->name;
+            std::string SystemElement::get_system_name(void) const noexcept {
+                return this->systemname;
             }
 
+            const FileLocation& SystemElement::get_filelocation(void) const noexcept {
+                return this->file_location;
+            }
+
+            std::string SystemElement::get_location(void) const noexcept{
+            	std::stringstream ss;
+            	ss << file_location.get_file() << ":" << file_location.get_line();
+            	return ss.str();
+            }
+
+            std::string SystemElement::get_provider_id(void) const noexcept {
+            	return this->required_association;
+            }
+
+#if 0
             const std::vector<ParameterInstance>& UserName::get_parameter_instances(void)
                 const noexcept
             {
                 return this->parameters;
             }
+#endif
 
             std::string UserName::get_name(void) const noexcept {
                 return this->name;
             }
-
+#if 0
             std::string UserName::get_system_name(void) const noexcept {
                 return this->systemname;
             }
@@ -97,6 +113,16 @@ namespace imc {
                 return this->file_location;
             }
 
+            std::string UserName::get_location(void) const noexcept{
+            	std::stringstream ss;
+            	ss << file_location.get_file() << ":" << file_location.get_line();
+            	return ss.str();
+            }
+
+            std::string UserName::get_provider_id(void) const noexcept {
+            	return this->required_association;
+            }
+#endif
         }
     }
 }

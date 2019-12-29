@@ -34,6 +34,7 @@ struct Nick {
 
 };
 
+/*
 std::vector<Nick> fetch_nicks(const Platform& pl) noexcept {
     std::vector<Nick> nicks;
     auto accumulate_nicks = [&](const PlatformType& pl) {
@@ -67,6 +68,7 @@ std::vector<Nick> fetch_nicks(const Platform& pl) noexcept {
 
     return nicks;
 }
+*/
 
 std::vector<int> to_vector_int(const std::vector<chaiscript::Boxed_Value> &vs) {
     std::vector<int> vi;
@@ -83,7 +85,7 @@ namespace imc {
     namespace expr {
         bool compute(Platform& platform) noexcept {
             chaiscript::ChaiScript scriptengine;
-
+/*
             imc::logger::log::log::debug() << "Accumulating nicknames..." << std::endl;
 
             // Collect all "nick" names from platform, enter into engine as variables
@@ -110,6 +112,8 @@ namespace imc {
             }
 
             // In case of Error, print and return
+            */
+
             return true;
         }
 
@@ -182,6 +186,8 @@ namespace imc {
                     {
                         { chaiscript::fun(&Layout::setDeviceId),     "setDeviceId" },
                         { chaiscript::fun(&Layout::getDeviceId),     "getDeviceId" },
+                        { chaiscript::fun(&Layout::setProviderId),   "setProviderId" },
+                        { chaiscript::fun(&Layout::getProviderId),   "getProviderId" },
                         { chaiscript::fun(&Layout::setAddress),      "setAddress" },
                         { chaiscript::fun(&Layout::getAddress),      "getAddress" },
                         { chaiscript::fun(&Layout::getBits),         "getBits" },

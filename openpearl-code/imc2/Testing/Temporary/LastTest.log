@@ -1,17 +1,19 @@
-Start testing: Jan 07 15:33 CET
+Start testing: Nov 05 14:56 CET
 ----------------------------------------------------------
 1/11 Testing: 001
 1/11 Test: 001
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/001/platform.xml" "tests/001/module.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"001" start time: Jan 07 15:33 CET
+"001" start time: Nov 05 14:56 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 <end of output>
-Test time =   0.09 sec
+Test time =   0.12 sec
 ----------------------------------------------------------
 Test Passed.
-"001" end time: Jan 07 15:33 CET
+"001" end time: Nov 05 14:56 CET
 "001" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -19,14 +21,16 @@ Test Passed.
 2/11 Test: 002
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/002/platform.xml" "tests/002/module.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"002" start time: Jan 07 15:33 CET
+"002" start time: Nov 05 14:56 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 <end of output>
-Test time =   0.10 sec
+Test time =   0.12 sec
 ----------------------------------------------------------
 Test Passed.
-"002" end time: Jan 07 15:33 CET
+"002" end time: Nov 05 14:56 CET
 "002" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -34,14 +38,16 @@ Test Passed.
 3/11 Test: 003
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/003/platform.xml" "tests/003/module.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"003" start time: Jan 07 15:33 CET
+"003" start time: Nov 05 14:56 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 <end of output>
-Test time =   0.16 sec
+Test time =   0.13 sec
 ----------------------------------------------------------
 Test Passed.
-"003" end time: Jan 07 15:33 CET
+"003" end time: Nov 05 14:56 CET
 "003" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -49,14 +55,16 @@ Test Passed.
 4/11 Test: 004
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/004/platform.xml" "tests/004/module_1.xml" "tests/004/module_2.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"004" start time: Jan 07 15:33 CET
+"004" start time: Nov 05 14:56 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 <end of output>
-Test time =   0.15 sec
+Test time =   0.12 sec
 ----------------------------------------------------------
 Test Passed.
-"004" end time: Jan 07 15:33 CET
+"004" end time: Nov 05 14:56 CET
 "004" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -64,14 +72,16 @@ Test Passed.
 5/11 Test: 005
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/005/platform.xml" "tests/005/module.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"005" start time: Jan 07 15:33 CET
+"005" start time: Nov 05 14:56 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 <end of output>
-Test time =   0.13 sec
+Test time =   0.12 sec
 ----------------------------------------------------------
 Test Passed.
-"005" end time: Jan 07 15:33 CET
+"005" end time: Nov 05 14:57 CET
 "005" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -79,18 +89,20 @@ Test Passed.
 6/11 Test: 006
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/006/platform.xml" "tests/006/module.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"006" start time: Jan 07 15:33 CET
+"006" start time: Nov 05 14:57 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 [ERROR]: Error constructing ParameterType instance: No data in node
 [ERROR]: Constructing ParameterInstance failed
 [ERROR]: Error while parsing 'module.system'.
 [ERROR]: Error while reading module
 <end of output>
-Test time =   0.10 sec
+Test time =   0.08 sec
 ----------------------------------------------------------
 Test Passed.
-"006" end time: Jan 07 15:33 CET
+"006" end time: Nov 05 14:57 CET
 "006" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -98,14 +110,16 @@ Test Passed.
 7/11 Test: 007
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/007/platform.xml" "tests/007/module.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"007" start time: Jan 07 15:33 CET
+"007" start time: Nov 05 14:57 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 <end of output>
-Test time =   0.14 sec
+Test time =   0.12 sec
 ----------------------------------------------------------
 Test Passed.
-"007" end time: Jan 07 15:33 CET
+"007" end time: Nov 05 14:57 CET
 "007" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -113,9 +127,11 @@ Test Passed.
 8/11 Test: 008
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/008/platform.xml" "tests/008/module.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"008" start time: Jan 07 15:33 CET
+"008" start time: Nov 05 14:57 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 [ERROR]: Unknown child: 
 [ERROR]: Error while parsing 'module.system'.
 [ERROR]: Error while reading module
@@ -123,7 +139,7 @@ Output:
 Test time =   0.08 sec
 ----------------------------------------------------------
 Test Passed.
-"008" end time: Jan 07 15:33 CET
+"008" end time: Nov 05 14:57 CET
 "008" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -131,9 +147,11 @@ Test Passed.
 9/11 Test: 009
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/009/platform.xml" "tests/009/module.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"009" start time: Jan 07 15:33 CET
+"009" start time: Nov 05 14:57 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 [ERROR]: Error constructing ParameterType instance: No data in node
 [ERROR]: Constructing ParameterInstance failed
 [ERROR]: Error while parsing 'module.system'.
@@ -142,7 +160,7 @@ Output:
 Test time =   0.08 sec
 ----------------------------------------------------------
 Test Passed.
-"009" end time: Jan 07 15:33 CET
+"009" end time: Nov 05 14:57 CET
 "009" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -150,17 +168,19 @@ Test Passed.
 10/11 Test: 010
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/010/platform.xml" "tests/010/module.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"010" start time: Jan 07 15:33 CET
+"010" start time: Nov 05 14:57 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 [ERROR]: Colliding parameters found: Layout(name = PCF8574Out, addr = '20'B4, bits = [1, 0, 0, 0, 0, 0, 0, 0, ])) <=> Layout(name = PCF8574Out, addr = '20'B4, bits = [1, 0, 0, 0, 0, 0, 0, 0, ]))
 
 [ERROR]: Error ...
 <end of output>
-Test time =   0.12 sec
+Test time =   0.14 sec
 ----------------------------------------------------------
 Test Passed.
-"010" end time: Jan 07 15:33 CET
+"010" end time: Nov 05 14:57 CET
 "010" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -168,18 +188,20 @@ Test Passed.
 11/11 Test: 011
 Command: "/home/mueller/OpenPEARL/openpearl-code/imc2/src/imc" "-o" "/dev/null" "-S" "scripts" "-b" "tests/011/platform.xml" "tests/011/module.xml"
 Directory: /home/mueller/OpenPEARL/openpearl-code/imc2
-"011" start time: Jan 07 15:33 CET
+"011" start time: Nov 05 14:57 CET
 Output:
 ----------------------------------------------------------
+"scripts/utils.chaiscript"
+"scripts/utils.chaiscript"
 [ERROR]: Parameter error: ''21'B4' does not match restriction: ValueRestriction(72, 73, 74, 75, 76, 77, 78, 79, ) in ParameterInstance(value = ''21'B4', type = 2')
 
 [ERROR]: Error ...
 <end of output>
-Test time =   0.09 sec
+Test time =   0.13 sec
 ----------------------------------------------------------
 Test Passed.
-"011" end time: Jan 07 15:33 CET
+"011" end time: Nov 05 14:57 CET
 "011" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Jan 07 15:33 CET
+End testing: Nov 05 14:57 CET

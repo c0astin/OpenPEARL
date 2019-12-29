@@ -27,7 +27,7 @@ namespace imc {
                 std::ostringstream msg;
 
             public:
-                error()  = default;
+                 error()  = default;
                 ~error() = default;
 
                 error(const error& other)

@@ -1,3 +1,7 @@
+/*
+ * changes Nov-2019 (rm)
+ *    Type replaced by std::string
+ */
 #include <iostream>
 #include "logger.hpp"
 
@@ -7,6 +11,8 @@ extern imc::logger::loglevel GLOBAL_LOG_LEVEL;
 
 namespace imc {
     namespace logger {
+
+    	int log::errors = 0;
 
         std::ostream& operator<<(std::ostream& os, imc::logger::loglevel& ll) {
             switch (ll) {
@@ -24,6 +30,7 @@ namespace imc {
 
                 case loglevel::ERROR:
                     os << "[ERROR]: ";
+                    //os << "";
                     break;
             }
             return os;
@@ -85,17 +92,12 @@ namespace imc {
 
         imc::logger::log& log::operator<<(const Parameter& p) noexcept {
             std::string nickname;
-            auto nick = p.get_nick();
-            if (!nick) {
-                nickname = "<none>";
-            } else {
-                nickname = *nick;
-            }
+            std::string name = p.get_name();
 
             this->out
                 << "Parameter("
                 << "len = " << p.get_len()
-                << ", nick = '" << nickname << "'"
+                << ", name = '" << name << "'"
                 << ")";
             return *this;
         }
@@ -214,6 +216,18 @@ namespace imc {
             return *this;
         }
 
+        imc::logger::log& log::operator<<(const SystemElement & c) noexcept {
+            *this
+			    << "Configuration("
+                << " sysname = '" << c.get_system_name() << "',"
+                << " parameters = " << c.get_parameter_instances()
+                << ") at "
+                << c.get_filelocation()
+				;
+            return *this;
+        }
+
+
         imc::logger::log& log::operator<<(const UserName& un) noexcept {
             *this
                 << "UserName("
@@ -225,11 +239,14 @@ namespace imc {
             return *this;
         }
 
-        imc::logger::log& log::operator<<(const SystemName& sn) noexcept {
-            this->out
-                << "UserName("
-                << "name = '" << sn.get_name() << "'"
-                << ")";
+        imc::logger::log& log::operator<<(const ConfigurationMod& sn) noexcept {
+            *this
+			    << "Configuration("
+                << " sysname = '" << sn.get_system_name() << "',"
+                << " parameters = " << sn.get_parameter_instances()
+                << ") at "
+                << sn.get_filelocation()
+				;
             return *this;
         }
 
@@ -272,24 +289,27 @@ namespace imc {
         }
 
         imc::logger::log& log::operator<<(const FileLocation& floc) noexcept {
+            // remove quotes from filename of floc.get_file()
             this->out
-                << "FileLocation(file = " << floc.get_file()
-                << ", line = " << floc.get_line()
-                << ", column = " << floc.get_column();
+            //    << "FileLocation(file = " << floc.get_file()
+            //    << ", line = " << floc.get_line()
+            //    << ", column = " << floc.get_column();
+            << floc.get_file() << ":" << floc.get_line();
+            // do not print columns, since they are not yet exported by the compiler
 
-            auto token = floc.get_token();
-            if (token) {
-                this->out << ", token = " << *token;
-            }
+            //auto token = floc.get_token();
+            //if (token) {
+            //    this->out << ", token = " << *token;
+            //}
 
-            this->out << ")";
+            //this->out << ")";
 
             return *this;
         }
 
         imc::logger::log& log::operator<<(const Layout& layout) noexcept {
             *this
-                << "Layout(device_id = " << layout.getDeviceId()
+                << "Layout(provider_id = " << layout.getProviderId() << ", device_id = " << layout.getDeviceId()
                 << ", address = " << layout.getAddress()
                 << ", bits = " << layout.getBits()
                 << ")";
@@ -299,19 +319,15 @@ namespace imc {
 
         imc::logger::log& log::operator<<(const Module& module) noexcept {
             *this
-                << "Module: {{{" << std::endl
-                << "\tProblem parts: " << std::endl;
-
-            for (const auto& problem_part: module.problem_parts) {
-                *this << "\t * " << problem_part << std::endl;
-            }
-
-            *this << "\tSystem parts: " << std::endl;
-
-            for (const auto& system_part: module.system_parts) {
-                *this << "\t * " << system_part << std::endl;
-            }
-
+                << "Module: {{{" << std::endl;
+             if (module.problem_part) {
+                *this << "\tProblem part: " << std::endl;
+                 *this << "\t * " << *module.problem_part << std::endl;
+             }
+             if (module.system_part) {
+                 *this << "\tSystem part: " << std::endl;
+                *this << "\t * " << *module.system_part << std::endl;
+             }
             *this << "}}}" << std::endl;
             return *this;
         }
@@ -325,11 +341,13 @@ namespace imc {
 
         imc::logger::log& log::operator<<(const System& s) noexcept {
             *this
-                << "System(usernames = " << s.usernames << ", sysnames = " << s.sysnames << ")"
+                << "System(usernames = " << s.usernames
+				<< ", configurations = " << s.configurations << ")"
                 << std::endl;
             return *this;
         }
 
+        /*
         imc::logger::log& log::operator<<(const Type& ty) noexcept {
             switch (ty) {
                 case Type::Interrupt:
@@ -347,7 +365,7 @@ namespace imc {
             }
             return *this;
         }
-
+         */
 
         imc::logger::log& log::operator<<(const pugi::xml_node& node) noexcept {
             this->out

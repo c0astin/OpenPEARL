@@ -42,17 +42,19 @@ using Interrupt               = imc::types::platform::Interrupt;
 using Connection              = imc::types::platform::Connection;
 using LayoutGenerator         = imc::types::platform::LayoutGenerator;
 
+
+static std::string systemElementName;
 //
 // Private helper functions
 //
 
-std::shared_ptr<ValueRestriction<std::string>> value_restriction_from_node_consistsof(const pugi::xml_node& node) noexcept {
+static std::shared_ptr<ValueRestriction<std::string>> value_restriction_from_node_consistsof(const pugi::xml_node& node) noexcept {
     ValueRestriction<std::string> valres;
     valres.allowed_values = imc::util::strsplit(node.value(), ',');
     return std::make_shared<ValueRestriction<std::string>>(valres);
 }
 
-std::shared_ptr<ValueRestriction<unsigned int>> value_restriction_from_node_values(const pugi::xml_node& node) noexcept {
+static std::shared_ptr<ValueRestriction<unsigned int>> value_restriction_from_node_values(const pugi::xml_node& node) noexcept {
     ValueRestriction<unsigned int> valres;
 
     std::vector<std::string> allowed_values = imc::util::strsplit(node.value(), ',');
@@ -63,9 +65,11 @@ std::shared_ptr<ValueRestriction<unsigned int>> value_restriction_from_node_valu
     for (std::string& val : allowed_values) {
         if (!val.empty() && !::imc::util::is_blank(val)) {
             try {
+                valres.showAs = ::imc::util::postfix_to_string(val);
                 valres.allowed_values.push_back(std::stoi(val));
             } catch (const std::invalid_argument& e) {
                 auto test_postfixed = ::imc::util::postfixed_to_int(val);
+
                 if (test_postfixed) {
                     valres.allowed_values.push_back(*test_postfixed);
                 } else {
@@ -85,7 +89,7 @@ std::shared_ptr<ValueRestriction<unsigned int>> value_restriction_from_node_valu
     return std::make_shared<ValueRestriction<unsigned int>>(valres);
 }
 
-std::shared_ptr<FixedGtRestriction> fixedgt_restriction_from_node(const pugi::xml_node& node) noexcept {
+static std::shared_ptr<FixedGtRestriction> fixedgt_restriction_from_node(const pugi::xml_node& node) noexcept {
     unsigned int lower;
     std::string value = node.first_child().value();
 
@@ -123,13 +127,13 @@ std::shared_ptr<FixedGtRestriction> fixedgt_restriction_from_node(const pugi::xm
     }
 }
 
-std::shared_ptr<NotEmptyRestriction> notempty_restriction_from_node(const pugi::xml_node&) noexcept {
+static std::shared_ptr<NotEmptyRestriction> notempty_restriction_from_node(const pugi::xml_node&) noexcept {
     NotEmptyRestriction ne;
     ::imc::logger::log::debug() << "Constructed: " << ne << std::endl;
     return std::make_shared<NotEmptyRestriction>(ne);
 }
 
-std::shared_ptr<FixedRangeRestriction> fixedrange_restriction_from_node(const pugi::xml_node& node) noexcept {
+static std::shared_ptr<FixedRangeRestriction> fixedrange_restriction_from_node(const pugi::xml_node& node) noexcept {
     std::string lower_s;
     std::string upper_s;
 
@@ -211,7 +215,7 @@ std::shared_ptr<FixedRangeRestriction> fixedrange_restriction_from_node(const pu
     return std::make_shared<FixedRangeRestriction>(frr);
 }
 
-std::shared_ptr<Restriction> restriction_from_node(const pugi::xml_node& node) {
+static std::shared_ptr<Restriction> restriction_from_node(const pugi::xml_node& node) {
     std::string restriction_name(node.name());
     ::imc::logger::log::debug() << "Restriction name = " << restriction_name << std::endl;
 
@@ -239,7 +243,7 @@ std::shared_ptr<Restriction> restriction_from_node(const pugi::xml_node& node) {
     return {};
 }
 
-optional<Parameter> make_param_from_node(const pugi::xml_node& node) {
+static optional<Parameter> make_param_from_node(const pugi::xml_node& node, int i) {
     std::string name = node.name();
     ::imc::logger::log::debug() << "Constructing param with type " << name << std::endl;
     auto opt_ptype = ::imc::reader::common::ptype_from_name(name);
@@ -260,7 +264,7 @@ optional<Parameter> make_param_from_node(const pugi::xml_node& node) {
         }
     }
 
-    {
+ /*   {
         auto nick_attr = node.attribute("nick");
         if (nick_attr) {
             auto nick = nick_attr.as_string();
@@ -268,7 +272,19 @@ optional<Parameter> make_param_from_node(const pugi::xml_node& node) {
             p.set_nick(nick);
         }
     }
-
+*/
+    {
+          auto pname_attr = node.attribute("name");
+          if (pname_attr) {
+              std::string pname = pname_attr.as_string();
+              ::imc::logger::log::debug() << "Setting param name to '" << pname << "'" << std::endl;
+              p.set_name(pname);
+          } else {
+              ::imc::logger::log::error() << ": error in platform definition: '" << systemElementName <<
+                      "' parameter #"<<i<<" has no name attribute"<< std::endl;
+              return{};
+          }
+      }
     for (auto restriction_node : node.children()) {
         std::shared_ptr<Restriction> restriction = restriction_from_node(restriction_node);
         if (!restriction) {
@@ -283,7 +299,7 @@ optional<Parameter> make_param_from_node(const pugi::xml_node& node) {
     return p;
 }
 
-optional<std::string> make_association_provider_from_node(const pugi::xml_node& node) {
+static optional<std::string> make_association_provider_from_node(const pugi::xml_node& node) {
     ::imc::logger::log::debug() << "Fetching AssociationProviderType" << std::endl;
     auto first_child = node.first_child();
     if (first_child.empty()) {
@@ -305,7 +321,7 @@ optional<std::string> make_association_provider_from_node(const pugi::xml_node& 
     return attr.value();
 }
 
-optional<std::string> fetch_needed_association_from_node(const pugi::xml_node& node) noexcept {
+static optional<std::string> fetch_needed_association_from_node(const pugi::xml_node& node) noexcept {
     auto req_association_name = node.attribute("name");
     if (!req_association_name) {
         ::imc::logger::log::error() << "Error while parsing name of required association in "
@@ -321,7 +337,7 @@ optional<std::string> fetch_needed_association_from_node(const pugi::xml_node& n
 /** Returns the name of the generator function registered in the engine
  *
  */
-optional<std::string> fetch_layout_generator(
+static optional<std::string> fetch_layout_generator(
         std::shared_ptr<chaiscript::ChaiScript> engine,
         const pugi::xml_node& node
     ) noexcept
@@ -363,7 +379,7 @@ optional<std::string> fetch_layout_generator(
     return name.as_string();
 }
 
-optional<std::vector<Dation>> fetch_dations(
+static optional<std::vector<Dation>> fetch_dations(
         std::shared_ptr<chaiscript::ChaiScript> engine,
         const pugi::xml_node& platform
     ) noexcept
@@ -380,14 +396,16 @@ optional<std::vector<Dation>> fetch_dations(
             }
 
             std::string name = name_attr.value();
+            systemElementName = name;
 
             Dation d(std::move(name));
 
             for (pugi::xml_node dation_child : child.children()) {
                 std::string dation_child_name(dation_child.name());
                 if (dation_child_name  == "parameters") {
+                    int paramNbr = 0;
                     for (pugi::xml_node param_node : dation_child.children()) {
-                        auto param = make_param_from_node(param_node);
+                        auto param = make_param_from_node(param_node,++paramNbr);
                         if (!param) {
                             ::imc::logger::log::error() << "Constructing Parameter failed" << std::endl;
                             return {};
@@ -461,7 +479,7 @@ optional<std::vector<Dation>> fetch_dations(
     return l;
 }
 
-optional<std::vector<Signal>> fetch_signals(const pugi::xml_node& platform) {
+static optional<std::vector<Signal>> fetch_signals(const pugi::xml_node& platform) {
     std::vector<Signal> l;
 
     for(pugi::xml_node child : platform.children()) {
@@ -474,10 +492,32 @@ optional<std::vector<Signal>> fetch_signals(const pugi::xml_node& platform) {
             }
 
             std::string name = name_attr.value();
+            Signal signal(std::move(name));
 
-            // TODO: Handle attributes
+            for (pugi::xml_node signal_child : child.children()) {
+                std::string signal_child_name(signal_child.name());
+                if (signal_child_name == "needAssociation") {
+                    auto s = fetch_needed_association_from_node(signal_child);
+                    if (!s) {
+                        return {};
+                    }
 
-            l.push_back(Signal(std::move(name)));
+                    ::imc::logger::log::debug()
+                    << "Setting required association (by name) in configuration: "
+                    << "'" << *s << "'"
+                    << std::endl;
+
+                    signal.set_required_association_provider(std::move(*s));
+                } else {
+                    ::imc::logger::log::error() << "Unknown node type in 'platform.signal': "
+                            << "'" << signal_child_name << "'"
+                            << std::endl;
+
+                    return {};
+                }
+            }
+
+            l.push_back(std::move(signal));
         }
     }
 
@@ -490,7 +530,7 @@ optional<std::vector<Signal>> fetch_signals(const pugi::xml_node& platform) {
     return l;
 }
 
-optional<std::vector<Interrupt>> fetch_interrupts(const pugi::xml_node& platform) {
+static optional<std::vector<Interrupt>> fetch_interrupts(const pugi::xml_node& platform) {
     std::vector<Interrupt> interrupts;
 
     for (pugi::xml_node child : platform.children()) {
@@ -509,14 +549,27 @@ optional<std::vector<Interrupt>> fetch_interrupts(const pugi::xml_node& platform
             for (pugi::xml_node interrupt_child : child.children()) {
                 std::string interrupt_child_name(interrupt_child.name());
                 if (interrupt_child_name  == "parameters") {
+                    int paramNbr = 0;
                     for (pugi::xml_node param_node : interrupt_child.children()) {
-                        auto param = make_param_from_node(param_node);
+                        auto param = make_param_from_node(param_node,++paramNbr);
                         if (!param) {
                             ::imc::logger::log::error() << "Constructing Parameter failed" << std::endl;
                             return {};
                         }
                         interrupt.push_back_param(std::move(*param));
                     }
+                } else if (interrupt_child_name == "needAssociation") {
+                    auto s = fetch_needed_association_from_node(interrupt_child);
+                    if (!s) {
+                        return {};
+                    }
+
+                    ::imc::logger::log::debug()
+                        << "Setting required association (by name) in interrupt: "
+                        << "'" << *s << "'"
+                        << std::endl;
+
+                    interrupt.set_required_association_provider(std::move(*s));
                 } else {
                     ::imc::logger::log::error() << "Unknown node type in 'platform.<interrupt>': "
                                  << "'" << interrupt_child_name << "'"
@@ -539,7 +592,7 @@ optional<std::vector<Interrupt>> fetch_interrupts(const pugi::xml_node& platform
     return interrupts;
 }
 
-optional<std::vector<std::string>> fetch_provided_association_names_from_node(const pugi::xml_node& node) noexcept {
+static optional<std::vector<std::string>> fetch_provided_association_names_from_node(const pugi::xml_node& node) noexcept {
     std::vector<std::string> lst;
 
     for(auto child : node.children()) {
@@ -557,7 +610,7 @@ optional<std::vector<std::string>> fetch_provided_association_names_from_node(co
     return lst;
 }
 
-optional<std::vector<Configuration>> fetch_configurations(const pugi::xml_node& platform) {
+static optional<std::vector<Configuration>> fetch_configurations(const pugi::xml_node& platform) {
     std::vector<Configuration> configurations;
 
     for (pugi::xml_node child : platform.children()) {
@@ -585,8 +638,9 @@ optional<std::vector<Configuration>> fetch_configurations(const pugi::xml_node& 
             for (pugi::xml_node configuration_child : child.children()) {
                 std::string configuration_child_name(configuration_child.name());
                 if (configuration_child_name  == "parameters") {
+                    int paramNbr = 0;
                     for (pugi::xml_node param_node : configuration_child.children()) {
-                        auto param = make_param_from_node(param_node);
+                        auto param = make_param_from_node(param_node,++paramNbr);
                         if (!param) {
                             ::imc::logger::log::error() << "Constructing Parameter failed" << std::endl;
                             return {};
@@ -627,7 +681,7 @@ optional<std::vector<Configuration>> fetch_configurations(const pugi::xml_node& 
     return configurations;
 }
 
-optional<std::vector<Connection>> fetch_connections(
+static optional<std::vector<Connection>> fetch_connections(
         std::shared_ptr<chaiscript::ChaiScript> engine,
         const pugi::xml_node& platform
     )
@@ -649,8 +703,9 @@ optional<std::vector<Connection>> fetch_connections(
             for (pugi::xml_node connection_child : child.children()) {
                 std::string connection_child_name(connection_child.name());
                 if (connection_child_name  == "parameters") {
+                    int paramNbr = 0;
                     for (pugi::xml_node param_node : connection_child.children()) {
-                        auto param = make_param_from_node(param_node);
+                        auto param = make_param_from_node(param_node, ++paramNbr);
                         if (!param) {
                             ::imc::logger::log::error() << "Constructing Parameter failed" << std::endl;
                             return {};
@@ -736,6 +791,7 @@ namespace imc {
             { // load all scripts in the searchpath into the engine
                 for (auto& p : fs::recursive_directory_iterator(this->searchpath)) {
                     if (fs::is_regular_file(p.status())) {
+
                         ::imc::logger::log::debug()
                             << "Trying to load " << p.path() << std::endl;
 

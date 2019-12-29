@@ -1,6 +1,16 @@
-def someHelperFunction(name, addr, bits) {
+def someHelperFunction(name, provider, addr, bits) {
     var layout = Layout(name);
+    layout.setProviderId(provider);
     layout.setAddress(addr);
+    layout.setBits(bits);
+    return layout;
+}
+
+
+def gpioBits(name, provider, addr, bits) {
+    var layout = Layout(name);
+    layout.setProviderId("*gpio*");
+    ///layout.setAddress(0);
     layout.setBits(bits);
     return layout;
 }

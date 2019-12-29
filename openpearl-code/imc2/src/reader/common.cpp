@@ -1,3 +1,7 @@
+/*
+ * changes: 2019-11-18 (rm)
+ *    error messages removed/moved to callee
+ */
 #include <iostream>
 #include <vector>
 #include <string>
@@ -26,7 +30,8 @@ namespace imc {
                 } else if (name == "BIT") {
                     return ParameterType::Bit;
                 } else {
-                    ::imc::logger::log::error() << "Unknown parameter type: " << name << std::endl;
+                    // ::imc::logger::log::error() << "Unknown parameter type: " << name << std::endl;
+                    // the error message is printed by the callee
                 }
 
                 return {};
@@ -37,7 +42,7 @@ namespace imc {
                 if (node.first_child().type() == pugi::xml_node_type::node_pcdata) {
                     return node.first_child().value();
                 } else {
-                    ::imc::logger::log::error() << "Type Error: Expected PCDATA type, got " << node.type() << std::endl;
+                   // ::imc::logger::log::error() << "Type Error: Expected PCDATA type, got " << node.type() << std::endl;
                     return {};
                 }
             }
@@ -50,9 +55,9 @@ namespace imc {
                     std::string value(node.first_child().value());
                     return imc::util::strsplit(value, ',');
                 } else {
-                    ::imc::logger::log::error()
-                        << "Type Error: While constructing Attribute: Expected PCDATA type, got "
-                        << node.type() << std::endl;
+                    //::imc::logger::log::error()
+                    //    << "Type Error: While constructing Attribute: Expected PCDATA type, got "
+                    //    << node.type() << std::endl;
                     return {};
                 }
             }

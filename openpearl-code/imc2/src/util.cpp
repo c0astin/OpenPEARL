@@ -62,7 +62,7 @@ namespace imc {
             size_t pos;
 
             auto text = trim(str);
-            ::imc::logger::log::debug() << "Trimmed: '" << str << "' to '" << text << "'" << std::endl;
+ //           ::imc::logger::log::debug() << "Trimmed: '" << str << "' to '" << text << "'" << std::endl;
 
             try {
                 if (strEndsWith(text, "'B")) {
@@ -95,6 +95,73 @@ namespace imc {
 
             return val;
         }
+
+        std::string postfix_to_string(const std::string& str) noexcept {
+
+            auto text = trim(str);
+//            ::imc::logger::log::debug() << "Trimmed: '" << str << "' to '" << text << "'" << std::endl;
+
+            try {
+                if (strEndsWith(text, "'B")) {
+               	   return "B1";
+                } else if (strEndsWith(text, "'B1")) {
+                   return "B1";
+                } else if (strEndsWith(text, "'B2")) {
+                   return "B2";
+                } else if (strEndsWith(text, "'B3")) {
+                  return "B3";
+                } else if (strEndsWith(text, "'B4")) {
+                  return "B4";
+                } else {
+                  ::imc::logger::log::debug()
+                       << "no postfix found: '" << text << "'" << std::endl;
+                  return {};
+                }
+            } catch (std::invalid_argument&) {
+               ::imc::logger::log::error()
+                   << "Invalid value: <<" << text << ">>"
+                   << std::endl;
+               return {};
+            }
+            return {};
+        }
+
+        std::string uint_to_postfixed(unsigned int val, const std::string& postfix) noexcept {
+        	static char digits[] = {'0','1','2','3','4','5','6','7',
+        							'8','9','A','B','C','D','E','F'};
+        	static unsigned int mask[] = {0x01, 0x03, 0x07, 0x0f};
+        	std::string result;
+
+            int bitsPerDigit = 4;
+            if (postfix.length() == 0) {
+            	// no postfix --> return value as decimal
+            	std::stringstream ss;
+            	ss << val;
+            	result = ss.str();
+            } else {
+				result ="''"+postfix;
+
+				if (postfix.compare("B4")==0) {
+					bitsPerDigit = 4;
+				} else if (postfix.compare("B3")==0) {
+					bitsPerDigit = 3;
+				} else if (postfix.compare("B2")==0) {
+					bitsPerDigit = 2;
+				} else if (postfix.compare("B1")==0) {
+					bitsPerDigit = 1;
+				} else if (postfix.compare("B")==0) {
+					bitsPerDigit = 1;
+				}
+
+				while (val) {
+					std::string add ={ digits[val&mask[bitsPerDigit-1]] };
+				   result.insert(1,add);
+				   val >>= bitsPerDigit;
+				}
+            }
+           	return result;
+       }
+
 
         optional<unsigned int> postfixed_to_uint(const std::string& str) noexcept {
             auto val = 0;

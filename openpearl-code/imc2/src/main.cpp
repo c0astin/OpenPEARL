@@ -1,3 +1,10 @@
+/*
+ * changes: nov-2019 (rm)
+ *   command line parameters reworked (-o is now really optional)
+ *   platform object now accessible by getInstance() (required for direct associations)
+ *   no output file creation if errors were detected
+ */
+
 #include <algorithm>
 #include <iostream>
 #include <ostream>
@@ -17,6 +24,7 @@
 #include "checker/checker.hpp"
 #include "expr/computer.hpp"
 #include "codegen/codegen.hpp"
+#include "types/platform.hpp"
 
 using path = ::std::experimental::filesystem::path;
 
@@ -26,7 +34,7 @@ static const char USAGE[] =
 R"(imc.
 
     Usage:
-      imc [-d] [-v] [-S SEARCHPATH] [-o OUTPUT] -b PLATFORM INPUT ...
+      imc [-d] [-v] -S SEARCHPATH [-o OUTPUT] -b PLATFORM INPUT ...
       imc (-h | --help)
       imc --version
 
@@ -67,9 +75,26 @@ int main(int argc, const char** argv) {
         }
     }
 
+
+    if (!args["-b"]) {
+    	  	std::cerr<< "-b missing" << std::endl;
+    	  	return -1;
+    }
+    if (!args["-S"]) {
+    	  	std::cerr<< "-o missing" << std::endl;
+    	  	return -1;
+    }
+
     // docopt verifies that we have these:
+
+    std::string output_name;
+    if (!args["-o"]) {
+    	  	output_name = "./system.cc";
+    } else {
+            output_name = args["-o"].asString();
+    }
+
     std::string platform_name      = args["-b"].asString();
-    std::string output_name        = args["-o"].asString();
     std::string searchpath         = args["-S"].asString();
     std::vector<std::string> input = args["INPUT"].asStringList();
 
@@ -93,9 +118,10 @@ int main(int argc, const char** argv) {
 
     auto platform = platform_reader();
     if (!platform) {
-        ::imc::logger::log::error() << "Error while constructing platform object" << std::endl;
+        ::imc::logger::log::error() << "Error while constructing platform object ("<<platform_name <<")" << std::endl;
         return 1;
     }
+    ::imc::types::platform::Platform::setInstance(platform.value());
 
     std::vector<imc::reader::ModuleXMLReader>   module_readers;
     std::vector<imc::types::module::Module>     modules;
@@ -152,6 +178,11 @@ int main(int argc, const char** argv) {
             ::imc::logger::log::debug() << "Module: " << module << std::endl;
         }
         ::imc::logger::log::debug() << "]" << std::endl;
+    }
+
+    if (::imc::logger::log::get_error_count() > 0) {
+        std::cerr << "imc aborted with " << ::imc::logger::log::get_error_count() << " errors" << std::endl;
+        return(-1);
     }
 
     imc::codegen::Codegen generator(std::move(modules), std::move(*platform), output_name);

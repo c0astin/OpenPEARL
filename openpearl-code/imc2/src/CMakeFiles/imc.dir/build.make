@@ -417,33 +417,57 @@ src/CMakeFiles/imc.dir/checker/checks/check_associations_provided.cpp.o.provides
 src/CMakeFiles/imc.dir/checker/checks/check_associations_provided.cpp.o.provides.build: src/CMakeFiles/imc.dir/checker/checks/check_associations_provided.cpp.o
 
 
-src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o: src/CMakeFiles/imc.dir/flags.make
-src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o: src/checker/checks/check_each_spc_has_one_dcl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o"
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o -c /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_each_spc_has_one_dcl.cpp
+src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o: src/CMakeFiles/imc.dir/flags.make
+src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o: src/checker/checks/check_multiple_dcl.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o"
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o -c /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_multiple_dcl.cpp
 
-src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.i"
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_each_spc_has_one_dcl.cpp > CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.i
+src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.i"
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_multiple_dcl.cpp > CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.i
 
-src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.s"
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_each_spc_has_one_dcl.cpp -o CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.s
+src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.s"
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_multiple_dcl.cpp -o CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.s
 
-src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o.requires:
+src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o.requires:
 
-.PHONY : src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o.requires
+.PHONY : src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o.requires
 
-src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o.provides: src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o.requires
-	$(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o.provides.build
-.PHONY : src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o.provides
+src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o.provides: src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o.requires
+	$(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o.provides.build
+.PHONY : src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o.provides
 
-src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o.provides.build: src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o
+src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o.provides.build: src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o
+
+
+src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o: src/CMakeFiles/imc.dir/flags.make
+src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o: src/checker/checks/check_spc_has_dcl.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o"
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o -c /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_spc_has_dcl.cpp
+
+src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.i"
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_spc_has_dcl.cpp > CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.i
+
+src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.s"
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_spc_has_dcl.cpp -o CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.s
+
+src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o.requires:
+
+.PHONY : src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o.requires
+
+src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o.provides: src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o.requires
+	$(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o.provides.build
+.PHONY : src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o.provides
+
+src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o.provides.build: src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o
 
 
 src/CMakeFiles/imc.dir/checker/checks/check_params_match.cpp.o: src/CMakeFiles/imc.dir/flags.make
 src/CMakeFiles/imc.dir/checker/checks/check_params_match.cpp.o: src/checker/checks/check_params_match.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/CMakeFiles/imc.dir/checker/checks/check_params_match.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/CMakeFiles/imc.dir/checker/checks/check_params_match.cpp.o"
 	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/imc.dir/checker/checks/check_params_match.cpp.o -c /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_params_match.cpp
 
 src/CMakeFiles/imc.dir/checker/checks/check_params_match.cpp.i: cmake_force
@@ -467,7 +491,7 @@ src/CMakeFiles/imc.dir/checker/checks/check_params_match.cpp.o.provides.build: s
 
 src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o: src/CMakeFiles/imc.dir/flags.make
 src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o: src/checker/checks/check_pin_layout.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o"
 	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o -c /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_pin_layout.cpp
 
 src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.i: cmake_force
@@ -487,30 +511,6 @@ src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o.provides: src/CMake
 .PHONY : src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o.provides
 
 src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o.provides.build: src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o
-
-
-src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o: src/CMakeFiles/imc.dir/flags.make
-src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o: src/checker/checks/check_username_sysname_mappings.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mueller/OpenPEARL/openpearl-code/imc2/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o"
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o -c /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_username_sysname_mappings.cpp
-
-src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.i"
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_username_sysname_mappings.cpp > CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.i
-
-src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.s"
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2/src && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mueller/OpenPEARL/openpearl-code/imc2/src/checker/checks/check_username_sysname_mappings.cpp -o CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.s
-
-src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o.requires:
-
-.PHONY : src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o.requires
-
-src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o.provides: src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o.requires
-	$(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o.provides.build
-.PHONY : src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o.provides
-
-src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o.provides.build: src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o
 
 
 src/CMakeFiles/imc.dir/checker/error.cpp.o: src/CMakeFiles/imc.dir/flags.make
@@ -602,10 +602,10 @@ imc_OBJECTS = \
 "CMakeFiles/imc.dir/checker/check.cpp.o" \
 "CMakeFiles/imc.dir/checker/checker.cpp.o" \
 "CMakeFiles/imc.dir/checker/checks/check_associations_provided.cpp.o" \
-"CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o" \
+"CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o" \
+"CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o" \
 "CMakeFiles/imc.dir/checker/checks/check_params_match.cpp.o" \
 "CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o" \
-"CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o" \
 "CMakeFiles/imc.dir/checker/error.cpp.o" \
 "CMakeFiles/imc.dir/expr/computer.cpp.o" \
 "CMakeFiles/imc.dir/codegen/codegen.cpp.o"
@@ -628,10 +628,10 @@ src/imc: src/CMakeFiles/imc.dir/types/problem.cpp.o
 src/imc: src/CMakeFiles/imc.dir/checker/check.cpp.o
 src/imc: src/CMakeFiles/imc.dir/checker/checker.cpp.o
 src/imc: src/CMakeFiles/imc.dir/checker/checks/check_associations_provided.cpp.o
-src/imc: src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o
+src/imc: src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o
+src/imc: src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o
 src/imc: src/CMakeFiles/imc.dir/checker/checks/check_params_match.cpp.o
 src/imc: src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o
-src/imc: src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o
 src/imc: src/CMakeFiles/imc.dir/checker/error.cpp.o
 src/imc: src/CMakeFiles/imc.dir/expr/computer.cpp.o
 src/imc: src/CMakeFiles/imc.dir/codegen/codegen.cpp.o
@@ -662,10 +662,10 @@ src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/types/problem.cpp.o.requ
 src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/checker/check.cpp.o.requires
 src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/checker/checker.cpp.o.requires
 src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/checker/checks/check_associations_provided.cpp.o.requires
-src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o.requires
+src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o.requires
+src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o.requires
 src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/checker/checks/check_params_match.cpp.o.requires
 src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.o.requires
-src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o.requires
 src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/checker/error.cpp.o.requires
 src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/expr/computer.cpp.o.requires
 src/CMakeFiles/imc.dir/requires: src/CMakeFiles/imc.dir/codegen/codegen.cpp.o.requires

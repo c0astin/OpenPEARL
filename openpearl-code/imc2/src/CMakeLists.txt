@@ -23,10 +23,11 @@ set(SOURCE_FILES
     checker/check.cpp
     checker/checker.cpp
     checker/checks/check_associations_provided.cpp
-    checker/checks/check_each_spc_has_one_dcl.cpp
+    checker/checks/check_multiple_dcl.cpp
+    checker/checks/check_spc_has_dcl.cpp
     checker/checks/check_params_match.cpp
     checker/checks/check_pin_layout.cpp
-    checker/checks/check_username_sysname_mappings.cpp
+    #checker/checks/check_username_sysname_mappings.cpp
     checker/error.cpp
     expr/computer.cpp
     codegen/codegen.cpp

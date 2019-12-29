@@ -1,18 +1,18 @@
 <!-- Test where username contains nonexistent -->
 <?xml version="1.0" encoding="UTF-8" ?>
-<module name="test" file="./tests/008/module.prl">
+<module name="test" file="./tests/009/module.prl">
     <system>
         <username name="LongDationUserName" line="6">
             <sysname name="nonexistent">
                 <parameters>
                     <FIXED length="31">
-                        <FIXEDGT>10</FIXEDGT>
+                        10
                     </FIXED>
                     <FIXED length="31">
-                        <FIXEDGT>11</FIXEDGT>
+                        11
                     </FIXED>
                     <FIXED length="31">
-                        <FIXEDGT>11</FIXEDGT>
+                        11
                     </FIXED>
                 </parameters>
             </sysname>

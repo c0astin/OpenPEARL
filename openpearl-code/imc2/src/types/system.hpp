@@ -12,9 +12,9 @@ namespace imc {
             using FileLocation  = imc::types::common::FileLocation;
             using ParameterType = imc::types::common::ParameterType;
 
-            enum SystemNameResourceType {
-                Configuration
-            };
+           // enum SystemNameResourceType {
+           //     Configuration
+           // };
 
             class ParameterInstance {
                 private:
@@ -54,41 +54,26 @@ namespace imc {
 
             };
 
-            class SystemName {
+            /**
+             * SystemElement is ether UserName or Configuration
+             */
+            class SystemElement {
                 private:
-                    std::string name;
-                    SystemNameResourceType resource_type;
+                    std::string systemname;
+                    //SystemNameResourceType resource_type;
+                    std::string  required_association;
+                    FileLocation file_location;
                     std::vector<ParameterInstance> params;
 
                 public:
 
-                    SystemName(std::string&& n, SystemNameResourceType rty, std::vector<ParameterInstance>&& params)
-                        : name(std::move(n))
-                        , resource_type(rty)
+                    SystemElement(std::string&& n, /*SystemNameResourceType rty,*/ std::string&& assoc,
+                   		 FileLocation&& floc, std::vector<ParameterInstance>&& params)
+                        : systemname(std::move(n))
+                      //  , resource_type(rty)
+        				, required_association(std::move(assoc))
+                		, file_location(std::move(floc))
                         , params(std::move(params))
-                    {
-                        // Nothing
-                    }
-
-                    std::string get_name(void) const noexcept;
-
-                    const std::vector<ParameterInstance>& get_parameter_instances(void) const noexcept;
-            };
-
-            class UserName {
-                private:
-                    std::string  name;
-                    std::string  systemname;
-                    FileLocation file_location;
-                    std::vector<ParameterInstance> parameters;
-
-                public:
-
-                    UserName(std::string&& n, std::string&& sysname, FileLocation&& floc, std::vector<ParameterInstance>&& params)
-                        : name(std::move(n))
-                        , systemname(std::move(sysname))
-                        , file_location(std::move(floc))
-                        , parameters(std::move(params))
                     {
                         // Nothing
                     }
@@ -97,17 +82,54 @@ namespace imc {
 
                     const FileLocation& get_filelocation(void) const noexcept;
 
-                    std::string get_name(void) const noexcept;
+                    std::string get_location(void) const noexcept;
+
+                    std::string get_provider_id(void) const noexcept;
+
                     const std::vector<ParameterInstance>& get_parameter_instances(void) const noexcept;
+            };
+
+            class Configuration : public SystemElement {
+            	public:
+                    Configuration(std::string&& sysname, std::string&& assoc,
+                   		 FileLocation floc, std::vector<ParameterInstance>&& params)
+					  	: SystemElement(std::move(sysname)
+                                      , std::move(assoc)
+									  , std::move(floc)
+									  , std::move(params))
+                    {
+                        // Nothing
+                    }
+
+             };
+
+            class UserName : public SystemElement{
+                private:
+                    std::string  name;
+
+                public:
+
+                    UserName(std::string&& n, std::string&& sysname, std::string&& assoc,
+                    		 FileLocation floc, std::vector<ParameterInstance>&& params)
+                        :  SystemElement(std::move(sysname)
+                                       ,std::move(assoc)
+                                       ,std::move(floc)
+                                       ,std::move(params))
+                			, name(std::move(n))
+                    {
+                        // Nothing
+                    }
+
+                    std::string get_name(void) const noexcept;
             };
 
             struct System {
                 std::vector<UserName>     usernames;
-                std::vector<SystemName>   sysnames;
+                std::vector<Configuration>   configurations;
 
-                System(std::vector<UserName>&& un, std::vector<SystemName>&& sn)
+                System(std::vector<UserName>&& un, std::vector<Configuration>&& sn)
                     : usernames(std::move(un))
-                    , sysnames(std::move(sn))
+                    , configurations(std::move(sn))
                 {
                     // empty
                 }

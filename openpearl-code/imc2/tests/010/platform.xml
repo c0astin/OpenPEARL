@@ -29,10 +29,12 @@
         <attributes>SYSTEM, BASIC, OUT</attributes>
         <data>BIT($width)</data>
         <needAssociation name="I2CBusProvider" />
-        <layoutGenerator name="generate">
-            def generate(name, params) {
+        <layoutGenerator name="pcfBits">
+            def pcfBits(name, provider, params) {
+# name defaults to dations system name
+# params are the dations params
                 var list = bitslist_from_width(params[1].to_int(), params[2].to_int(), 8);
-                return someHelperFunction(name, params[0], list);
+                return someHelperFunction(name, provider, params[0], list);
             }
         </layoutGenerator>
     </dation>
@@ -46,7 +48,62 @@
         </parameters>
         <attributes> OUT, SYSTEM, BASIC</attributes>
         <data>BIT($width)</data>
+        <layoutGenerator name="gpioBits">
+            def gpioBits(name, provider, params) {
+# name defaults to dations system name
+# params are the dations params
+                var list = bitslist_from_width(params[0].to_int(), params[1].to_int(), 32);
+                return gpioBits(name, provider, params[0], list);
+            }
+        </layoutGenerator>
+    </dation>
+    <dation name="RPiDigitalIn">
+        <parameters>
+            <FIXED length="31">
+                <VALUES>2,3,4,7,8,9,10,11,14,15,17,18,21,22,23,24,25,27</VALUES>
+            </FIXED>
+            <FIXED length="31" nick="width"> <FIXEDGT>0</FIXEDGT></FIXED>
+        </parameters>
+        <attributes> OUT, SYSTEM, BASIC</attributes>
+        <data>BIT($width)</data>
+        <layoutGenerator name="gpioBitsIn">
+            def gpioBitsIn(name, provider, params) {
+# name defaults to dations system name
+# params are the dations params
+                var list = bitslist_from_width(params[0].to_int(), params[1].to_int(), 32);
+                return gpioBits(name, provider, params[0], list);
+            }
+        </layoutGenerator>
     </dation>
 
+
+   <configuration name="Log" instances="1" >
+      <parameters>
+         <CHAR length="4">
+           <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <needAssociation name="AlphicOutProvider"/>
+   </configuration>
+
+   <dation name="StdOut">
+      <parameters> 
+      </parameters>
+      <attributes>FORWARD, OUT, SYSTEM</attributes>
+      <data>ALPHIC</data>
+      <associationProvider>
+         <associationType name="AlphicOutProvider"/>
+      </associationProvider>
+   </dation>
+
+   <interrupt name="UnixSignal">
+      <parameters>
+         <FIXED length="31">
+            <VALUES>1,2,3,15,16,17</VALUES>
+         </FIXED>
+      </parameters>
+   </interrupt>
+   <signal name="FixedRangeSignal"/>
+   <signal name="FixedDivideByZeroSignal"/>
 
 </platform>

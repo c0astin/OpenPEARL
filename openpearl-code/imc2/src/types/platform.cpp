@@ -50,7 +50,8 @@ namespace imc {
                 std::stringstream ss;
                 ss << "ValueRestriction(";
                 for (auto& val: this->allowed_values) {
-                    ss << val << ", ";
+                	std::string s = ::imc::util::uint_to_postfixed((unsigned int)val,showAs);
+                    ss << s << ", ";
                 }
                 ss << ")";
                 return ss.str();
@@ -353,16 +354,17 @@ namespace imc {
                 this->len = i;
             }
 
-            void Parameter::set_nick(std::string nick) noexcept {
-                this->nick = nick;
+
+            void Parameter::set_name(std::string name) noexcept {
+                this->name = name;
             }
 
             unsigned int Parameter::get_len(void) const noexcept {
                 return this->len;
             }
 
-            optional<std::string> Parameter::get_nick(void) const noexcept {
-                return this->nick;
+            std::string Parameter::get_name(void) const noexcept {
+                return this->name;
             }
 
             const ParameterType& Parameter::get_type(void) const noexcept {
@@ -456,6 +458,8 @@ namespace imc {
             void Configuration::set_instances(unsigned int i) noexcept {
                 this->instances = i;
             }
+
+            Platform * Platform::instance = 0;
 
             const std::vector<Dation>& Platform::get_dations(void) const noexcept {
                 return this->dations;

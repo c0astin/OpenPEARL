@@ -23,11 +23,10 @@ using ParameterInstance = imc::types::system::ParameterInstance;
 using Platform          = imc::types::platform::Platform;
 using Signal            = imc::types::platform::Signal;
 using System            = imc::types::system::System;
-using SystemName        = imc::types::system::SystemName;
 using UserName          = imc::types::system::UserName;
 using error             = imc::checker::error;
 
-typedef std::tuple<std::string, Layout>           NamedLayout;
+typedef std::tuple<std::string, Layout, UserName>           NamedLayout;
 typedef std::vector<NamedLayout>                  LayoutMap;
 typedef std::reference_wrapper<NamedLayout>       NamedLayoutRef;
 typedef std::pair<NamedLayoutRef, NamedLayoutRef> NamedLayoutPair;
@@ -54,7 +53,7 @@ bool does_collide(NamedLayoutPair& pr) noexcept {
         << "(Comparing "
         << (size_t) &first_layout << " <-> " << (size_t) &second_layout
         << ")" << std::endl;
-
+   if (first_layout.getProviderId() == second_layout.getProviderId()) {
     if (first_layout.getDeviceId() == second_layout.getDeviceId()) {
         if (first_layout.getAddress() == second_layout.getAddress()) {
             // collision if bit arrays are equal
@@ -73,11 +72,11 @@ bool does_collide(NamedLayoutPair& pr) noexcept {
         // collision if addresses for different devices are equal
         collision = first_layout.getAddress() == second_layout.getAddress();
     }
-
+   }
     if (!collision) {
         ::imc::logger::log::debug()
             << "Does not collide: "
-            << first_layout  << std::endl
+            << first_layout  << std::endl << "\t"
             << second_layout << std::endl;
     }
 
@@ -85,7 +84,7 @@ bool does_collide(NamedLayoutPair& pr) noexcept {
 }
 
 // For all pairs, check if they collide and if they do, return an error
-optional<error> check_layout_pairs_for_collisions(const LayoutPairs& pairs) noexcept {
+void check_layout_pairs_for_collisions(const LayoutPairs& pairs) noexcept {
     ::imc::logger::log::debug()
         << "Performing layout checks on "
         << pairs.size()
@@ -93,18 +92,20 @@ optional<error> check_layout_pairs_for_collisions(const LayoutPairs& pairs) noex
 
     for (auto pr: pairs) {
         if (does_collide(pr)) {
-            error e;
-            e
-                << "Colliding parameters found: "
+            ::imc::logger::log::error()
+				<< (std::get<2>(std::get<0>(pr).get())).get_location() << " -- "
+				<< (std::get<2>(std::get<1>(pr).get())).get_location()
+
+                << ": Colliding parameters found: " << std::endl << "\t"
                 << std::get<1>(std::get<0>(pr).get()) << ")"
-                << " <=> "
+                << " <=> " << std::endl << "\t"
                 << std::get<1>(std::get<1>(pr).get()) << ")"
                 << std::endl;
-            return e;
+
         }
     }
 
-    return {};
+    return ;
 }
 
 optional<error> check_layouts_for_name_with_gen(
@@ -136,10 +137,10 @@ optional<error> check_layouts_for_name_with_gen(
         // - store the result, with the name, in the layout_map
         LayoutMap       layout_map;
 
-        for (const System& system_part : module.system_parts) {
-            ::imc::logger::log::debug() << "Checking System part: " << system_part << std::endl;
+        if (module.system_part) {
+            ::imc::logger::log::debug() << "Checking System part: " << module.system_part.value() << std::endl;
 
-            for (const auto& username: system_part.usernames) {
+            for (const auto& username: module.system_part.value().usernames) {
                 const std::string username_system_name = username.get_system_name();
 
                 if (username_system_name  == name) {
@@ -163,11 +164,12 @@ optional<error> check_layouts_for_name_with_gen(
 
                     ::imc::logger::log::debug()
                         << "Generating Layout: " << username_system_name
+						<< " with provider: '" << username.get_provider_id() <<"'"
                         << std::endl;
 
                     try {
-                        Layout layout = layout_generator(username_system_name, params_strs);
-                        layout_map.push_back(std::make_tuple(username_system_name, layout));
+                        Layout layout = layout_generator(username_system_name, username.get_provider_id(), params_strs);
+                        layout_map.push_back(std::make_tuple(username_system_name, layout, username));
                     } catch (const chaiscript::exception::eval_error& ee) {
                         error e;
                         e
@@ -209,8 +211,9 @@ optional<error> check_layouts_for_name_with_gen(
                 << std::endl;
 
             // I don't know how to do better in this hell of a language
+            // avoid building of symmetric pairs
             for (unsigned int i = 0; i < layout_map.size(); ++i) {
-                for (unsigned int j = 0; j < layout_map.size(); ++j) {
+                for (unsigned int j = i+1; j < layout_map.size(); ++j) {
                     if (i != j) {
                         pairs.push_back(std::make_pair(std::ref(layout_map[i]), std::ref(layout_map[j])));
                     }
@@ -218,10 +221,7 @@ optional<error> check_layouts_for_name_with_gen(
             }
         }
 
-        auto error = check_layout_pairs_for_collisions(pairs);
-        if (error) {
-            return *error;
-        }
+        check_layout_pairs_for_collisions(pairs);
     }
 
     return {};

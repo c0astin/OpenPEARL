@@ -1,3 +1,8 @@
+/*
+ * changes Nov-2019 (rm)
+ *   max 1 system part per module
+ *   max 1 problem part per module
+ */
 #ifndef IMC_TYPES_MODULE_HPP
 #define IMC_TYPES_MODULE_HPP
 
@@ -22,12 +27,16 @@ namespace imc {
             using System        = types::system::System;
 
             struct Module {
-                std::vector<Problem> problem_parts;
-                std::vector<System>  system_parts;
+                optional<Problem> problem_part;
+                optional<System>  system_part;
+                std::string module_name;
+                std::string file_name;
 
-                Module(std::vector<System> system, std::vector<Problem> problem) noexcept
-                    : problem_parts(problem)
-                    , system_parts(system)
+                Module(optional<System> & system, optional<Problem>& problem, std::string m_name, std::string f_name) noexcept
+                    : problem_part(problem)
+                    , system_part(system)
+					, module_name(m_name)
+					, file_name(f_name)
                 {
                     // Nothing
                 }

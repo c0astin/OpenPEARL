@@ -32,6 +32,9 @@ namespace imc {
         optional<int> postfixed_to_int(const std::string& str) noexcept;
         optional<int> postfixed_to_uint(const std::string& str) noexcept;
 
+        std::string postfix_to_string(const std::string& str) noexcept;
+        std::string uint_to_postfixed(unsigned int val, const std::string& postfix) noexcept;
+
         bool is_blank(const std::string& s) noexcept;
 
     }

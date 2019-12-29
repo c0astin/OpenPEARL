@@ -1,6 +1,6 @@
 <!-- Test where username contains nonexistent -->
 <?xml version="1.0" encoding="UTF-8" ?>
-<platform file="./tests/008/platform.xml">
+<platform file="./tests/009/platform.xml">
     <dation name="LongDationName">
         <parameters>
             <FIXED length="31" nick="test1"><FIXEDGT>10</FIXEDGT></FIXED>

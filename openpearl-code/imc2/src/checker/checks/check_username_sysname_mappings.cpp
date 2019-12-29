@@ -1,3 +1,9 @@
+/*
+ * changes: 2019-Nov  (rm)
+ *   * error messages improved
+ *   * continue treatment after an error message
+ *
+ */
 #include <algorithm>
 #include <vector>
 #include <functional>
@@ -43,7 +49,7 @@ using error         = imc::checker::error;
  *  Also, if the element name does not match the required system_name, it returns false.
  *  This is needed because we do not know which type (Dation, Interrupt,...) has the user name. So
  *  we try all (see `check_username_systemname_mappings()`) and if none of them matches, we can
- *  abbort the whole checking process.
+ *  abort the whole checking process.
  */
 class checker_helper {
     const UserName& username;
@@ -57,13 +63,13 @@ class checker_helper {
         }
 
         template<typename T>
-        optional<error> do_check(const T& element) {
+        void do_check(const T& element) {
             if (element.get_name() != system_name) {
                 // name does not match, no error here
                 ::imc::logger::log::debug()
                     << "'" << element.get_name() << "' != '" << system_name << "'"
                     << std::endl;
-                return {}; // early return
+                return; // early return
             }
 
             auto instances = username.get_parameter_instances();
@@ -73,39 +79,52 @@ class checker_helper {
                 if (instances.size() != 0) {
                     // error: no parameters for element required, but username provides some
                     ::imc::logger::log::error()
+                        << username.get_location()
                         << "'" << system_name << "' requires no parameters, but there are some provided"
                         << std::endl;
-                    return {}; // early return
+                    return; // early return
                 }
 
                 // no params required, no there, names match. Nice.
-                return {};
+                return;
             }
 
             if (params->size() != instances.size()) {
                 // number of parameters wrong error output
-                error e;
-                e
-                    << "Numbers of parameters do not match platform requirement: '"
+                ::imc::logger::log::error()
+                    << username.get_location() <<": "
+                    << "numbers of parameters do not match platform requirement: '"
                     << system_name << "'"
                     << std::endl;
-                return e;
+                return;
             }
             ::imc::logger::log::debug()
                 << "'" << system_name << "': Numbers of parameters do match platform requirement!"
                 << std::endl;
 
             // length match
+            std::string systemString = system_name;
             for (unsigned int i = 0; i < params->size(); ++i) {
+            	if (i==0) {
+            		systemString += "(";
+            	} else {
+            		systemString += ",";
+            	}
+            	systemString += instances[i].get_value() + " ";
+            }
+            systemString += ")";
+
+            for (unsigned int i = 0; i < params->size(); ++i) {
+
+std::cout << "parameters: " << params->size() << std::endl;
                 if (params->at(i).get_type() != instances[i].get_type()) {
                     // Type mismatch error output
-                    error e;
-                     e
-                        << "Type error: '" << system_name << "': Expected"
+                    ::imc::logger::log::error()
+                        << username.get_location()<<": "
+                        << " parameter #" << i << " type error: '" << system_name << "': Expected"
                         << params->at(i).get_type()
                         << " in platform, got " << instances[i].get_type()
                         << std::endl;
-                    return e;
                 }
                 ::imc::logger::log::debug()
                     << "'" << system_name << "': Type of parameter does match platform requirement!"
@@ -117,13 +136,13 @@ class checker_helper {
 
                     if (param_len < instance_len) {
                         // Parameter length does not match requirement error output
-                        error e;
-                        e
+                        ::imc::logger::log::error()
+                            << username.get_location()<<": "
                             << "Parameter error: '" << system_name << "': Expected "
                             << param_len
                             << " in platform, got " << instance_len
                             << std::endl;
-                        return e;
+                        return;
                     }
                     ::imc::logger::log::debug()
                         << "'" << system_name << "': Parameter length does match platform requirement!"
@@ -135,17 +154,17 @@ class checker_helper {
 
                 {
                     if (!params->at(i).get_restriction()->matches(instances[i].get_value())) {
-                        error e;
-                        e
-                            << "Parameter error: '"
-                            << instances[i].get_value() << "' does not match restriction: "
+                        ::imc::logger::log::error()
+                         	<< username.get_location()
+                            << "parameter error: "<< systemString << ": #"<<i<<" not supported "
+                            << instances[i].get_value() << "    "
                             << *params->at(i).get_restriction()
-                            << " in " << instances[i]
+                           // << " in " << instances[i]
                             << std::endl;
-                        return e;
+                        return;
                     }
-                    error e;
-                    e
+                    ::imc::logger::log::debug()
+						<< username.get_location()
                         << "Parameter '"
                         << instances[i].get_value()
                         << "' does match restriction: '"
@@ -157,7 +176,7 @@ class checker_helper {
                 // all good
             }
 
-            return {};
+            return;
         }
 };
 
@@ -176,6 +195,8 @@ namespace imc {
             optional<error> check_username_sysname_mappings::run(void)
                 noexcept
             {
+                std::cout << "check_username_sysname_mappings" << std::endl;
+
                 ::imc::logger::log::debug()
                     << "Checking whether all usernames->system names are correct for the platform" << std::endl;
                 for (auto& mod : modules) {
@@ -199,11 +220,8 @@ namespace imc {
 
 #define TRY_ALL(elems) do {                              \
     for (auto elem: (elems)) {                           \
-        optional<error> e = check_helper.do_check(elem); \
-        if (e) {                                         \
-            return *e;                                   \
-        }                                                \
-    }                                                    \
+         check_helper.do_check(elem);                    \
+            }                                            \
 } while (0)
                             TRY_ALL(platform.get_dations());
                             TRY_ALL(platform.get_signals());

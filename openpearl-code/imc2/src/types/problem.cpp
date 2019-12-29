@@ -12,7 +12,7 @@ namespace imc {
         namespace problem {
             using Attribute = types::common::Attribute;
 
-            Type Specification::get_type(void) const noexcept {
+            std::string Specification::get_type(void) const noexcept {
                 return this->type;
             }
 
@@ -28,7 +28,7 @@ namespace imc {
                 return this->data;
             }
 
-            Type Declaration::get_type(void) const noexcept {
+            std::string Declaration::get_type(void) const noexcept {
                 return this->type;
             }
 
@@ -50,6 +50,14 @@ namespace imc {
 
             const std::vector<Specification>& Problem::get_spcs(void) const noexcept {
                 return this->spec;
+            }
+
+            const FileLocation Declaration::get_filelocation(void) const noexcept {
+                return this->fl;
+            }
+
+            const FileLocation Specification::get_filelocation(void) const noexcept {
+                return this->fl;
             }
 
         }

@@ -120,13 +120,12 @@
         <username name="temperature2conflict"  line="25">
             <sysname name="LM75">
                 <parameters>
-                    <BIT>'21'B4</BIT>
+                    <BIT>'48'B4</BIT>
                 </parameters>
                 <association name="i2cbus2">
                 </association>
             </sysname>
         </username>
-
 
     </system>
 </module>

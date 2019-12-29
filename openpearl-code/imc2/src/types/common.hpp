@@ -29,7 +29,7 @@ namespace imc {
                     path                  filepath;
                     unsigned int          line;
                     unsigned int          column;
-                    optional<std::string> token;
+                    //optional<std::string> token;
 
                 public:
 
@@ -48,9 +48,9 @@ namespace imc {
                         this->column = i;
                     }
 
-                    void get_token(std::string s) {
-                        this->token = s;
-                    }
+                   // void get_token(std::string s) {
+                   //     this->token = s;
+                   // }
 
                     path const & get_file() const {
                         return this->filepath;
@@ -64,9 +64,9 @@ namespace imc {
                         return this->column;
                     }
 
-                    optional<std::string> get_token() const {
-                        return this->token;
-                    }
+                    //optional<std::string> get_token() const {
+                    //    return this->token;
+                    //}
             };
 
             using TypeRepresentator = std::string;

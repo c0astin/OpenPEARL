@@ -1,3 +1,7 @@
+/*
+ * changes: Nov-2019 (rm)
+ *    imc::types::problem::Type; replaced by std::string
+ */
 #ifndef IMC_LOGGER_HPP
 #define IMC_LOGGER_HPP
 
@@ -33,11 +37,12 @@ namespace imc {
         using Interrupt             = imc::types::platform::Interrupt;
         using Connection            = imc::types::platform::Connection;
         using Layout                = imc::types::platform::Layout;
+        using SystemElement         = imc::types::system::SystemElement;
         using UserName              = imc::types::system::UserName;
-        using SystemName            = imc::types::system::SystemName;
+        using ConfigurationMod         = imc::types::system::Configuration;
         using Specification         = imc::types::problem::Specification;
         using Declaration           = imc::types::problem::Declaration;
-        using Type                  = imc::types::problem::Type;
+       // using Type                  = imc::types::problem::Type;
         using Module                = imc::types::module::Module;
         using Problem               = imc::types::problem::Problem;
         using System                = imc::types::system::System;
@@ -81,7 +86,7 @@ namespace imc {
                     : level(l)
                 {
                 }
-
+                static int errors;
             public:
                 log(const log& other)
                     : level(other.level)
@@ -90,6 +95,10 @@ namespace imc {
                 }
 
                 ~log() noexcept;
+
+                static int get_error_count(void) noexcept {
+                	return errors;
+                }
 
                 static log debug(void) noexcept {
                     return log(loglevel::DEBUG);
@@ -104,6 +113,7 @@ namespace imc {
                 }
 
                 static log error(void) noexcept {
+                	errors ++;
                     return log(loglevel::ERROR);
                 }
 
@@ -133,10 +143,12 @@ namespace imc {
                 log& operator<<(const Interrupt&)                   noexcept;
                 log& operator<<(const Connection&)                  noexcept;
                 log& operator<<(const UserName&)                    noexcept;
-                log& operator<<(const SystemName&)                  noexcept;
+                log& operator<<(const ConfigurationMod&)               noexcept;  // configuration in module definition
+                log& operator<<(const SystemElement&)                    noexcept;
+
                 log& operator<<(const Specification&)               noexcept;
                 log& operator<<(const Declaration&)               noexcept;
-                log& operator<<(const Type&)                        noexcept;
+              //  log& operator<<(const Type&)                        noexcept;
 
                 log& operator<<(const FileLocation&)                noexcept;
                 log& operator<<(const Layout&)                noexcept;

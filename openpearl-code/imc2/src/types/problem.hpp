@@ -1,3 +1,7 @@
+/*
+ * changes Nov-2019 (rm)
+ * type of specification and declaration is now std::string
+ */
 #ifndef IMC_TYPES_PROBLEM_HPP
 #define IMC_TYPES_PROBLEM_HPP
 
@@ -16,17 +20,17 @@ namespace imc {
             using FileLocation  = types::common::FileLocation;
             using Attribute     = types::common::Attribute;
             using DataSpec      = types::common::DataSpec;
-
+/*
             enum Type {
                 Interrupt,
                 Dation,
                 Signal
             };
-
+*/
             class Specification {
                 private:
 
-                    Type                    type;
+                    std::string             type;
                     std::string             name;
                     std::vector<Attribute>  attributes;
                     DataSpec                data;
@@ -35,7 +39,7 @@ namespace imc {
                 public:
 
                     Specification(
-                            Type ty,
+                            std::string  ty,
                             std::string n,
                             std::vector<Attribute> attrs,
                             DataSpec ds,
@@ -52,9 +56,10 @@ namespace imc {
 
                     ~Specification() = default;
 
-                    Type                 get_type(void)       const noexcept;
+                    std::string          get_type(void)       const noexcept;
                     std::string          get_name(void)       const noexcept;
                     std::vector<Attribute> get_attributes(void) const noexcept;
+                    const FileLocation    get_filelocation()   const noexcept;
                     DataSpec             get_dataspec(void)   const noexcept;
 
             };
@@ -62,7 +67,7 @@ namespace imc {
             class Declaration {
                 private:
 
-                    Type                    type;
+                    std::string             type;
                     std::string             name;
                     std::vector<Attribute>  attributes;
                     DataSpec                data;
@@ -71,7 +76,7 @@ namespace imc {
                 public:
 
                     Declaration(
-                            Type ty,
+                            std::string  ty,
                             std::string n,
                             std::vector<Attribute> attrs,
                             DataSpec ds,
@@ -88,9 +93,10 @@ namespace imc {
 
                     ~Declaration() = default;
 
-                    Type                 get_type(void)       const noexcept;
+                    std::string          get_type(void)       const noexcept;
                     std::string          get_name(void)       const noexcept;
                     std::vector<Attribute> get_attributes(void) const noexcept;
+                    const FileLocation    get_filelocation()   const noexcept;
                     DataSpec             get_dataspec(void)   const noexcept;
             };
 

@@ -40,8 +40,47 @@ in the xml-subtree \verb|problem|.
 If a system element defines a user name the \verb|<username>| tag is 
 used. Each user name is accompanied by an system name with the tag 
 \verb|<sysname>|, which may have parameters.
-The sysname-tag may contain a list of associations, thus there may by a tree
-of \verb|<association>| tags.
+The sysname-tag may contain an association.
+The OpenPEARL grammar allows associations to \textit{identifiers} or \textit{connections}.
+
+The grammar is described the OpenPEARL languagereport \cite{p_report}.
+
+As showcase:
+
+\begin{verbatim}
+UserNameDeclaration ::=
+    { SystemDationDeclaration 
+    | SystemDignalDeclaration 
+    | SystemInterruptDeclrataion
+    };
+
+ConfigurationElement ::
+   Identifier$ConfigurationItem [ (ListOfConstants)] [Association];
+
+SystemDationDeclaration ::=
+   Identifier$UserName : 
+         Identifier$DationSystemName
+              [ ( ListOfConstants ) ] [Association ] );
+
+Association ::=
+   --- { Identifier$UserNameOfConnectionProvider
+       | Identifier$ConnectionProviderSystemName[(ListOfConstants])
+       }
+       [  --- { Identifier$UserNameOfConnectionProvider
+              | Identifier$ConnectionProviderSystemName[(ListOfConstants])
+              } ...
+       ];
+\end{verbatim}
+
+It is not possible for the conmpiler to distinguish between 
+\verb|Identifier$UserNameOfConnectionProvider| and 
+\verb|Identifier$ConnectionProviderSystemName| if the system name does not 
+require parameters.
+Thus we have a list of connection clients and providers.
+
+This may happen in principle for dations, signals, interrupts and configurations ---
+for all system part elements.
+
 The user name tag contains the attribute \verb|line| with the value of the 
 source code line number.
 
@@ -62,12 +101,11 @@ An association may be ether a system name (with parameters) or a user name.
 The  \verb|<association>|-tag contains the attribute \verb|name| with the 
 given name as value. If parameters are specified for the association,
 they are passed as \verb|<parameters>|-subtree in the same way as decribed 
-in section \label{sec_system_names}.
+in section \ref{sec_system_names}.
 
 There is no check in the compilation phase necessary,
 whether a name is a system name
 or a user supplied name.
-
 
 \subsection{Configuration Item}
 Configuration elements in the system part are located in the
@@ -80,10 +118,10 @@ The only difference to the \verb|<username>|-tag is the absence of the
 MODULE(demo);
 
 SYSTEM;
-lm75: LM75('48'B4) --- I2CBus('/dev/i2c-0', 100000);
+lm75: LM75('48'B4) --- I2CBus('/dev/i2c-0');
 
 lm75a : LM75('49'B4) --- i2cbus1;
-i2cbus1: I2CBus('/dev/i2c-1', 100000);
+i2cbus1: I2CBus('/dev/i2c-1');
 
 sig1: FixedRangeSignal;
 int1: UnixSignal(15);
@@ -116,7 +154,6 @@ MODEND;
       <association name="I2CBus">
          <parameters>
             <CHAR>'/dev/i2c-0'</CHAR>
-            <FIXED>100000</FIXED>
          </parameters>
       </association>
    </sysname>
@@ -136,7 +173,6 @@ MODEND;
    <sysname name="I2CBus">
       <parameters>
          <CHAR>'/dev/i2c-1'</CHAR>
-         <FIXED>100000</FIXED>
       </parameters>
    </sysname>
 </username>
@@ -195,6 +231,13 @@ MODEND;
 </problem>
 </module>
 \end{XMLCode}
+
+\subsection{Multiple Usage of SystemNames}
+Some \verb|Identifier§xxxSystemName| (\verb|xxx| is \verb|Dation|, \verb|Signal|,
+\verb|Interrupt| or \verb|Connection|) may be used only once for a parameter set
+--- others may be used in multiple instances.
+This is specified in the platform definition of ths system elements.
+
 \section{Problem Part Elements}
 \subsection{Specification of System Part Elements}
 The PEARL source code defined the type of a system name to be ether a DATION, 

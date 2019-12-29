@@ -20,6 +20,8 @@
         <layoutGenerator name="generate">
             def generate(name, params) {
                 print("DOING FINE");
+                print(name);
+                print(params);
                 return someHelperFunction(name, "", [0, 1, 0, 1, 0, 0, 0, 0 ]);
             }
         </layoutGenerator>

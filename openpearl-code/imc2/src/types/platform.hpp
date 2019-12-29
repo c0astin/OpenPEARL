@@ -1,8 +1,19 @@
+/*
+ * changes: 2019-11-29 (rm)
+ * setInstance, getInstance added as class methods for easy access to the platform data
+ *   this is not nice but efficient to avoid tramp parameters for the checks
+ *   The reason for this change is the ModuleReader which must check nested associations
+ *   to be ether usernames or system names to avoid lot of irritation errors if an
+ *   association provider ok defined.
+ *   This is the minimal change in the softwar architecture.
+ *   signals and interrupts may have associations
+ */
+
 #ifndef IMC_TYPES_PLATFORM_HPP
 #define IMC_TYPES_PLATFORM_HPP
 
-#include <string>
-#include <vector>
+    #include <string>
+    #include <vector>
 #include <memory>
 
 #include <chaiscript/chaiscript.hpp>
@@ -41,7 +52,7 @@ namespace imc {
             template<typename T>
             struct ValueRestriction : public Restriction {
                 std::vector<T> allowed_values;
-
+                std::string showAs;
                 bool matches(const std::string& value) const noexcept override;
                 const std::string explain(void) const noexcept override;
                 void add_to_engine(chaiscript::ChaiScript&, std::string) noexcept override;
@@ -106,7 +117,7 @@ namespace imc {
                     ParameterType                paramtype;
                     std::shared_ptr<Restriction> restriction;
                     unsigned int                 len;
-                    optional<std::string>        nick;
+                    std::string                  name;
 
                 public:
 
@@ -118,15 +129,16 @@ namespace imc {
 
                     void set_restriction(std::shared_ptr<Restriction> r) noexcept;
                     void set_len(unsigned int i) noexcept;
-                    void set_nick(std::string nick) noexcept;
+                    void set_name(std::string name) noexcept;
 
                     unsigned int get_len(void) const noexcept;
-                    optional<std::string> get_nick(void) const noexcept;
+                    std::string get_name(void) const noexcept;
                     const ParameterType& get_type(void) const noexcept;
                     const std::shared_ptr<Restriction> get_restriction(void) const noexcept;
             };
 
             class Layout {
+            	std::string			provider_id;
                 std::string         device_id;
                 std::string         address;
                 std::vector<bool>   bits;
@@ -137,14 +149,25 @@ namespace imc {
                         : device_id(id)
                     {
                         // Intentionally left blank
+                    	address = "none";
+                    	provider_id = "none";
                     }
 
                     Layout(const Layout& other)
-                        : device_id(other.device_id)
+                        : provider_id(other.provider_id)
+                    	, device_id(other.device_id)
                         , address(other.address)
                         , bits(other.bits)
                     {
                         // Intentionally left blank
+                    }
+
+                    void setProviderId(std::string id) noexcept {
+                        this->provider_id = id;
+                    }
+
+                    std::string getProviderId(void) const noexcept {
+                        return this->provider_id;
                     }
 
                     void setDeviceId(std::string id) noexcept {
@@ -175,7 +198,7 @@ namespace imc {
                     }
             };
 
-            typedef std::function<Layout (std::string, std::vector<std::string>)> LayoutGenerator;
+            typedef std::function<Layout (std::string, std::string, std::vector<std::string>)> LayoutGenerator;
 
             class PlatformType {
                 private:
@@ -204,26 +227,6 @@ namespace imc {
                     optional<LayoutGenerator> get_layout_generator(void) noexcept;
             };
 
-            /**
-             * Represents a signal
-             *
-             * The `get_parameters()` function and the parameters member variable _must_ exist, even
-             * if it is never used.
-             *
-             * This makes the code in the matcher way simpler.
-             *
-             * I know this is ugly, but it is C++... so live with it.
-             */
-            class Signal : public PlatformType {
-                private:
-                public:
-                    Signal(std::string&& name) : PlatformType(name) {}
-            };
-
-            class Interrupt : public PlatformType {
-                public:
-                    Interrupt(std::string&& name) : PlatformType(name) {}
-            };
 
             class AssociationRequireableType : public PlatformType {
                 private:
@@ -261,6 +264,27 @@ namespace imc {
                     const std::vector<std::string>& get_provided_associations(void) const noexcept {
                         return this->provided_associations;
                     }
+            };
+
+            /**
+             * Represents a signal
+             *
+             * The `get_parameters()` function and the parameters member variable _must_ exist, even
+             * if it is never used.
+             *
+             * This makes the code in the matcher way simpler.
+             *
+             * I know this is ugly, but it is C++... so live with it.
+             */
+            class Signal : public AssociationRequireableType {
+                private:
+                public:
+                    Signal(std::string&& name) : AssociationRequireableType(name) {}
+            };
+
+            class Interrupt : public AssociationRequireableType {
+                public:
+                    Interrupt(std::string&& name) : AssociationRequireableType(name) {}
             };
 
             class Configuration : public AssociationRequireableType {
@@ -331,8 +355,14 @@ namespace imc {
                     std::vector<Interrupt> interrupts;
                     std::vector<Configuration> configurations;
                     std::vector<Connection> connections;
-
+                    static Platform *instance;
                 public:
+                    static Platform & getInstance(void) {
+                        return *instance;
+                    }
+                    static void setInstance(Platform & pf) {
+                        instance = & pf;
+                    }
 
                     Platform(
                         path filelocation,

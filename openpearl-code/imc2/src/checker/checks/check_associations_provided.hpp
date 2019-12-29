@@ -9,6 +9,7 @@ namespace imc {
         namespace checks {
 
             class check_associations_provided : public ::imc::checker::check {
+            private:
 
                 public:
 

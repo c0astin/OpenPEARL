@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module name="ok"  file="/home/debian/matthias1.prl">
     <system>
+  <username name="ctrlc">
+     <sysname name="UnixSignal">
+         <parameters>
+              <FIXED>2</FIXED>
+          </parameters>
+     </sysname>
+  </username>
+
+        <username name="stdout"  line="1">
+            <sysname name="StdOut">
+            </sysname>
+        </username>
+
         <username name="i2cbus1"  line="3">
             <sysname name="I2CBus">
                 <parameters>
@@ -18,11 +31,35 @@
             </sysname>
         </username>
 
-        <username name="remoteBits1"  line="7">
+        <username name="bits1collide"  line="44">
+            <sysname name="RPiDigitalIn">
+                <parameters>
+                    <FIXED>4</FIXED>
+                    <FIXED>3</FIXED>
+                </parameters>
+            </sysname>
+        </username>
+
+        <username name="directRemoteBits1"  line="7">
             <sysname name="PCF8574Out">
                 <parameters>
                     <BIT>'20'B4</BIT>
-                    <FIXED>7</FIXED>
+                    <FIXED>2</FIXED>
+                    <FIXED>2</FIXED>
+                </parameters>
+                <association name="I2CBus">
+                   <parameters>
+                    <CHAR>'/dev/i2c-3'</CHAR>
+                   </parameters>
+                </association>
+            </sysname>
+        </username>
+
+        <username name="remoteBits1collide"  line="77">
+            <sysname name="PCF8574Out">
+                <parameters>
+                    <BIT>'20'B4</BIT>
+                    <FIXED>2</FIXED>
                     <FIXED>2</FIXED>
                 </parameters>
                 <association name="i2cbus1">
@@ -86,6 +123,39 @@
             </sysname>
         </username>
 
+ <configuration line="10">
+     <sysname name="Log" >
+           <parameters>
+                 <CHAR>'EWD'</CHAR>
+           </parameters>
+         <association name="stdout">
+         </association>
+     </sysname>
+ </configuration>
 
+   <username name="FixedOvl" line="100">
+      <sysname name="FixedRangeSignal">
+      </sysname>
+   </username>
     </system>
+
+
+  <problem>
+    <dcl type="FIXED(15)" name="f15" line="99">
+    </dcl>
+        <spc type="signal" name="FixedOvl" line="22">
+        </spc>
+        <spc type="dation" name="remoteBits2" line="33">
+            <attributes>SYSTEM,BASIC,OUT</attributes>
+            <data>FIXED(31)</data>
+        </spc>
+
+        <spc type="dation" name="bits1" line="31">
+            <attributes>SYSTEM,INOUT</attributes>
+            <data>ALL</data>
+        </spc>
+        <dcl type="FIXED(7)" name="fixedFromM11" line="35" />
+    </problem>
+
+  
 </module>

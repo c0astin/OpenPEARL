@@ -110,8 +110,8 @@ namespace imc {
 
             // forward declarations
             for (auto& module: this->modules) {
-                for (auto& systempart : module.system_parts) {
-                    for (auto& username: systempart.usernames) {
+                if (module.system_part) {
+                    for (auto& username: module.system_part.value().usernames) {
                         optional<const ForwardDeclaration> fd = ForwardDeclaration::mk(username, this->platform);
                         if (!fd) {
                             ::imc::logger::log::error()
@@ -138,9 +138,9 @@ namespace imc {
 
             // Function body
             for (auto& module: this->modules) {
-                for (auto& systempart : module.system_parts) {
+                if (module.system_part) {
                     unsigned int number = 0;
-                    for (auto& username: systempart.usernames) {
+                    for (auto& username: module.system_part.value().usernames) {
                         auto ics = InitializationCodeSnippet::mk(username, this->platform);
                         if (!ics) {
                             ::imc::logger::log::error()

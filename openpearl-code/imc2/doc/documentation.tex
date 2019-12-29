@@ -4,29 +4,38 @@
 
 \begin{description}
 \item[Pass 1:]
-The tool reads the specified xml files as DOM-trees into memory.
-In case of read errors, the java default exception handling
-gives information about the mistake in the input files.
+The tool reads the specified xml files for platform and moduke(s)
+ as DOM-trees into memory.
+In case of read errors, an error message is emitted and execution aborted.
 
-\item [Pass 2:]
-Scan the system part for each module and add the detected system elements
-into the container \verb|SystemElements|. Forward declarations are 
-recorded together with the expectation. 
-Errors are created on unknown system elements, wrong number or values
-of parameters. Mismatch of  associations types.
-Duplicate user names are detected and reported as error.
+In case of the usage of direct associations like
+\texttt{temp: LM75('48'B4) --- I2CBus('/dev/i2c-1');}
+the association providers becomes  replaced by an automatic userName , which
+is not avialable by any application program.
+
+
+\item [Pass 2a: check\_params\_match]
+Verify compliance of defined system elements with the platform definitions in
+\begin{itemize}
+  \item number and type of parameters
+\end{itemize}
+
+\item [Pass 2b: check\_associations\_provided]
+Verify compliance of defined system elements with the platform definitions in
+\begin{itemize}
+  \item if requrired: type of accociation provider
+\end{itemize}
+
+\item [Pass 2c: check\_username\_sysnames\_mapping] ???
+
+\item [Pass 2d: check\_pin\_layout] check for multiple usage of i/o pins
 
 \item[Pass 3:]
-The problem part elements are checked to fit to the system definitions.
-Unused defined system elements are reported as warning.
-
-\item[Pass 4:]
-The C++ source code is created.
+The C++ source code for the sytem part becomes created if no errors were detected.
 
 \end{description}
 
 The process stops after each pass, if there were errors detected.
 
-\section{Source Code}
-The source code consists of several classes, whic are documented with JavaDoc.
+\section{Check Layout}
 

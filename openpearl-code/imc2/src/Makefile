@@ -217,32 +217,32 @@ checker/checks/check_associations_provided.cpp.s:
 	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_associations_provided.cpp.s
 .PHONY : checker/checks/check_associations_provided.cpp.s
 
-checker/checks/check_each_spc_has_one_dcl.o: checker/checks/check_each_spc_has_one_dcl.cpp.o
+checker/checks/check_multiple_dcl.o: checker/checks/check_multiple_dcl.cpp.o
 
-.PHONY : checker/checks/check_each_spc_has_one_dcl.o
+.PHONY : checker/checks/check_multiple_dcl.o
 
 # target to build an object file
-checker/checks/check_each_spc_has_one_dcl.cpp.o:
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.o
-.PHONY : checker/checks/check_each_spc_has_one_dcl.cpp.o
+checker/checks/check_multiple_dcl.cpp.o:
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.o
+.PHONY : checker/checks/check_multiple_dcl.cpp.o
 
-checker/checks/check_each_spc_has_one_dcl.i: checker/checks/check_each_spc_has_one_dcl.cpp.i
+checker/checks/check_multiple_dcl.i: checker/checks/check_multiple_dcl.cpp.i
 
-.PHONY : checker/checks/check_each_spc_has_one_dcl.i
+.PHONY : checker/checks/check_multiple_dcl.i
 
 # target to preprocess a source file
-checker/checks/check_each_spc_has_one_dcl.cpp.i:
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.i
-.PHONY : checker/checks/check_each_spc_has_one_dcl.cpp.i
+checker/checks/check_multiple_dcl.cpp.i:
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.i
+.PHONY : checker/checks/check_multiple_dcl.cpp.i
 
-checker/checks/check_each_spc_has_one_dcl.s: checker/checks/check_each_spc_has_one_dcl.cpp.s
+checker/checks/check_multiple_dcl.s: checker/checks/check_multiple_dcl.cpp.s
 
-.PHONY : checker/checks/check_each_spc_has_one_dcl.s
+.PHONY : checker/checks/check_multiple_dcl.s
 
 # target to generate assembly for a file
-checker/checks/check_each_spc_has_one_dcl.cpp.s:
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_each_spc_has_one_dcl.cpp.s
-.PHONY : checker/checks/check_each_spc_has_one_dcl.cpp.s
+checker/checks/check_multiple_dcl.cpp.s:
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_multiple_dcl.cpp.s
+.PHONY : checker/checks/check_multiple_dcl.cpp.s
 
 checker/checks/check_params_match.o: checker/checks/check_params_match.cpp.o
 
@@ -298,32 +298,32 @@ checker/checks/check_pin_layout.cpp.s:
 	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_pin_layout.cpp.s
 .PHONY : checker/checks/check_pin_layout.cpp.s
 
-checker/checks/check_username_sysname_mappings.o: checker/checks/check_username_sysname_mappings.cpp.o
+checker/checks/check_spc_has_dcl.o: checker/checks/check_spc_has_dcl.cpp.o
 
-.PHONY : checker/checks/check_username_sysname_mappings.o
+.PHONY : checker/checks/check_spc_has_dcl.o
 
 # target to build an object file
-checker/checks/check_username_sysname_mappings.cpp.o:
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.o
-.PHONY : checker/checks/check_username_sysname_mappings.cpp.o
+checker/checks/check_spc_has_dcl.cpp.o:
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.o
+.PHONY : checker/checks/check_spc_has_dcl.cpp.o
 
-checker/checks/check_username_sysname_mappings.i: checker/checks/check_username_sysname_mappings.cpp.i
+checker/checks/check_spc_has_dcl.i: checker/checks/check_spc_has_dcl.cpp.i
 
-.PHONY : checker/checks/check_username_sysname_mappings.i
+.PHONY : checker/checks/check_spc_has_dcl.i
 
 # target to preprocess a source file
-checker/checks/check_username_sysname_mappings.cpp.i:
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.i
-.PHONY : checker/checks/check_username_sysname_mappings.cpp.i
+checker/checks/check_spc_has_dcl.cpp.i:
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.i
+.PHONY : checker/checks/check_spc_has_dcl.cpp.i
 
-checker/checks/check_username_sysname_mappings.s: checker/checks/check_username_sysname_mappings.cpp.s
+checker/checks/check_spc_has_dcl.s: checker/checks/check_spc_has_dcl.cpp.s
 
-.PHONY : checker/checks/check_username_sysname_mappings.s
+.PHONY : checker/checks/check_spc_has_dcl.s
 
 # target to generate assembly for a file
-checker/checks/check_username_sysname_mappings.cpp.s:
-	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_username_sysname_mappings.cpp.s
-.PHONY : checker/checks/check_username_sysname_mappings.cpp.s
+checker/checks/check_spc_has_dcl.cpp.s:
+	cd /home/mueller/OpenPEARL/openpearl-code/imc2 && $(MAKE) -f src/CMakeFiles/imc.dir/build.make src/CMakeFiles/imc.dir/checker/checks/check_spc_has_dcl.cpp.s
+.PHONY : checker/checks/check_spc_has_dcl.cpp.s
 
 checker/error.o: checker/error.cpp.o
 
@@ -749,18 +749,18 @@ help:
 	@echo "... checker/checks/check_associations_provided.o"
 	@echo "... checker/checks/check_associations_provided.i"
 	@echo "... checker/checks/check_associations_provided.s"
-	@echo "... checker/checks/check_each_spc_has_one_dcl.o"
-	@echo "... checker/checks/check_each_spc_has_one_dcl.i"
-	@echo "... checker/checks/check_each_spc_has_one_dcl.s"
+	@echo "... checker/checks/check_multiple_dcl.o"
+	@echo "... checker/checks/check_multiple_dcl.i"
+	@echo "... checker/checks/check_multiple_dcl.s"
 	@echo "... checker/checks/check_params_match.o"
 	@echo "... checker/checks/check_params_match.i"
 	@echo "... checker/checks/check_params_match.s"
 	@echo "... checker/checks/check_pin_layout.o"
 	@echo "... checker/checks/check_pin_layout.i"
 	@echo "... checker/checks/check_pin_layout.s"
-	@echo "... checker/checks/check_username_sysname_mappings.o"
-	@echo "... checker/checks/check_username_sysname_mappings.i"
-	@echo "... checker/checks/check_username_sysname_mappings.s"
+	@echo "... checker/checks/check_spc_has_dcl.o"
+	@echo "... checker/checks/check_spc_has_dcl.i"
+	@echo "... checker/checks/check_spc_has_dcl.s"
 	@echo "... checker/error.o"
 	@echo "... checker/error.i"
 	@echo "... checker/error.s"
