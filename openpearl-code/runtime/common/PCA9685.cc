@@ -29,7 +29,7 @@
 
 
 #include "Dation.h"
-#include "PCF9685.h"
+#include "PCA9685.h"
 #include "Task.h"
 #include "Log.h"
 #include "Signals.h"
@@ -37,13 +37,13 @@
 #include <iostream>
 
 /**
- \brief Implementation of the PCF9685 i2c-device  basic  systemdation
+ \brief Implementation of the PCA9685 i2c-device  basic  systemdation
 
 
 */
 namespace pearlrt {
 
-   PCF9685::PCF9685(I2CProvider * provider, int addr, int prescaler) {
+   PCA9685::PCA9685(I2CProvider * provider, int addr, int prescaler) {
       static uint8_t defaultValue[] = {0, 0x20, 0x04};
       static uint8_t sleepMode[] = {0, 0x30};
       static uint8_t setPrescaler[] = {0xfe, 0 };
@@ -51,12 +51,12 @@ namespace pearlrt {
       this->provider = provider;
 
       if (addr < 0x40 || addr > 0x7f) {
-         Log::error("PCF9685: illegal addres (%x)", addr);
+         Log::error("PCA9685: illegal addres (%x)", addr);
          throw theDationParamSignal;
       }
 
       if (prescaler < 3 || prescaler > 255) {
-         Log::error("PCF9685: Prescaler out of range");
+         Log::error("PCA9685: Prescaler out of range");
          throw theOpenFailedSignal;
       }
 
@@ -81,13 +81,13 @@ namespace pearlrt {
 //   defaultValue[0], defaultValue[1], defaultValue[2]);
          Task::delayUs(500); // need 500us delay before oscillator is stable
       } catch (WritingFailedSignal s) {
-         Log::error("PCF9685: Dation not ready");
+         Log::error("PCA9685: Dation not ready");
          throw theInternalDationSignal;
       }
 
    }
 
-   void PCF9685::writeChannel(int channel, int offValue) {
+   void PCA9685::writeChannel(int channel, int offValue) {
 
       uint8_t setChannel[5];
 

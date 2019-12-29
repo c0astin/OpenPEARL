@@ -29,28 +29,28 @@
 
 
 #include "Dation.h"
-#include "PCF9685Channel.h"
-#include "PCF9685.h"
+#include "PCA9685Channel.h"
+#include "PCA9685.h"
 #include "Log.h"
 #include "Signals.h"
 #include "Fixed.h"
 #include <iostream>
 
 /**
- \brief Implementation of the PCF9685 i2c-device  basic  systemdation
+ \brief Implementation of the PCA9685 i2c-device  basic  systemdation
 
 
 */
 namespace pearlrt {
 
-   PCF9685Channel::PCF9685Channel(PCF9685 * provider, int channel) {
+   PCA9685Channel::PCA9685Channel(PCA9685 * provider, int channel) {
 
       dationStatus = CLOSED;
       this->provider = provider;
 
 
       if (channel < 0 || channel > 15) {
-         Log::error("PCF9685Channel: illegal channel (%d)", channel);
+         Log::error("PCA9685Channel: illegal channel (%d)", channel);
          throw theDationParamSignal;
       }
 
@@ -59,20 +59,20 @@ namespace pearlrt {
       // leave the device unchanged
    }
 
-   PCF9685Channel* PCF9685Channel::dationOpen(const char * idf, int params) {
+   PCA9685Channel* PCA9685Channel::dationOpen(const char * idf, int params) {
 
       if (idf) {
-         Log::error("PCF9685Channel: no IDF allowed");
+         Log::error("PCA9685Channel: no IDF allowed");
          throw theDationParamSignal;
       }
 
       if (params & ~(RST | IN | OUT | INOUT)) {
-         Log::error("PCF9685Channel: only RST allowed");
+         Log::error("PCA9685Channel: only RST allowed");
          throw theDationParamSignal;
       }
 
       if (dationStatus != CLOSED) {
-         Log::error("PCF9685Channel: Dation already open");
+         Log::error("PCA9685Channel: Dation already open");
          throw theOpenFailedSignal;
       }
 
@@ -81,22 +81,22 @@ namespace pearlrt {
       return this;
    }
 
-   void PCF9685Channel::dationClose(int params) {
+   void PCA9685Channel::dationClose(int params) {
 
       if (dationStatus != OPENED) {
-         Log::error("PCF9685Channel: Dation not open");
+         Log::error("PCA9685Channel: Dation not open");
          throw theDationNotOpenSignal;
       }
 
       if (params & ~(RST | IN | OUT | INOUT)) {
-         Log::error("PCF9685Channel: only RST allowed");
+         Log::error("PCA9685Channel: only RST allowed");
          throw theDationParamSignal;
       }
 
       dationStatus = CLOSED;
    }
 
-   void PCF9685Channel::dationWrite(void* data, size_t size) {
+   void PCA9685Channel::dationWrite(void* data, size_t size) {
       int16_t offValue;
 
       //check size of parameter!
@@ -104,12 +104,12 @@ namespace pearlrt {
       // with a maximum of 16 bits. This fits into 2 byte.
       // Therefore size must be 2
       if (size != sizeof(Fixed<15>)) {
-         Log::error("PCF9685Channel: Fixed<15> expected (got %d byte data)", (int)size);
+         Log::error("PCA9685Channel: Fixed<15> expected (got %d byte data)", (int)size);
          throw theDationParamSignal;
       }
 
       if (dationStatus != OPENED) {
-         Log::error("PCF9685Channel: Dation not open");
+         Log::error("PCA9685Channel: Dation not open");
          throw theDationNotOpenSignal;
       }
 
@@ -119,14 +119,14 @@ namespace pearlrt {
       return;
    }
 
-   void PCF9685Channel::dationRead(void* data, size_t size) {
-      Log::error("PCF9685Channel: no read supported");
+   void PCA9685Channel::dationRead(void* data, size_t size) {
+      Log::error("PCA9685Channel: no read supported");
       throw theInternalDationSignal;
 
 
    }
 
-   int PCF9685Channel::capabilities() {
+   int PCA9685Channel::capabilities() {
       int cap =  OUT;
       return cap;
    }

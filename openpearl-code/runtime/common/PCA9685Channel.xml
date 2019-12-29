@@ -1,4 +1,4 @@
-   <dation name="PCF9685Channel">
+   <dation name="PCA9685Channel">
       <parameters>
          <FIXED length="31" name="channel">
             <FIXEDRANGE>0,15</FIXEDRANGE>
@@ -6,8 +6,9 @@
       </parameters>
       <attributes>SYSTEM, BASIC, OUT</attributes>
       <data>FIXED(15)</data>
-      <needAssociation name="PCF9685Provider" />
+      <needAssociation name="PCA9685Provider" />
       <checks>
-         <check pinDoesNotCollide="PCF9685Channel" start="channel" errorText="pwm channel" />
+         <check pinDoesNotCollide="PCA9685Channel"
+                start="channel" errorText="pwm channel" />
       </checks>
    </dation>

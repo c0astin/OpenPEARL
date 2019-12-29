@@ -161,9 +161,9 @@ END;
 ...
 \end{PEARLCode}
 
-\section{I2c-Device: PCF9685, PCF9685Channel}
+\section{I2c-Device: PCA9685, PCA9685Channel}
 This device acts as puls width modulation generator.
-The PCF9685 contains 16 independent channels. The duty cycle
+The PCA9685 contains 16 independent channels. The duty cycle
 is specified by a 12 bit integer value (0..4095).
 
 The device contains an internal 25MHz oscillator and an 8 bit
@@ -173,10 +173,10 @@ $1.526 kHz$ and $24 Hz$.
 
 The decice operates via an I2C bus. 
 
-Synopsis: PCF9685Channel(channel) --- PCF9685(address, prescaler) \\
+Synopsis: PCA9685Channel(channel) --- PCA9685(address, prescaler) --- i2cbus; \\
 
 \begin{description}
-\item[channel] denotes the channel of the PCF9685
+\item[channel] denotes the channel of the PCA9685
 \item[address] is the I2C adress of the sensor on the I2C bus.
    Valid adresses are: '40'B4 to '7F'B4
 \item[prescaler] defines the dividor of the internal oscillator
@@ -185,7 +185,7 @@ Synopsis: PCF9685Channel(channel) --- PCF9685(address, prescaler) \\
 
 \paragraph{Notes:}\ 
 \begin{itemize}
-\item The PCF9685 needs an I2C-device for operation
+\item The PCA9685 needs an I2C-device for operation
 \item The outputs are configured as totem pole. This 
     setting may not set channel specific.
 \item Check the requirements of your actor for maximum freqency
@@ -198,13 +198,13 @@ SYSTEM;
    ! linux specific i2c bus interface definition
    ic2bus1: I2CBUS('/dev/i2c-0');
 
-   ! connect the PCF9685 to the the I2C bus
+   ! connect the PCA9685 to the the I2C bus
    ! default i2c-adress and default prescaler --> 200Hz
-   pcfProvider: PCF9685('40'B4,30) --- i2cbus1;
+   pcaProvider: PCA9685('40'B4,30) --- i2cbus1;
 
    ! select channel 0 and 1 for led 0 and 1
-   led0: PCF9685Channel(0) --- pcfProvider;
-   led1: PCF9685Channel(1) --- pcfProvider;
+   led0: PCA9685Channel(0) --- pcaProvider;
+   led1: PCA9685Channel(1) --- pcaProvider;
 
 
 PROBLEM;

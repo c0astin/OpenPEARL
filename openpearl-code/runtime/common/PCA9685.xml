@@ -1,4 +1,4 @@
-   <connection name="PCF9685">
+   <connection name="PCA9685">
       <parameters>
          <BIT length="8" name="iicAdr">
            <VALUES>
@@ -17,10 +17,10 @@
          </FIXED>
       </parameters>
       <associationProvider>
-         <associationType name="PCF9685Provider"/>
+         <associationType name="PCA9685Provider"/>
       </associationProvider>
       <needAssociation name="I2CBusProvider" />
       <checks>
-        <check i2cAdrDoesNotCollide="PCF8596" nonsharable="$iicAdr" />
+        <check i2cAdrDoesNotCollide="PCA8596" nonsharable="$iicAdr" />
       </checks>
    </connection>

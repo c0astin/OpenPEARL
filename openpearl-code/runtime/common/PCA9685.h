@@ -26,12 +26,12 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef PCF9685PROVIDER_H_INCLUDED
-#define PCF9685PROVIDER_H_INCLUDED
+#ifndef PCA9685PROVIDER_H_INCLUDED
+#define PCA9685PROVIDER_H_INCLUDED
 /**
 \file
 
-\brief Basic system device for the PCF9685 I2C basic dation
+\brief Basic system device for the PCA9685 I2C basic dation
 
 */
 
@@ -49,16 +49,16 @@ namespace pearlrt {
    */
 
    /**
-   \brief Basic system device for an i2c element pcf9685  basic dation
+   \brief Basic system device for an i2c element pca9685  basic dation
 
-      This device works only together with PCF9685Channel, which allows
+      This device works only together with PCA9685Channel, which allows
       single channels to become set.
-      The device PCF9685 treats common stuff for all channels, like
+      The device PCA9685 treats common stuff for all channels, like
       ic bus adress and prescler.
 
    */
 
-   class PCF9685 {
+   class PCA9685 {
 
    private:
       int16_t addr;
@@ -77,7 +77,7 @@ namespace pearlrt {
       \throws DationParamSignal in case of init failure
 
       */
-      PCF9685(I2CProvider * provider, int addr, int prescaler);
+      PCA9685(I2CProvider * provider, int addr, int prescaler);
 
       /**
       send  a  value to the device

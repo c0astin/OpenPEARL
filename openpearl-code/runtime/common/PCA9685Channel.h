@@ -26,19 +26,19 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef PCF9685CHANNEL_H_INCLUDED
-#define PCF9685CHANNEL_H_INCLUDED
+#ifndef PCA9685CHANNEL_H_INCLUDED
+#define PCA9685CHANNEL_H_INCLUDED
 /**
 \file
 
-\brief Basic system device for the PCF9685 I2C basic dation
+\brief Basic system device for the PCA9685 I2C basic dation
 
 */
 
 #include "SystemDationB.h"
 #include "Fixed.h"
 #include "Signals.h"
-#include "PCF9685.h"
+#include "PCA9685.h"
 
 #include <stdint.h>
 
@@ -49,21 +49,21 @@ namespace pearlrt {
    */
 
    /**
-   \brief Basic system device for an i2c element pcf9685  basic dation
+   \brief Basic system device for an i2c element pca9685  basic dation
 
-      This device works only together with PCF9685Channel, which allows
+      This device works only together with PCA9685Channel, which allows
       single channels to become set.
-      The device PCF9685 treats common stuff for all channels, like
+      The device PCA9685 treats common stuff for all channels, like
       ic bus adress and prescler.
 
    */
 
-   class PCF9685Channel: public SystemDationB {
+   class PCA9685Channel: public SystemDationB {
 
    private:
       int16_t channel;
 
-      PCF9685 * provider;
+      PCA9685 * provider;
 
       void internalDationOpen();
       void internalDationClose();
@@ -71,15 +71,15 @@ namespace pearlrt {
    public:
       /**
       constructor to create access to one cghannel of
-      the 16 channels of the PCF9685 device
+      the 16 channels of the PCA9685 device
 
-      \param provider reference to the PCF9685 object
+      \param provider reference to the PCA9685 object
       \param channel the channel
 
       \throws DationParamSignal in case of init failure
 
       */
-      PCF9685Channel(PCF9685 * provider, int channel);
+      PCA9685Channel(PCA9685 * provider, int channel);
 
       /**
       Open the  dation
@@ -91,7 +91,7 @@ namespace pearlrt {
 
       \throws OpenFailedSignal, if  dation is not closed and rst is not given
       */
-      PCF9685Channel* dationOpen(const char* idf = 0, int openParam = 0);
+      PCA9685Channel* dationOpen(const char* idf = 0, int openParam = 0);
 
       /**
       Close the sample basic dation
