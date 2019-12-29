@@ -81,6 +81,7 @@ message if an error message is too long
       static bool initialized;
       static Log* instance;
       static bool ctorIsActive;
+      bool definedInSystemPart;
 
       /**
         The current log level. This is a bitwise or'd value from
@@ -133,7 +134,7 @@ message if an error message is too long
       \param level a C-string with desired log levels (E,W,D,I)
 
       \note: the default ctor set the default path of the log message,
-      which is plattform dependent - thus the implementation of this 
+      which is platform dependent - thus the implementation of this 
       method is in the plattform specific part.
       The configuration ctor replaces the plattform specific default setting
       */
@@ -146,6 +147,15 @@ message if an error message is too long
          \returns the refernce to this object
       */
       static Log* getInstance();
+
+      /**
+      check if the Log device is defined in the system part
+
+      returns true, if defined in system part <br>
+              false, else
+      */
+      bool isDefinedInSystemPart();
+      void setDefinedInSystemPart(bool fromSystemPart);
 
 
       /**

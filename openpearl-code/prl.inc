@@ -116,7 +116,7 @@ fi
 if [ "$COMPILEONLY" != "1" ] ; then
   if [ "$NOSYSTEMPART" != "1" ] ; then
     SYSTEM="system.cc"
-    #include "imc/imc.inc"
+    #include "imc3/imc.inc"
     rc=$?
     if [ $rc -ne 0 ]
     then

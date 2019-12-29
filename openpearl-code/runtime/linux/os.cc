@@ -262,12 +262,12 @@ code. By this way, the compiler may pass the user names directly to
 C++ source code.
 */
 namespace pearlrt {
-
 // ------------------------ prototypes of static functions
 #if 0
    static char* task_state(enum Task::TaskState t);
    static void treat_command(char * line);
 #endif
+
 
 //signal handler for SIGXCPU - cpu time limit exeeded
    static void sigXCPU(int dummy) {
@@ -283,57 +283,6 @@ namespace pearlrt {
       Log::exit();
       exit(Control::getExitCode());
    }
-
-#if 0
-   static char* task_state(enum Task::TaskState t) {
-      switch (t) {
-      case Task::TERMINATED:
-         return ((char*)"TERMINATED");
-
-      case Task::SUSPENDED:
-         return ((char*)"SUSPENDED");
-
-      case Task::RUNNING:
-         return ((char*)"RUNNING");
-
-      case Task::BLOCKED:
-         return ((char*)"SEMA/BOLT/IO_BLOCKED");
-
-      case Task::SUSPENDED_BLOCKED:
-         return ((char*)"SEMA/BOLT/IO_SUSP_BLOCKED");
-
-      default:
-         return ((char*)"unknown state");
-      }
-   };
-
-   static void treat_command(char * line) {
-      Task * t;
-      int j, n;
-      char line1[80], line2[80], line3[80], line4[80];
-      char* detailedState[] = {line1, line2, line3, line4};
-
-      if (strcasecmp(line, "/PRLI") == 0) {
-         printf("Number of pending tasks: %d\n",
-                TaskMonitor::Instance().getPendingTasks());
-
-         for (int i = 0; i < TaskList::Instance().size();  i++) {
-            t = TaskList::Instance().getTaskByIndex(i);
-            printf("%-10.10s  %3d  %2d  %-20.20s (%s:%d)\n", t->getName(),
-                   (t->getPrio()).x,
-                   t->getIsMain(),
-                   task_state(t->getTaskState()),
-                   t->getLocationFile(), t->getLocationLine());
-            n = t->detailedTaskState(detailedState);
-
-            for (j = 0; j < n ; j++) {
-               printf("\t%s\n", detailedState[j]);
-            }
-         }
-      }
-   }
-#endif
-
 
    static void set_cores(int n) {
       cpu_set_t *mask;
@@ -370,7 +319,7 @@ namespace pearlrt {
       char  format[20];
       int value;
    } entries[] = {
-      {"LogLevel   %x", 0x0c},
+      {"LogLevel   %x", -1},
       {"MaxCpuTime %d", 300},
       {"Cores      %d", 1}
    };
@@ -455,15 +404,22 @@ int main() {
    int numberOfCpus;
 
 
-   // setup default log file as ./pearl_log.txt
-   Disc * disc = new Disc("./", 1);
-   LogFile * logfile = new LogFile(disc, "pearl_log.txt");
-   new Log(logfile, (char*)"EWDI"); // all levels enabled
+   // setup default log file as defined in linux/Log.cc
+   bool logFromSystemPart = pearlrt::Log::getInstance()->
+		isDefinedInSystemPart();
+
+   //Disc * disc = new Disc("./", 1);
+   //LogFile * logfile = new LogFile(disc, "pearl_log.txt");
+   //new Log(logfile, (char*)"EWDI"); // all levels enabled
 
    scanPearlRc();
 
-   // set desired log level
-   Log::setLevel(entries[LOGLEVEL].value);
+   if (!logFromSystemPart) {
+      if (entries[LOGLEVEL].value != -1) {
+          // set desired log level from .pearlrc
+          Log::setLevel(entries[LOGLEVEL].value);
+      }
+   }
    // --- log setup complete ---
 
 

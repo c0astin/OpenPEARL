@@ -45,11 +45,16 @@ namespace pearlrt {
    int Log::logLevel = Log::WARN | Log::ERROR;
    SystemDationNB* Log::provider = NULL;
    Log* Log::instance = NULL;
+   bool definedInSystemPart;
 
    Log* Log::getInstance() {
       if (!instance) {
         try {
          instance = new Log();
+        
+         // if no Log instance existed yet --> no entry
+         // in the system part present
+	 instance->setDefinedInSystemPart(false);  
         } catch ( ... ) {
           printf("failed to create logger\n");
         }
@@ -57,9 +62,23 @@ namespace pearlrt {
       return instance;
    }
 
+   bool Log::isDefinedInSystemPart() {
+       return definedInSystemPart;
+   }
+
+   void Log::setDefinedInSystemPart(bool fromSystemPart) {
+       definedInSystemPart = fromSystemPart;
+   }
+
+  
    Log::Log(SystemDationNB * _provider, char * level) {
       int newLogLevel = 0;
 
+      // let's assume that the ctor is called due to an entry in
+      // the system part. If getInstance() find no instance it will create
+      // an instance  and set this flag afterwards to false
+      definedInSystemPart = true;
+      
       if (ctorIsActive) {
          printf("RECURSION!\n");
       }

@@ -31,20 +31,24 @@
 #include "Mutex.h"
 #include "Signals.h"
 #include "StdError.h"
-/*
+
 #include "LogFile.h"
 #include "Disc.h"
-*/
+
 
 namespace pearlrt {
    static Mutex mutex;
 
    Log::Log() {
-      ctorIsActive = true;
-      static StdError stdError;
-      provider = &stdError;
-      provider->dationOpen(NULL, 0);
-      ctorIsActive = false;
+      // create default log as ./pearl_log.txt
+      Disc * disc = new Disc("./", 1);
+      LogFile * logfile = new LogFile(disc, "pearl_log.txt");
+      Log(logfile, (char*)"EWDI"); // all levels enabled
+
+      //static StdError stdError;
+      //provider = &stdError;
+      //provider->dationOpen(NULL, 0);
+      //ctorIsActive = false;
       mutex.name("Log");
    }
 

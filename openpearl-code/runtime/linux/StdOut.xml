@@ -5,4 +5,7 @@
       <associationProvider>
          <associationType name="AlphicOutProvider"/>
       </associationProvider>
+      <checks>
+        <check instances="1" />
+      </checks>
    </dation>
