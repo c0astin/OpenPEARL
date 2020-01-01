@@ -213,13 +213,13 @@ namespace pearlrt {
       /** scheduled structure for activate and continue
 
       this struct contains all data which are required for a timed
-      activation and continueation
+      activation and continuation
       */
       struct Schedule {
-         bool whenRegistered; ///< set to true, if WHEN isr registered
+         bool whenRegistered; ///< set to true, if WHEN is registered
          Interrupt * when;  ///< pointer to registered interrupt
          Fixed<15> prio;    ///< prio for new action
-         TaskTimerCommon * taskTimer;  ///< the timer
+         TaskTimerCommon * taskTimer;  ///< the timer for AT/AFTER
       };
 
       /** control data for the scheduled activation */

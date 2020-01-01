@@ -902,38 +902,50 @@ namespace pearlrt {
 
       Log::info("%s: resume (cond=%d)", name, condition);
 
-      if (condition != Task::AT && condition != Task::AFTER) {
-         Log::error("task %s: resume nether AT nor AFTER", name);
-         throw theInternalTaskSignal;
-      } else if (condition == Task::AT) {
-         after =  at - Clock::now();
-      }
-
       mutexLock();
+      if (condition & Task::WHEN) {
+         if (schedContinueData.taskTimer->isActive() ) {
+            schedContinueData.taskTimer->cancel();
+         }
+      } else {
+         if (condition != Task::AT && condition != Task::AFTER) {
+            Log::error("task %s: resume nether AT nor AFTER", name);
+            throw theInternalTaskSignal;
+         } else if (condition == Task::AT) {
+            after =  at - Clock::now();
+         }
+      }
 
       schedContinueData.prio = 0; // don't change the prio
 
-      try {
-         schedContinueData.taskTimer->set(Task::AFTER, Clock(),
-                                          after, Duration(),
-                                          Clock(), Duration());
-      } catch (...) {
-         mutexUnlock();
-         throw;
-      }
+      if (condition & Task::WHEN) {
+         schedContinueData.whenRegistered = true;
+         schedContinueData.when = when;
+         schedContinueData.when->registerContinue(this,&nextContinue);
+      } else {
 
-      if (schedContinueData.whenRegistered) {
-         schedContinueData.when->unregisterContinue(this);
-         schedContinueData.when = 0;
-         schedContinueData.whenRegistered = false;
-         // no need to update number of pending tasks since this
-         // method it called from the task by itsself
-      }
+         try {
+            schedContinueData.taskTimer->set(Task::AFTER, Clock(),
+                                             after, Duration(),
+                                             Clock(), Duration());
+         } catch (...) {
+            mutexUnlock();
+            throw;
+         }
 
-      // start the timer
-      if (schedContinueData.taskTimer->start()) {
-         mutexUnlock();
-         throw theInternalTaskSignal;
+         if (schedContinueData.whenRegistered) {
+            schedContinueData.when->unregisterContinue(this);
+            schedContinueData.when = 0;
+            schedContinueData.whenRegistered = false;
+            // no need to update number of pending tasks since this
+            // method it called from the task by itsself
+         }
+
+         // start the timer
+         if (schedContinueData.taskTimer->start()) {
+            mutexUnlock();
+            throw theInternalTaskSignal;
+         }
       }
 
       // do the plattform specific part ... and release the mutexTasks lock

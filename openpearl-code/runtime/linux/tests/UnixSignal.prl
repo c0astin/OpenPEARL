@@ -17,13 +17,24 @@ t1: TASK MAIN;
 
    OPEN stdout;
 
+   PUT 
+!    'wait for ^C and ^\ and start a dedicated task which echos the reception'
+    'wait for ^C and ^'\5C\' and start a dedicated task which echos the reception '
+     TO stdout BY A, SKIP;
+
+   PUT 'after 30 SEC the application terminates autonmatically' 
+       TO stdout BY A, SKIP;
+  
+
    ENABLE quit;
    ENABLE ctrlc;
 
    WHEN quit ACTIVATE tQuit;
    WHEN ctrlc ACTIVATE tCtrlc;
 
-
+   AFTER 30 SEC RESUME;
+   PREVENT tQuit;
+   PREVENT tCtrlc;
 
 END;
 

@@ -117,7 +117,7 @@ namespace pearlrt {
       /**
       register a task for triggered continuation
 
-      Theses tasks re automatically removed from the list
+      Theses tasks are automatically removed from the list
       when the interrupt is triggered.
 
       \param t pointer to the task object with should be activated when
