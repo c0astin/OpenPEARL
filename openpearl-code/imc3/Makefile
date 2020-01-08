@@ -1,6 +1,9 @@
 
-all:
+all: convertList
 	(cd src; make;) 
+
+convertList: convertList.c
+	gcc convertList.c -o convertList
 
 clean:
 	(cd doc; make clean;)

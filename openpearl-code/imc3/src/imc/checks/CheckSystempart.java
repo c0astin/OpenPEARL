@@ -66,6 +66,9 @@ public class CheckSystempart {
 					//Node inModule = se.getNode();
 					// get node which contains the parameters
 					Node seSystem = NodeUtils.getChildByName(se.getNode(), "sysname");
+
+					Log.info("   check illegal autoInstanciate usage");
+					checkAutoInstanciate(se,seSystem,systemNode);
 					Log.info("   check ParameterTypes ..");
 					compareParameterTypes(se, seSystem, systemNode);
 					Log.info("   check Associations ..");
@@ -78,6 +81,16 @@ public class CheckSystempart {
 			
 		}
 
+	}
+
+
+	private static void checkAutoInstanciate(ModuleEntrySystemPart se,
+		Node seSystem, Node systemNode) {
+		if (systemNode.getAttributes().getNamedItem("autoInstanciate") != null) {
+			
+		   Log.error("illegal instantiation of '"+seSystem.getAttributes().getNamedItem("name").getTextContent()+"'");
+		}
+	    return;
 	}
 
 
@@ -170,7 +183,7 @@ public class CheckSystempart {
 			// we must create an anonymous ModuleEntrySystemPart
 			// find the node of the association in the module definition file
 			//  if is the first level, we must search in the sysname-branch
-			//  if it is a deeper level we must search in the current branch
+			//  if it is a deeper level we must search in the child branch
 			Node nodeInModule = imc.utilities.NodeUtils.getChildByName(se.getNode(), "sysname");
 			if (nodeInModule==null) {
 				nodeInModule = imc.utilities.NodeUtils.getChildByName(se.getNode(), "association");

@@ -313,8 +313,10 @@ public class CheckSpcDcl {
 	private int isDefinedInSystemPart(Module m, String globalOfUserName, String userName) {
 		List<ModuleEntrySystemPart> mseList = m.getSystemElements();
 		for (int i=0; i<mseList.size(); i++) {
-			if (!m.getModuleName().equals(globalOfUserName)) continue;
-			if (mseList.get(i).getUserName() == null) continue;  // configurations have no uesername
+			if (useNameSpace) {
+			   if (!m.getModuleName().equals(globalOfUserName)) continue;
+			}
+			if (mseList.get(i).getUserName() == null) continue;  // configurations have no username
 			if (mseList.get(i).getUserName().equals(userName)) return i;
 		}
 		return -1;
@@ -329,8 +331,10 @@ public class CheckSpcDcl {
 	private int isDefinedInProblemPart(Module m, String globalOfUserName, String userName) {
 		List<DclProblemPart> dclList = m.getDclProblemPart();
 		for (int i=0; i<dclList.size(); i++) {
-			if (!dclList.get(i).getUserName().equals(userName)) continue;
-			if (dclList.get(i).getGlobal().equals(globalOfUserName)) return i;
+			if (useNameSpace) {
+				if (!dclList.get(i).getGlobal().equals(globalOfUserName)) continue;
+			}
+			if (dclList.get(i).getUserName().equals(userName)) return i;
 		}
 		return -1;
 	}

@@ -108,7 +108,6 @@ public class InterModuleChecker {
 		// read target-xml
 		targetXml = Platform.getInstance(target + ".xml", verbose, installationPath);
 
-
 		// read all input files
 		for (int i = 0; i < inputFiles.size(); i++) {
 			Module mXml = new Module(inputFiles.get(i) + ".xml", verbose);

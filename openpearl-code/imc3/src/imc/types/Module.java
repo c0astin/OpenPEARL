@@ -72,9 +72,10 @@ public class Module {
 	List<SpcProblemPart> spcProblemPart;
 	List<DclProblemPart> dclProblemPart;
 	
+
 	/**
 	 * create an object for the query operations for the target platform
-	 * elements, like SIGNAL, DATION and INTERRUPT in one souce file
+	 * elements, like SIGNAL, DATION and INTERRUPT in one source file
 	 * 
 	 * Several Module objects with the same moduleName may exist
 	 * 
@@ -121,7 +122,7 @@ public class Module {
 	 * check existence and type of used system names, associations and
 	 * configuration elements on the target platform *
 	 * <p>
-	 * <b>Note:</b> the methode emits error messages in case of problems. The
+	 * <b>Note:</b> the method emits error messages in case of problems. The
 	 * check is aborted by the main program, if errors are detected in one stage
 	 * of translation
 	 */
@@ -163,7 +164,7 @@ public class Module {
 						ConfigurationSystemPart cnf = new ConfigurationSystemPart(line, n);
 						systemElements.add(cnf);
 						Log.setLocation(sourceFileName, line);
-						Log.info("module "+moduleName+" defines configuration element ");
+						Log.info("module "+moduleName+" defines a configuration");
 					} else {
 						continue;
 					}

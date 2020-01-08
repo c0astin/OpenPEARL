@@ -3,6 +3,7 @@
       <signal name="FixedRangeSignal"/>
       <signal name="FixedDivideByZeroSignal"/>
       <signal name="FloatIsNaNSignal"/>
+
       <interrupt name="UnixSignal">
          <parameters>
             <FIXED name="signalNumber" length="31">
@@ -10,6 +11,7 @@
             </FIXED>
          </parameters>
       </interrupt>
+
       <dation name="Disc">
          <parameters>
             <CHAR name="dir" length="32767"/>	<!-- beliebiger String -->
@@ -23,6 +25,7 @@
             <associationType name="NamedAlphicOutProvider" />
          </associationProvider>
       </dation>
+
       <dation name="StdIn">
          <parameters>
          </parameters>
@@ -34,6 +37,7 @@
            <check instances="1"/>
          </checks>
       </dation>
+
       <dation name="StdOut">
          <parameters>
          </parameters>
@@ -48,6 +52,7 @@
            <check instances ="1"/>
          </checks>
       </dation>
+
       <connection name="I2CBus">
          <parameters>
             <CHAR name="deviceName" length="32767">
@@ -61,6 +66,7 @@
            <check instances ="oncePerSet" set="I2CBus($deviceName)"/>
          </checks>
       </connection>
+
       <dation name="LM75">
          <parameters>
             <BIT name="iicAdr" length="8">
@@ -75,23 +81,6 @@
          <needAssociation name="I2CBusProvider"/>
          <checks>
            <check i2cAdrDoesNotCollide="LM75"
-                   nonShareable="$iicAdr"/>
-         </checks>
-      </dation>
-      <dation name="LM75a">
-         <parameters>
-            <BIT name="iicAdr" length="8">
-               <VALUES>'48'B4, '49'B4, '4A'B4, '4B'B4,
-                       '4C'B4, '4D'B4 , '4E'B4, '4F'B4</VALUES>
-            </BIT>
-         </parameters>
-	 <attributes>
-            BASIC, SYSTEM, IN
-         </attributes>
-         <data>FIXED(15)</data>
-         <needAssociation name="I2CBusProvider"/>
-         <checks>
-           <check i2cAdrDoesNotCollide="LM75a"
                    nonShareable="$iicAdr"/>
          </checks>
       </dation>
@@ -119,7 +108,7 @@
          <needAssociation name="I2CBusProvider"/>
          <checks>
            <check pinDoesNotCollide="PCF8574xx(I2cAdr=$iicAdr)" 
-		start="$start" width= "$width" errorText="blubb"/>
+		start="$start" width= "$width" />
            <check i2cAdrDoesNotCollide="PCF8574"
                    shareable="$iicAdr"/>
          </checks>
@@ -181,7 +170,7 @@
    <dation name="RPiDigitalIn">
       <parameters>
          <FIXED name="start" length="31">
-             <FIXEDRANGE>2,27</FIXEDRANGE>
+             <FIXEDRANGE>0,27</FIXEDRANGE>
          </FIXED>
          <FIXED length="31" name="width"> <FIXEDGT>0</FIXEDGT></FIXED>
          <CHAR name="pullUpDown" length="1"><VALUES>'u','d','n'</VALUES></CHAR>
@@ -193,10 +182,11 @@
            </checks>
       <data>BIT($width)</data>
    </dation>
+
    <dation name="RPiDigitalOut">
       <parameters>
          <FIXED name="start" length="31">
-             <FIXEDRANGE>2,27</FIXEDRANGE>
+             <FIXEDRANGE>0,27</FIXEDRANGE>
          </FIXED>
          <FIXED length="31" name="width"> <FIXEDGT>0</FIXEDGT></FIXED>
       </parameters>
@@ -207,6 +197,12 @@
       <attributes> OUT, SYSTEM, BASIC</attributes>
       <data>BIT($width)</data>
    </dation>
+
+   <configuration name="reservedGpios" autoInstanciate="1">
+     <checks>
+      <check pinDoesNotCollide="RPiGPIO" bitList="0,1,2,4,5,6,7"/>
+     </checks>
+   </configuration>
 
 </platform>
 

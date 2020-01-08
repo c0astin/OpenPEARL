@@ -55,6 +55,21 @@ config LINUX_Raspberry_Version_V4B
 
 endchoice
 
+config LINUX_Raspberry_reservedGpios
+	depends on LINUX_Raspberry
+	string "reserved GPIOs by drivers or other applications"
+	default ""
+	help
+	enter a comma separted list of ranges like 0-1,18-21,10,12
+	common settings are
+	  0-1   for HAT detection
+	  2-3   for I2C1 bus
+	  14-15 for the UART
+	  7-10  for SPI0
+	multiple denotations of a gpio bit are accepted
+	If you use a hardware attached on top (HAT) add all 0-1 and 
+	all gpio bits used by the HAT.
+
 
 config LINUX_tests
 	depends on LINUX

@@ -5,7 +5,7 @@
 <username name="rpiBi3" line="400">
   <sysname name="RPiDigitalIn">
   <parameters>
-  <FIXED>4</FIXED>
+  <FIXED>9</FIXED>
   <FIXED>2</FIXED>
   <CHAR>'n'</CHAR>
   </parameters>
@@ -59,25 +59,6 @@
    </sysname>
 </username>
 
-<username name="lm75a" line="6">
-   <sysname name="LM75a">
-   <parameters>
-   <BIT>'49'B4</BIT>
-   </parameters>
-   <association name="i2cbus1">
-   </association>
-   </sysname>
-</username>
-
-<username name="lm75b" line="116">
-   <sysname name="LM75">
-   <parameters>
-   <BIT>'49'B4</BIT>
-   </parameters>
-   <association name="i2cbus0">
-   </association>
-   </sysname>
-</username>
 
 <username name="i2cbus1" line="7">
    <sysname name="I2CBus">
@@ -130,6 +111,7 @@
   </association>
   </sysname>
 </configuration>
+
 </system>
 
 <problem>

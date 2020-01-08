@@ -5,6 +5,7 @@ import imc.types.Module;
 import imc.types.ModuleEntrySystemPart;
 import imc.types.Parameter;
 import imc.types.Platform;
+import imc.types.PlatformSystemElement;
 import imc.utilities.EvaluateNamedExpression;
 import imc.utilities.Log;
 
@@ -89,21 +90,21 @@ public class CheckPinsDoNotCollide {
 	 * @author mueller
 	 *
 	 */
-	
+
 	class PinProvider{
 		public String providerName;
 		private ArrayList<UsedPin> usedBits;
-		
-		
+
+
 		/**
 		 * create an empty list of used bits for the named  provider 
 		 * @param name name of the provider
 		 */
-		 public PinProvider(String name) {
+		public PinProvider(String name) {
 			providerName = name;
 			usedBits=new ArrayList<UsedPin>();
 		}
-		
+
 		/**
 		 * mark a range of pins as used; this is useful for digital i/o, when several bits
 		 * are used as i/o device for bit strings
@@ -113,16 +114,52 @@ public class CheckPinsDoNotCollide {
 		 * @param se the {@link ModuleEntrySystemPart} which uses these pins or bits
 		 */
 		public void usePins(int start, int width, ModuleEntrySystemPart se) {
-		while(width > 0) {
-		   usedBits.add(new UsedPin(start, se));
-		   start--;
-		   width--;
-		}
-	}		
+			while(width > 0) {
+				usedBits.add(new UsedPin(start, se));
+				start--;
+				width--;
+			}
+		}		
 	}
 	
 
 	public CheckPinsDoNotCollide(List<Module> modules) {
+		// check, if we have a configuration elements with attribute "autoInstanciate" 
+		// and check pinDoesNotCollide
+		// if yes, we define the reserved gpio bits as used
+		for (PlatformSystemElement pse: Platform.getInstance().getSystemNames()) {
+		   if (pse.getNode().getAttributes().getNamedItem("autoInstanciate") != null) {
+			   Node checks = imc.utilities.NodeUtils.getChildByName(pse.getNode(), "checks");
+			   if (checks==null) continue;
+			   NodeList check = checks.getChildNodes();
+			   for (int ni=0; ni< check.getLength(); ni++) {
+				   if (check.item(ni).getNodeType() != Node.ELEMENT_NODE) continue;
+				   if (!check.item(ni).getNodeName().equals("check")) continue;
+				   Node pinDoesNotCollide = check.item(ni).getAttributes().getNamedItem("pinDoesNotCollide");
+				   if (pinDoesNotCollide==null) continue;
+				   String provider = pinDoesNotCollide.getTextContent();
+				   Node nbl = check.item(ni).getAttributes().getNamedItem("bitList");
+				   if (nbl == null) {
+					   Log.internalError("autoInstanciated elements with pinDoesNotcollide need 'bitList' attribute");
+					   continue;
+				   }
+ 				   String bitList = nbl.getTextContent();
+ 					Log.info("automatic system entry with pinDoesNotCollide: "+ provider+ ":" +bitList);
+ 					PinProvider pp = getProvider(provider);
+ 			        String[] pins;
+ 			 
+ 			        /* given string will be split by the argument delimiter provided. */
+ 			        pins = bitList.split(",");
+ 			 
+ 			         /* print substrings */
+ 			        for (int i = 0; i < pins.length; i++) {
+ 			            int start = Integer.parseInt(pins[i]);
+ 					    pp.usePins(start, 1, null);
+ 			        }
+ 				} 				   
+			   }
+		   }
+
 		for (Module m: modules) {
 			for (ModuleEntrySystemPart se: m.getSystemElements()) {
 				// find all i2c bus providers and store them into a vector
@@ -195,8 +232,12 @@ public class CheckPinsDoNotCollide {
 							imc.utilities.Log.setLocation(m.getSourceFileName(), mse2.getLine());
 							Log.error("'"+ definitionFromUsername(mse2) + " "+ errorMsg+ " " + pp.usedBits.get(j).pin
 									+ " already in use");
-							Log.note(m.getSourceFileName(), mse1.getLine(),
+							if (mse1 != null) {
+							   Log.note(m.getSourceFileName(), mse1.getLine(),
 									"previous usage in '" + definitionFromUsername(mse1)+"'");
+							} else {
+							   Log.note("is reserved for system driver or other application");								
+							}
 						}
 					}
 				}
