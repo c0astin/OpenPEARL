@@ -1,6 +1,6 @@
    <connection name="LogFile">
       <parameters>
-         <CHAR length="32767">
+         <CHAR length="32767" name="logFileName">
             <NotEmpty/>
          </CHAR>
       </parameters>
