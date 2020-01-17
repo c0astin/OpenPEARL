@@ -16,9 +16,11 @@ import org.w3c.dom.NodeList;
 /**
  * check if an I2C address is not used conflicting with other devices on the same bus
  * 
- * Some devices allow multiple dations (like port expanders) -> their address is "shareable"
+ * Some devices allow multiple dations (like port expanders) -&gt;
+ *	 their address is "shareable"
  * 
- * Other devices allow to be used by one dation -> their address is "nonSharable"
+ * Other devices allow to be used by one dation -&gt;
+ *       their address is "nonSharable"
  * 
  * @author mueller
  *
