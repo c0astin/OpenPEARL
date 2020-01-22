@@ -32,9 +32,9 @@
 #include "Signals.h"
 
 namespace pearlrt {
-   void assignIntToFixedViaVoidPointer(
+   void assignInt32ToFixedViaVoidPointer(
            void* voidPointerToFixed,
-           size_t lengthOfFixed, int valueToAssign) {
+           size_t lengthOfFixed, int32_t valueToAssign) {
       // test if the valueToAssign is larger than the Fixed-type may
       // store
       // Example with FIXED(3)
@@ -42,9 +42,9 @@ namespace pearlrt {
       //    maximum value: 0...00000111  (+7)
       //    mask:          1...11111000
       //    value AND mask:must be ether 0 or mask to fit in the data type
-      unsigned int mask = (unsigned int) - 1; // creates all bits as 1
-      unsigned int maskedValue;
-      unsigned int unsignedValue = *(unsigned int*)&valueToAssign;
+      uint32_t mask = (uint32_t) (- 1); // creates all bits as 1
+      uint32_t maskedValue;
+      uint32_t unsignedValue = *(uint32_t*)&valueToAssign;
 
       mask <<= lengthOfFixed;
 
@@ -60,7 +60,7 @@ namespace pearlrt {
          } else if (lengthOfFixed <= 63) {
             *(int64_t*)voidPointerToFixed = valueToAssign;
          } else {
-            Log::error("illegel length for int to Fixed Assign (%zu)",
+            Log::error("illegal length for int to Fixed Assign (%zu)",
                        lengthOfFixed);
             throw theInternalDationSignal;
          }

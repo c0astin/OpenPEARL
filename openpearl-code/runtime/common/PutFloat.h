@@ -258,9 +258,13 @@ namespace pearlrt {
 
          // exp field, decimal point and digits
          // w-s denote thenumber of digits in front of the decimal point
-         // -3 due to decimal point and E and sign of exponent
+         // -2 due to E and sign of exponent
+         // the decimal point is shown only if d>0
          // eSize denotes the number of digits in the exponent
-         leadingSpaces = w.x - s.x - 3 - eSize.x;
+         leadingSpaces = w.x - s.x - 2 - eSize.x;
+         if ((d > (Fixed<31>)0).getBoolean() ) {
+             leadingSpaces --;
+         }
 
          x = floatValue;
 
@@ -339,7 +343,9 @@ namespace pearlrt {
             y = y / (Float<52>)10.0;
             prePointDigits --;
          }
-         sink.putChar('.');
+         if ((d > (Fixed<31>)0).getBoolean() ) {
+            sink.putChar('.');
+         }
 
          y = (Float<52>)10.0;
          while (postPointDigits > 0) {

@@ -344,6 +344,40 @@ namespace pearlrt {
                       const Fixed<31> d = 0) ;
 
       /**
+       output format E with Float with the IOJob interface
+
+       \param f pointer to the FLOAT value to be printed
+       \param len the length of the FLOAT type
+       \param index the current index if we are in an array
+       \param w width of the output field
+       \param d number of decimals to be used
+       \param s number of significant digits
+       \param expSize number of digits in the exponent
+       \tparam  S width of the fixed value type
+       */
+      void toFloatE(void *f, size_t len, size_t index, const Fixed<31> w,
+                    const Fixed<31> d,
+                    const Fixed<31> s,
+		    const int expSize );
+ 
+      /**
+       input format E with Float with the IOJob interface
+
+       \param f pointer to the FLOAT value to be printed
+       \param len the length of the FLOAT type
+       \param index the current index if we are in an array
+       \param w width of the output field
+       \param d number of decimals to be used
+       \param s number of significant digits
+       \param expSize number of digits in the exponent
+       \tparam  S width of the fixed value type
+       */
+      void fromFloatE(void *f, size_t len, size_t index, const Fixed<31> w,
+                    const Fixed<31> d,
+                    const Fixed<31> s,
+		    const int expSize );
+ 
+      /**
        output format F with Fixed with the IOJob interface
 
        \param f pointer to the FIXED value to be printed

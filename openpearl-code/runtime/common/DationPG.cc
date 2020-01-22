@@ -164,7 +164,6 @@ namespace pearlrt {
       LoopControl formatLoop(formatList->nbrOfEntries, true);
       LoopControl dataLoop(dataList->nbrOfEntries, false);
 
-
       try {
          beginSequence(me, Dation::OUT);
 
@@ -172,18 +171,19 @@ namespace pearlrt {
          dataElement = dataLoop.next();
 
          while (dataElement < (int)dataList->nbrOfEntries) {
-            // test for begin of loop, repeatedly
+            // test for begin of loop, repeatedly for nested loops
             while (dataList->entry[dataElement].dataType.baseType ==
                    IODataEntry::LoopStart) {
                dataElement = dataLoop.enter(
                                 dataList->entry[dataElement].dataType.dataWidth,
-                                *dataList->entry[dataElement].param1.numberOfElements,
+                                dataList->entry[dataElement].param1.numberOfElements,
                                 dataList->entry[dataElement].dataPtr.offsetIncrement);
             }
 
-            // treat arrays of simple types
+            // treat all data entries, which are  simple types or arrays of simple types
+            // structs were unrolled by the compiler
             for (size_t dataIndex = 0;
-                  dataIndex < * (dataList->entry[dataElement].param1.numberOfElements);
+                  dataIndex < (dataList->entry[dataElement].param1.numberOfElements);
                   dataIndex++) {
 
                formatItem = formatLoop.next();
@@ -207,14 +207,13 @@ namespace pearlrt {
                                      formatList->entry[formatItem].fp2.intValue);
                   }
                }
-
                putDataFormat(me, &dataList->entry[dataElement],
                              dataIndex,
                              dataLoop.getOffset(),
                              &formatList->entry[formatItem]);
             }
 
-            // end of array od simple type
+            // end of array of simple type
             // take next data element
             dataElement = dataLoop.next();
          }
@@ -282,13 +281,13 @@ namespace pearlrt {
                    IODataEntry::LoopStart) {
                dataElement = dataLoop.enter(
                                 dataList->entry[dataElement].dataType.dataWidth,
-                                *dataList->entry[dataElement].param1.numberOfElements,
+                                dataList->entry[dataElement].param1.numberOfElements,
                                 dataList->entry[dataElement].dataPtr.offsetIncrement);
             }
 
             // treat arrays of simple types
             for (size_t dataIndex = 0;
-                  dataIndex < * (dataList->entry[dataElement].param1.numberOfElements);
+                  dataIndex < (dataList->entry[dataElement].param1.numberOfElements);
                   dataIndex++) {
 
                formatItem = formatLoop.next();

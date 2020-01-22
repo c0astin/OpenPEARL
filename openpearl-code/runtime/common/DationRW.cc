@@ -139,6 +139,7 @@ namespace pearlrt {
    }
 
    void DationRW::dationWrite(void* data, size_t size) {
+
       assertOpen();
 
       if (!(dationParams & (OUT | INOUT))) {
@@ -226,7 +227,7 @@ namespace pearlrt {
          for (dataElement = 0; dataElement < dataList->nbrOfEntries;
                dataElement++) {
             dationWrite(dataList->entry[dataElement].dataPtr.inData,
-                        *dataList->entry[dataElement].param1.numberOfElements);
+                        dataList->entry[dataElement].param1.numberOfElements);
          }
 
          endSequence(me);
@@ -265,7 +266,7 @@ namespace pearlrt {
          for (dataElement = 0; dataElement < dataList->nbrOfEntries;
                dataElement++) {
             dationRead(dataList->entry[dataElement].dataPtr.inData,
-                       *dataList->entry[dataElement].param1.numberOfElements);
+                       dataList->entry[dataElement].param1.numberOfElements);
          }
 
          endSequence(me);

@@ -137,24 +137,30 @@ namespace pearlrt {
          throw theInternalDationSignal;
 
       case IOFormatEntry::X:
-         toX(*fmtEntry->fp1.constF31Ptr);
+         toX(fmtEntry->fp1.f31);
          break;
 
       case IOFormatEntry::ADV1:
-         adv(*fmtEntry->fp1.constF31Ptr);
+         adv(fmtEntry->fp1.f31);
          break;
 
       case IOFormatEntry::POS1:
-         pos(*fmtEntry->fp1.constF31Ptr);
+         pos(fmtEntry->fp1.f31);
          break;
 
       case IOFormatEntry::SOP1:
-         sop(*fmtEntry->fp1.f31Ptr);
+         {
+            Fixed<31> help;
+            sop(help);
+	    assignInt32ToFixedViaVoidPointer(fmtEntry->fp1.fxxPtr.voidPtr,
+             				   fmtEntry->fp1.fxxPtr.size,
+					   help.x);
+         }
          break;
 
       case IOFormatEntry::RST:
-         rst(fmtEntry->fp1.voidPtr,
-             fmtEntry->fp2.intValue);
+         rst(fmtEntry->fp1.fxxPtr.voidPtr,
+             fmtEntry->fp1.fxxPtr.size);
          break;
 
       case IOFormatEntry::InduceFormat:
@@ -175,24 +181,30 @@ namespace pearlrt {
          break;
 
       case IOFormatEntry::X:
-         fromX(*fmtEntry->fp1.constF31Ptr);
+         fromX(fmtEntry->fp1.f31);
          break;
 
       case IOFormatEntry::ADV1:
-         adv(*fmtEntry->fp1.constF31Ptr);
+         adv(fmtEntry->fp1.f31);
          break;
 
       case IOFormatEntry::POS1:
-         pos(*fmtEntry->fp1.constF31Ptr);
+         pos(fmtEntry->fp1.f31);
          break;
 
       case IOFormatEntry::SOP1:
-         sop(*fmtEntry->fp1.f31Ptr);
+         {
+            pearlrt::Fixed<31> help;
+            sop(help);
+	    assignInt32ToFixedViaVoidPointer(fmtEntry->fp1.fxxPtr.voidPtr,
+             				   fmtEntry->fp1.fxxPtr.size,
+					   help.x);
+         }
          break;
 
       case IOFormatEntry::RST:
-         rst(fmtEntry->fp1.voidPtr,
-             fmtEntry->fp2.intValue);
+         rst(fmtEntry->fp1.fxxPtr.voidPtr,
+             fmtEntry->fp1.fxxPtr.size);
          break;
 
       case IOFormatEntry::InduceFormat:
@@ -225,13 +237,13 @@ namespace pearlrt {
                    IODataEntry::LoopStart) {
                dataElement = dataLoop.enter(
                                 dataList->entry[dataElement].dataType.dataWidth,
-                                *dataList->entry[dataElement].param1.numberOfElements,
+                                dataList->entry[dataElement].param1.numberOfElements,
                                 dataList->entry[dataElement].dataPtr.offsetIncrement);
             }
 
             // treat arrays of simple types
             for (size_t dataIndex = 0;
-                  dataIndex < * (dataList->entry[dataElement].param1.numberOfElements);
+                  dataIndex < (dataList->entry[dataElement].param1.numberOfElements);
                   dataIndex++) {
 
                formatItem = formatLoop.next();
@@ -325,13 +337,13 @@ namespace pearlrt {
                    IODataEntry::LoopStart) {
                dataElement = dataLoop.enter(
                                 dataList->entry[dataElement].dataType.dataWidth,
-                                *dataList->entry[dataElement].param1.numberOfElements,
+                                dataList->entry[dataElement].param1.numberOfElements,
                                 dataList->entry[dataElement].dataPtr.offsetIncrement);
             }
 
             // treat arrays of simple types
             for (size_t dataIndex = 0;
-                  dataIndex < * (dataList->entry[dataElement].param1.numberOfElements);
+                  dataIndex < (dataList->entry[dataElement].param1.numberOfElements);
                   dataIndex++) {
 
                formatItem = formatLoop.next();

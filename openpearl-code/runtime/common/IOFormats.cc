@@ -87,6 +87,48 @@ namespace pearlrt {
       }
    }
 
+   void IOFormats::toFloatE(void *s, size_t index, size_t len,
+                            const Fixed<31> w,
+                            const Fixed<31> d,
+                            const Fixed<31> significance,
+ 			    const int expSize) {
+      checkCapacity(w);
+
+      if (len == 23) {
+         Float<23> * f = (Float<23>*)s;
+         f += index;
+         PutFloat<23>::toE(*f, w, d,significance, expSize, *sink);
+      } else if (len == 52) {
+         Float<52> * f = (Float<52>*)s;
+         f += index;
+         PutFloat<52>::toE(*f, w, d,significance, expSize, *sink);
+      } else {
+         Log::error("unsupported length of float E-format (len=%zu)", len);
+         throw theInternalDationSignal;
+      }
+   }
+
+   void IOFormats::fromFloatE(void *s, size_t index, size_t len,
+                            const Fixed<31> w,
+                            const Fixed<31> d,
+                            const Fixed<31> significance,
+ 			    const int expSize) {
+      checkCapacity(w);
+
+      if (len == 23) {
+         Float<23> * f = (Float<23>*)s;
+         f += index;
+         GetFloat<23>::fromE(*f, w, d,significance, *source);
+      } else if (len == 52) {
+         Float<52> * f = (Float<52>*)s;
+         f += index;
+         GetFloat<52>::fromE(*f, w, d,significance, *source);
+      } else {
+         Log::error("unsupported length of float E-format (len=%zu)", len);
+         throw theInternalDationSignal;
+      }
+   }
+
    void IOFormats::fromFloatF(void *s, size_t index,
                               size_t len,
                               const Fixed<31> w,
@@ -249,7 +291,8 @@ namespace pearlrt {
 
 
    int IOFormats::putDataFormat(TaskCommon * me, IODataEntry * dataEntry,
-                                size_t index, size_t loopOffset, IOFormatEntry * fmtEntry) {
+                                size_t index, size_t loopOffset,
+                                IOFormatEntry * fmtEntry) {
       int returnValue = 0;
 
       switch (dataEntry->dataType.baseType) {
@@ -261,18 +304,19 @@ namespace pearlrt {
                 dataEntry->dataPtr.inData,
                 dataEntry->dataType.baseType,
                 dataEntry->dataType.dataWidth,
-                *dataEntry->param1.numberOfElements);
+                dataEntry->param1.numberOfElements);
          break;
 
       case IODataEntry::CHAR:
-         if (fmtEntry->format == IOFormatEntry::A) {
+         if (fmtEntry->format == IOFormatEntry::A ||
+             fmtEntry->format == IOFormatEntry::LIST) {
             toA((char*)(dataEntry->dataPtr.inData) + loopOffset,
                 dataEntry->dataType.dataWidth,
                 (Fixed<31>)(dataEntry->dataType.dataWidth));
          } else if (fmtEntry->format == IOFormatEntry::Aw) {
             toA((char*)(dataEntry->dataPtr.inData) + loopOffset,
                 dataEntry->dataType.dataWidth,
-                *fmtEntry->fp1.constF31Ptr);
+                fmtEntry->fp1.f31);
          } else {
             Log::error("type mismatch in A format");
             throw theDationDatatypeSignal;
@@ -281,15 +325,17 @@ namespace pearlrt {
          break;
 
       case IODataEntry::FIXED:
-         if (fmtEntry->format == IOFormatEntry::Fw) {
+         if (fmtEntry->format == IOFormatEntry::F) {
             toFixedF((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
                      dataEntry->dataType.dataWidth,
-                     *fmtEntry->fp1.constF31Ptr);
-         } else if (fmtEntry->format == IOFormatEntry::Fwd) {
+                     fmtEntry->fp1.f31,
+                     fmtEntry->fp2.f31);
+         } else if (fmtEntry->format == IOFormatEntry::LIST) {
+            int width=dataEntry->dataType.dataWidth;
+            width = width/3.32+2;
             toFixedF((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
                      dataEntry->dataType.dataWidth,
-                     *fmtEntry->fp1.constF31Ptr,
-                     *fmtEntry->fp2.constF31Ptr);
+                     width);
          } else {
             Log::error("type mismatch in F format");
             throw theDationDatatypeSignal;
@@ -299,15 +345,31 @@ namespace pearlrt {
 
 
       case IODataEntry::FLOAT:
-         if (fmtEntry->format == IOFormatEntry::Fw) {
-            toFloatF((char*)(dataEntry->dataPtr.inData) + loopOffset, index ,
-                     dataEntry->dataType.dataWidth,
-                     *fmtEntry->fp1.constF31Ptr);
-         } else if (fmtEntry->format == IOFormatEntry::Fwd) {
+         if (fmtEntry->format == IOFormatEntry::F) {
             toFloatF((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
                      dataEntry->dataType.dataWidth,
-                     *fmtEntry->fp1.constF31Ptr,
-                     *fmtEntry->fp2.constF31Ptr);
+                     fmtEntry->fp1.f31,
+                     fmtEntry->fp2.f31);
+         } else if (fmtEntry->format == IOFormatEntry::E2) {
+            toFloatE((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
+                     dataEntry->dataType.dataWidth,
+                     fmtEntry->fp1.f31,
+                     fmtEntry->fp2.f31,
+                     fmtEntry->fp3.f31,
+		     2);
+         } else if (fmtEntry->format == IOFormatEntry::E3) {
+            toFloatE((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
+                     dataEntry->dataType.dataWidth,
+                     fmtEntry->fp1.f31,
+                     fmtEntry->fp2.f31,
+                     fmtEntry->fp3.f31,
+		     3);
+         } else if (fmtEntry->format == IOFormatEntry::LIST) {
+            int width = dataEntry->dataType.dataWidth;
+            width = width/3.32+3;
+            toFloatE((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
+                     dataEntry->dataType.dataWidth,
+                     width, width-7, width-6, 2);
          } else {
             Log::error("type mismatch in F format");
             throw theDationDatatypeSignal;
@@ -326,16 +388,53 @@ namespace pearlrt {
             Log::error("type mismatch in B format");
             throw theDationDatatypeSignal;
 
+         case IOFormatEntry::LIST:
          case IOFormatEntry::B1:
             base = 1;
             length = dataEntry->dataType.dataWidth;
-            width = (Fixed<31>)(length);
+            width = (length + base - 1) / base ;
             break;
 
          case IOFormatEntry::B1w:
             base = 1;
             length = dataEntry->dataType.dataWidth;
-            width = (Fixed<31>)(dataEntry->dataType.dataWidth);
+            width = fmtEntry->fp1.f31;
+            break;
+         
+	case IOFormatEntry::B2:
+            base = 2;
+            length = dataEntry->dataType.dataWidth;
+            width = (length + base - 1) / base ;
+            break;
+
+         case IOFormatEntry::B2w:
+            base = 2;
+            length = dataEntry->dataType.dataWidth;
+            width = fmtEntry->fp1.f31;
+            break;
+         
+	case IOFormatEntry::B3:
+            base = 3;
+            length = dataEntry->dataType.dataWidth;
+            width = (length + base - 1) / base ;
+            break;
+
+         case IOFormatEntry::B3w:
+            base = 3;
+            length = dataEntry->dataType.dataWidth;
+            width = fmtEntry->fp1.f31;
+            break;
+         
+	case IOFormatEntry::B4:
+            base = 4;
+            length = dataEntry->dataType.dataWidth;
+            width = (length + base - 1) / base;
+            break;
+
+         case IOFormatEntry::B4w:
+            base = 4;
+            length = dataEntry->dataType.dataWidth;
+            width = fmtEntry->fp1.f31;
             break;
          }
 
@@ -343,6 +442,41 @@ namespace pearlrt {
                length, base, width);
       }
       break;
+
+      case IODataEntry::CLOCK:
+         if (fmtEntry->format == IOFormatEntry::T) {
+            toT(*(pearlrt::Clock*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+                     fmtEntry->fp1.f31,
+                     fmtEntry->fp2.f31);
+         } else if (fmtEntry->format == IOFormatEntry::LIST) {
+            toT(*(pearlrt::Clock*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+                     8,0);
+         } else {
+            Log::error("type mismatch in T format");
+            throw theDationDatatypeSignal;
+         }
+
+         break;
+
+
+      case IODataEntry::DURATION:
+         if (fmtEntry->format == IOFormatEntry::D) {
+            toD(*(pearlrt::Duration*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+                     fmtEntry->fp1.f31,
+                     fmtEntry->fp2.f31);
+         } else if (fmtEntry->format == IOFormatEntry::LIST) {
+            toD(*(pearlrt::Duration*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+                     20,0);
+         } else {
+            Log::error("type mismatch in D format");
+            throw theDationDatatypeSignal;
+         }
+
+         break;
 
 
       case IODataEntry::InduceData:
@@ -366,18 +500,19 @@ namespace pearlrt {
                 dataEntry->dataPtr.inData,
                 dataEntry->dataType.baseType,
                 dataEntry->dataType.dataWidth,
-                *dataEntry->param1.numberOfElements);
+                dataEntry->param1.numberOfElements);
          break;
 
       case IODataEntry::CHAR:
-         if (fmtEntry->format == IOFormatEntry::A) {
+         if (fmtEntry->format == IOFormatEntry::A ||
+             fmtEntry->format == IOFormatEntry::LIST) {
             fromA((char*)(dataEntry->dataPtr.inData) + loopOffset,
                   dataEntry->dataType.dataWidth,
                   (Fixed<31>)(dataEntry->dataType.dataWidth));
          } else if (fmtEntry->format == IOFormatEntry::Aw) {
             fromA((char*)(dataEntry->dataPtr.inData) + loopOffset,
                   dataEntry->dataType.dataWidth,
-                  *fmtEntry->fp1.constF31Ptr);
+                  fmtEntry->fp1.f31);
          } else {
             Log::error("type mismatch in A format");
             throw theDationDatatypeSignal;
@@ -386,15 +521,17 @@ namespace pearlrt {
          break;
 
       case IODataEntry::FIXED:
-         if (fmtEntry->format == IOFormatEntry::Fw) {
+         if (fmtEntry->format == IOFormatEntry::F) {
             fromFixedF((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
                        dataEntry->dataType.dataWidth,
-                       *fmtEntry->fp1.constF31Ptr);
-         } else if (fmtEntry->format == IOFormatEntry::Fwd) {
+                       fmtEntry->fp1.f31,
+                       fmtEntry->fp2.f31);
+         } else if (fmtEntry->format == IOFormatEntry::LIST) {
+            int width=dataEntry->dataType.dataWidth;
+            width = width/3.32+2;
             fromFixedF((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
                        dataEntry->dataType.dataWidth,
-                       *fmtEntry->fp1.constF31Ptr,
-                       *fmtEntry->fp2.constF31Ptr);
+                       width);
          } else {
             Log::error("type mismatch in F format");
             throw theDationDatatypeSignal;
@@ -404,15 +541,29 @@ namespace pearlrt {
 
 
       case IODataEntry::FLOAT:
-         if (fmtEntry->format == IOFormatEntry::Fw) {
-            fromFloatF((char*)(dataEntry->dataPtr.inData) + loopOffset, index ,
-                       dataEntry->dataType.dataWidth,
-                       *fmtEntry->fp1.constF31Ptr);
-         } else if (fmtEntry->format == IOFormatEntry::Fwd) {
+         if (fmtEntry->format == IOFormatEntry::F) {
             fromFloatF((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
                        dataEntry->dataType.dataWidth,
-                       *fmtEntry->fp1.constF31Ptr,
-                       *fmtEntry->fp2.constF31Ptr);
+                       fmtEntry->fp1.f31,
+                       fmtEntry->fp2.f31);
+         } else if (fmtEntry->format == IOFormatEntry::E2) {
+            fromFloatE((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
+                       dataEntry->dataType.dataWidth,
+                       fmtEntry->fp1.f31,
+                       fmtEntry->fp2.f31,
+                       fmtEntry->fp3.f31,2);
+         } else if (fmtEntry->format == IOFormatEntry::E3) {
+            fromFloatE((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
+                       dataEntry->dataType.dataWidth,
+                       fmtEntry->fp1.f31,
+                       fmtEntry->fp2.f31,
+                       fmtEntry->fp3.f31,3);
+         } else if (fmtEntry->format == IOFormatEntry::LIST) {
+            int width = dataEntry->dataType.dataWidth;
+            width = width/3.32+3;
+            fromFloatE((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
+                       dataEntry->dataType.dataWidth,
+                     width, width-7, width-6, 2);
          } else {
             Log::error("type mismatch in F format");
             throw theDationDatatypeSignal;

@@ -117,7 +117,7 @@ namespace pearlrt {
       Any valid float constant is accepted. There is no implicit 
       decimal point position as in the F-format!
 
-      The parameters d and s are abosolte in input direction!
+      The parameters d and s are abosolute in input direction!
 
       \param f the variable which gets the read value
       \param w the input field width

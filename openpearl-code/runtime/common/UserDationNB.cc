@@ -298,7 +298,7 @@ namespace pearlrt {
       assertOpenDirect();
 
       if (dim->getDimensions() < 2) {
-         Log::error("UserDationNB: SOP(x,y) needs two DIMs");
+         Log::error("UserDationNB: SOP(,) needs two DIMs");
          throw theInternalDationSignal;
       }
 
@@ -312,7 +312,7 @@ namespace pearlrt {
       assertOpenDirect();
 
       if (dim->getDimensions() < 3) {
-         Log::error("UserdationNB: SOP needs DIM");
+         Log::error("UserdationNB: SOP(,,) needs three DIMs");
          throw theInternalDationSignal;
       }
 
@@ -498,16 +498,16 @@ namespace pearlrt {
 
 
       if (tfuBuffer.isUsed()) {
-         //calculate new position
+         //calculate difference to new position
          // add 1, since dim-> counts with starting 0,
-         //         and UserDationNB starts with 1
-         page = dim->getPage() - oldPage + one;
-         row = dim->getRow() - oldRow + one;
-         element  = dim->getColumn() - oldCol + one;
+         //         and UserDationNB starts counting with 1
+         page = (dim->getPage() + one) - oldPage;
+         row = (dim->getRow() + one) - oldRow;
+         element  = (dim->getColumn() +one) - oldCol;
 
          // now: page,row,element contains the difference to the
          // previous position
-//printf("diff: p=%d, r=%d e=%d\n", page.x, row.x, element.x);
+//printf("diff: page=%d, row=%d element=%d\n", page.x, row.x, element.x);
 //printf("  new: p=%d, r=%d e=%d\n",
 //         dim->getPage().x+1, dim->getRow().x+1, dim->getColumn().x+1);
 
@@ -516,10 +516,11 @@ namespace pearlrt {
          if (tfuBuffer.isNotEmpty() &&
                (row.x != 0 || page.x != 0)) {
             tfuBuffer.flushRecord();
+	    row = row - one;  // one line printed
             tfuBuffer.prepare();
 
             if (dationParams & Dation::FORWARD && dationType == ALPHIC) {
-               fill(1, '\n');
+//               fill(1, '\n');
             }
          }
 
@@ -539,6 +540,7 @@ namespace pearlrt {
          // now treat the lines and pages for forward dation
          if (dationParams & Dation::FORWARD) {
             // calculate number of complete rows to be written
+            
 //printf("toAdv: p/r/c: %d/%d/%d", page.x, row.x, element.x);
             row = row + dim->getRows() * page;
 
@@ -548,7 +550,7 @@ namespace pearlrt {
                   tfuBuffer.flushRecord();
 
                   if (dationParams & Dation::FORWARD && dationType == ALPHIC) {
-                     fill(1, '\n');
+//                     fill(1, '\n');
                   }
                } else {
                   tfuBuffer.readRecord(dationType == ALPHIC);
@@ -682,6 +684,7 @@ namespace pearlrt {
          // no TFU buffer active
          if (dationParams & Dation::DIRECT)  {
             adv(page, row, element);
+
             ((SystemDationNB*)systemDation)->dationSeek(dim->getIndex() * stepSize, dationParams);
          } else if (dationParams & Dation::FORWARD)  {
             if (dationType == ALPHIC) {
@@ -1054,16 +1057,101 @@ namespace pearlrt {
          throw theInternalDationSignal;
 
       case IOFormatEntry::X:
-         toX(*fmtEntry->fp1.constF31Ptr);
+         toX(fmtEntry->fp1.f31);
          break;
 
       case IOFormatEntry::SKIP:
-         toSkip(*fmtEntry->fp1.constF31Ptr);
+         toSkip(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::PAGE:
+         toPage(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::EOFPOS:
+         eof();
+         break;
+
+      case IOFormatEntry::LINE:
+         line(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::COL:
+         col(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::POS1:
+         pos(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::POS2:
+         pos(fmtEntry->fp1.f31,
+               fmtEntry->fp2.f31);
+         break;
+
+      case IOFormatEntry::POS3:
+         pos(fmtEntry->fp1.f31,
+               fmtEntry->fp2.f31,
+               fmtEntry->fp3.f31);
+         break;
+
+      case IOFormatEntry::ADV1:
+         toAdv(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::ADV2:
+         toAdv(fmtEntry->fp1.f31,
+               fmtEntry->fp2.f31);
+         break;
+
+      case IOFormatEntry::ADV3:
+         toAdv(fmtEntry->fp1.f31,
+               fmtEntry->fp2.f31,
+               fmtEntry->fp3.f31);
+         break;
+
+      case IOFormatEntry::SOP1:
+         {
+            Fixed<31> col; 
+            sop(&col);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp1.fxxPtr.voidPtr,
+                                           fmtEntry->fp1.fxxPtr.size,
+                                           col.x);
+         }
+         break;
+
+      case IOFormatEntry::SOP2:
+         {
+            Fixed<31> col, line; 
+            sop(&line,&col);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp1.fxxPtr.voidPtr,
+                                           fmtEntry->fp1.fxxPtr.size,
+                                           line.x);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp2.fxxPtr.voidPtr,
+                                           fmtEntry->fp2.fxxPtr.size,
+                                           col.x);
+         }
+         break;
+
+      case IOFormatEntry::SOP3:
+         {
+            Fixed<31> col, line , page; 
+            sop(&page, &line,&col);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp1.fxxPtr.voidPtr,
+                                           fmtEntry->fp1.fxxPtr.size,
+                                           page.x);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp2.fxxPtr.voidPtr,
+                                           fmtEntry->fp2.fxxPtr.size,
+                                           line.x);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp3.fxxPtr.voidPtr,
+                                           fmtEntry->fp3.fxxPtr.size,
+                                           col.x);
+         }
          break;
 
       case IOFormatEntry::RST:
-         rst(fmtEntry->fp1.voidPtr,
-             fmtEntry->fp2.intValue);
+         rst(fmtEntry->fp1.fxxPtr.voidPtr,
+             fmtEntry->fp1.fxxPtr.size);
          break;
 
       case IOFormatEntry::InduceFormat:
@@ -1084,17 +1172,16 @@ namespace pearlrt {
          break;
 
       case IOFormatEntry::X:
-         fromX(*fmtEntry->fp1.constF31Ptr);
+         fromX(fmtEntry->fp1.f31);
          break;
 
       case IOFormatEntry::SKIP:
-         fromSkip(*fmtEntry->fp1.constF31Ptr);
+         fromSkip(fmtEntry->fp1.f31);
          break;
 
       case IOFormatEntry::RST:
-         rst(fmtEntry->fp1.voidPtr,
-             fmtEntry->fp2.intValue);
-         break;
+         rst(fmtEntry->fp1.fxxPtr.voidPtr,
+             fmtEntry->fp1.fxxPtr.size);
 
       case IOFormatEntry::InduceFormat:
          Signal::throwSignalByRst(fmtEntry->fp1.intValue);

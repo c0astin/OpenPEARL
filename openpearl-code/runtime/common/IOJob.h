@@ -220,24 +220,25 @@ namespace pearlrt {
        },
        { // index 1
           .format=IOFormatEntry::Fw,
-          .fp1={.outParam=&CONST_FIXED_POS_5_31,
+          .fp1={.f31=CONST_FIXED_POS_5_31,
        },
        { // index 2
           .format=IOFormatEntry::X,
-          .fp1={.outParam=&resultOfExpr2},
+          .fp1={.f31=resultOfExpr2},
        },
        { // index 3
           .format=IOFormatEntry::Aw,
-          .fp1={.outParam=&CONST_FIXED_POS_4_31,
+          .fp1={.f31=CONST_FIXED_POS_4_31,
        },
        { // index
-          .format=IOFormatEntry::E2wd,
-          .fp1={.outParam=&CONST_FIXED_POS_13_31,
-          .fp2={.outParam=&CONST_FIXED_POS_6_31,
+          .format=IOFormatEntry::E2,
+          .fp1={.f31=CONST_FIXED_POS_13_31,
+          .fp2={.f31=CONST_FIXED_POS_6_31,
+          .fp2={.f31=CONST_FIXED_POS_7_31,
        },
        { // index 5
           .format=IOFormatEntry::SKIP,
-          .fp1={.outParam=&CONST_FIXD_POS_1_31},
+          .fp1={.f31=CONST_FIXD_POS_1_31},
        },
     };
 
@@ -290,7 +291,7 @@ namespace pearlrt {
    {
       .dataType={IODataEntry::FLOAT,52},
       .dataPtr.inData = _x,
-      .numberOfElements = & one,
+      .numberOfElements = one,
    }
    \endcode
 
@@ -389,7 +390,7 @@ namespace pearlrt {
       */
       union { 
          /** pointer to the number of data elements */
-         size_t *numberOfElements;
+         size_t numberOfElements;
          /** pointer to the first element in the array to be read */
          size_t * start;
       } param1;  ///< start of array or slice
@@ -424,50 +425,37 @@ namespace pearlrt {
          /** the A-format without width specification */
          A,
          /** the A-format with width specification<br>
-         fp1.outParam must refer the field width */
+         fp1.f31 must refer the field width */
          Aw,
-
-         /** F-format for FIXED and FLOAT types width width<br>
-         fp1.outParam must refer the field width */
-         Fw,
 
          /** F-format for FIXED and FLOAT types with
                        width and precision<br>
-         fp1.outParam must refer the field width <br>
-         fp2.outParam must refer the number of decimals
+         fp1.f31 must refer the field width <br>
+         fp2.f31 must refer the number of decimals
          */
-         Fwd,
+         F,
 
          /** E or E2-format for FLOAT types with
                        width and precision
-         fp1.outParam must refer the field width <br>
-         fp2.outParam must refer the number of decimals
+         fp1.f31 must refer the field width <br>
+         fp2.f31 must refer the number of decimals
          */
 
-         E2wd,
-         /** E3-format for FLOAT types with
-                       width and precision
-         fp1.outParam must refer the field width <br>
-         fp2.outParam must refer the number of decimals
-         */
-
-         E2wds,
+         E2,
          /** E or E2-format for FLOAT types with
                        width, precision and significance
-         fp1.outParam must refer the field width <br>
-         fp2.outParam must refer the number of decimals<br>
-         fp3.outParam must refer the number of significant digits
+         fp1.f31 must refer the field width <br>
+         fp2.f31 must refer the number of decimals<br>
+         fp3.f31 must refer the number of significant digits
          */
 
-         E3wd,
+         E3,
          /** E3-format for FLOAT types with
                        width, precision and significance
-                       width and precision
-         fp1.outParam must refer the field width <br>
-         fp2.outParam must refer the number of decimals<br>
-         fp3.outParam must refer the number of significant digits
+         fp1.f31 must refer the field width <br>
+         fp2.f31 must refer the number of decimals<br>
+         fp3.f31 must refer the number of significant digits
          */
-         E3wds,
 
          /** the B or B1 format without width specification */
          B1,
@@ -478,35 +466,27 @@ namespace pearlrt {
          /** the B4 format without width specification */
          B4,
          /** the B or B1 format width width specification <br>
-         fp1.outParam must refer the field width */
+         fp1.f31 must refer the field width */
          B1w,
          /** the B2 format width width specification<br>
-         fp1.outParam must refer the field width  */
+         fp1.f31 must refer the field width  */
          B2w,
          /** the B3 format width width specification<br>
-         fp1.outParam must refer the field width  */
+         fp1.f31 must refer the field width  */
          B3w,
          /** the B4 format width width specification<br>
-         fp1.outParam must refer the field width  */
+         fp1.f31 must refer the field width  */
          B4w,
 
-         /** T format with width <br>
-         fp1.outParam must refer the field width */
-         Tw,
-
          /** T format with width and decimals<br>
-         fp1.outParam must refer the field width<br>
-         fp2.outParam must refer the number of decimals  */
-         Twd,
-
-         /** D format with width<br>
-         fp1.outParam must refer the field width  */
-         Dw,
+         fp1.f31 must refer the field width<br>
+         fp2.f31 must refer the number of decimals  */
+         T,
 
          /** D format with width and decimals<br>
-         fp1.outParam must refer the field width <br>
-         fp2.outParam must refer the number of decimals */
-         Dwd,
+         fp1.f31 must refer the field width <br>
+         fp2.f31 must refer the number of decimals */
+         D,
 
          /** LIST format will use the default format
              depending on the data type */
@@ -519,7 +499,7 @@ namespace pearlrt {
 
              fp1.intValue must contain the number of enveloped
                   format elements (this entry is not counted)<br>
-             fp2.intValue must contain the number of repetitions
+             fp2.f31 must contain the number of repetitions
          */
          LoopStart,
 
@@ -529,7 +509,7 @@ namespace pearlrt {
          Data entries will be treated inside the IOFormat class
          Format entries will be treated inside the
          UserDationNB class.
-         RST fits better to the format entries.
+         RST fits better to the format entries.<br>
          This element ist never used by the applications
          */
          IsPositioning,
@@ -537,22 +517,22 @@ namespace pearlrt {
          /**
          the RST format entry
 
-         fp1.inData must refer the rst variable<br>
-         fp2.intValue contains the dataSize
+         fp1.fxxPtr.voidPtr must refer the rst variable<br>
+         fp1.fxxPtr.size contains the dataSize
          */
          RST,
 
          /** X positioning<br>
-         fp1.outParam must refer the field width
+         fp1.f31 must contain the field width
          */
          X,
 
          /** SKIP positioning <br>
-         fp1.outParam must refer the number of lines to terminate */
+         fp1.f31 must contain the number of lines to terminate */
          SKIP,
 
          /** PAGE positioning <br>
-         fp1.outParam must refer the number of pages to skip */
+         fp1.f31 must contain the number of pages to skip */
          PAGE,
 
          /** EOF positioning <br>
@@ -560,58 +540,64 @@ namespace pearlrt {
          EOFPOS,
 
          /** advance  ADV 1-dimensional<br>
-         fp1.outParam must refer the number of columns to skip */
+         fp1.outParam contain refer the number of columns to skip */
          ADV1,
 
          /** advance  ADV 2-dimensional<br>
-         fp1.outParam must refer the number of rows to skip<br>
-         fp2.outParam must refer the number of columns to skip */
+         fp1.f31 must contain the number of rows to skip<br>
+         fp2.f31 must contain the number of columns to skip */
          ADV2,
 
          /** advance  ADV 3-dimensional<br>
-         fp1.outParam must refer the number of pages to skip<br>
-         fp2.outParam must refer the number of rows to skip<br>
-         fp3.outParam must refer the number of columns to skip */
+         fp1.f31 must contain the number of pages to skip<br>
+         fp2.f31 must contain the number of rows to skip<br>
+         fp3.f31 must contain the number of columns to skip */
          ADV3,
 
          //-- absolute positioning
 
          /** COL positioning<br>
-         fp1.outParam must refer the target column number*/
+         fp1.f31 must contain the target column number*/
          COL,
 
-         /** ROW positioning<br>
-         fp1.outParam must refer the target row number */
-         ROW,
+         /** LINE positioning<br>
+         fp1.f31 must contain the target line number */
+         LINE,
 
          /** POS 1-dimensional<br>
-         fp1.outParam must refer the target column number*/
+         fp1.f31 must contain the target column number*/
          POS1,
 
          /** POS 2-dimensional<br>
-         fp1.outParam must refer the target row number <br>
-         fp2.outParam must refer the target column number */
+         fp1.f31 must contain the target row number <br>
+         fp2.f31 must contain the target column number */
          POS2,
 
          /** POS 3-dimensional<br>
-         fp1.outParam must refer the target page number<br>
-         fp2.outParam must refer the target row number <br>
-         fp3.outParam must refer the target column number */
+         fp1.f31 must contain the target page number<br>
+         fp2.f31 must contain the target row number <br>
+         fp3.f31 must contain the target column number */
          POS3,
 
          /** SOP 1-dimensional<br>
-         fp1.inParam must refer the variable for the  column number*/
+         fp1.fxxPtr.voidPtr must refer the variable for the  column number<br>
+         fp1.fxxPtr.size contains the size of the FIXED variable*/
          SOP1,
 
          /** SOP 2-dimensional<br>
-         fp1.inParam must refer the variable for the  row number <br>
-         fp2.inParam must refer the variable for the  column number */
+         fp1.fxxPtr.voidPtr must refer the variable for the row/line number<br>
+         fp1.fxxPtr.size contains the size of the FIXED variable<br>
+         fp2.fxxPtr.voidPtr must refer the variable for the  column number<br>
+         fp2.fxxPtr.size contains the size of the FIXED variable*/
          SOP2,
 
          /** SOP 3-dimensional<br>
-         fp1.inParam must refer the variable for the  page number<br>
-         fp2.inParam must refer the variable for the row number <br>
-         fp3.inParam must refer the variable for the  column number */
+         fp1.fxxPtr.voidPtr must refer the variable for the page number<br>
+         fp1.fxxPtr.size contains the size of the FIXED variable<br>
+         fp2.fxxPtr.voidPtr must refer the variable for the row/line number<br>
+         fp2.fxxPtr.size contains the size of the FIXED variable<br>
+         fp3.fxxPtr.voidPtr must refer the variable for the column number<br>
+         fp3.fxxPtr.size contains the size of the FIXED variable*/
          SOP3,
 
          /** a virtual format entry, which is used to inject a PEARL
@@ -638,12 +624,15 @@ namespace pearlrt {
       the formatting like the width of an F-format
       */
       union FormatParameter {
-         /** pointer to a FIXED(31) value to receive results like in SOP */
-         Fixed<31> * f31Ptr;
-         /** pointer to a FIXED(31) value to specify width or precision */
-         Fixed<31> const * constF31Ptr;
-         /** generic pointer used only in RST format for the RST variable */
-         void * voidPtr;
+         /** FIXED(31) value to be used for the width in F-format */
+         Fixed<31>  f31;
+         /** pointer to a FIXED(xx) value to receive results like in SOP */
+         struct {
+            /** start address of the value  */ 
+            void * voidPtr;  
+            /** number of bits (xx) f the FIXED value */
+            int  size;
+         } fxxPtr;
          /** an int value used only in InduceFormat item to specify the
              signal number  */
          int intValue;

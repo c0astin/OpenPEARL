@@ -805,16 +805,23 @@ namespace pearlrt {
    }
 
    /**
-   safe assignment of an int value to a Fixed<lengthOfFixed> value
+   safe assignment of an int32_t value to a Fixed<lengthOfFixed> value
    via a void pointer
+   This function is required for RST and SOP formats.
+
+   lengthOfFixed must be <= 31.<br>
+   <ul>
+     <li>RST numbers are simple ints --- all values fit in int32_t
+     <li>positions in files are at maximum FIXED(31) 
+   </ul>
 
    \param voidPointerToFixed the pointer to the Fixed<..> data
    \param lengthOfFixed the number of bits of the Fixed<..> data
    \param valueToAssign the data for the Fixed<..> data
    \throws FixedRangeSignal, if the valueToAssign violates the Fixed<..> range
    */
-   void assignIntToFixedViaVoidPointer(
-      void* voidPointerToFixed, size_t lengthOfFixed, int valueToAssign);
+   void assignInt32ToFixedViaVoidPointer(
+      void* voidPointerToFixed, size_t lengthOfFixed, int32_t valueToAssign);
 }
 # undef NOSTACKCHECK
 #endif

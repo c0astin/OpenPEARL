@@ -151,7 +151,7 @@ public:
       /**
       translate newline
   
-      \param doNewLineTranslation enbale/disable the translation
+      \param doNewLineTranslation enable/disable the translation
       */
       void translateNewLine(bool doNewLineTranslation);
 
