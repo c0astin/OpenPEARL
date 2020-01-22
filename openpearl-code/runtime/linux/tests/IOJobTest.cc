@@ -117,7 +117,7 @@ testvalue=*(data_array1+
 // TASK DECLARATIONS
 /////////////////////////////////////////////////////////////////////////////
 DCLTASK(_ttt, (pearlrt::Prio( (pearlrt::Fixed<15>)255)), ((pearlrt::BitString<1>)1)) {
-        pearlrt::Float<53>  _x(3.1425); 
+        pearlrt::Float<52>  _x(3.1425); 
         pearlrt::Fixed<15>  _y(4711); 
         pearlrt::Fixed<15>  _z;
 
@@ -142,39 +142,39 @@ printf("begin of print struct\n");
                 // idx 0 (modified)
                 {.dataType={pearlrt::IODataEntry::BIT,1},
                  .dataPtr={.outData=&myDataList.modified},
-                 .param1={.numberOfElements = &one}
+                 .param1={.numberOfElements = one}
                 },
                 // idx 1 (LoopStart)
                 {.dataType={pearlrt::IODataEntry::LoopStart, 5},
                  .dataPtr={.offsetIncrement=sizeof(myDataList.person[0])},
-                 .param1={.numberOfElements=&five},
+                 .param1={.numberOfElements=five},
                 },
                 // idx 2 (name)
                 {.dataType={pearlrt::IODataEntry::CHAR,10},
                  .dataPtr={.outData=&myDataList.person[0].name},
-                 .param1={.numberOfElements = &one}
+                 .param1={.numberOfElements = one}
                 },
                
                 // idx 3 (prename)
                 {.dataType={pearlrt::IODataEntry::CHAR,10},
                  .dataPtr={.outData=&myDataList.person[0].prename},
-                 .param1={.numberOfElements = &one}
+                 .param1={.numberOfElements = one}
                 },
 
                 // idx 4 (day)
                 {.dataType={pearlrt::IODataEntry::FIXED,15},
                  .dataPtr={.outData=&myDataList.person[0].date[0]},
-                 .param1={.numberOfElements = &one}
+                 .param1={.numberOfElements = one}
                 },
                 // idx 5 (month)
                 {.dataType={pearlrt::IODataEntry::FIXED,15},
                  .dataPtr={.outData=&myDataList.person[0].date[1]},
-                 .param1={.numberOfElements = &one}
+                 .param1={.numberOfElements = one}
                 },
                 // idx 6 (year)
                 {.dataType={pearlrt::IODataEntry::FIXED,15},
                  .dataPtr={.outData=&myDataList.person[0].date[2]},
-                 .param1={.numberOfElements = &one}
+                 .param1={.numberOfElements = one}
                 },
                 
                   
@@ -187,7 +187,7 @@ printf("begin of print struct\n");
                },
                { // idx 1
                   .format=pearlrt::IOFormatEntry::SKIP,
-                  .fp1={ .constF31Ptr =&CONSTANT_FIXED_POS_1_31}
+                  .fp1={ .f31 =CONSTANT_FIXED_POS_1_31}
                },
                { // idx 2 LoopStart
                 .format=pearlrt::IOFormatEntry::LoopStart,
@@ -199,7 +199,7 @@ printf("begin of print struct\n");
                },
                { // 4
                   .format=pearlrt::IOFormatEntry::X,
-                  .fp1={ .constF31Ptr =&CONSTANT_FIXED_POS_1_31}
+                  .fp1={ .f31 =CONSTANT_FIXED_POS_1_31}
                },
                { // 5
                 .format=pearlrt::IOFormatEntry::A,
@@ -211,19 +211,19 @@ printf("begin of print struct\n");
                },
                { // idx 7
                   .format=pearlrt::IOFormatEntry::X,
-                  .fp1={ .constF31Ptr =&CONSTANT_FIXED_POS_1_31}
+                  .fp1={ .f31 =CONSTANT_FIXED_POS_1_31}
                },
                { // idx 8
                   .format=pearlrt::IOFormatEntry::Fw,
-                  .fp1={ .constF31Ptr =&CONSTANT_FIXED_POS_4_31}
+                  .fp1={ .f31 =CONSTANT_FIXED_POS_4_31}
                },
                { // idx 9
                   .format=pearlrt::IOFormatEntry::SKIP,
-                  .fp1={ .constF31Ptr =&CONSTANT_FIXED_POS_1_31}
+                  .fp1={ .f31 =CONSTANT_FIXED_POS_1_31}
                },
                { // idx 10 
                   .format=pearlrt::IOFormatEntry::SKIP,
-                  .fp1={ .constF31Ptr =&CONSTANT_FIXED_POS_1_31}
+                  .fp1={ .f31 =CONSTANT_FIXED_POS_1_31}
                },
             };
             pearlrt::IODataList dataList = {
@@ -245,7 +245,7 @@ printf("end of print struct\n");
                {.dataType={pearlrt::IODataEntry::FIXED,31},
                 .dataPtr = {.outData= (data_array1+
                   array1->offset(pearlrt::Fixed<31>(3),pearlrt::Fixed<31>(1)))},
-                .param1={.numberOfElements = &resultOfExpr1},
+                .param1={.numberOfElements = resultOfExpr1},
                }
             };
             pearlrt::IOFormatEntry formatEntries[]= {
@@ -261,15 +261,15 @@ printf("end of print struct\n");
                },
                { // 2
                 .format=pearlrt::IOFormatEntry::Fw,
-                .fp1 ={.constF31Ptr = &CONSTANT_FIXED_POS_6_31},
+                .fp1 ={.f31 = CONSTANT_FIXED_POS_6_31},
                },
                { // 3
                   .format=pearlrt::IOFormatEntry::X,
-                  .fp1={ .constF31Ptr =&CONSTANT_FIXED_POS_1_31}
+                  .fp1={ .f31 =CONSTANT_FIXED_POS_1_31}
                },
                { // 4
                   .format=pearlrt::IOFormatEntry::SKIP,
-                  .fp1={ .constF31Ptr =&CONSTANT_FIXED_POS_1_31}
+                  .fp1={ .f31 =CONSTANT_FIXED_POS_1_31}
                },
            };
 
@@ -285,6 +285,7 @@ printf("end of print struct\n");
                 resultOfExpr1 = ((pearlrt::Fixed<31>)(18)-
                                 (pearlrt::Fixed<31>)(1) +
                                 CONSTANT_FIXED_POS_1_31).x;
+                dataList.entry[0].param1.numberOfElements = resultOfExpr1;
             } catch (Signal & s) {
                dataList.entry[0].dataType.baseType= pearlrt::IODataEntry::InduceData;
                dataList.entry[0].dataType.dataWidth= s.whichRST();
@@ -304,31 +305,31 @@ printf("end of print struct\n");
             pearlrt::IODataEntry dataEntries[]= {
                {.dataType={pearlrt::IODataEntry::CHAR,5},
                 .dataPtr = {.outData=&CONSTANT_CHARACTER_5a7707ad_4efa_4d82_a801_951eba9d4126},
-                .param1={.numberOfElements = &one}
+                .param1={.numberOfElements = one}
                },
-               {.dataType={pearlrt::IODataEntry::FLOAT,53},
+               {.dataType={pearlrt::IODataEntry::FLOAT,52},
                 .dataPtr = {.outData = &_x},
-                .param1={.numberOfElements = &one}
+                .param1={.numberOfElements = one}
                },
                {.dataType={pearlrt::IODataEntry::FIXED,15},
                 .dataPtr = {.outData = &resultOfExpr1},
-                .param1={.numberOfElements = &one}
+                .param1={.numberOfElements = one}
                },
             };
 
           pearlrt::IOFormatEntry formatEntries[]= {
                {
                 .format=pearlrt::IOFormatEntry::A,
-                .fp1 ={.constF31Ptr=&CONSTANT_FIXED_POS_5_31}
+                .fp1 ={.f31=CONSTANT_FIXED_POS_5_31}
                },
                {
                 .format=pearlrt::IOFormatEntry::Fwd,
-                .fp1 ={.constF31Ptr = &CONSTANT_FIXED_POS_13_31},
-                .fp2 ={.constF31Ptr = &CONSTANT_FIXED_POS_6_31}
+                .fp1 ={.f31= CONSTANT_FIXED_POS_13_31},
+                .fp2 ={.f31 = CONSTANT_FIXED_POS_6_31}
                },
                {
                   .format=pearlrt::IOFormatEntry::X,
-                  .fp1={ .constF31Ptr =&CONSTANT_FIXED_POS_1_31}
+                  .fp1={ .f31 =CONSTANT_FIXED_POS_1_31}
                },
                {
                   .format=pearlrt::IOFormatEntry::RST,
@@ -337,16 +338,16 @@ printf("end of print struct\n");
                },
                {
                 .format=pearlrt::IOFormatEntry::Fw,
-                .fp1 = {.f31Ptr=&resultOfExpr2},
+                .fp1 = {.f31=resultOfExpr2},
                },
                {
                 .format=pearlrt::IOFormatEntry::X,
-                .fp1 ={.constF31Ptr=&CONSTANT_FIXED_POS_1_31}
+                .fp1 ={.f31=CONSTANT_FIXED_POS_1_31}
                },
 
                {
                 .format=pearlrt::IOFormatEntry::SKIP,
-                .fp1 ={.constF31Ptr=&CONSTANT_FIXED_POS_1_31}
+                .fp1 ={.f31=CONSTANT_FIXED_POS_1_31}
                },
             };
             pearlrt::IODataList dataList = {
@@ -403,31 +404,31 @@ printf("end of print struct\n");
             {
                {.dataType={pearlrt::IODataEntry::CHAR,5},
                 .dataPtr = {.outData=&CONSTANT_CHARACTER_5a7707ad_4efa_4d82_a801_951eba9d4126},
-                .param1={.numberOfElements = &one}
+                .param1={.numberOfElements = one}
                },
                {.dataType={pearlrt::IODataEntry::FIXED,15},
                 .dataPtr = {.outData = &_y},
-                .param1={.numberOfElements = &one}
+                .param1={.numberOfElements = one}
                }
             };
             IOFormatEntry fmtEntries[]=
             {
                { // 0
                 .format=pearlrt::IOFormatEntry::SKIP,
-                .fp1 ={.constF31Ptr = &CONSTANT_FIXED_POS_1_31}
+                .fp1 ={.f31 = CONSTANT_FIXED_POS_1_31}
                },
                { // 1
                 .format=pearlrt::IOFormatEntry::A,
-                .fp1 ={.constF31Ptr=&CONSTANT_FIXED_POS_5_31}
+                .fp1 ={.f31=CONSTANT_FIXED_POS_5_31}
                },
                { // 2
                 .format=pearlrt::IOFormatEntry::Fwd,
-                .fp1 = {.constF31Ptr=&CONSTANT_FIXED_POS_6_31},
-                .fp2= {.constF31Ptr=&CONSTANT_FIXED_POS_0_31}
+                .fp1 = {.f31=CONSTANT_FIXED_POS_6_31},
+                .fp2= {.f31=CONSTANT_FIXED_POS_0_31}
                },
                { // 3
                 .format=pearlrt::IOFormatEntry::SKIP,
-                .fp1 ={.constF31Ptr = &CONSTANT_FIXED_POS_1_31}
+                .fp1 ={.f31 = CONSTANT_FIXED_POS_1_31}
                },
             };
             pearlrt::IODataList dataList = {
@@ -455,19 +456,19 @@ printf("end of print struct\n");
             {
                {.dataType={pearlrt::IODataEntry::FIXED,15},
                 .dataPtr = {.inData = &_z},
-                .param1={.numberOfElements = &one}
+                .param1={.numberOfElements = one}
                }
             };
             IOFormatEntry fmtEntries[]=
             {
                { // 0
                 .format=pearlrt::IOFormatEntry::Fwd,
-                .fp1 = {.constF31Ptr=&CONSTANT_FIXED_POS_6_31},
-                .fp2= {.constF31Ptr=&CONSTANT_FIXED_POS_0_31}
+                .fp1 = {.f31=CONSTANT_FIXED_POS_6_31},
+                .fp2= {.f31=CONSTANT_FIXED_POS_0_31}
                },
                { // 1
                 .format=pearlrt::IOFormatEntry::SKIP,
-                .fp1 ={.constF31Ptr = &CONSTANT_FIXED_POS_1_31}
+                .fp1 ={.f31 = CONSTANT_FIXED_POS_1_31}
                },
             };
             pearlrt::IODataList dataList = {
