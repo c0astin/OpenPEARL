@@ -435,6 +435,11 @@ namespace pearlrt {
                        strerror(ferror(fp)));
             throw thePositioningFailedSignal;
          }
+         if (fflush(fp)) {
+            Log::error("Disc: positioning failed (%s)",
+                       strerror(ferror(fp)));
+            throw thePositioningFailedSignal;
+         }
       } else if (dationParam & Dation::FORWARD) {
          /* do nothing: seek is done by empty reads
             or write 0's
