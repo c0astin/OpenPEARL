@@ -254,7 +254,7 @@ namespace pearlrt {
          throw theInternalTaskSignal;
       }
 
-      DEBUG("TaskCommon::unblock %s taskState %d(%d) -> %d(%d)\n",
+      DEBUG("TaskCommon::unblock %s taskState %d(%d) -> %d(%d)",
             name, oldState, oldReason, taskState, blockParams.why.reason);
       blockParams.semaBlock.release();
    }
@@ -415,21 +415,20 @@ namespace pearlrt {
             break;
 
          case IOWAITQUEUE:
-            Log::error("terminateFromOtherTask: IOWAITQUEUE start");
+            DEBUG("terminateFromOtherTask: IOWAITQUEUE start");
 
-            //blockParams.why.u.ioWaitQueue.dation->getWaitQueue()->remove(this);
             blockParams.why.u.io.dation->getWaitQueue()->remove(this);
             blockParams.semaBlock.release();
-            DEBUG("task %s: terminateFromOtherTask: IOWAITQUEUE",
-                  name);
             mutexUnlock();
             break;
 
          case IO:
+            DEBUG("terminateFromOtherTask: IO start");
             blockParams.why.u.io.dation->terminate(this);
             break;
 
          case IO_MULTIPLE_IO:
+            DEBUG("terminateFromOtherTask: IO_MULTIPLE_IO start");
             blockParams.why.u.io.dation->terminate(this);
             blockParams.semaBlock.release();
             mutexUnlock();

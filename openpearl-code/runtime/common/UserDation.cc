@@ -116,11 +116,12 @@ namespace pearlrt {
       // verify that the dation is really open
       assertOpen();
 
-      mutexUserDation.lock();
 
      // for testing purpose it is possible to use
      // without a task object
       if (me) {
+         mutexUserDation.lock();
+
          // the taskState of at least one task will change - maybe 
          // more than one task is affected
          // lock the global task lock, and treat async requests 
@@ -167,21 +168,22 @@ namespace pearlrt {
          beginSequenceHook(me);       // deal with TFU stuff
 
          TaskCommon::mutexUnlock(); // we need no longer access to task data
+         mutexUserDation.unlock();
          me->scheduleCallback();
       }
-      mutexUserDation.unlock();
    }
 
    void UserDation::endSequence(TaskCommon * me) {
       TaskCommon* pendingTask;
 
-      mutexUserDation.lock();
-
-      endSequenceHook();   // deal with TFU stuff
 
       // for testing purpose it it possible to use
       // without a task object
       if (me) {
+         mutexUserDation.lock();
+
+         endSequenceHook();   // deal with TFU stuff
+
          // gain global task lock, since the task state of at least one
          // task changes
          TaskCommon::mutexLock();
@@ -203,10 +205,10 @@ namespace pearlrt {
          }
  
          TaskCommon::mutexUnlock();
+         mutexUserDation.unlock();
          me->scheduleCallback();
       }
 
-      mutexUserDation.unlock();
    }
 
    PriorityQueue* UserDation::getWaitQueue() {

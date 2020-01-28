@@ -247,7 +247,12 @@ namespace pearlrt {
          }
 
          endSequence(me);
+
       } catch (Signal &s) {
+         if (s.whichRST() == theTerminateRequestSignal.whichRST()) {
+           endSequence(me);
+           me->terminate(me); 
+         }
          if (! updateRst(&s)) {
             endSequence(me);
             throw;

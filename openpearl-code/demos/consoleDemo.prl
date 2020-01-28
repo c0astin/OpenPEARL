@@ -32,17 +32,16 @@ hello: TASK MAIN;
    AFTER 1SEC RESUME;
    PUT '****** reader1 suspended - to accepting input' TO console BY A, SKIP;
    SUSPEND reader1;
-   AFTER 10SEC RESUME;
+   AFTER 5SEC RESUME;
    CONTINUE reader1;
    PUT '****** reader1 continue - accepting input' TO console BY A, SKIP;
 
-   ! terminate at this point does not work (ticket #277)
-   !AFTER 2 SEC RESUME;
-   !PUT '****** reader1 becomes terminated ' TO console BY A, SKIP;
-   !TERMINATE reader1;
-   !AFTER 2 SEC RESUME;
-   !PUT '****** reader1 restarted' TO console BY A, SKIP;
-   !ACTIVATE reader1;
+   AFTER 5 SEC RESUME;
+   PUT '****** reader1 becomes terminated ' TO console BY A, SKIP;
+   TERMINATE reader1;
+   AFTER 5 SEC RESUME;
+   PUT '****** reader1 restart' TO console BY A, SKIP;
+   ACTIVATE reader1;
 
    REQUEST stop;
    REQUEST stop;
