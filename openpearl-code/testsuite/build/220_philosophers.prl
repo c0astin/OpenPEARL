@@ -13,7 +13,7 @@ PROBLEM;
    DCL semaFork3 SEMA PRESET(1);
    DCL semaFork4 SEMA PRESET(1);
    DCL semaFork5 SEMA PRESET(1);
-   
+
    eat: PROC(num FIXED);	  
       REQUEST semaTermout;
       OPEN termout;

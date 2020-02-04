@@ -34,21 +34,14 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
 public class TypeClock extends TypeDefinition {
-    Double m_value = 0.0;
 
     TypeClock() {
         super("CLOCK");
 
     }
 
-    TypeClock(Double value) {
-        super("CLOCK");
-        m_value = value;
-    }
-
-
     public String toString() {
-        return this.getName() + "(" + m_value + ")";
+        return this.getName();
     }
 
     @Override
@@ -57,10 +50,7 @@ public class TypeClock extends TypeDefinition {
             return false;
         }
 
-        TypeClock that = (TypeClock) other;
-
-        // Custom equality check here.
-        return this.m_value == that.m_value;
+        return true;
     }
 
     public ST toST(STGroup group) {

@@ -30,6 +30,7 @@
 package org.smallpearl.compiler;
 
 import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
 import org.stringtemplate.v4.ST;
@@ -47,6 +48,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     private Integer m_currFixedLength = null;
     private boolean m_calculateRealFixedLength;
     private org.smallpearl.compiler.AST m_ast;
+    private SymbolTableEntry m_name = null;
+    private StructureEntry m_struct = null;
+    private TypeDefinition m_type = null;
+    private int m_nameDepth = 0;
 
     public ExpressionTypeVisitor(int verbose, boolean debug, SymbolTableVisitor symbolTableVisitor, org.smallpearl.compiler.AST ast) {
 
@@ -56,8 +61,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         m_symbolTableVisitor = symbolTableVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
         m_ast = ast;
+        m_name = null;
+        m_type = null;
+        m_nameDepth = 0;
 
-        Log.info("=============================================================================");
         Log.info("Semantic Check: Attributing parse tree with expression type information");
 
         LinkedList<ModuleEntry> listOfModules = this.m_symboltable.getModules();
@@ -81,10 +88,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             if (expressionResult != null) {
                 m_ast.put(ctx, expressionResult);
 
-                if (m_debug) {
-                    System.out.println("ExpressionTypeVisitor: visitBaseExpression: exp=" + ctx.primaryExpression().getText());
-                    System.out.println("ExpressionTypeVisitor: visitBaseExpression: res=(" + expressionResult + ")");
-                }
+                Log.debug("ExpressionTypeVisitor: visitBaseExpression: exp=" + ctx.primaryExpression().getText());
+                Log.debug("ExpressionTypeVisitor: visitBaseExpression: res=(" + expressionResult + ")");
             }
         }
 
@@ -103,8 +108,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
-        } else if (ctx.ID() != null) {
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
+        } else if (ctx.name() != null) {
+            visitName(ctx.name());
+            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
 
             String s = ctx.toStringTree();
             if ( entry == null ) {
@@ -132,6 +138,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                 	   expressionResult = new ASTAttribute(((TypeArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
                 	}
                 }
+                else if ( variable.getType() instanceof TypeFormalParameterArray ) {
+                    expressionResult = new ASTAttribute(((TypeFormalParameterArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
+                }
                 else {
                     expressionResult = new ASTAttribute(variable.getType(), variable.getAssigmentProtection(), variable);
                 }
@@ -149,6 +158,15 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
+        } else if(ctx.name() != null) {
+            visit(ctx.name());
+            ASTAttribute expressionResult= m_ast.lookup(ctx.name());
+            if (expressionResult != null) {
+                m_ast.put(ctx, expressionResult);
+            } else {
+                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            }
+
         } else if (ctx.semaTry() != null) {
             visit(ctx.semaTry());
             ASTAttribute expressionResult= m_ast.lookup(ctx.semaTry());
@@ -165,15 +183,24 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
-        } else if (ctx.expression() != null) {
-            if (ctx.expression().size() > 1) {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        } else if (ctx.name() != null) {
+            Log.debug("ExpressionTypeVisitor: visitPrimaryExpression: ctx.name=" + ctx.name().getText());
+            m_name = m_currentSymbolTable.lookup(ctx.name().ID().getText());
+
+            if (!(m_name instanceof VariableEntry)) {
+                throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
-            visit(ctx.expression(0));
-            ASTAttribute expressionResult = m_ast.lookup(ctx.expression(0));
-            if (expressionResult != null) {
-                m_ast.put(ctx, expressionResult);
+            visit(ctx.name());
+            m_name = null;
+        } else if (ctx.expression() != null) {
+            if ( ctx.expression() !=  null) {
+                visit(ctx.expression());
+
+                ASTAttribute expressionResult = m_ast.lookup(ctx.expression());
+                if (expressionResult != null) {
+                    m_ast.put(ctx, expressionResult);
+                }
             }
         }
 
@@ -648,6 +675,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         ASTAttribute res;
 
         Log.debug("ExpressionTypeVisitor:visitMultiplicativeExpression:ctx" + CommonUtils.printContext(ctx));
+        Log.debug("ExpressionTypeVisitor:visitMultiplicativeExpression:ctx.expression(0)" + CommonUtils.printContext(ctx.expression(0)));
 
         visit(ctx.expression(0));
         op1 = m_ast.lookup(ctx.expression(0));
@@ -806,7 +834,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideExpression: rule#7");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeFloat(23), op1.isReadOnly() && op2.isReadOnly());
+            res = new ASTAttribute(new TypeFloat(24), op1.isReadOnly() && op2.isReadOnly());
             m_ast.put(ctx, res);
 
             if (m_debug)
@@ -1266,7 +1294,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
             typeChar = (TypeChar) op.getType();
 
-            if ( typeChar.getSize() != 1 ) {
+            if ( typeChar.getPrecision() != 1 ) {
                 throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
@@ -1741,6 +1769,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
+        } else if (ctx.selector() != null ) {
+            Log.debug("ExpressionTypeVisitor:visitAssignment_statement:selector:ctx" + CommonUtils.printContext(ctx.selector()));
+            visitSelector(ctx.selector());
+            id = ctx.selector().ID().getText();
         } else {
             id = ctx.ID().getText();
         }
@@ -2461,7 +2493,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             ASTAttribute expressionResult = new ASTAttribute(type);
             m_ast.put(ctx, expressionResult);
         } else if (op1.getType() instanceof TypeChar && op2.getType() instanceof TypeChar) {
-            TypeChar type = new TypeChar(((TypeChar)op1.getType()).getSize() + ((TypeChar)op2.getType()).getSize());
+            TypeChar type = new TypeChar(((TypeChar)op1.getType()).getPrecision() + ((TypeChar)op2.getType()).getPrecision());
             ASTAttribute expressionResult = new ASTAttribute(type);
             m_ast.put(ctx, expressionResult);
         } else {
@@ -2862,7 +2894,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         if ( entry instanceof VariableEntry) {
             VariableEntry var = (VariableEntry) entry;
             if ( var.getType() instanceof TypeChar) {
-                m_ast.put(ctx, new ASTAttribute(new TypeChar(((TypeChar) var.getType()).getSize())));
+                m_ast.put(ctx, new ASTAttribute(new TypeChar(((TypeChar) var.getType()).getPrecision())));
             }
             else {
                 throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -2873,11 +2905,13 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         return null;
     }
+
     @Override
     public Void visitCase3CharSlice(SmallPearlParser.Case3CharSliceContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitCase3CharSlice:ctx" + CommonUtils.printContext(ctx));
         throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
     }
+
     @Override
     public Void visitCase4CharSlice(SmallPearlParser.Case4CharSliceContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitCase4CharSlice:ctx" + CommonUtils.printContext(ctx));
@@ -2902,7 +2936,47 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
 
+    /*
+    selector
+    : ID indices? ( '.' ID indices? )*
+    ;
 
+    indices
+    : '(' expression ( ',' expression )* ')'
+    ;
+     */
+    @Override
+    public Void visitSelector(SmallPearlParser.SelectorContext ctx) {
+        String id = null;
+
+        id = ctx.ID().toString();
+        if ( ctx.indices() != null ) {
+            visitIndices(ctx.indices());
+        }
+
+        SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
+        if (!(entry instanceof VariableEntry)) {
+            throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+
+        VariableEntry var = (VariableEntry)entry;
+
+        for (int i = 0; i < ctx.selectors().size(); i++) {
+            visitSelectors(ctx.selectors(i));
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitIndices(SmallPearlParser.IndicesContext ctx) {
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public Void visitSelectors(SmallPearlParser.SelectorsContext ctx) {
+        return visitChildren(ctx);
+    }
 
     private ConstantValue getConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
         ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
@@ -2910,4 +2984,91 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         return constant;
     }
+
+    @Override
+    public Void visitName(SmallPearlParser.NameContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitName:ctx=" + CommonUtils.printContext(ctx));
+        Log.debug("ExpressionTypeVisitor:visitName:id=" + ctx.ID().toString());
+
+        if ( m_nameDepth == 0 ) {
+            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
+
+            if ( entry != null ) {
+                if (entry instanceof VariableEntry) {
+                    VariableEntry var = (VariableEntry) entry;
+                    TypeDefinition typ = var.getType();
+
+                    if ( typ instanceof TypeArray) {
+                        m_type = ((TypeArray) typ).getBaseType();
+                    } else {
+                        m_type = typ;
+                    }
+
+                    if ( ctx.name() != null) {
+                        m_nameDepth++;
+                        visitName(ctx.name());
+                        m_nameDepth--;
+                    }
+
+                    m_ast.put(ctx, new ASTAttribute(m_type));
+                }
+            } else {
+                throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(),(ctx.ID().toString()));
+            }
+        } else {
+            if ( m_type instanceof TypeArray) {
+                m_type = ((TypeArray)m_type).getBaseType();
+                m_nameDepth++;
+                visitName(ctx.name());
+                m_nameDepth--;
+            } else if (m_type instanceof TypeStructure) {
+                TypeStructure typ = (TypeStructure)m_type;
+                StructureComponent component = typ.lookup(ctx.ID().getText());
+
+                if (component != null) {
+                    if ( component.m_type instanceof TypeArray) {
+                        m_type = ((TypeArray) component.m_type).getBaseType();
+                        m_nameDepth++;
+                        visitName(ctx.name());
+                        m_nameDepth--;
+                    } else if ( component.m_type instanceof TypeStructure) {
+                        m_type = component.m_type;
+                        m_nameDepth++;
+                        visitName(ctx.name());
+                        m_nameDepth--;
+                    } else {
+                        m_type = component.m_type;
+                    }
+                } else {
+                    throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(),(ctx.ID().toString()));
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the type of name
+     *
+     * @param entry Symboltable entry of the variable
+     * @return TypeDefinition of the name
+     */
+    private TypeDefinition getTypeDefintion(SymbolTableEntry entry) {
+        if ( entry != null ) {
+            if (entry instanceof VariableEntry) {
+                VariableEntry var = (VariableEntry)entry;
+
+                if (var.getType() instanceof TypeStructure ) {
+                }
+                else if (var.getType() instanceof TypeArray ) {
+                    TypeArray typeArray = (TypeArray)var.getType();
+                }
+            }
+        }
+
+        return null;
+    }
+
 }
+

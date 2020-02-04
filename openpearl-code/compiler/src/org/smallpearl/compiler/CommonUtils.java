@@ -37,6 +37,10 @@ import org.smallpearl.compiler.SymbolTable.*;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.smallpearl.compiler.SymbolTable.VariableEntry;
+
+import java.io.File;
 import java.util.UUID;
 
 public class CommonUtils {
@@ -444,9 +448,6 @@ public class CommonUtils {
                 case 0:
                     if (ch == '\'') {
                         state = 1;
-                    } else if (ch == '"') {
-                        sb.append("\\");
-                        sb.append("\"");
                     } else {
                         sb.append(ch);
                     }
@@ -456,38 +457,40 @@ public class CommonUtils {
                     if (ch == '\\') {
                         state = 2;
                     } else {
-                        throw new IllegalCharacterException("");
+                        state = 0;
+                        sb.append(ch);
                     }
                     break;
 
                 case 2:
-                    if ((ch == ' ') || (ch == '\n')) {
+                    if (ch == ' ') {
                         state = 2;
-                    } else if ((ch == '\\')) {
-                        state = 5;
                     } else {
                         value += ch;
                         state = 3;
                     }
                     break;
 
+
                 case 3:
                     value += ch;
                     val = Integer.toString(Integer.parseInt(value, 16), 8);
-                    while (val.length() < 3) {
+                    if (val.length() == 1) {
                         val = "0" + val;
                     }
-                    octalValue = "\\" + val;
+                    octalValue = "\\0" + val;
                     sb.append(octalValue);
                     value = "";
                     state = 4;
                     break;
 
                 case 4:
-                    if ((ch == ' ') || (ch == '\n')) {
-                        state = 2;
-                    } else if ((ch == '\\')) {
+                    if (ch == '\\') {
                         state = 5;
+                    } else if (ch == ' ') {
+                        state = 4;
+                    } else if (ch == '\n') {
+                        state = 4;
                     } else {
                         value += ch;
                         state = 3;
@@ -526,19 +529,15 @@ public class CommonUtils {
                     if (ch == '\\') {
                         state = 1;
                     } else {
-                        s += ch;
                         len++;
                     }
                     break;
 
                 case 1:
-                    if (ch >= '0' && ch <= '7') {
+                    if (ch == '0') {
                         state = 2;
-                        s += '?';
-                        len++;
                     } else {
                         state = 0;
-                        s += ch;
                         len++;
                     }
                     break;
@@ -548,7 +547,6 @@ public class CommonUtils {
                         state = 3;
                     } else {
                         state = 0;
-                        s += ch;
                         len++;
                     }
                     break;
@@ -560,7 +558,6 @@ public class CommonUtils {
                         state = 1;
                     } else {
                         state = 0;
-                        s += ch;
                         len++;
                     }
                     break;
@@ -771,5 +768,22 @@ public class CommonUtils {
         }
 
         return seconds;
+    
+   /**
+     * Retrieve the rightmost identifier of a name
+     *
+     * @param ctx NameContext
+     * @return ParserRuleContext of rightmost identifier
+     */
+    public static ParserRuleContext getRightMostID(SmallPearlParser.NameContext ctx) {
+        if ( ctx != null ) {
+            String s = ctx.ID().getText();
+            if (ctx.name() != null) {
+                return getRightMostID(ctx.name());
+            } else {
+                return ctx;
+            }
+        }
+        return null;
     }
 }

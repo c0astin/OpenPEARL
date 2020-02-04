@@ -71,7 +71,7 @@ public class TaskEntry extends SymbolTableEntry {
     }
 
     protected String scopeString(int m_level) {
-        return scope == null ? "\n" : "\n" + scope.toString(m_level);
+        return scope == null ? "" : "" + scope.toString(m_level);
     }
 
     public int getSourceLineNo() {

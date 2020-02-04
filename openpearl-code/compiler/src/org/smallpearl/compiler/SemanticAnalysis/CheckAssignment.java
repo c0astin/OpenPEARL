@@ -92,11 +92,14 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
+        } else if (ctx.selector() != null ) {
+            Log.debug("ExpressionTypeVisitor:visitAssignment_statement:selector:ctx" + CommonUtils.printContext(ctx.selector()));
+            visitSelector(ctx.selector());
+            id = ctx.selector().ID().getText();
         }
         else {
             id = ctx.ID().getText();
         }
-
 
         SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
 

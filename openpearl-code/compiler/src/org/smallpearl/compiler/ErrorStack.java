@@ -224,7 +224,6 @@ public class ErrorStack {
 		System.err.println(
 				Compiler.getSourceFilename() + ":" + startLineNumber + ":"
 						+ startColNumber + ": " + typeOfMessage + ": "+prefix + " " + msg);
-
 		return null;
 	}
 

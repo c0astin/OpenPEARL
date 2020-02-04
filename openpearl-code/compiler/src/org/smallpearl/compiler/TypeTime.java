@@ -31,21 +31,14 @@ package org.smallpearl.compiler;
 
 
 public class TypeTime extends TypeDefinition {
-    Double m_value = 0.0;
 
     public TypeTime() {
         super("TIME");
 
     }
 
-    TypeTime(Double value) {
-        super("TIME");
-        m_value = value;
-    }
-
-
     public String toString() {
-        return this.getName() + "(" + m_value + ")";
+        return this.getName();
     }
 
     @Override
@@ -54,9 +47,6 @@ public class TypeTime extends TypeDefinition {
             return false;
         }
 
-        TypeTime that = (TypeTime) other;
-
-        // Custom equality check here.
-        return this.m_value == that.m_value;
+        return true;
     }
 }

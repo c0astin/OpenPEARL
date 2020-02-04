@@ -5,6 +5,8 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.smallpearl.compiler.*;
 import org.smallpearl.compiler.ConstantFixedValue;
 
+import java.util.ArrayList;
+
 public class VariableEntry extends SymbolTableEntry {
 
     private TypeDefinition    m_type;
@@ -100,6 +102,7 @@ public class VariableEntry extends SymbolTableEntry {
 //            }
 //        }
 //
+
         return indentString(level) +
                 super.toString(level) +
                 "var " +

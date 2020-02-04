@@ -48,7 +48,7 @@ import static org.smallpearl.compiler.Log.LEVEL_DEBUG;
 import static org.smallpearl.compiler.Log.LEVEL_ERROR;
 
 public class Compiler {
-    static String version = "v0.8.9.33";
+    static String version = "v0.8.9.40";
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();
@@ -62,6 +62,7 @@ public class Compiler {
     static String encoding = null;
     static boolean SLL = false;
     static boolean nosemantic = false;
+    static boolean constantfolding = true;
     static int verbose = 0;
     static String groupFile = "SmallPearlCpp.stg";
     static boolean lineSeparatorHasToBeModified = true;
@@ -98,14 +99,14 @@ public class Compiler {
         }
 
         ErrorStack.useColors(coloured);
-        
+
         // Setup logger
         Log.Logger logger = new Log.Logger();
         Log.setLogger(logger);
         //Log.set(LEVEL_INFO);
 
         for (i = 0; i < inputFiles.size(); i++) {
-            OpenPearlLexer lexer = null;
+            SmallPearlLexer lexer = null;
             AST ast = new AST();
 
             m_sourceFilename = inputFiles.get(i);
@@ -116,7 +117,7 @@ public class Compiler {
             Log.debug("Performing syntax check");
 
             try {
-                lexer = new OpenPearlLexer(new ANTLRFileStream(m_sourceFilename));
+                lexer = new SmallPearlLexer(new ANTLRFileStream(m_sourceFilename));
             }
             catch(IOException ex) {
                 System.out.println("Error:" + ex.getMessage());
@@ -294,6 +295,7 @@ public class Compiler {
                 "  --quiet                     Be quiet                              \n" +
                 "  --trace                                                           \n" +
                 "  --nosemantic                Disable semantic checker              \n" +
+                "  --noconstantfolding         Disable constant folding              \n" +
                 "  --printAST                  Print Abtract Syntax Tree             \n" +
                 "  --dumpDFA                   Print DFA                             \n" +
                 "  --dumpSymbolTable           Print the SymbolTable                 \n" +
@@ -340,6 +342,8 @@ public class Compiler {
                 printSysInfo = true;
             } else if (arg.equals("--nosemantic")) {
                 nosemantic = true;
+            } else if (arg.equals("--noconstantfolding")) {
+                constantfolding = false;
             } else if (arg.equals("--diagnostics")) {
                 diagnostics = true;
             } else if (arg.equals("--dumpDFA")) {

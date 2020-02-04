@@ -66,6 +66,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     public enum Type {
         BIT, CHAR, FIXED
+    CHAR,
+    FIXED
     }
 
     public static final double pi = java.lang.Math.PI;
@@ -104,6 +106,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         }
 
         this.ReadTemplate(filename);
+
+    LinkedList<StructureEntry> listOfStructureDeclarations =
+        this.m_currentSymbolTable.getStructureDeclarations();
+
         generatePrologue();
     }
 
@@ -273,12 +279,17 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             } else if (ctx.seconds().floatingPointConstant() != null) {
                 seconds = Double.valueOf(ctx.seconds().floatingPointConstant()
                         .FloatingPointNumberPrecision().getText());
+                ctx.seconds().floatingPointConstant().FloatingPointNumberPrecision().getText());
             }
         }
 
         return (hours + minutes + seconds);
     }
 
+                ctx.seconds()
+                    .floatingPointConstant()
+                    .FloatingPointNumberWithoutPrecision()
+                    .toString());
     /*
      * Time/Clock example: 11:30:00 means 11.30 15:45:3.5 means 15.45 and 3.5
      * seconds 25:00:00 means 1.00
@@ -298,6 +309,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx.floatingPointConstant() != null) {
             seconds = Double.valueOf(ctx.floatingPointConstant()
                     .FloatingPointNumberWithoutPrecision().toString());
+              ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
         }
 
         if (hours < 0 || minutes < 0 || minutes > 59) {
@@ -319,6 +331,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable
                 .lookupLocal(ctx.ID().getText());
         m_currentSymbolTable = ((org.smallpearl.compiler.SymbolTable.ModuleEntry) symbolTableEntry).scope;
+        ((org.smallpearl.compiler.SymbolTable.ModuleEntry) symbolTableEntry).scope;
 
         if (ctx != null) {
             for (ParseTree c : ctx.children) {
@@ -330,7 +343,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     module.add(
                             "ProblemPart",
                             visitProblem_part((SmallPearlParser.Problem_partContext) c));
-                } else if (c instanceof SmallPearlParser.Cpp_inlineContext) {
+2                } else if (c instanceof SmallPearlParser.Cpp_inlineContext) {
                     ST decl = m_group.getInstanceOf("cpp_inline");
                     module.add(
                             "cpp_inlines",
@@ -358,8 +371,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     visitUsername_declaration((SmallPearlParser.Username_declarationContext) c);
                 } else if (c instanceof SmallPearlParser.UserConfigurationWithoutAssociationContext) {
                     visitUserConfigurationWithoutAssociation((SmallPearlParser.UserConfigurationWithoutAssociationContext) c);
+              (SmallPearlParser.UserConfigurationWithoutAssociationContext) c);
                 } else if (c instanceof SmallPearlParser.UserConfigurationWithAssociationContext) {
                     visitUserConfigurationWithAssociation((SmallPearlParser.UserConfigurationWithAssociationContext) c);
+              (SmallPearlParser.UserConfigurationWithAssociationContext) c);
                 }
             }
         }
@@ -586,6 +601,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             for (ParseTree c : ctx.children) {
                 if (c instanceof SmallPearlParser.IdentifierDenotationContext) {
                     identifierDenotationList = getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
+              getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
                 }
             }
 
@@ -603,6 +619,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                 if (var.getInitializer() != null) {
                     v.add("InitElement", var.getInitializer().getConstant());
+            v.add("InitElement", ((SimpleInitializer) var.getInitializer()).getConstant());
+          } else {
+            throw new InternalCompilerErrorException(
+                ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+          }
                 }
 
                 variableDenotation.add("decl", v);
@@ -733,7 +754,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             } else {
                 st.add("initElements", last_value);
             }
-
         }
 
         return st;
@@ -820,6 +840,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                 value = Double.parseDouble(ctx.floatingPointConstant()
                         .FloatingPointNumberWithoutPrecision().getText());
+                ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().getText());
 
                 if (ctx.getChildCount() > 1) {
                     if (ctx.getChild(0).getText().equals("-")) {
@@ -920,6 +941,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
      * integerConstant.add("value", value); } else {
      * integerConstant.add("value", value + "LL"); }
      *//*
+  /*
      *
      *
      * constant.add("IntegerConstant", integerConstant); } else if
@@ -1047,6 +1069,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return st;
     }
 
+              ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().getText());
     @Override
     public ST visitTypeAttributeForArray(
             SmallPearlParser.TypeAttributeForArrayContext ctx) {
@@ -1124,8 +1147,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 if (c instanceof SmallPearlParser.MprecisionContext) {
                     size = Integer
                             .parseInt(((SmallPearlParser.MprecisionContext) c)
+                  ((SmallPearlParser.MprecisionContext) c)
                                     .integerWithoutPrecision()
                                     .IntegerConstant().getText());
+                      .getText());
                 }
             }
         }
@@ -1152,7 +1177,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         st.add("length", length);
 
         return st;
-
     }
 
     @Override
@@ -1206,6 +1230,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     problem_part
                             .add("ScalarVariableDeclarations",
                                     visitScalarVariableDeclaration((SmallPearlParser.ScalarVariableDeclarationContext) c));
+                  (SmallPearlParser.ScalarVariableDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                     problem_part
                             .add("ArrayVariableDeclarations",
@@ -1533,6 +1558,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     taskbody.add(
                             "decls",
                             visitScalarVariableDeclaration((SmallPearlParser.ScalarVariableDeclarationContext) c));
+                  (SmallPearlParser.ScalarVariableDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                     taskbody.add(
                             "decls",
@@ -1571,42 +1597,55 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitAdditiveExpression(((SmallPearlParser.AdditiveExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.SubtractiveExpressionContext) {
                 st.add("code",
+            "code",
                         visitSubtractiveExpression(((SmallPearlParser.SubtractiveExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.MultiplicativeExpressionContext) {
                 st.add("code",
+            "code",
                         visitMultiplicativeExpression((SmallPearlParser.MultiplicativeExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.DivideExpressionContext) {
                 st.add("code",
                         visitDivideExpression((SmallPearlParser.DivideExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.DivideIntegerExpressionContext) {
                 st.add("code",
+            "code",
                         visitDivideIntegerExpression((SmallPearlParser.DivideIntegerExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.UnaryAdditiveExpressionContext) {
                 st.add("code",
+            "code",
                         visitUnaryAdditiveExpression((SmallPearlParser.UnaryAdditiveExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.UnarySubtractiveExpressionContext) {
                 st.add("code",
                         visitUnarySubtractiveExpression((SmallPearlParser.UnarySubtractiveExpressionContext) ctx));
+            visitUnarySubtractiveExpression(
+                (SmallPearlParser.UnarySubtractiveExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.ExponentiationExpressionContext) {
                 st.add("code",
+            "code",
                         visitExponentiationExpression((SmallPearlParser.ExponentiationExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.LtRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitLtRelationalExpression((SmallPearlParser.LtRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.GeRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitGeRelationalExpression((SmallPearlParser.GeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.NeRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitNeRelationalExpression((SmallPearlParser.NeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.EqRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitEqRelationalExpression((SmallPearlParser.EqRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.GtRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitGtRelationalExpression((SmallPearlParser.GtRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.LeRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitLeRelationalExpression((SmallPearlParser.LeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.AtanExpressionContext) {
                 st.add("code",
@@ -1637,6 +1676,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitFitExpression((SmallPearlParser.FitExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.ExponentiationExpressionContext) {
                 st.add("code",
+            "code",
                         visitExponentiationExpression((SmallPearlParser.ExponentiationExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.AbsExpressionContext) {
                 st.add("code",
@@ -1700,12 +1740,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitLwbDyadicExpression(((SmallPearlParser.LwbDyadicExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.LwbMonadicExpressionContext) {
                 st.add("code",
+            "code",
                         visitLwbMonadicExpression(((SmallPearlParser.LwbMonadicExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.UpbDyadicExpressionContext) {
                 st.add("code",
                         visitUpbDyadicExpression(((SmallPearlParser.UpbDyadicExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.UpbMonadicExpressionContext) {
                 st.add("code",
+            "code",
                         visitUpbMonadicExpression(((SmallPearlParser.UpbMonadicExpressionContext) ctx)));
             }
 
@@ -1728,42 +1770,55 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitAdditiveExpression(((SmallPearlParser.AdditiveExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.SubtractiveExpressionContext) {
                 st.add("code",
+            "code",
                         visitSubtractiveExpression(((SmallPearlParser.SubtractiveExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.MultiplicativeExpressionContext) {
                 st.add("code",
+            "code",
                         visitMultiplicativeExpression((SmallPearlParser.MultiplicativeExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.DivideExpressionContext) {
                 st.add("code",
                         visitDivideExpression((SmallPearlParser.DivideExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.DivideIntegerExpressionContext) {
                 st.add("code",
+            "code",
                         visitDivideIntegerExpression((SmallPearlParser.DivideIntegerExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.UnaryAdditiveExpressionContext) {
                 st.add("code",
+            "code",
                         visitUnaryAdditiveExpression((SmallPearlParser.UnaryAdditiveExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.UnarySubtractiveExpressionContext) {
                 st.add("code",
                         visitUnarySubtractiveExpression((SmallPearlParser.UnarySubtractiveExpressionContext) ctx));
+            visitUnarySubtractiveExpression(
+                (SmallPearlParser.UnarySubtractiveExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.ExponentiationExpressionContext) {
                 st.add("code",
+            "code",
                         visitExponentiationExpression((SmallPearlParser.ExponentiationExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.LtRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitLtRelationalExpression((SmallPearlParser.LtRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.GeRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitGeRelationalExpression((SmallPearlParser.GeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.NeRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitNeRelationalExpression((SmallPearlParser.NeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.EqRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitEqRelationalExpression((SmallPearlParser.EqRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.GtRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitGtRelationalExpression((SmallPearlParser.GtRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.LeRelationalExpressionContext) {
                 st.add("code",
+            "code",
                         visitLeRelationalExpression((SmallPearlParser.LeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.AtanExpressionContext) {
                 st.add("code",
@@ -1794,6 +1849,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitFitExpression((SmallPearlParser.FitExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.ExponentiationExpressionContext) {
                 st.add("code",
+            "code",
                         visitExponentiationExpression((SmallPearlParser.ExponentiationExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.AbsExpressionContext) {
                 st.add("code",
@@ -1850,7 +1906,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 st.add("code",
                         visitTaskFunction(((SmallPearlParser.TaskFunctionContext) ctx)));
             }
-
         }
 
         return st;
@@ -2269,6 +2324,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             } else if (ctx.stringSelection().bitSelection() != null) {
                 id = ctx.stringSelection().bitSelection().ID().getText();
             }
+    } else if (ctx.selector() != null) {
+      Log.debug(
+          "ExpressionTypeVisitor:visitAssignment_statement:selector:ctx"
+              + CommonUtils.printContext(ctx.selector()));
+      visitSelector(ctx.selector());
+      id = ctx.selector().ID().getText();
         }
 
         SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
@@ -2402,7 +2463,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                                 }
 
                                 st.add("lhs", slice);
-
                             }
 
                             ST setCharSlice = m_group
@@ -2501,7 +2561,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         }
 
         return statement;
-
     }
 
     @Override
@@ -2514,7 +2573,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         }
 
         return expression;
-
     }
 
     private String getBitStringLiteral(String literal) {
@@ -2565,6 +2623,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 expression.add("functionCall", functionCall);
             } else if (entry instanceof org.smallpearl.compiler.SymbolTable.VariableEntry) {
                 org.smallpearl.compiler.SymbolTable.VariableEntry variable = (org.smallpearl.compiler.SymbolTable.VariableEntry) entry;
+            (org.smallpearl.compiler.SymbolTable.VariableEntry) entry;
 
                 if (variable.getType() instanceof TypeBit) {
                     TypeBit type = (TypeBit) variable.getType();
@@ -2731,9 +2790,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitDivideExpression(SmallPearlParser.DivideExpressionContext ctx) {
 		/*	ST expr = m_group.getInstanceOf("expression");
 
-		expr.add("code", visit(ctx.expression(0)));
-		expr.add("code", ctx.op.getText());
-		expr.add("code", visit(ctx.expression(1)));
+    expr.add("code", visit(ctx.expression(0)));
+    expr.add("code", ctx.op.getText());
+    expr.add("code", visit(ctx.expression(1)));
 		 */
         ST expr = m_group.getInstanceOf("DivisionExpression");
 
@@ -2807,6 +2866,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         try {
                             double value = -1
                                     * Double.parseDouble(literal_ctx
+                      * Double.parseDouble(
+                          literal_ctx
                                     .floatingPointConstant()
                                     .FloatingPointNumberWithoutPrecision()
                                     .toString());
@@ -2817,6 +2878,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                             expr.add("code", float_value);
                         } catch (NumberFormatException ex) {
                             throw new NumberOutOfRangeException(ctx.getText(),
+                  ctx.getText(),
                                     literal_ctx.start.getLine(),
                                     literal_ctx.start.getCharPositionInLine());
                         }
@@ -2831,6 +2893,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                                 precision = Integer.parseInt(literal_ctx
                                         .fixedConstant().fixedNumberPrecision()
                                         .IntegerConstant().toString());
+                            .fixedNumberPrecision()
+                            .IntegerConstant()
+                            .toString());
                             }
 
                             String s = literal_ctx.fixedConstant()
@@ -2849,6 +2914,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                             }
                         } catch (NumberFormatException ex) {
                             throw new NumberOutOfRangeException(ctx.getText(),
+                  ctx.getText(),
                                     literal_ctx.start.getLine(),
                                     literal_ctx.start.getCharPositionInLine());
                         }
@@ -2865,11 +2931,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         }
                     } else if (literal_ctx.timeConstant() != null) {
                         throw new NotYetImplementedException(ctx.getText(),
+                ctx.getText(),
                                 literal_ctx.start.getLine(),
                                 literal_ctx.start.getCharPositionInLine(),
                                 "-CLOCK not treated");
                     } else {
                         throw new NotYetImplementedException(ctx.getText(),
+                ctx.getText(),
                                 literal_ctx.start.getLine(),
                                 literal_ctx.start.getCharPositionInLine(),
                                 "untreated type" + literal_ctx.toString());
@@ -3036,6 +3104,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             try {
                 Double value = Double.parseDouble(ctx.floatingPointConstant()
                         .FloatingPointNumberWithoutPrecision().toString());
+                ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
                 int precision = m_currentSymbolTable.lookupDefaultFloatLength();
                 ConstantFloatValue constFloat = ConstantPool.lookupFloatValue(
                         value, precision);
@@ -3067,6 +3136,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(),
                         ctx.start.getLine(), ctx.start.getCharPositionInLine(),
+            ctx.start.getLine(),
+            ctx.start.getCharPositionInLine(),
                         "ConstantCharacter not found in pool");
             }
         } else if (ctx.BitStringLiteral() != null) {
@@ -3154,11 +3225,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                         if (var.getType() instanceof TypeArray) {
 							/*
-							TypeArray typeArray = (TypeArray) var.getType();
-							ArrayDescriptor array_descriptor = new ArrayDescriptor(
-									typeArray.getNoOfDimensions(),
-									typeArray.getDimensions());
-							st.add("descriptor", array_descriptor.getName());
+              TypeArray typeArray = (TypeArray) var.getType();
+              ArrayDescriptor array_descriptor =
+                  new ArrayDescriptor(typeArray.getNoOfDimensions(), typeArray.getDimensions());
+              st.add("descriptor", array_descriptor.getName());
 							*/
                             st.add("descriptor", getArrayDescriptor(var));
                             st.add("index", getExpression(ctx.expression(0))
@@ -3204,11 +3274,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                         if (var.getType() instanceof TypeArray) {
 							/*
-							TypeArray typeArray = (TypeArray) var.getType();
-							ArrayDescriptor array_descriptor = new ArrayDescriptor(
-									typeArray.getNoOfDimensions(),
-									typeArray.getDimensions());
-							st.add("descriptor", array_descriptor.getName());
+              TypeArray typeArray = (TypeArray) var.getType();
+              ArrayDescriptor array_descriptor =
+                  new ArrayDescriptor(typeArray.getNoOfDimensions(), typeArray.getDimensions());
+              st.add("descriptor", array_descriptor.getName());
 							*/
                             st.add("descriptor", getArrayDescriptor(var));
                             st.add("index", 1);
@@ -3253,11 +3322,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                         if (var.getType() instanceof TypeArray) {
 							/*
-							TypeArray typeArray = (TypeArray) var.getType();
-							ArrayDescriptor array_descriptor = new ArrayDescriptor(
-									typeArray.getNoOfDimensions(),
-									typeArray.getDimensions());
-							st.add("descriptor", array_descriptor.getName());
+              TypeArray typeArray = (TypeArray) var.getType();
+              ArrayDescriptor array_descriptor =
+                  new ArrayDescriptor(typeArray.getNoOfDimensions(), typeArray.getDimensions());
+              st.add("descriptor", array_descriptor.getName());
 							*/
                             st.add("descriptor", getArrayDescriptor(var));
                             st.add("index", getExpression(ctx.expression(0))
@@ -3303,11 +3371,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                         if (var.getType() instanceof TypeArray) {
 							/*
-							TypeArray typeArray = (TypeArray) var.getType();
-							ArrayDescriptor array_descriptor = new ArrayDescriptor(
-									typeArray.getNoOfDimensions(),
-									typeArray.getDimensions());
-							st.add("descriptor", array_descriptor.getName());
+              TypeArray typeArray = (TypeArray) var.getType();
+              ArrayDescriptor array_descriptor =
+                  new ArrayDescriptor(typeArray.getNoOfDimensions(), typeArray.getDimensions());
+              st.add("descriptor", array_descriptor.getName());
 							*/
                             st.add("descriptor", getArrayDescriptor(var));
                             st.add("index", 1);
@@ -3653,20 +3720,20 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     visitClose_parameterlist(ctx.close_parameterlist()));
 
 			/*
-			ArrayList<String> rstVars = getCloseRstVariables(ctx
-					.close_parameterlist());
 
-			if (rstVars.size() > 1) {
-				throw new NotSupportedFeatureException("close_statement",
-						ctx.start.getLine(), ctx.start.getCharPositionInLine(),
-						"CLOSE: Mulitple RST not supported");
-			}
+      if (rstVars.size() > 1) {
+        throw new NotSupportedFeatureException(
+            "close_statement",
+            ctx.start.getLine(),
+            ctx.start.getCharPositionInLine(),
+            "CLOSE: Mulitple RST not supported");
+      }
 
-			if (rstVars.size() == 1) {
-				String var = rstVars.get(0);
+      if (rstVars.size() == 1) {
+        String var = rstVars.get(0);
 
-				stmt.add("rst_var", var);
-			}
+        stmt.add("rst_var", var);
+      }
 			 */
         } else {
             ST st = m_group.getInstanceOf("close_parameterlist");
@@ -3679,19 +3746,17 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     }
 
 	/*
-	private boolean isRSTSpecified(
-			SmallPearlParser.Close_parameterlistContext ctx) {
-		boolean rstFound = false;
+    boolean rstFound = false;
 
-		for (ParseTree c : ctx.children) {
-			if (c instanceof SmallPearlParser.Close_parameter_rstContext) {
-				rstFound = true;
-				break;
-			}
-		}
+    for (ParseTree c : ctx.children) {
+      if (c instanceof SmallPearlParser.Close_parameter_rstContext) {
+        rstFound = true;
+        break;
+      }
+    }
 
-		return rstFound;
-	}
+    return rstFound;
+  }
 	 */
 
     @Override
@@ -3705,16 +3770,15 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     visitOpen_parameterlist(ctx.open_parameterlist()));
 
 			/* obsolete: semantic analsyis enshures <= 1 IDF
-			ArrayList<String> idfFilenames = getIdfFilenames(ctx
-					.open_parameterlist());
 
-			if (idfFilenames.size() > 1) {
-				throw new NotSupportedFeatureException("open_statement",
-						ctx.start.getLine(), ctx.start.getCharPositionInLine(),
+      if (idfFilenames.size() > 1) {
+        throw new NotSupportedFeatureException(
+            "open_statement",
 						"OPEN: Mulitiple IDF not supported");
-			}
+            ctx.start.getCharPositionInLine(),
+      }
 
-			if (idfFilenames.size() == 1) {
+      if (idfFilenames.size() == 1) {
 			 */
             Open_parameter_idfContext idfName = null;
             Open_close_RSTContext rstVar = null;
@@ -3787,116 +3851,105 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
 			stmt.add("declFileName", declFilename);
 			stmt.add("refFileName", refFilename);
-
 			if (rstVar != null) {
 				stmt.add("rst_var", rstVar.ID());
-			}
+      }
 
 
 		}
 		/* obsolete semantic analysis enshure <=1 IDF <=1 RST
  	 		ArrayList<String> rstVars = getOpenRstVariables(ctx
 
-					.open_parameterlist());
 
-			if (rstVars.size() > 1) {
-				throw new NotSupportedFeatureException("open_statement",
-						ctx.start.getLine(), ctx.start.getCharPositionInLine(),
-						"OPEN: Mulitple RST not supported");
-			}
+      if (rstVars.size() > 1) {
+        throw new NotSupportedFeatureException(
+            "open_statement",
+            ctx.start.getLine(),
+            ctx.start.getCharPositionInLine(),
+            "OPEN: Mulitple RST not supported");
+      }
 
-			if (rstVars.size() == 1) {
-				String var = rstVars.get(0);
+      if (rstVars.size() == 1) {
+        String var = rstVars.get(0);
 
-				stmt.add("rst_var", var);
-			}
-		}
+        stmt.add("rst_var", var);
+      }
+    }
 		 */
         return stmt;
     }
 
 
     /* obsolete -- Sematic check enshure <= 1 IDF statement
-	private ArrayList<String> getIdfFilenames(
-			SmallPearlParser.Open_parameterlistContext ctx) {
-		ArrayList<String> filenames = new ArrayList<String>();
+    ArrayList<String> filenames = new ArrayList<String>();
 
-		if (ctx != null) {
-			for (int i = 0; i < ctx.open_parameter().size(); i++) {
-				if (ctx.open_parameter(i) instanceof SmallPearlParser.Open_parameter_idfContext) {
-					SmallPearlParser.Open_parameter_idfContext c = (SmallPearlParser.Open_parameter_idfContext) ctx
-							.open_parameter(i);
+    if (ctx != null) {
+      for (int i = 0; i < ctx.open_parameter().size(); i++) {
+        if (ctx.open_parameter(i) instanceof SmallPearlParser.Open_parameter_idfContext) {
+          SmallPearlParser.Open_parameter_idfContext c =
+              (SmallPearlParser.Open_parameter_idfContext) ctx.open_parameter(i);
 
-					if (c.StringLiteral() != null) {
-						String quoteless = c
-								.StringLiteral()
-								.toString()
-								.subSequence(
-										1,
-										c.StringLiteral().toString().length() - 1)
-								.toString();
-						filenames.add(quoteless);
-					} else if (c.ID() != null) {
-						SymbolTableEntry entry = m_currentSymbolTable.lookup(c
-								.ID().getText());
+          if (c.StringLiteral() != null) {
+            String quoteless =
+                c.StringLiteral()
+                    .toString()
+                    .subSequence(1, c.StringLiteral().toString().length() - 1)
+                    .toString();
+            filenames.add(quoteless);
+          } else if (c.ID() != null) {
+            SymbolTableEntry entry = m_currentSymbolTable.lookup(c.ID().getText());
 
-						if (!(entry instanceof VariableEntry)) {
-							throw new UnknownIdentifierException(ctx.getText(),
-									ctx.start.getLine(),
-									ctx.start.getCharPositionInLine());
-						}
+            if (!(entry instanceof VariableEntry)) {
+              throw new UnknownIdentifierException(
+                  ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            }
 
-						filenames.add(c.ID().toString());
-					}
-				}
+            filenames.add(c.ID().toString());
+          }
+        }
+      }
+    }
 
-			}
-		}
-
-		return filenames;
-	}
+    return filenames;
+  }
 	 */
 	/* obsolete semantic analysis enshure <=1 RST attributes
-	private ArrayList<String> getOpenRstVariables(
-			SmallPearlParser.Open_parameterlistContext ctx) {
-		ArrayList<String> vars = new ArrayList<String>();
+    ArrayList<String> vars = new ArrayList<String>();
 
-		if (ctx != null) {
-			for (int i = 0; i < ctx.open_parameter().size(); i++) {
-				if (ctx.open_parameter(i) instanceof SmallPearlParser.Open_parameter_rstContext) {
-					SmallPearlParser.Open_parameter_rstContext c = (SmallPearlParser.Open_parameter_rstContext) ctx
-							.open_parameter(i);
+    if (ctx != null) {
+      for (int i = 0; i < ctx.open_parameter().size(); i++) {
+        if (ctx.open_parameter(i) instanceof SmallPearlParser.Open_parameter_rstContext) {
+          SmallPearlParser.Open_parameter_rstContext c =
+              (SmallPearlParser.Open_parameter_rstContext) ctx.open_parameter(i);
 
-					if (c.ID() != null) {
-						vars.add(c.ID().toString());
-					}
-				}
+          if (c.ID() != null) {
+            vars.add(c.ID().toString());
+          }
+        }
+      }
+    }
 
-			}
-		}
+    return vars;
+  }
 
-		return vars;
-	}
+  private ArrayList<String> getCloseRstVariables(SmallPearlParser.Close_parameterlistContext ctx) {
+    ArrayList<String> vars = new ArrayList<String>();
 
-	private ArrayList<String> getCloseRstVariables(
-			SmallPearlParser.Close_parameterlistContext ctx) {
-		ArrayList<String> vars = new ArrayList<String>();
+    if (ctx != null) {
+      for (int i = 0; i < ctx.close_parameter().size(); i++) {
+        if (ctx.close_parameter(i) instanceof SmallPearlParser.Close_parameter_rstContext) {
+          SmallPearlParser.Close_parameter_rstContext c =
+              (SmallPearlParser.Close_parameter_rstContext) ctx.close_parameter(i);
 
-		if (ctx != null) {
-			for (int i = 0; i < ctx.close_parameter().size(); i++) {
-				if (ctx.close_parameter(i) instanceof SmallPearlParser.Close_parameter_rstContext) {
-					SmallPearlParser.Close_parameter_rstContext c = (SmallPearlParser.Close_parameter_rstContext) ctx
-							.close_parameter(i);
+          if (c.ID() != null) {
+            vars.add(c.ID().toString());
+          }
+        }
+      }
+    }
 
-					if (c.ID() != null) {
-						vars.add(c.ID().toString());
-					}
-				}
-			}
-		}
-
-		return vars;
-	}
+    return vars;
+  }
 	 */
     @Override
     public ST visitOpen_parameterlist(
@@ -3945,33 +3998,35 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
 		/*
-		for (ParseTree c : ctx.children) {
-			if (c instanceof SmallPearlParser.Open_parameter_old_or_new_or_anyContext) {
-				SmallPearlParser.Open_parameter_old_or_new_or_anyContext ctxTmp = (SmallPearlParser.Open_parameter_old_or_new_or_anyContext) c;
-				if (ctxTmp.open_parameter_old_new_any() != null) {
-					st.add("parameter",
-							visitOpen_parameter_old_or_new_or_any(ctxTmp));
-				}
-			} else if (c instanceof SmallPearlParser.Open_parameter_can_or_prmContext) {
-				SmallPearlParser.Open_parameter_can_or_prmContext ctxTmp = (SmallPearlParser.Open_parameter_can_or_prmContext) c;
-				if (ctxTmp.open_parameter_can_prm() != null) {
-					st.add("parameter", visitOpen_parameter_can_or_prm(ctxTmp));
-				}
-			} else if (c instanceof SmallPearlParser.Open_parameter_rstContext) {
-				SmallPearlParser.Open_parameter_rstContext ctxTmp = (SmallPearlParser.Open_parameter_rstContext) c;
-				ST stTmp = m_group.getInstanceOf("open_parameter_rst");
+    for (ParseTree c : ctx.children) {
+      if (c instanceof SmallPearlParser.Open_parameter_old_or_new_or_anyContext) {
+        SmallPearlParser.Open_parameter_old_or_new_or_anyContext ctxTmp =
+            (SmallPearlParser.Open_parameter_old_or_new_or_anyContext) c;
+        if (ctxTmp.open_parameter_old_new_any() != null) {
+          st.add("parameter", visitOpen_parameter_old_or_new_or_any(ctxTmp));
+        }
+      } else if (c instanceof SmallPearlParser.Open_parameter_can_or_prmContext) {
+        SmallPearlParser.Open_parameter_can_or_prmContext ctxTmp =
+            (SmallPearlParser.Open_parameter_can_or_prmContext) c;
+        if (ctxTmp.open_parameter_can_prm() != null) {
+          st.add("parameter", visitOpen_parameter_can_or_prm(ctxTmp));
+        }
+      } else if (c instanceof SmallPearlParser.Open_parameter_rstContext) {
+        SmallPearlParser.Open_parameter_rstContext ctxTmp =
+            (SmallPearlParser.Open_parameter_rstContext) c;
+        ST stTmp = m_group.getInstanceOf("open_parameter_rst");
 
-				if (ctxTmp.ID() != null) {
-					stTmp.add("id", ctxTmp.ID().getText());
-				}
+        if (ctxTmp.ID() != null) {
+          stTmp.add("id", ctxTmp.ID().getText());
+        }
 
-				st.add("parameter", stTmp);
-			} else if (c instanceof SmallPearlParser.Open_parameter_idfContext) {
-				SmallPearlParser.Open_parameter_idfContext ctxTmp = (SmallPearlParser.Open_parameter_idfContext) c;
-				st.add("parameter", visitOpen_parameter_idf(ctxTmp));
-			}
-
-		}
+        st.add("parameter", stTmp);
+      } else if (c instanceof SmallPearlParser.Open_parameter_idfContext) {
+        SmallPearlParser.Open_parameter_idfContext ctxTmp =
+            (SmallPearlParser.Open_parameter_idfContext) c;
+        st.add("parameter", visitOpen_parameter_idf(ctxTmp));
+      }
+    }
 		 */
         return st;
     }
@@ -3997,10 +4052,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             st.add("attribute", 1);
             return st;
         } else if (ctxTmp.getText().equals("NEW")) {
+        instanceof SmallPearlParser.Open_parameter_newContext) {
             ST st = m_group.getInstanceOf("open_parameter_new");
             st.add("attribute", 1);
             return st;
         } else if (ctxTmp.getText().equals("ANY")) {
+        instanceof SmallPearlParser.Open_parameter_anyContext) {
             ST st = m_group.getInstanceOf("open_parameter_any");
             st.add("attribute", 1);
             return st;
@@ -4047,20 +4104,19 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
 		/*			if (c instanceof SmallPearlParser.Open_close_parameter_canContext) {
-				ST can = m_group.getInstanceOf("close_parameter_can");
-				can.add("attribute", 1);
-				st.add("parameter", can);
-			} else if (c instanceof SmallPearlParser.Close_parameter_prmContext) {
-				ST prm = m_group.getInstanceOf("close_parameter_prm");
-				prm.add("attribute", 1);
-				st.add("parameter", prm);
-			} else if (c instanceof SmallPearlParser.Close_parameter_rstContext) {
-				ST rst = m_group.getInstanceOf("close_parameter_rst");
-				rst.add("id",
-						((SmallPearlParser.Close_parameter_rstContext) c).ID());
-				st.add("parameter", rst);
-			}
-		}
+        ST can = m_group.getInstanceOf("close_parameter_can");
+        can.add("attribute", 1);
+        st.add("parameter", can);
+      } else if (c instanceof SmallPearlParser.Close_parameter_prmContext) {
+        ST prm = m_group.getInstanceOf("close_parameter_prm");
+        prm.add("attribute", 1);
+        st.add("parameter", prm);
+      } else if (c instanceof SmallPearlParser.Close_parameter_rstContext) {
+        ST rst = m_group.getInstanceOf("close_parameter_rst");
+        rst.add("id", ((SmallPearlParser.Close_parameter_rstContext) c).ID());
+        st.add("parameter", rst);
+      }
+    }
 		 */
         return st;
     }
@@ -4101,6 +4157,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     ST e = getFactorPositionForIO(
                             (SmallPearlParser.FactorPositionContext) ctx.formatPosition(nextFormatPositionIndex),
                             ctx.dationName().ID().getText(), "from");
+                    ctx.ID(i).getText());
                     stmt.add("elements", e);
                 } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatPositionContext) {
 
@@ -4176,6 +4233,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitPutStatement(SmallPearlParser.PutStatementContext ctx) {
+    Log.debug("CppCodeGeneratorVisitor:visitPutStatement:ctx" + CommonUtils.printContext(ctx));
         ST stmt = m_group.getInstanceOf("put_statement");
         stmt.add("dation", getUserVariable(ctx.dationName().ID().toString()));
 
@@ -4194,11 +4252,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 		there may be less format/positions than data elements - the format/position list is
 		   repeated until all data elements are treated
 
-		if (formatCount > ctx.expression().size()) {
-			throw new NoOfFormatSpecifiersDoesNotMatchException(
-					"put_statement", ctx.start.getLine(),
-					ctx.start.getCharPositionInLine());
-		}
+    if (formatCount > ctx.expression().size()) {
+      throw new NoOfFormatSpecifiersDoesNotMatchException(
+          "put_statement", ctx.start.getLine(), ctx.start.getCharPositionInLine());
+    }
 		 */
         /* this block deals with the repetition of the format list, if more
          * expressions are given than formats
@@ -4232,6 +4289,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                             (SmallPearlParser.FactorPositionContext) ctx
                                     .formatPosition(nextFormatPositionIndex),
                             ctx.dationName().ID().getText(), "to");
+                    ctx.expression(i));
                     stmt.add("elements", e);
                 } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatPositionContext) {
                     ErrorStack.enter(ctx.formatPosition(nextFormatPositionIndex), "factor");
@@ -4244,7 +4302,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                 nextFormatPositionIndex += 1;
             }
-
         }
 
         // apply remaining positioning untikl the format lists end or an FactorFormat appears
@@ -4253,6 +4310,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 ST e = getFactorPositionForIO(
                         (SmallPearlParser.FactorPositionContext) ctx.formatPosition(k),
                         ctx.dationName().ID().getText(), "to");
+                  null);
                 stmt.add("elements", e);
             }
         }
@@ -4275,11 +4333,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (ctx.format().floatFormat() != null) {
             if (ctx.format().floatFormat() instanceof SmallPearlParser.FloatFormatEContext) {
                 currentFormat =
+            "format",
                         getFloatFormatEForPut(
                                 (SmallPearlParser.FloatFormatEContext) ctx
                                         .format().floatFormat(), expression);
             } else if (ctx.format().floatFormat() instanceof SmallPearlParser.FloatFormatE3Context) {
                 currentFormat =
+            "format",
                         getFloatFormatE3ForPut(
                                 (SmallPearlParser.FloatFormatE3Context) ctx
                                         .format().floatFormat(), expression);
@@ -4290,20 +4350,24 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (ctx.format().bitFormat() != null) {
             if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat1Context) {
                 currentFormat = getBitFormat1ForPut(
+            "format",
                         (SmallPearlParser.BitFormat1Context) ctx
                                 .format().bitFormat(), expression);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat2Context) {
                 currentFormat =
+            "format",
                         getBitFormat2ForPut(
                                 (SmallPearlParser.BitFormat2Context) ctx
                                         .format().bitFormat(), expression);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat3Context) {
                 currentFormat =
+            "format",
                         getBitFormat3ForPut(
                                 (SmallPearlParser.BitFormat3Context) ctx
                                         .format().bitFormat(), expression);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat4Context) {
                 currentFormat =
+            "format",
                         getBitFormat4ForPut(
                                 (SmallPearlParser.BitFormat4Context) ctx
                                         .format().bitFormat(), expression);
@@ -4348,10 +4412,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (ctx.format().floatFormat() != null) {
             if (ctx.format().floatFormat() instanceof SmallPearlParser.FloatFormatEContext) {
                 currentFormat = getFloatFormatEForGet(
+            "format",
                         (SmallPearlParser.FloatFormatEContext) ctx
                                 .format().floatFormat(), element);
             } else if (ctx.format().floatFormat() instanceof SmallPearlParser.FloatFormatE3Context) {
                 currentFormat =
+            "format",
                         getFloatFormatE3ForGet(
                                 (SmallPearlParser.FloatFormatE3Context) ctx
                                         .format().floatFormat(), element);
@@ -4362,21 +4428,25 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (ctx.format().bitFormat() != null) {
             if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat1Context) {
                 currentFormat =
+            "format",
                         getBitFormat1ForGet(
                                 (SmallPearlParser.BitFormat1Context) ctx
                                         .format().bitFormat(), element);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat2Context) {
                 currentFormat =
+            "format",
                         getBitFormat2ForGet(
                                 (SmallPearlParser.BitFormat2Context) ctx
                                         .format().bitFormat(), element);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat3Context) {
                 currentFormat =
+            "format",
                         getBitFormat3ForGet(
                                 (SmallPearlParser.BitFormat3Context) ctx
                                         .format().bitFormat(), element);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat4Context) {
                 currentFormat =
+            "format",
                         getBitFormat4ForGet(
                                 (SmallPearlParser.BitFormat4Context) ctx
                                         .format().bitFormat(), element);
@@ -4416,6 +4486,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         if (ctx instanceof SmallPearlParser.CharacterStringFormatAContext) {
             SmallPearlParser.CharacterStringFormatAContext c = (SmallPearlParser.CharacterStringFormatAContext) ctx;
+          (SmallPearlParser.CharacterStringFormatAContext) ctx;
 
             if (c.fieldWidth() != null) {
                 st.add("fieldwidth", getExpression(c.fieldWidth().expression()));
@@ -4433,6 +4504,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         if (ctx instanceof SmallPearlParser.CharacterStringFormatAContext) {
             SmallPearlParser.CharacterStringFormatAContext c = (SmallPearlParser.CharacterStringFormatAContext) ctx;
+          (SmallPearlParser.CharacterStringFormatAContext) ctx;
 
             if (c.fieldWidth() != null) {
                 st.add("fieldwidth", getExpression(c.fieldWidth().expression()));
@@ -4480,6 +4552,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         .expression()));
             } else {
                 st.add("significance",
+            "significance",
                         "("
                                 + getExpression(
                                 ctx.decimalPositions().expression())
@@ -4514,6 +4587,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         .expression()));
             } else {
                 st.add("significance",
+            "significance",
                         "("
                                 + getExpression(
                                 ctx.decimalPositions().expression())
@@ -4524,7 +4598,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return st;
     }
 
-
+  private ST getBitFormat1ForPut(
     private ST getBitFormat1ForPut(SmallPearlParser.BitFormat1Context ctx,
                                    SmallPearlParser.ExpressionContext expression) {
         ST st = m_group.getInstanceOf("io_bit_format_1");
@@ -4655,6 +4729,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         .expression()));
             } else {
                 st.add("significance",
+            "significance",
                         "("
                                 + getExpression(
                                 ctx.decimalPositions().expression())
@@ -4691,6 +4766,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         .expression()));
             } else {
                 st.add("significance",
+            "significance",
                         "("
                                 + getExpression(
                                 ctx.decimalPositions().expression())
@@ -4793,6 +4869,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     private ST treatPositionForIO(ST st, SmallPearlParser.PositionContext ctx, String dation, String direction) {
         ParseTree child = ctx.getChild(0);
+      String dation,
 
         if (child instanceof SmallPearlParser.PositionRSTContext) {
             SmallPearlParser.PositionRSTContext c = (SmallPearlParser.PositionRSTContext) child;
@@ -4960,6 +5037,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             SmallPearlParser.Take_send_rstContext c = ctx.take_send_rst();
 
             el.add("id", getUserVariable(c.ID().getText()));
+                ctx.take_send_rst_s_ctrl_format(i);
+            (SmallPearlParser.Take_send_rst_s_ctrl_format_SContext)
+                ctx.take_send_rst_s_ctrl_format(i);
+            (SmallPearlParser.Take_send_rst_s_ctrl_format_CONTROLContext)
+                ctx.take_send_rst_s_ctrl_format(i);
             el.add("dation", getUserVariable(dation));
             st.add("elements", el);
         }
@@ -4999,6 +5081,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             SmallPearlParser.Take_send_rstContext c = ctx.take_send_rst();
 
             el.add("id", getUserVariable(c.ID().getText()));
+                ctx.take_send_rst_s_ctrl_format(i);
+            (SmallPearlParser.Take_send_rst_s_ctrl_format_SContext)
+                ctx.take_send_rst_s_ctrl_format(i);
+            (SmallPearlParser.Take_send_rst_s_ctrl_format_CONTROLContext)
+                ctx.take_send_rst_s_ctrl_format(i);
             el.add("dation", getUserVariable(dation));
             st.add("elements", el);
         }
@@ -5077,11 +5164,38 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             addVariableOrArrayIdToSt(el, ctx.ID(i));
 
 
+              visitReadWriteAbsolutePositionCOL(
+                  (SmallPearlParser.ReadWriteAbsolutePositionCOLContext)
+                      c.readWriteAbsolutePosition());
+              visitReadWriteAbsolutePositionLINE(
+                  (SmallPearlParser.ReadWriteAbsolutePositionLINEContext)
+                      c.readWriteAbsolutePosition());
+              visitReadWriteAbsolutePositionPOS(
+                  (SmallPearlParser.ReadWriteAbsolutePositionPOSContext)
+                      c.readWriteAbsolutePosition());
+              visitReadWriteAbsolutePositionSOP(
+                  (SmallPearlParser.ReadWriteAbsolutePositionSOPContext)
+                      c.readWriteAbsolutePosition());
             el.add("dation", getUserVariable(dation));
             st.add("elements", el);
         }
 
         return st;
+              visitReadWriteRelativePositionX(
+                  (SmallPearlParser.ReadWriteRelativePositionXContext)
+                      c.readWriteRelativePosition());
+              visitReadWriteRelativePositionSKIP(
+                  (SmallPearlParser.ReadWriteRelativePositionSKIPContext)
+                      c.readWriteRelativePosition());
+              visitReadWriteRelativePositionPAGE(
+                  (SmallPearlParser.ReadWriteRelativePositionPAGEContext)
+                      c.readWriteRelativePosition());
+              visitReadWriteRelativePositionADV(
+                  (SmallPearlParser.ReadWriteRelativePositionADVContext)
+                      c.readWriteRelativePosition());
+              visitReadWriteRelativePositionEOF(
+                  (SmallPearlParser.ReadWriteRelativePositionEOFContext)
+                      c.readWriteRelativePosition());
     }
 
     private void addVariableOrArrayIdToSt(ST el, TerminalNode id) {
@@ -5135,6 +5249,30 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         (SmallPearlParser.PositionContext) ctx.position(i),
                         dation, "to");
                 st.add("elements", e);
+              visitReadWriteAbsolutePositionLINE(
+                  (SmallPearlParser.ReadWriteAbsolutePositionLINEContext)
+                      c.readWriteAbsolutePosition());
+              visitReadWriteAbsolutePositionPOS(
+                  (SmallPearlParser.ReadWriteAbsolutePositionPOSContext)
+                      c.readWriteAbsolutePosition());
+              visitReadWriteAbsolutePositionSOP(
+                  (SmallPearlParser.ReadWriteAbsolutePositionSOPContext)
+                      c.readWriteAbsolutePosition());
+              visitReadWriteRelativePositionX(
+                  (SmallPearlParser.ReadWriteRelativePositionXContext)
+                      c.readWriteRelativePosition());
+              visitReadWriteRelativePositionSKIP(
+                  (SmallPearlParser.ReadWriteRelativePositionSKIPContext)
+                      c.readWriteRelativePosition());
+              visitReadWriteRelativePositionPAGE(
+                  (SmallPearlParser.ReadWriteRelativePositionPAGEContext)
+                      c.readWriteRelativePosition());
+              visitReadWriteRelativePositionADV(
+                  (SmallPearlParser.ReadWriteRelativePositionADVContext)
+                      c.readWriteRelativePosition());
+              visitReadWriteRelativePositionEOF(
+                  (SmallPearlParser.ReadWriteRelativePositionEOFContext)
+                      c.readWriteRelativePosition());
             }
         }
 
@@ -5173,130 +5311,130 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     }
 
     /*
-	@Override
-	public ST visitReadWriteAbsolutePositionCOL(
-			SmallPearlParser.ReadWriteAbsolutePositionCOLContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_col_position");
-		st.add("expression", ctx.expression().getText());
-		return st;
-	}
+  @Override
+  public ST visitReadWriteAbsolutePositionCOL(
+      SmallPearlParser.ReadWriteAbsolutePositionCOLContext ctx) {
+    ST st = m_group.getInstanceOf("read_write_col_position");
+    st.add("expression", ctx.expression().getText());
+    return st;
+  }
 
-	@Override
-	public ST visitReadWriteAbsolutePositionLINE(
-			SmallPearlParser.ReadWriteAbsolutePositionLINEContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_line_position");
-		st.add("expression", ctx.expression().getText());
-		return st;
-	}
+  @Override
+  public ST visitReadWriteAbsolutePositionLINE(
+      SmallPearlParser.ReadWriteAbsolutePositionLINEContext ctx) {
+    ST st = m_group.getInstanceOf("read_write_line_position");
+    st.add("expression", ctx.expression().getText());
+    return st;
+  }
 
-	@Override
-	public ST visitReadWriteAbsolutePositionPOS(
-			SmallPearlParser.ReadWriteAbsolutePositionPOSContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_pos_position");
+  @Override
+  public ST visitReadWriteAbsolutePositionPOS(
+      SmallPearlParser.ReadWriteAbsolutePositionPOSContext ctx) {
+    ST st = m_group.getInstanceOf("read_write_pos_position");
 
-		if (ctx.expression().size() == 3) {
-			st.add("expression1", getExpression(ctx.expression(0)));
-			st.add("expression2", getExpression(ctx.expression(1)));
-			st.add("expression3", getExpression(ctx.expression(2)));
-		} else if (ctx.expression().size() == 2) {
-			st.add("expression1", getExpression(ctx.expression(0)));
-			st.add("expression2", getExpression(ctx.expression(1)));
-		} else if (ctx.expression().size() == 1) {
-			st.add("expression1", getExpression(ctx.expression(0)));
-		}
+    if (ctx.expression().size() == 3) {
+      st.add("expression1", getExpression(ctx.expression(0)));
+      st.add("expression2", getExpression(ctx.expression(1)));
+      st.add("expression3", getExpression(ctx.expression(2)));
+    } else if (ctx.expression().size() == 2) {
+      st.add("expression1", getExpression(ctx.expression(0)));
+      st.add("expression2", getExpression(ctx.expression(1)));
+    } else if (ctx.expression().size() == 1) {
+      st.add("expression1", getExpression(ctx.expression(0)));
+    }
 
-		return st;
-	}
+    return st;
+  }
 
-	@Override
-	public ST visitReadWriteAbsolutePositionSOP(
-			SmallPearlParser.ReadWriteAbsolutePositionSOPContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_sop_position");
+  @Override
+  public ST visitReadWriteAbsolutePositionSOP(
+      SmallPearlParser.ReadWriteAbsolutePositionSOPContext ctx) {
+    ST st = m_group.getInstanceOf("read_write_sop_position");
 
-		if (ctx.ID().size() == 3) {
-			st.add("id1", getUserVariable(ctx.ID(0).getText()));
-			st.add("id2", getUserVariable(ctx.ID(1).getText()));
-			st.add("id3", getUserVariable(ctx.ID(2).getText()));
-		} else if (ctx.ID().size() == 2) {
-			st.add("id1", getUserVariable(ctx.ID(0).getText()));
-			st.add("id2", getUserVariable(ctx.ID(1).getText()));
-		} else if (ctx.ID().size() == 1) {
-			st.add("id1", getUserVariable(ctx.ID(0).getText()));
-		}
+    if (ctx.ID().size() == 3) {
+      st.add("id1", getUserVariable(ctx.ID(0).getText()));
+      st.add("id2", getUserVariable(ctx.ID(1).getText()));
+      st.add("id3", getUserVariable(ctx.ID(2).getText()));
+    } else if (ctx.ID().size() == 2) {
+      st.add("id1", getUserVariable(ctx.ID(0).getText()));
+      st.add("id2", getUserVariable(ctx.ID(1).getText()));
+    } else if (ctx.ID().size() == 1) {
+      st.add("id1", getUserVariable(ctx.ID(0).getText()));
+    }
 
-		return st;
-	}
+    return st;
+  }
 
 
   	@Override
  	public ST visitReadRSTPosition(SmallPearlParser.ReadRSTPositionContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_rst_position");
-		st.add("id", getUserVariable(ctx.ID().getText()));
-		return st;
-	}
+    ST st = m_group.getInstanceOf("read_write_rst_position");
+    st.add("id", getUserVariable(ctx.ID().getText()));
+    return st;
+  }
 
-	@Override
-	public ST visitWriteRSTPosition(SmallPearlParser.WriteRSTPositionContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_rst_position");
-		st.add("id", getUserVariable(ctx.ID().getText()));
-		return st;
-	}
+  @Override
+  public ST visitWriteRSTPosition(SmallPearlParser.WriteRSTPositionContext ctx) {
+    ST st = m_group.getInstanceOf("read_write_rst_position");
+    st.add("id", getUserVariable(ctx.ID().getText()));
+    return st;
+  }
 
-	@Override
-	public ST visitReadWriteRelativePositionX(
-			SmallPearlParser.ReadWriteRelativePositionXContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_x_position");
-		if (ctx.expression() != null) {
-			st.add("expression", ctx.expression().getText());
-		}
-		return st;
-	}
+  @Override
+  public ST visitReadWriteRelativePositionX(
+      SmallPearlParser.ReadWriteRelativePositionXContext ctx) {
+    ST st = m_group.getInstanceOf("read_write_x_position");
+    if (ctx.expression() != null) {
+      st.add("expression", ctx.expression().getText());
+    }
+    return st;
+  }
 
-	@Override
-	public ST visitReadWriteRelativePositionSKIP(
-			SmallPearlParser.ReadWriteRelativePositionSKIPContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_skip_position");
-		if (ctx.expression() != null) {
-			st.add("expression", ctx.expression().getText());
-		}
-		return st;
-	}
+  @Override
+  public ST visitReadWriteRelativePositionSKIP(
+      SmallPearlParser.ReadWriteRelativePositionSKIPContext ctx) {
+    ST st = m_group.getInstanceOf("read_write_skip_position");
+    if (ctx.expression() != null) {
+      st.add("expression", ctx.expression().getText());
+    }
+    return st;
+  }
 
-	@Override
-	public ST visitReadWriteRelativePositionPAGE(
-			SmallPearlParser.ReadWriteRelativePositionPAGEContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_page_position");
-		if (ctx.expression() != null) {
-			st.add("expression", ctx.expression().getText());
-		}
-		return st;
-	}
+  @Override
+  public ST visitReadWriteRelativePositionPAGE(
+      SmallPearlParser.ReadWriteRelativePositionPAGEContext ctx) {
+    ST st = m_group.getInstanceOf("read_write_page_position");
+    if (ctx.expression() != null) {
+      st.add("expression", ctx.expression().getText());
+    }
+    return st;
+  }
 
-	@Override
-	public ST visitReadWriteRelativePositionADV(
-			SmallPearlParser.ReadWriteRelativePositionADVContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_adv_position");
+  @Override
+  public ST visitReadWriteRelativePositionADV(
+      SmallPearlParser.ReadWriteRelativePositionADVContext ctx) {
+    ST st = m_group.getInstanceOf("read_write_adv_position");
 
-		if (ctx.expression().size() == 3) {
-			st.add("expression1", ctx.expression(0).getText());
-			st.add("expression2", ctx.expression(1).getText());
-			st.add("expression3", ctx.expression(2).getText());
-		} else if (ctx.expression().size() == 2) {
-			st.add("expression1", ctx.expression(0).getText());
-			st.add("expression2", ctx.expression(1).getText());
-		} else if (ctx.expression().size() == 1) {
-			st.add("expression1", ctx.expression(0).getText());
-		}
+    if (ctx.expression().size() == 3) {
+      st.add("expression1", ctx.expression(0).getText());
+      st.add("expression2", ctx.expression(1).getText());
+      st.add("expression3", ctx.expression(2).getText());
+    } else if (ctx.expression().size() == 2) {
+      st.add("expression1", ctx.expression(0).getText());
+      st.add("expression2", ctx.expression(1).getText());
+    } else if (ctx.expression().size() == 1) {
+      st.add("expression1", ctx.expression(0).getText());
+    }
 
-		return st;
-	}
+    return st;
+  }
 
-	@Override
-	public ST visitReadWriteRelativePositionEOF(
-			SmallPearlParser.ReadWriteRelativePositionEOFContext ctx) {
-		ST st = m_group.getInstanceOf("read_write_eof_position");
-		return st;
-	}
+  @Override
+  public ST visitReadWriteRelativePositionEOF(
+      SmallPearlParser.ReadWriteRelativePositionEOFContext ctx) {
+    ST st = m_group.getInstanceOf("read_write_eof_position");
+    return st;
+  }
 	 */
     @Override
     public ST visitCallStatement(SmallPearlParser.CallStatementContext ctx) {
@@ -5778,7 +5916,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                             .getInstanceOf("SpecificationSystemDationRW");
                     specifyDation.add("name", identifierDenotationList.get(i));
                     dationSpecifications.add("decl", specifyDation);
-
                 }
             }
         }
@@ -5817,6 +5954,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             for (ParseTree c : ctx.children) {
                 if (c instanceof SmallPearlParser.IdentifierDenotationContext) {
                     identifierDenotationList = getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
+              getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
                 }
             }
 
@@ -5882,23 +6020,19 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 	/* @Override
 	replaced be TypeDation
 
-	public ST visitSpecifyTypeDation(
-			SmallPearlParser.SpecifyTypeDationContext ctx) {
-		if (ctx.classAttribute() != null) {
-			if (ctx.classAttribute().systemDation() != null) {
-			}
+    if (ctx.classAttribute() != null) {
+      if (ctx.classAttribute().systemDation() != null) {}
 
-			if (ctx.classAttribute().alphicDation() != null) {
-			} else if (ctx.classAttribute().basicDation() != null) {
-				ST st = m_group.getInstanceOf("DationSpecificationBasic");
-				st.add("SourceSinkAttribute", ctx.sourceSinkAttribute()
-						.getText());
-				return st;
-			}
-		}
+      if (ctx.classAttribute().alphicDation() != null) {
+      } else if (ctx.classAttribute().basicDation() != null) {
+        ST st = m_group.getInstanceOf("DationSpecificationBasic");
+        st.add("SourceSinkAttribute", ctx.sourceSinkAttribute().getText());
+        return st;
+      }
+    }
 
-		return null;
-	}
+    return null;
+  }
 	 */
 
     @Override
@@ -5964,10 +6098,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         if (ctx.typeOfTransmissionData() != null) {
             if (ctx.typeOfTransmissionData() instanceof SmallPearlParser.TypeOfTransmissionDataALLContext) {
+          instanceof SmallPearlParser.TypeOfTransmissionDataALLContext) {
                 return "DationRW";
             }
 
             if (ctx.typeOfTransmissionData() instanceof SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) {
+          instanceof SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) {
                 return "DationRW";
             }
         }
@@ -6014,6 +6150,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             st.add("all", "1");
         } else if (ctx instanceof SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) {
             SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext c = (SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) ctx;
+          (SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) ctx;
             st.add("type", visitSimpleType(c.simpleType()));
         }
 
@@ -6051,9 +6188,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         for (ParseTree c : ctx.children) {
             if (c instanceof SmallPearlParser.ScalarVariableDeclarationContext) {
                 st.add("code",
+            "code",
                         visitScalarVariableDeclaration((SmallPearlParser.ScalarVariableDeclarationContext) c));
             } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                 st.add("code",
+            "code",
                         visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c));
             } else if (c instanceof SmallPearlParser.StatementContext) {
                 st.add("code",
@@ -6213,6 +6352,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitGlobalAttribute((SmallPearlParser.GlobalAttributeContext) c));
             } else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
                 st.add("listOfFormalParameters",
+            "listOfFormalParameters",
                         visitListOfFormalParameters((SmallPearlParser.ListOfFormalParametersContext) c));
             }
         }
@@ -6236,6 +6376,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitGlobalAttribute((SmallPearlParser.GlobalAttributeContext) c));
             } else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
                 st.add("listOfFormalParameters",
+            "listOfFormalParameters",
                         visitListOfFormalParameters((SmallPearlParser.ListOfFormalParametersContext) c));
             }
         }
@@ -6329,8 +6470,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 if (c instanceof SmallPearlParser.ScalarVariableDeclarationContext) {
                     st.add("declarations",
                             visitScalarVariableDeclaration((SmallPearlParser.ScalarVariableDeclarationContext) c));
+              visitScalarVariableDeclaration(
+                  (SmallPearlParser.ScalarVariableDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                     st.add("declarations",
+              "declarations",
                             visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.StatementContext) {
                     st.add("statements",
@@ -6426,7 +6570,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             ST st = m_group.getInstanceOf("CHARACTERSTOFIXED");
             st.add("operand", getExpression(ctx.expression()));
             return st;
-
         }
 
         return null;
@@ -6578,51 +6721,44 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
 	we go directly to the ConvertTo and ConvertFrom visitors
 
-	@Override
-	public ST visitConvertStatement(SmallPearlParser.ConvertStatementContext ctx) {
-		ST st = m_group.getInstanceOf("ConvertStatement");
+  @Override
+  public ST visitConvertStatement(SmallPearlParser.ConvertStatementContext ctx) {
+    ST st = m_group.getInstanceOf("ConvertStatement");
 
-		if (m_verbose > 0) {
-			System.out
-					.println("CppCodeGeneratorVisitor: visitConvertStatement");
-		}
+    if (m_verbose > 0) {
+      System.out.println("CppCodeGeneratorVisitor: visitConvertStatement");
+    }
 
-		if (ctx.convertToStatement() != null) {
-			st.add("convert", visitConvertToStatement(ctx.convertToStatement()));
-		} else if (ctx.convertFromStatement() != null) {
-			st.add("convert",
-					visitConvertFromStatement(ctx.convertFromStatement()));
-		}
+    if (ctx.convertToStatement() != null) {
+      st.add("convert", visitConvertToStatement(ctx.convertToStatement()));
+    } else if (ctx.convertFromStatement() != null) {
+      st.add("convert", visitConvertFromStatement(ctx.convertFromStatement()));
+    }
 
-		return st;
-	}
+    return st;
+  }
 	 */
 	/*
-	@Override
-	public ST visitFormatOrPositionConvert(
-			SmallPearlParser.FormatOrPositionConvertContext ctx) {
-		System.out
-				.println("CppCodeGeneratorVisitor: visitFormatOrPositionConvert");
-		visitChildren(ctx);
-		return null;
-	}
+  @Override
+  public ST visitFormatOrPositionConvert(SmallPearlParser.FormatOrPositionConvertContext ctx) {
+    System.out.println("CppCodeGeneratorVisitor: visitFormatOrPositionConvert");
+    visitChildren(ctx);
+    return null;
+  }
 
-	@Override
-	public ST visitFormatFactorConvert(
-			SmallPearlParser.FormatFactorConvertContext ctx) {
-		System.out.println("CppCodeGeneratorVisitor: visitFormatFactorConvert");
-		visitChildren(ctx);
-		return null;
+  @Override
+  public ST visitFormatFactorConvert(SmallPearlParser.FormatFactorConvertContext ctx) {
+    System.out.println("CppCodeGeneratorVisitor: visitFormatFactorConvert");
+    visitChildren(ctx);
+    return null;
+  }
 
-	}
-
-	@Override
-	public ST visitFormatConvert(SmallPearlParser.FormatConvertContext ctx) {
-		System.out.println("CppCodeGeneratorVisitor: visitFormatConvert");
-		visitChildren(ctx);
-		return null;
-
-	}
+  @Override
+  public ST visitFormatConvert(SmallPearlParser.FormatConvertContext ctx) {
+    System.out.println("CppCodeGeneratorVisitor: visitFormatConvert");
+    visitChildren(ctx);
+    return null;
+  }
 	 */
     // @Override
     // public ST visitPositionConvert(SmallPearlParser.PositionConvertContext
@@ -6668,11 +6804,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 		there may be less format/positions than data elements - the format/position list is
 		   repeated until all data elements are treated
 
-		if (formatCount > ctx.expression().size()) {
-			throw new NoOfFormatSpecifiersDoesNotMatchException(
-					"put_statement", ctx.start.getLine(),
-					ctx.start.getCharPositionInLine());
-		}
+    if (formatCount > ctx.expression().size()) {
+      throw new NoOfFormatSpecifiersDoesNotMatchException(
+          "put_statement", ctx.start.getLine(), ctx.start.getCharPositionInLine());
+    }
 		 */
         /* this block deals with the repetition of the format list, if more
          * expressions are given than formats
@@ -6907,6 +7042,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 .constantFixedExpression(1));
 
         if (lwb == null || upb == null || !(lwb instanceof ConstantFixedValue)
+        || upb == null
+        || !(lwb instanceof ConstantFixedValue)
                 || !(upb instanceof ConstantFixedValue)) {
             throw new InternalCompilerErrorException(ctx.getText(),
                     ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -7000,7 +7137,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         // | StringLiteral
         // | 'NIL'
         return null;
-
     }
 
     /**
@@ -7031,5 +7167,4 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         }
         return s;
     }
-
 }

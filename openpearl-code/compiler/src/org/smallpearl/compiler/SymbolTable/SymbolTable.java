@@ -31,6 +31,7 @@
 package org.smallpearl.compiler.SymbolTable;
 
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.NotYetImplementedException;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -131,6 +132,7 @@ public class SymbolTable {
     }
 
     public SymbolTableEntry lookupLocal(String name) {
+        Log.debug("SymbolTable:lookupLocal: name=" + name);
         return (SymbolTableEntry) m_entries.get(name);
     }
 
@@ -196,7 +198,7 @@ public class SymbolTable {
     public void dump() {
         System.out.println();
         System.out.println("Symboltable:");
-        System.out.println(toString());
+        System.out.println(toString()+"\n");
     }
 
     public String toString() {
@@ -219,7 +221,6 @@ public class SymbolTable {
 
         return output;
     }
-
 
     public LinkedList<TaskEntry> getTaskDeclarations() {
         LinkedList<TaskEntry>  listOfTaskEntries = new  LinkedList<TaskEntry>();
@@ -306,6 +307,50 @@ public class SymbolTable {
         return listOfModules;
     }
 
+    public LinkedList<StructureEntry> getStructureDeclarations() {
+        LinkedList<StructureEntry>  listOfStructureEntries = new  LinkedList<StructureEntry>();
+        SymbolTableEntry e;
+
+        for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
+            if (symbolTableEntry instanceof StructureEntry) {
+                StructureEntry structEntry = (StructureEntry) symbolTableEntry;
+                listOfStructureEntries.add(structEntry);
+            }
+            else if (symbolTableEntry instanceof ModuleEntry) {
+                getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope, listOfStructureEntries);
+            }
+        }
+
+        return listOfStructureEntries;
+    }
+
+    private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable, LinkedList<StructureEntry> list) {
+        SymbolTableEntry e;
+
+        for (Iterator it = symbolTable.m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
+
+            if (symbolTableEntry instanceof StructureEntry) {
+                StructureEntry structEntry = (StructureEntry) symbolTableEntry;
+                list.add(structEntry);
+            }
+            else if (symbolTableEntry instanceof ModuleEntry) {
+                ModuleEntry entry = (ModuleEntry)symbolTableEntry;
+                getStructureDeclarationsForSymboltable(entry.scope, list);
+            }
+            else if (symbolTableEntry instanceof VariableEntry) {
+                VariableEntry entry = (VariableEntry)symbolTableEntry;
+                if ( entry.getType() instanceof TypeStructure ) {
+                    System.out.println("**" + ((TypeStructure) entry.getType()).getStructureName());
+
+                }
+            }
+
+        }
+    }
+
+
     public int lookupDefaultFixedLength() {
         SymbolTableEntry entry = this.lookup("~LENGTH_FIXED~");
 
@@ -377,6 +422,32 @@ public class SymbolTable {
 
         return -1;
     }
+
+    public int getNumberOfComponents(TypeStructure typ) {
+        int numberOfComponents = 0;
+
+        for (int i = 0; i < typ.m_listOfComponents.size(); i++ ) {
+            TypeDefinition componentType = typ.m_listOfComponents.get(i).m_type;
+             numberOfComponents += getNumberOfComponents(componentType);
+        }
+
+        return numberOfComponents;
+    }
+
+    public int getNumberOfComponents(TypeArray typ) {
+        return typ.getTotalNoOfElements() * getNumberOfComponents(typ.getBaseType());
+    }
+
+    public int getNumberOfComponents(TypeDefinition typ) {
+        if ( typ instanceof TypeArray) {
+            return getNumberOfComponents((TypeArray)typ);
+        } else if ( typ instanceof TypeStructure) {
+            return getNumberOfComponents((TypeStructure)typ);
+        } else {
+            return 1;
+        }
+    }
+
 
     public void setUsesSystemElements() { m_usesSystemElements = true;}
     public boolean usesSystemElements() { return m_usesSystemElements;}

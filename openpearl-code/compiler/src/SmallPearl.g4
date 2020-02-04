@@ -34,7 +34,7 @@ grammar SmallPearl;
 @header
 {
     package org.smallpearl.compiler;
-    import org.smallpearl.compiler.OpenPearlLexer;
+    import org.smallpearl.compiler.SmallPearlLexer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -446,7 +446,7 @@ structVariableDeclaration :
 
 ////////////////////////////////////////////////////////////////////////////////
 // StructureDenotation ::=
-//   IdentifierDenotation§MainStructure [ DimensionAttribute ][INV ]
+//   IdentifierDenotation§MainStructure [ DimensionAttribute ]
 //   TypeStructure [ GlobalAttribute ][ InitialisationAttribute ]
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -470,7 +470,7 @@ typeStructure :
 ////////////////////////////////////////////////////////////////////////////////
 
 structureComponent :
-    ( ID | '(' ID ( ',' ID)* ')' ) dimensionAttribute? typeAttributeInStructureComponent
+    ( ID | '(' ID ( ',' ID)* ')' ) dimensionAttribute? assignmentProtection? typeAttributeInStructureComponent
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -479,7 +479,7 @@ structureComponent :
 ////////////////////////////////////////////////////////////////////////////////
 
 typeAttributeInStructureComponent :
-    assignmentProtection? (simpleType | structuredType )
+    (simpleType | structuredType )
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -666,7 +666,7 @@ listOfFormalParameters :
    ;
 
 ////////////////////////////////////////////////////////////////////////////////
-// TODO: FormalParameter ::=
+// FormalParameter ::=
 //   Identifier or IdentifierList [ VirtualDimensionList ] [ AssignmentProtection ] ParameterType [ IDENTICAL | IDENT ]
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -693,8 +693,11 @@ passIdentical:
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-// TODO: VirtualDimensionList ::= ([,... ])
+// VirtualDimensionList ::= ([,... ])
 ////////////////////////////////////////////////////////////////////////////////
+virtualDimensionList2:
+    '(' (',')* ')'
+    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO: ParameterType ::=
@@ -896,7 +899,19 @@ exitStatement
 ////////////////////////////////////////////////////////////////////////////////
 
 assignment_statement
-    : ( dereference? ID indices? | stringSelection ) ( ':=' | '=' ) expression ';'
+    : ( dereference? ID indices? | stringSelection | selector) ( ':=' | '=' ) expression ';'
+    ;
+
+////////////////////////////////////////////////////////////////////////////////
+
+selector
+    : ID indices? ( '.' selectors )*
+    ;
+
+////////////////////////////////////////////////////////////////////////////////
+
+selectors
+    : ID indices? | stringSelection
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2203,16 +2218,35 @@ numericLiteralNegative
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
+// Name ::=
+//    Identifier [ ( Index [ , Index ] ... ) ] [ . Name ]
+////////////////////////////////////////////////////////////////////////////////
+
+name
+    : ID ( '(' index ( ',' index )? ')' )? ( '.' name )?
+    ;
+
+////////////////////////////////////////////////////////////////////////////////
+// Index ::=
+//  Expression§WithIntegerAsValue
+////////////////////////////////////////////////////////////////////////////////
+
+index :
+    expression
+    ;
+
+////////////////////////////////////////////////////////////////////////////////
 
 primaryExpression
 	: '(' expression ')'
-    | ID
-//    | ID indices
-    | ID '(' expression  ( ',' expression )* ')'
-//    | ID listOfActualParameters?
+//  | ID
+//  | ID indices
+//  | ID '(' expression  ( ',' expression )* ')'
+    | name
+    | ID listOfActualParameters?
     | literal
     | semaTry
-//    | monadicExplicitTypeConversionOperators
+//  | monadicExplicitTypeConversionOperators
     | stringSlice
     ;
 
@@ -2635,8 +2669,14 @@ constant :
     | timeConstant
     | sign? durationConstant
     | bitStringConstant
-    | StringLiteral
+    | stringConstant
     | 'NIL'
+    ;
+
+////////////////////////////////////////////////////////////////////////////////
+
+stringConstant:
+    StringLiteral
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2788,7 +2828,6 @@ lengthDefinitionType
     | 'BIT'                            #lengthDefinitionBitType
     | ( 'CHARACTER' | 'CHAR' )         #lengthDefinitionCharacterType
     ;
-
 ////////////////////////////////////////////////////////////////////////////////
 
  precision
@@ -2842,9 +2881,11 @@ Newline
 STRING: '"' (~'"')* '"'
     ;
 
-INCLUDE_TOKEN:
-    '#INCLUDE' Whitespace? STRING ';'
-    {
+////////////////////////////////////////////////////////////////////////////////
+
+//INCLUDE_TOKEN:
+//    '#INCLUDE' Whitespace? STRING ';'
+//    {
 //        try {
 //            System.out.println( "include file:" + getText());
 //            ANTLRFileStream inputStream = new ANTLRFileStream("/home/marcel/repositories/openpearl-code/openpearl-code/testsuite/build/TEST.PRL");
@@ -2861,10 +2902,9 @@ INCLUDE_TOKEN:
 //
 //        System.out.println( "include file:" + getText());
 //        System.out.println( _input);
-          nextToken();
-
-    }
-    ;
+//        nextToken();
+//    }
+//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 

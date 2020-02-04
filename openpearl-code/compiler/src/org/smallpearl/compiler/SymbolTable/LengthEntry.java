@@ -32,7 +32,7 @@ public class LengthEntry extends SymbolTableEntry {
             s += "(" + ((TypeBit)this.m_type).getPrecision() +")";
         }
         else if ( this.m_type instanceof TypeChar) {
-            s += "(" + ((TypeChar)this.m_type).getSize() +")";
+            s += "(" + ((TypeChar)this.m_type).getPrecision() +")";
         }
 
         return s;

@@ -40,7 +40,6 @@ import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
-
 public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
     private int m_verbose;
     private boolean m_debug;
@@ -170,9 +169,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitPrimaryExpression(SmallPearlParser.PrimaryExpressionContext ctx) {
-        Log.debug("visitBaseExpression:visitPrimaryExpression");
-
-        ASTAttribute primaryExpr = m_ast.lookup(ctx);
+        Log.debug("ConstantPoolVisitor:visitBaseExpression:visitPrimaryExpression:ctx" + CommonUtils.printContext(ctx));
 
         visitChildren(ctx);
 
@@ -181,8 +178,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitLiteral(SmallPearlParser.LiteralContext ctx) {
-        if (m_debug)
-            System.out.println("ConstantPoolVisitor: visitLiteral");
+        Log.debug("ConstantPoolVisitor: visitLiteral");
 
         if (ctx.durationConstant() != null) {
             m_constantPool.add(CommonUtils.getConstantDurationValue(ctx.durationConstant(),1));
@@ -318,7 +314,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                             throw new NumberOutOfRangeException(ctx.getText(), literal_ctx.start.getLine(), literal_ctx.start.getCharPositionInLine());
                         }
                     } else if (literal_ctx.timeConstant() != null) {
-                        System.out.println("ConstantPoolVisitor:unarySubstractive for CLOCK: not supported");
+                        System.out.println("time:(" + ")");
                     } else if (literal_ctx.durationConstant() != null) {
                         add(CommonUtils.getConstantDurationValue(literal_ctx.durationConstant(),-1));
                     }
@@ -426,7 +422,6 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         	s = CommonUtils.removeQuotes(s);
         	s = CommonUtils.unescapePearlString(s);
         	m_constantPool.add(new ConstantCharacterValue(s));
-            //m_constantPool.add(new ConstantCharacterValue(ctx.StringLiteral().toString()));
         } else if (ctx.durationConstant() != null) {
             Integer hours = 0;
             Integer minutes = 0;

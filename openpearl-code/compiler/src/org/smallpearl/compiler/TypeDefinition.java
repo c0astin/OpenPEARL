@@ -63,4 +63,8 @@ public abstract class TypeDefinition {
     public ST toST(STGroup group) {
         return null;
     }
+
+    public Integer getPrecision() { return 0;}
+
+    public int getNoOfBytes() { return 0;}
 }

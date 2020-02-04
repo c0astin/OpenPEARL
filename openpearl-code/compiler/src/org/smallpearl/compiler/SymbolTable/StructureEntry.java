@@ -30,7 +30,8 @@
 
 package org.smallpearl.compiler.SymbolTable;
 
-import org.smallpearl.compiler.SmallPearlParser;
+import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
 
 import java.util.LinkedList;
 
@@ -41,7 +42,6 @@ public class StructureEntry extends SymbolTableEntry {
         m_listOfStructureComponents = new LinkedList<>() ;
     }
 
-
     public StructureEntry(String name, SmallPearlParser.StructureDenotationContext ctx, SymbolTable scope) {
         super(name);
         this.m_ctx = ctx;
@@ -49,9 +49,8 @@ public class StructureEntry extends SymbolTableEntry {
     }
 
     public String toString(int level) {
-        return indentString(level) + super.toString(level) + "struct" + scopeString(level);
+        return indentString(level) + super.toString(level) + "struct" + scopeString(level) + ":" +getStructureName();
     }
-
 
     protected String scopeString(int m_level) {
         return scope == null ? "" : "\n " + indentString(m_level) +
@@ -64,6 +63,61 @@ public class StructureEntry extends SymbolTableEntry {
 
     public int getCharPositionInLine() {
         return m_ctx.getStart().getCharPositionInLine();
+    }
+
+    /*
+        Datatype      letter   REF
+        --------------------------
+        FIXED         A        a
+        FLOAT         B        b
+        BIT           C        c
+        CHARACTER     D        d
+        CLOCK         E        e
+        DURATION      F        f
+        TASK                   g
+        PROC                   h
+        SEMA          I        i
+        BOLT          J        j
+        STRUCT        S        s
+     */
+
+    private String getDataTypeEncoding(TypeDefinition type) {
+        if ( type instanceof TypeFixed)           return "A" + type.getPrecision().toString();
+        if ( type instanceof TypeFloat)           return "B" + type.getPrecision().toString();
+        if ( type instanceof TypeBit)             return "C" + type.getPrecision().toString();
+        if ( type instanceof TypeChar)            return "D" + type.getPrecision().toString();
+        if ( type instanceof TypeClock)           return "E" + type.getPrecision().toString();
+        if ( type instanceof TypeDuration)        return "F" + type.getPrecision().toString();
+        if ( type instanceof TypeSemaphore)       return "I" + type.getPrecision().toString();
+        if ( type instanceof TypeBolt)            return "J" + type.getPrecision().toString();
+        if ( type instanceof TypeStructure)       return "S" + type.getPrecision().toString();
+
+        if ( type instanceof TypeReference) {
+            TypeReference reftype = (TypeReference) type;
+
+            if ( reftype.getBaseType() instanceof TypeFixed)           return "a" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeFloat)           return "b" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeBit)             return "c" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeChar)            return "d" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeClock)           return "e" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeDuration)        return "f" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeTask)            return "g";
+            if ( reftype.getBaseType() instanceof TypeProcedure)       return "h";
+            if ( reftype.getBaseType() instanceof TypeSemaphore)       return "i";
+            if ( reftype.getBaseType() instanceof TypeBolt)            return "j";
+            if ( reftype.getBaseType() instanceof TypeStructure)       return "s";
+        }
+
+        return "~?~";
+    }
+
+    public String getStructureName() {
+        String sname = "";
+        for (int i = 0; i < m_listOfStructureComponents.size(); i++ ) {
+            TypeDefinition typ = m_listOfStructureComponents.get(i).getType();
+            sname += getDataTypeEncoding(typ);
+        }
+        return sname;
     }
 
     /** Local scope for this function. */
