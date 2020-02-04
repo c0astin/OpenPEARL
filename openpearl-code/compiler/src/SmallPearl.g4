@@ -1917,7 +1917,6 @@ typologyAttribute
     : ('TFU')? ('MAX')?
     ;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // DimensionAttribute ::=
 //  (BoundaryDenotation§FirstDimension [ , BoundaryDenotation§FurtherDimension ] ...)
@@ -2077,9 +2076,6 @@ numericLiteralNegative
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////////////
 // Name ::=
 //    Identifier [ ( Index [ , Index ] ... ) ] [ . Name ]
 ////////////////////////////////////////////////////////////////////////////////
@@ -2101,14 +2097,14 @@ index :
 
 primaryExpression
 	: '(' expression ')'
-    | ID
-//    | ID indices
-    | ID '(' expression  ( ',' expression )* ')'
+//  | ID
+//  | ID indices
+//  | ID '(' expression  ( ',' expression )* ')'
     | name
-//    | ID listOfActualParameters?
+    | ID listOfActualParameters?
     | literal
     | semaTry
-//    | monadicExplicitTypeConversionOperators
+//  | monadicExplicitTypeConversionOperators
     | stringSlice
     ;
 
@@ -2684,7 +2680,6 @@ lengthDefinitionType
     | 'BIT'                            #lengthDefinitionBitType
     | ( 'CHARACTER' | 'CHAR' )         #lengthDefinitionCharacterType
     ;
-
 ////////////////////////////////////////////////////////////////////////////////
 
  precision

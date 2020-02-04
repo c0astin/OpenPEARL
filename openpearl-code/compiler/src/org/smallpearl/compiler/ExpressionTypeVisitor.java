@@ -106,8 +106,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
-        } else if (ctx.ID() != null) {
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
+        } else if (ctx.name() != null) {
+            visitName(ctx.name());
+            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
 
             if ( entry == null ) {
                 throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -177,14 +178,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             visit(ctx.name());
             m_name = null;
         } else if (ctx.expression() != null) {
-            if (ctx.expression().size() > 1) {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-
             if ( ctx.expression() !=  null) {
-                visit(ctx.expression(0));
+                visit(ctx.expression());
 
-                ASTAttribute expressionResult = m_ast.lookup(ctx.expression(0));
+                ASTAttribute expressionResult = m_ast.lookup(ctx.expression());
                 if (expressionResult != null) {
                     m_ast.put(ctx, expressionResult);
                 }
@@ -2881,11 +2878,13 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         return null;
     }
+
     @Override
     public Void visitCase3CharSlice(SmallPearlParser.Case3CharSliceContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitCase3CharSlice:ctx" + CommonUtils.printContext(ctx));
         throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
     }
+
     @Override
     public Void visitCase4CharSlice(SmallPearlParser.Case4CharSliceContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitCase4CharSlice:ctx" + CommonUtils.printContext(ctx));

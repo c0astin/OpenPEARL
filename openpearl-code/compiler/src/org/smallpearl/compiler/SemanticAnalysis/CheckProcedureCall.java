@@ -158,8 +158,8 @@ public class CheckProcedureCall extends SmallPearlBaseVisitor<Void> implements S
 
     @Override
     public Void visitPrimaryExpression(SmallPearlParser.PrimaryExpressionContext ctx) {
-        if (ctx.ID() != null) {
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
+        if (ctx.name() != null) {
+            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
             if (entry instanceof ProcedureEntry) {
                 if (m_debug)
                     System.out.println("Semantic: Check ProcedureCall: found call in expression");
@@ -169,19 +169,17 @@ public class CheckProcedureCall extends SmallPearlBaseVisitor<Void> implements S
             }
 
             if ( ctx.expression() != null ) {
-                checkListOfActualParameters(ctx.expression());
+                checkListOfActualParameters(ctx.listOfActualParameters());
             }
         }
 
         return null;
     }
 
-    private Void checkListOfActualParameters(List<SmallPearlParser.ExpressionContext> parameters) {
-        if (m_debug) {
-            System.out.println( "Semantic: Check ProcedureCall: checkListOfActualParameters");
-        }
+    private Void checkListOfActualParameters(SmallPearlParser.ListOfActualParametersContext ctx) {
+        Log.debug("CheckProcedureCall:ctx" + CommonUtils.printContext(ctx));
 
-        // TODO: Check paraneter types
+        // TODO: Check parameter types
 
         return null;
     }
