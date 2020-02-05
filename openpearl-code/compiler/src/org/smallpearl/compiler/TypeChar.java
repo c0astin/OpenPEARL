@@ -46,11 +46,11 @@ public class TypeChar extends TypeDefinition {
         this.m_size = size;
     }
 
-/*
+
     public Integer getSize() {
         return m_size;
     }
-    */
+    
     public Integer getPrecision() { return m_size;}
 
     public String toString() {
