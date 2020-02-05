@@ -503,10 +503,10 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 			if (entry instanceof org.smallpearl.compiler.SymbolTable.ProcedureEntry) {
 				org.smallpearl.compiler.SymbolTable.ProcedureEntry proc = (org.smallpearl.compiler.SymbolTable.ProcedureEntry)(entry);
 				
-				if (ctx.expression() != null && ctx.expression().size() > 0) {
-					for (int i=0; i< ctx.expression().size(); i++) {
-			   		   ErrorStack.enter(ctx.expression(i),"param");
-				       checkParameter(proc, ctx.expression(i), proc.getFormalParameters().get(i));
+				if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
+					for (int i=0; i< ctx.listOfActualParameters().expression().size(); i++) {
+			   		   ErrorStack.enter(ctx.listOfActualParameters().expression(i),"param");
+				       checkParameter(proc, ctx.listOfActualParameters().expression(i), proc.getFormalParameters().get(i));
 				       ErrorStack.leave();
 					}
 				}
