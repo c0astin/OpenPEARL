@@ -1527,7 +1527,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else if (ctx.timeConstant() != null) {
-            ASTAttribute expressionResult = new ASTAttribute( new TypeClock(getTime(ctx.timeConstant())),true);
+            ASTAttribute expressionResult = new ASTAttribute( new TypeClock(),true);
             expressionResult.setConstant(getConstantClockValue(ctx.timeConstant()));
             m_ast.put(ctx, expressionResult);
         } else if (ctx.StringLiteral() != null) {

@@ -421,7 +421,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         return null;
     }
 
-    private void fixPrecision(ParserRuleContext ctx, TypeDefinition type, Initializer initializer) {
+    private void fixPrecision(ParserRuleContext ctx, TypeDefinition type, SimpleInitializer initializer) {
         Log.debug("SymbolTableVisitor:fixPrecision:ctx" + CommonUtils.printContext(ctx));
 
         if (type instanceof TypeFixed) {
@@ -570,7 +570,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     @Override
     public Void visitTypeBitString(SmallPearlParser.TypeBitStringContext ctx) {
         Log.debug("SymbolTableVisitor:visitTypeBitString:ctx" + CommonUtils.printContext(ctx));
-
+        int length = 0;
 
         if (ctx.IntegerConstant() != null) {
             length = Integer.parseInt(ctx.IntegerConstant().getText());
@@ -1461,8 +1461,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         if (ctx != null) {
             for (int i = 0; i < ctx.initElement().size(); i++) {
                 ConstantValue constant = getInitElement(ctx.initElement(i));
-                Initializer initializer = new Initializer(ctx.initElement(i), constant);
-                initElementList.add(initializer);
+//TODO: MERGE                Initializer initializer = new Initializer(ctx.initElement(i), constant);
+//                initElementList.add(initializer);
             }
         }
 

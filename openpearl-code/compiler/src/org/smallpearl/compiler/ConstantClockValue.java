@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- *  Copyright (c) 2012-2016 Marcel Schaible
+ *  Copyright (c) 2012-2020 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,6 @@ public class ConstantClockValue extends ConstantValue {
         m_seconds = seconds;
     }
 
-
     public double getValue() {
         return m_hours * 3600 + m_minutes * 60 + m_seconds;
     }
@@ -88,7 +87,6 @@ public class ConstantClockValue extends ConstantValue {
         return this.m_hours == other.m_hours &&
                 this.m_minutes == other.m_minutes &&
                 this.m_seconds == other.m_seconds;
-
     }
 }
 
