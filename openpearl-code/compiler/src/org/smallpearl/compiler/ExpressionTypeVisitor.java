@@ -127,7 +127,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
                 if ( variable.getType() instanceof TypeArray ) {
                 	// expressionResult should be TypeArray if no indices are given
-                	if (ctx.expression().size()==0) {
+                	if (ctx.listOfActualParameters().expression().size()==0) {
                 	   TypeArray ta = (TypeArray) variable.getType();
                 	   
                 	   expressionResult = new ASTAttribute(ta);

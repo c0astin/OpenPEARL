@@ -332,7 +332,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable
                 .lookupLocal(ctx.ID().getText());
         m_currentSymbolTable = ((org.smallpearl.compiler.SymbolTable.ModuleEntry) symbolTableEntry).scope;
-        ((org.smallpearl.compiler.SymbolTable.ModuleEntry) symbolTableEntry).scope;
+// 2020-02-05: merge error
+//        ((org.smallpearl.compiler.SymbolTable.ModuleEntry) symbolTableEntry).scope;
 
         if (ctx != null) {
             for (ParseTree c : ctx.children) {
@@ -372,10 +373,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     visitUsername_declaration((SmallPearlParser.Username_declarationContext) c);
                 } else if (c instanceof SmallPearlParser.UserConfigurationWithoutAssociationContext) {
                     visitUserConfigurationWithoutAssociation((SmallPearlParser.UserConfigurationWithoutAssociationContext) c);
-              (SmallPearlParser.UserConfigurationWithoutAssociationContext) c);
+// 2020-02-05: merge error
+//              (SmallPearlParser.UserConfigurationWithoutAssociationContext) c);
                 } else if (c instanceof SmallPearlParser.UserConfigurationWithAssociationContext) {
                     visitUserConfigurationWithAssociation((SmallPearlParser.UserConfigurationWithAssociationContext) c);
-              (SmallPearlParser.UserConfigurationWithAssociationContext) c);
+// 2020-02-05: merge error
+//              (SmallPearlParser.UserConfigurationWithAssociationContext) c);
                 }
             }
         }
@@ -619,13 +622,15 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 v.add("inv", var.getAssigmentProtection());
 
                 if (var.getInitializer() != null) {
-                    v.add("InitElement", var.getInitializer().getConstant());
+                  // 2020-02-05: merge error
+//                   v.add("InitElement", var.getInitializer().getConstant());
             v.add("InitElement", ((SimpleInitializer) var.getInitializer()).getConstant());
           } else {
             throw new InternalCompilerErrorException(
                 ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
           }
-                }
+                // 2020-02-05: merge error
+//                }
 
                 variableDenotation.add("decl", v);
             }
@@ -851,9 +856,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 }
 
                 constant.add("FloatingPointConstant", value);
-            } else if (ctx.StringLiteral() != null) {
+            } else if (ctx.stringConstant() != null) {
                 ST stringConstant = m_group.getInstanceOf("StringConstant");
-                String s = ctx.StringLiteral().toString();
+                String s = ctx.stringConstant().StringLiteral().toString();
 
                 if (s.startsWith("'")) {
                     s = s.substring(1, s.length());
@@ -2649,10 +2654,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 ST functionCall = m_group.getInstanceOf("FunctionCall");
                 functionCall.add("callee", ctx.ID().getText());
 
-                if (ctx.expression() != null && ctx.expression().size() > 0) {
+                if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
 
                     functionCall.add("ListOfActualParameters",
-                            getActualParameters(ctx.expression()));
+                        //  2020-02-05 merge problem ???
+                        //    getActualParameters(ctx.expression()));
+                            getActualParameters(ctx.listOfActualParameters().expression()));
+                        
                 }
 
                 expression.add("functionCall", functionCall);
@@ -2683,7 +2691,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 //							type.getNoOfDimensions(), type.getDimensions());
 //					array.add("name", variable.getName());
 //					array.add("descriptor", array_descriptor.getName());
-                    array.add("indices", getIndices(ctx.expression()));
+                    array.add("indices", getIndices(ctx.listOfActualParameters().expression()));
 
                     expression.add("id", array);
                 } else {
@@ -2698,7 +2706,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             expression.add("code", visitStringSlice(ctx.stringSlice()));
         } else if (ctx.expression() != null) {
             expression.add("code", "(");
-            expression.add("code", visit(ctx.expression(0)));
+            expression.add("code", visit(ctx.expression()));
             expression.add("code", ")");
         } else if (ctx.stringSlice() != null) {
             expression.add("code", visitStringSlice(ctx.stringSlice()));
@@ -4336,7 +4344,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                             (SmallPearlParser.FactorPositionContext) ctx
                                     .formatPosition(nextFormatPositionIndex),
                             ctx.dationName().ID().getText(), "to");
-                    ctx.expression(i));
+
+// 2020-02-05merge problem??
+//                    ctx.expression(i));
+                    
                     stmt.add("elements", e);
                 } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatPositionContext) {
                     ErrorStack.enter(ctx.formatPosition(nextFormatPositionIndex), "factor");

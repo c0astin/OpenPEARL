@@ -417,8 +417,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
-        } else if (ctx.StringLiteral() != null) {
-        	String s = ctx.StringLiteral().toString();
+        } else if (ctx.stringConstant() != null) {
+        	String s = ctx.stringConstant().StringLiteral().toString();
         	s = CommonUtils.removeQuotes(s);
         	s = CommonUtils.unescapePearlString(s);
         	m_constantPool.add(new ConstantCharacterValue(s));
