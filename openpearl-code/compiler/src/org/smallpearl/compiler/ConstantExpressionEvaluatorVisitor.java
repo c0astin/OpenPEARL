@@ -121,21 +121,6 @@ public class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<Vo
       m_constantPoolVisitor.add(result);
     }
 
-    public boolean getEnterResultinConstantPool() {
-        return m_enterResultinConstantPool;
-    }
-
-    public Void setEnterResultinConstantPool(boolean flag) {
-        m_enterResultinConstantPool = flag;
-        return null;
-    }
-
-    @Override
-    public Void visitConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
-        if (m_debug) {
-            System.out.println("ConstantExpressionEvaluatorVisitor: visitConstantExpression");
-        }
-     
     Log.debug("ConstantExpressionEvaluatorVisitor:visitConstantFixedExpression:result=" + result);
 
     return null;
