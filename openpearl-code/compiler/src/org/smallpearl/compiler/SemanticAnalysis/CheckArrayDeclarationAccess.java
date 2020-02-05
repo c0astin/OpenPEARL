@@ -179,9 +179,9 @@ public class CheckArrayDeclarationAccess extends SmallPearlBaseVisitor<Void> imp
 						checkIndexValue = false;
 					}
 					// expressionResult should be TypeArray if no indices are given
-					if (ctx.expression() != null && ctx.expression().size() > 0) {
+					if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
 						TypeArray ta = (TypeArray) variable.getType();
-						checkIndices(ta,ctx.expression(),checkIndexValue);
+						checkIndices(ta,ctx.listOfActualParameters().expression(), checkIndexValue);
 
 					} else {
 						// we got no indices -_> complete array as parameter
