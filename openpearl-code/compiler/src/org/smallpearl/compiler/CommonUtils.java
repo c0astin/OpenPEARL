@@ -768,6 +768,7 @@ public class CommonUtils {
         }
 
         return seconds;
+    }
     
    /**
      * Retrieve the rightmost identifier of a name
