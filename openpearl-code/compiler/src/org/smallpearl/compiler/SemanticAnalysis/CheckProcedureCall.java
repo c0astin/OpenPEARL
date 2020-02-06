@@ -169,14 +169,14 @@ public class CheckProcedureCall extends SmallPearlBaseVisitor<Void> implements S
             }
 
             if ( ctx.expression() != null ) {
-                checkListOfActualParameters(ctx.listOfActualParameters());
+                checkListOfActualParameters(ctx.name().listOfExpression());
             }
         }
 
         return null;
     }
 
-    private Void checkListOfActualParameters(SmallPearlParser.ListOfActualParametersContext ctx) {
+    private Void checkListOfActualParameters(SmallPearlParser.ListOfExpressionContext ctx) {
         Log.debug("CheckProcedureCall:ctx" + CommonUtils.printContext(ctx));
 
         // TODO: Check parameter types

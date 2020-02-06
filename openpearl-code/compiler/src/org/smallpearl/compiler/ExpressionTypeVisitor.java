@@ -116,9 +116,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             if ( entry == null ) {
                 throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
-            if (ctx.expression()!= null) {
+            if (ctx.name().listOfExpression() != null && ctx.name().listOfExpression().expression()!= null) {
             	// if we have array indices or function parameters -- we must visit them to get the ASTAttributes
-            	visitChildren(ctx);
+            	visitChildren(ctx.name().listOfExpression());
             }
             if (entry instanceof VariableEntry) {
                 ASTAttribute expressionResult;
@@ -127,7 +127,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
                 if ( variable.getType() instanceof TypeArray ) {
                 	// expressionResult should be TypeArray if no indices are given
-                	if (ctx.listOfActualParameters().expression().size()==0) {
+                	if (ctx.name().listOfExpression().expression().size()==0) {
                 	   TypeArray ta = (TypeArray) variable.getType();
                 	   
                 	   expressionResult = new ASTAttribute(ta);
@@ -138,9 +138,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                 	   expressionResult = new ASTAttribute(((TypeArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
                 	}
                 }
-                else if ( variable.getType() instanceof TypeFormalParameterArray ) {
-                    expressionResult = new ASTAttribute(((TypeFormalParameterArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
-                }
+//                else if ( variable.getType() instanceof TypeFormalParameterArray ) {
+//                    expressionResult = new ASTAttribute(((TypeFormalParameterArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
+//                }
                 else {
                     expressionResult = new ASTAttribute(variable.getType(), variable.getAssigmentProtection(), variable);
                 }

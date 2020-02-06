@@ -2223,8 +2223,16 @@ numericLiteralNegative
 ////////////////////////////////////////////////////////////////////////////////
 
 name
-    : ID ( '(' index ( ',' index )? ')' )? ( '.' name )?
+    : ID ( '(' listOfExpression ')' )? ( '.' name )?
     ;
+
+listOfExpression
+    : expression ( ',' expression )?
+    ;
+
+//name
+//    : ID ( '(' index ( ',' index )? ')' )? ( '.' name )?
+//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Index ::=
@@ -2243,7 +2251,7 @@ primaryExpression
 //  | ID indices
 //  | ID '(' expression  ( ',' expression )* ')'
     | name
-    | ID listOfActualParameters?
+//    | ID listOfActualParameters?
     | literal
     | semaTry
 //  | monadicExplicitTypeConversionOperators

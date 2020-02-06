@@ -198,6 +198,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 // to the constant pool
                 // String s = CommonUtils.unescapePearlString(value.getValue());
                 String s = value.getValue();
+                int len = CommonUtils.getStringLength(s); 
                 entry.add("length", CommonUtils.getStringLength(s));
                 entry.add("value", s);
 
@@ -2651,14 +2652,18 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
             if (entry instanceof org.smallpearl.compiler.SymbolTable.ProcedureEntry) {
                 ST functionCall = m_group.getInstanceOf("FunctionCall");
-                functionCall.add("callee", ctx.ID().getText());
+                
+                functionCall.add("callee", ctx.name().ID().getText());
+                
+                if (ctx.name().listOfExpression() != null && ctx.name().listOfExpression().expression().size() > 0) {
 
-                if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
+                //if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
 
                     functionCall.add("ListOfActualParameters",
                         //  2020-02-05 merge problem ???
                         //    getActualParameters(ctx.expression()));
-                            getActualParameters(ctx.listOfActualParameters().expression()));
+                       //     getActualParameters(ctx.listOfActualParameters().expression()));
+                        getActualParameters(ctx.name().listOfExpression().expression()));
                         
                 }
 
@@ -2690,14 +2695,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 //							type.getNoOfDimensions(), type.getDimensions());
 //					array.add("name", variable.getName());
 //					array.add("descriptor", array_descriptor.getName());
-                    array.add("indices", getIndices(ctx.listOfActualParameters().expression()));
+                    array.add("indices", getIndices(ctx.name().listOfExpression().expression()));
 
                     expression.add("id", array);
                 } else {
                     expression.add("id", getUserVariable(ctx.name().ID().getText()));
                 }
             } else {
-                expression.add("id", getUserVariable(ctx.ID().getText()));
+                expression.add("id", getUserVariable(ctx.name().ID().getText()));
             }
         } else if (ctx.semaTry() != null) {
             expression.add("code", visitSemaTry(ctx.semaTry()));
@@ -3267,8 +3272,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx.expression(1) instanceof SmallPearlParser.BaseExpressionContext) {
             SmallPearlParser.BaseExpressionContext expr = (SmallPearlParser.BaseExpressionContext) ctx
                     .expression(1);
-            if (expr.primaryExpression().ID() != null) {
-                String id = expr.primaryExpression().ID().toString();
+            if (expr.primaryExpression().name().ID() != null) {
+                String id = expr.primaryExpression().name().ID().toString();
                 SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
                 if (entry != null) {
                     if (entry instanceof VariableEntry) {
@@ -3316,8 +3321,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx.expression() instanceof SmallPearlParser.BaseExpressionContext) {
             SmallPearlParser.BaseExpressionContext expr = (SmallPearlParser.BaseExpressionContext) ctx
                     .expression();
-            if (expr.primaryExpression().ID() != null) {
-                String id = expr.primaryExpression().ID().toString();
+            if (expr.primaryExpression().name().ID() != null) {
+                String id = expr.primaryExpression().name().ID().toString();
                 SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
                 if (entry != null) {
                     if (entry instanceof VariableEntry) {
@@ -3364,8 +3369,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx.expression(1) instanceof SmallPearlParser.BaseExpressionContext) {
             SmallPearlParser.BaseExpressionContext expr = (SmallPearlParser.BaseExpressionContext) ctx
                     .expression(1);
-            if (expr.primaryExpression().ID() != null) {
-                String id = expr.primaryExpression().ID().toString();
+            if (expr.primaryExpression().name().ID() != null) {
+                String id = expr.primaryExpression().name().ID().toString();
                 SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
                 if (entry != null) {
                     if (entry instanceof VariableEntry) {
@@ -3413,8 +3418,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx.expression() instanceof SmallPearlParser.BaseExpressionContext) {
             SmallPearlParser.BaseExpressionContext expr = (SmallPearlParser.BaseExpressionContext) ctx
                     .expression();
-            if (expr.primaryExpression().ID() != null) {
-                String id = expr.primaryExpression().ID().toString();
+            if (expr.primaryExpression().name().ID() != null) {
+                String id = expr.primaryExpression().name().ID().toString();
                 SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
                 if (entry != null) {
                     if (entry instanceof VariableEntry) {
