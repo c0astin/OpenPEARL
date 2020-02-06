@@ -596,47 +596,44 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitVariableDenotation(
-            SmallPearlParser.VariableDenotationContext ctx) {
-        ST variableDenotation = m_group.getInstanceOf("variable_denotation");
-        ST typeAttribute = m_group.getInstanceOf("TypeAttribute");
-        ArrayList<String> identifierDenotationList = null;
+        SmallPearlParser.VariableDenotationContext ctx) {
+      ST variableDenotation = m_group.getInstanceOf("variable_denotation");
+      ST typeAttribute = m_group.getInstanceOf("TypeAttribute");
+      ArrayList<String> identifierDenotationList = null;
 
-        if (ctx != null) {
-            for (ParseTree c : ctx.children) {
-                if (c instanceof SmallPearlParser.IdentifierDenotationContext) {
-                    identifierDenotationList = getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
-              getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
-                }
-            }
-
-            for (int i = 0; i < identifierDenotationList.size(); i++) {
-                ST v = m_group.getInstanceOf("VariableDeclaration");
-
-                SymbolTableEntry entry = m_currentSymbolTable
-                        .lookup(identifierDenotationList.get(i));
-                VariableEntry var = (VariableEntry) entry;
-
-                v.add("name", identifierDenotationList.get(i));
-                v.add("TypeAttribute", var.getType().toST(m_group));
-                // v.add("global", "?");
-                v.add("inv", var.getAssigmentProtection());
-
-                if (var.getInitializer() != null) {
-                  // 2020-02-05: merge error
-//                   v.add("InitElement", var.getInitializer().getConstant());
-            v.add("InitElement", ((SimpleInitializer) var.getInitializer()).getConstant());
-          } else {
-            throw new InternalCompilerErrorException(
-                ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+      if (ctx != null) {
+        for (ParseTree c : ctx.children) {
+          if (c instanceof SmallPearlParser.IdentifierDenotationContext) {
+            identifierDenotationList = getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
+            getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
           }
-                // 2020-02-05: merge error
-//                }
-
-                variableDenotation.add("decl", v);
-            }
         }
 
-        return variableDenotation;
+        for (int i = 0; i < identifierDenotationList.size(); i++) {
+          ST v = m_group.getInstanceOf("VariableDeclaration");
+
+          SymbolTableEntry entry = m_currentSymbolTable
+              .lookup(identifierDenotationList.get(i));
+          VariableEntry var = (VariableEntry) entry;
+
+          v.add("name", identifierDenotationList.get(i));
+          v.add("TypeAttribute", var.getType().toST(m_group));
+          // v.add("global", "?");
+          v.add("inv", var.getAssigmentProtection());
+
+          if (var.getInitializer() != null) {
+            // 2020-02-05: merge error
+            //                   v.add("InitElement", var.getInitializer().getConstant());
+            v.add("InitElement", ((SimpleInitializer) var.getInitializer()).getConstant());
+          } 
+          variableDenotation.add("decl", v);
+        }
+     } else {
+         throw new InternalCompilerErrorException(
+                ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+     }
+     
+      return variableDenotation;
     }
 
     /*
@@ -2646,8 +2643,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             // } else {
             expression.add("code", visitLiteral(ctx.literal()));
             // }
-        } else if (ctx.ID() != null) {
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID()
+// 2020-02-06 ID changed to name().ID
+// treatment of index() and name missing 
+        } else if (ctx.name()!= null) {
+            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID()
                     .getText());
 
             if (entry instanceof org.smallpearl.compiler.SymbolTable.ProcedureEntry) {
@@ -2671,7 +2670,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                 if (variable.getType() instanceof TypeBit) {
                     TypeBit type = (TypeBit) variable.getType();
-                    expression.add("id", getUserVariable(ctx.ID().getText()));
+                    expression.add("id", getUserVariable(ctx.name().ID().getText()));
                 } else if (variable.getType() instanceof TypeArray) {
                     ST array = m_group.getInstanceOf("ArrayLHS");
 
@@ -2695,7 +2694,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                     expression.add("id", array);
                 } else {
-                    expression.add("id", getUserVariable(ctx.ID().getText()));
+                    expression.add("id", getUserVariable(ctx.name().ID().getText()));
                 }
             } else {
                 expression.add("id", getUserVariable(ctx.ID().getText()));
