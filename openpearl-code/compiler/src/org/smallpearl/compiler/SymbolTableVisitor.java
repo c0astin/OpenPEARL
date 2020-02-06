@@ -1461,6 +1461,9 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         if (ctx != null) {
             for (int i = 0; i < ctx.initElement().size(); i++) {
                 ConstantValue constant = getInitElement(ctx.initElement(i));
+                
+                SimpleInitializer initializer = new SimpleInitializer(ctx.initElement(i), constant);
+                initElementList.add(initializer);
 //TODO: MERGE                Initializer initializer = new Initializer(ctx.initElement(i), constant);
 //                initElementList.add(initializer);
             }
