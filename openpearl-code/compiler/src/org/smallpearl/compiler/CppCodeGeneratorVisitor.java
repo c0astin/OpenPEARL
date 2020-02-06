@@ -107,8 +107,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         this.ReadTemplate(filename);
 
-    LinkedList<StructureEntry> listOfStructureDeclarations =
-        this.m_currentSymbolTable.getStructureDeclarations();
+        LinkedList<StructureEntry> listOfStructureDeclarations =
+                this.m_currentSymbolTable.getStructureDeclarations();
 
         generatePrologue();
     }
@@ -287,7 +287,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return (hours + minutes + seconds);
     }
 
-// 2020-02-05: merge error 
+    // 2020-02-05: merge error
 //    ctx.seconds() .floatingPointConstant() .FloatingPointNumberWithoutPrecision() .toString());
 //   
     /*
@@ -1075,7 +1075,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     // 2020-02-05 merge error
     //          ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().getText());
-    
+
     @Override
     public ST visitTypeAttributeForArray(
             SmallPearlParser.TypeAttributeForArrayContext ctx) {
@@ -1157,7 +1157,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 //                  ((SmallPearlParser.MprecisionContext) c)
 //                                    .integerWithoutPrecision()
 //                                    .IntegerConstant().getText());
-                      .getText());
+                                    .getText());
                 }
             }
         }
@@ -1237,8 +1237,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     problem_part
                             .add("ScalarVariableDeclarations",
                                     visitScalarVariableDeclaration((SmallPearlParser.ScalarVariableDeclarationContext) c));
-                  // 2020-02-05: merge error
-                  //(SmallPearlParser.ScalarVariableDeclarationContext) c));
+                    // 2020-02-05: merge error
+                    //(SmallPearlParser.ScalarVariableDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                     problem_part
                             .add("ArrayVariableDeclarations",
@@ -1611,7 +1611,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitSubtractiveExpression(((SmallPearlParser.SubtractiveExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.MultiplicativeExpressionContext) {
                 st.add("code",
-                 // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitMultiplicativeExpression((SmallPearlParser.MultiplicativeExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.DivideExpressionContext) {
@@ -1619,12 +1619,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitDivideExpression((SmallPearlParser.DivideExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.DivideIntegerExpressionContext) {
                 st.add("code",
-                 // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitDivideIntegerExpression((SmallPearlParser.DivideIntegerExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.UnaryAdditiveExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitUnaryAdditiveExpression((SmallPearlParser.UnaryAdditiveExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.UnarySubtractiveExpressionContext) {
@@ -1632,40 +1632,40 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitUnarySubtractiveExpression((SmallPearlParser.UnarySubtractiveExpressionContext) ctx));
                 // 2020-02-05: merge error
 //            visitUnarySubtractiveExpression(
- //               (SmallPearlParser.UnarySubtractiveExpressionContext) ctx));
+                //               (SmallPearlParser.UnarySubtractiveExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.ExponentiationExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //           "code",
                         visitExponentiationExpression((SmallPearlParser.ExponentiationExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.LtRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //           "code",
                         visitLtRelationalExpression((SmallPearlParser.LtRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.GeRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitGeRelationalExpression((SmallPearlParser.GeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.NeRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitNeRelationalExpression((SmallPearlParser.NeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.EqRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitEqRelationalExpression((SmallPearlParser.EqRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.GtRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitGtRelationalExpression((SmallPearlParser.GtRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.LeRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitLeRelationalExpression((SmallPearlParser.LeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.AtanExpressionContext) {
@@ -1697,7 +1697,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitFitExpression((SmallPearlParser.FitExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.ExponentiationExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //           "code",
                         visitExponentiationExpression((SmallPearlParser.ExponentiationExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.AbsExpressionContext) {
@@ -1762,7 +1762,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitLwbDyadicExpression(((SmallPearlParser.LwbDyadicExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.LwbMonadicExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //           "code",
                         visitLwbMonadicExpression(((SmallPearlParser.LwbMonadicExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.UpbDyadicExpressionContext) {
@@ -1770,7 +1770,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitUpbDyadicExpression(((SmallPearlParser.UpbDyadicExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.UpbMonadicExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //          "code",
                         visitUpbMonadicExpression(((SmallPearlParser.UpbMonadicExpressionContext) ctx)));
             }
@@ -1794,12 +1794,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitAdditiveExpression(((SmallPearlParser.AdditiveExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.SubtractiveExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitSubtractiveExpression(((SmallPearlParser.SubtractiveExpressionContext) ctx)));
             } else if (ctx instanceof SmallPearlParser.MultiplicativeExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //"code",
                         visitMultiplicativeExpression((SmallPearlParser.MultiplicativeExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.DivideExpressionContext) {
@@ -1807,12 +1807,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitDivideExpression((SmallPearlParser.DivideExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.DivideIntegerExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitDivideIntegerExpression((SmallPearlParser.DivideIntegerExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.UnaryAdditiveExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitUnaryAdditiveExpression((SmallPearlParser.UnaryAdditiveExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.UnarySubtractiveExpressionContext) {
@@ -1820,40 +1820,40 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitUnarySubtractiveExpression((SmallPearlParser.UnarySubtractiveExpressionContext) ctx));
                 // 2020-02-05: merge error
 //            visitUnarySubtractiveExpression(
- //               (SmallPearlParser.UnarySubtractiveExpressionContext) ctx));
+                //               (SmallPearlParser.UnarySubtractiveExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.ExponentiationExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitExponentiationExpression((SmallPearlParser.ExponentiationExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.LtRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitLtRelationalExpression((SmallPearlParser.LtRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.GeRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitGeRelationalExpression((SmallPearlParser.GeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.NeRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitNeRelationalExpression((SmallPearlParser.NeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.EqRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitEqRelationalExpression((SmallPearlParser.EqRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.GtRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitGtRelationalExpression((SmallPearlParser.GtRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.LeRelationalExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitLeRelationalExpression((SmallPearlParser.LeRelationalExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.AtanExpressionContext) {
@@ -1885,7 +1885,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitFitExpression((SmallPearlParser.FitExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.ExponentiationExpressionContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitExponentiationExpression((SmallPearlParser.ExponentiationExpressionContext) ctx));
             } else if (ctx instanceof SmallPearlParser.AbsExpressionContext) {
@@ -2361,12 +2361,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             } else if (ctx.stringSelection().bitSelection() != null) {
                 id = ctx.stringSelection().bitSelection().ID().getText();
             }
-    } else if (ctx.selector() != null) {
-      Log.debug(
-          "ExpressionTypeVisitor:visitAssignment_statement:selector:ctx"
-              + CommonUtils.printContext(ctx.selector()));
-      visitSelector(ctx.selector());
-      id = ctx.selector().ID().getText();
+        } else if (ctx.selector() != null) {
+            Log.debug(
+                    "ExpressionTypeVisitor:visitAssignment_statement:selector:ctx"
+                            + CommonUtils.printContext(ctx.selector()));
+            visitSelector(ctx.selector());
+            id = ctx.selector().ID().getText();
         }
 
         SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
@@ -2656,10 +2656,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
 
                     functionCall.add("ListOfActualParameters",
-                        //  2020-02-05 merge problem ???
-                        //    getActualParameters(ctx.expression()));
+                            //  2020-02-05 merge problem ???
+                            //    getActualParameters(ctx.expression()));
                             getActualParameters(ctx.listOfActualParameters().expression()));
-                        
+
                 }
 
                 expression.add("functionCall", functionCall);
@@ -2922,7 +2922,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                             expr.add("code", float_value);
                         } catch (NumberFormatException ex) {
                             throw new NumberOutOfRangeException(ctx.getText(),
-                                // 2020-02-05: merge error
+                                    // 2020-02-05: merge error
 //                  ctx.getText(),
                                     literal_ctx.start.getLine(),
                                     literal_ctx.start.getCharPositionInLine());
@@ -2960,7 +2960,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                             }
                         } catch (NumberFormatException ex) {
                             throw new NumberOutOfRangeException(ctx.getText(),
-                                // 2020-02-05: merge error
+                                    // 2020-02-05: merge error
 //                  ctx.getText(),
                                     literal_ctx.start.getLine(),
                                     literal_ctx.start.getCharPositionInLine());
@@ -2978,14 +2978,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         }
                     } else if (literal_ctx.timeConstant() != null) {
                         throw new NotYetImplementedException(ctx.getText(),
-                            // 2020-02-05: merge error
+                                // 2020-02-05: merge error
 //                ctx.getText(),
                                 literal_ctx.start.getLine(),
                                 literal_ctx.start.getCharPositionInLine(),
                                 "-CLOCK not treated");
                     } else {
                         throw new NotYetImplementedException(ctx.getText(),
-                            // 2020-02-05: merge error
+                                // 2020-02-05: merge error
 //                ctx.getText(),
                                 literal_ctx.start.getLine(),
                                 literal_ctx.start.getCharPositionInLine(),
@@ -3138,7 +3138,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST literal = m_group.getInstanceOf("literal");
 
         if (ctx.durationConstant() != null) {
-            ConstantDurationValue value = CommonUtils.getConstantDurationValue(ctx.durationConstant(),m_sign);
+            ConstantDurationValue value = CommonUtils.getConstantDurationValue(ctx.durationConstant(), m_sign);
             ConstantDurationValue constDuration = ConstantPool
                     .lookupDurationValue(value.getHours(),
                             value.getMinutes(), value.getSeconds(), value.getSign());
@@ -3185,10 +3185,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 literal.add("string", value);
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(),
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //                        ctx.start.getLine(), ctx.start.getCharPositionInLine(),
-            ctx.start.getLine(),
-            ctx.start.getCharPositionInLine(),
+                        ctx.start.getLine(),
+                        ctx.start.getCharPositionInLine(),
                         "ConstantCharacter not found in pool");
             }
         } else if (ctx.BitStringLiteral() != null) {
@@ -3727,12 +3727,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST st = m_group.getInstanceOf("Constant");
         int last_sign = m_sign;
 
-		if (ctx.sign() != null
-				&& ctx.sign() instanceof SmallPearlParser.SignMinusContext) {
-			m_sign = -1;
-		}
+        if (ctx.sign() != null
+                && ctx.sign() instanceof SmallPearlParser.SignMinusContext) {
+            m_sign = -1;
+        }
 
-		m_sign = last_sign;
+        m_sign = last_sign;
         return st;
     }
 
@@ -4103,13 +4103,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             st.add("attribute", 1);
             return st;
         } else if (ctxTmp.getText().equals("NEW")) {
-          // 2020-02-05: merge error
+            // 2020-02-05: merge error
 //        instanceof SmallPearlParser.Open_parameter_newContext) {
             ST st = m_group.getInstanceOf("open_parameter_new");
             st.add("attribute", 1);
             return st;
         } else if (ctxTmp.getText().equals("ANY")) {
-          // 2020-02-05: merge error
+            // 2020-02-05: merge error
 //        instanceof SmallPearlParser.Open_parameter_anyContext) {
             ST st = m_group.getInstanceOf("open_parameter_any");
             st.add("attribute", 1);
@@ -4248,10 +4248,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 stmt.add("elements", e);
             }
         }
-        
+
         if (ctx.ID().size() > 0) {
             if (nextFormatPositionIndex < ctx.formatPosition().size()) {
-         //       ErrorStack.add("trailing elements in format/position list");
+                //       ErrorStack.add("trailing elements in format/position list");
             }
         } else {
             while (nextFormatPositionIndex < ctx.formatPosition().size()) {
@@ -4277,9 +4277,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                 nextFormatPositionIndex += 1;
             }
-          
+
         }
- 
+
         ErrorStack.leave();
 
         return stmt;
@@ -4287,7 +4287,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitPutStatement(SmallPearlParser.PutStatementContext ctx) {
-    Log.debug("CppCodeGeneratorVisitor:visitPutStatement:ctx" + CommonUtils.printContext(ctx));
+        Log.debug("CppCodeGeneratorVisitor:visitPutStatement:ctx" + CommonUtils.printContext(ctx));
         ST stmt = m_group.getInstanceOf("put_statement");
         stmt.add("dation", getUserVariable(ctx.dationName().ID().toString()));
 
@@ -4346,7 +4346,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
 // 2020-02-05merge problem??
 //                    ctx.expression(i));
-                    
+
                     stmt.add("elements", e);
                 } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatPositionContext) {
                     ErrorStack.enter(ctx.formatPosition(nextFormatPositionIndex), "factor");
@@ -4391,14 +4391,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (ctx.format().floatFormat() != null) {
             if (ctx.format().floatFormat() instanceof SmallPearlParser.FloatFormatEContext) {
                 currentFormat =
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         getFloatFormatEForPut(
                                 (SmallPearlParser.FloatFormatEContext) ctx
                                         .format().floatFormat(), expression);
             } else if (ctx.format().floatFormat() instanceof SmallPearlParser.FloatFormatE3Context) {
                 currentFormat =
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         getFloatFormatE3ForPut(
                                 (SmallPearlParser.FloatFormatE3Context) ctx
@@ -4410,27 +4410,27 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (ctx.format().bitFormat() != null) {
             if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat1Context) {
                 currentFormat = getBitFormat1ForPut(
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         (SmallPearlParser.BitFormat1Context) ctx
                                 .format().bitFormat(), expression);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat2Context) {
                 currentFormat =
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         getBitFormat2ForPut(
                                 (SmallPearlParser.BitFormat2Context) ctx
                                         .format().bitFormat(), expression);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat3Context) {
                 currentFormat =
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         getBitFormat3ForPut(
                                 (SmallPearlParser.BitFormat3Context) ctx
                                         .format().bitFormat(), expression);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat4Context) {
                 currentFormat =
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         getBitFormat4ForPut(
                                 (SmallPearlParser.BitFormat4Context) ctx
@@ -4476,13 +4476,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (ctx.format().floatFormat() != null) {
             if (ctx.format().floatFormat() instanceof SmallPearlParser.FloatFormatEContext) {
                 currentFormat = getFloatFormatEForGet(
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         (SmallPearlParser.FloatFormatEContext) ctx
                                 .format().floatFormat(), element);
             } else if (ctx.format().floatFormat() instanceof SmallPearlParser.FloatFormatE3Context) {
                 currentFormat =
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         getFloatFormatE3ForGet(
                                 (SmallPearlParser.FloatFormatE3Context) ctx
@@ -4494,28 +4494,28 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (ctx.format().bitFormat() != null) {
             if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat1Context) {
                 currentFormat =
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         getBitFormat1ForGet(
                                 (SmallPearlParser.BitFormat1Context) ctx
                                         .format().bitFormat(), element);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat2Context) {
                 currentFormat =
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         getBitFormat2ForGet(
                                 (SmallPearlParser.BitFormat2Context) ctx
                                         .format().bitFormat(), element);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat3Context) {
                 currentFormat =
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         getBitFormat3ForGet(
                                 (SmallPearlParser.BitFormat3Context) ctx
                                         .format().bitFormat(), element);
             } else if (ctx.format().bitFormat() instanceof SmallPearlParser.BitFormat4Context) {
                 currentFormat =
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "format",
                         getBitFormat4ForGet(
                                 (SmallPearlParser.BitFormat4Context) ctx
@@ -4624,7 +4624,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         .expression()));
             } else {
                 st.add("significance",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "significance",
                         "("
                                 + getExpression(
@@ -4660,7 +4660,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         .expression()));
             } else {
                 st.add("significance",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "significance",
                         "("
                                 + getExpression(
@@ -4804,7 +4804,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         .expression()));
             } else {
                 st.add("significance",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "significance",
                         "("
                                 + getExpression(
@@ -4842,7 +4842,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         .expression()));
             } else {
                 st.add("significance",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "significance",
                         "("
                                 + getExpression(
@@ -5116,7 +5116,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
             el.add("id", getUserVariable(c.ID().getText()));
             // 2020-02-05: merge error
-            
+
 //                ctx.take_send_rst_s_ctrl_format(i);
 //            (SmallPearlParser.Take_send_rst_s_ctrl_format_SContext)
 //                ctx.take_send_rst_s_ctrl_format(i);
@@ -6038,7 +6038,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             for (ParseTree c : ctx.children) {
                 if (c instanceof SmallPearlParser.IdentifierDenotationContext) {
                     identifierDenotationList = getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
-              getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
+                    getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
                 }
             }
 
@@ -6182,13 +6182,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         if (ctx.typeOfTransmissionData() != null) {
             if (ctx.typeOfTransmissionData() instanceof SmallPearlParser.TypeOfTransmissionDataALLContext) {
-              // 2020-02-05: merge error
+                // 2020-02-05: merge error
 //          instanceof SmallPearlParser.TypeOfTransmissionDataALLContext) {
                 return "DationRW";
             }
 
             if (ctx.typeOfTransmissionData() instanceof SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) {
-              // 2020-02-05: merge error
+                // 2020-02-05: merge error
 //          instanceof SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) {
                 return "DationRW";
             }
@@ -6275,12 +6275,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         for (ParseTree c : ctx.children) {
             if (c instanceof SmallPearlParser.ScalarVariableDeclarationContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitScalarVariableDeclaration((SmallPearlParser.ScalarVariableDeclarationContext) c));
             } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                 st.add("code",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "code",
                         visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c));
             } else if (c instanceof SmallPearlParser.StatementContext) {
@@ -6441,7 +6441,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitGlobalAttribute((SmallPearlParser.GlobalAttributeContext) c));
             } else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
                 st.add("listOfFormalParameters",
-           // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "listOfFormalParameters",
                         visitListOfFormalParameters((SmallPearlParser.ListOfFormalParametersContext) c));
             }
@@ -6466,7 +6466,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitGlobalAttribute((SmallPearlParser.GlobalAttributeContext) c));
             } else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
                 st.add("listOfFormalParameters",
-                    // 2020-02-05: merge error
+                        // 2020-02-05: merge error
 //            "listOfFormalParameters",
                         visitListOfFormalParameters((SmallPearlParser.ListOfFormalParametersContext) c));
             }
@@ -6566,7 +6566,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 //                  (SmallPearlParser.ScalarVariableDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                     st.add("declarations",
-                        // 2020-02-05: merge error
+                            // 2020-02-05: merge error
 //              "declarations",
                             visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.StatementContext) {
@@ -7135,8 +7135,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 .constantFixedExpression(1));
 
         if (lwb == null || upb == null || !(lwb instanceof ConstantFixedValue)
-        || upb == null
-        || !(lwb instanceof ConstantFixedValue)
+                || upb == null
+                || !(lwb instanceof ConstantFixedValue)
                 || !(upb instanceof ConstantFixedValue)) {
             throw new InternalCompilerErrorException(ctx.getText(),
                     ctx.start.getLine(), ctx.start.getCharPositionInLine());
