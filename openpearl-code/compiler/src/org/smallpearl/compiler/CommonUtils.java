@@ -564,15 +564,16 @@ public class CommonUtils {
             }
         }
 
-        try {
-            byte arr[] = s.getBytes("UTF8");
-            len = arr.length;
-        } catch (UnsupportedEncodingException ex) {
-        }
-
-        if (len == 0) {
-            len = 1;
-        }
+// 20202-02-06; merge error
+//        try {
+//            byte arr[] = s.getBytes("UTF8");
+//            len = arr.length;
+//        } catch (UnsupportedEncodingException ex) {
+//        }
+//
+//        if (len == 0) {
+//            len = 1;
+//        }
 
         return len;
     }
