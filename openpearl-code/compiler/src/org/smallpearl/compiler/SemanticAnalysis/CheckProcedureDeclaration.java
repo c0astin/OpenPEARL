@@ -497,16 +497,16 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 	public Void visitPrimaryExpression(
 			SmallPearlParser.PrimaryExpressionContext ctx) {
 
-		if (ctx.ID() != null) {
-		    SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
+		if (ctx.name() != null && ctx.name().ID() != null) {
+		    SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
 
 			if (entry instanceof org.smallpearl.compiler.SymbolTable.ProcedureEntry) {
 				org.smallpearl.compiler.SymbolTable.ProcedureEntry proc = (org.smallpearl.compiler.SymbolTable.ProcedureEntry)(entry);
 				
-				if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
-					for (int i=0; i< ctx.listOfActualParameters().expression().size(); i++) {
-			   		   ErrorStack.enter(ctx.listOfActualParameters().expression(i),"param");
-				       checkParameter(proc, ctx.listOfActualParameters().expression(i), proc.getFormalParameters().get(i));
+				if (ctx.name().listOfExpression() != null && ctx.name().listOfExpression().expression().size() > 0) {
+					for (int i=0; i< ctx.name().listOfExpression().expression().size(); i++) {
+			   		   ErrorStack.enter(ctx.name().listOfExpression().expression(i),"param");
+				       checkParameter(proc, ctx.name().listOfExpression().expression(i), proc.getFormalParameters().get(i));
 				       ErrorStack.leave();
 					}
 				}

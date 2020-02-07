@@ -99,13 +99,13 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
             visitLiteral(ctx.literal());
             ASTAttribute literal = m_ast.lookup(ctx.literal());
             primaryExpr = literal;
-        } else if (ctx.ID() != null) {
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
-
-            if (entry == null) {
-                throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-            visitChildren(ctx);    // get constants also for array indices in expressions and proc parameters
+//        } else if (ctx.name() != null) {
+//            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
+//
+//            if (entry == null) {
+//                throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//            }
+//            visitChildren(ctx);    // get constants also for array indices in expressions and proc parameters
         } else if (ctx.semaTry() != null) {
             visit(ctx.semaTry());
         } else if (ctx.stringSlice() != null) {

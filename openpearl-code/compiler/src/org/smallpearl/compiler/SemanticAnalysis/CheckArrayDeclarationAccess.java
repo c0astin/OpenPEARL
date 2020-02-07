@@ -160,8 +160,8 @@ public class CheckArrayDeclarationAccess extends SmallPearlBaseVisitor<Void> imp
 		Log.debug("ExpressionTypeVisitor:visitPrimaryExpression:ctx" + CommonUtils.printContext(ctx));
 
 		ErrorStack.enter(ctx,"array index");
-		if (ctx.ID() != null) {
-			SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
+		if (ctx.name() != null && ctx.name().ID() != null) {
+			SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
 
 	//		String s = ctx.toStringTree();
 	//		System.out.println(ctx.ID().toString());
@@ -179,9 +179,9 @@ public class CheckArrayDeclarationAccess extends SmallPearlBaseVisitor<Void> imp
 						checkIndexValue = false;
 					}
 					// expressionResult should be TypeArray if no indices are given
-					if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
+					if (ctx.name().listOfExpression() != null && ctx.name().listOfExpression().expression().size() > 0) {
 						TypeArray ta = (TypeArray) variable.getType();
-						checkIndices(ta,ctx.listOfActualParameters().expression(), checkIndexValue);
+						checkIndices(ta,ctx.name().listOfExpression().expression(), checkIndexValue);
 
 					} else {
 						// we got no indices -_> complete array as parameter
