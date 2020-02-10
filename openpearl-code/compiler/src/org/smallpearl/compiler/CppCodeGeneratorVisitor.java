@@ -623,8 +623,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
           v.add("inv", var.getAssigmentProtection());
 
           if (var.getInitializer() != null) {
-            // 2020-02-05: merge error
-            //                   v.add("InitElement", var.getInitializer().getConstant());
             v.add("InitElement", ((SimpleInitializer) var.getInitializer()).getConstant());
           } 
           variableDenotation.add("decl", v);
@@ -2660,9 +2658,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 //if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
 
                     functionCall.add("ListOfActualParameters",
-                            //  2020-02-05 merge problem ???
-                            //    getActualParameters(ctx.expression()));
-                            getActualParameters(ctx.listOfActualParameters().expression()));
+                            getActualParameters(ctx.name().listOfExpression().expression()));
                 }
 
                 expression.add("functionCall", functionCall);
