@@ -30,6 +30,7 @@
 package org.smallpearl.compiler;
 
 import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
+import org.smallpearl.compiler.SmallPearlParser.ListOfExpressionContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
@@ -127,7 +128,11 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
                 if ( variable.getType() instanceof TypeArray ) {
                 	// expressionResult should be TypeArray if no indices are given
-                	if (ctx.name().listOfExpression().expression().size()==0) {
+                  ParserRuleContext c = ctx.name();
+                  ListOfExpressionContext cl = ctx.name().listOfExpression();
+                 // List<SmallPearlParser.ExpressionContext> cc = ctx.name().listOfExpression().expression();
+                  
+                	if (ctx.name().listOfExpression()==null) {
                 	   TypeArray ta = (TypeArray) variable.getType();
                 	   
                 	   expressionResult = new ASTAttribute(ta);
@@ -834,7 +839,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: DivideExpression: rule#7");
         } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeFloat(24), op1.isReadOnly() && op2.isReadOnly());
+            res = new ASTAttribute(new TypeFloat(23), op1.isReadOnly() && op2.isReadOnly());
             m_ast.put(ctx, res);
 
             if (m_debug)
