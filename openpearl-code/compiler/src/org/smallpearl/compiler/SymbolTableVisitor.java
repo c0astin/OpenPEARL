@@ -570,7 +570,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     @Override
     public Void visitTypeBitString(SmallPearlParser.TypeBitStringContext ctx) {
         Log.debug("SymbolTableVisitor:visitTypeBitString:ctx" + CommonUtils.printContext(ctx));
-        int length = 0;
+        int length = m_currentSymbolTable.lookupDefaultBitLength();
+        
 
         if (ctx.IntegerConstant() != null) {
             length = Integer.parseInt(ctx.IntegerConstant().getText());
