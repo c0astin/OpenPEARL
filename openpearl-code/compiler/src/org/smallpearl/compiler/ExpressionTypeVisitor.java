@@ -32,6 +32,7 @@ package org.smallpearl.compiler;
 import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
 import org.smallpearl.compiler.SmallPearlParser.ListOfExpressionContext;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
 import org.stringtemplate.v4.ST;
@@ -1536,8 +1537,11 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             expressionResult.setConstant(getConstantClockValue(ctx.timeConstant()));
             m_ast.put(ctx, expressionResult);
         } else if (ctx.StringLiteral() != null) {
-        	ASTAttribute expressionResult = new ASTAttribute(new TypeChar(CommonUtils.getStringLength(
-        			CommonUtils.removeQuotes(ctx.StringLiteral().getText()))), true);
+            ConstantCharacterValue ccv = getConstantStringLiteral(ctx.StringLiteral());
+            int length = ccv.getLength();
+            
+        	ASTAttribute expressionResult = new ASTAttribute(new TypeChar(ccv.getLength()), true);
+        	expressionResult.setConstant(ccv);
             m_ast.put(ctx, expressionResult);
         } else if (ctx.BitStringLiteral() != null) {
             ASTAttribute expressionResult = new ASTAttribute(  new TypeBit(CommonUtils.getBitStringLength(ctx.BitStringLiteral().getText())), true);
@@ -1576,6 +1580,14 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
 
+    private ConstantCharacterValue getConstantStringLiteral( TerminalNode terminalNode) {
+      String s = terminalNode.toString();
+    
+      ConstantCharacterValue result = new ConstantCharacterValue(s);
+      
+      return result;
+    }
+    
     private Double getTime(SmallPearlParser.TimeConstantContext ctx) {
         Integer hours = 0;
         Integer minutes = 0;
@@ -1635,9 +1647,16 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
            minutes = Integer.valueOf(ctx.minutes().IntegerConstant().toString());
         }
         
-        if (ctx.seconds() != null && ctx.seconds().floatingPointConstant() != null) {
-        	String s = ctx.seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString();
-            seconds = Double.valueOf(ctx.seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+        if (ctx.seconds() != null) {
+          String s = "";
+          if (ctx.seconds().floatingPointConstant() != null) {
+        	 s = ctx.seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString();
+          } else if (ctx.seconds() != null && ctx.seconds().IntegerConstant() != null) {
+            s = ctx.seconds().IntegerConstant().toString();
+          } else {
+            throw new InternalCompilerErrorException("ConstantDurationValue: how did you reach this point?");
+          }
+            seconds = Double.valueOf(s);
         }
 
         if (hours < 0 || minutes < 0 || minutes > 59) {

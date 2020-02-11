@@ -109,8 +109,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         LinkedList<StructureEntry> listOfStructureDeclarations =
                 this.m_currentSymbolTable.getStructureDeclarations();
-
-        generatePrologue();
+        
+       // generateProlog is invoked via visitModule!!
+       generatePrologue();
     }
 
     private Void ReadTemplate(String filename) {
@@ -150,6 +151,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     }
 
     private ST generateConstantPool() {
+        Log.debug("CppCodeGeneratorVisitor:generateConstantPool:");
+
         ST pool = m_group.getInstanceOf("ConstantPoolList");
 
         for (int i = 0; i < ConstantPool.constantPool.size(); i++) {
@@ -193,29 +196,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 ST entry = m_group.getInstanceOf("ConstantPoolCharacterEntry");
                 entry.add("name", value.toString());
                 entry.add("type", value.getBaseType());
-
-                // there is no need to unescape the string again.
-                // to the constant pool
-                // String s = CommonUtils.unescapePearlString(value.getValue());
+                entry.add("length", value.getLength());
+                  
+                // we must quote the backslash and the double quote
                 String s = value.getValue();
-                int len = CommonUtils.getStringLength(s); 
-                entry.add("length", CommonUtils.getStringLength(s));
+                s = CommonUtils.convertPearl2CString(s);
                 entry.add("value", s);
-
+                
                 pool.add("constants", entry);
-
-                Log.debug("CppCodeGeneratorVisitor:generateConstantPool:");
-                try {
-                    StringBuilder sb = new StringBuilder();
-                    byte[] ptext = s.getBytes("UTF-8");
-
-                    for (byte b : ptext) {
-                        sb.append(String.format(" %02X", b));
-                    }
-                    Log.debug("[" + sb.toString() + " ]");
-                } catch (UnsupportedEncodingException ex) {
-                    Log.debug("[ ??? ]");
-                }
             }
         }
 
@@ -801,6 +789,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     private ST getInitElement(SmallPearlParser.ConstantContext ctx) {
         ST constant = m_group.getInstanceOf("Constant");
         int last_sign = m_sign;
+        ASTAttribute ast = m_ast.lookup(ctx);
 
         if (ctx != null) {
             if (ctx.sign() != null
@@ -864,7 +853,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     s = s.substring(0, s.length() - 1);
                 }
 
-                s = CommonUtils.unescapePearlString(s);
+                s = CommonUtils.convertPearl2CString(s);
 
                 stringConstant.add("value", s);
                 constant.add("StringConstant", stringConstant);
@@ -3135,7 +3124,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitLiteral(SmallPearlParser.LiteralContext ctx) {
         ST literal = m_group.getInstanceOf("literal");
-
+        ASTAttribute attr = m_ast.lookup(ctx);
+        
         if (ctx.durationConstant() != null) {
             ConstantDurationValue value = CommonUtils.getConstantDurationValue(ctx.durationConstant(), m_sign);
             ConstantDurationValue constDuration = ConstantPool
@@ -3172,14 +3162,24 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (ctx.timeConstant() != null) {
             literal.add("time", getTime(ctx.timeConstant()));
         } else if (ctx.StringLiteral() != null) {
+          ConstantCharacterValue value=null;
+          if (attr.m_constant!= null) {
+            value = (ConstantCharacterValue)(attr.m_constant);
+          } else {
+            // maybe obsolete code. 
+            Log.debug("CppCodeGenerator:3170","shoul never be used");
             String s = ctx.StringLiteral().getText();
             s = CommonUtils.removeQuotes(s);
-            s = CommonUtils.unescapePearlString(s);
+            s = CommonUtils.compressPearlString(s);
+            //s = CommonUtils.unescapePearlString(s);
 
             ST constantCharacterValue = m_group
                     .getInstanceOf("ConstantCharacterValue");
-            ConstantCharacterValue value = ConstantPool.lookupCharacterValue(s);
-
+             value = ConstantPool.lookupCharacterValue(s);
+          }
+            
+            String s = value.getValue();
+            
             if (value != null) {
                 literal.add("string", value);
             } else {

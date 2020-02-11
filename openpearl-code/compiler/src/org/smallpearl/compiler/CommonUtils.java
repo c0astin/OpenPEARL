@@ -434,135 +434,378 @@ public class CommonUtils {
         return sb.toString();
     }
 
-    public static String unescapePearlString(String st) {
-        StringBuilder sb = new StringBuilder(st.length());
-        int state = 0;
-        String value = "";
-        String octalValue = "";
-        String val = "";
+//    public static String unescapePearlString(String st) {
+//        StringBuilder sb = new StringBuilder(st.length());
+//        int state = 0;
+//        String value = "";
+//        String octalValue = "";
+//        String val = "";
+//
+//        for (int i = 0; i < st.length(); i++) {
+//            char ch = st.charAt(i);
+//
+//            switch (state) {
+//                case 0:
+//                    if (ch == '\'') {
+//                        state = 1;
+//                    } else {
+//                        sb.append(ch);
+//                    }
+//                    break;
+//
+//                case 1:
+//                    if (ch == '\\') {
+//                        state = 2;
+//                    } else {
+//                        state = 0;
+//                        sb.append(ch);
+//                    }
+//                    break;
+//
+//                case 2:
+//                    if (ch == ' ') {
+//                        state = 2;
+//                    } else {
+//                        value += ch;
+//                        state = 3;
+//                    }
+//                    break;
+//
+//
+//                case 3:
+//                    value += ch;
+//                    val = Integer.toString(Integer.parseInt(value, 16), 8);
+//                    while (val.length() < 3) {
+//                        val = "0" + val;
+//                    }
+//                    octalValue = "\\" + val;
+//                    sb.append(octalValue);
+//                    value = "";
+//                    state = 4;
+//                    break;
+//
+//                case 4:
+//                    if (ch == '\\') {
+//                        state = 5;
+//                    } else if (ch == ' ') {
+//                        state = 4;
+//                    } else if (ch == '\n') {
+//                        state = 4;
+//                    } else {
+//                        value += ch;
+//                        state = 3;
+//                    }
+//                    break;
+//
+//                case 5:
+//                    state = 0;
+//                    if (ch == '\'') {
+//                    } else {
+//                        sb.append(ch);
+//                    }
+//                    break;
+//            }
+//        }
+//
+//        return sb.toString();
+//    }
 
-        for (int i = 0; i < st.length(); i++) {
-            char ch = st.charAt(i);
-
-            switch (state) {
-                case 0:
-                    if (ch == '\'') {
-                        state = 1;
-                    } else {
-                        sb.append(ch);
-                    }
-                    break;
-
-                case 1:
-                    if (ch == '\\') {
-                        state = 2;
-                    } else {
-                        state = 0;
-                        sb.append(ch);
-                    }
-                    break;
-
-                case 2:
-                    if (ch == ' ') {
-                        state = 2;
-                    } else {
-                        value += ch;
-                        state = 3;
-                    }
-                    break;
+    // st is already without the limiting single quotes 
+    // remove spaces and newlines between escaped control codes
+    // and place exactly one space between control codes
+    // replace double single quotes by one single quote
+    public static String compressPearlString(String st) {
+      StringBuilder sb = new StringBuilder(st.length());
+      int state = 0;
 
 
-                case 3:
-                    value += ch;
-                    val = Integer.toString(Integer.parseInt(value, 16), 8);
-                    if (val.length() == 1) {
-                        val = "0" + val;
-                    }
-                    octalValue = "\\0" + val;
-                    sb.append(octalValue);
-                    value = "";
-                    state = 4;
-                    break;
+      for (int i = 0; i < st.length(); i++) {
+          char ch = st.charAt(i);
 
-                case 4:
-                    if (ch == '\\') {
-                        state = 5;
-                    } else if (ch == ' ') {
-                        state = 4;
-                    } else if (ch == '\n') {
-                        state = 4;
-                    } else {
-                        value += ch;
-                        state = 3;
-                    }
-                    break;
+          switch (state) {
+              case 0:  // normal string content 
+                sb.append(ch);
 
-                case 5:
+                  if (ch == '\'') {
+                      state = 1;
+                  }
+                  break;
+
+              case 1:   // string single quote detected 
+                  if (ch == '\\') {
+                      state = 2;
+                      sb.append(ch);
+                  } else if (ch == '\'') {
+                    // double single quotes detected --> replace by 1 single quote
+                    // single quote is already in sb
                     state = 0;
-                    if (ch == '\'') {
-                    } else {
-                        sb.append(ch);
-                    }
-                    break;
-            }
-        }
+                  } else {
+                    // error: should never reach this point
+                    System.err.println("compressPearlString: how did you reach this point?");
+                      state = 0;
+                  }
+                  break;
 
-        return sb.toString();
-    }
+              case 2: // control characters start detected
+                  if (Character.isWhitespace(ch)) {
+                      state = 2;
+                  } else {
+                      sb.append(ch);
+                      state = 3;
+                  }
+                  break;
 
+
+              case 3:  // second control nibble detected
+                  sb.append(ch);
+                  state = 4;
+                  break;
+
+              case 4:  // skip spaces between control characters
+                  if (ch == '\\') {
+                      state = 5;
+                      sb.append(ch);
+                  } else if (Character.isWhitespace(ch)) {
+                      state = 4;
+                  } else {
+                      sb.append(' ');
+                      sb.append(ch);
+                      state = 3;
+                  }
+                  break;
+
+              case 5:
+                  if (ch == '\'') {
+                     state = 0;
+                     sb.append(ch);
+                  }
+                  break;
+          }
+      }
+
+      return sb.toString();
+  }
+    
+
+    // st has no limiting single quotes
+    // is already compressed
+    // now: replace '\23 34\' with the octal numbers
+    //      and quote containing backslash and double quotes
+    public static String convertPearl2CString(String st) {
+      StringBuilder sb = new StringBuilder(st.length());
+      int state = 0;
+      String value="";
+
+      
+      for (int i = 0; i < st.length(); i++) {
+          char ch = st.charAt(i);
+
+          switch (state) {
+              case 0:  // normal string content 
+                  if (ch == '\'') {
+                      state = 1;
+                  } else if (ch == '"' || ch == '\\') {
+                       sb.append('\\');
+                       sb.append(ch);
+                  } else {
+                    sb.append(ch);
+                  }
+                  break;
+
+              case 1:   // string single quote detected 
+                  if (ch == '\\') {
+                      state = 2;
+                  } else {
+                    sb.append('\'');
+                    sb.append(ch);
+                    state = 0;   
+                  }
+                  break;
+
+              case 2: // control characters start detected
+                  if (Character.isWhitespace(ch)) {
+                      state = 2;
+                  } else {
+                      value +=ch;
+                      state = 3;
+                  }
+                  break;
+
+
+              case 3:  // second control nibble detected
+                  value += ch;
+                  int hexValue = Integer.valueOf(value, 16).intValue();
+                  String octal = Integer.toOctalString(hexValue);
+                  while (octal.length()<3) {
+                    octal = "0"+octal;
+                  }
+                  octal = "\\"+octal;
+                  sb.append(octal);
+                  state=4;
+                  value="";
+                  break;
+
+              case 4:  // skip spaces between control characters
+                  if (ch == '\\') {
+                      state = 5;
+                  } else if (Character.isWhitespace(ch)) {
+                      state = 4;
+                  } else {
+                      value+=ch;
+                      state = 3;
+                  }
+                  break;
+
+              case 5:
+                  if (ch == '\'') {
+                     state = 0;
+                  }
+                  break;
+          }
+      }
+      if (state == 1) {
+        sb.append('\'');
+      }
+
+      return sb.toString();
+  }
+    
     public static String removeQuotes(String st) {
-        st = st.replaceAll("^'", "");
-        st = st.replaceAll("'$", "");
+      if( st.startsWith("'") && st.endsWith("'")) {
+        st = st.substring(1, st.length()-1);
+      }
         return st;
     }
 
+    // st is already without limiting single quotes and compressed
+    // double single quotes are already reduced to one single quote
     public static int getStringLength(String st) {
-        int state = 0;
-        int len = 0;
-        String s = "";
+      StringBuilder sb = new StringBuilder(st.length());
+      int state = 0;
+      int length=0;
 
-        for (int i = 0; i < st.length(); i++) {
-            char ch = st.charAt(i);
+      for (int i = 0; i < st.length(); i++) {
+        char ch = st.charAt(i);
 
-            switch (state) {
-                case 0:
-                    if (ch == '\\') {
-                        state = 1;
-                    } else {
-                        len++;
-                    }
-                    break;
-
-                case 1:
-                    if (ch == '0') {
-                        state = 2;
-                    } else {
-                        state = 0;
-                        len++;
-                    }
-                    break;
-
-                case 2:
-                    if (ch >= '0' && ch <= '7') {
-                        state = 3;
-                    } else {
-                        state = 0;
-                        len++;
-                    }
-                    break;
-
-                case 3:
-                    if (ch >= '0' && ch <= '7') {
-                        state = 0;
-                    } else if (ch == '\\') {
-                        state = 1;
-                    } else {
-                        state = 0;
-                        len++;
-                    }
-                    break;
+        switch (state) {
+          case 0:  // normal string content 
+            
+            if (ch == '\'') {
+              state = 1;
+            } else {
+              sb.append(ch);
             }
+            break;
+
+          case 1:   // string single quote detected 
+            //sb.append(ch);
+            if (ch == '\\') {
+              state = 2;
+            } else {
+              // two single quotes are ok --> deliver a single quote
+              sb.append('\'');
+              sb.append(ch);
+              state = 0;
+            } 
+            break;
+
+          case 2: // control characters start detected
+            if (Character.isWhitespace(ch)) {
+              // discard white spaces in control character context
+              state = 2;
+            } else {
+              // first nibble detected
+              state = 3;
+            }
+            break;
+
+
+          case 3:  // second control nibble detected
+            sb.append('?');  // substitude control code value with '?'
+            state = 4;
+            break;
+
+          case 4:  // skip spaces between control characters
+            if (ch == '\\') {
+              state = 5;
+              // terminating backslash detected
+            } else if (Character.isWhitespace(ch)) {
+              state = 4;
+            } else {
+              // first nibble of next code reached
+              state = 3;
+            }
+            break;
+
+          case 5:
+            if (ch == '\'') {
+              state = 0;
+              //sb.append(ch);
+            }
+            break;
         }
+      }
+      if (state == 1) {
+        sb.append('\'');
+      }
+      
+      try {
+        byte arr[] = sb.toString().getBytes("UTF8");
+        length = arr.length;
+      } catch (UnsupportedEncodingException ex) {
+        //ErrorStack.add("illegal character in string constant");
+      }
+
+      return length;
+    }
+//    public static int getStringLength(String st) {
+//        int state = 0;
+//        int len = 0;
+//        String s = "";
+//
+//        for (int i = 0; i < st.length(); i++) {
+//            char ch = st.charAt(i);
+//
+//            switch (state) {
+//                case 0:
+//                    if (ch == '\\') {
+//                        state = 1;
+//                    } else {
+//                        len++;
+//                    }
+//                    break;
+//
+//                case 1:
+//                    // first digit of an octal value
+//                    if (ch >= '0' && ch <= '7') {
+//                        state = 2;
+//                    } else {
+//                        state = 0;
+//                        len++;
+//                    }
+//                    break;
+//
+//                case 2:
+//                    if (ch >= '0' && ch <= '7') {
+//                        state = 3;
+//                    } else {
+//                        state = 0;
+//                        len++;
+//                    }
+//                    break;
+//
+//                case 3:
+//                    if (ch >= '0' && ch <= '7') {
+//                        state = 0;
+//                    } else if (ch == '\\') {
+//                        state = 1;
+//                    } else {
+//                        state = 0;
+//                        len++;
+//                    }
+//                    break;
+//            }
+//        }
 
 // 20202-02-06; merge error
 //        try {
@@ -574,9 +817,9 @@ public class CommonUtils {
 //        if (len == 0) {
 //            len = 1;
 //        }
-
-        return len;
-    }
+//
+//        return len;
+//    }
 
     public static String printContext(ParserRuleContext ctx) {
         int a = ctx.start.getStartIndex();
@@ -788,4 +1031,5 @@ public class CommonUtils {
         }
         return null;
     }
+
 }

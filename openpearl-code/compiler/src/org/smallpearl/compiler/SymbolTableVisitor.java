@@ -1487,7 +1487,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         } else if (ctx.constant() != null) {
             constant = getConstant(ctx.constant());
         } else if (ctx.ID() != null) {
-            String s = ctx.ID().toString();
             SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().toString());
 
             if ( entry == null ) {
@@ -1528,10 +1527,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             }
         }
 
-        if ( ctx.stringConstant() != null) {
-            constant = new ConstantCharacterValue(ctx.stringConstant().StringLiteral().toString());
-        }
-        else if ( ctx.fixedConstant() != null) {
+//        if ( ctx.stringConstant() != null) {
+//            constant = new ConstantCharacterValue(ctx.stringConstant().StringLiteral().toString());
+//        }
+//        else 
+          if ( ctx.fixedConstant() != null) {
             long curval = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
             int curlen =   m_currentSymbolTable.lookupDefaultFixedLength();
 
@@ -1617,9 +1617,9 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             constant = new ConstantClockValue(hours, minutes, seconds);
         }
         else if ( ctx.stringConstant() != null) {
-            String s = ctx.stringConstant().toString();
-            s = CommonUtils.removeQuotes(s);
-            s = CommonUtils.unescapePearlString(s);
+            String s = ctx.stringConstant().StringLiteral().toString();
+           // s = CommonUtils.removeQuotes(s);
+            //s = CommonUtils.compressPearlString(s);
             constant = new ConstantCharacterValue(s);
         }
 

@@ -156,7 +156,7 @@ public class ConstantPool {
         for ( i = 0; i < constantPool.size(); i++) {
             if ( constantPool.get(i) instanceof ConstantCharacterValue ) {
                 ConstantCharacterValue str = (ConstantCharacterValue)constantPool.get(i);
-                String output = String.format("  %-40s : %s",  constantPool.get(i).toString(), str);
+                String output = String.format("  %-40s : %s",  constantPool.get(i).toString(), str.getValue());
                 System.out.println(output);
             }
             else if ( constantPool.get(i) instanceof ConstantFixedValue ) {

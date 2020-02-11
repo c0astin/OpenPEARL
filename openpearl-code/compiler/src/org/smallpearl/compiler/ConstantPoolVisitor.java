@@ -180,6 +180,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
     public Void visitLiteral(SmallPearlParser.LiteralContext ctx) {
         Log.debug("ConstantPoolVisitor: visitLiteral");
 
+        ASTAttribute attr = m_ast.lookup(ctx);
+        
         if (ctx.durationConstant() != null) {
             m_constantPool.add(CommonUtils.getConstantDurationValue(ctx.durationConstant(),1));
         } else if (ctx.timeConstant() != null) {
@@ -219,8 +221,16 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             }
 
         } else if (ctx.StringLiteral() != null) {
-            String s = CommonUtils.unescapePearlString(CommonUtils.removeQuotes(ctx.StringLiteral().toString()));
-            add(new ConstantCharacterValue(s));
+          if (attr.m_constant != null) {
+            m_constantPool.add(attr.m_constant);
+          } else {
+            String s = ctx.StringLiteral().toString();
+            //s = CommonUtils.removeQuotes(s);
+           // s = CommonUtils.compressPearlString(s);
+           // s = CommonUtils.unescapePearlString(CommonUtils.removeQuotes(s));
+            m_constantPool.add(new ConstantCharacterValue(s));
+            System.out.println("ConstPoolVisitor: should never be called: "+s);
+          }
         } else if (ctx.fixedConstant() != null) {
             try {
                 long value;
@@ -419,8 +429,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
         } else if (ctx.stringConstant() != null) {
         	String s = ctx.stringConstant().StringLiteral().toString();
-        	s = CommonUtils.removeQuotes(s);
-        	s = CommonUtils.unescapePearlString(s);
+        	//s = CommonUtils.removeQuotes(s);
+        	//s = CommonUtils.compressPearlString(s);
         	m_constantPool.add(new ConstantCharacterValue(s));
         } else if (ctx.durationConstant() != null) {
             Integer hours = 0;

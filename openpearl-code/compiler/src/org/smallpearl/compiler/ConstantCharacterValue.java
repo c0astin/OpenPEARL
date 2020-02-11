@@ -36,27 +36,20 @@ import java.io.UnsupportedEncodingException;
 public class ConstantCharacterValue  extends ConstantValue {
     private String m_value;
     private String m_uuid;
-
+    private int length;
+    /**
+     * 
+     * @param str as written in the PEARL-Application including escaped control characters
+     */
     ConstantCharacterValue(String str) {
-        if( str.startsWith("'")) {
-            str = str.substring(1, str.length());
-        }
-
-        if( str.endsWith("'")) {
-            str = str.substring(0, str.length() - 1);
-        }
-
-        m_value = str;
+        str = CommonUtils.removeQuotes(str);
+        m_value = CommonUtils.compressPearlString(str);
+        length = CommonUtils.getStringLength(m_value);
         m_uuid = CommonUtils.getUUIDString();
     }
 
     public int getLength() {
-        try{
-            byte[] ptext = m_value.getBytes("UTF-8");
-            return ptext.length;
-        }catch(UnsupportedEncodingException ex){
-            throw new InternalCompilerErrorException("Unsupported character encoding.");
-        }
+      return length;
     }
 
     public String getValue() {
