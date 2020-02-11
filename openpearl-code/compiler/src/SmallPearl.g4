@@ -2526,18 +2526,18 @@ StringLiteral
 
 fragment
 StringCharacters
-	:	StringCharacter+
+	:	(StringCharacter | EscapeSequence)+ 
 	;
 
 fragment
 StringCharacter
-	:	~['\\\r\n]
-	|	EscapeSequence
+	:	~['\r\n]
+	| 	'\'\''
 	;
 
 fragment
 EscapeSequence
-	: '\'\\' (HexEscape| ' ' | [\r\n])* '\\\''
+	: '\'\\' (HexEscape | ' ' | [\r\n\t])* '\\\''
 	;
 
 fragment
