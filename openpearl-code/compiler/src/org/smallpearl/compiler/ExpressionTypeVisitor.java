@@ -47,6 +47,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     private org.smallpearl.compiler.SymbolTable.SymbolTable m_symboltable;
     private org.smallpearl.compiler.SymbolTable.SymbolTable m_currentSymbolTable;
     private org.smallpearl.compiler.SymbolTable.ModuleEntry m_module;
+    private ConstantPool m_constantPool;
     private Integer m_currFixedLength = null;
     private boolean m_calculateRealFixedLength;
     private org.smallpearl.compiler.AST m_ast;
@@ -55,13 +56,15 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     private TypeDefinition m_type = null;
     private int m_nameDepth = 0;
 
-    public ExpressionTypeVisitor(int verbose, boolean debug, SymbolTableVisitor symbolTableVisitor, org.smallpearl.compiler.AST ast) {
+    public ExpressionTypeVisitor(int verbose, boolean debug, SymbolTableVisitor symbolTableVisitor, 
+        ConstantPool constantPool, org.smallpearl.compiler.AST ast) {
 
         m_verbose = verbose;
         m_debug = debug;
 
         m_symbolTableVisitor = symbolTableVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
+        this.m_constantPool = constantPool;
         m_ast = ast;
         m_name = null;
         m_type = null;
@@ -1539,10 +1542,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         } else if (ctx.StringLiteral() != null) {
             ConstantCharacterValue ccv = getConstantStringLiteral(ctx.StringLiteral());
             int length = ccv.getLength();
-            
+            if (length == 0) {
+               ErrorStack.enter(ctx,"string constant");
+               ErrorStack.add("need at least 1 character");
+               ErrorStack.leave();
+            } 
+            // generate AST Attribute for further analysis
         	ASTAttribute expressionResult = new ASTAttribute(new TypeChar(ccv.getLength()), true);
-        	expressionResult.setConstant(ccv);
+        	ConstantValue cv = m_constantPool.add(ccv);   // add to constant pool; maybe we have it already
+        	expressionResult.setConstant(cv);
             m_ast.put(ctx, expressionResult);
+            
         } else if (ctx.BitStringLiteral() != null) {
             ASTAttribute expressionResult = new ASTAttribute(  new TypeBit(CommonUtils.getBitStringLength(ctx.BitStringLiteral().getText())), true);
             m_ast.put(ctx, expressionResult);
