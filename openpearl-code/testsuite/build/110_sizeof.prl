@@ -71,13 +71,13 @@ t1: TASK MAIN;
            TO stdout
            BY A,F(3), A, SKIP; 
     FIN;
+*/
    
     IF ok THEN
         PUT 'success' TO stdout BY A,SKIP;
     ELSE
         PUT 'failure' TO stdout BY A,SKIP;
     FIN;
-*/
 
     CLOSE stdout;
 END;
