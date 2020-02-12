@@ -1620,7 +1620,14 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             String s = ctx.stringConstant().StringLiteral().toString();
            // s = CommonUtils.removeQuotes(s);
             //s = CommonUtils.compressPearlString(s);
-            constant = new ConstantCharacterValue(s);
+            ConstantCharacterValue ccv = new ConstantCharacterValue(s);
+            if (ccv.getLength() == 0) {
+              ErrorStack.enter(ctx,"character string constant");
+              ErrorStack.add("need at least 1 character");
+              ErrorStack.leave();
+            }
+            // continue with wrong constant for further analysis
+            constant = ccv;
         }
 
         return constant;
