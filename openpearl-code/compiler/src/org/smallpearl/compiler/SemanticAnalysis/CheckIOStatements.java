@@ -557,10 +557,39 @@ SmallPearlVisitor<Void> {
 
 
 		if (ctx.expression().size() > 0) {
-			// count number of format(without positions) 
+			// count number of elements (without positions) 
 			int nbr = 0;
 			for (int i = 0; i<ctx.formatPosition().size(); i++) {
 				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatContext) {
+					FactorFormatContext c = (FactorFormatContext)(ctx.formatPosition(i));
+					if (c.factor() != null) {
+						if (c.factor().expression()!= null) {
+							System.out.println("("+c.factor().expression().getText()+")");
+						}
+						if (c.factor().integerWithoutPrecision() != null) {
+							System.out.println("INT-Factor: "+c.factor().integerWithoutPrecision().getText());
+						}
+					}
+					nbr ++;
+				}
+				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorPositionContext) {
+					FactorPositionContext c = (FactorPositionContext)(ctx.formatPosition(i));
+					if (c.factor() != null) {
+						if (c.factor().expression()!= null) {
+							System.out.println("FactorPosition  ("+c.factor().expression().getText()+")");
+						}
+						if (c.factor().integerWithoutPrecision() != null) {
+							System.out.println("INT-Factor: "+c.factor().integerWithoutPrecision().getText());
+						}
+					}
+					//nbr ++;
+				}
+				
+				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatPositionContext) {
+					FactorFormatPositionContext c = (FactorFormatPositionContext)(ctx.formatPosition(i));
+					System.out.println("FactorFormatPosition"+c.getText());
+					// let's assume there is a format statement
+
 					nbr ++;
 				}
 			}
@@ -757,7 +786,7 @@ SmallPearlVisitor<Void> {
 			System.out.println( "Semantic: Check IOStatements: visitPositionWRITE");
 		}
 
-		// enshure that the dation id of type ALPHIC
+		// enshure that the dation id of type 'type'
 		ErrorStack.enter(ctx, "WRITE");
 
 		TypeDation d = lookupDation(ctx.dationName());
@@ -770,27 +799,30 @@ SmallPearlVisitor<Void> {
 
 		// check if absolute positions follow relative positions
 
-		boolean foundAbsolutePosition= false;
-		boolean foundRelativePosition = false;
+		int nbrOfPositionsAlreadyFound = 0;
 		for (int i = 0; i<ctx.position().size(); i++) {
 			ParseTree child = ctx.position(i).getChild(0); 
-
+			
 			if (child instanceof SmallPearlParser.AbsolutePositionContext) {
-				ErrorStack.enter(ctx.position(i));
-				if (foundRelativePosition) {
-					ErrorStack.warn("relative positioning before absolute positioning is void");
-					foundRelativePosition = false;
+				SmallPearlParser.AbsolutePositionContext c = (AbsolutePositionContext)child;
+				if (c.positionPOS() != null ||
+						c.positionLINE() != null) {
+					ErrorStack.enter(ctx.position(i));
+					if (nbrOfPositionsAlreadyFound > 0) {
+						ErrorStack.warn("previous positioning before LINE or POS are void");
+					}
+					ErrorStack.leave();
 				}
-				if (foundAbsolutePosition) {
-					ErrorStack.warn("previous absolute positioning is void");
-				}
-				ErrorStack.leave();
-				foundAbsolutePosition = true;
 			}
-			if (child instanceof SmallPearlParser.RelativePositionContext) {
-				foundRelativePosition = true;
+			// count all positioning formats; RST is ok multiple times in the list
+			// to capture positioning errors and transfer errors
+			if (child instanceof SmallPearlParser.RelativePositionContext ||
+				child instanceof SmallPearlParser.AbsolutePositionContext) {
+				nbrOfPositionsAlreadyFound ++;
 			}
 		}
+		
+		// check type of transfer data is missing
 
 		visitChildren(ctx);
 		ErrorStack.leave();
@@ -1983,9 +2015,9 @@ SmallPearlVisitor<Void> {
 				sd.setAlphic(true);
 				sd.setDirect(true);
 				return sd;
+			} else {
+				ErrorStack.add("'"+ userDation + "' must be DATION -- has type "+ (((VariableEntry)se).getType().toString()));
 			}
-		} else {
-			ErrorStack.add("'"+ userDation + "' must be DATION -- has type "+ (((VariableEntry)se).getType().toString()));
 		}
 		return null;
 	}
@@ -1995,7 +2027,7 @@ SmallPearlVisitor<Void> {
 		String userDation = "";
 		boolean isConvert = false;
 
-		// walk grammar up to put_statement
+		// walk grammar up to put,get,read,write,take,send,convert_statement
 		RuleContext p= (RuleContext)ctx;
 		while ( p != null ) {
 			p=p.parent;
