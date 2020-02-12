@@ -1432,7 +1432,7 @@ dationName :
 //   Factor ( FormatPosition [ , FormatPosition ] ... )
 ////////////////////////////////////////////////////////////////////////////////
 
- formatPosition :
+formatPosition :
       factor? format                                             # factorFormat
     | factor? position                                           # factorPosition
     | factor '(' formatPosition ( ( ','  formatPosition )* )?')' # factorFormatPosition
@@ -1466,6 +1466,7 @@ format :
     | bitFormat
     | timeFormat
     | durationFormat
+    | listFormat
     | characterStringFormat
     ;
 
