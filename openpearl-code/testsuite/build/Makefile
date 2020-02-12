@@ -18,10 +18,9 @@
  
 DONOTBUILD= 030_signals 031_signalsInduce  \
 	043_switch \
-	151_array_procParam \
 	224_bit_slice \
 	300_float_dcl \
-	707_dation_pg_formats \
+	800_struct_decl \
 	850_ref_decl
 
 DONOTRUN=000_empty \
