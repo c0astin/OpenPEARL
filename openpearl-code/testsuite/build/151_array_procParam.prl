@@ -1,9 +1,9 @@
 MODULE(arrayProcParam);
 
 SYSTEM;
-!   stdout: StdOut;
+   stdout: StdOut;
 PROBLEM;
- /*
+ 
    SPC stdout DATION OUT SYSTEM ALPHIC;
    DCL so DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
 
@@ -41,10 +41,10 @@ testFixedIdent: PROC (a FIXED IDENT);
 END;
 
 testInvFixedIdent: PROC (a INV FIXED IDENT);
-!   a = 0;   !<<< is not detected by the compiler
+!   a = 0;   !<<< will be detected by the compiler
 END;
 
-*/
+
 
 sum: PROC (x() FIXED IDENT) RETURNS (FIXED);
    DCL s FIXED INIT(0);
