@@ -22,10 +22,11 @@ END;
 
 ! make automatic test happy
 main: TASK MAIN;
-
+   DCL a(10) FIXED;
    DCL (x,y) FIXED;
    x = 2;
    y = p2(x);
+   y = p2(a(3));
 END;
 
 MODEND;
