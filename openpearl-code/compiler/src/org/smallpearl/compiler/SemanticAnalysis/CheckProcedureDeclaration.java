@@ -201,7 +201,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 		}
 
 		// reset the attribute before visitChildren()
-		// m_typeOfReturnExpression conatins the type of the last RETURN statement
+		// m_typeOfReturnExpression contains the type of the last RETURN statement
 		// in the procedure body
 		m_typeOfReturns = null;
 		m_typeOfReturnExpression = null;
@@ -502,12 +502,32 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 
 			if (entry instanceof org.smallpearl.compiler.SymbolTable.ProcedureEntry) {
 				org.smallpearl.compiler.SymbolTable.ProcedureEntry proc = (org.smallpearl.compiler.SymbolTable.ProcedureEntry)(entry);
-				
+
+				int nbrActualParameters = 0;
+				int nbrFormalParameters = 0;
 				if (ctx.name().listOfExpression() != null && ctx.name().listOfExpression().expression().size() > 0) {
-					for (int i=0; i< ctx.name().listOfExpression().expression().size(); i++) {
+					nbrActualParameters = ctx.name().listOfExpression().expression().size();
+				}
+				if (proc.getFormalParameters()!= null)  {
+					nbrFormalParameters = proc.getFormalParameters().size();
+				}
+				if (nbrActualParameters != nbrFormalParameters) {
+					ErrorStack.enter(ctx);
+					ErrorStack.add("number of parameters mismatch: given "+nbrActualParameters+" expected: "+nbrFormalParameters);
+					ErrorStack.leave();
+				}
+
+				if (ctx.name().listOfExpression() != null && ctx.name().listOfExpression().expression().size() > 0) {
+					int min = Math.min(nbrActualParameters, nbrFormalParameters);
+					for (int i=0; i< min; i++) {
 			   		   ErrorStack.enter(ctx.name().listOfExpression().expression(i),"param");
+			   		   String s = ctx.getText();
+			   		   if (proc.getFormalParameters() != null) {
+			   			   int fp=proc.getFormalParameters().size();
+			   		   }
+			   		   int ap = ctx.name().listOfExpression().expression().size();
 				       checkParameter(proc, ctx.name().listOfExpression().expression(i), proc.getFormalParameters().get(i));
-				       ErrorStack.leave();
+					   ErrorStack.leave();				
 					}
 				}
 			
