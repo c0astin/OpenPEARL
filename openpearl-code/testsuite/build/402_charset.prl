@@ -187,7 +187,7 @@ DCL charset7 CHAR(4) INIT('xäx');
 
 ! make automatic test happy
 main: TASK MAIN;
-DCL all CHAR(128) INIT('');
+DCL all CHAR(128) INIT(' ');
 DCL ch CHAR;
 
 all := c_00 >< c_01 >< c_02 >< c_03 >< c_04 >< c_05 >< c_06 >< c_07 ><
