@@ -2673,12 +2673,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     }
                     array.add("name", variable.getName());
 
-//					TypeArray type = (TypeArray) variable.getType();
-//					ArrayDescriptor array_descriptor = new ArrayDescriptor(
-//							type.getNoOfDimensions(), type.getDimensions());
-//					array.add("name", variable.getName());
-//					array.add("descriptor", array_descriptor.getName());
-                    array.add("indices", getIndices(ctx.name().listOfExpression().expression()));
+                    // if no indices are given, the complete array is accessed
+                    if (ctx.name().listOfExpression()!= null ) {
+                       array.add("indices", getIndices(ctx.name().listOfExpression().expression()));
+                    } 
 
                     expression.add("id", array);
                 } else {
@@ -3167,11 +3165,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             value = (ConstantCharacterValue)(attr.m_constant);
           } else {
             // maybe obsolete code. 
-            Log.debug("CppCodeGenerator:3170","shoul never be used");
+            Log.debug("CppCodeGenerator:3170","should never be reached");
             String s = ctx.StringLiteral().getText();
             s = CommonUtils.removeQuotes(s);
             s = CommonUtils.compressPearlString(s);
-            //s = CommonUtils.unescapePearlString(s);
 
             ST constantCharacterValue = m_group
                     .getInstanceOf("ConstantCharacterValue");
@@ -3184,8 +3181,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 literal.add("string", value);
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(),
-                        // 2020-02-05: merge error
-//                        ctx.start.getLine(), ctx.start.getCharPositionInLine(),
                         ctx.start.getLine(),
                         ctx.start.getCharPositionInLine(),
                         "ConstantCharacter not found in pool");
