@@ -373,7 +373,6 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         return null;
     }
 
-
     @Override
     public Void visitConstant(SmallPearlParser.ConstantContext ctx) {
         Log.debug("ConstantPoolVisitor:visitConstant:ctx" + CommonUtils.printContext(ctx));

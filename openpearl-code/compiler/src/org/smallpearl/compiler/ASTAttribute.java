@@ -34,7 +34,7 @@ import org.smallpearl.compiler.SymbolTable.VariableEntry;
 public class ASTAttribute {
     public TypeDefinition  m_type;
     public boolean m_readonly;
-    public VariableEntry   m_variable;
+    public VariableEntry m_variable;
     public ConstantValue m_constant;
     public ConstantSlice m_slice;
 
@@ -138,7 +138,6 @@ public class ASTAttribute {
         }
     }
 
-    
     public ConstantSlice getConstantSlice() {
         return this.m_slice;
     }

@@ -178,6 +178,7 @@ public class Compiler {
                         constantPool,
                         expressionTypeVisitor,
                         ast);
+
                 if (ErrorStack.getTotalErrorCount()<=0) {
                     constantPoolVisitor.visit(tree);
                 }
