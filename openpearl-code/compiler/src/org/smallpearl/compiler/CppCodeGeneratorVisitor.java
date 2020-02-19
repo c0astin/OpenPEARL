@@ -41,10 +41,7 @@ import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         implements SmallPearlVisitor<ST> {
@@ -107,9 +104,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         this.ReadTemplate(filename);
 
+        /* TODO: MS:
         LinkedList<StructureEntry> listOfStructureDeclarations =
                 this.m_currentSymbolTable.getStructureDeclarations();
-        
+        */
+
        // generateProlog is invoked via visitModule!!
        generatePrologue();
     }
@@ -1209,6 +1208,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     problem_part
                             .add("ArrayVariableDeclarations",
                                     visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c));
+                } else if (c instanceof SmallPearlParser.StructVariableDeclarationContext) {
+                    problem_part
+                            .add("StructVariableDeclarations",
+                                    visitStructVariableDeclaration((SmallPearlParser.StructVariableDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.SemaDeclarationContext) {
                     problem_part
                             .add("SemaDeclarations",
@@ -1536,7 +1539,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     taskbody.add(
                             "decls",
                             visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c));
-                } else if (c instanceof SmallPearlParser.StatementContext) {
+                } else if (c instanceof SmallPearlParser.StructVariableDeclarationContext) {
+                    taskbody.add(
+                            "decls",
+                            visitStructVariableDeclaration((SmallPearlParser.StructVariableDeclarationContext) c));
+                }else if (c instanceof SmallPearlParser.StatementContext) {
                     taskbody.add(
                             "statements",
                             visitStatement((SmallPearlParser.StatementContext) c));
@@ -6382,6 +6389,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                 st.add("code",
                         visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c));
+            } else if (c instanceof SmallPearlParser.StructVariableDeclarationContext) {
+                st.add("code",
+                        visitStructVariableDeclaration((SmallPearlParser.StructVariableDeclarationContext) c));
             } else if (c instanceof SmallPearlParser.StatementContext) {
                 st.add("code",
                         visitStatement((SmallPearlParser.StatementContext) c));
@@ -6483,6 +6493,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         for (int i = 0; i < ctx.arrayVariableDeclaration().size(); i++) {
             st.add("body", visitArrayVariableDeclaration(ctx
                     .arrayVariableDeclaration(i)));
+        }
+
+        for (int i = 0; i < ctx.structVariableDeclaration().size(); i++) {
+            st.add("body", visitStructVariableDeclaration(ctx.structVariableDeclaration(i)));
         }
 
         for (int i = 0; i < ctx.statement().size(); i++) {
@@ -6660,7 +6674,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                     st.add("declarations",
                             visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c));
-                } else if (c instanceof SmallPearlParser.StatementContext) {
+                } else if (c instanceof SmallPearlParser.StructVariableDeclarationContext) {
+                    st.add("declarations",
+                            visitStructVariableDeclaration((SmallPearlParser.StructVariableDeclarationContext) c));
+                }else if (c instanceof SmallPearlParser.StatementContext) {
                     st.add("statements",
                             visitStatement((SmallPearlParser.StatementContext) c));
                 } else if (c instanceof SmallPearlParser.DationDeclarationContext) {
@@ -7350,5 +7367,42 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             s = array_descriptor.getName();
         }
         return s;
+    }
+
+    @Override
+    public ST visitStructVariableDeclaration(SmallPearlParser.StructVariableDeclarationContext ctx) {
+        Log.debug("CppCodeGeneratorVisitor:visitStructVariableDeclaration:ctx" + CommonUtils.printContext(ctx));
+        ST st = m_group.getInstanceOf("StructVariableDeclaration");
+
+        for ( int i = 0; i < ctx.structureDenotation().size(); i++) {
+            String id = ctx.structureDenotation(i).ID().getText();
+
+            SymbolTableEntry symbolTableEntry = m_currentSymbolTable.lookupLocal(ctx.structureDenotation(i).ID().getText());
+
+            if ( symbolTableEntry != null && symbolTableEntry instanceof VariableEntry) {
+                VariableEntry variable = (VariableEntry)symbolTableEntry;
+                ASTAttribute ast = m_ast.lookup(variable.getCtx());
+                TypeStructure typ = (TypeStructure) variable.getType();
+
+                st.add("name",((TypeStructure) variable.getType()).getStructureName());
+                ListIterator structIterator = typ.m_listOfComponents.listIterator();
+
+                while(structIterator.hasNext()){
+                    ST stComponent =  m_group.getInstanceOf("StructComponent");
+                    StructureComponent component = (StructureComponent) structIterator.next();
+                    stComponent.add( "name", component.m_alias);
+
+                    if ( component.m_type instanceof TypeStructure) {
+                        stComponent.add("type", ((TypeStructure) component.m_type).getStructureName());
+                    } else {
+                        stComponent.add("type", component.m_type);
+                    }
+                    st.add("components", stComponent);
+                }
+
+            }
+        }
+
+        return st;
     }
 }
