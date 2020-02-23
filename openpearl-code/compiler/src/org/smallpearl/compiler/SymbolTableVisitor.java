@@ -56,10 +56,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     private SymbolTableEntry m_currentEntry;
     private SymbolTable m_currentSymbolTable;
     private TypeStructure m_currentTypeStructure;
-    private StructureEntry m_currentStructureEntry;
     private LinkedList<LinkedList<SemaphoreEntry>> m_listOfTemporarySemaphoreArrays;
     private LinkedList<LinkedList<BoltEntry>> m_listOfTemporaryBoltArrays;
     private LinkedList<ArrayDescriptor> m_listOfArrayDescriptors;
+    private LinkedList<TypeStructure> m_listOfStructureDeclarations;
 
     private TypeDefinition m_type;
 
@@ -83,7 +83,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         this.m_symboltablePerContext = new ParseTreeProperty<SymbolTable>();
         this.m_constantPool = constantPool;
         this.m_currentTypeStructure = null;
-        this.m_currentStructureEntry = null;
+//TODO: MS REMOVE?:        this.m_currentStructureEntry = null;
         this.m_typeStructure = null;
     }
 
@@ -1548,17 +1548,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             constant = new ConstantFixedValue(curval,curlen);
         }
         else if ( ctx.floatingPointConstant() != null) {
-            double curval = sign * Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
-            int curlen =   m_currentSymbolTable.lookupDefaultFloatLength();
-
-            if ( ctx.floatingPointConstant().FloatingPointNumberPrecision() != null ) {
-                curlen = Integer.parseInt(ctx.floatingPointConstant().FloatingPointNumberPrecision().toString());
-            }else if ( m_type instanceof TypeFloat) {
-                curlen = ((TypeFloat)m_type).getPrecision();
-            } else {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-
+            double curval = sign * CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+            int curlen = CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(), m_currentSymbolTable.lookupDefaultFloatLength());
             constant = new ConstantFloatValue(curval,curlen);
         }
         else if ( ctx.durationConstant() != null) {
@@ -1576,7 +1567,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 if (ctx.durationConstant().seconds().IntegerConstant() != null) {
                     seconds = Double.valueOf(ctx.durationConstant().seconds().IntegerConstant().toString());
                 } else if (ctx.durationConstant().seconds().floatingPointConstant() != null) {
-                    seconds = Double.valueOf(ctx.durationConstant().seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+                    seconds = CommonUtils.getFloatingPointConstantValue(ctx.durationConstant().seconds().floatingPointConstant());
                 }
             }
 
@@ -1605,7 +1596,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             minutes = Integer.valueOf(ctx.timeConstant().IntegerConstant(1).toString());
 
             if (ctx.timeConstant().floatingPointConstant() != null) {
-                seconds = Double.valueOf(ctx.timeConstant().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+                seconds = CommonUtils.getFloatingPointConstantValue(ctx.timeConstant().floatingPointConstant());
             }
             else if (ctx.timeConstant().IntegerConstant(2) != null) {
                 seconds = Double.valueOf(ctx.timeConstant().IntegerConstant(2).toString());
@@ -1728,26 +1719,17 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
     @Override
     public Void visitStructVariableDeclaration(SmallPearlParser.StructVariableDeclarationContext ctx) {
-        if (m_debug) {
-            System.out.println("SymbolTableVisitor: visitStructVariableDeclaration");
-        }
+        Log.debug("SymbolTableVisitor:visitStructVariableDeclaration:ctx" + CommonUtils.printContext(ctx));
         visitChildren(ctx);
         return null;
     }
-
 
     @Override
     public Void visitStructureDenotation(SmallPearlParser.StructureDenotationContext ctx) {
         Log.debug("SymbolTableVisitor:visitStructureDenotation:ctx" + CommonUtils.printContext(ctx));
         boolean hasAssignmentProtection = false;
 
-        StructureEntry old_structureEntry = m_currentStructureEntry;
         ArrayList<Initializer> initElementList = null;
-
-        if (m_debug) {
-            System.out.println("SymbolTableVisitor: visitStructureDenotation");
-        }
-
         SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(ctx.ID().toString());
 
         if (entry != null) {
@@ -1786,7 +1768,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         VariableEntry variableEntry = new VariableEntry(ctx.ID().toString(), m_type, hasAssignmentProtection, ctx, structureInitializer);
         m_currentSymbolTable.enter(variableEntry);
 
-        m_currentStructureEntry = old_structureEntry;
         return null;
     }
 
@@ -1861,6 +1842,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
         return null;
     }
+
     @Override
     public Void visitStructuredType(SmallPearlParser.StructuredTypeContext ctx) {
         Log.debug("SymbolTableVisitor:visitStructuredType:ctx" + CommonUtils.printContext(ctx));

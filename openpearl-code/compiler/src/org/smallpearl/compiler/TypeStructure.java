@@ -33,6 +33,7 @@ package org.smallpearl.compiler;
 import org.smallpearl.compiler.Exception.NotYetImplementedException;
 import org.smallpearl.compiler.SymbolTable.SemaphoreEntry;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class TypeStructure extends TypeDefinition {
@@ -104,6 +105,18 @@ public class TypeStructure extends TypeDefinition {
         if ( type instanceof TypeSemaphore)       return "I" + type.getPrecision().toString();
         if ( type instanceof TypeBolt)            return "J" + type.getPrecision().toString();
         if ( type instanceof TypeStructure)       return "S" + type.getPrecision().toString();
+
+        if ( type instanceof TypeArray ) {
+            TypeArray typeArray = (TypeArray) type;
+            String encoding =  Integer.toString(typeArray.getNoOfDimensions());
+            ArrayList<ArrayDimension> dimensionList = typeArray.getDimensions();
+
+            for ( int i = 0; i <  dimensionList.size(); i++ ) {
+                encoding += "_" + dimensionList.get(i).getLowerBoundary() + "_" + dimensionList.get(i).getUpperBoundary();
+            }
+
+            return getDataTypeEncoding(typeArray.getBaseType()) + "_" + encoding;
+        }
 
         if ( type instanceof TypeReference) {
             TypeReference reftype = (TypeReference) type;

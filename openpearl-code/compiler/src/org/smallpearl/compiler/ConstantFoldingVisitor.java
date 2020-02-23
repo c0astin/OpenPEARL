@@ -149,8 +149,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
             		String s = "";
             		
             		 if (ctx.durationConstant().seconds().floatingPointConstant() != null) {
-            		 	 s = ctx.durationConstant().seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString();
-            		 	 seconds = Double.parseDouble(s);
+            		 	 seconds =CommonUtils.getFloatingPointConstantValue(ctx.durationConstant().seconds().floatingPointConstant());
             		 } else if (ctx.durationConstant().seconds().IntegerConstant() != null) {
             			 s = ctx.durationConstant().seconds().IntegerConstant().toString();
             			 seconds = Integer.parseInt(s);
@@ -177,8 +176,8 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
         	
         } else if (ctx.floatingPointConstant() != null) {
             try {
-                double value = Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
-                Integer precision = 23;
+                double value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+                Integer precision = CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(), Defaults.FLOAT_SHORT_PRECISION);
                 ASTAttribute expressionResult = new ASTAttribute( new TypeFloat(precision),true);
 
                 ASTAttribute attr = m_ast.lookup(ctx);

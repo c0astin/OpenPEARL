@@ -2492,8 +2492,8 @@ charSlice
 ////////////////////////////////////////////////////////////////////////////////
 
 literal
-    : fixedConstant
-    | floatingPointConstant
+    : floatingPointConstant
+    | fixedConstant
     | BitStringLiteral
     | StringLiteral
     | timeConstant
@@ -2673,7 +2673,7 @@ Letter : [a-zA-Z] ;
 ////////////////////////////////////////////////////////////////////////////////
 
 constant :
-      sign? ( fixedConstant | floatingPointConstant )
+      sign? ( floatingPointConstant | fixedConstant )
     | timeConstant
     | sign? durationConstant
     | bitStringConstant
@@ -2729,60 +2729,54 @@ B4Digit
 // ':'  IntegerConstant ':' FloatingPointNumberWithoutPrecisionAndExponent
 ////////////////////////////////////////////////////////////////////////////////
 
-timeConstant
-    : IntegerConstant ':' IntegerConstant ':' ( IntegerConstant | floatingPointConstant )
+timeConstant:
+    IntegerConstant ':' IntegerConstant ':' ( IntegerConstant | floatingPointConstant )
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-durationConstant
-    : hours  minutes? seconds?
+durationConstant:
+      hours  minutes? seconds?
     | minutes seconds?
     | seconds
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-hours
-    : IntegerConstant 'HRS'
+hours:
+    IntegerConstant 'HRS'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-minutes
-    : IntegerConstant 'MIN'
+minutes:
+    IntegerConstant 'MIN'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-seconds
-    : ( IntegerConstant | floatingPointConstant ) 'SEC'
+seconds:
+    ( IntegerConstant | floatingPointConstant ) 'SEC'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-// FloatingPointNumber ::= FloatingPointNumberWithoutPrecision [ ( Precision ) ]
-////////////////////////////////////////////////////////////////////////////////
 
-floatingPointConstant
-    : FloatingPointNumberWithoutPrecision ( '(' FloatingPointNumberPrecision ')' )?
+floatingPointConstant:
+    FloatingPointNumber
     ;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-FloatingPointNumberPrecision
-    : IntegerConstant
+FloatingPointNumber:
+    ( Digit+ '.' ( Digit+)? | '.' Digit+ ) Exponent? FloatingPointNumberPrecision?
+    | Digit+ Exponent FloatingPointNumberPrecision?
     ;
 
-
-////////////////////////////////////////////////////////////////////////////////
-// FloatingPointNumberWithoutPrecision ::=
-//      {Digit... . [Digit... ]|. Digit... }[Exponent] | Digit ... Exponent
 ////////////////////////////////////////////////////////////////////////////////
 
-FloatingPointNumberWithoutPrecision
-    : ( Digit+ '.' ( Digit+)? | '.' Digit+ ) Exponent?
-    | Digit+ Exponent
+fragment
+FloatingPointNumberPrecision:
+    '(' IntegerConstant ')'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2822,7 +2816,6 @@ cpp_inline
 //              Y FLOAT(23);    /* Y is of type FLOAT(23) */
 //
 ////////////////////////////////////////////////////////////////////////////////
-
 
 lengthDefinition
     : 'LENGTH' lengthDefinitionType '(' IntegerConstant ')' ';'

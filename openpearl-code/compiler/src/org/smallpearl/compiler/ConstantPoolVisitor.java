@@ -195,7 +195,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             if (ctx.timeConstant().IntegerConstant(3) != null) {
                 seconds = Double.valueOf(ctx.timeConstant().IntegerConstant(3).toString());
             } else if (ctx.timeConstant().floatingPointConstant() != null) {
-                seconds = Double.valueOf(ctx.timeConstant().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+                seconds = CommonUtils.getFloatingPointConstantValue(ctx.timeConstant().floatingPointConstant());
             }
 
             m_constantPool.add(new ConstantClockValue(hours, minutes, seconds));
@@ -206,13 +206,9 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         } else if (ctx.floatingPointConstant() != null) {
             try {
                 double value = 0.0;
-                int precision = m_currentSymbolTable.lookupDefaultFloatLength();
+                int precision = CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(), m_currentSymbolTable.lookupDefaultFloatLength());
 
-                if (ctx.floatingPointConstant().FloatingPointNumberPrecision() != null) {
-                    precision = Integer.valueOf(ctx.floatingPointConstant().FloatingPointNumberPrecision().toString());
-                }
-
-                value = Double.valueOf(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+                value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
 
                 m_constantPool.add(new ConstantFloatValue(value, precision));
 
@@ -292,8 +288,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
                     if (literal_ctx.floatingPointConstant() != null) {
                         try {
-                            double value = -1 * Double.parseDouble(literal_ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
-                            int precision = m_currentSymbolTable.lookupDefaultFloatLength();
+                            double value = -1 * CommonUtils.getFloatingPointConstantValue(literal_ctx.floatingPointConstant());
+                            int precision = CommonUtils.getFloatingPointConstantPrecision(literal_ctx.floatingPointConstant(),m_currentSymbolTable.lookupDefaultFloatLength());
                             add(new ConstantFloatValue(value, precision));
                         } catch (NumberFormatException ex) {
                             throw new NumberOutOfRangeException(ctx.getText(), literal_ctx.start.getLine(), literal_ctx.start.getCharPositionInLine());
@@ -317,8 +313,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                         System.out.println("string:(" + literal_ctx.StringLiteral().toString() + ")");
                     } else if (literal_ctx.floatingPointConstant() != null) {
                         try {
-                            double value = -1 * Double.parseDouble(literal_ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
-                            int precision = m_currentSymbolTable.lookupDefaultFloatLength();
+                            double value = -1 * CommonUtils.getFloatingPointConstantValue(literal_ctx.floatingPointConstant());
+                            int precision = CommonUtils.getFloatingPointConstantPrecision(literal_ctx.floatingPointConstant(), m_currentSymbolTable.lookupDefaultFloatLength());
                             add(new ConstantFloatValue(value, precision));
                         } catch (NumberFormatException ex) {
                             throw new NumberOutOfRangeException(ctx.getText(), literal_ctx.start.getLine(), literal_ctx.start.getCharPositionInLine());
@@ -446,7 +442,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 if (ctx.durationConstant().seconds().IntegerConstant() != null) {
                     seconds = Double.valueOf(ctx.durationConstant().seconds().IntegerConstant().toString());
                 } else if (ctx.durationConstant().seconds().floatingPointConstant() != null) {
-                    seconds = Double.valueOf(ctx.durationConstant().seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+                    seconds = CommonUtils.getFloatingPointConstantValue(ctx.durationConstant().seconds().floatingPointConstant());
                 }
             }
 
@@ -461,7 +457,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             minutes = Integer.valueOf(ctx.timeConstant().IntegerConstant(1).toString());
 
             if (ctx.timeConstant().floatingPointConstant() != null) {
-                seconds = Double.valueOf(ctx.timeConstant().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+                seconds = CommonUtils.getFloatingPointConstantValue(ctx.timeConstant().floatingPointConstant());
             } else if (ctx.timeConstant().IntegerConstant(2) != null) {
                 seconds = Double.valueOf(ctx.timeConstant().IntegerConstant(2).toString());
             } else {
@@ -501,7 +497,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
  }
  ***/
-                value = sign * Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+                value = sign * CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
                 m_constantPool.add(new ConstantFloatValue(value, precision));
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());

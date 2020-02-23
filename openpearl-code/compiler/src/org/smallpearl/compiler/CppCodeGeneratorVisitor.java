@@ -265,8 +265,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 seconds = Double.valueOf(ctx.seconds().IntegerConstant()
                         .toString());
             } else if (ctx.seconds().floatingPointConstant() != null) {
-                seconds = Double.valueOf(ctx.seconds().floatingPointConstant()
-                        .FloatingPointNumberPrecision().getText());
+                seconds = Double.valueOf(ctx.seconds().floatingPointConstant().FloatingPointNumber().getText());
             }
         }
 
@@ -290,8 +289,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         }
 
         if (ctx.floatingPointConstant() != null) {
-            seconds = Double.valueOf(ctx.floatingPointConstant()
-                    .FloatingPointNumberWithoutPrecision().toString());
+            seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
         }
 
         if (hours < 0 || minutes < 0 || minutes > 59) {
@@ -816,8 +814,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 Double value;
                 Integer sign = 1;
 
-                value = Double.parseDouble(ctx.floatingPointConstant()
-                        .FloatingPointNumberWithoutPrecision().getText());
+                value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
 
                 if (ctx.getChildCount() > 1) {
                     if (ctx.getChild(0).getText().equals("-")) {
@@ -2816,12 +2813,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     if (literal_ctx.floatingPointConstant() != null) {
                         try {
                             double value = -1
-                                    * Double.parseDouble(literal_ctx
-                                    .floatingPointConstant()
-                                    .FloatingPointNumberWithoutPrecision()
-                                    .toString());
-                            int precision = m_currentSymbolTable
-                                    .lookupDefaultFloatLength();
+                                    * CommonUtils.getFloatingPointConstantValue(literal_ctx.floatingPointConstant());
+                            int precision = CommonUtils.getFloatingPointConstantPrecision(literal_ctx.floatingPointConstant(), m_currentSymbolTable.lookupDefaultFloatLength());
+
                             ConstantFloatValue float_value = new ConstantFloatValue(
                                     value, precision);
                             expr.add("code", float_value);
@@ -3045,9 +3039,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         } else if (ctx.floatingPointConstant() != null) {
             try {
-                Double value = Double.parseDouble(ctx.floatingPointConstant()
-                        .FloatingPointNumberWithoutPrecision().toString());
-                int precision = m_currentSymbolTable.lookupDefaultFloatLength();
+                Double value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+                int precision = CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(),m_currentSymbolTable.lookupDefaultFloatLength())
+                        ;
                 ConstantFloatValue constFloat = ConstantPool.lookupFloatValue(
                         value, precision);
 
