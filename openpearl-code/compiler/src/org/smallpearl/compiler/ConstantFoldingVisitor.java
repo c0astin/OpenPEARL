@@ -263,7 +263,13 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
         if ( op1 != null && op2 != null) {
             if ( op1.isReadOnly() && op2.isReadOnly()) {
                 ConstantFixedValue op1Value = op1.getConstantFixedValue();
-                ConstantFixedValue op2Value = op1.getConstantFixedValue();
+                ConstantFixedValue op2Value = op2.getConstantFixedValue();
+                if (op1Value == null) {
+                  op1Value = look4ConstantFixedVariable(op1);
+                }
+                if (op2Value == null) {
+                  op2Value = look4ConstantFixedVariable(op2);
+                }  
 
                 if (op1Value != null && op2Value != null) {
                     ConstantFixedValue value = new ConstantFixedValue(op1.getConstantFixedValue().getValue() + op2.getConstantFixedValue().getValue());
@@ -275,6 +281,24 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
 
+    private ConstantFixedValue look4ConstantFixedVariable(ASTAttribute op) {
+      // let's see if we have an INV FIXED variable
+      if (op.isReadOnly() && op.m_variable != null && op.m_type instanceof TypeFixed) {
+        // seem be be INV const
+        SymbolTableEntry se =  m_currentSymbolTable.lookup(op.m_variable.getName());
+        if (se != null) {
+          if (se instanceof VariableEntry) {
+            Initializer ini = ((VariableEntry)se).getInitializer();
+            ConstantValue cv = ((SimpleInitializer)ini).getConstant();
+            if (cv instanceof ConstantFixedValue) {
+              return (ConstantFixedValue)cv;
+            }
+          }
+        }
+      }
+    
+      return null;
+    }
 
     @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {
@@ -964,7 +988,56 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     public Void visitName(SmallPearlParser.NameContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitName");
         Log.debug("ConstantFoldingVisitor:visitName:ctx" + CommonUtils.printContext(ctx));
+        ASTAttribute res = m_ast.lookup(ctx);
 
+        //if (ctx.ID()!= null) System.out.println("ID: "+ctx.ID().getText());
+        //if (ctx.listOfExpression()!= null) System.out.println("listOfExp: "+ctx.listOfExpression().getText());
+        //if (ctx.name()!= null) System.out.println("name: "+ctx.name().getText());
+        
+        
+        SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID().toString());
+        if (se instanceof VariableEntry) {
+          VariableEntry ve = (VariableEntry)se;
+          if (ve.getType() instanceof TypeArray) {
+            if (ctx.listOfExpression() == null) {
+              return null;  // a complete array is no simple constant
+            }
+            System.out.println("ConstantFolding: treatment of array indices and initialisier missing");
+            return null;
+          }
+          if (ve.getType() instanceof TypeStructure) {
+            if (ctx.name() == null) {
+              return null;  // a complete struct is nio simple constant
+            }
+            TypeStructure ts = (TypeStructure)(ve.getType());
+            
+            int x=getIndexOfComponent(ts, ctx.name());
+            System.out.println("ConstantFolding: treatment of struct component ans initilisier missing");
+            return null;
+          }
+          if (ve.getAssigmentProtection()) {
+            // is INV
+            Initializer ini = ve.getInitializer();
+            if (ini != null && ini instanceof SimpleInitializer) {
+              res.m_readonly = true;
+              res.setConstant(((SimpleInitializer)ini).getConstant());
+              res.setVariable(ve);
+            }
+            
+          }
+        }
         return null;
+    }
+
+    private int getIndexOfComponent(TypeStructure ts, SmallPearlParser.NameContext name) {
+      String componentId = name.ID().toString();
+      for (int i = 0; i<ts.m_listOfComponents.size(); i++) {
+        String s = ts.m_listOfComponents.get(i).m_id;
+        if (ts.m_listOfComponents.get(i).m_id.equals(componentId)) {
+          return i;
+        }
+      }
+      // component name not found - should be detected in expressionTypeVisitor
+      return -1;
     }
 }

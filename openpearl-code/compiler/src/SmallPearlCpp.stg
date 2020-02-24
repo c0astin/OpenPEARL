@@ -1184,8 +1184,8 @@ iojob_put_statement(dation,datalist,formatlist,format_list_is_static) ::= <<
    <datalist>
 
    pearlrt::IODataList dataList = {
-     .nbrOfEntries=sizeof(dataEntries)/sizeof(dataEntries[0]),
-     .entry=dataEntries};
+     .nbrOfEntries=<if(datalist)>sizeof(dataEntries)/sizeof(dataEntries[0])<else>0<endif>,
+     .entry=<if(datalist)>dataEntries<else>NULL<endif>};
    <if(format_list_is_static)>static <endif>pearlrt::IOFormatList formatList = {
      .nbrOfEntries=sizeof(formatEntries)/sizeof(formatEntries[0]),
      .entry=formatEntries};

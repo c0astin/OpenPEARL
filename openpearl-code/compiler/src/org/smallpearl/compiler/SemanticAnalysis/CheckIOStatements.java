@@ -29,8 +29,12 @@
 
 package org.smallpearl.compiler.SemanticAnalysis;
 
+import java.time.Clock;
+import java.util.ArrayList;
+import java.util.List;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.atn.SetTransition;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
@@ -76,6 +80,8 @@ SmallPearlVisitor<Void> {
 	    private SymbolTable m_currentSymbolTable;
 	    private ModuleEntry m_module;
 	    private AST m_ast = null;
+
+	    
 	
 	    public CheckDationDeclaration(String sourceFileName,
 	                    int verbose,
@@ -302,6 +308,7 @@ SmallPearlVisitor<Void> {
 	private SymbolTable m_currentSymbolTable;
 	private ModuleEntry m_module;
 	private AST m_ast = null;
+    private boolean m_formatListAborted=false;
 
 	public CheckIOStatements(String sourceFileName, int verbose, boolean debug,
 			SymbolTableVisitor symbolTableVisitor,
@@ -540,70 +547,211 @@ SmallPearlVisitor<Void> {
 
 	@Override
 	public Void visitPutStatement(SmallPearlParser.PutStatementContext ctx) {
-		if (m_debug) {
-			System.out.println( "Semantic: Check IOStatements: visitPositionPUT");
-		}
 
-		// enshure that the dation id of type ALPHIC
-		ErrorStack.enter(ctx, "PUT");
+	  if (m_debug) {
+	    System.out.println( "Semantic: Check IOStatements: visitPositionPUT");
+	  }
 
-		TypeDation d = lookupDation(ctx.dationName());
+	  // enshure that the dation id of type ALPHIC
+	  ErrorStack.enter(ctx, "PUT");
 
-		if (!d.isAlphic()) {
-			ErrorStack.enter(ctx.dationName());
-			ErrorStack.add("need ALPHIC dation");
-			ErrorStack.leave();
-		}
+	  TypeDation d = lookupDation(ctx.dationName());
 
+	  if (!d.isAlphic()) {
+	    ErrorStack.enter(ctx.dationName());
+	    ErrorStack.add("need ALPHIC dation");
+	    ErrorStack.leave();
+	  }
 
-		if (ctx.expression().size() > 0) {
-			// count number of elements (without positions) 
-			int nbr = 0;
-			for (int i = 0; i<ctx.formatPosition().size(); i++) {
-				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatContext) {
-					FactorFormatContext c = (FactorFormatContext)(ctx.formatPosition(i));
-					if (c.factor() != null) {
-						if (c.factor().expression()!= null) {
-							System.out.println("("+c.factor().expression().getText()+")");
-						}
-						if (c.factor().integerWithoutPrecision() != null) {
-							System.out.println("INT-Factor: "+c.factor().integerWithoutPrecision().getText());
-						}
-					}
-					nbr ++;
-				}
-				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorPositionContext) {
-					FactorPositionContext c = (FactorPositionContext)(ctx.formatPosition(i));
-					if (c.factor() != null) {
-						if (c.factor().expression()!= null) {
-							System.out.println("FactorPosition  ("+c.factor().expression().getText()+")");
-						}
-						if (c.factor().integerWithoutPrecision() != null) {
-							System.out.println("INT-Factor: "+c.factor().integerWithoutPrecision().getText());
-						}
-					}
-					//nbr ++;
-				}
-				
-				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatPositionContext) {
-					FactorFormatPositionContext c = (FactorFormatPositionContext)(ctx.formatPosition(i));
-					System.out.println("FactorFormatPosition"+c.getText());
-					// let's assume there is a format statement
+	  visitChildren(ctx);
 
-					nbr ++;
-				}
-			}
-			if (nbr == 0) {
-				ErrorStack.add("need at least 1 format element");
-			}
-		}
+	  /* listOfExpressions   listOfFormats    reaction
+	   *    empty              empty          warning: no effect if no TFU is set
+	   *    empty              not empty      warning if format elements are in listOfFormats
+	   *    not empty          empty          nothing to do: LIST format applies to all expressions
+	   *    not empty          not empty      check matching until variable elements appear in 
+	   *                                      listOfExpressions or ListOfFormats
+	   */
+	  if (ctx.ioDataList() == null && ctx.listOfFormatPositions() == null) {
+	    // no data no formats
+	    if (!d.hasTfu()) {
+	      ErrorStack.warn("no data, no formats has no effect without TFU" );
+	    }
+	  }
+	  m_formatListAborted = false;
+	  List<ParserRuleContext> fmtPos = null;
+	  if (ctx.listOfFormatPositions() != null) {
+	    fmtPos = getFormatOrPositions(ctx.listOfFormatPositions());
+	  }
 
-		visitChildren(ctx);
-		ErrorStack.leave();
-		return null;
+	  List<IODataListElementWithCtx> expr = null;
+	  if (ctx.ioDataList() != null) {
+	    expr = getIoDataListWithCtx(ctx.ioDataList());
+	  }
+
+	  if (ctx.ioDataList() == null && ctx.listOfFormatPositions() != null) {
+	    // test if a format element is in the format list
+	    for (int i=0; i<fmtPos.size(); i++) {
+	      if (fmtPos.get(i) instanceof FormatContext) {
+
+	        ErrorStack.enter(((FormatContext)fmtPos.get(i)));
+	        ErrorStack.warn("format is never applied");
+	        ErrorStack.leave();
+	        break;
+	      }
+
+	    }
+	  }
+	  if (ctx.ioDataList()!= null && ctx.listOfFormatPositions()!= null) {
+	    // test if all expression types fit to the corresponding format
+	    // abort the search as soon as an non constant amount of expressions 
+	    // (like an array slice with variable length), or
+	    // an expression is detected for the factor of a format element 
+
+	    // test if listOfFormatPosition contains at least 1 format
+	    boolean fmtFound = false;
+	    for (int i=0; fmtFound==false && i<fmtPos.size(); i++) {
+	      if (fmtPos.get(i) instanceof FormatContext) {
+	        fmtFound = true;
+	      }
+	    }
+
+	    if (!fmtFound && !m_formatListAborted) {
+	      ErrorStack.add("non empty format list needs at least 1 format");
+	    } else {
+	      int fmtPosIndex = 0;
+	      for (int i=0; i<expr.size(); i++) {
+	        IODataListElementWithCtx etc = expr.get(i);
+	        //            System.out.println(i+": "+etc.ctx.getText()+"  "+etc.td);
+	        if (!m_formatListAborted && fmtPosIndex == fmtPos.size()) {
+	          fmtPosIndex = 0;
+	        }
+
+	        if (fmtPos.isEmpty()) {
+	          ErrorStack.enter(ctx.listOfFormatPositions().formatPosition(0),"expression type match format");
+	          ErrorStack.warn("check aborted due to non static format list");
+	          ErrorStack.leave();
+	          break;
+	        } else {
+
+	          while (!fmtPos.isEmpty() && fmtPos.get(fmtPosIndex) instanceof PositionContext) {
+	            fmtPosIndex ++;
+
+	            if (fmtPosIndex == fmtPos.size()) {
+	              if (!m_formatListAborted) {
+	                fmtPosIndex = 0;
+	              } else {
+	                ErrorStack.enter(fmtPos.get(fmtPosIndex-1),"expression type match format");
+	                ErrorStack.warn("check aborted: non static element after here");
+	                ErrorStack.leave();
+	                break;
+	              }
+	            }
+	          }
+
+	          if (!fmtPos.isEmpty() && fmtPos.get(fmtPosIndex) instanceof FormatContext) {
+	            if (!exprMatchFormat(fmtPos.get(fmtPosIndex),etc.td)) {
+	              ErrorStack.enter(etc.ctx,"expression type match format");
+	              ErrorStack.add(""+etc.td+" does not apply to format ");
+
+	              ErrorStack.enter(((FormatContext)fmtPos.get(fmtPosIndex)));
+	              ErrorStack.warn(""+ fmtPos.get(fmtPosIndex).getText());
+	              ErrorStack.leave();                
+	              ErrorStack.leave();                
+	            }
+
+	          }
+
+	          fmtPosIndex ++;
+	        }
+	      }
+	    }
+	  }
+
+	  ErrorStack.leave();
+	  return null;
 	}
 
-	/**
+
+
+  private boolean exprMatchFormat(ParserRuleContext formatCtx, TypeDefinition td) {
+    // LIST matches all types
+    if (formatCtx.getChild(0) instanceof ListFormatContext) {
+      return true;
+    }
+    // treat only simple types
+    // F-format
+    if (formatCtx.getChild(0) instanceof FixedFormatContext && 
+        (td instanceof TypeFixed || td instanceof TypeFloat)) {
+      return true;
+    }
+    // E-format
+    if ((formatCtx.getChild(0) instanceof FloatFormatEContext ||
+        formatCtx.getChild(0) instanceof FloatFormatE3Context    ) && td instanceof TypeFloat) {
+      return true;
+    }
+    // B-Format
+    if ((formatCtx.getChild(0) instanceof BitFormat1Context ||
+         formatCtx.getChild(0) instanceof BitFormat2Context ||
+         formatCtx.getChild(0) instanceof BitFormat3Context ||
+         formatCtx.getChild(0) instanceof BitFormat4Context) && td instanceof TypeBit) {
+      return true;
+    }
+    //A-Format
+    if (formatCtx.getChild(0) instanceof CharacterStringFormatContext && td instanceof TypeChar) {
+      return true;
+    }
+    // D-Format
+    if (formatCtx.getChild(0) instanceof DurationFormatContext && td instanceof TypeDuration) {
+      return true;
+    }
+    // T-Format
+    if (formatCtx.getChild(0) instanceof TimeFormatContext && td instanceof TypeClock) {
+      return true;
+    }
+     
+    
+    return false;
+  }
+
+  private List<IODataListElementWithCtx> getIoDataListWithCtx(IoDataListContext ioDataList) {
+    List<IODataListElementWithCtx> list = new ArrayList<IODataListElementWithCtx>();
+    
+    for (int i=0; i<ioDataList.ioListElement().size(); i++) {
+      ParserRuleContext ctx = ioDataList.ioListElement(i);
+      IODataListElementWithCtx etc = new IODataListElementWithCtx(ctx);
+      
+      ASTAttribute attr = m_ast.lookup(ctx);
+      if (attr != null) {
+        if (attr.getType() instanceof TypeArray) {
+          int nbrOfElements = ((TypeArray)(attr.getType())).getTotalNoOfElements();
+          etc.setType(((TypeArray)(attr.getType())).getBaseType());
+          for (int j=0; j<nbrOfElements; j++) {
+            list.add(etc);
+          }
+        } else if (attr.getType() instanceof TypeStructure){
+          for (int j=0; j<((TypeStructure)(attr.getType())).m_listOfComponents.size(); j++) {
+            etc = new IODataListElementWithCtx(ctx);
+            TypeDefinition td = ((TypeStructure)(attr.getType())).m_listOfComponents.get(j).m_type;
+            if (td instanceof TypeArray ||
+                td instanceof TypeStructure) {
+              // delegate missing
+            } else {
+              etc.setType(td);
+              list.add(etc);
+            }
+          }
+        } else {
+          etc.setType(attr.getType());
+           list.add(etc);
+        }
+      }
+    }
+    
+    return list;
+  }
+
+  /**
 	 * check if the ID-list is not INV
 	 * check type of dation
 	 * no positioning after last format element in position/format list
@@ -2106,5 +2254,110 @@ SmallPearlVisitor<Void> {
 		return null;
 	}
 
+	/**
+	 * parse a FactorFormatPositionContext and deliver a List of formats/positions
+	 *
+	 * Grammar:
+        listOfFormatPositions :
+          formatPosition ( ',' formatPosition )*
+          ;
+	         
+	   formatPosition :
+              factor? format                                    # factorFormat
+            | factor? position                                  # factorPosition
+            | factor '(' listOfFormatPositions ')'              # factorFormatPosition
+            ;
+            
+       factor :
+            '(' expression ')'
+            | integerWithoutPrecision
+            ;
 
+	 * Example: (2)(X(4), B4 ,(2)(A,X, 2F(x),SKIP))
+	 *           B4,A,F,F,A,F,F,B4,A,F,F,A,F,F,null+status(end of format)
+	 *          2A,(x)(F,E)
+	 *          A,A,F,E,null+status(end of static format)
+	 *           
+	 * @author mueller
+	 *
+	 */
+	
+	private List<ParserRuleContext> getFormatOrPositions(ListOfFormatPositionsContext listOfFormatPosition) {
+	  List<ParserRuleContext> fmtPos = new ArrayList<ParserRuleContext>();
+	  long repetitions;
+	  
+	  //System.out.println("get.. "+listOfFormatPosition.getText());
+
+	  for (int i=0; i<listOfFormatPosition.formatPosition().size(); i++) {
+	    if (listOfFormatPosition.formatPosition(i) instanceof FactorPositionContext) {
+	      FactorPositionContext ctx = ((FactorPositionContext)listOfFormatPosition.formatPosition(i));
+	      try {
+	       repetitions = getFactor(ctx.factor());
+	      } catch (FactorIsNotConstantException e) {
+	        return fmtPos;
+	      }
+	      for (long j=0; j<repetitions; j++) {
+	        fmtPos.add(ctx.position());
+	      }
+	    } else if (listOfFormatPosition.formatPosition(i) instanceof FactorFormatContext) {
+	      FactorFormatContext ctx = ((FactorFormatContext)listOfFormatPosition.formatPosition(i));
+          try {
+           repetitions = getFactor(ctx.factor());
+          } catch (FactorIsNotConstantException e) {
+            return fmtPos;
+          }
+
+          for (long j=0; j<repetitions; j++) {
+            fmtPos.add(ctx.format());
+          }
+        } else if (listOfFormatPosition.formatPosition(i) instanceof FactorFormatPositionContext) {
+          FactorFormatPositionContext ctx = ((FactorFormatPositionContext)listOfFormatPosition.formatPosition(i));
+          try {
+           repetitions = getFactor(ctx.factor());
+          } catch (FactorIsNotConstantException e) {
+            m_formatListAborted = true;
+            return fmtPos;
+          }
+          List l = getFormatOrPositions(ctx.listOfFormatPositions());
+          for (long j=0; j<repetitions; j++) {
+            for (int k = 0; k<l.size(); k++) {
+               fmtPos.add((ParserRuleContext)(l.get(k)));
+            }
+          }
+        }
+	    
+	  }
+	  return fmtPos;
+	}
+	
+    private long getFactor(FactorContext factor) {
+      long value=0;
+      if (factor != null) {
+        if (factor.integerWithoutPrecision()!= null) {
+          value = Integer.parseInt(factor.integerWithoutPrecision().getText());
+        } else if (factor.expression() != null) {
+          ASTAttribute attr = m_ast.lookup(factor.expression());
+          if (attr.m_constant != null) {
+            value = attr.getConstantFixedValue().getValue();
+          } else {
+            throw new FactorIsNotConstantException();
+          }
+        }
+        return value;
+      } else {
+        return 1;
+      }
+    }
+    private class IODataListElementWithCtx {
+      public TypeDefinition td;
+      public ParserRuleContext ctx;
+      public IODataListElementWithCtx(ParserRuleContext ctx) {
+        this.ctx = ctx;
+
+      }
+      public void setType(TypeDefinition td) {
+        this.td = td;
+      }
+    }
 }
+

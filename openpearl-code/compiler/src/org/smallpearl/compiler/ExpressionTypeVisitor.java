@@ -3081,7 +3081,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     /**
      * Get the type of name
      *
-     * @param entry Symboltable entry of the variable
+     * @param entry SymboltableEntry of the variable
      * @return TypeDefinition of the name
      */
     private TypeDefinition getTypeDefintion(SymbolTableEntry entry) {
@@ -3096,6 +3096,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                 }
             }
         }
+
+        return null;
+    }
+    
+    @Override
+    public Void visitArraySlice(SmallPearlParser.ArraySliceContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitArraySlice:ctx" + CommonUtils.printContext(ctx));
+        ASTAttribute attr = m_ast.lookup(ctx);
+        
+        // TypeArraySlice neu erstellen mit BaseTape TypeArray
+        // der Rest bleibt im ctx
 
         return null;
     }

@@ -4070,28 +4070,24 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     	
         // this should never occur, since this is checked in the semantic analysis
         // in CheckIOStatements
-        if (ctx.formatPosition() == null) {
-            throw new InternalCompilerErrorException("PUT need format list");
-        }
-        
-        /* ----------------------- */
-        /* new IOJobAPI            */
-        /* create format list      */
         ST formatList = m_group.getInstanceOf("iojob_formatlist");
-      
-        for (int i = 0; i<ctx.formatPosition().size(); i++) {
-        	addFormatPositionToFormatList(formatList,  ctx.formatPosition(i));
-		}        
+        if (ctx.listOfFormatPositions() == null) {
+          ST fmt = m_group.getInstanceOf("iojob_list_format");
+          formatList.add("formats", fmt);
+        } else {
         
+            for (int i = 0; i<ctx.listOfFormatPositions().formatPosition().size(); i++) {
+            	addFormatPositionToFormatList(formatList,  ctx.listOfFormatPositions().formatPosition(i));
+    		} 
+        }
+      
         stmt.add("formatlist",formatList);
         if (!m_isNonStatic) {
            stmt.add("format_list_is_static","1");
         }
         
         // create list of datas
-        //   should become modifiert towards
-        //    getIojobDataList(ctx.datalist) when the grammar accepts datalist in PUT/GET/WRITE/READ/SEND/TAKE
-        ST dataList = getIojobDataList(ctx);
+        ST dataList = getIojobDataList(ctx.ioDataList());
 
         stmt.add("datalist",dataList);
 
@@ -4168,18 +4164,19 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return stmt;
     }
 
-    private ST getIojobDataList(ParserRuleContext c) {
+    private ST getIojobDataList(IoDataListContext ctx) {
     	
-    	PutStatementContext ctx = (PutStatementContext)c;
-
+//    	PutStatementContext ctx = (PutStatementContext)c;
+      if (ctx != null) {
         ST dataList = m_group.getInstanceOf("iojob_datalist");
-        for (int i=0; i<ctx.expression().size(); i++) {
-        	//System.out.println("type_ "+m_ast.lookupType(ctx.expression(i)));
-            ASTAttribute attr = m_ast.lookup(ctx.expression(i));
+        for (int i=0; i<ctx.ioListElement().size(); i++) {
+          //System.out.println("type_ "+m_ast.lookupType(ctx.expression(i)));
+          if (ctx.ioListElement(i).expression() != null) {
+            ASTAttribute attr = m_ast.lookup(ctx.ioListElement(i).expression());
             if (attr.m_type instanceof TypeArray) {
             	TypeArray ta = (TypeArray)attr.m_type;
             	ST data = getIojobDataItem(ta.getBaseType());
-                data.add("variable","data_"+ctx.expression(i).getText());
+                data.add("variable","data_"+ctx.ioListElement(i).getText());
                 data.add("nbr_of_elements", ta.getTotalNoOfElements());
                 
                 dataList.add("dataelement", data);
@@ -4197,7 +4194,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
             	if (attr.isReadOnly() || attr.m_variable != null) {
             		// constant or  variable with simple type
-            		data.add("variable", getExpression(ctx.expression(i)));
+            		data.add("variable", getExpression(ctx.ioListElement(i).expression()));
             		data.add("nbr_of_elements", "1"); 
             	} else {
             		// it is an expression
@@ -4212,7 +4209,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             		ST variable_declaration= m_group.getInstanceOf("variable_declaration");
             		variable_declaration.add("name","tempVar"+i );
             		variable_declaration.add("type",t);
-            		variable_declaration.add("init",getExpression(ctx.expression(i)));
+            		variable_declaration.add("init",getExpression(ctx.ioListElement(i).expression()));
             		variable_declaration.add("no_decoration",1);
             		dataList.add("data_variable", variable_declaration);
             		dataList.add("data_index", i);
@@ -4224,12 +4221,16 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             	//   addVariableConstantOrExpressionToDatalist(dataList,data,attr,ctx.expression(i),i);
             	dataList.add("dataelement", data);	
             }
-            //System.out.println(ctx.expression(i).getText());
+          } else if (ctx.ioListElement(i).arraySlice() != null) {
+            System.out.println("io with array slice not implemented yet");
+          }
         }
 		return dataList;
-	}
+      }
+      return null; // no dataList
+    }
 
-	private ST getIojobDataItem(TypeDefinition type) {
+    private ST getIojobDataItem(TypeDefinition type) {
        ST data = m_group.getInstanceOf("iojob_data_item");
 	
     
@@ -4250,7 +4251,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     	} else if (type instanceof TypeDuration) {
             data.add("type","DURATION");
     	} else {
-    	   System.out.println("untreated type "+type );
+    	   System.out.println("getIoJobDataItem: untreated type "+type );
     	}
 		return data;
 	}
@@ -4545,21 +4546,27 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 		}
 		
 		if (ctx instanceof SmallPearlParser.FactorFormatPositionContext) {
-			System.out.println("(x)( , , , )  treatment");
+			// System.out.println("(x)( , , , )  treatment");
 			FactorFormatPositionContext c = (FactorFormatPositionContext)(ctx);
-			System.out.println("FactorFormatPosition"+c.getText());
+			//System.out.println("FactorFormatPosition"+c.getText());
 			ST loop = m_group.getInstanceOf("iojob_format_loopstart");
 			
 			if (c.factor()!= null) {
+			  if (c.factor().expression() != null) {
 				updateIsNonStatic(c.factor().expression());
 			    loop.add("repetitions", getExpression(c.factor().expression()));
 			    formatList.add("formats",loop);
 			    nbrOfFormats ++;
+			  } else if (c.factor().integerWithoutPrecision() != null) {
+			    String s = c.factor().integerWithoutPrecision().IntegerConstant().getText();
+	            loop.add("repetitions",s);
+			  }  
 			} 
+			nbrOfFormats += addFormatPositionToFormatList(formatList, c.listOfFormatPositions());
+//			for (int i=0; i<c.formatPosition().size(); i++) {
+//				nbrOfFormats += addFormatPositionToFormatList(formatList,c.formatPosition(i));
+//			}
 			
-			for (int i=0; i<c.formatPosition().size(); i++) {
-				nbrOfFormats += addFormatPositionToFormatList(formatList,c.formatPosition(i));
-			}
 			// decrement the number of format element, since the start_loop element
 			// does not count, but all containing start_loop elements count 
 		    loop.add("elements", nbrOfFormats-1);
@@ -4567,6 +4574,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 		return nbrOfFormats;
 		
 	}
+    private int addFormatPositionToFormatList(ST formatList, ListOfFormatPositionsContext list) {
+         int length=0;
+         for (int i=0; i<list.formatPosition().size(); i++) {
+           length += addFormatPositionToFormatList(formatList, list.formatPosition(i));
+         }
+         return length;
+    }
+	
 
 	private void addFactorToFormatList(ST formatList, FactorContext ctx) {
 		ST loopStart = m_group.getInstanceOf("iojob_format_loopstart");
@@ -6232,31 +6247,41 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitTypology(SmallPearlParser.TypologyContext ctx) {
         ST st = m_group.getInstanceOf("Typology");
+        // let's define the three dimension values with impossible preset
+        // 
+        int d1 = -1;
+        int d2 = -1;
+        int d3 = -1;
+        
         for (ParseTree c : ctx.children) {
             if (c instanceof SmallPearlParser.Dimension1StarContext) {
                 st.add("DIM1", -1);
                 st.add("DIM1Unlimited", 1);
             } else if (c instanceof SmallPearlParser.Dimension1IntegerContext) {
-                int d1 = CommonUtils.getConstantFixedExpression(((SmallPearlParser.Dimension1IntegerContext) c)
+                d1 = CommonUtils.getConstantFixedExpression(((SmallPearlParser.Dimension1IntegerContext) c)
                         .constantFixedExpression(), m_currentSymbolTable);
                 st.add("DIM1", d1);
-//						Integer.valueOf(((SmallPearlParser.Dimension1IntegerContext) c)
-//								.constantFixedExpression();
             } else if (c instanceof SmallPearlParser.Dimension2IntegerContext) {
-                int d2 = CommonUtils.getConstantFixedExpression(((SmallPearlParser.Dimension2IntegerContext) c)
+                d2 = CommonUtils.getConstantFixedExpression(((SmallPearlParser.Dimension2IntegerContext) c)
                         .constantFixedExpression(), m_currentSymbolTable);
                 st.add("DIM2", d2);
-//						Integer.valueOf(((SmallPearlParser.Dimension2IntegerContext) c)
-//								.IntegerConstant().toString()));
             } else if (c instanceof SmallPearlParser.Dimension3IntegerContext) {
-                int d3 = CommonUtils.getConstantFixedExpression(((SmallPearlParser.Dimension3IntegerContext) c)
+                d3 = CommonUtils.getConstantFixedExpression(((SmallPearlParser.Dimension3IntegerContext) c)
                         .constantFixedExpression(), m_currentSymbolTable);
                 st.add("DIM3", d3);
-//						Integer.valueOf(((SmallPearlParser.Dimension3IntegerContext) c)
-//								.IntegerConstant().toString()));
             }
         }
 
+        if (ctx.tfu() != null) {
+          // we have TFU specified --> let's get the last given dimension
+          if (d3 > 0) {
+              m_tfuRecord = d3;
+          } else if (d2 > 0) {
+              m_tfuRecord = d2;
+          } else {
+              m_tfuRecord = d1;
+          }       
+      }
         return st;
     }
 
@@ -7236,8 +7261,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ConstantValue upb = m_constantExpressionEvaluatorVisitor.lookup(ctx
                 .constantFixedExpression(1));
 
-        if (lwb == null || upb == null || !(lwb instanceof ConstantFixedValue)
-                || upb == null
+        if (lwb == null || upb == null 
                 || !(lwb instanceof ConstantFixedValue)
                 || !(upb instanceof ConstantFixedValue)) {
             throw new InternalCompilerErrorException(ctx.getText(),

@@ -1416,11 +1416,22 @@ getStatement :
 // PutStatement ::=
 //   PUT [ { Expression | ArraySlice } [ , { Expression | ArraySlice } ] ... ] TO Name§Dation [ BY FormatPosition [ , FormatPosition ] ... ] ;
 ////////////////////////////////////////////////////////////////////////////////
-
 putStatement :
-    'PUT' ( expression ( ',' expression )* )? 'TO' dationName
-    ( 'BY' formatPosition ( ',' formatPosition )* )? ';'
+    'PUT' ioDataList? 'TO' dationName
+    ( 'BY' listOfFormatPositions )? ';'
     ;
+    
+ioListElement:
+	(expression | arraySlice)
+	;
+	
+ioDataList:
+	ioListElement (',' ioListElement) *
+	;	
+	
+listOfFormatPositions :
+	formatPosition ( ',' formatPosition )* 
+	;
 
 dationName : 
 	ID
@@ -1435,7 +1446,8 @@ dationName :
 formatPosition :
       factor? format                                             # factorFormat
     | factor? position                                           # factorPosition
-    | factor '(' formatPosition ( ( ','  formatPosition )* )?')' # factorFormatPosition
+//    | factor '(' formatPosition ( ( ','  formatPosition )* )?')' # factorFormatPosition
+   | factor '(' listOfFormatPositions  ')'			 # factorFormatPosition
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1697,13 +1709,15 @@ index_array :
 	;
 
 arraySlice :
-    ID '(' 
-	index_array (',' index_array )* ':' index_array 
-	index_array  ':' index_array 
-	expression ':' expression
-	')' 
+    name '(' startIndex ':' endIndex ')'
     ;
 
+startIndex:
+    listOfExpression
+    ;
+
+endIndex:
+    expression; 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Position ::=
@@ -2228,7 +2242,7 @@ name
     ;
 
 listOfExpression
-    : expression ( ',' expression )?
+    : expression ( ',' expression )*
     ;
 
 //name
@@ -2491,9 +2505,9 @@ charSlice
 
 ////////////////////////////////////////////////////////////////////////////////
 
-literal
-    : floatingPointConstant
-    | fixedConstant
+literal:
+    fixedConstant
+    | floatingPointConstant
     | BitStringLiteral
     | StringLiteral
     | timeConstant
@@ -2672,8 +2686,8 @@ Letter : [a-zA-Z] ;
 //      | NIL
 ////////////////////////////////////////////////////////////////////////////////
 
-constant :
-      sign? ( floatingPointConstant | fixedConstant )
+constant:
+      sign? ( fixedConstant | floatingPointConstant )
     | timeConstant
     | sign? durationConstant
     | bitStringConstant
