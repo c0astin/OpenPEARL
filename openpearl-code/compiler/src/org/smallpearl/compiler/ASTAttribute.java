@@ -102,7 +102,7 @@ public class ASTAttribute {
         return null;
     }
 
-    public ConstantFixedValue getConstantFixedValue() {
+    public ConstantFixedValue getConstantFixedValue() { 
         if (m_constant instanceof ConstantFixedValue) {
             return (ConstantFixedValue) this.m_constant;
         } else {
@@ -145,5 +145,9 @@ public class ASTAttribute {
 
     public String toString() {
         return "(" + this.m_type + " " + this.isReadOnly() + " " + this.m_variable + " " + this.m_constant + " " + this.m_slice + ")";
+    }
+
+    public void setVariable(VariableEntry ve) {
+      this.m_variable = ve;
     }
 }
