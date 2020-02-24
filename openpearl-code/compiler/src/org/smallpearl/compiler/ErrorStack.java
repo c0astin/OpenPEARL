@@ -37,8 +37,8 @@ import org.smallpearl.compiler.Exception.*;
 /**
  * helper class for error treatment
  * 
- * The detection of semantic errors occurs in differenty layers. Eg. A
- * PUT-statement has a list of values, a list of formats. Each format may hyve
+ * The detection of semantic errors occurs in different layers. Eg. A
+ * PUT-statement has a list of values, a list of formats. Each format may have
  * some parameters like E(fieldWidth, decimalPositions,significance). These
  * parameters may be expressions of type FIXED.Ich they are constants we could
  * check their validity at compile time.
