@@ -274,10 +274,10 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void> implem
                 visitTimeConstant(ctx.timeConstant());
             }
             else if (ctx.floatingPointConstant() != null) {
-                Double value;
+                Double value = 0.0;
                 Integer sign = 1;
 
-                value = Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().getText());
+                value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
 
                 if (ctx.getChildCount() > 1)
                 {
@@ -287,8 +287,6 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void> implem
                     }
                 }
 
-                Float f11;
-//                new org.smallpearl.compiler.ConstantFloatValue(f11);
                 return null;
             }
             else if (ctx.stringConstant() != null)

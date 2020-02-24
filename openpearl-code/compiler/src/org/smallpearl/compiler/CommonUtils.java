@@ -32,6 +32,7 @@ package org.smallpearl.compiler;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 import org.smallpearl.compiler.Exception.IllegalCharacterException;
+import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
 import org.smallpearl.compiler.Exception.ValueOutOfBoundsException;
 import org.smallpearl.compiler.SymbolTable.*;
 
@@ -42,6 +43,8 @@ import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
 import java.io.File;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CommonUtils {
 
@@ -1004,7 +1007,7 @@ public class CommonUtils {
         } else if (ctx.floatingPointConstant() != null) {
             Integer sign = 1;
 
-            seconds = Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().getText());
+            seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
 
             if (seconds < 0) {
                 throw new ValueOutOfBoundsException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -1030,6 +1033,42 @@ public class CommonUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * Get the Value of a floating point constant from a given FloatingPointConstant context
+     *
+     * @param ctx  the FloatingPointConstantContext
+     * @return double value
+     */
+
+    public static double getFloatingPointConstantValue(SmallPearlParser.FloatingPointConstantContext ctx ) {
+        double value;
+        String regex = "([+-]?(\\d*[.])?\\d+)(\\(\\d+\\))?";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(ctx.FloatingPointNumber().getText());
+
+        if ( matcher.find() ) {
+            value = Double.valueOf(matcher.group(1));
+        } else {
+            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        }
+
+        return value;
+    }
+
+    public static int getFloatingPointConstantPrecision(SmallPearlParser.FloatingPointConstantContext ctx, int defaultPrecision) {
+        int precision = defaultPrecision;
+
+        String regex = "\\((\\d+)\\)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(ctx.FloatingPointNumber().getText());
+
+        if ( matcher.find() ) {
+            precision = Integer.valueOf(matcher.group(1));
+        }
+
+        return precision;
     }
 
 }

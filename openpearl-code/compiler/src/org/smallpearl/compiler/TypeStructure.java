@@ -33,6 +33,7 @@ package org.smallpearl.compiler;
 import org.smallpearl.compiler.Exception.NotYetImplementedException;
 import org.smallpearl.compiler.SymbolTable.SemaphoreEntry;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class TypeStructure extends TypeDefinition {
@@ -64,6 +65,8 @@ public class TypeStructure extends TypeDefinition {
 
     public boolean add(StructureComponent component) {
         m_listOfComponents.add(component);
+        component.m_index = m_listOfComponents.size() - 1;
+        component.m_alias = "m"+component.m_index;
         return true;
     }
 
@@ -71,24 +74,26 @@ public class TypeStructure extends TypeDefinition {
         StructureComponent component = new StructureComponent();
         component.m_type = typeStructure;
         m_listOfComponents.add(component);
+        component.m_index = m_listOfComponents.size() - 1;
+        component.m_alias = "m"+component.m_index;
         return true;
     }
 
-        /*
-        Datatype      letter   REF
-        --------------------------
-        FIXED         A        a
-        FLOAT         B        b
-        BIT           C        c
-        CHARACTER     D        d
-        CLOCK         E        e
-        DURATION      F        f
-        TASK                   g
-        PROC                   h
-        SEMA          I        i
-        BOLT          J        j
-        STRUCT        S        s
-     */
+    /*
+            Datatype      letter   REF
+            --------------------------
+            FIXED         A        a
+            FLOAT         B        b
+            BIT           C        c
+            CHARACTER     D        d
+            CLOCK         E        e
+            DURATION      F        f
+            TASK                   g
+            PROC                   h
+            SEMA          I        i
+            BOLT          J        j
+            STRUCT        S        s
+ */
 
     private String getDataTypeEncoding(TypeDefinition type) {
         if ( type instanceof TypeFixed)           return "A" + type.getPrecision().toString();
@@ -100,6 +105,18 @@ public class TypeStructure extends TypeDefinition {
         if ( type instanceof TypeSemaphore)       return "I" + type.getPrecision().toString();
         if ( type instanceof TypeBolt)            return "J" + type.getPrecision().toString();
         if ( type instanceof TypeStructure)       return "S" + type.getPrecision().toString();
+
+        if ( type instanceof TypeArray ) {
+            TypeArray typeArray = (TypeArray) type;
+            String encoding =  Integer.toString(typeArray.getNoOfDimensions());
+            ArrayList<ArrayDimension> dimensionList = typeArray.getDimensions();
+
+            for ( int i = 0; i <  dimensionList.size(); i++ ) {
+                encoding += "_" + dimensionList.get(i).getLowerBoundary() + "_" + dimensionList.get(i).getUpperBoundary();
+            }
+
+            return getDataTypeEncoding(typeArray.getBaseType()) + "_" + encoding;
+        }
 
         if ( type instanceof TypeReference) {
             TypeReference reftype = (TypeReference) type;
@@ -129,15 +146,32 @@ public class TypeStructure extends TypeDefinition {
 
     public String getStructureName() {
         String sname = "";
-        int    length = 0;
 
         for (int i = 0; i < m_listOfComponents.size(); i++ ) {
             TypeDefinition typ = m_listOfComponents.get(i).m_type;
-            sname += getDataTypeEncoding(typ);
-            length += getNumberOfBytes(typ);
+            sname += getComponentName(typ);
         }
 
-        return "S" + String.valueOf(length) + sname;
+        return "S" + sname.length() + sname;
+    }
+
+    private String getComponentName(TypeDefinition type) {
+        String componentName = "";
+
+        if ( type instanceof TypeStructure) {
+            TypeStructure typeStructure = (TypeStructure) type;
+            String components = "";
+            for (int i = 0; i < typeStructure.m_listOfComponents.size(); i++ ) {
+                TypeDefinition typ = typeStructure.m_listOfComponents.get(i).m_type;
+                components += getComponentName(typ);
+            }
+            componentName += "S" + components.length() + components;
+        }
+        else {
+            componentName = getDataTypeEncoding(type);
+        }
+
+        return componentName;
     }
 
     /**

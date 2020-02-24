@@ -307,6 +307,7 @@ public class SymbolTable {
         return listOfModules;
     }
 
+    /* TODO: MS
     public LinkedList<StructureEntry> getStructureDeclarations() {
         LinkedList<StructureEntry>  listOfStructureEntries = new  LinkedList<StructureEntry>();
         SymbolTableEntry e;
@@ -321,10 +322,12 @@ public class SymbolTable {
                 getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope, listOfStructureEntries);
             }
         }
-
         return listOfStructureEntries;
+        
     }
+    */
 
+    /* TODO MS
     private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable, LinkedList<StructureEntry> list) {
         SymbolTableEntry e;
 
@@ -349,7 +352,7 @@ public class SymbolTable {
 
         }
     }
-
+*/
 
     public int lookupDefaultFixedLength() {
         SymbolTableEntry entry = this.lookup("~LENGTH_FIXED~");

@@ -52,7 +52,6 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     private boolean m_calculateRealFixedLength;
     private org.smallpearl.compiler.AST m_ast;
     private SymbolTableEntry m_name = null;
-    private StructureEntry m_struct = null;
     private TypeDefinition m_type = null;
     private int m_nameDepth = 0;
 
@@ -1528,8 +1527,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             m_ast.put(ctx, expressionResult);
         } else if (ctx.floatingPointConstant() != null) {
             try {
-                double value = Double.parseDouble(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
-                Integer precision = 23;
+                double value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+                int precision = CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(), m_currentSymbolTable.lookupDefaultFloatLength());
+
                 ASTAttribute expressionResult = new ASTAttribute( new TypeFloat(precision),true);
                 m_ast.put(ctx, expressionResult);
             } catch (NumberFormatException ex) {
@@ -1611,7 +1611,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         }
 
         if ( ctx.floatingPointConstant() != null ) {
-            seconds = Double.valueOf(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+            seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
         }
 
         if (hours < 0 || minutes < 0 || minutes > 59) {
@@ -1634,7 +1634,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         }
 
         if ( ctx.floatingPointConstant() != null ) {
-            seconds = Double.valueOf(ctx.floatingPointConstant().FloatingPointNumberWithoutPrecision().toString());
+            seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
         }
 
         if (hours < 0 || minutes < 0 || minutes > 59) {
@@ -1658,15 +1658,11 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         }
         
         if (ctx.seconds() != null) {
-          String s = "";
-          if (ctx.seconds().floatingPointConstant() != null) {
-        	 s = ctx.seconds().floatingPointConstant().FloatingPointNumberWithoutPrecision().toString();
-          } else if (ctx.seconds() != null && ctx.seconds().IntegerConstant() != null) {
-            s = ctx.seconds().IntegerConstant().toString();
-          } else {
-            throw new InternalCompilerErrorException("ConstantDurationValue: how did you reach this point?");
-          }
-            seconds = Double.valueOf(s);
+            if ( ctx.seconds().floatingPointConstant() != null ) {
+                seconds = CommonUtils.getFloatingPointConstantValue(ctx.seconds().floatingPointConstant());
+            } else if ( ctx.seconds().IntegerConstant() != null ) {
+                seconds = Double.valueOf(ctx.seconds().IntegerConstant().toString());
+            }
         }
 
         if (hours < 0 || minutes < 0 || minutes > 59) {

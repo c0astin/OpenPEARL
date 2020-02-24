@@ -1,24 +1,41 @@
 MODULE(structDcl);
 
 PROBLEM;
+   ! Expected C++ name: S6A15B52
+   ! ===========================
+   DCL s1 STRUCT [
+    x FIXED(15),
+    y FLOAT(52)
+   ];
 
-   DCL person STRUCT [
-      name STRUCT [
-         first  CHAR(20),
-         second CHAR(20)
-      ], 
-      adr STRUCT [ 
-         str      CHAR(30),
-         postCode FIXED,
-         town     CHAR(20)
+   DCL s2 STRUCT [
+      !Expected: S6D20D30
+      s21 STRUCT [
+         c1  CHAR(20),
+         c2  CHAR(30)
+      ],
+      ! Expected: S9D30A31D20
+      s22 STRUCT [
+         c1      CHAR(30),
+         c2      FIXED,
+         c3      CHAR(20)
       ]
    ];
 
+   ! Expected:
+   DCL s3 STRUCT [
+        c1(1:10) FIXED
+   ];
+
+   ! Expected:
+   DCL s4 STRUCT [
+        c1(1:10) STRUCT [
+            c11    BIT(10)
+        ]
+   ];
+
 ttt: TASK;
-  DCL f FIXED;
-
-!  person.adr.postCode := f;
-
 END;
+
 MODEND;
 
