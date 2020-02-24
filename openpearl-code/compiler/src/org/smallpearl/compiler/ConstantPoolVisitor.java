@@ -929,7 +929,9 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
     @Override
     public Void visitInitElement(SmallPearlParser.InitElementContext ctx) {
-        visitChildren(ctx);
+        // MS: No need to add constant in INIT to the constant pool, because
+        // they are handled separetly.
+        // visitChildren(ctx);
         return null;
     }
 

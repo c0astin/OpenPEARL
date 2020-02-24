@@ -1549,7 +1549,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         }
         else if ( ctx.floatingPointConstant() != null) {
             double curval = sign * CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
-            int curlen = CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(), m_currentSymbolTable.lookupDefaultFloatLength());
+            int curlen = ((TypeFloat)m_type).getPrecision();
             constant = new ConstantFloatValue(curval,curlen);
         }
         else if ( ctx.durationConstant() != null) {
