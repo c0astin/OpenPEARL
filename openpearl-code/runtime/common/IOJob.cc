@@ -1,4 +1,6 @@
 #include "IOJob.h"
+#include "Clock.h"
+#include "Duration.h"
 
 namespace pearlrt {
 
@@ -89,5 +91,43 @@ namespace pearlrt {
        }
 //printf("\n getOffset=%zu\n", result);
        return result;
+   }
+
+   size_t IODataEntry::getSize() {
+      size_t nbrOfBytes;
+
+      switch (dataType.baseType) {
+	case CHAR: ///< CHAR types
+	   return 1;
+        case FLOAT: ///< FLOAT types
+	   if (dataType.dataWidth <24) {
+ 		return sizeof (Float<23>);
+	   } else {
+ 		return sizeof (Float<52>);
+	   }
+        case FIXED: ///< FIXED types
+	   nbrOfBytes =	(dataType.dataWidth+1)/8;
+	   return nbrOfBytes;
+        case BIT:   ///< BIT types
+	   nbrOfBytes =	(dataType.dataWidth)/8;
+	   return nbrOfBytes;
+         /*
+	dataType.dataWidth is the number of bits in the parent bit string<br>
+         dataPtr is the pointer to the parent bit string<br>
+         param1.start is a pointer to the value of the starting bit<br>
+         param2.end is a pointer to the value of the last bit
+         */
+        case BITSLICE:
+	   nbrOfBytes = *(param2.end)-*(param1.start)+1;
+   	   nbrOfBytes /= 8;
+	   return nbrOfBytes;
+        case CLOCK: ///< CLOCK types
+	   return sizeof (Clock);
+        case DURATION: ///< DURATION types
+	   return sizeof (Duration);
+	default:
+	   printf("IODataType:get_size untreated type %d\n", dataType.baseType);
+	   return 0;
+      }
    }
 }

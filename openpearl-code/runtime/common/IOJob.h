@@ -400,6 +400,11 @@ namespace pearlrt {
           size_t * end;
       } param2;  ///< end of array or slice
 
+     /**
+     deliver the size of one element of the given IODataType
+     */
+     size_t getSize();
+
    };
 
    /**
