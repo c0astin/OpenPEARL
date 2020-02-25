@@ -571,6 +571,12 @@ namespace pearlrt {
 
          break;
 
+      case IODataEntry::BIT:
+      case IODataEntry::CLOCK:
+      case IODataEntry::DURATION:
+	printf("get for BIT,CLOCK,DURATION muissing");
+	break;
+
       case IODataEntry::InduceData:
          Signal::throwSignalByRst(fmtEntry->fp1.intValue);
          break;
