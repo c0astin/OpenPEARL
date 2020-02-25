@@ -207,6 +207,7 @@ namespace pearlrt {
 
       size_t formatItem;
       size_t dataElement;
+      size_t nbrOfBytes;
 
       try {
          beginSequence(me, Dation::OUT);
@@ -226,8 +227,10 @@ namespace pearlrt {
 
          for (dataElement = 0; dataElement < dataList->nbrOfEntries;
                dataElement++) {
+	    nbrOfBytes = dataList->entry[dataElement].getSize();
+	    nbrOfBytes *= dataList->entry[dataElement].param1.numberOfElements;
             dationWrite(dataList->entry[dataElement].dataPtr.inData,
-                        dataList->entry[dataElement].param1.numberOfElements);
+                        nbrOfBytes);
          }
 
          endSequence(me);
@@ -246,6 +249,7 @@ namespace pearlrt {
 
       size_t formatItem;
       size_t dataElement;
+      size_t nbrOfBytes;
 
       try {
          beginSequence(me, Dation::IN);
@@ -259,14 +263,16 @@ namespace pearlrt {
                Log::error("non positioning element in format list");
                throw theInternalDationSignal;
             }
-
             fromPositioningFormat(me, &formatList->entry[formatItem]);
          }
 
          for (dataElement = 0; dataElement < dataList->nbrOfEntries;
                dataElement++) {
+	    nbrOfBytes = dataList->entry[dataElement].getSize();
+	    nbrOfBytes *= dataList->entry[dataElement].param1.numberOfElements;
+
             dationRead(dataList->entry[dataElement].dataPtr.inData,
-                       dataList->entry[dataElement].param1.numberOfElements);
+                       nbrOfBytes);
          }
 
          endSequence(me);
