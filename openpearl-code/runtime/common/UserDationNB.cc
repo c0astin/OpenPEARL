@@ -520,7 +520,7 @@ namespace pearlrt {
             tfuBuffer.prepare();
 
             if (dationParams & Dation::FORWARD && dationType == ALPHIC) {
-//               fill(1, '\n');
+               fill(1, '\n');
             }
          }
 
@@ -1162,14 +1162,15 @@ namespace pearlrt {
       return returnValue;
    }
 
+
    int UserDationNB::fromPositioningFormat(TaskCommon * me,
-                                           IOFormatEntry * fmtEntry) {
+                                         IOFormatEntry * fmtEntry) {
       int returnValue = 0;
 
       switch (fmtEntry->format) {
       default:
-         printf("unsupported format %d\n", fmtEntry->format);
-         break;
+         Log::error("Unsupported format %d\n", fmtEntry->format);
+         throw theInternalDationSignal;
 
       case IOFormatEntry::X:
          fromX(fmtEntry->fp1.f31);
@@ -1179,9 +1180,95 @@ namespace pearlrt {
          fromSkip(fmtEntry->fp1.f31);
          break;
 
+      case IOFormatEntry::PAGE:
+         fromPage(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::EOFPOS:
+         eof();
+         break;
+
+      case IOFormatEntry::LINE:
+         line(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::COL:
+         col(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::POS1:
+         pos(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::POS2:
+         pos(fmtEntry->fp1.f31,
+               fmtEntry->fp2.f31);
+         break;
+
+      case IOFormatEntry::POS3:
+         pos(fmtEntry->fp1.f31,
+               fmtEntry->fp2.f31,
+               fmtEntry->fp3.f31);
+         break;
+
+      case IOFormatEntry::ADV1:
+         fromAdv(fmtEntry->fp1.f31);
+         break;
+
+      case IOFormatEntry::ADV2:
+         fromAdv(fmtEntry->fp1.f31,
+               fmtEntry->fp2.f31);
+         break;
+
+      case IOFormatEntry::ADV3:
+         fromAdv(fmtEntry->fp1.f31,
+               fmtEntry->fp2.f31,
+               fmtEntry->fp3.f31);
+         break;
+
+      case IOFormatEntry::SOP1:
+         {
+            Fixed<31> col; 
+            sop(&col);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp1.fxxPtr.voidPtr,
+                                           fmtEntry->fp1.fxxPtr.size,
+                                           col.x);
+         }
+         break;
+
+      case IOFormatEntry::SOP2:
+         {
+            Fixed<31> col, line; 
+            sop(&line,&col);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp1.fxxPtr.voidPtr,
+                                           fmtEntry->fp1.fxxPtr.size,
+                                           line.x);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp2.fxxPtr.voidPtr,
+                                           fmtEntry->fp2.fxxPtr.size,
+                                           col.x);
+         }
+         break;
+
+      case IOFormatEntry::SOP3:
+         {
+            Fixed<31> col, line , page; 
+            sop(&page, &line,&col);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp1.fxxPtr.voidPtr,
+                                           fmtEntry->fp1.fxxPtr.size,
+                                           page.x);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp2.fxxPtr.voidPtr,
+                                           fmtEntry->fp2.fxxPtr.size,
+                                           line.x);
+            assignInt32ToFixedViaVoidPointer(fmtEntry->fp3.fxxPtr.voidPtr,
+                                           fmtEntry->fp3.fxxPtr.size,
+                                           col.x);
+         }
+         break;
+
       case IOFormatEntry::RST:
          rst(fmtEntry->fp1.fxxPtr.voidPtr,
              fmtEntry->fp1.fxxPtr.size);
+         break;
 
       case IOFormatEntry::InduceFormat:
          Signal::throwSignalByRst(fmtEntry->fp1.intValue);
