@@ -125,4 +125,64 @@ namespace pearlrt {
 
    void DationTS::endSequenceHook(void) {
    }
+
+   void DationTS::send(TaskCommon*me,
+                        IODataList * dataList, IOFormatList * formatList) {
+
+      size_t nbrOfBytes;
+
+      try {
+         beginSequence(me, Dation::OUT);
+
+         // execute formatlist first  -- only RST is allowed
+         if (formatList && formatList->nbrOfEntries > 0) {
+            rst(formatList->entry[0].fp1.fxxPtr.voidPtr,
+                formatList->entry[0].fp1.fxxPtr.size);
+ 	 } 
+
+	 nbrOfBytes = dataList->entry[0].getSize();
+ 	 nbrOfBytes *= dataList->entry[0].param1.numberOfElements;
+
+         dationWrite(dataList->entry[0].dataPtr.inData,nbrOfBytes);
+
+         endSequence(me);
+      } catch (Signal &s) {
+         if (! updateRst(&s)) {
+            endSequence(me);
+            throw;
+         }
+
+         endSequence(me);
+      }
+   }
+
+   void DationTS::take(TaskCommon*me,
+                       IODataList * dataList, IOFormatList * formatList) {
+
+      size_t nbrOfBytes;
+
+      try {
+         beginSequence(me, Dation::IN);
+
+         // execute formatlist first  -- only RST is allowed
+         if (formatList && formatList->nbrOfEntries > 0) {
+            rst(formatList->entry[0].fp1.fxxPtr.voidPtr,
+                formatList->entry[0].fp1.fxxPtr.size);
+ 	 } 
+
+	 nbrOfBytes = dataList->entry[0].getSize();
+ 	 nbrOfBytes *= dataList->entry[0].param1.numberOfElements;
+
+         dationRead(dataList->entry[0].dataPtr.inData, nbrOfBytes);
+
+         endSequence(me);
+      } catch (Signal &s) {
+         if (! updateRst(&s)) {
+            endSequence(me);
+            throw;
+         }
+
+         endSequence(me);
+      }
+   }
 }

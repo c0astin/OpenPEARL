@@ -40,7 +40,7 @@
 #include "DationDim.h"
 #include "Fixed.h"
 #include "TaskCommon.h"
-
+#include "IOJob.h"
 
 
 namespace pearlrt {
@@ -244,6 +244,26 @@ namespace pearlrt {
          case the tasks are added into a priority based wait queue
       */
       bool allowMultipleIORequests();
+
+      /**
+      send data via the IOJob interface
+
+      \param me the pointer to the calling task
+      \param dataList an array of data elements
+      \param formatList an array of positioning formats (incl. RST)
+      */
+      void send(TaskCommon*me,
+                 IODataList * dataList, IOFormatList * formatList);
+
+      /**
+      read data via the IOJob interface
+
+      \param me the pointer to the calling task
+      \param dataList an array of data elements
+      \param formatList an array of positioning formats (incl. RST)
+      */
+      void take(TaskCommon*me,
+                IODataList * dataList, IOFormatList * formatList);
 
    };
    /** @} */
