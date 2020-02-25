@@ -55,6 +55,7 @@ CXX_COMMON = \
 	RefCharSink.cc RefCharSource.cc \
 	SystemDationNBSource.cc SystemDationNBSink.cc \
 	PutClock.cc GetClock.cc \
+	GetBitString.cc \
 	PutBitString.cc \
 	GetHelper.cc PutHelper.cc \
 	TaskWhenLinks.cc \

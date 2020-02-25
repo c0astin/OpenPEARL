@@ -232,34 +232,33 @@ namespace pearlrt {
       }
    }
 
-#if 0
+
    void IOFormats::fromBit(void *s, size_t index,
                            size_t len, int base,
                            const Fixed<31> w) {
       checkCapacity(w);
 
       if (len <= 8) {
-         BitString<8> * f = (BitString<8>*)s;
+	 BitString<8> *f = (BitString<8>*)s;
          f += index;
-         PutBits<1>::toBit(*f, len, w, base, *sink);
+         GetBits<1>::fromBit(f->x, len, w.x, base, *source);
       } else if (len <= 15) {
-         BitString<16> * f = (BitString<16>*)s;
+	 BitString<16> *f = (BitString<16>*)s;
          f += index;
-         PutBits<2>::toBit(*f, len, w, base, *sink);
+         GetBits<2>::fromBit(f->x, len, w.x, base, *source);
       } else if (len <= 31) {
-         BitString<32> * f = (BitString<32>*)s;
+	 BitString<32> *f = (BitString<32>*)s;
          f += index;
-         PutBits<4>::toBit(*f, len, w, base, *sink);
+         GetBits<4>::fromBit(f->x, len, w.x, base, *source);
       } else if (len <= 63) {
-         BitString<64> * f = (BitString<64>*)s;
+	 BitString<64> *f = (BitString<64>*)s;
          f += index;
-         PutBits<8>::toBit(*f, len, w, base, *sink);
+         GetBits<8>::fromBit(f->x, len, w.x, base, *source);
       } else {
          Log::error("unsupported length of fixed B-format (len=%zu)", len);
          throw theInternalDationSignal;
       }
    }
-#endif
 
    void IOFormats::toT(const Clock f,
                        const Fixed<31> w,
@@ -571,22 +570,111 @@ namespace pearlrt {
 
          break;
 
+      
       case IODataEntry::BIT:
+         // treat B1, B2, B3, B4, B1w, B2w, B3w, B4w
+      {
+         int base, length;
+         Fixed<31> width;
+
+         switch (fmtEntry->format) {
+         default:
+            Log::error("type mismatch in B format");
+            throw theDationDatatypeSignal;
+
+         case IOFormatEntry::LIST:
+         case IOFormatEntry::B1:
+            base = 1;
+            length = dataEntry->dataType.dataWidth;
+            width = (length + base - 1) / base ;
+            break;
+
+         case IOFormatEntry::B1w:
+            base = 1;
+            length = dataEntry->dataType.dataWidth;
+            width = fmtEntry->fp1.f31;
+            break;
+         
+	case IOFormatEntry::B2:
+            base = 2;
+            length = dataEntry->dataType.dataWidth;
+            width = (length + base - 1) / base ;
+            break;
+
+         case IOFormatEntry::B2w:
+            base = 2;
+            length = dataEntry->dataType.dataWidth;
+            width = fmtEntry->fp1.f31;
+            break;
+         
+	case IOFormatEntry::B3:
+            base = 3;
+            length = dataEntry->dataType.dataWidth;
+            width = (length + base - 1) / base ;
+            break;
+
+         case IOFormatEntry::B3w:
+            base = 3;
+            length = dataEntry->dataType.dataWidth;
+            width = fmtEntry->fp1.f31;
+            break;
+         
+	case IOFormatEntry::B4:
+            base = 4;
+            length = dataEntry->dataType.dataWidth;
+            width = (length + base - 1) / base;
+            break;
+
+         case IOFormatEntry::B4w:
+            base = 4;
+            length = dataEntry->dataType.dataWidth;
+            width = fmtEntry->fp1.f31;
+            break;
+         }
+
+         fromBit((char*)(dataEntry->dataPtr.inData) + loopOffset, index,
+               length, base, width);
+      }
+      break;
+
       case IODataEntry::CLOCK:
+         if (fmtEntry->format == IOFormatEntry::T) {
+            fromT(*(pearlrt::Clock*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+                     fmtEntry->fp1.f31,
+                     fmtEntry->fp2.f31);
+         } else if (fmtEntry->format == IOFormatEntry::LIST) {
+            fromT(*(pearlrt::Clock*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+                     8,0);
+         } else {
+            Log::error("type mismatch in T format");
+            throw theDationDatatypeSignal;
+         }
+
+         break;
+
+
       case IODataEntry::DURATION:
-	printf("get for BIT,CLOCK,DURATION muissing");
-	break;
+         if (fmtEntry->format == IOFormatEntry::D) {
+            fromD(*((pearlrt::Duration*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index) ,
+                     fmtEntry->fp1.f31,
+                     fmtEntry->fp2.f31);
+         } else if (fmtEntry->format == IOFormatEntry::LIST) {
+            fromD(*((pearlrt::Duration*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index) ,
+                     20,0);
+         } else {
+            Log::error("type mismatch in D format");
+            throw theDationDatatypeSignal;
+         }
+         break;
+
 
       case IODataEntry::InduceData:
          Signal::throwSignalByRst(fmtEntry->fp1.intValue);
          break;
-#if 0
-
-      case IOJob::B1:
-      case IOJob::B2:
-      case IOJob::B3:
-      case IOJob::B4:
-#endif
       }
 
       return returnValue;

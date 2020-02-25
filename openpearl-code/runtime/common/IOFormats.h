@@ -191,6 +191,20 @@ namespace pearlrt {
                  const Fixed<31> w);
 
       /**
+      input formats Bx and Bx(w) for the IOJob interface, with x=1,2,3,4
+
+      \param s pointer to the data to be stored at
+      \param index index, if an array slice is used
+      \param len length of the BIT-type to be printed (1..64)
+      \param base of the input format (1,2,3 or 4)
+      \param w width of the input field. This field limits the number of
+               characters to be read
+      */
+      void fromBit(void *s, size_t index,
+                 size_t len, int base,
+                 const Fixed<31> w);
+
+      /**
       output format B1(w)
 
       \param s string to be printed
