@@ -88,7 +88,7 @@ namespace pearlrt {
            // declare local variables 
            // setup data and format lists
            // evaluate local variables
-           strDation.put(me, dataList, formatList);
+           strDation.convertTo(me, dataList, formatList);
         }
     } // convert end
 
@@ -100,7 +100,7 @@ namespace pearlrt {
            // declare local variables 
            // setup data and format lists
            // evaluate local variables
-           strDation.get(me, dataList, formatList);
+           strDation.convertFrom(me, dataList, formatList);
     } // convert end
    \endcode
 
@@ -209,7 +209,7 @@ namespace pearlrt {
       \param dataEntries is a pointer to the data entries
       \param formatEntries is a pointer to the format  entries
       */
-      void put(TaskCommon *me, IODataList *dataEntries,
+      void convertTo(TaskCommon *me, IODataList *dataEntries,
                IOFormatList * formatEntries);
 
       /**
@@ -219,7 +219,7 @@ namespace pearlrt {
       \param dataEntries is a pointer to the data entries
       \param formatEntries is a pointer to the format  entries
       */
-      void get(TaskCommon *me, IODataList *dataEntries,
+      void convertFrom(TaskCommon *me, IODataList *dataEntries,
                IOFormatList * formatEntries);
    };
 

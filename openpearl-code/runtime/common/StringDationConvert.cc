@@ -215,7 +215,7 @@ namespace pearlrt {
       return returnValue;
    }
 
-   void StringDationConvert::put(TaskCommon * me,
+   void StringDationConvert::convertTo(TaskCommon * me,
                       IODataList * dataList, IOFormatList * formatList) {
 
       int formatItem = -1;
@@ -315,7 +315,7 @@ namespace pearlrt {
    }
 
 
-   void StringDationConvert::get(TaskCommon * me,
+   void StringDationConvert::convertFrom(TaskCommon * me,
                       IODataList * dataList, IOFormatList * formatList) {
 
       int formatItem = -1;
