@@ -33,10 +33,10 @@ import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 
-public class StructureInitializer extends Initializer {
+public class ArrayOrStructureInitializer extends Initializer {
     private ArrayList<Initializer> m_initElementList = null;
 
-    public StructureInitializer(ParserRuleContext ctx, ArrayList<Initializer> initElementList) {
+    public ArrayOrStructureInitializer(ParserRuleContext ctx, ArrayList<Initializer> initElementList) {
 	    	super(ctx);
 	    	m_initElementList = initElementList;
 	    }

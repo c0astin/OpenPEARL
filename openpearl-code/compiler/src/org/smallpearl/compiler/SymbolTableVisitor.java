@@ -1753,19 +1753,19 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             initElementList = getInitialisationAttribute(ctx.initialisationAttribute());
         }
 
-        StructureInitializer structureInitializer = null;
+        ArrayOrStructureInitializer arrayOrStructureInitializer = null;
 
         if ( initElementList != null && initElementList.size() > 0) {
-            structureInitializer = new StructureInitializer(ctx, initElementList);
+            arrayOrStructureInitializer = new ArrayOrStructureInitializer(ctx, initElementList);
         }
         else {
-            structureInitializer = null;
+            arrayOrStructureInitializer = null;
         }
 
         int no = symbolTable.getNumberOfComponents(m_type);
         hasAssignmentProtection = ctx.assignmentProtection() != null;
 
-        VariableEntry variableEntry = new VariableEntry(ctx.ID().toString(), m_type, hasAssignmentProtection, ctx, structureInitializer);
+        VariableEntry variableEntry = new VariableEntry(ctx.ID().toString(), m_type, hasAssignmentProtection, ctx, arrayOrStructureInitializer);
         m_currentSymbolTable.enter(variableEntry);
 
         return null;
