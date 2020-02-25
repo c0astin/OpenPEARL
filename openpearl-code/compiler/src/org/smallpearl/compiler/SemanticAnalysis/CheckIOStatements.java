@@ -552,11 +552,12 @@ SmallPearlVisitor<Void> {
 	    System.out.println( "Semantic: Check IOStatements: visitPositionPUT");
 	  }
 
-	  // enshure that the dation id of type ALPHIC
+
 	  ErrorStack.enter(ctx, "PUT");
 
 	  TypeDation d = lookupDation(ctx.dationName());
-
+	  
+      // enshure that the dation id of type ALPHIC
 	  if (!d.isAlphic()) {
 	    ErrorStack.enter(ctx.dationName());
 	    ErrorStack.add("need ALPHIC dation");
@@ -565,114 +566,399 @@ SmallPearlVisitor<Void> {
 
 	  visitChildren(ctx);
 
-	  /* listOfExpressions   listOfFormats    reaction
-	   *    empty              empty          warning: no effect if no TFU is set
-	   *    empty              not empty      warning if format elements are in listOfFormats
-	   *    not empty          empty          nothing to do: LIST format applies to all expressions
-	   *    not empty          not empty      check matching until variable elements appear in 
-	   *                                      listOfExpressions or ListOfFormats
-	   */
-	  if (ctx.ioDataList() == null && ctx.listOfFormatPositions() == null) {
-	    // no data no formats
-	    if (!d.hasTfu()) {
-	      ErrorStack.warn("no data, no formats has no effect without TFU" );
-	    }
-	  }
-	  m_formatListAborted = false;
-	  List<ParserRuleContext> fmtPos = null;
-	  if (ctx.listOfFormatPositions() != null) {
-	    fmtPos = getFormatOrPositions(ctx.listOfFormatPositions());
-	  }
-
-	  List<IODataListElementWithCtx> expr = null;
-	  if (ctx.ioDataList() != null) {
-	    expr = getIoDataListWithCtx(ctx.ioDataList());
-	  }
-
-	  if (ctx.ioDataList() == null && ctx.listOfFormatPositions() != null) {
-	    // test if a format element is in the format list
-	    for (int i=0; i<fmtPos.size(); i++) {
-	      if (fmtPos.get(i) instanceof FormatContext) {
-
-	        ErrorStack.enter(((FormatContext)fmtPos.get(i)));
-	        ErrorStack.warn("format is never applied");
-	        ErrorStack.leave();
-	        break;
-	      }
-
-	    }
-	  }
-	  if (ctx.ioDataList()!= null && ctx.listOfFormatPositions()!= null) {
-	    // test if all expression types fit to the corresponding format
-	    // abort the search as soon as an non constant amount of expressions 
-	    // (like an array slice with variable length), or
-	    // an expression is detected for the factor of a format element 
-
-	    // test if listOfFormatPosition contains at least 1 format
-	    boolean fmtFound = false;
-	    for (int i=0; fmtFound==false && i<fmtPos.size(); i++) {
-	      if (fmtPos.get(i) instanceof FormatContext) {
-	        fmtFound = true;
-	      }
-	    }
-
-	    if (!fmtFound && !m_formatListAborted) {
-	      ErrorStack.add("non empty format list needs at least 1 format");
-	    } else {
-	      int fmtPosIndex = 0;
-	      for (int i=0; i<expr.size(); i++) {
-	        IODataListElementWithCtx etc = expr.get(i);
-	        //            System.out.println(i+": "+etc.ctx.getText()+"  "+etc.td);
-	        if (!m_formatListAborted && fmtPosIndex == fmtPos.size()) {
-	          fmtPosIndex = 0;
-	        }
-
-	        if (fmtPos.isEmpty()) {
-	          ErrorStack.enter(ctx.listOfFormatPositions().formatPosition(0),"expression type match format");
-	          ErrorStack.warn("check aborted due to non static format list");
-	          ErrorStack.leave();
-	          break;
-	        } else {
-
-	          while (!fmtPos.isEmpty() && fmtPos.get(fmtPosIndex) instanceof PositionContext) {
-	            fmtPosIndex ++;
-
-	            if (fmtPosIndex == fmtPos.size()) {
-	              if (!m_formatListAborted) {
-	                fmtPosIndex = 0;
-	              } else {
-	                ErrorStack.enter(fmtPos.get(fmtPosIndex-1),"expression type match format");
-	                ErrorStack.warn("check aborted: non static element after here");
-	                ErrorStack.leave();
-	                break;
-	              }
-	            }
-	          }
-
-	          if (!fmtPos.isEmpty() && fmtPos.get(fmtPosIndex) instanceof FormatContext) {
-	            if (!exprMatchFormat(fmtPos.get(fmtPosIndex),etc.td)) {
-	              ErrorStack.enter(etc.ctx,"expression type match format");
-	              ErrorStack.add(""+etc.td+" does not apply to format ");
-
-	              ErrorStack.enter(((FormatContext)fmtPos.get(fmtPosIndex)));
-	              ErrorStack.warn(""+ fmtPos.get(fmtPosIndex).getText());
-	              ErrorStack.leave();                
-	              ErrorStack.leave();                
-	            }
-
-	          }
-
-	          fmtPosIndex ++;
-	        }
-	      }
-	    }
-	  }
+	  checkPutGetDataFormat(d, ctx.ioDataList(), ctx.listOfFormatPositions());
 
 	  ErrorStack.leave();
 	  return null;
 	}
+	
+	/**
+     * check if the ID-list is not INV
+     * check type of dation
+     * no positioning after last format element in position/format list
+     */
+    @Override
+    public Void visitGetStatement(SmallPearlParser.GetStatementContext ctx) {
+        if (m_debug) {
+            System.out.println( "Semantic: Check IOStatements: visitPositionGET");
+        }
+
+        ErrorStack.enter(ctx, "GET");
+
+        TypeDation d = lookupDation(ctx.dationName());
+
+        // enshure that the dation id of type ALPHIC
+        if (!d.isAlphic()) {
+            ErrorStack.enter(ctx.dationName());
+            ErrorStack.add("need ALPHIC dation");
+            ErrorStack.leave();
+        }
+        
+        enshureDataForInput(ctx.ioDataList());
+
+        checkPutGetDataFormat(d, ctx.ioDataList(), ctx.listOfFormatPositions());
+        
+        visitChildren(ctx);
+        ErrorStack.leave();
+        return null;
+    }
+
+    @Override
+    public Void visitConvertToStatement(SmallPearlParser.ConvertToStatementContext ctx) {
+        if (m_debug) {
+            System.out.println( "Semantic: Check IOStatements: visitConvertTo");
+        }
+        
+        // create dummy Type Dation for reuse of checkPutGetDataFormat
+        TypeDation d = new TypeDation();
+        d.setTypeOfTransmission("ALPHIC");
+        d.setTfu(false);
+
+        ErrorStack.enter(ctx, "CONVERT TO");
+
+        visitChildren(ctx);
+
+        checkPutGetDataFormat(d, ctx.ioDataList(), ctx.listOfFormatPositions());
+        if (ctx.ioDataList() == null || ctx.ioDataList().ioListElement().size() < 1) {
+          ErrorStack.add("need at least one expression");
+        }
+
+        ASTAttribute attr = m_ast.lookup(ctx.name());
+        if (attr == null) {
+          ErrorStack.add("internal compiler error: no ASTAttribute in CONVERT/TO destination");
+        } else {
+          if (! (attr.m_type instanceof TypeChar)) {
+            ErrorStack.add("destination must be of type CHAR");
+          }
+          
+          if (attr.isReadOnly()) {
+            ErrorStack.add("destination is not writable");
+          }
+        }
+        
+  
+        ErrorStack.leave();
+        return null;
+      }
+        
+    @Override
+    public Void visitConvertFromStatement(SmallPearlParser.ConvertFromStatementContext ctx) {
+        if (m_debug) {
+            System.out.println( "Semantic: Check IOStatements: visitConvertFrom");
+        }
+
+        // create dummy Type Dation for reuse of checkPutGetDataFormat
+        TypeDation d = new TypeDation();
+        d.setTypeOfTransmission("ALPHIC");
+        d.setTfu(false);
+
+        ErrorStack.enter(ctx, "CONVERT FROM");
+
+        visitChildren(ctx);
+
+        checkPutGetDataFormat(d, ctx.ioDataList(), ctx.listOfFormatPositions());
+        if (ctx.ioDataList() == null || ctx.ioDataList().ioListElement().size() < 1) {
+          ErrorStack.add("need at least one expression");
+        }
+
+        ASTAttribute attr = m_ast.lookup(ctx.name());
+        if (attr == null) {
+          ErrorStack.add("internal compiler error: no ASTAttribute in CONVERT/FROM source");
+        } else {
+          if (! (attr.m_type instanceof TypeChar)) {
+            ErrorStack.add("source must be of type CHAR");
+          }
+        }
+        
+        ErrorStack.leave();
+        return null;
+    }
+
+    @Override
+    public Void visitReadStatement(SmallPearlParser.ReadStatementContext ctx) {
+        if (m_debug) {
+            System.out.println( "Semantic: Check IOStatements: visitPositionREAD");
+        }
+
+        // enshure that the dation id of type 'type'
+        ErrorStack.enter(ctx, "READ");
+
+        TypeDation d = lookupDation(ctx.dationName());
+
+        if (d.isAlphic() || d.isBasic()) {
+            ErrorStack.enter(ctx.dationName());
+            ErrorStack.add("need 'type' dation");
+            ErrorStack.leave();
+        }
+        
+        enshureDataForInput(ctx.ioDataList());
+        
+        checkWriteReadFormat(d, ctx.listOfFormatPositions());
+
+        // TODO: (rm) check type of transfer data is missing!!
+
+        visitChildren(ctx);
+        ErrorStack.leave();
+        return null;
+    }
 
 
+
+    @Override
+    public Void visitWriteStatement(SmallPearlParser.WriteStatementContext ctx) {
+        if (m_debug) {
+            System.out.println( "Semantic: Check IOStatements: visitPositionWRITE");
+        }
+
+        // enshure that the dation id of type 'type'
+        ErrorStack.enter(ctx, "WRITE");
+
+        TypeDation d = lookupDation(ctx.dationName());
+
+        if (d.isAlphic() || d.isBasic()) {
+            ErrorStack.enter(ctx.dationName());
+            ErrorStack.add("need 'type' dation");
+            ErrorStack.leave();
+        }
+
+        // check if absolute positions follow relative positions
+        checkWriteReadFormat(d, ctx.listOfFormatPositions());
+
+        // TODO: (rm) check type of transfer data is missing!!
+
+        visitChildren(ctx);
+        ErrorStack.leave();
+        return null;
+    }
+    
+    // enshure that no formats and no absolute positions occur after relative positions
+    /**
+     * @param d
+     * @param listOfFormatPositions
+     */
+    private void checkWriteReadFormat(TypeDation d,
+        ListOfFormatPositionsContext listOfFormatPositions) {
+      int  nbrOfPositionsAlreadyFound = 0;
+
+      if (listOfFormatPositions != null) {
+        for (int i=0; i<listOfFormatPositions.formatPosition().size(); i++) {
+          if (listOfFormatPositions.formatPosition(i) instanceof FactorFormatPositionContext ||
+              listOfFormatPositions.formatPosition(i) instanceof FactorFormatContext) {
+            ErrorStack.enter(listOfFormatPositions.formatPosition(i));
+            ErrorStack.add("only positions are allowed");
+            ErrorStack.leave();
+          } else if (listOfFormatPositions.formatPosition(i) instanceof FactorPositionContext) {
+            PositionContext pc = ((FactorPositionContext)(listOfFormatPositions.formatPosition(i))).position();
+
+            if (pc.absolutePosition() != null) {
+              SmallPearlParser.AbsolutePositionContext c = pc.absolutePosition();
+              if (c.positionPOS() != null ||
+                  c.positionLINE() != null) {
+                ErrorStack.enter(pc);
+                if (nbrOfPositionsAlreadyFound > 0) {
+                  ErrorStack.warn("previous positioning before LINE or POS are void");
+                }
+                ErrorStack.leave();
+              }
+            }
+            
+            if (pc.positionRST() == null) {
+              nbrOfPositionsAlreadyFound++;
+            }
+          }
+        }
+      }
+    }
+    
+    
+    @Override
+    public Void visitTakeStatement(SmallPearlParser.TakeStatementContext ctx) {
+        if (m_debug) {
+            System.out.println( "Semantic: Check IOStatements: visitPositionTAKE");
+        }
+
+        // enshure that the dation id of type BASIC
+        ErrorStack.enter(ctx, "TAKE");
+
+        TypeDation d = lookupDation(ctx.dationName());
+        if (!d.isBasic()) {
+            ErrorStack.enter(ctx.dationName());
+            ErrorStack.add("need BASIC dation");
+            ErrorStack.leave();
+        }
+
+        // check that only 1 time RST is allowed
+        checkTakeSendFormat(d, ctx.listOfFormatPositions());
+        
+        if (ctx.ioDataList() == null ||
+            ctx.ioDataList().ioListElement().size()> 1) {
+          ErrorStack.add("need one name");
+        }
+        
+        enshureDataForInput(ctx.ioDataList());
+        
+        // TODO: (rm) check type of transfer data is missing!!
+        
+        visitChildren(ctx);
+
+        ErrorStack.leave();
+        return null;
+    }
+
+
+
+    @Override
+    public Void visitSendStatement(SmallPearlParser.SendStatementContext ctx) {
+        if (m_debug) {
+            System.out.println( "Semantic: Check IOStatements: visitPositionSEND");
+        }
+
+        // enshure that the dation id of type BASIC
+        ErrorStack.enter(ctx, "SEND");
+
+        TypeDation d = lookupDation(ctx.dationName());
+
+        if (!d.isBasic()) {
+            ErrorStack.add("need BASIC dation");
+        }      
+        // check that only 1 time RST is allowed
+        checkTakeSendFormat(d, ctx.listOfFormatPositions());
+        
+        if (ctx.ioDataList() == null ||
+            ctx.ioDataList().ioListElement().size()> 1) {
+          ErrorStack.add("need one expression");
+        }
+
+        // TODO: (rm) check type of transfer data is missing!!
+        
+        visitChildren(ctx);
+        ErrorStack.leave();
+        return null;
+    }
+
+    private void checkTakeSendFormat(TypeDation d,
+        ListOfFormatPositionsContext listOfFormatPositions) {
+      if (listOfFormatPositions != null) {
+        for (int i=0; i<listOfFormatPositions.formatPosition().size(); i++) {
+          ErrorStack.enter(listOfFormatPositions.formatPosition(i));
+          if (listOfFormatPositions.formatPosition(i) instanceof FactorPositionContext) {
+            FactorPositionContext fpc = (FactorPositionContext)(listOfFormatPositions.formatPosition(i));
+            if (fpc.factor() != null || fpc.position().positionRST() == null) {
+              ErrorStack.add("only RST allowed once");
+            }
+          }
+          ErrorStack.leave();
+        }
+      }
+      // TODO Auto-generated method stub
+      
+    }
+
+	private void checkPutGetDataFormat(TypeDation d, IoDataListContext dataCtx, ListOfFormatPositionsContext fmtCtx) {
+	    /* listOfExpressions   listOfFormats    reaction
+	     *    empty              empty          warning: no effect if no TFU is set
+	     *    empty              not empty      warning if format elements are in listOfFormats
+	     *    not empty          empty          nothing to do: LIST format applies to all expressions
+	     *    not empty          not empty      check matching until variable elements appear in 
+	     *                                      listOfExpressions or ListOfFormats
+	     */
+	    if (dataCtx == null && fmtCtx == null) {
+	      // no data no formats
+	      if (!d.hasTfu()) {
+	        ErrorStack.warn("no data, no formats has no effect without TFU" );
+	      }
+	    }
+	    m_formatListAborted = false;
+	    List<ParserRuleContext> fmtPos = null;
+	    if (fmtCtx != null) {
+	      fmtPos = getFormatOrPositions(fmtCtx);
+	    }
+
+	    List<IODataListElementWithCtx> expr = null;
+	    if (dataCtx != null) {
+	      expr = getIoDataListWithCtx(dataCtx);
+	    }
+
+	    if (dataCtx  == null && fmtCtx != null) {
+	      // test if a format element is in the format list
+	      for (int i=0; i<fmtPos.size(); i++) {
+	        if (fmtPos.get(i) instanceof FormatContext) {
+
+	          ErrorStack.enter(((FormatContext)fmtPos.get(i)));
+	          ErrorStack.warn("format is never applied");
+	          ErrorStack.leave();
+	          break;
+	        }
+
+	      }
+	    }
+	    if (dataCtx != null && fmtCtx!= null) {
+	      // test if all expression types fit to the corresponding format
+	      // abort the search as soon as an non constant amount of expressions 
+	      // (like an array slice with variable length), or
+	      // an expression is detected for the factor of a format element 
+
+	      // test if listOfFormatPosition contains at least 1 format
+	      boolean fmtFound = false;
+	      for (int i=0; fmtFound==false && i<fmtPos.size(); i++) {
+	        if (fmtPos.get(i) instanceof FormatContext) {
+	          fmtFound = true;
+	        }
+	      }
+
+	      if (!fmtFound && !m_formatListAborted) {
+	        ErrorStack.add("non empty format list needs at least 1 format");
+	      } else {
+	        int fmtPosIndex = 0;
+	        for (int i=0; i<expr.size(); i++) {
+	          IODataListElementWithCtx etc = expr.get(i);
+	          //            System.out.println(i+": "+etc.ctx.getText()+"  "+etc.td);
+	          if (!m_formatListAborted && fmtPosIndex == fmtPos.size()) {
+	            fmtPosIndex = 0;
+	          }
+
+	          if (fmtPos.isEmpty()) {
+	            ErrorStack.enter(fmtCtx.formatPosition(0),"expression type match format");
+	            ErrorStack.warn("check aborted due to non static format list");
+	            ErrorStack.leave();
+	            break;
+	          } else {
+
+	            while (!fmtPos.isEmpty() && fmtPos.get(fmtPosIndex) instanceof PositionContext) {
+	              fmtPosIndex ++;
+
+	              if (fmtPosIndex == fmtPos.size()) {
+	                if (!m_formatListAborted) {
+	                  fmtPosIndex = 0;
+	                } else {
+	                  ErrorStack.enter(fmtPos.get(fmtPosIndex-1),"expression type match format");
+	                  ErrorStack.warn("check aborted: non static element after here");
+	                  ErrorStack.leave();
+	                  break;
+	                }
+	              }
+	            }
+
+	            if (!fmtPos.isEmpty() && fmtPos.get(fmtPosIndex) instanceof FormatContext) {
+	              if (!exprMatchFormat(fmtPos.get(fmtPosIndex),etc.td)) {
+	                ErrorStack.enter(etc.ctx,"expression type match format");
+	                ErrorStack.add(""+etc.td+" does not apply to format ");
+
+	                ErrorStack.enter(((FormatContext)fmtPos.get(fmtPosIndex)));
+	                ErrorStack.warn(""+ fmtPos.get(fmtPosIndex).getText());
+	                ErrorStack.leave();                
+	                ErrorStack.leave();                
+	              }
+
+	            }
+
+	            fmtPosIndex ++;
+	          }
+	        }
+	      }
+	    }
+
+	  }
 
   private boolean exprMatchFormat(ParserRuleContext formatCtx, TypeDefinition td) {
     // LIST matches all types
@@ -751,316 +1037,8 @@ SmallPearlVisitor<Void> {
     return list;
   }
 
-  /**
-	 * check if the ID-list is not INV
-	 * check type of dation
-	 * no positioning after last format element in position/format list
-	 */
-	@Override
-	public Void visitGetStatement(SmallPearlParser.GetStatementContext ctx) {
-		if (m_debug) {
-			System.out.println( "Semantic: Check IOStatements: visitPositionGET");
-		}
-
-		// enshure that the dation id of type ALPHIC
-		ErrorStack.enter(ctx, "GET");
-
-		TypeDation d = lookupDation(ctx.dationName());
-
-
-		if (!d.isAlphic()) {
-			ErrorStack.enter(ctx.dationName());
-			ErrorStack.add("need ALPHIC dation");
-			ErrorStack.leave();
-		}
-
-		for (int i=0; i<ctx.ID().size(); i++) {
-			enshureNotInvVariableForInput(ctx.ID(i).toString());
-		}
-
-		if (ctx.ID().size() > 0) {
-			if (ctx.formatPosition() == null) {
-				ErrorStack.add("need format/position");
-			} else {
-				if (ctx.formatPosition(ctx.formatPosition().size()-1) instanceof FactorPositionContext) {
-					ErrorStack.warn("OpenPEARL allows position elements after last data format");
-				}
-			}
-		}
-
-		if (ctx.ID().size() > 0) {
-			// count number of format(without positions) 
-			int nbr = 0;
-			for (int i = 0; i<ctx.formatPosition().size(); i++) {
-				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatContext) {
-					nbr ++;
-				} 
-			}
-
-			if (nbr != ctx.ID().size()) {
-				ErrorStack.add("number of format elements differs from data elements");
-			}
-		}
-
-
-		visitChildren(ctx);
-		ErrorStack.leave();
-		return null;
-	}
-
-	@Override
-	public Void visitConvertToStatement(SmallPearlParser.ConvertToStatementContext ctx) {
-		if (m_debug) {
-			System.out.println( "Semantic: Check IOStatements: visitConvertTo");
-		}
-
-		// enshure that the dation id of type ALPHIC
-		ErrorStack.enter(ctx, "CONVERT");
-
-
-		if (ctx.expression().size() > 0) {
-			// count number of format(without positions) 
-			int nbr = 0;
-			for (int i = 0; i<ctx.formatPosition().size(); i++) {
-				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatContext) {
-					nbr ++;
-				}
-			}
-			if (nbr == 0) {
-				ErrorStack.add("need at least 1 format element");
-			}
-		}
-
-		// check TO parameter
-		String toName = ctx.idCharacterString().ID().toString();
-
-		SymbolTableEntry se = m_currentSymbolTable.lookup(toName);
-
-		TypeChar c = enshureCharacterString(toName);
-		if (c != null) {
-			// INV check is missing
-			if (((VariableEntry)se).getAssigmentProtection()) {
-				ErrorStack.add(toName+ " is INV");
-			}
-		}
-
-
-		visitChildren(ctx);
-		ErrorStack.leave();
-		return null;
-	}
-
-	@Override
-	public Void visitConvertFromStatement(SmallPearlParser.ConvertFromStatementContext ctx) {
-		if (m_debug) {
-			System.out.println( "Semantic: Check IOStatements: visitConvertFrom");
-		}
-
-		// enshure that the dation id of type ALPHIC
-		ErrorStack.enter(ctx, "CONVERT");
-
-
-		if (ctx.ID().size() > 0) {
-			// count number of format(without positions) 
-			int nbr = 0;
-			for (int i = 0; i<ctx.formatPosition().size(); i++) {
-				if (ctx.formatPosition(i) instanceof SmallPearlParser.FactorFormatContext) {
-					nbr ++;
-				}
-			}
-			if (nbr == 0) {
-				ErrorStack.add("need at least 1 format element");
-			}
-		}
-
-		// check FROM parameter
-		String fromName = ctx.idCharacterString().ID().toString();
-
-		enshureCharacterString(fromName);
-
-		for (int i=0; i<ctx.ID().size(); i++) {
-			enshureNotInvVariableForInput(ctx.ID(i).toString());
-		}
-
-		visitChildren(ctx);
-		ErrorStack.leave();
-		return null;
-	}
-
-	@Override
-	public Void visitReadStatement(SmallPearlParser.ReadStatementContext ctx) {
-		if (m_debug) {
-			System.out.println( "Semantic: Check IOStatements: visitPositionREAD");
-		}
-
-		// enshure that the dation id of type 'type'
-		ErrorStack.enter(ctx, "READ");
-
-		TypeDation d = lookupDation(ctx.dationName());
-
-		if (d.isAlphic() || d.isBasic()) {
-			ErrorStack.enter(ctx.dationName());
-			ErrorStack.add("need 'type' dation");
-			ErrorStack.leave();
-		}
-
-		for (int i=0; i<ctx.ID().size(); i++) {
-			enshureNotInvVariableForInput(ctx.ID(i).toString());
-		}
-
-		// check if absolute positions follow relative positions
-		boolean foundAbsolutePosition= false;
-		boolean foundRelativePosition = false;
-		for (int i = 0; i<ctx.position().size(); i++) {
-			ParseTree child = ctx.position(i).getChild(0); 
-
-			if (child instanceof SmallPearlParser.AbsolutePositionContext && foundRelativePosition) {
-				ErrorStack.warn("relative positioning before absolute positioning is void");
-				foundRelativePosition = false;
-			}
-			if (child instanceof SmallPearlParser.RelativePositionContext) {
-				foundRelativePosition = true;
-			}
-		}
-
-		visitChildren(ctx);
-		ErrorStack.leave();
-		return null;
-	}
-
-	@Override
-	public Void visitWriteStatement(SmallPearlParser.WriteStatementContext ctx) {
-		if (m_debug) {
-			System.out.println( "Semantic: Check IOStatements: visitPositionWRITE");
-		}
-
-		// enshure that the dation id of type 'type'
-		ErrorStack.enter(ctx, "WRITE");
-
-		TypeDation d = lookupDation(ctx.dationName());
-
-		if (d.isAlphic() || d.isBasic()) {
-			ErrorStack.enter(ctx.dationName());
-			ErrorStack.add("need 'type' dation");
-			ErrorStack.leave();
-		}
-
-		// check if absolute positions follow relative positions
-
-		int nbrOfPositionsAlreadyFound = 0;
-		for (int i = 0; i<ctx.position().size(); i++) {
-			ParseTree child = ctx.position(i).getChild(0); 
-			
-			if (child instanceof SmallPearlParser.AbsolutePositionContext) {
-				SmallPearlParser.AbsolutePositionContext c = (AbsolutePositionContext)child;
-				if (c.positionPOS() != null ||
-						c.positionLINE() != null) {
-					ErrorStack.enter(ctx.position(i));
-					if (nbrOfPositionsAlreadyFound > 0) {
-						ErrorStack.warn("previous positioning before LINE or POS are void");
-					}
-					ErrorStack.leave();
-				}
-			}
-			// count all positioning formats; RST is ok multiple times in the list
-			// to capture positioning errors and transfer errors
-			if (child instanceof SmallPearlParser.RelativePositionContext ||
-				child instanceof SmallPearlParser.AbsolutePositionContext) {
-				nbrOfPositionsAlreadyFound ++;
-			}
-		}
-		
-		// check type of transfer data is missing
-
-		visitChildren(ctx);
-		ErrorStack.leave();
-		return null;
-	}
-	@Override
-	public Void visitTakeStatement(SmallPearlParser.TakeStatementContext ctx) {
-		if (m_debug) {
-			System.out.println( "Semantic: Check IOStatements: visitPositionTAKE");
-		}
-
-		// enshure that the dation id of type BASIC
-		ErrorStack.enter(ctx, "TAKE");
-
-		TypeDation d = lookupDation(ctx.dationName());
-		if (!d.isBasic()) {
-			ErrorStack.enter(ctx.dationName());
-			ErrorStack.add("need BASIC dation");
-			ErrorStack.leave();
-		}
-
-		if(ctx.ID() == null) {
-			ErrorStack.add("OpenPEARL needs one variable");
-		} else {
-			SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID().getText());
-			if (se == null) {
-				ErrorStack.add("'" + ctx.ID().getText()+"' not defined");
-			} else {
-				if (se instanceof VariableEntry) {
-					if (d.getTypeOfTransmission() != null &&
-							!d.getTypeOfTransmission().equals("ALL") ) {
-
-						if (!((VariableEntry)se).getType().toString().equals(d.getTypeOfTransmission())) {
-							ErrorStack.add("type mismatch: expected "+d.getTypeOfTransmission()+ " -- got "+
-									((VariableEntry)se).getType().toString());
-						}
-					}
-				}
-			}
-			enshureNotInvVariableForInput(ctx.ID().toString());
-		}
-		if (ctx.take_send_rst() != null) {
-			ErrorStack.enter(ctx.take_send_rst(), "RST");
-			CheckPrecision(ctx.take_send_rst().ID().getText(), ctx.take_send_rst());
-			ErrorStack.leave();
-		}
-		visitChildren(ctx);
-		ErrorStack.leave();
-		return null;
-	}
-
-	@Override
-	public Void visitSendStatement(SmallPearlParser.SendStatementContext ctx) {
-		if (m_debug) {
-			System.out.println( "Semantic: Check IOStatements: visitPositionSEND");
-		}
-
-		// enshure that the dation id of type BASIC
-		ErrorStack.enter(ctx, "SEND");
-
-		TypeDation d = lookupDation(ctx.dationName());
-
-		if (!d.isBasic()) {
-			ErrorStack.add("need BASIC dation");
-		}	   
-
-		if(ctx.expression() == null) {
-			ErrorStack.add("OpenPEARL needs one expression");
-		} else {
-			String typeOfExpression = lookupTypeOfExpressionOrConstant(ctx.expression());
-			if (d.getTypeOfTransmission() != null &&
-					!d.getTypeOfTransmission().equals(typeOfExpression) ) {
-				ErrorStack.add("type mismatch: expected "+d.getTypeOfTransmission()+ " -- got "+
-						typeOfExpression);
-
-
-
-			}
-		}
-
-		if (ctx.take_send_rst() != null) {
-			ErrorStack.enter(ctx.take_send_rst(), "RST");
-			CheckPrecision(ctx.take_send_rst().ID().getText(), ctx.take_send_rst());
-			ErrorStack.leave();
-		}
-		visitChildren(ctx);
-		ErrorStack.leave();
-		return null;
-	}
-
+  
+  
 	@Override
 	public Void visitPositionRST(SmallPearlParser.PositionRSTContext ctx) {
 		if (m_debug) {
@@ -2106,8 +2084,37 @@ SmallPearlVisitor<Void> {
 	}
 
 
-
-	private void enshureNotInvVariableForInput(String var) {
+	private void enshureDataForInput(IoDataListContext dataCtx) {
+	  boolean isName = false;
+	  
+	  if (dataCtx != null) {
+	    for (int i=0; i<dataCtx.ioListElement().size(); i++) {
+	      if (dataCtx.ioListElement(i).expression()!= null) {
+	        ExpressionContext expr = (ExpressionContext)(dataCtx.ioListElement(i).expression());
+	        // only name is allowed
+	        if (expr instanceof BaseExpressionContext) {
+	          if (((BaseExpressionContext)expr).primaryExpression() != null) {
+	            PrimaryExpressionContext pe = ((BaseExpressionContext)expr).primaryExpression();
+	            if (pe.name() != null) {
+	               enshureDataForInput(pe.name().getText());
+	               isName = true;
+	            } 
+	          }
+	        }
+	  
+	        if (! isName) {
+	           ErrorStack.enter(dataCtx.ioListElement(i).expression());
+	           ErrorStack.add("only names allowed in input list");
+	           ErrorStack.leave();
+	        }
+	      } else {
+	         enshureDataForInput(dataCtx.ioListElement(i).getText());
+	      }
+	    }
+	  }
+	}
+	
+	private void enshureDataForInput(String var) {
 		SymbolTableEntry se = m_currentSymbolTable.lookup(var);
 		if (se == null) {
 			ErrorStack.add("'" + var+"' is not defined");
@@ -2191,13 +2198,13 @@ SmallPearlVisitor<Void> {
 			}
 			if (p instanceof SmallPearlParser.ConvertToStatementContext) {
 				SmallPearlParser.ConvertToStatementContext stmnt = (SmallPearlParser.ConvertToStatementContext) p;
-				userDation = stmnt.idCharacterString().ID().toString();  // name of the string
+				userDation = stmnt.name().getText();  // name of the string
 				isConvert = true;
 				p=null;
 			}
 			if (p instanceof SmallPearlParser.ConvertFromStatementContext) {
 				SmallPearlParser.ConvertFromStatementContext stmnt = (SmallPearlParser.ConvertFromStatementContext) p;
-				userDation = stmnt.idCharacterString().ID().toString();  // name of the string
+				userDation = stmnt.name().getText();   // name of the string
 				isConvert = true;
 				p=null;
 			}

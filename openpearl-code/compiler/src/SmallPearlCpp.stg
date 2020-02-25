@@ -1176,6 +1176,34 @@ io_position_skip(element,direction) ::= <%
     <direction>Skip(<element>)
 %>
 
+// generic template for READ/WRITE/TAKE/SEND/PUT/GET
+iojob_io_statement(dation,command,datalist,formatlist,format_list_is_static) ::= <<
+//<command> statement
+{
+   <if(format_list_is_static)>static <endif><formatlist>
+
+   <datalist>
+
+   <if(datalist)>
+   pearlrt::IODataList dataList = {
+     .nbrOfEntries=sizeof(dataEntries)/sizeof(dataEntries[0]),
+     .entry=dataEntries};
+   <else>pearlrt::IODataList dataList = {
+     .nbrOfEntries=0,
+     .entry=NULL};
+  <endif>
+  <if(format_list_is_static)>static <endif>pearlrt::IOFormatList formatList = {
+     <if(formatlist)>
+     .nbrOfEntries=sizeof(formatEntries)/sizeof(formatEntries[0]),
+     .entry=formatEntries};
+     <else>.nbrOfEntries=0,
+     .entry=NULL};
+     <endif>
+
+  <dation>.<command>(me, &dataList , &formatList);
+}
+>>
+
 iojob_put_statement(dation,datalist,formatlist,format_list_is_static) ::= <<
 //PUT statement
 {
@@ -1191,6 +1219,66 @@ iojob_put_statement(dation,datalist,formatlist,format_list_is_static) ::= <<
      .entry=formatEntries};
 
    <dation>.put(me, &dataList , &formatList);
+}
+>>
+
+iojob_get_statement(dation,datalist,formatlist,format_list_is_static) ::= <<
+//GET statement
+{
+   <if(format_list_is_static)>static <endif><formatlist>
+
+   <datalist>
+
+   pearlrt::IODataList dataList = {
+     .nbrOfEntries=<if(datalist)>sizeof(dataEntries)/sizeof(dataEntries[0])<else>0<endif>,
+     .entry=<if(datalist)>dataEntries<else>NULL<endif>};
+   <if(format_list_is_static)>static <endif>pearlrt::IOFormatList formatList = {
+     .nbrOfEntries=sizeof(formatEntries)/sizeof(formatEntries[0]),
+     .entry=formatEntries};
+
+   <dation>.get(me, &dataList , &formatList);
+}
+>>
+
+iojob_convertTo_statement(char_string,datalist,formatlist,format_list_is_static) ::= <<
+//CONVERT TO statement
+{
+  pearlrt::RefCharacter rc(<char_string>);
+                                             // true indicates output
+  pearlrt::StringDationConvert strDation(&rc, true);
+   <if(format_list_is_static)>static <endif><formatlist>
+
+   <datalist>
+
+   pearlrt::IODataList dataList = {
+     .nbrOfEntries=<if(datalist)>sizeof(dataEntries)/sizeof(dataEntries[0])<else>0<endif>,
+     .entry=<if(datalist)>dataEntries<else>NULL<endif>};
+   <if(format_list_is_static)>static <endif>pearlrt::IOFormatList formatList = {
+     .nbrOfEntries=sizeof(formatEntries)/sizeof(formatEntries[0]),
+     .entry=formatEntries};
+
+   strDation.convertTo(me, &dataList , &formatList);
+}
+>>
+
+iojob_convertFrom_statement(char_string,datalist,formatlist,format_list_is_static) ::= <<
+//CONVERT FROM statement
+{
+  pearlrt::RefCharacter rc(<char_string>);
+                                             // true indicates output
+  pearlrt::StringDationConvert strDation(&rc, false);
+   <if(format_list_is_static)>static <endif><formatlist>
+
+   <datalist>
+
+   pearlrt::IODataList dataList = {
+     .nbrOfEntries=<if(datalist)>sizeof(dataEntries)/sizeof(dataEntries[0])<else>0<endif>,
+     .entry=<if(datalist)>dataEntries<else>NULL<endif>};
+   <if(format_list_is_static)>static <endif>pearlrt::IOFormatList formatList = {
+     .nbrOfEntries=sizeof(formatEntries)/sizeof(formatEntries[0]),
+     .entry=formatEntries};
+
+   strDation.convertFrom(me, &dataList , &formatList);
 }
 >>
 
@@ -1220,8 +1308,7 @@ pearlrt::IOFormatEntry formatEntries[]  = {
 iojob_rst(element,size) ::= <<
 {
    .format=pearlrt::IOFormatEntry::RST,
-   .fp1={.fxxPtr={.voidPtr=&<element>},
-   .fp1={.fxxPtr={.size=<size>}
+   .fp1={.fxxPtr={.voidPtr=&<element>,.size=<size>}}
 }
 >>
 
@@ -1239,14 +1326,14 @@ iojob_position_line(element,direction) ::= <<
 }
 >>
 
-iojob_position_pos(expression1,expression2,expression3,direction,dimensions) ::= <%
+iojob_position_pos(expression1,expression2,expression3,direction,dimensions) ::= <<
 {
    .format=pearlrt::IOFormatEntry::POS<dimensions>,
-   <if(expression1)>.fp1={.fp31=<expression1>}<endif>
-   <if(expression2)>.fp2={.fp31=<expression2>}<endif>
-   <if(expression3)>.fp3={.fp31=<expression3>}<endif>
+   <if(expression1)>.fp1={.f31=<expression1>}<endif>
+   <if(expression2)>.fp2={.f31=<expression2>}<endif>
+   <if(expression3)>.fp3={.f31=<expression3>}<endif>
 }
-%>
+>>
 
 iojob_position_sop(expression1,size1, expression2,size2, expression3,size3, direction,dimensions) ::= <%
 {

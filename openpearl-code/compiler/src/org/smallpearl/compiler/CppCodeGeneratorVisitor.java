@@ -248,29 +248,30 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return pool;
     }
 
-    private double getDuration(SmallPearlParser.DurationConstantContext ctx) {
-        Integer hours = 0;
-        Integer minutes = 0;
-        Double seconds = 0.0;
-
-        if (ctx.hours() != null) {
-            hours = Integer.valueOf(ctx.hours().IntegerConstant().toString()) * 3600;
-        }
-        if (ctx.minutes() != null) {
-            minutes = Integer.valueOf(ctx.minutes().IntegerConstant()
-                    .toString()) * 60;
-        }
-        if (ctx.seconds() != null) {
-            if (ctx.seconds().IntegerConstant() != null) {
-                seconds = Double.valueOf(ctx.seconds().IntegerConstant()
-                        .toString());
-            } else if (ctx.seconds().floatingPointConstant() != null) {
-                seconds = Double.valueOf(ctx.seconds().floatingPointConstant().FloatingPointNumber().getText());
-            }
-        }
-
-        return (hours + minutes + seconds);
-    }
+// obsolete 2020-02-26 (rm)    
+//    private double getDuration(SmallPearlParser.DurationConstantContext ctx) {
+//        Integer hours = 0;
+//        Integer minutes = 0;
+//        Double seconds = 0.0;
+//
+//        if (ctx.hours() != null) {
+//            hours = Integer.valueOf(ctx.hours().IntegerConstant().toString()) * 3600;
+//        }
+//        if (ctx.minutes() != null) {
+//            minutes = Integer.valueOf(ctx.minutes().IntegerConstant()
+//                    .toString()) * 60;
+//        }
+//        if (ctx.seconds() != null) {
+//            if (ctx.seconds().IntegerConstant() != null) {
+//                seconds = Double.valueOf(ctx.seconds().IntegerConstant()
+//                        .toString());
+//            } else if (ctx.seconds().floatingPointConstant() != null) {
+//                seconds = Double.valueOf(ctx.seconds().floatingPointConstant().FloatingPointNumber().getText());
+//            }
+//        }
+//
+//        return (hours + minutes + seconds);
+//    }
 
     /*
      * Time/Clock example: 11:30:00 means 11.30 15:45:3.5 means 15.45 and 3.5
@@ -1102,7 +1103,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitTypeDuration(SmallPearlParser.TypeDurationContext ctx) {
         ST st = m_group.getInstanceOf("TypeDuration");
-        Integer size = 31;
 
         if (ctx != null) {
             st.add("code", 1);
@@ -3950,223 +3950,70 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitGetStatement(SmallPearlParser.GetStatementContext ctx) {
-        ST stmt = m_group.getInstanceOf("get_statement");
-        boolean formatFound;
+      ST stmt = m_group.getInstanceOf("iojob_io_statement");
+      stmt.add("command", "get");
+      
+        stmt.add("dation", getUserVariable(ctx.dationName().ID().toString()));
 
-        ErrorStack.enter(ctx, "GET");
-
-        String dationName = ctx.dationName().ID().getText();
-
-        stmt.add("dation", getUserVariable(dationName));
-
-        int nextFormatPositionIndex = 0;
-
-        // possible situations
-        //  empty ID-list; only position in formats is ok --> all positioning must be done
-        //  non empte ID-list; position/format list must be exhausted after last format element
-        //   --> semantic check
-        for (int i = 0; i < ctx.ID().size(); i++) {
-            formatFound = false;
-            while (!formatFound) {
-                if (nextFormatPositionIndex == ctx.formatPosition().size()) {
-                    ErrorStack.add("format list exhausted");
-                    break;
-                }
-                if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatContext) {
-                    ST e = getFactorFormatForGet(
-                            (SmallPearlParser.FactorFormatContext) ctx.formatPosition(nextFormatPositionIndex),
-                            dationName, ctx.ID(i).getText());
-                    e.add("direction", "from");
-                    stmt.add("elements", e);
-                    formatFound = true;
-                } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorPositionContext) {
-                    // TODO: visitExpression???
-                    ST e = getFactorPositionForIO(
-                            (SmallPearlParser.FactorPositionContext) ctx.formatPosition(nextFormatPositionIndex),
-                            ctx.dationName().ID().getText(), "from");
-                    stmt.add("elements", e);
-                } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatPositionContext) {
-
-                    ErrorStack.enter(ctx.formatPosition(nextFormatPositionIndex), "factor");
-                    ErrorStack.add("not supported");
-                    ErrorStack.leave();
-
-                } else {
-                    System.out.println("*** error?: alternative not treated");
-                    return null;
-                }
-
-                nextFormatPositionIndex += 1;
-            }
-        }
-
-
-        // the language report states that the format/position list must be exhausted after
-        // treatment of the last data element
-        // thus a tailing SKIP is not allowed!  this must be placedd into another get statement
-        // a hint for this rule is in the book of Frevert, p. 97 
-        //   the data transfer was assumed to be after completion of the GET statement
-        //   OpenPEARL transfers immediatelly after a successful READ/GET/TAKE
-        //   subsequent errors lead to a SIGNAL or RST-value setting
-        // --> this error check was temporarily removed until this feature is 
-        //    solved by etehr TFU (no trailing SKIP needed) or other means (2019-11-10)
-        // added due to comment above -> trailing position statements allowed for the moment
-        // apply remaining positioning untikl the format lists end or an FactorFormat appears
-        for (int k = nextFormatPositionIndex; k < ctx.formatPosition().size(); k++) {
-            if (ctx.formatPosition(k) instanceof SmallPearlParser.FactorPositionContext) {
-                ST e = getFactorPositionForIO(
-                        (SmallPearlParser.FactorPositionContext) ctx.formatPosition(k),
-                        ctx.dationName().ID().getText(), "from");
-                stmt.add("elements", e);
-            }
-        }
-
-        if (ctx.ID().size() > 0) {
-            if (nextFormatPositionIndex < ctx.formatPosition().size()) {
-                //       ErrorStack.add("trailing elements in format/position list");
-            }
-        } else {
-            while (nextFormatPositionIndex < ctx.formatPosition().size()) {
-                if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatContext) {
-                    ErrorStack.add("format element without data");
-                    break;
-                } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorPositionContext) {
-                    // TODO: visitExpression???
-                    ST e = getFactorPositionForIO(
-                            (SmallPearlParser.FactorPositionContext) ctx.formatPosition(nextFormatPositionIndex),
-                            ctx.dationName().ID().getText(), "from");
-                    stmt.add("elements", e);
-                } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatPositionContext) {
-
-                    ErrorStack.enter(ctx.formatPosition(nextFormatPositionIndex), "factor");
-                    ErrorStack.add("not supported");
-                    ErrorStack.leave();
-
-                } else {
-                    System.out.println("*** error?: alternative not treated");
-                    return null;
-                }
-
-                nextFormatPositionIndex += 1;
-            }
-
-        }
-
-        ErrorStack.leave();
+        addDataAndFormatListToST(stmt, ctx.listOfFormatPositions(), ctx.ioDataList());
 
         return stmt;
+
     }
 
     @Override
     public ST visitPutStatement(SmallPearlParser.PutStatementContext ctx) {
         //ST stmt = m_group.getInstanceOf("put_statement");
-        ST stmt = m_group.getInstanceOf("iojob_put_statement");
+        ST stmt = m_group.getInstanceOf("iojob_io_statement");
+        stmt.add("command", "put");
+        
         stmt.add("dation", getUserVariable(ctx.dationName().ID().toString()));
 
-        int nextFormatPositionIndex = 0;
-
-    	// this flag is set to true if at least one non static format parameter is detected
-    	m_isNonStatic=false;  
-    	
-        // this should never occur, since this is checked in the semantic analysis
-        // in CheckIOStatements
-        ST formatList = m_group.getInstanceOf("iojob_formatlist");
-        if (ctx.listOfFormatPositions() == null) {
-          ST fmt = m_group.getInstanceOf("iojob_list_format");
-          formatList.add("formats", fmt);
-        } else {
-        
-            for (int i = 0; i<ctx.listOfFormatPositions().formatPosition().size(); i++) {
-            	addFormatPositionToFormatList(formatList,  ctx.listOfFormatPositions().formatPosition(i));
-    		} 
-        }
-      
-        stmt.add("formatlist",formatList);
-        if (!m_isNonStatic) {
-           stmt.add("format_list_is_static","1");
-        }
-        
-        // create list of datas
-        ST dataList = getIojobDataList(ctx.ioDataList());
-
-        stmt.add("datalist",dataList);
-
-//		/*
-//		2019-10-18: rm: I see no reason for this check
-//		there may be more format/positions than data elements - subsequent positions
-//		   are sent to the dation
-//		there may be less format/positions than data elements - the format/position list is
-//		   repeated until all data elements are treated
-//
-//		if (formatCount > ctx.expression().size()) {
-//			throw new NoOfFormatSpecifiersDoesNotMatchException(
-//					"put_statement", ctx.start.getLine(),
-//					ctx.start.getCharPositionInLine());
-//		}
-//		 */
-//        /* this block deals with the repetition of the format list, if more
-//         * expressions are given than formats
-//         * this becomes obsolete with the IOJob-api which becomes necessary to arrays in
-//         * put/get
-//         */
-//        for (int i = 0; i < ctx.expression().size(); i++) {
-//
-//            boolean foundFormat;
-//
-//            foundFormat = false;
-//
-//
-//            // send all positioning elements until a format element is reached
-//            while (!foundFormat) {
-//                if (nextFormatPositionIndex == ctx.formatPosition().size()) {
-//                    nextFormatPositionIndex = 0;
-//                }
-//
-//                if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatContext) {
-//                    ST e = getFactorFormatForPut(
-//                            (SmallPearlParser.FactorFormatContext) ctx
-//                                    .formatPosition(nextFormatPositionIndex),
-//                            ctx.dationName().ID().getText(), ctx.expression(i));
-//                    e.add("direction", "to");
-//                    stmt.add("elements", e);
-//                    foundFormat = true;
-//                } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorPositionContext) {
-//                    // TODO: visitExpression???
-//                    ST e = getFactorPositionForIO(
-//                            (SmallPearlParser.FactorPositionContext) ctx
-//                                    .formatPosition(nextFormatPositionIndex),
-//                            ctx.dationName().ID().getText(), "to");
-//                    stmt.add("elements", e);
-//                } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatPositionContext) {
-//                    ErrorStack.enter(ctx.formatPosition(nextFormatPositionIndex), "factor");
-//                    ErrorStack.add("not supported");
-//                    ErrorStack.leave();
-//                    //System.out.println("*** error?: FormatFactorPositionContext not treated");
-//                } else {
-//                    System.out.println("*** error?: alternative not treated");
-//                }
-//
-//                nextFormatPositionIndex += 1;
-//            }
-//
-//        }
-//
-//        // apply remaining positioning untikl the format lists end or an FactorFormat appears
-//        for (int k = nextFormatPositionIndex; k < ctx.formatPosition().size(); k++) {
-//            if (ctx.formatPosition(k) instanceof SmallPearlParser.FactorPositionContext) {
-//                ST e = getFactorPositionForIO(
-//                        (SmallPearlParser.FactorPositionContext) ctx.formatPosition(k),
-//                        ctx.dationName().ID().getText(), "to");
-//                stmt.add("elements", e);
-//            }
-//        }
-//
+        addDataAndFormatListToST(stmt, ctx.listOfFormatPositions(), ctx.ioDataList());
         return stmt;
     }
 
+    private void addDataAndFormatListToST(ST stmt, ListOfFormatPositionsContext fmtCtx, IoDataListContext dataCtx) {
+      // this flag is set to true if at least one non static format parameter is detected
+      m_isNonStatic=false;  
+    
+      boolean hasFormats = false;
+      
+      // this should never occur, since this is checked in the semantic analysis
+      // in CheckIOStatements
+      ST formatList = m_group.getInstanceOf("iojob_formatlist");
+      
+      // for PUT and GET set format LIST, if the format list is empty
+      String command = stmt.getAttribute("command").toString();
+      if (fmtCtx == null && (command.equals("put") || command.equals("get"))) {
+        ST fmt = m_group.getInstanceOf("iojob_list_format");
+        formatList.add("formats", fmt);
+        hasFormats = true;
+      } else {
+        if (fmtCtx != null) {
+          for (int i = 0; i<fmtCtx.formatPosition().size(); i++) {
+              addFormatPositionToFormatList(formatList,  fmtCtx.formatPosition(i));
+              hasFormats = true;
+          } 
+        }
+      }
+
+      if (hasFormats) {
+         stmt.add("formatlist",formatList);
+         if (!m_isNonStatic) {
+            stmt.add("format_list_is_static","1");
+         }
+      }
+      
+      // create list of datas
+      ST dataList = getIojobDataList(dataCtx);
+
+      stmt.add("datalist",dataList);
+
+    }
+    
     private ST getIojobDataList(IoDataListContext ctx) {
     	
-//    	PutStatementContext ctx = (PutStatementContext)c;
       if (ctx != null) {
         ST dataList = m_group.getInstanceOf("iojob_datalist");
         for (int i=0; i<ctx.ioListElement().size(); i++) {
@@ -4302,278 +4149,282 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 	}
 	
 	private int addFormatPositionToFormatList(ST formatList,
-			FormatPositionContext ctx) {
-    	int nbrOfFormats = 0;
-    
+	    FormatPositionContext ctx) {
+	  int nbrOfFormats = 0;
 
+	  // we have to deal with
+	  //   FactorFormatContext   like 3F(6)
+	  //   FactorPositionContext like 3X(4)
+	  //   FactorFormatPositionContext  like (3)(A,F(6),SKIP)
+	  //   factor is always aptional!
+	  if (ctx instanceof SmallPearlParser.FactorFormatContext) {
+	    FactorFormatContext c = (FactorFormatContext)(ctx);
+	    if (c.factor() != null) {
+	      addFactorToFormatList(formatList, c.factor());
+	      nbrOfFormats ++;
+	    }
 
+	    // add format
+	    if (c.format() instanceof SmallPearlParser.FormatContext) {
+	      FormatContext c1 = (FormatContext)(c.format());
+	      if (c1.fixedFormat() != null) {
+	        FixedFormatContext ffc = c1.fixedFormat();
+	        ST fmt = m_group.getInstanceOf("iojob_fixed_format");
+	        updateIsNonStatic(ffc.fieldWidth().expression());
+	        fmt.add("fieldwidth",  getExpression(ffc.fieldWidth().expression()));
+	        if (c1.fixedFormat().decimalPositions() != null) {
+	          updateIsNonStatic(ffc.decimalPositions().expression());
+	          fmt.add("decimalPositions",  getExpression(ffc.decimalPositions().expression()));
+	        }
+	        formatList.add("formats", fmt);
+	        nbrOfFormats ++;
+	      } else if (c1.floatFormat() != null) {
+	        ST fmt = m_group.getInstanceOf("iojob_e_format");
+	        if (c1.floatFormat() instanceof FloatFormatEContext) {
+	          FloatFormatEContext c2 = (FloatFormatEContext)c1.floatFormat();
+	          updateIsNonStatic(c2.fieldWidth().expression());
+	          fmt.add("fieldwidth", getExpression(c2.fieldWidth().expression()));
+	          fmt.add("exp23",2);
+	          if (c2.decimalPositions()!= null) {
+	            updateIsNonStatic(c2.decimalPositions().expression());
+	            fmt.add("decimalPositions", getExpression(c2.decimalPositions().expression()));
+	          }
+	          if (c2.significance()!= null) {
+	            updateIsNonStatic(c2.significance().expression());
+	            fmt.add("significance", getExpression(c2.significance().expression()));
+	          }				
+	        } else 	if (c1.floatFormat() instanceof FloatFormatE3Context) {
+	          FloatFormatE3Context c2 = (FloatFormatE3Context)c1.floatFormat();
+	          updateIsNonStatic(c2.fieldWidth().expression());
+	          fmt.add("fieldwidth", getExpression(c2.fieldWidth().expression()));
+	          fmt.add("exp23",3);
+	          if (c2.decimalPositions()!= null) {
+	            updateIsNonStatic(c2.decimalPositions().expression());
+	            fmt.add("decimalPositions", getExpression(c2.decimalPositions().expression()));
+	          }
+	          if (c2.significance()!= null) {
+	            updateIsNonStatic(c2.significance().expression());
+	            fmt.add("significance", getExpression(c2.significance().expression()));
+	          }				
+	        }
+	        formatList.add("formats", fmt);
+	        nbrOfFormats ++;
+	      } else if (c1.characterStringFormat()!= null) {
+	        if (c1.characterStringFormat() instanceof CharacterStringFormatAContext) {
+	          CharacterStringFormatAContext c2 = (CharacterStringFormatAContext)c1.characterStringFormat();
+	          ST fmt = m_group.getInstanceOf("iojob_character_string_format");
+	          if (c2.fieldWidth()!= null) {
+	            updateIsNonStatic(c2.fieldWidth().expression());
+	            fmt.add("fieldwidth",getExpression(c2.fieldWidth().expression()));
+	          }					
+	          formatList.add("formats", fmt);
+	          nbrOfFormats ++;
+	        }	
+	      } else if (c1.bitFormat() != null) {
+	        ST fmt = m_group.getInstanceOf("iojob_bit_format");
+	        if (c1.bitFormat() instanceof BitFormat1Context) {
+	          BitFormat1Context c2 = (BitFormat1Context)(c1.bitFormat());
+	          fmt.add("base",1);
+	          if (c2.numberOfCharacters()!= null) {
+	            updateIsNonStatic(c2.numberOfCharacters().expression());
+	            fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
+	          }
+	        } else if (c1.bitFormat() instanceof BitFormat2Context) { 
+	          BitFormat2Context c2 = (BitFormat2Context)(c1.bitFormat());
+	          fmt.add("base",2);
+	          if (c2.numberOfCharacters()!= null) {
+	            updateIsNonStatic(c2.numberOfCharacters().expression());
+	            fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
+	          }
+	        } else if (c1.bitFormat() instanceof BitFormat3Context) {
+	          BitFormat3Context c2 = (BitFormat3Context)(c1.bitFormat());
+	          fmt.add("base",3);
+	          if (c2.numberOfCharacters()!= null) {
+	            updateIsNonStatic(c2.numberOfCharacters().expression());
+	            fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
+	          }
+	        } else if (c1.bitFormat() instanceof BitFormat4Context) { 
+	          BitFormat4Context c2 = (BitFormat4Context)(c1.bitFormat());
+	          fmt.add("base",4);
+	          if (c2.numberOfCharacters()!= null) {
+	            updateIsNonStatic(c2.numberOfCharacters().expression());
+	            fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
+	          }
+	        }
+	        formatList.add("formats", fmt);
+	        nbrOfFormats ++;					
+	      } else if (c1.timeFormat() != null) {
+	        TimeFormatContext ffc = c1.timeFormat();
+	        ST fmt = m_group.getInstanceOf("iojob_time_format");
+	        updateIsNonStatic(ffc.fieldWidth().expression());
+	        fmt.add("fieldwidth",  getExpression(ffc.fieldWidth().expression()));
+	        if (ffc.decimalPositions() != null) {
+	          updateIsNonStatic(ffc.decimalPositions().expression());
+	          fmt.add("decimalPositions",  getExpression(ffc.decimalPositions().expression()));
+	        }
+	        formatList.add("formats", fmt);
+	        nbrOfFormats ++;					
+	      } else if (c1.durationFormat() != null) {
+	        DurationFormatContext ffc = c1.durationFormat();
+	        ST fmt = m_group.getInstanceOf("iojob_duration_format");
+	        fmt.add("fieldwidth",  getExpression(ffc.fieldWidth().expression()));
+	        updateIsNonStatic(ffc.fieldWidth().expression());
+	        if (ffc.decimalPositions() != null) {
+	          updateIsNonStatic(ffc.decimalPositions().expression());
+	          fmt.add("decimalPositions",  getExpression(ffc.decimalPositions().expression()));
+	        }
+	        formatList.add("formats", fmt);
+	        nbrOfFormats ++;					
+	      } else if (c1.listFormat() != null) {
+	        ST fmt = m_group.getInstanceOf("iojob_list_format");
+	        formatList.add("formats", fmt);
+	        nbrOfFormats ++;	
+	      } else {
+	        System.out.println("untreated format "+c.format().getText());
+	      }
 
-    	// we have to deal with
-    	//   FactorFormatContext   like 3F(6)
-    	//   FactorPositionContext like 3X(4)
-    	//   FactorFormatPositionContext  like (3)(A,F(6),SKIP)
-    	//   factor is always aptional!
-    	if (ctx instanceof SmallPearlParser.FactorFormatContext) {
-			FactorFormatContext c = (FactorFormatContext)(ctx);
-			if (c.factor() != null) {
-				addFactorToFormatList(formatList, c.factor());
-				nbrOfFormats ++;
-			}
-			
-			// add format
-			if (c.format() instanceof SmallPearlParser.FormatContext) {
-				FormatContext c1 = (FormatContext)(c.format());
-				if (c1.fixedFormat() != null) {
-					FixedFormatContext ffc = c1.fixedFormat();
-					ST fmt = m_group.getInstanceOf("iojob_fixed_format");
-					updateIsNonStatic(ffc.fieldWidth().expression());
-					fmt.add("fieldwidth",  getExpression(ffc.fieldWidth().expression()));
-					if (c1.fixedFormat().decimalPositions() != null) {
-						updateIsNonStatic(ffc.decimalPositions().expression());
-					   fmt.add("decimalPositions",  getExpression(ffc.decimalPositions().expression()));
-					}
-					formatList.add("formats", fmt);
-					nbrOfFormats ++;
-				} else if (c1.floatFormat() != null) {
-					ST fmt = m_group.getInstanceOf("iojob_e_format");
-					if (c1.floatFormat() instanceof FloatFormatEContext) {
-						FloatFormatEContext c2 = (FloatFormatEContext)c1.floatFormat();
-						updateIsNonStatic(c2.fieldWidth().expression());
-						fmt.add("fieldwidth", getExpression(c2.fieldWidth().expression()));
-						fmt.add("exp23",2);
-						if (c2.decimalPositions()!= null) {
-							updateIsNonStatic(c2.decimalPositions().expression());
-							fmt.add("decimalPositions", getExpression(c2.decimalPositions().expression()));
-						}
-						if (c2.significance()!= null) {
-							updateIsNonStatic(c2.significance().expression());
-							fmt.add("significance", getExpression(c2.significance().expression()));
-						}				
-					} else 	if (c1.floatFormat() instanceof FloatFormatE3Context) {
-						FloatFormatE3Context c2 = (FloatFormatE3Context)c1.floatFormat();
-						updateIsNonStatic(c2.fieldWidth().expression());
-						fmt.add("fieldwidth", getExpression(c2.fieldWidth().expression()));
-						fmt.add("exp23",3);
-						if (c2.decimalPositions()!= null) {
-							updateIsNonStatic(c2.decimalPositions().expression());
-							fmt.add("decimalPositions", getExpression(c2.decimalPositions().expression()));
-						}
-						if (c2.significance()!= null) {
-							updateIsNonStatic(c2.significance().expression());
-							fmt.add("significance", getExpression(c2.significance().expression()));
-						}				
-					}
-					formatList.add("formats", fmt);
-					nbrOfFormats ++;
-				} else if (c1.characterStringFormat()!= null) {
-					if (c1.characterStringFormat() instanceof CharacterStringFormatAContext) {
-						CharacterStringFormatAContext c2 = (CharacterStringFormatAContext)c1.characterStringFormat();
-						ST fmt = m_group.getInstanceOf("iojob_character_string_format");
-						if (c2.fieldWidth()!= null) {
-							updateIsNonStatic(c2.fieldWidth().expression());
-							fmt.add("fieldwidth",getExpression(c2.fieldWidth().expression()));
-						}					
-						formatList.add("formats", fmt);
-						nbrOfFormats ++;
-					}	
-				} else if (c1.bitFormat() != null) {
-					ST fmt = m_group.getInstanceOf("iojob_bit_format");
-					if (c1.bitFormat() instanceof BitFormat1Context) {
-						BitFormat1Context c2 = (BitFormat1Context)(c1.bitFormat());
-						fmt.add("base",1);
-						if (c2.numberOfCharacters()!= null) {
-							updateIsNonStatic(c2.numberOfCharacters().expression());
-						   fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
-						}
-					} else if (c1.bitFormat() instanceof BitFormat2Context) { 
-						BitFormat2Context c2 = (BitFormat2Context)(c1.bitFormat());
-						fmt.add("base",2);
-						if (c2.numberOfCharacters()!= null) {
-							updateIsNonStatic(c2.numberOfCharacters().expression());
-						  fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
-						}
-					} else if (c1.bitFormat() instanceof BitFormat3Context) {
-						BitFormat3Context c2 = (BitFormat3Context)(c1.bitFormat());
-						fmt.add("base",3);
-						if (c2.numberOfCharacters()!= null) {
-							updateIsNonStatic(c2.numberOfCharacters().expression());
-						  fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
-						}
-					} else if (c1.bitFormat() instanceof BitFormat4Context) { 
-						BitFormat4Context c2 = (BitFormat4Context)(c1.bitFormat());
-						fmt.add("base",4);
-						if (c2.numberOfCharacters()!= null) {
-							updateIsNonStatic(c2.numberOfCharacters().expression());
-						  fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
-						}
-					}
-					formatList.add("formats", fmt);
-					nbrOfFormats ++;					
-				} else if (c1.timeFormat() != null) {
-					TimeFormatContext ffc = c1.timeFormat();
-					ST fmt = m_group.getInstanceOf("iojob_time_format");
-					updateIsNonStatic(ffc.fieldWidth().expression());
-					fmt.add("fieldwidth",  getExpression(ffc.fieldWidth().expression()));
-					if (ffc.decimalPositions() != null) {
-						updateIsNonStatic(ffc.decimalPositions().expression());
-					   fmt.add("decimalPositions",  getExpression(ffc.decimalPositions().expression()));
-					}
-					formatList.add("formats", fmt);
-					nbrOfFormats ++;					
-				} else if (c1.durationFormat() != null) {
-					DurationFormatContext ffc = c1.durationFormat();
-					ST fmt = m_group.getInstanceOf("iojob_duration_format");
-					fmt.add("fieldwidth",  getExpression(ffc.fieldWidth().expression()));
-					updateIsNonStatic(ffc.fieldWidth().expression());
-					if (ffc.decimalPositions() != null) {
-						updateIsNonStatic(ffc.decimalPositions().expression());
-					   fmt.add("decimalPositions",  getExpression(ffc.decimalPositions().expression()));
-					}
-					formatList.add("formats", fmt);
-					nbrOfFormats ++;					
-				} else if (c1.listFormat() != null) {
-					ST fmt = m_group.getInstanceOf("iojob_list_format");
-					formatList.add("formats", fmt);
-					nbrOfFormats ++;	
-				} else {
-					System.out.println("untreated format "+c.format().getText());
-				}
-				
-			}
-		}
-    	if (ctx instanceof SmallPearlParser.FactorPositionContext) {
-			FactorPositionContext c = (FactorPositionContext)(ctx);
-			if (c.factor() != null) {
-				updateIsNonStatic(c.factor());
-				addFactorToFormatList(formatList, c.factor());
-				nbrOfFormats ++;
-			}
-			// treat position
-			if (c.position().positionRST()!= null) {
-				ST fmt = m_group.getInstanceOf("iojob_rst");
-	            fmt.add("element", getUserVariable(c.position().positionRST().ID().getText()));
-	            SymbolTableEntry se = m_currentSymbolTable.lookup(c.position().positionRST().ID().getText());
-	            if (se instanceof VariableEntry) {
-	            	TypeFixed tf = (TypeFixed)(((VariableEntry)se).getType());
-	            	fmt.add("size",  tf.getPrecision());
-	            }
-	            
-				formatList.add("formats",fmt);
-				setIsNonStatic();
-				nbrOfFormats ++;
-			} else if (c.position().relativePosition().positionSKIP()!= null){
-				ExpressionContext e = c.position().relativePosition().positionSKIP().expression();
-				ST fmt = m_group.getInstanceOf("iojob_position_skip");
-				if (e != null) {
-					updateIsNonStatic(e);
-					fmt.add("element",getExpression(e));
-				}
-				formatList.add("formats",fmt);
-				nbrOfFormats ++;
-			} else if (c.position().relativePosition().positionX()!= null) {
-				ExpressionContext e = c.position().relativePosition().positionX().expression();
-				ST fmt = m_group.getInstanceOf("iojob_position_x");
-				if (e != null) {
-					updateIsNonStatic(e);
-					fmt.add("element",getExpression(e));
-				}
-				formatList.add("formats",fmt);
-				nbrOfFormats ++;				
-			} else if (c.position().relativePosition().positionPAGE()!= null) {
-				ExpressionContext e = c.position().relativePosition().positionPAGE().expression();
-				ST fmt = m_group.getInstanceOf("iojob_position_page");
-				if (e != null) {
-					updateIsNonStatic(e);
-					fmt.add("element",getExpression(e));
-				}
-				formatList.add("formats",fmt);
-				nbrOfFormats ++;				
-			} else if (c.position().relativePosition().positionADV()!= null) {
-				ST fmt = m_group.getInstanceOf("iojob_position_adv");
-			    for (int i=0; i<c.position().relativePosition().positionADV().expression().size(); i++ ) {
-				   ExpressionContext e = c.position().relativePosition().positionADV().expression(i);
-				   updateIsNonStatic(e);
-				   fmt.add("expression"+(i+1),getExpression(e));
-				}
-			    fmt.add("dimensions",c.position().relativePosition().positionADV().expression().size());
-				formatList.add("formats",fmt);
-				nbrOfFormats ++;
-			} else if (c.position().relativePosition().positionEOF()!= null) {
-				ST fmt = m_group.getInstanceOf("iojob_position_eof");
-				formatList.add("formats",fmt);
-				nbrOfFormats ++;	
-			} else if (c.position().absolutePosition().positionCOL()!= null) {
-				ExpressionContext e = c.position().absolutePosition().positionCOL().expression();
-				ST fmt = m_group.getInstanceOf("iojob_position_col");
-				updateIsNonStatic(e);
-				fmt.add("element",getExpression(e));
-				formatList.add("formats",fmt);
-				nbrOfFormats ++;				
-			} else if (c.position().absolutePosition().positionLINE()!= null) {
-				ExpressionContext e = c.position().absolutePosition().positionLINE().expression();
-				ST fmt = m_group.getInstanceOf("iojob_position_line");
-				updateIsNonStatic(e);
-				fmt.add("element",getExpression(e));
-				formatList.add("formats",fmt);
-				nbrOfFormats ++;				
-			} else if (c.position().absolutePosition().positionPOS() != null) {
-				ST fmt = m_group.getInstanceOf("iojob_position_pos");
-				for (int i=0; i<c.position().absolutePosition().positionPOS().expression().size(); i++ ) {
-				   ExpressionContext e = c.position().absolutePosition().positionPOS().expression(i);
-				   updateIsNonStatic(e);
-				   fmt.add("expression"+(i+1),getExpression(e));
-				}
-			    fmt.add("dimensions",c.position().absolutePosition().positionPOS().expression().size());
-				formatList.add("formats",fmt);
-				nbrOfFormats ++;
-			} else if (c.position().absolutePosition().positionSOP() != null) {
-				ST fmt = m_group.getInstanceOf("iojob_position_sop");
-				for (int i=0; i<c.position().absolutePosition().positionSOP().ID().size(); i++ ) {
-				   fmt.add("element"+(i+1), getUserVariable(c.position().absolutePosition().positionSOP().ID(i).getText()));
-		            SymbolTableEntry se = m_currentSymbolTable.lookup(c.position().absolutePosition().positionSOP().ID(i).getText());
-		            if (se instanceof VariableEntry) {
-		            	TypeFixed tf = (TypeFixed)(((VariableEntry)se).getType());
-		            	fmt.add("size"+(i+1),  tf.getPrecision());
-		            }				   
-				   setIsNonStatic();
-				}
-				fmt.add("dimensions", c.position().absolutePosition().positionSOP().ID().size());
-				formatList.add("formats",fmt);
-				nbrOfFormats ++;	
-			} else {
-				System.out.println("untreated positioning: "+c.position().getText());
-			}
-		}
-		
-		if (ctx instanceof SmallPearlParser.FactorFormatPositionContext) {
-			// System.out.println("(x)( , , , )  treatment");
-			FactorFormatPositionContext c = (FactorFormatPositionContext)(ctx);
-			//System.out.println("FactorFormatPosition"+c.getText());
-			ST loop = m_group.getInstanceOf("iojob_format_loopstart");
-			
-			if (c.factor()!= null) {
-			  if (c.factor().expression() != null) {
-				updateIsNonStatic(c.factor().expression());
-			    loop.add("repetitions", getExpression(c.factor().expression()));
-			    formatList.add("formats",loop);
-			    nbrOfFormats ++;
-			  } else if (c.factor().integerWithoutPrecision() != null) {
-			    String s = c.factor().integerWithoutPrecision().IntegerConstant().getText();
-	            loop.add("repetitions",s);
-			  }  
-			} 
-			nbrOfFormats += addFormatPositionToFormatList(formatList, c.listOfFormatPositions());
-//			for (int i=0; i<c.formatPosition().size(); i++) {
-//				nbrOfFormats += addFormatPositionToFormatList(formatList,c.formatPosition(i));
-//			}
-			
-			// decrement the number of format element, since the start_loop element
-			// does not count, but all containing start_loop elements count 
-		    loop.add("elements", nbrOfFormats-1);
-		}
-		return nbrOfFormats;
-		
+	    }
+	  }
+	  if (ctx instanceof SmallPearlParser.FactorPositionContext) {
+	    FactorPositionContext c = (FactorPositionContext)(ctx);
+	    if (c.factor() != null) {
+	      updateIsNonStatic(c.factor());
+	      addFactorToFormatList(formatList, c.factor());
+	      nbrOfFormats ++;
+	    }
+	    // treat position
+	    if (c.position().positionRST()!= null) {
+	      ST fmt = m_group.getInstanceOf("iojob_rst");
+	      fmt.add("element", getUserVariable(c.position().positionRST().ID().getText()));
+	      SymbolTableEntry se = m_currentSymbolTable.lookup(c.position().positionRST().ID().getText());
+	      if (se instanceof VariableEntry) {
+	        TypeFixed tf = (TypeFixed)(((VariableEntry)se).getType());
+	        fmt.add("size",  tf.getPrecision());
+	      }
+
+	      formatList.add("formats",fmt);
+	      setIsNonStatic();
+	      nbrOfFormats ++;
+	    } else if (c.position().relativePosition() != null) {
+	      RelativePositionContext rp = c.position().relativePosition();
+
+	      if (rp.positionSKIP()!= null){
+	        ExpressionContext e = rp.positionSKIP().expression();
+	        ST fmt = m_group.getInstanceOf("iojob_position_skip");
+	        if (e != null) {
+	          updateIsNonStatic(e);
+	          fmt.add("element",getExpression(e));
+	        }
+	        formatList.add("formats",fmt);
+	        nbrOfFormats ++;
+	      } else if (rp.positionX()!= null) {
+	        ExpressionContext e = rp.positionX().expression();
+	        ST fmt = m_group.getInstanceOf("iojob_position_x");
+	        if (e != null) {
+	          updateIsNonStatic(e);
+	          fmt.add("element",getExpression(e));
+	        }
+	        formatList.add("formats",fmt);
+	        nbrOfFormats ++;				
+	      } else if (rp.positionPAGE()!= null) {
+	        ExpressionContext e = rp.positionPAGE().expression();
+	        ST fmt = m_group.getInstanceOf("iojob_position_page");
+	        if (e != null) {
+	          updateIsNonStatic(e);
+	          fmt.add("element",getExpression(e));
+	        }
+	        formatList.add("formats",fmt);
+	        nbrOfFormats ++;				
+	      } else if (rp.positionADV()!= null) {
+	        ST fmt = m_group.getInstanceOf("iojob_position_adv");
+	        for (int i=0; i<rp.positionADV().expression().size(); i++ ) {
+	          ExpressionContext e = rp.positionADV().expression(i);
+	          updateIsNonStatic(e);
+	          fmt.add("expression"+(i+1),getExpression(e));
+	        }
+	        fmt.add("dimensions",rp.positionADV().expression().size());
+	        formatList.add("formats",fmt);
+	        nbrOfFormats ++;
+	      } else if (rp.positionEOF()!= null) {
+	        ST fmt = m_group.getInstanceOf("iojob_position_eof");
+	        formatList.add("formats",fmt);
+	        nbrOfFormats ++;
+	      } else {
+	        System.out.println("untreated positioning: "+c.position().getText());
+	      }
+	    } else if (c.position().absolutePosition() != null) {
+	      AbsolutePositionContext ap = c.position().absolutePosition();
+	      if (ap.positionCOL()!= null) {
+	        ExpressionContext e = ap.positionCOL().expression();
+	        ST fmt = m_group.getInstanceOf("iojob_position_col");
+	        updateIsNonStatic(e);
+	        fmt.add("element",getExpression(e));
+	        formatList.add("formats",fmt);
+	        nbrOfFormats ++;				
+	      } else if (ap.positionLINE()!= null) {
+	        ExpressionContext e = ap.positionLINE().expression();
+	        ST fmt = m_group.getInstanceOf("iojob_position_line");
+	        updateIsNonStatic(e);
+	        fmt.add("element",getExpression(e));
+	        formatList.add("formats",fmt);
+	        nbrOfFormats ++;				
+	      } else if (ap.positionPOS() != null) {
+	        ST fmt = m_group.getInstanceOf("iojob_position_pos");
+	        for (int i=0; i<ap.positionPOS().expression().size(); i++ ) {
+	          ExpressionContext e = ap.positionPOS().expression(i);
+	          updateIsNonStatic(e);
+	          fmt.add("expression"+(i+1),getExpression(e));
+	        }
+	        fmt.add("dimensions",ap.positionPOS().expression().size());
+	        formatList.add("formats",fmt);
+	        nbrOfFormats ++;
+	      } else if (ap.positionSOP() != null) {
+	        ST fmt = m_group.getInstanceOf("iojob_position_sop");
+	        for (int i=0; i<ap.positionSOP().ID().size(); i++ ) {
+	          fmt.add("element"+(i+1), getUserVariable(ap.positionSOP().ID(i).getText()));
+	          SymbolTableEntry se = m_currentSymbolTable.lookup(ap.positionSOP().ID(i).getText());
+	          if (se instanceof VariableEntry) {
+	            TypeFixed tf = (TypeFixed)(((VariableEntry)se).getType());
+	            fmt.add("size"+(i+1),  tf.getPrecision());
+	          }				   
+	          setIsNonStatic();
+	        }
+	        fmt.add("dimensions", ap.positionSOP().ID().size());
+	        formatList.add("formats",fmt);
+	        nbrOfFormats ++;	
+	      } else {
+	        System.out.println("untreated positioning: "+c.position().getText());
+	      }
+	    }
+	  }
+
+	  if (ctx instanceof SmallPearlParser.FactorFormatPositionContext) {
+	    // System.out.println("(x)( , , , )  treatment");
+	    FactorFormatPositionContext c = (FactorFormatPositionContext)(ctx);
+	    //System.out.println("FactorFormatPosition"+c.getText());
+	    ST loop = m_group.getInstanceOf("iojob_format_loopstart");
+
+	    if (c.factor()!= null) {
+	      if (c.factor().expression() != null) {
+	        updateIsNonStatic(c.factor().expression());
+	        loop.add("repetitions", getExpression(c.factor().expression()));
+	        formatList.add("formats",loop);
+	        nbrOfFormats ++;
+	      } else if (c.factor().integerWithoutPrecision() != null) {
+	        String s = c.factor().integerWithoutPrecision().IntegerConstant().getText();
+	        loop.add("repetitions",s);
+	      }  
+	    } 
+	    nbrOfFormats += addFormatPositionToFormatList(formatList, c.listOfFormatPositions());
+
+	    // decrement the number of format element, since the start_loop element
+	    // does not count, but all containing start_loop elements count 
+	    loop.add("elements", nbrOfFormats-1);
+	  }
+	  return nbrOfFormats;
+
 	}
+	
     private int addFormatPositionToFormatList(ST formatList, ListOfFormatPositionsContext list) {
          int length=0;
          for (int i=0; i<list.formatPosition().size(); i++) {
@@ -5291,31 +5142,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitSendStatement(SmallPearlParser.SendStatementContext ctx) {
-        ST st = m_group.getInstanceOf("send_statement");
+        ST st = m_group.getInstanceOf("iojob_io_statement");
+        st.add("command", "send");
+        
         String dation = "";
-
         dation = ctx.dationName().ID().getText();
-
         st.add("dation", getUserVariable(dation));
 
-        if (ctx.take_send_rst() != null) {
-            ST el = m_group.getInstanceOf("take_send_rst");
-            SmallPearlParser.Take_send_rstContext c = ctx.take_send_rst();
-
-            el.add("id", getUserVariable(c.ID().getText()));
-            el.add("dation", getUserVariable(dation));
-            st.add("elements", el);
-        }
-
-
-        if (ctx.expression() != null) {
-            ST el = m_group.getInstanceOf("write_send_expression");
-            ASTAttribute attr = m_ast.lookup(ctx.expression());
-            addVariableOrConstantOrArrayToIoDataList(el, attr, ctx.expression());
-            //el.add("expression", getUserVariable((ctx.expression().getText())));
-            el.add("dation", getUserVariable(dation));
-            st.add("elements", el);
-        }
+        addDataAndFormatListToST(st, ctx.listOfFormatPositions(), ctx.ioDataList());
 
         return st;
     }
@@ -5330,98 +5164,31 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitTakeStatement(SmallPearlParser.TakeStatementContext ctx) {
-        ST st = m_group.getInstanceOf("take_statement");
+        ST st = m_group.getInstanceOf("iojob_io_statement");
+        st.add("command", "take");
+
         String dation = "";
-
         dation = ctx.dationName().ID().getText();
-
         st.add("dation", getUserVariable(dation));
 
-        if (ctx.take_send_rst() != null) {
-            ST el = m_group.getInstanceOf("take_send_rst");
-            SmallPearlParser.Take_send_rstContext c = ctx.take_send_rst();
-
-            el.add("dation", getUserVariable(dation));
-            st.add("elements", el);
-        }
-
-
-        if (ctx.ID() != null) {
-            ST el = m_group.getInstanceOf("read_take_expression");
-            addVariableOrIdOrArrayIdToSt(el, ctx.ID());
-            //el.add("id", getUserVariable(ctx.ID().getText()));
-            el.add("dation", getUserVariable(dation));
-            st.add("elements", el);
-        }
+        addDataAndFormatListToST(st, ctx.listOfFormatPositions(), ctx.ioDataList());
 
         return st;
     }
 
-    /**
-     * obsolete
-     *
-     * @Override public ST visitTake_send_rst_s_ctrl_format_RST(
-     * SmallPearlParser.Take_send_rst_s_ctrl_format_RSTContext ctx) {
-     * ST st = m_group.getInstanceOf("take_send_rst_position");
-     * st.add("id", getUserVariable(ctx.ID().getText()));
-     * return st;
-     * }
-     * @Override public ST visitTake_send_rst_s_ctrl_format_S(
-     * SmallPearlParser.Take_send_rst_s_ctrl_format_SContext ctx) {
-     * ST st = m_group.getInstanceOf("take_send_s_position");
-     * st.add("id", getUserVariable(ctx.ID().getText()));
-     * return st;
-     * }
-     * @Override public ST visitTake_send_rst_s_ctrl_format_CONTROL(
-     * SmallPearlParser.Take_send_rst_s_ctrl_format_CONTROLContext ctx) {
-     * ST st = m_group.getInstanceOf("take_send_control_position");
-     * <p>
-     * if (ctx.expression().size() == 3) {
-     * st.add("expression1", ctx.expression(0).getText());
-     * st.add("expression2", ctx.expression(1).getText());
-     * st.add("expression3", ctx.expression(2).getText());
-     * } else if (ctx.expression().size() == 2) {
-     * st.add("expression1", ctx.expression(0).getText());
-     * st.add("expression2", ctx.expression(1).getText());
-     * } else if (ctx.expression().size() == 1) {
-     * st.add("expression1", ctx.expression(0).getText());
-     * }
-     * <p>
-     * return st;
-     * }
-     */
 
 
     @Override
     public ST visitReadStatement(SmallPearlParser.ReadStatementContext ctx) {
-        ST st = m_group.getInstanceOf("read_statement");
-        String dation = "";
+      ST st = m_group.getInstanceOf("iojob_io_statement");
+      st.add("command", "read");
+      
+      String dation = "";
 
         dation = ctx.dationName().ID().getText();
 
         st.add("dation", getUserVariable(dation));
-
-        for (int i = 0; i < ctx.position().size(); i++) {
-            if (ctx.position(i) instanceof SmallPearlParser.PositionContext) {
-                // TODO: visitExpression???
-                ST e = m_group.getInstanceOf("io_factor_position");
-                e.add("dation", getUserVariable(dation));
-                treatPositionForIO(e,
-                        (SmallPearlParser.PositionContext) ctx.position(i),
-                        ctx.dationName().ID().getText(), "from");
-                st.add("elements", e);
-            }
-        }
-
-        for (int i = 0; i < ctx.ID().size(); i++) {
-            ST el = m_group.getInstanceOf("read_take_expression");
-
-            addVariableOrIdOrArrayIdToSt(el, ctx.ID(i));
-
-
-            el.add("dation", getUserVariable(dation));
-            st.add("elements", el);
-        }
+        addDataAndFormatListToST(st, ctx.listOfFormatPositions(), ctx.ioDataList());
 
         return st;
     }
@@ -5461,33 +5228,35 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitWriteStatement(SmallPearlParser.WriteStatementContext ctx) {
-        ST st = m_group.getInstanceOf("write_statement");
+      ST st = m_group.getInstanceOf("iojob_io_statement");
+      st.add("command", "write");
         String dation = "";
 
         dation = ctx.dationName().ID().getText();
 
         st.add("dation", getUserVariable(dation));
+        addDataAndFormatListToST(st, ctx.listOfFormatPositions(), ctx.ioDataList());
 
-        for (int i = 0; i < ctx.position().size(); i++) {
-            if (ctx.position(i) instanceof SmallPearlParser.PositionContext) {
-                // TODO: visitExpression???
-                ST e = m_group.getInstanceOf("io_factor_position");
-                e.add("dation", getUserVariable(dation));
-                treatPositionForIO(e,
-                        (SmallPearlParser.PositionContext) ctx.position(i),
-                        dation, "to");
-                st.add("elements", e);
-            }
-        }
-
-
-        for (int i = 0; i < ctx.expression().size(); i++) {
-            ST el = m_group.getInstanceOf("write_send_expression");
-            ASTAttribute attr = m_ast.lookup(ctx.expression(i));
-            addVariableOrConstantOrArrayToIoDataList(el, attr, ctx.expression(i));
-            el.add("dation", getUserVariable(dation));
-            st.add("elements", el);
-        }
+//        for (int i = 0; i < ctx.position().size(); i++) {
+//            if (ctx.position(i) instanceof SmallPearlParser.PositionContext) {
+//                // TODO: visitExpression???
+//                ST e = m_group.getInstanceOf("io_factor_position");
+//                e.add("dation", getUserVariable(dation));
+//                treatPositionForIO(e,
+//                        (SmallPearlParser.PositionContext) ctx.position(i),
+//                        dation, "to");
+//                st.add("elements", e);
+//            }
+//        }
+//
+//
+//        for (int i = 0; i < ctx.expression().size(); i++) {
+//            ST el = m_group.getInstanceOf("write_send_expression");
+//            ASTAttribute attr = m_ast.lookup(ctx.expression(i));
+//            addVariableOrConstantOrArrayToIoDataList(el, attr, ctx.expression(i));
+//            el.add("dation", getUserVariable(dation));
+//            st.add("elements", el);
+//        }
 
         return st;
     }
@@ -5514,132 +5283,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     }
 
-    /*
-  @Override
-  public ST visitReadWriteAbsolutePositionCOL(
-      SmallPearlParser.ReadWriteAbsolutePositionCOLContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_col_position");
-    st.add("expression", ctx.expression().getText());
-    return st;
-  }
-
-  @Override
-  public ST visitReadWriteAbsolutePositionLINE(
-      SmallPearlParser.ReadWriteAbsolutePositionLINEContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_line_position");
-    st.add("expression", ctx.expression().getText());
-    return st;
-  }
-
-  @Override
-  public ST visitReadWriteAbsolutePositionPOS(
-      SmallPearlParser.ReadWriteAbsolutePositionPOSContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_pos_position");
-
-    if (ctx.expression().size() == 3) {
-      st.add("expression1", getExpression(ctx.expression(0)));
-      st.add("expression2", getExpression(ctx.expression(1)));
-      st.add("expression3", getExpression(ctx.expression(2)));
-    } else if (ctx.expression().size() == 2) {
-      st.add("expression1", getExpression(ctx.expression(0)));
-      st.add("expression2", getExpression(ctx.expression(1)));
-    } else if (ctx.expression().size() == 1) {
-      st.add("expression1", getExpression(ctx.expression(0)));
-    }
-
-    return st;
-  }
-
-  @Override
-  public ST visitReadWriteAbsolutePositionSOP(
-      SmallPearlParser.ReadWriteAbsolutePositionSOPContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_sop_position");
-
-    if (ctx.ID().size() == 3) {
-      st.add("id1", getUserVariable(ctx.ID(0).getText()));
-      st.add("id2", getUserVariable(ctx.ID(1).getText()));
-      st.add("id3", getUserVariable(ctx.ID(2).getText()));
-    } else if (ctx.ID().size() == 2) {
-      st.add("id1", getUserVariable(ctx.ID(0).getText()));
-      st.add("id2", getUserVariable(ctx.ID(1).getText()));
-    } else if (ctx.ID().size() == 1) {
-      st.add("id1", getUserVariable(ctx.ID(0).getText()));
-    }
-
-    return st;
-  }
-
-
-  	@Override
- 	public ST visitReadRSTPosition(SmallPearlParser.ReadRSTPositionContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_rst_position");
-    st.add("id", getUserVariable(ctx.ID().getText()));
-    return st;
-  }
-
-  @Override
-  public ST visitWriteRSTPosition(SmallPearlParser.WriteRSTPositionContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_rst_position");
-    st.add("id", getUserVariable(ctx.ID().getText()));
-    return st;
-  }
-
-  @Override
-  public ST visitReadWriteRelativePositionX(
-      SmallPearlParser.ReadWriteRelativePositionXContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_x_position");
-    if (ctx.expression() != null) {
-      st.add("expression", ctx.expression().getText());
-    }
-    return st;
-  }
-
-  @Override
-  public ST visitReadWriteRelativePositionSKIP(
-      SmallPearlParser.ReadWriteRelativePositionSKIPContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_skip_position");
-    if (ctx.expression() != null) {
-      st.add("expression", ctx.expression().getText());
-    }
-    return st;
-  }
-
-  @Override
-  public ST visitReadWriteRelativePositionPAGE(
-      SmallPearlParser.ReadWriteRelativePositionPAGEContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_page_position");
-    if (ctx.expression() != null) {
-      st.add("expression", ctx.expression().getText());
-    }
-    return st;
-  }
-
-  @Override
-  public ST visitReadWriteRelativePositionADV(
-      SmallPearlParser.ReadWriteRelativePositionADVContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_adv_position");
-
-    if (ctx.expression().size() == 3) {
-      st.add("expression1", ctx.expression(0).getText());
-      st.add("expression2", ctx.expression(1).getText());
-      st.add("expression3", ctx.expression(2).getText());
-    } else if (ctx.expression().size() == 2) {
-      st.add("expression1", ctx.expression(0).getText());
-      st.add("expression2", ctx.expression(1).getText());
-    } else if (ctx.expression().size() == 1) {
-      st.add("expression1", ctx.expression(0).getText());
-    }
-
-    return st;
-  }
-
-  @Override
-  public ST visitReadWriteRelativePositionEOF(
-      SmallPearlParser.ReadWriteRelativePositionEOFContext ctx) {
-    ST st = m_group.getInstanceOf("read_write_eof_position");
-    return st;
-  }
-	 */
+  
     @Override
     public ST visitCallStatement(SmallPearlParser.CallStatementContext ctx) {
         ST stmt = m_group.getInstanceOf("CallStatement");
@@ -6937,57 +6581,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return declarations;
     }
 
-	/*
-
-	we go directly to the ConvertTo and ConvertFrom visitors
-
-  @Override
-  public ST visitConvertStatement(SmallPearlParser.ConvertStatementContext ctx) {
-    ST st = m_group.getInstanceOf("ConvertStatement");
-
-    if (m_verbose > 0) {
-      System.out.println("CppCodeGeneratorVisitor: visitConvertStatement");
-    }
-
-    if (ctx.convertToStatement() != null) {
-      st.add("convert", visitConvertToStatement(ctx.convertToStatement()));
-    } else if (ctx.convertFromStatement() != null) {
-      st.add("convert", visitConvertFromStatement(ctx.convertFromStatement()));
-    }
-
-    return st;
-  }
-	 */
-	/*
-  @Override
-  public ST visitFormatOrPositionConvert(SmallPearlParser.FormatOrPositionConvertContext ctx) {
-    System.out.println("CppCodeGeneratorVisitor: visitFormatOrPositionConvert");
-    visitChildren(ctx);
-    return null;
-  }
-
-  @Override
-  public ST visitFormatFactorConvert(SmallPearlParser.FormatFactorConvertContext ctx) {
-    System.out.println("CppCodeGeneratorVisitor: visitFormatFactorConvert");
-    visitChildren(ctx);
-    return null;
-  }
-
-  @Override
-  public ST visitFormatConvert(SmallPearlParser.FormatConvertContext ctx) {
-    System.out.println("CppCodeGeneratorVisitor: visitFormatConvert");
-    visitChildren(ctx);
-    return null;
-  }
-	 */
-    // @Override
-    // public ST visitPositionConvert(SmallPearlParser.PositionConvertContext
-    // ctx) {
-    // System.out.println("CppCodeGeneratorVisitor: visitPositionConvert");
-    // visitChildren(ctx);
-    // return null;
-    //
-    // }
 
     /**
      * create code for CONVERT .. TO
@@ -6997,170 +6590,88 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
      */
     @Override
     public ST visitConvertToStatement(
-            SmallPearlParser.ConvertToStatementContext ctx) {
-        //ST st = m_group.getInstanceOf("ConvertToStatement");
-        String convertToString = "";
+        SmallPearlParser.ConvertToStatementContext ctx) {
+      //ST st = m_group.getInstanceOf("ConvertToStatement");
+      String convertToString = "";
 
-        if (m_verbose > 0) {
-            System.out
-                    .println("CppCodeGeneratorVisitor: visitConvertToStatement");
-        }
+      if (m_verbose > 0) {
+        System.out
+        .println("CppCodeGeneratorVisitor: visitConvertToStatement");
+      }
 
-        ST stmt = m_group.getInstanceOf("ConvertToStatement");
-        stmt.add("id", getUserVariable(ctx.idCharacterString().ID().getText()));
+      ST stmt = m_group.getInstanceOf("iojob_convertTo_statement");
+      stmt.add("char_string", getUserVariable(ctx.name().getText()));
 
-        int nextFormatPositionIndex = 0;
 
-        // this should never occur, since this is checked in the semantic analysis
-        // in CheckIOStatements
-        if (ctx.formatPosition() == null) {
-            throw new InternalCompilerErrorException("PUT need format list");
-        }
+      // this flag is set to true if at least one non static format parameter is detected
+      m_isNonStatic=false;  
 
-		/*
-		2019-10-18: rm: I see no reason for this check
-		there may be more format/positions than data elements - subsequent positions
-		   are sent to the dation
-		there may be less format/positions than data elements - the format/position list is
-		   repeated until all data elements are treated
+      // this should never occur, since this is checked in the semantic analysis
+      // in CheckIOStatements
+      ST formatList = m_group.getInstanceOf("iojob_formatlist");
+      if (ctx.listOfFormatPositions() == null) {
+        ST fmt = m_group.getInstanceOf("iojob_list_format");
+        formatList.add("formats", fmt);
+      } else {
 
-    if (formatCount > ctx.expression().size()) {
-      throw new NoOfFormatSpecifiersDoesNotMatchException(
-          "put_statement", ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        for (int i = 0; i<ctx.listOfFormatPositions().formatPosition().size(); i++) {
+          addFormatPositionToFormatList(formatList,  ctx.listOfFormatPositions().formatPosition(i));
+        } 
+      }
+
+      stmt.add("formatlist",formatList);
+      if (!m_isNonStatic) {
+        stmt.add("format_list_is_static","1");
+      }
+
+      // create list of datas
+      ST dataList = getIojobDataList(ctx.ioDataList());
+
+      stmt.add("datalist",dataList);
+
+
+      return stmt;
     }
-		 */
-        /* this block deals with the repetition of the format list, if more
-         * expressions are given than formats
-         * this becomes obsolete with the IOJob-api which becomes necessary to arrays in
-         * put/get
-         */
-        for (int i = 0; i < ctx.expression().size(); i++) {
 
-            boolean foundFormat;
-
-            foundFormat = false;
-
-
-            // send all positioning elements until a format element is reached
-            while (!foundFormat) {
-                if (nextFormatPositionIndex == ctx.formatPosition().size()) {
-                    nextFormatPositionIndex = 0;
-                }
-
-                if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatContext) {
-                    ST e = getFactorFormatForPut(
-                            (SmallPearlParser.FactorFormatContext) ctx
-                                    .formatPosition(nextFormatPositionIndex),
-                            convertToString, ctx.expression(i));
-                    e.add("direction", "to");
-                    e.remove("dation");
-                    stmt.add("elements", e);
-                    foundFormat = true;
-                } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorPositionContext) {
-                    // TODO: visitExpression???
-                    ST e = getFactorPositionForIO(
-                            (SmallPearlParser.FactorPositionContext) ctx
-                                    .formatPosition(nextFormatPositionIndex),
-                            convertToString, "to");
-                    e.remove("dation");
-                    stmt.add("elements", e);
-                } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatPositionContext) {
-                    ErrorStack.enter(ctx.formatPosition(nextFormatPositionIndex), "factor");
-                    ErrorStack.add("not supported");
-                    ErrorStack.leave();
-                    //System.out.println("*** error?: FormatFactorPositionContext not treated");
-                } else {
-                    System.out.println("*** error?: alternative not treated");
-                }
-
-                nextFormatPositionIndex += 1;
-            }
-
-        }
-
-        // apply remaining positioning untikl the format lists end or an FactorFormat appears
-        for (int k = nextFormatPositionIndex; k < ctx.formatPosition().size(); k++) {
-            if (ctx.formatPosition(k) instanceof SmallPearlParser.FactorPositionContext) {
-                ST e = getFactorPositionForIO(
-                        (SmallPearlParser.FactorPositionContext) ctx.formatPosition(k),
-                        convertToString, "to");
-                e.remove("dation");
-                stmt.add("elements", e);
-            }
-        }
-
-
-        return stmt;
-    }
 
     @Override
     public ST visitConvertFromStatement(
             SmallPearlParser.ConvertFromStatementContext ctx) {
-        ST stmt = m_group.getInstanceOf("ConvertFromStatement");
-        String convertFromString = "";
+      
+      ST stmt = m_group.getInstanceOf("iojob_convertFrom_statement");
+      stmt.add("char_string", getUserVariable(ctx.name().getText()));
 
-        int nextFormatPositionIndex = 0;
+      // this flag is set to true if at least one non static format parameter is detected
+      m_isNonStatic=false;  
 
-        if (m_verbose > 0) {
-            System.out
-                    .println("CppCodeGeneratorVisitor: visitConvertFromStatement");
-        }
+      // this should never occur, since this is checked in the semantic analysis
+      // in CheckIOStatements
+      ST formatList = m_group.getInstanceOf("iojob_formatlist");
+      if (ctx.listOfFormatPositions() == null) {
+        ST fmt = m_group.getInstanceOf("iojob_list_format");
+        formatList.add("formats", fmt);
+      } else {
 
-        String s = ctx.idCharacterString().ID().getText();
-        stmt.add("id", getUserVariable(ctx.idCharacterString().ID().getText()));
+        for (int i = 0; i<ctx.listOfFormatPositions().formatPosition().size(); i++) {
+          addFormatPositionToFormatList(formatList,  ctx.listOfFormatPositions().formatPosition(i));
+        } 
+      }
 
-        for (int i = 0; i < ctx.ID().size(); i++) {
+      stmt.add("formatlist",formatList);
+      if (!m_isNonStatic) {
+        stmt.add("format_list_is_static","1");
+      }
 
-            boolean foundFormat;
+      // create list of datas
+      ST dataList = getIojobDataList(ctx.ioDataList());
 
-            foundFormat = false;
-
-
-            // send all positioning elements until a format element is reached
-            while (!foundFormat) {
-                if (nextFormatPositionIndex == ctx.formatPosition().size()) {
-                    nextFormatPositionIndex = 0;
-                }
-
-                if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatContext) {
-                    ST e = getFactorFormatForGet(
-                            (SmallPearlParser.FactorFormatContext) ctx
-                                    .formatPosition(nextFormatPositionIndex),
-                            convertFromString, ctx.ID(i).toString());
-                    e.add("direction", "from");
-                    e.remove("dation");
-                    stmt.add("elements", e);
-                    foundFormat = true;
-                } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorPositionContext) {
-                    // TODO: visitExpression???
-                    ST e = getFactorPositionForIO(
-                            (SmallPearlParser.FactorPositionContext) ctx
-                                    .formatPosition(nextFormatPositionIndex),
-                            convertFromString, "from");
-                    e.remove("dation");
-                    stmt.add("elements", e);
-                } else if (ctx.formatPosition(nextFormatPositionIndex) instanceof SmallPearlParser.FactorFormatPositionContext) {
-                    ErrorStack.enter(ctx.formatPosition(nextFormatPositionIndex), "factor");
-                    ErrorStack.add("not supported");
-                    ErrorStack.leave();
-                    //System.out.println("*** error?: FormatFactorPositionContext not treated");
-                } else {
-                    System.out.println("*** error?: alternative not treated");
-                }
-
-                nextFormatPositionIndex += 1;
-            }
-
-        }
+      stmt.add("datalist",dataList);
 
 
-        if (nextFormatPositionIndex < ctx.formatPosition().size()) {
-            ErrorStack.add("trailing format/position elements");
-        }
-
-        return stmt;
+      return stmt;
     }
 
+    
     @Override
     public ST visitCase1CharSlice(SmallPearlParser.Case1CharSliceContext ctx) {
         ST st = m_group.getInstanceOf("StringSlice");

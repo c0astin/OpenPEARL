@@ -1402,25 +1402,109 @@ close_parameter :
     | open_close_RST                  
      ;
 
+//////////////////////////////////////////////////////////////////////////////////    
+// let's treat all i/o statements (PUT,GET,READ,WRITE,TRAKE,SEND, CONVERT FROM/TO 
+// identical here and verify in the semantic analysis if wrong elements are used
+// --> allow non, one or multiple data 
+// --> allow name, expression and arraySlice for all io statements
+//
+// and the same for the formats!
+
 ////////////////////////////////////////////////////////////////////////////////
 // GetStatement ::=
 //   GET [ { Name§Variable | Segment } [ , { Name§Variable | Segment } ] ... ] FROM Name§Dation [ BY FormatPosition [ , FormatPosition ] ... ] ;
 ////////////////////////////////////////////////////////////////////////////////
 
-getStatement :
-    'GET' ( ID ( ',' ID )* )?  'FROM' dationName  'BY' formatPosition ( ',' formatPosition )* ';'
-    ;
+//getStatement :
+//    'GET' ( ID ( ',' ID )* )?  'FROM' dationName  'BY' formatPosition ( ',' formatPosition )* ';'
+//    ;
 
+getStatement:
+    'GET' ioDataList? 'FROM' dationName
+    ( 'BY' listOfFormatPositions )? ';'
+    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PutStatement ::=
 //   PUT [ { Expression | ArraySlice } [ , { Expression | ArraySlice } ] ... ] TO Name§Dation [ BY FormatPosition [ , FormatPosition ] ... ] ;
 ////////////////////////////////////////////////////////////////////////////////
-putStatement :
+putStatement:
     'PUT' ioDataList? 'TO' dationName
     ( 'BY' listOfFormatPositions )? ';'
     ;
+
+
+////////////////////////////////////////////////////////////////////////////////
+// WriteStatement ::=
+//  WRITE [ { Expression | ArraySlice } [ , { Expression | ArraySlice } ] ... ]
+//     TO Name§Dation [ BY Position [ , Position ] ... ] ;
+//
+// ArraySlice ::=
+//   Name§Field ( [ Index , ] ... Index : Index)
+//
+// Index ::=
+//   Expression§WithIntegerAsValue
+////////////////////////////////////////////////////////////////////////////////
+
+writeStatement:
+    'WRITE' ioDataList? 'TO' dationName
+    ( 'BY' listOfFormatPositions )? ';'
+    ;
     
+//    'WRITE' ( expression ( ',' expression )* )? 
+//	'TO' dationName
+//	(  'BY' position ( ',' position )* )? ';'
+//    ;
+
+////////////////////////////////////////////////////////////////////////////////
+// ReadStatement ::=
+//   READ [ { Name§Variable | ArraySlice } [ , { Name§Variable | ArraySlice } ] ... ] FROM Name§Dation [ BY Position [ , Position ] ... ] ;
+////////////////////////////////////////////////////////////////////////////////
+
+readStatement :
+    'READ' ioDataList? 'FROM' dationName
+    ( 'BY' listOfFormatPositions )? ';'
+    ;
+//    'READ' ID  (','  ID  )* 
+//	'FROM' dationName  
+//	(  'BY' position ( ',' position )* )? ';'
+//  ;
+
+////////////////////////////////////////////////////////////////////////////////
+// TakeStatement ::=
+//   TAKE [ Name§Variable ] FROM Name§Dation
+//     [ BY RST-S-CTRL-Format [ , RST-S-CTRL-Format ] ... ] ;
+////////////////////////////////////////////////////////////////////////////////
+
+takeStatement:
+    //'TAKE' ID?  takeFrom ( 'BY'  take_send_rst_s_ctrl_format ( ',' take_send_rst_s_ctrl_format)* )? ';'
+//    'TAKE' ID?  'FROM' dationName( 'BY'  take_send_rst )? ';'
+//    ;
+    'TAKE' ioDataList? 'FROM' dationName
+    ( 'BY' listOfFormatPositions )? ';'
+    ;
+
+
+////////////////////////////////////////////////////////////////////////////////
+// SendStatement ::=
+//   SEND [ Expression ] TO Name§Dation
+//    [ BY RST-S-CTRL-Format [ , RST-S-CTRL-Format ] ... ] ;
+////////////////////////////////////////////////////////////////////////////////
+
+sendStatement :
+    //'SEND' expression? sendTo ( 'BY'  take_send_rst_s_ctrl_format ( ',' take_send_rst_s_ctrl_format)* )? ';'
+    //'SEND' expression? 'TO' dationName ( 'BY'  take_send_rst )? ';'
+    //;
+    'SEND' ioDataList? 'TO' dationName
+    ( 'BY' listOfFormatPositions )? ';'
+    ;    
+    
+// obsolete 2020-02-24 (rm)
+//take_send_rst :
+//      'RST' '(' ID ')' 
+//	;
+
+// note 'name' is part of rule 'expression'
 ioListElement:
 	(expression | arraySlice)
 	;
@@ -1429,11 +1513,12 @@ ioDataList:
 	ioListElement (',' ioListElement) *
 	;	
 	
-listOfFormatPositions :
+	
+listOfFormatPositions:
 	formatPosition ( ',' formatPosition )* 
 	;
 
-dationName : 
+dationName: 
 	ID
 	;
 
@@ -1443,11 +1528,10 @@ dationName :
 //   Factor ( FormatPosition [ , FormatPosition ] ... )
 ////////////////////////////////////////////////////////////////////////////////
 
-formatPosition :
-      factor? format                                             # factorFormat
-    | factor? position                                           # factorPosition
-//    | factor '(' formatPosition ( ( ','  formatPosition )* )?')' # factorFormatPosition
-   | factor '(' listOfFormatPositions  ')'			 # factorFormatPosition
+formatPosition:
+      factor? format                                 # factorFormat
+    | factor? position                               # factorPosition
+    | factor '(' listOfFormatPositions  ')'			 # factorFormatPosition
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1455,7 +1539,7 @@ formatPosition :
 //   ( Expression§IntegerGreaterZero ) | IntegerWithoutPrecision§GreaterZero
 ////////////////////////////////////////////////////////////////////////////////
 
-factor :
+factor:
     '(' expression ')' | integerWithoutPrecision
     ;
 
@@ -1472,7 +1556,7 @@ factor :
 //   | S ( Name§LengthVariable-FIXED )
 ////////////////////////////////////////////////////////////////////////////////
 
-format :
+format:
       fixedFormat
     | floatFormat
     | bitFormat
@@ -1490,27 +1574,27 @@ format :
 //   | { COL | LINE } ( Expression )
 //   | SOP ( Name [ , Name [ , Name ] ] /∗ PositionVariables-FIXED ∗/ )
 ////////////////////////////////////////////////////////////////////////////////
-absolutePosition :
+absolutePosition:
        positionCOL
      | positionLINE
      | positionPOS
      | positionSOP
      ;
 
-positionCOL :
+positionCOL:
        'COL' '(' expression ')'
 	;
 
-positionLINE :
+positionLINE:
      'LINE' '(' expression ')'                           
      ;
 
-positionPOS :
+positionPOS:
      'POS' '(' ( (  expression ',' )? expression ',' )?
        expression ')'
      ;
 
-positionSOP :
+positionSOP:
      'SOP' '(' ( ( ID ',' )? ID ',' )? ID ')'     
      ;
 
@@ -1523,7 +1607,7 @@ positionSOP :
 //   | { COL | LINE } ( Expression )
 //   | SOP ( Name [ , Name [ , Name ] ] /∗ PositionVariables-FIXED ∗/ )
 ////////////////////////////////////////////////////////////////////////////////
-position :
+position:
       positionRST
     | relativePosition
     | absolutePosition
@@ -1534,7 +1618,7 @@ position :
 //   { X | SKIP | PAGE } [ (Expression) ] |
 //   ADV ( [ [ Expression , ] Expression , ] Expression )
 ////////////////////////////////////////////////////////////////////////////////
-relativePosition :
+relativePosition:
     | positionX
     | positionSKIP
     | positionPAGE
@@ -1547,19 +1631,19 @@ positionRST :
 	'RST' ( '(' ID ')' )
 	;
 
-positionPAGE :
+positionPAGE:
 	'PAGE' ( '(' expression ')' )?
 	;
 
-positionSKIP :
+positionSKIP:
 	'SKIP' ( '(' expression ')' )?
 	;
 
-positionX :
+positionX:
 	'X' ( '(' expression ')' )?
 	;
 
-positionADV :
+positionADV:
     | 'ADV' '(' ( ( expression ',' )? expression ',' )?
       expression ')'                                     
     ;
@@ -1567,6 +1651,7 @@ positionADV :
 positionEOF:
 	'EOF'
 	;
+	
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1580,7 +1665,7 @@ positionEOF:
 //    'F' '(' fieldWidth ( ',' decimalPositions ( ',' scaleFactor )? )? ')'
 //    ;
 
-fixedFormat :
+fixedFormat:
     'F' '(' fieldWidth ( ',' decimalPositions )? ')'
     ;
 
@@ -1588,7 +1673,7 @@ fixedFormat :
 // FieldWidth ::= Expression§WithPositiveIntegerAsValue
 ////////////////////////////////////////////////////////////////////////////////
 
-fieldWidth :
+fieldWidth:
     expression
     ;
 
@@ -1599,7 +1684,7 @@ fieldWidth :
 // Significance ::= Expression§WithIntegerAsValue
 ////////////////////////////////////////////////////////////////////////////////
 
-significance :
+significance:
 	expression
 	;
 
@@ -1649,7 +1734,7 @@ durationFormat:
 // DecimalPositions ::= Expression§WithNonNegativeIntegerAsValue
 ////////////////////////////////////////////////////////////////////////////////
 
-decimalPositions :
+decimalPositions:
     expression
     ;
 
@@ -1657,7 +1742,7 @@ decimalPositions :
 // ScaleFactor ::= Expression§WithIntegerAsValue
 ////////////////////////////////////////////////////////////////////////////////
 
-scaleFactor :
+scaleFactor:
     expression
     ;
 
@@ -1675,34 +1760,6 @@ characterStringFormat :
 
 channel: ID;
 
-////////////////////////////////////////////////////////////////////////////////
-// WriteStatement ::=
-//  WRITE [ { Expression | ArraySlice } [ , { Expression | ArraySlice } ] ... ]
-//     TO Name§Dation [ BY Position [ , Position ] ... ] ;
-//
-// ArraySlice ::=
-//   Name§Field ( [ Index , ] ... Index : Index)
-//
-// Index ::=
-//   Expression§WithIntegerAsValue
-////////////////////////////////////////////////////////////////////////////////
-
-writeStatement :
-    'WRITE' ( expression ( ',' expression )* )? 
-	'TO' dationName
-	(  'BY' position ( ',' position )* )? ';'
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-// ReadStatement ::=
-//   READ [ { Name§Variable | ArraySlice } [ , { Name§Variable | ArraySlice } ] ... ] FROM Name§Dation [ BY Position [ , Position ] ... ] ;
-////////////////////////////////////////////////////////////////////////////////
-
-readStatement :
-    'READ' ID  (','  ID  )* 
-	'FROM' dationName  
-	(  'BY' position ( ',' position )* )? ';'
-    ;
 
 index_array :
 	expression
@@ -1724,103 +1781,7 @@ endIndex:
 //   AbsolutePosition | RelativePosition | RST (Name§ErrorVariable-FIXED)
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-obsolete --> mapped to io_position_*
-readPosition :
-      readWriteAbsolutePosition                             # readAbsPosition
-    | readWriteRelativePosition                             # readRelPosition
-    | 'RST' '(' ID ')'                                      # readRSTPosition
-    ;
 
-writePosition :
-      readWriteAbsolutePosition                             # writeAbsPosition
-    | readWriteRelativePosition                             # writeRelPosition
-    | 'RST' '(' ID ')'                                      # writeRSTPosition
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-// AbsolutePosition ::=
-//   { COL | LINE } (Expression) |
-//   POS ( [ [ Expression , ] Expression , ] Expression) | SOP ( [ [ Name , ] Name , ] Name)
-////////////////////////////////////////////////////////////////////////////////
-
-readWriteAbsolutePosition :
-       'COL' '(' expression ')'                              # ReadWriteAbsolutePositionCOL
-     | 'LINE' '(' expression ')'                             # ReadWriteAbsolutePositionLINE
-     | 'POS' '(' ( (  expression ',' )? expression ',' )?
-       expression ')'                                        # ReadWriteAbsolutePositionPOS
-     | 'SOP' '(' ( ( ID ',' )? ID ',' )? ID ')'              # ReadWriteAbsolutePositionSOP
-     ;
-
-
-////////////////////////////////////////////////////////////////////////////////
-// RelativePosition ::=
-//   { X | SKIP | PAGE } [ (Expression) ] |
-//   ADV ( [ [ Expression , ] Expression , ] Expression )
-////////////////////////////////////////////////////////////////////////////////
-
-readWriteRelativePosition :
-      'X'     ( '(' expression ')' )?                         # readWriteRelativePositionX
-    | 'SKIP'  ( '(' expression ')' )?                         # readWriteRelativePositionSKIP
-    | 'PAGE'  ( '(' expression ')' )?                         # readWriteRelativePositionPAGE
-    | 'ADV' '(' ( ( expression ',' )? expression ',' )?
-      expression ')'                                          # readWriteRelativePositionADV
-    | 'EOF'                                                   # readWriteRelativePositionEOF
-    ;
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-// TakeStatement ::=
-//   TAKE [ Name§Variable ] FROM Name§Dation
-//     [ BY RST-S-CTRL-Format [ , RST-S-CTRL-Format ] ... ] ;
-////////////////////////////////////////////////////////////////////////////////
-
-takeStatement:
-    //'TAKE' ID?  takeFrom ( 'BY'  take_send_rst_s_ctrl_format ( ',' take_send_rst_s_ctrl_format)* )? ';'
-    'TAKE' ID?  'FROM' dationName( 'BY'  take_send_rst )? ';'
-    ;
-
-// obsolete
-//takeFrom :
-//    'FROM' ID
-//    ;
-
-////////////////////////////////////////////////////////////////////////////////
-// SendStatement ::=
-//   SEND [ Expression ] TO Name§Dation
-//    [ BY RST-S-CTRL-Format [ , RST-S-CTRL-Format ] ... ] ;
-////////////////////////////////////////////////////////////////////////////////
-
-sendStatement :
-    //'SEND' expression? sendTo ( 'BY'  take_send_rst_s_ctrl_format ( ',' take_send_rst_s_ctrl_format)* )? ';'
-    'SEND' expression? 'TO' dationName ( 'BY'  take_send_rst )? ';'
-    ;
-
-// obsolete
-//sendTo :
-//    'TO' ID
-//    ;
-
-take_send_rst :
-      'RST' '(' ID ')' 
-	;
-
-/*
-obsolete 2019-10-11 rm
-////////////////////////////////////////////////////////////////////////////////
-// RST-S-CTRL-Format ::=
-//     RST ( Name§ErrorVariable-FIXED )
-//   | S ( Name§Variable-FIXED )
-//   | CONTROL ( Expression [ , Expression [ , Expression ] ] )
-////////////////////////////////////////////////////////////////////////////////
-
-take_send_rst_s_ctrl_format :
-      'RST' '(' ID ')'                                  # take_send_rst_s_ctrl_format_RST
-    | 'S' '(' ID ')'                                    # take_send_rst_s_ctrl_format_S
-    | 'CONTROL' '(' expression (',' expression
-        (',' expression)?)? ')'                         # take_send_rst_s_ctrl_format_CONTROL
-    ;
-*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2045,52 +2006,44 @@ typology :
     ')' ( tfu )?
     ;
 
-dimension1
-    : '*'                      # dimension1Star
-//    | IntegerConstant          # dimension1Integer
+dimension1:
+     '*'                      # dimension1Star
     | constantFixedExpression          # dimension1Integer
     ;
 
-dimension2
-    : constantFixedExpression          # dimension2Integer
+dimension2:
+    constantFixedExpression          # dimension2Integer
     ;
 
-dimension3
-    : constantFixedExpression          # dimension3Integer
+dimension3:
+    constantFixedExpression          # dimension3Integer
     ;
 
-tfu
-   : 'TFU' ( tfuMax )?
+tfu:
+   'TFU' ( tfuMax )?
    ;
 
-tfuMax 
-   : 'MAX'
+tfuMax: 
+   'MAX'
    ;
-
-	
-/* remove unused rule 
-typologyAttribute
-    : ('TFU')? ('MAX')?
-    ;
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // DimensionAttribute ::=
 //  (BoundaryDenotation§FirstDimension [ , BoundaryDenotation§FurtherDimension ] ...)
 ////////////////////////////////////////////////////////////////////////////////
 
-dimensionAttribute
-    : '(' boundaryDenotation ( ',' boundaryDenotation )* ')'
+dimensionAttribute:
+    '(' boundaryDenotation ( ',' boundaryDenotation )* ')'
     ;
 
-boundaryDenotation
-    : constantFixedExpression ( ':' constantFixedExpression )?
+boundaryDenotation:
+    constantFixedExpression ( ':' constantFixedExpression )?
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-indices
-    : '(' expression ( ',' expression )* ')'
+indices:
+    '(' expression ( ',' expression )* ')'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2098,8 +2051,8 @@ indices
 //    IO-Structure | Identifier§ForNewTypeFromSimpleTypes
 ////////////////////////////////////////////////////////////////////////////////
 
-compoundType
-    : ioStructure | ID
+compoundType:
+    ioStructure | ID
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2136,8 +2089,8 @@ ioStructureComponent
 // All monadic standard operators have rank 1.
 ////////////////////////////////////////////////////////////////////////////////
 
-expression
-    : primaryExpression                                     # baseExpression
+expression:
+    primaryExpression                                     # baseExpression
     | op='ATAN' expression                                  # atanExpression
     | op='COS' expression                                   # cosExpression
     | op='EXP' expression                                   # expExpression
@@ -2204,32 +2157,34 @@ unaryExpression
 
 ////////////////////////////////////////////////////////////////////////////////
 
-expressionList
-    : expression (',' expression)*
+
+// obsolete? (2020-02-26 (rm)
+//expressionList:
+//    expression (',' expression)*
+//    ;
+
+////////////////////////////////////////////////////////////////////////////////
+
+numericLiteral:
+    numericLiteralUnsigned | numericLiteralPositive | numericLiteralNegative
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-numericLiteral
-    : numericLiteralUnsigned | numericLiteralPositive | numericLiteralNegative
+numericLiteralUnsigned:
+    IntegerConstant
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-numericLiteralUnsigned
-    : IntegerConstant
+numericLiteralPositive:
+    IntegerConstant
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-numericLiteralPositive
-    : IntegerConstant
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-
-numericLiteralNegative
-    : '-' IntegerConstant
+numericLiteralNegative:
+    '-' IntegerConstant
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2237,12 +2192,12 @@ numericLiteralNegative
 //    Identifier [ ( Index [ , Index ] ... ) ] [ . Name ]
 ////////////////////////////////////////////////////////////////////////////////
 
-name
-    : ID ( '(' listOfExpression ')' )? ( '.' name )?
+name:
+    ID ( '(' listOfExpression ')' )? ( '.' name )?
     ;
 
-listOfExpression
-    : expression ( ',' expression )*
+listOfExpression:
+    expression ( ',' expression )*
     ;
 
 //name
@@ -2254,7 +2209,7 @@ listOfExpression
 //  Expression§WithIntegerAsValue
 ////////////////////////////////////////////////////////////////////////////////
 
-index :
+index:
     expression
     ;
 
@@ -2378,9 +2333,8 @@ convertStatement
 //   [ BY FormatOrPositionConvert [ , FormatOrPositionConvert ] ... ] ;
 ////////////////////////////////////////////////////////////////////////////////
 
-convertToStatement
-    //: 'CONVERT' expression (',' expression)* 'TO' ID ( 'BY' formatOrPositionConvert (',' formatOrPositionConvert)* )?
-    : 'CONVERT' expression (',' expression)* 'TO' idCharacterString ( 'BY' formatPosition (',' formatPosition)* )?
+convertToStatement:
+    'CONVERT' ioDataList? 'TO' name ( 'BY' listOfFormatPositions )? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2388,57 +2342,10 @@ convertToStatement
 //   CONVERT Name§Variable [ , Name§Variable ] ... FROM Expression§CharacterString
 //   [ BY FormatOrPositionConvert [ , FormatOrPositionConvert ] ... ] ;
 ////////////////////////////////////////////////////////////////////////////////
-convertFromStatement
-//    : 'CONVERT'  ID (',' ID)* 'FROM' expression ( 'BY' formatOrPositionConvert (',' formatOrPositionConvert)* )?
-    : 'CONVERT'  ID (',' ID)* 'FROM' idCharacterString ( 'BY' formatPosition (',' formatPosition)* )?
-    ;
+convertFromStatement:
+	'CONVERT' ioDataList? 'FROM' name ( 'BY' listOfFormatPositions )? ';'
+	;
 
-idCharacterString :
-    ID
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-// FormatOrPositionConvert ::=
-//    [ FormatFactor ] { Format | PositionConvert }
-//    | FormatFactor ( FormatOrPositionConvert [ , FormatOrPositionConvert ]... )
-//
-////////////////////////////////////////////////////////////////////////////////
-
-formatOrPositionConvert
-    :
-    formatFactorConvert? ( formatConvert | positionConvert )
-    | formatFactorConvert ( formatOrPositionConvert ( ',' formatOrPositionConvert )* )?
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-// FormatFactor ::=
-//   ( Expression§IntegerGreaterZero ) | IntegerWithoutPrecision§GreaterZero
-////////////////////////////////////////////////////////////////////////////////
-
-formatFactorConvert
-    :
-    '(' expression ')'
-    | integerWithoutPrecision
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-// Format ::=
-//   FixedFormat | FloatFormat |
-//   CharacterStringFormat | BitFormat |
-//   TimeFormat | DurationFormat |
-//   ListFormat | RFormat
-////////////////////////////////////////////////////////////////////////////////
-
-formatConvert
-    : fixedFormat
-    | floatFormat
-    | characterStringFormat
-    | bitFormat
-    | timeFormat
-    | durationFormat
-    | listFormat
-    | rFormat
-    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // ListFormat ::=
@@ -2458,27 +2365,6 @@ rFormat
     : 'R' '(' ID ')'
     ;
 
-////////////////////////////////////////////////////////////////////////////////
-// PositionConvert ::=
-//   RST ( Name§ErrorVariable-FIXED )
-//   | X [ ( Expression ) ]
-//   | { POS | ADV } ( Expression )
-//   | SOP ( Name§PositionVariable-FIXED )
-////////////////////////////////////////////////////////////////////////////////
-
-positionConvert
-    : 'RST' '(' ID ')'                        # positionConvertRST
-    | 'X' ( '(' expression ')' )?             # positionConvertX
-    | 'POS' '(' expression ')'                # positionConvertPOS
-    | 'ADV' '(' expression ')'                # positionConvertADV
-    | 'SOP' '(' ID ')'                        # positionConvertSOP
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-// ConvertFromStatement ::=
-//    CONVERT Name§Variable [ , Name§Variable ] ... FROM Expression§CharacterString
-//    [ BY FormatOrPositionConvert [ , FormatOrPositionConvert ] ... ] ;
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 
