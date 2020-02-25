@@ -694,9 +694,8 @@ SmallPearlVisitor<Void> {
         enshureDataForInput(ctx.ioDataList());
         
         checkWriteReadFormat(d, ctx.listOfFormatPositions());
-
-        // TODO: (rm) check type of transfer data is missing!!
-
+        checkReadWriteTakeSendDataTypes(d,ctx.ioDataList());
+ 
         visitChildren(ctx);
         ErrorStack.leave();
         return null;
@@ -723,6 +722,7 @@ SmallPearlVisitor<Void> {
 
         // check if absolute positions follow relative positions
         checkWriteReadFormat(d, ctx.listOfFormatPositions());
+        checkReadWriteTakeSendDataTypes(d,ctx.ioDataList());
 
         // TODO: (rm) check type of transfer data is missing!!
 
@@ -731,6 +731,30 @@ SmallPearlVisitor<Void> {
         return null;
     }
     
+    private void checkReadWriteTakeSendDataTypes(TypeDation d, IoDataListContext ioDataList) {
+      if (d.getTypeOfTransmissionAsType() == null) {
+        // this is a type 'ALL' dation --> we are ready here
+        return;
+      }
+      if (ioDataList != null) {
+        for (int i=0; i<ioDataList.ioListElement().size(); i++) {
+          if (ioDataList.ioListElement(i).expression()!=null) {
+            ASTAttribute attr = m_ast.lookup(ioDataList.ioListElement(i).expression());
+            if (attr != null) {
+              if (!attr.getType().equals(d.getTypeOfTransmissionAsType())) {
+                ErrorStack.enter(ioDataList.ioListElement(i).expression());
+                ErrorStack.add("type mismatch: allowed: "+d.getTypeOfTransmission()+" got "+attr.getType().toString());
+                ErrorStack.leave();
+              }
+            }
+          } else if (ioDataList.ioListElement(i).arraySlice()!=null) {
+            System.err.println("arraySlice stuff missing");
+          }
+        }
+      }
+      
+    }
+
     // enshure that no formats and no absolute positions occur after relative positions
     /**
      * @param d
@@ -796,8 +820,8 @@ SmallPearlVisitor<Void> {
         }
         
         enshureDataForInput(ctx.ioDataList());
-        
-        // TODO: (rm) check type of transfer data is missing!!
+        checkReadWriteTakeSendDataTypes(d,ctx.ioDataList());        
+ 
         
         visitChildren(ctx);
 
@@ -829,7 +853,7 @@ SmallPearlVisitor<Void> {
           ErrorStack.add("need one expression");
         }
 
-        // TODO: (rm) check type of transfer data is missing!!
+        checkReadWriteTakeSendDataTypes(d,ctx.ioDataList());        
         
         visitChildren(ctx);
         ErrorStack.leave();

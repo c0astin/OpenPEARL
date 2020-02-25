@@ -37,6 +37,7 @@ public class TypeDation extends TypeDefinition {
 	private boolean m_alphic;
 	private boolean m_basic;
 	private String m_typeOfTransmission;
+	private TypeDefinition m_typeOfTransmissionAsType;
 	private boolean m_direct;
 	private boolean m_forward;
 	private boolean m_forback;
@@ -154,6 +155,19 @@ public class TypeDation extends TypeDefinition {
 	public void setTypeOfTransmission(String m_typeOfTransmission) {
 		this.m_typeOfTransmission = m_typeOfTransmission;
 	}
+
+	/**
+	 * 
+	 * @return null of typeOfTransmission is ALL,
+	 *      else the corresponding type
+	 */
+	public TypeDefinition getTypeOfTransmissionAsType() {
+      return m_typeOfTransmissionAsType;
+    }
+
+    public void setTypeOfTransmission(TypeDefinition m_typeOfTransmissionAsType) {
+      this.m_typeOfTransmissionAsType = m_typeOfTransmissionAsType;
+    }
 
 	public boolean isDirect() {
 		return m_direct;

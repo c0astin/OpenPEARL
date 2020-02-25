@@ -1979,7 +1979,8 @@ basicDation
 typeOfTransmissionData
     : 'ALL'                     # typeOfTransmissionDataALL
     | simpleType                # typeOfTransmissionDataSimpleType
-    | compoundType              # typeOfTransmissionDataCompoundType
+//    | compoundType              # typeOfTransmissionDataCompoundType
+    | typeStructure             # typeOfTransmissionDataCompoundType
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2046,6 +2047,8 @@ indices:
     '(' expression ( ',' expression )* ')'
     ;
 
+/* obsolete 2020-02-25 (rm)
+
 ////////////////////////////////////////////////////////////////////////////////
 //  CompoundType ::=
 //    IO-Structure | Identifier§ForNewTypeFromSimpleTypes
@@ -2072,6 +2075,8 @@ ioStructure
 ioStructureComponent
     : identifierDenotation ( simpleType | ioStructure | ID )+
     ;
+*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Ranks of the operators defined in PEARL

@@ -1374,6 +1374,13 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 }
                 if (ctx.classAttribute().typeOfTransmissionData() != null) {
                     TypeOfTransmissionDataContext c = ctx.classAttribute().typeOfTransmissionData();
+                    if (c instanceof TypeOfTransmissionDataALLContext) {
+                      // nothing to do here!
+                    } else {
+                      // ether simpleType or typeStructure possible
+                      visitChildren(c);
+                      d.setTypeOfTransmission(m_type);
+                    }
                     // maybe we need some treatment for STRUCT
                     d.setTypeOfTransmission(c.getText());
                 }
