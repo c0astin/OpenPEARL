@@ -115,7 +115,10 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
             SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
 
             if (entry == null) {
-                throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+              ErrorStack.enter(ctx);
+              ErrorStack.addInternal("unknown indetifier '"+ctx.getText()+"'");
+              ErrorStack.leave();
+              return null;
             }
 
             visitName(ctx.name());
@@ -164,14 +167,21 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
                 ASTAttribute attr = m_ast.lookup(ctx);
 
                 if ( attr == null ) {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                  ErrorStack.enter(ctx);
+                  ErrorStack.addInternal("no ASTAttributes found for '"+ctx.getText()+"'");
+                  ErrorStack.leave();
+                  return null;
                 }
                 
                 attr.setConstantDurationValue( new ConstantDurationValue (hours, minutes, seconds));
                 m_ast.put(ctx, expressionResult);
 
             	} catch (NumberFormatException ex) {
-                throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            	   ErrorStack.enter(ctx.durationConstant());
+            	   ErrorStack.addInternal("bad number '"+ctx.durationConstant().getText()+"'");
+            	   ErrorStack.leave();
+            	   return null;
+//                throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         	
         } else if (ctx.floatingPointConstant() != null) {
@@ -183,13 +193,21 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
                 ASTAttribute attr = m_ast.lookup(ctx);
 
                 if ( attr == null ) {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                  ErrorStack.enter(ctx);
+                  ErrorStack.addInternal("no ASTAttributes found for '"+ctx.getText()+"'");
+                  ErrorStack.leave();
+                  return null;
+                  //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
                 attr.setConstantFloatValue( new ConstantFloatValue(value,precision));
                 m_ast.put(ctx, expressionResult);
             } catch (NumberFormatException ex) {
-                throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+              ErrorStack.enter(ctx.floatingPointConstant());
+              ErrorStack.addInternal("bad number '"+ctx.floatingPointConstant().getText()+"'");
+              ErrorStack.leave();
+              return null;
+              // throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else if (ctx.timeConstant() != null) {
         	Log.error("missing code for timeConstant");
@@ -221,12 +239,20 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
                 ASTAttribute attr = m_ast.lookup(ctx);
 
                 if ( attr == null ) {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                  ErrorStack.enter(ctx);
+                  ErrorStack.addInternal("no ASTAttributes found for '"+ctx.getText()+"'");
+                  ErrorStack.leave();
+                  return null;
+                  //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
                 attr.setConstantFixedValue( new ConstantFixedValue(value));
             } catch (NumberFormatException ex) {
-                throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+              ErrorStack.enter(ctx.fixedConstant());
+              ErrorStack.addInternal("bad number '"+ctx.fixedConstant().getText()+"'");
+              ErrorStack.leave();
+              return null;
+              //  throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         }
 
@@ -257,7 +283,11 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if ( res == null )
         {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+          ErrorStack.enter(ctx);
+          ErrorStack.addInternal("no ASTAttributes found for '"+ctx.getText()+"'");
+          ErrorStack.leave();
+          return null;
+          //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if ( op1 != null && op2 != null) {
@@ -403,7 +433,11 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
         res = m_ast.lookup(ctx);
 
         if (res == null) {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+          ErrorStack.enter(ctx);
+          ErrorStack.addInternal("no ASTAttributes found for '"+ctx.getText()+"'");
+          ErrorStack.leave();
+          return null;
+          //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         
@@ -476,7 +510,11 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
         res = m_ast.lookup(ctx);
 
         if (res == null) {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+          ErrorStack.enter(ctx);
+          ErrorStack.addInternal("no ASTAttributes found for '"+ctx.getText()+"'");
+          ErrorStack.leave();
+          return null;
+          //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if (op1 != null && op2 != null) {
@@ -539,13 +577,17 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if ( res == null )
         {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+          ErrorStack.enter(ctx);
+          ErrorStack.addInternal("no ASTAttributes found for '"+ctx.getText()+"'");
+          ErrorStack.leave();
+          return null;
+          //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if ( op1 != null && op2 != null) {
             if ( op1.isReadOnly() && !op1.isLoopControlVariable() && op2.isReadOnly() && !op2.isLoopControlVariable()) {
                 ConstantFixedValue op1Value = op1.getConstantFixedValue();
-                ConstantFixedValue op2Value = op1.getConstantFixedValue();
+                ConstantFixedValue op2Value = op2.getConstantFixedValue();
 
                 if (op1Value != null && op2Value != null) {
                     ConstantFixedValue value = new ConstantFixedValue(op1.getConstantFixedValue().getValue() * op2.getConstantFixedValue().getValue());
@@ -581,16 +623,24 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if ( res == null )
         {
-            throw new DivisionByZeroException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+          ErrorStack.enter(ctx);
+          ErrorStack.addInternal("no ASTAttributes found for '"+ctx.getText()+"'");
+          ErrorStack.leave();
+          return null;
+          //  throw new DivisionByZeroException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if ( op1 != null && op2 != null) {
             if ( op1.isReadOnly() && op2.isReadOnly()) {
                 ConstantFixedValue op1Value = op1.getConstantFixedValue();
-                ConstantFixedValue op2Value = op1.getConstantFixedValue();
+                ConstantFixedValue op2Value = op2.getConstantFixedValue();
 
                 if ( op2Value.getValue() == 0 ) {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                  ErrorStack.enter(ctx.expression(1));
+                  ErrorStack.add("divide by zero");
+                  ErrorStack.leave();
+                  //return null;
+                  //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
                 if (op1Value != null && op2Value != null) {
@@ -627,17 +677,24 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if ( res == null )
         {
-            throw new DivisionByZeroException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+          ErrorStack.enter(ctx);
+          ErrorStack.addInternal("no ASTAttributes found for '"+ctx.getText()+"'");
+          ErrorStack.leave();
+          return null;
+          //  throw new DivisionByZeroException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         if ( op1 != null && op2 != null) {
             if ( op1.isReadOnly() && op2.isReadOnly()) {
                 ConstantFixedValue op1Value = op1.getConstantFixedValue();
-                ConstantFixedValue op2Value = op1.getConstantFixedValue();
+                ConstantFixedValue op2Value = op2.getConstantFixedValue();
 
                 if ( op2Value.getValue() == 0 ) {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-                }
+                  ErrorStack.enter(ctx.expression(1));
+                  ErrorStack.add("divide by zero");
+                  ErrorStack.leave();
+                  //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                } else
 
                 if (op1Value != null && op2Value != null) {
                     ConstantFixedValue value = new ConstantFixedValue(op1.getConstantFixedValue().getValue() / op2.getConstantFixedValue().getValue());
@@ -998,21 +1055,31 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
         SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID().toString());
         if (se instanceof VariableEntry) {
           VariableEntry ve = (VariableEntry)se;
+          if (ve.getAssigmentProtection() == false) {
+            return null;
+          }
           if (ve.getType() instanceof TypeArray) {
             if (ctx.listOfExpression() == null) {
               return null;  // a complete array is no simple constant
             }
-            System.out.println("ConstantFolding: treatment of array indices and initialisier missing");
+            ErrorStack.enter(ctx);
+            ErrorStack.addInternal("treatment of ARRAY-element missing");
+            ErrorStack.leave();
             return null;
           }
           if (ve.getType() instanceof TypeStructure) {
             if (ctx.name() == null) {
-              return null;  // a complete struct is nio simple constant
+              return null;  // a complete struct is no simple constant
             }
-            TypeStructure ts = (TypeStructure)(ve.getType());
-            
-            int x=getIndexOfComponent(ts, ctx.name());
-            System.out.println("ConstantFolding: treatment of struct component ans initilisier missing");
+            ErrorStack.enter(ctx);
+            ErrorStack.addInternal("treatment of STRUCT-Komponent missing");
+            ErrorStack.leave();
+//            ASTAttribute a = m_ast.lookup(ctx.name());
+//            TypeStructure ts = (TypeStructure)(ve.getType());
+//            StructureComponent sc = ts.lookup(ctx.name().getText()); 
+//            int x=sc.m_index;
+//            
+//            System.out.println("ConstantFolding: treatment of struct component ans initilisier missing");
             return null;
           }
           if (ve.getAssigmentProtection()) {
