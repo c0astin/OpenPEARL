@@ -3120,6 +3120,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         ErrorStack.enter(ctx, "integer constant");
                         ErrorStack.add("value exceeds precision");
                         ErrorStack.leave();
+                    } else {
+                      precision = explicitPrecision;
                     }
                 } else {
                     if (m_currFixedLength != null) {

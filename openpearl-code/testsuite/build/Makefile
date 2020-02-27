@@ -19,7 +19,6 @@
 DONOTBUILD= 030_signals 031_signalsInduce  \
 	043_switch \
 	224_bit_slice \
-	300_float_dcl \
 	450_struct_dcl \
 	800_struct_decl \
 	850_ref_decl
