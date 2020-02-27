@@ -265,7 +265,9 @@ SmallPearlVisitor<Void> {
 	            	   if (!sd.isAlphic()) {
 	            	      // the system dation misses some data -- this should be detected by the
 	            	      // imc in all compilations
-	            	      throw new InternalCompilerErrorException(sd+" has no typeOfTransmission");
+	            	     ErrorStack.addInternal(sd+" has no typeOfTransmission");
+	            	     ErrorStack.leave();
+	            	     return null;
 	            	   }
 	               } else if (!sd.getTypeOfTransmission().equals("ALL")) {
 	            	   if (!sd.getTypeOfTransmission().equals(d.getTypeOfTransmission())) {
@@ -748,7 +750,7 @@ SmallPearlVisitor<Void> {
               }
             }
           } else if (ioDataList.ioListElement(i).arraySlice()!=null) {
-            System.err.println("arraySlice stuff missing");
+            ErrorStack.addInternal("arraySlice stuff missing");
           }
         }
       }
@@ -1028,10 +1030,19 @@ SmallPearlVisitor<Void> {
     List<IODataListElementWithCtx> list = new ArrayList<IODataListElementWithCtx>();
     
     for (int i=0; i<ioDataList.ioListElement().size(); i++) {
-      ParserRuleContext ctx = ioDataList.ioListElement(i);
+      IoListElementContext ctx = ioDataList.ioListElement(i);
       IODataListElementWithCtx etc = new IODataListElementWithCtx(ctx);
       
-      ASTAttribute attr = m_ast.lookup(ctx);
+      ASTAttribute attr = null;
+      if (ctx.expression() != null) {
+        attr = m_ast.lookup(ctx.expression());
+      } else if (ctx.arraySlice() != null) {
+        ErrorStack.enter(ctx.expression());
+        ErrorStack.addInternal("treatment of arraySlice missing");
+        ErrorStack.leave();
+      }
+      //attr = m_ast.lookup(ctx);
+      
       if (attr != null) {
         if (attr.getType() instanceof TypeArray) {
           int nbrOfElements = ((TypeArray)(attr.getType())).getTotalNoOfElements();
@@ -2315,7 +2326,7 @@ SmallPearlVisitor<Void> {
 	
 	private List<ParserRuleContext> getFormatOrPositions(ListOfFormatPositionsContext listOfFormatPosition) {
 	  List<ParserRuleContext> fmtPos = new ArrayList<ParserRuleContext>();
-	  long repetitions;
+	  long repetitions=0;
 	  
 	  //System.out.println("get.. "+listOfFormatPosition.getText());
 
@@ -2325,7 +2336,9 @@ SmallPearlVisitor<Void> {
 	      try {
 	       repetitions = getFactor(ctx.factor());
 	      } catch (FactorIsNotConstantException e) {
-	        return fmtPos;
+	         // if the repetitions of position are not constant and known
+	         // we may continue with checks on data formats
+	        repetitions = 0;
 	      }
 	      for (long j=0; j<repetitions; j++) {
 	        fmtPos.add(ctx.position());
@@ -2335,6 +2348,7 @@ SmallPearlVisitor<Void> {
           try {
            repetitions = getFactor(ctx.factor());
           } catch (FactorIsNotConstantException e) {
+            m_formatListAborted = true;
             return fmtPos;
           }
 
@@ -2370,10 +2384,29 @@ SmallPearlVisitor<Void> {
           ASTAttribute attr = m_ast.lookup(factor.expression());
           if (attr.m_constant != null) {
             value = attr.getConstantFixedValue().getValue();
+          } else if (attr.isReadOnly() && attr.m_variable != null) {
+            ErrorStack.enter(factor);
+
+            VariableEntry ve = attr.m_variable;
+            if (ve.getType() instanceof TypeArray) {
+              ErrorStack.warn("treatment of ARRAY components missing");
+            } else if (ve.getType() instanceof TypeStructure) {
+              ErrorStack.warn("treatment of STRUCT components missing");
+            } else if (ve.getType() instanceof TypeFixed && ve.getInitializer() != null) {
+              SimpleInitializer si = (SimpleInitializer)(ve.getInitializer());
+              if (si.getConstant() instanceof ConstantFixedValue) {
+                value = ((ConstantFixedValue)(si.getConstant())).getValue();
+              } else {
+                ErrorStack.addInternal("type of initializer must be TypeFixed");
+              }
+
+            }
+            ErrorStack.leave();
+            
           } else {
             throw new FactorIsNotConstantException();
           }
-        }
+      }
         return value;
       } else {
         return 1;
