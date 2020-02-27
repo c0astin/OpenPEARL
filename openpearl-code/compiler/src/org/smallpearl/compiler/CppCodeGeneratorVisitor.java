@@ -4144,7 +4144,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 			System.out.println("no ASTAttributes on "+ctx.getText());
 			m_isNonStatic = true;
 		} else {
-			if (attr.m_constant == null) {
+			if (attr.m_constant == null && !attr.isReadOnly()) {
 				m_isNonStatic = true;  // no constant
 			}
 		}
@@ -4445,9 +4445,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 			loopStart.add("repetitions",getExpression(ctx.expression()));
 		}
 		if (ctx.integerWithoutPrecision() != null) {
-			updateIsNonStatic(ctx.integerWithoutPrecision());
-			System.out.println("INT-Factor: "+ctx.integerWithoutPrecision().getText());
-			String s = ctx.integerWithoutPrecision().IntegerConstant().getText();
 			loopStart.add("repetitions",ctx.integerWithoutPrecision().IntegerConstant().getText());
 		}
 		loopStart.add("elements",1);
