@@ -143,6 +143,27 @@ public class ErrorStack {
 	}
 
 	/**
+     * add a new error
+     * 
+     * emits an internal compiler error message to System.err with
+     * <ul>
+     * <li>the corresponding source code
+     * <li>colored region for the error
+     * <li>complete hierarchy of the error stack and the error message<br>
+     * like PUT:E-format:fieldWidth: must be positive
+     * </ul>
+     * 
+     * The error counters are incremented
+     * 
+     * @param msg the concrete error message
+     */
+    public static Void addInternal(String msg) {
+        m_stack[m_sp].incLocalCount();
+        m_totalErrorCount++;
+        printMessage(msg+"\n\tplease send a bug report","internet compiler error");
+        return null;
+    }
+	/**
 	 * add a new warning
 	 * 
 	 * emits an warning message to System.err with
