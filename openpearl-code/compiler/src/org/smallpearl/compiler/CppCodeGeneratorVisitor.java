@@ -3038,29 +3038,29 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else if (ctx.floatingPointConstant() != null) {
-          
-// 2020-03-03 (rm) the constant is already in the AST attributes
-// try catch becomes obsolete          
-//            try {
-//                Double value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
-//                int precision = CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(),m_currentSymbolTable.lookupDefaultFloatLength())
-//                        ;
-//                ConstantFloatValue constFloat = ConstantPool.lookupFloatValue(
-//                        value, precision);
-//                
-                ConstantFloatValue constFloat = attr.getConstantFloatValue();
-                
-                if (constFloat != null) {
-                    literal.add("float", constFloat);
-                } else {
-                    throw new InternalCompilerErrorException(ctx.getText(),
-                            ctx.start.getLine(),
-                            ctx.start.getCharPositionInLine());
-                }
-//            } catch (NumberFormatException ex) {
-//                throw new NumberOutOfRangeException(ctx.getText(),
-//                        ctx.start.getLine(), ctx.start.getCharPositionInLine());
-//            }
+
+          ConstantFloatValue constFloat;
+          if (attr == null || attr.m_constant == null) {
+            try {
+              Double value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+              int precision = CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(),m_currentSymbolTable.lookupDefaultFloatLength())
+                  ;
+              constFloat = ConstantPool.lookupFloatValue(
+                  value, precision);
+            } catch (NumberFormatException ex) {
+              throw new NumberOutOfRangeException(ctx.getText(),
+                  ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            }
+          } else {
+            constFloat = attr.getConstantFloatValue();
+          }  
+          if (constFloat != null) {
+            literal.add("float", constFloat);
+          } else {
+            throw new InternalCompilerErrorException(ctx.getText(),
+                ctx.start.getLine(),
+                ctx.start.getCharPositionInLine());
+          }
         } else if (ctx.timeConstant() != null) {
             literal.add("time", getTime(ctx.timeConstant()));
         } else if (ctx.StringLiteral() != null) {

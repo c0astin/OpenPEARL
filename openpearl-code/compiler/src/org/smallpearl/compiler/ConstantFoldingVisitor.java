@@ -414,6 +414,19 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
     public Void visitUnaryAdditiveExpression(SmallPearlParser.UnaryAdditiveExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitUnaryAdditiveExpression:ctx" + CommonUtils.printContext(ctx));
         Log.error("missing code for unary additive expression");
+        ASTAttribute op2 = null;
+        ASTAttribute res = null;
+        res = m_ast.lookup(ctx);
+        
+        // let's if if the expression is a constant -> than we may easy papagate this constant
+        if (ctx.expression() != null) {
+          visit(ctx.expression());
+          op2 = m_ast.lookup(ctx.expression());
+          Log.debug("ConstantFoldingVisitor:visitUnaryAdditiveExpression:op2=" + op2);            
+        }
+        if (op2 != null) {
+          m_ast.put(ctx, op2);
+        }
         return null;
     }
 
