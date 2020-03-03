@@ -1043,17 +1043,37 @@ public class CommonUtils {
      */
 
     public static double getFloatingPointConstantValue(SmallPearlParser.FloatingPointConstantContext ctx ) {
-        double value;
-        String regex = "([+-]?(\\d*[.])?\\d+)(\\(\\d+\\))?";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(ctx.FloatingPointNumber().getText());
-
-        if ( matcher.find() ) {
-            value = Double.valueOf(matcher.group(1));
-        } else {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        double value =0.0;
+//        String regex = "([+-]?(\\d*[.])?\\d+)(\\(\\d+\\))?";
+//        Pattern pattern = Pattern.compile(regex);
+//        Matcher matcher = pattern.matcher(ctx.FloatingPointNumber().getText());
+//
+//        if ( matcher.find() ) {
+//            value = Double.valueOf(matcher.group(1));
+//        } else {
+//            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//        }
+        
+        // we must remove the optional part 'precision '(ddd)' at the end
+        String nbr = ctx.FloatingPointNumber().getText();
+        int openBrace = nbr.indexOf('(');
+        if (openBrace >= 0) {
+          nbr = nbr.substring(0, openBrace);
         }
-
+        try {
+          value = Double.valueOf(nbr); 
+        } catch (NumberFormatException e) {
+          ErrorStack.enter(ctx);
+          ErrorStack.add("illegal floating point constant");
+          ErrorStack.leave();
+        }
+        if (value == Double.POSITIVE_INFINITY ||
+            value == Double.NEGATIVE_INFINITY) {
+          ErrorStack.enter(ctx);
+          ErrorStack.add("illegal floating point constant to large");
+          ErrorStack.leave();
+          
+        }
         return value;
     }
 

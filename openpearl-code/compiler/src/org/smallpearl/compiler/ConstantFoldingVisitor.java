@@ -188,7 +188,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
             try {
                 double value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
                 Integer precision = CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(), Defaults.FLOAT_SHORT_PRECISION);
-                ASTAttribute expressionResult = new ASTAttribute( new TypeFloat(precision),true);
+//                ASTAttribute expressionResult = new ASTAttribute( new TypeFloat(precision),true);
 
                 ASTAttribute attr = m_ast.lookup(ctx);
 
@@ -201,7 +201,8 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
                 }
 
                 attr.setConstantFloatValue( new ConstantFloatValue(value,precision));
-                m_ast.put(ctx, expressionResult);
+                //m_ast.put(ctx, expressionResult);
+                m_ast.put(ctx, attr);
             } catch (NumberFormatException ex) {
               ErrorStack.enter(ctx.floatingPointConstant());
               ErrorStack.addInternal("bad number '"+ctx.floatingPointConstant().getText()+"'");
