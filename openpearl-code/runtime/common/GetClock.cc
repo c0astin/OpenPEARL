@@ -126,6 +126,6 @@ namespace pearlrt {
       }
 
       Log::info(logText);
-      return theClockValueSignal.whichRST();
+      throw theClockValueSignal;
    }
 }
