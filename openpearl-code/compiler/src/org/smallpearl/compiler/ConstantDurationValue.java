@@ -84,7 +84,14 @@ public class ConstantDurationValue extends ConstantValue {
     public double getSeconds() { return m_seconds;}
 
     public double getValue() {
-        return m_sign * ( m_hours * 3600 + m_minutes * 60 + m_seconds);
+      double result = m_hours;
+      result *= 60;
+      result += m_minutes;
+      result *= 60;
+      result += m_seconds;
+      result *= m_sign;
+      return result;
+//        return m_sign * ( m_hours * 3600 + m_minutes * 60 + m_seconds);
     }
 
     public String getBaseType() {
