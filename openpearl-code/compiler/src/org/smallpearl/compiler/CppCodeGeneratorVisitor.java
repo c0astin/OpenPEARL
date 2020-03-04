@@ -3062,7 +3062,32 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 ctx.start.getCharPositionInLine());
           }
         } else if (ctx.timeConstant() != null) {
-            literal.add("time", getTime(ctx.timeConstant()));
+          ConstantClockValue constClock;
+          if (attr == null || attr.m_constant == null) {
+            try {
+              Double value = getTime(ctx.timeConstant());
+              int hours = (int)(value / 3600);
+              value -= hours*3600;
+              int minutes = (int)(value/60);
+              value -= minutes * 60;
+              
+              constClock = ConstantPool.lookupClockValue(hours, minutes, value);
+                  
+            } catch (NumberFormatException ex) {
+              throw new NumberOutOfRangeException(ctx.getText(),
+                  ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            }
+          } else {
+            constClock = (ConstantClockValue)(attr.getConstant());
+          }  
+          if (constClock != null) {
+            literal.add("time", constClock);
+          } else {
+            throw new InternalCompilerErrorException(ctx.getText(),
+                ctx.start.getLine(),
+                ctx.start.getCharPositionInLine());
+          }          
+          // literal.add("time", getTime(ctx.timeConstant()));
         } else if (ctx.StringLiteral() != null) {
           ConstantCharacterValue value=null;
           if (attr.m_constant!= null) {
