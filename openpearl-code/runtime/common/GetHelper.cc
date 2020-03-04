@@ -461,7 +461,7 @@ endSampling:
       int c;   // characters or field delimiters to read
       int nbrOfCharsToTreat = rc->getMax();
 
-      if (width < 0) {
+      if (width <= 0) {
          throw theCharacterFormatSignal;
       }
 
@@ -593,7 +593,7 @@ endSampling:
       int scale = 0;
       const Fixed63 ten((Fixed63::Fixed63_t)10);
       const Fixed63 zero;
-      *f = zero;
+      Fixed63 result ((Fixed63::Fixed63_t)0);
 
       if (skipSpaces() == 0) {
          try {
@@ -605,8 +605,8 @@ endSampling:
                c = readChar();
 
                if (isdigit(c)) {
-                  *f *= ten;
-                  *f += Fixed63((Fixed63::Fixed63_t)(c - '0'));
+                  result *= ten;
+                  result += Fixed63((Fixed63::Fixed63_t)(c - '0'));
                   digitsProcessed ++;
 
                   if (decimalPointFound) {
@@ -633,31 +633,33 @@ endSampling:
             // if d > 0 : the value must be divided    d times by 10
 
             if (!decimalPointFound) {
+               // no decimal point found, maybe decimals
+	       // are specified in format
                scale = d;
             } else {
+               // decimal point found
                scale = postPointDigits;
             }
 
             if (scale > 0) {
+               // discard decimals but leave the first survive
+               // for rounding
                while (scale > 1) {
-                  *f /= ten;
+                  result /= ten;
                   scale --;
                }
 
-               *f += Fixed63((Fixed63::Fixed63_t)(5 * sign));
-               *f /= ten;
+	       // perform rounding
+               result += Fixed63((Fixed63::Fixed63_t)(5));
+               result /= ten;
             }
 
-            while (scale < 0) {
-               *f *= ten;
-               scale ++;
-            }
-
-            *f *= Fixed63((Fixed63::Fixed63_t)(sign));
+            result *= Fixed63((Fixed63::Fixed63_t)(sign));
+            *f = result;
             return;
          } catch (ArithmeticSignal s) {
             // arithmetic error
-            *f = zero;
+            // *f = zero;
             discardRemaining();
             throw theFixedRangeSignal;
          } catch (TerminateRequestSignal s) {
