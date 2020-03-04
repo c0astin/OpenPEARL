@@ -188,16 +188,24 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             int hours = 0;
             int minutes = 0;
             double seconds = 0.0;
-
+            ErrorStack.enter(ctx.timeConstant(),"CLOCK value");
             hours = Integer.valueOf(ctx.timeConstant().IntegerConstant(0).toString());
+            hours %= 24;
+            
             minutes = Integer.valueOf(ctx.timeConstant().IntegerConstant(1).toString());
-
-            if (ctx.timeConstant().IntegerConstant(3) != null) {
-                seconds = Double.valueOf(ctx.timeConstant().IntegerConstant(3).toString());
+            if (minutes <0 || minutes > 59) {
+              ErrorStack.add("minutes must be in range 0..59");
+            }
+            
+            if (ctx.timeConstant().IntegerConstant(2) != null) {
+                seconds = Double.valueOf(ctx.timeConstant().IntegerConstant(2).toString());
             } else if (ctx.timeConstant().floatingPointConstant() != null) {
                 seconds = CommonUtils.getFloatingPointConstantValue(ctx.timeConstant().floatingPointConstant());
             }
-
+            if (seconds < 0.0 || seconds >= 60.0) {
+              ErrorStack.add("seconds must be in range 0..59");
+            }
+            ErrorStack.leave();
             m_constantPool.add(new ConstantClockValue(hours, minutes, seconds));
         } else if (ctx.BitStringLiteral() != null) {
             long value = CommonUtils.convertBitStringToLong(ctx.BitStringLiteral().getText());
