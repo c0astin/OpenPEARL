@@ -92,7 +92,7 @@ namespace pearlrt {
          }
       } else {
          if (w - d - 1 < 8) {
-            Log::info("width too small");
+            Log::info("T-format  width,decimal mismatch (%d,%d)", w,d);
             throw theClockFormatSignal;
          }
 
