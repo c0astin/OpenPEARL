@@ -148,6 +148,10 @@ namespace pearlrt {
    }
 
    void DationPG::checkCapacity(Fixed<31> n) {
+      // check 0 or negativ, which must be accepted to produce the
+      // correct Signal from the I/O formats
+      if (n.x <= 0) return;
+
       // move the read/write pointer.
       // this method will throw an exception if there is too little space
       adv(n);
