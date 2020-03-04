@@ -37,12 +37,14 @@ This class provides the operations of the data type ref char.
 */
 
 #include "RefChar.h"
+#include "Log.h"
 
 namespace pearlrt {
    RefCharacter::RefCharacter() {
       max = 0;
       current = 0;
       data = 0;
+      charIsINV = false;
    }
 
    void RefCharacter::clear() {
@@ -86,12 +88,22 @@ namespace pearlrt {
    }
 
    void RefCharacter::fill() {
+      if (charIsINV) {
+          Log::error("REF CHAR: CHAR variable is INV (fill)");
+          throw theCharIsINVSignal;
+      }
+
       for (size_t i = current; i < max; i++) {
          data[i] = ' ';
       }
    }
 
    void RefCharacter::add(const RefCharacter& rhs) {
+      if (charIsINV) {
+          Log::error("REF CHAR: CHAR variable is INV (add RC)");
+          throw theCharIsINVSignal;
+      }
+
       size_t newCurrent = current + rhs.current;
 
       if (newCurrent > max) {
@@ -108,6 +120,11 @@ namespace pearlrt {
    }
 
    void RefCharacter::add(const char rhs) {
+      if (charIsINV) {
+          Log::error("REF CHAR: CHAR variable is INV (add char)");
+          throw theCharIsINVSignal;
+      }
+
       if (current + 1 > max) {
          throw theCharacterTooLongSignal;
       }
@@ -116,6 +133,11 @@ namespace pearlrt {
    }
 
    void RefCharacter::add(const char * rhs) {
+      if (charIsINV) {
+          Log::error("REF CHAR: CHAR variable is INV (add char*)");
+          throw theCharIsINVSignal;
+      }
+
       while (*rhs) {
          add(*rhs);
          rhs++;

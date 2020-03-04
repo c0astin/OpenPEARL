@@ -95,6 +95,8 @@ namespace pearlrt {
 
    */
    class RefCharacter {
+   private:
+      bool charIsINV;
    public:
       size_t max;     ///< the maximum size (derived from the container)
       size_t current; ///< the current content length
@@ -118,6 +120,23 @@ namespace pearlrt {
          max = rhs.upb().x;
          current = 0; //max;
          data = &rhs.data[0];
+         charIsINV = false;
+      }
+
+      /**
+         constructor and set work space character variable
+
+         \tparam S the size of the Character value which is used as
+                   initial storage of the RefCharacter
+
+         \param rhs the container storage for the RefCharacter
+      */
+      template<size_t S>
+      RefCharacter(const Character<S> & rhs) {
+         max = rhs.upb().x;
+         current = 0; //max;
+         data = (char*) &rhs.data[0];
+         charIsINV = true;
       }
 
       /**
