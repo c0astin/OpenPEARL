@@ -101,10 +101,11 @@ namespace pearlrt {
          Fixed<31> digitsFixed;
          bool signNeeded;
          bool pointNeeded;
+         static const Float<23> ten(10);
 
          // easy case: illegal parameter setting
          if (w.x <= 0) {
-            Log::info("F: width < 0");
+            Log::info("F: width <= 0");
             throw theFixedFormatSignal;
          }
 
@@ -128,6 +129,13 @@ namespace pearlrt {
          if (d.x > 0) {
             pointNeeded = true;
          }
+
+	 // perform rounding
+         Float<23> half(0.5);
+	 for (int s=0; s<d.x; s++) {
+            half = half / ten;
+         }
+         absValue = absValue + half;
 
          // get number of digits in current value
          digits = 1;
@@ -230,7 +238,7 @@ namespace pearlrt {
 
          Float<52> x, y, testExponent; // internal workspace
          static const Float<52> one(1.0); // internal workspace
-         static const Float<52> two(2.0); // internal workspace
+         static const Float<52> ten(10.0); // internal workspace
          
          int32_t leadingSpaces;
          int32_t expValue; // value of the exponent field
@@ -238,7 +246,6 @@ namespace pearlrt {
          int32_t sign=1; 
          int32_t prePointDigits, postPointDigits;
          int ch;
-
 
          // easy case: illegal parameter setting
          if (w.x <= 0) {
@@ -257,7 +264,7 @@ namespace pearlrt {
          }
 
          // exp field, decimal point and digits
-         // w-s denote thenumber of digits in front of the decimal point
+         // w-s denote the number of digits in front of the decimal point
          // -2 due to E and sign of exponent
          // the decimal point is shown only if d>0
          // eSize denotes the number of digits in the exponent
@@ -281,11 +288,13 @@ namespace pearlrt {
 
          // determine the value of the 10th exponent
          expValue = 0;
-         if ((x >= one).getBoolean()) {
-            testExponent = GetHelper::pow10(100);
-            if ((x >= testExponent).getBoolean()) {
-               Log::info("E: number too large");
-               throw theExpValueSignal;
+         if ( (x >= one).getBoolean()) {
+            if (eSize.x == 2) {
+               testExponent = GetHelper::pow10(100);
+               if ((x >= testExponent).getBoolean()) {
+                  Log::info("E: number too large");
+                  throw theExpValueSignal;
+               }
             }
             e = 256;
             y = x;
@@ -300,7 +309,7 @@ namespace pearlrt {
             e = 256;
             y = x;
             for (i=0; i<PutHelper::nbrBinExpValues; i++) {
-               if ( (y * PutHelper::binExpValues[i] < two).getBoolean()) {
+               if ( (y * PutHelper::binExpValues[i] < ten).getBoolean()) {
                   y = y * PutHelper::binExpValues[i];
                   expValue += e;
                }
@@ -332,9 +341,16 @@ namespace pearlrt {
             sink.putChar('-');
          }
 
-
          x = x / Float<52>(GetHelper::pow10(expValue));
          y = GetHelper::pow10(prePointDigits-1);
+        
+         // perform rounding
+         x = x + Float<52>(0.5) / Float<52>(GetHelper::pow10(postPointDigits));
+	 // and exponent adjust if rounding produced overflow of first mantissa digit
+         if ((x >= Float<52>(GetHelper::pow10(prePointDigits))).getBoolean()) {
+            x = x / ten;
+            expValue ++;
+         }
 
          while (prePointDigits > 0) {
             ch = (x / y).x;
@@ -367,7 +383,7 @@ namespace pearlrt {
             // three digit exponent
             ch = expValue / 100 + '0';
             sink.putChar(ch);
-            expValue /= 10;
+            expValue %= 100;
          }
 
          ch = expValue / 10 + '0';
