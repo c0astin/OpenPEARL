@@ -81,6 +81,7 @@ SmallPearlVisitor<Void> {
 	    private ModuleEntry m_module;
 	    private AST m_ast = null;
 
+
 	    
 	
 	    public CheckDationDeclaration(String sourceFileName,
@@ -311,6 +312,7 @@ SmallPearlVisitor<Void> {
 	private ModuleEntry m_module;
 	private AST m_ast = null;
     private boolean m_formatListAborted=false;
+    private boolean m_directionInput;
 
 	public CheckIOStatements(String sourceFileName, int verbose, boolean debug,
 			SymbolTableVisitor symbolTableVisitor,
@@ -556,7 +558,8 @@ SmallPearlVisitor<Void> {
 
 
 	  ErrorStack.enter(ctx, "PUT");
-
+	  m_directionInput = false;
+	  
 	  TypeDation d = lookupDation(ctx.dationName());
 	  
       // enshure that the dation id of type ALPHIC
@@ -586,6 +589,7 @@ SmallPearlVisitor<Void> {
         }
 
         ErrorStack.enter(ctx, "GET");
+        m_directionInput = true;
 
         TypeDation d = lookupDation(ctx.dationName());
 
@@ -615,8 +619,9 @@ SmallPearlVisitor<Void> {
         TypeDation d = new TypeDation();
         d.setTypeOfTransmission("ALPHIC");
         d.setTfu(false);
-
+        
         ErrorStack.enter(ctx, "CONVERT TO");
+        m_directionInput = false;
 
         visitChildren(ctx);
 
@@ -627,7 +632,7 @@ SmallPearlVisitor<Void> {
 
         ASTAttribute attr = m_ast.lookup(ctx.name());
         if (attr == null) {
-          ErrorStack.add("internal compiler error: no ASTAttribute in CONVERT/TO destination");
+          ErrorStack.addInternal("no ASTAttribute in CONVERT/TO destination");
         } else {
           if (! (attr.m_type instanceof TypeChar)) {
             ErrorStack.add("destination must be of type CHAR");
@@ -655,6 +660,7 @@ SmallPearlVisitor<Void> {
         d.setTfu(false);
 
         ErrorStack.enter(ctx, "CONVERT FROM");
+        m_directionInput = true;
 
         visitChildren(ctx);
 
@@ -684,6 +690,7 @@ SmallPearlVisitor<Void> {
 
         // enshure that the dation id of type 'type'
         ErrorStack.enter(ctx, "READ");
+        m_directionInput = true;
 
         TypeDation d = lookupDation(ctx.dationName());
 
@@ -713,6 +720,7 @@ SmallPearlVisitor<Void> {
 
         // enshure that the dation id of type 'type'
         ErrorStack.enter(ctx, "WRITE");
+        m_directionInput = false;
 
         TypeDation d = lookupDation(ctx.dationName());
 
@@ -805,6 +813,7 @@ SmallPearlVisitor<Void> {
 
         // enshure that the dation id of type BASIC
         ErrorStack.enter(ctx, "TAKE");
+        m_directionInput = true;
 
         TypeDation d = lookupDation(ctx.dationName());
         if (!d.isBasic()) {
@@ -841,6 +850,7 @@ SmallPearlVisitor<Void> {
 
         // enshure that the dation id of type BASIC
         ErrorStack.enter(ctx, "SEND");
+        m_directionInput = false;
 
         TypeDation d = lookupDation(ctx.dationName());
 
@@ -1277,7 +1287,12 @@ SmallPearlVisitor<Void> {
 					+ checkDecimalPositions + ")" + "significance="
 					+ significance + " (check=" + checkSignificance + ")");
 			 */
-
+			int sizeForExponent = 4;
+			if (m_directionInput) {
+			  sizeForExponent = 0;
+			  
+			}
+	
 			if (checkWidth && checkDecimalPositions && checkSignificance) {
 				if (significance <= decimalPositions) {
 					ErrorStack
@@ -1289,11 +1304,11 @@ SmallPearlVisitor<Void> {
 				// leading digit, decimal point and "E+xx"
 				// if the output value is <0, there may still occur a
 				// problem during run time, since the sign is not mandatory
-				if ((width < significance + 5)
-						|| (width < decimalPositions + 6)) {
+				if ((width < significance + sizeForExponent +1)
+						|| (width < decimalPositions + sizeForExponent +2)) {
 					ErrorStack.add("field width too small (at least "
-							+ Math.max((significance + 5),
-									(decimalPositions + 6)) + " required)");
+							+ Math.max((significance + sizeForExponent +1),
+									(decimalPositions + sizeForExponent +2)) + " required)");
 				}
 			} else if (!checkWidth && checkDecimalPositions
 					&& checkSignificance) {
@@ -1306,18 +1321,18 @@ SmallPearlVisitor<Void> {
 				// leading digit, decimal point and "E+xx"
 				// if the output value is <0, there may still occur a
 				// problem during run time, since the sign is not mandatory
-				if (width < decimalPositions + 6) {
+				if (width < decimalPositions + sizeForExponent + 2) {
 					ErrorStack.add("field width too small (at least "
-							+ (decimalPositions + 6) + " required)");
+							+ (decimalPositions + sizeForExponent + 2) + " required)");
 				}
 			} else if (checkWidth && checkSignificance) {
 
 				// add 5 to significance due to decimal point and "E+xx"
 				// if the output value is <0, there may still occur a
 				// problem during run time, since the sign is not mandatory
-				if (width < significance + 5) {
+				if (width < significance + sizeForExponent + 1) {
 					ErrorStack.add("field width too small (at least "
-							+ (significance + 5) + " required)");
+							+ (significance + sizeForExponent + 1) + " required)");
 				}
 			}
 		}
@@ -1401,7 +1416,11 @@ SmallPearlVisitor<Void> {
 					+ significance + " (check=" + checkSignificance + ")");
 
 			 */
-
+            int sizeForExponent = 5;
+            if (m_directionInput) {
+              sizeForExponent = 0;
+              
+            }
 			if (checkWidth && checkDecimalPositions && checkSignificance) {
 				if (significance <= decimalPositions) {
 					ErrorStack
@@ -1413,11 +1432,11 @@ SmallPearlVisitor<Void> {
 				// leading digit, decimal point and "E+xxx"
 				// if the output value is <0, there may still occur a
 				// problem during run time, since the sign is not mandatory
-				if ((width < significance + 6)
-						|| (width < decimalPositions + 7)) {
+				if ((width < significance + sizeForExponent + 1)
+						|| (width < decimalPositions + sizeForExponent + 2)) {
 					ErrorStack.add("field width too small (at least "
-							+ Math.max((significance + 5),
-									(decimalPositions + 6)) + " required)");
+							+ Math.max((significance + sizeForExponent + 1),
+									(decimalPositions + sizeForExponent + 2)) + " required)");
 				}
 			} else if (!checkWidth && checkDecimalPositions
 					&& checkSignificance) {
@@ -1430,18 +1449,18 @@ SmallPearlVisitor<Void> {
 				// leading digit, decimal point and "E+xxx"
 				// if the output value is <0, there may still occur a
 				// problem during run time, since the sign is not mandatory
-				if (width < decimalPositions + 7) {
+				if (width < decimalPositions + sizeForExponent + 2) {
 					ErrorStack.add("field width too small (at least "
-							+ (decimalPositions + 7) + " required)");
+							+ (decimalPositions + sizeForExponent + 2) + " required)");
 				}
 			} else if (checkWidth && checkSignificance) {
 
 				// add 6 to significance due to decimal point and "E+xxx"
 				// if the output value is <0, there may still occur a
 				// problem during run time, since the sign is not mandatory
-				if (width < significance + 6) {
+				if (width < significance + sizeForExponent + 1) {
 					ErrorStack.add("field width too small (at least "
-							+ (significance + 6) + " required)");
+							+ (significance + sizeForExponent + 1) + " required)");
 				}
 			}
 		}
