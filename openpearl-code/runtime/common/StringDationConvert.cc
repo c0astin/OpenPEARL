@@ -65,7 +65,9 @@ namespace pearlrt {
    }
 
    void StringDationConvert::checkCapacity(Fixed<31> n) {
-
+      // check 0 or negativ, which must be accepted to produce the
+      // correct Signal from the I/O formats
+      if (n.x <= 0) return;
       if (string->getCurrent()+n.x >= string->getMax() ) {
           Log::error("attempt to read/write past the string limits");
           throw theCharacterTooLongSignal;
@@ -133,7 +135,7 @@ namespace pearlrt {
 
       switch (fmtEntry->format) {
       default:
-         Log::error("CONVERT: unsupported format %d\n", fmtEntry->format);
+         Log::error("CONVERT: unsupported format %d", fmtEntry->format);
          throw theInternalDationSignal;
 
       case IOFormatEntry::X:
@@ -177,7 +179,8 @@ namespace pearlrt {
 
       switch (fmtEntry->format) {
       default:
-         printf("unsupported format %d\n", fmtEntry->format);
+         Log::error("CONVERT: unsupported format %d", fmtEntry->format);
+         throw theInternalDationSignal;
          break;
 
       case IOFormatEntry::X:
@@ -324,7 +327,6 @@ namespace pearlrt {
       // create a loop control structure for the format list treatment
       LoopControl formatLoop(formatList->nbrOfEntries, true);
       LoopControl dataLoop(dataList->nbrOfEntries, false);
-
 
       try {
 
