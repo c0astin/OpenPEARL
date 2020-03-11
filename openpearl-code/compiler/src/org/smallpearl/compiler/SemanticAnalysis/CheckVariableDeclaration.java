@@ -349,7 +349,7 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void> implem
                     throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
-                if (ctx.arrayInitialisationAttribute() != null) {
+                if (ctx.initialisationAttribute() != null) {
                 }
 
             }

@@ -418,12 +418,6 @@ initialisationAttribute :
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-arrayInitialisationAttribute :
-    ( 'INITIAL' | 'INIT' ) '(' initElement ( ',' initElement )* ')'
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
 //  InitElement ::= Constant
 //      | Identifier§NamedConstant | ConstantExpression ...
 ////////////////////////////////////////////////////////////////////////////////
@@ -526,7 +520,7 @@ arrayVariableDeclaration :
 
 arrayDenotation :
      ( ID | '(' ID ( ',' ID)* ')' ) dimensionAttribute assignmentProtection? typeAttributeForArray globalAttribute?
-     arrayInitialisationAttribute?
+     initialisationAttribute?
     ;
 
 ////////////////////////////////////////////////////////////////////////////////

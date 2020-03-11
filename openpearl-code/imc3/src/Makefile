@@ -7,7 +7,7 @@ SRCS:= $(foreach dir,$(DIRS),$(filter-out $(dir)/package-info.java,$(wildcard $(
 
 .PHONY: all clean tests
 
-all: ../out/imc.jar javadoc
+all: ../out/imc.jar 
 
 ../out/imc.jar: $(SRCS)
 	mkdir -p  out

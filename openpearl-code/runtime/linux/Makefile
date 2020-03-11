@@ -42,6 +42,7 @@ CXXFLAGS += -fno-non-call-exceptions
 CPPFLAGS += $(INCLUDES)
 LDLIBS = -lpthread -lrt 
 CXXFLAGS += -DTARGET=1
+CXXFLAGS += -std=c++11 
 
 #LINK.o = @echo link $<; $(LINK.cc)
 LINK.o = $(LINK.cc) $(LDLIBS)

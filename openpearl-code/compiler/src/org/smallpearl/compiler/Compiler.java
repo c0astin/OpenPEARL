@@ -182,7 +182,6 @@ public class Compiler {
                 if (ErrorStack.getTotalErrorCount()<=0) {
                     constantPoolVisitor.visit(tree);
                 }
-                    
 
                 ConstantExpressionEvaluatorVisitor constantExpressionVisitor = new ConstantExpressionEvaluatorVisitor(verbose, debug, symbolTableVisitor, constantPoolVisitor);
                 if (ErrorStack.getTotalErrorCount()<=0) {
@@ -194,7 +193,7 @@ public class Compiler {
                     fixUpSymbolTableVisitor.visit(tree);
                 }
                     
-                    // expressionTypeVisitor.visit(tree);
+                // expressionTypeVisitor.visit(tree);
 
                 if (dumpConstantPool) {
                         ConstantPool.dump();

@@ -15,14 +15,15 @@ SystemKnown=0
 AptPackageList=""
 PackageManager="apt-get"
 
-grep "PRETTY_NAME=\"Fedora 30 (Workstation Edition)\"" /etc/os-release >/dev/null
+grep "PRETTY_NAME=\"Fedora 31 (Workstation Edition)\"" /etc/os-release >/dev/null
 rc=$?
 if [ $rc -eq 0 ]
 then
-   echo "detected: Fedora 30 (Workstation Edition) "
+   echo "detected: Fedora 31 (Workstation Edition) "
    AptPackageList+=" gcc g++ make"
    AptPackageList+=" java-1.8.0-openjdk.x86_64"
-   AptPackageList+=" flex ncurses-libs.x86_64"
+   AptPackageList+=" flex flex-devel"
+   AptPackageList+=" ncurses-libs.x86_64 ncurses-devel"
    AptPackageList+=" expat expat-devel.x86_64"
    AptPackageList+=" cpan"
    PackageManager="dnf"

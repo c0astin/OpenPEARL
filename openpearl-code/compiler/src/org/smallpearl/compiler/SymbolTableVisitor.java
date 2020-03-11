@@ -678,6 +678,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         boolean hasGlobalAttribute = false;
         boolean hasAssigmentProtection = false;
         ArrayList<String> identifierDenotationList = new ArrayList<String>();
+        ArrayOrStructureInitializer arrayOrStructureInitializer = null;
 
         m_type = new TypeArray();
 
@@ -700,10 +701,23 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 }
             }
 
+            if ( ctx.initialisationAttribute() != null ) {
+                ArrayList<Initializer> initElementList = null;
+
+                initElementList = getInitialisationAttribute(ctx.initialisationAttribute());
+
+                if ( initElementList != null && initElementList.size() > 0) {
+                    arrayOrStructureInitializer = new ArrayOrStructureInitializer(ctx, initElementList);
+                }
+                else {
+                    arrayOrStructureInitializer = null;
+                }
+            }
+
             addArrayDescriptor(new ArrayDescriptor(((TypeArray) m_type).getNoOfDimensions(), ((TypeArray) m_type).getDimensions()));
 
             for (int i = 0; i < identifierDenotationList.size(); i++) {
-                VariableEntry variableEntry = new VariableEntry(identifierDenotationList.get(i), m_type, hasAssigmentProtection, ctx, null);
+                VariableEntry variableEntry = new VariableEntry(identifierDenotationList.get(i), m_type, hasAssigmentProtection, ctx, arrayOrStructureInitializer);
                 if (!m_currentSymbolTable.enter(variableEntry)) {
                     System.out.println("ERR: Double definition of " + identifierDenotationList.get(i));
                 }
@@ -1524,6 +1538,25 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         return constant;
     }
 
+    private int getPrecisionByType(TypeDefinition type) {
+        int precision =  0;
+
+        if ( type instanceof TypeFixed) {
+            precision = ((TypeFixed)type).getPrecision();
+        } else if ( type instanceof TypeFloat) {
+            precision = ((TypeFloat)type).getPrecision();
+        } else if ( type instanceof TypeBit) {
+            precision = ((TypeBit)type).getPrecision();
+        } else if ( type instanceof TypeArray) {
+            TypeArray arrType = (TypeArray)type;
+            precision = getPrecisionByType(arrType.getBaseType());
+        } else {
+            throw new InternalCompilerErrorException("Cannot determine lenght of type");
+        }
+
+        return precision;
+    }
+
     private ConstantValue getConstant(SmallPearlParser.ConstantContext ctx) {
         ConstantValue constant = null;
         int sign = 1;
@@ -1544,19 +1577,22 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
             if ( ctx.fixedConstant().fixedNumberPrecision() != null ) {
                 curlen = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
-            } else if ( m_type instanceof TypeFixed) {
-                curlen = ((TypeFixed)m_type).getPrecision();
-            } else if ( m_type instanceof TypeFloat) {
-                curlen = ((TypeFloat)m_type).getPrecision();
             } else {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                curlen = getPrecisionByType(m_type);
             }
 
             constant = new ConstantFixedValue(curval,curlen);
         }
         else if ( ctx.floatingPointConstant() != null) {
             double curval = sign * CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
-            int curlen = ((TypeFloat)m_type).getPrecision();
+            int curlen = 0;
+
+            if ( m_type instanceof TypeArray) {
+                curlen = ((TypeArray)m_type).getBaseType().getPrecision();
+            } else {
+                curlen = ((TypeFloat)m_type).getPrecision();
+            }
+
             constant = new ConstantFloatValue(curval,curlen);
         }
         else if ( ctx.durationConstant() != null) {
@@ -1578,15 +1614,14 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 }
             }
 
-            if ( m_type instanceof TypeDuration) {
-                constant = new ConstantDurationValue(hours, minutes, seconds);
-            }
-            else if ( m_type instanceof TypeClock) {
-                constant = new ConstantClockValue(hours, minutes, seconds);
-            }
-            else {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
+            constant = new ConstantDurationValue(hours, minutes, seconds);
+//  TODO MS          }
+//            else if ( m_type instanceof TypeClock) {
+//                constant = new ConstantClockValue(hours, minutes, seconds);
+//            }
+//            else {
+//                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//            }
 
         }
         else if ( ctx.bitStringConstant() != null) {

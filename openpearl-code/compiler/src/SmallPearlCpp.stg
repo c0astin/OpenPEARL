@@ -2327,8 +2327,7 @@ ArrayRHS(name,descriptor,indices) ::= <%
 *(data_<name> + <descriptor>->offset(<indices>))
 %>
 
-ArrayInitalisations(initElements)::= <%
-{<initElements: {initElement|<initElement>} ; separator=",">}
+ArrayInitalisations(initElements)::= <%{<initElements: {initElement|<initElement>} ; separator=",">}
 %>
 
 ArrayLWB(descriptor,index) ::= <%
