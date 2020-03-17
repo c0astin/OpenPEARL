@@ -67,8 +67,8 @@ TEST(GetClock, conversions) {
    ASSERT_EQ(pearlrt::GetClock::fromT(c, 19, 0, source), 0);
    source.rewind();
    d = (pearlrt::Character<20>)("  12:10:21.1234    X");
-   ASSERT_EQ(pearlrt::GetClock::fromT(c, 20, 0, source),
-             pearlrt::theClockValueSignal.whichRST());
+   ASSERT_THROW(pearlrt::GetClock::fromT(c, 20, 0, source),
+             pearlrt::ClockValueSignal);
    // cal hours mod 24?
    source.rewind();
    //                            12345678901234567890
@@ -85,24 +85,24 @@ TEST(GetClock, conversions) {
    ASSERT_TRUE((c == c2).getBoolean());
    source.rewind();
    d = (pearlrt::Character<20>)("  12:60:21.1234    X");
-   ASSERT_EQ(pearlrt::GetClock::fromT(c, 19, 0, source),
-             pearlrt::theClockValueSignal.whichRST());
+   ASSERT_THROW(pearlrt::GetClock::fromT(c, 19, 0, source),
+             pearlrt::ClockValueSignal);
    source.rewind();
    d = (pearlrt::Character<20>)("  12:10:60.1234    X");
-   ASSERT_EQ(pearlrt::GetClock::fromT(c, 19, 0, source),
-             pearlrt::theClockValueSignal.whichRST());
+   ASSERT_THROW(pearlrt::GetClock::fromT(c, 19, 0, source),
+             pearlrt::ClockValueSignal);
    source.rewind();
    d = (pearlrt::Character<20>)("  12 10:21.1234    X");
-   ASSERT_EQ(pearlrt::GetClock::fromT(c, 19, 0, source),
-             pearlrt::theClockValueSignal.whichRST());
+   ASSERT_THROW(pearlrt::GetClock::fromT(c, 19, 0, source),
+             pearlrt::ClockValueSignal);
    source.rewind();
    d = (pearlrt::Character<20>)("  12:10 21.1234    X");
-   ASSERT_EQ(pearlrt::GetClock::fromT(c, 19, 0, source),
-             pearlrt::theClockValueSignal.whichRST());
+   ASSERT_THROW(pearlrt::GetClock::fromT(c, 19, 0, source),
+             pearlrt::ClockValueSignal);
    source.rewind();
    d = (pearlrt::Character<20>)("  12:10:21 1234    X");
-   ASSERT_EQ(pearlrt::GetClock::fromT(c, 19, 0, source),
-             pearlrt::theClockValueSignal.whichRST());
+   ASSERT_THROW(pearlrt::GetClock::fromT(c, 19, 0, source),
+             pearlrt::ClockValueSignal);
    // continue reading at right position?
    //                            12345678901234567890
    d = (pearlrt::Character<20>)("12:10:21 13:11:22 ");
@@ -116,8 +116,8 @@ TEST(GetClock, conversions) {
    //                            12345678901234567890
    d = (pearlrt::Character<20>)("1T:10:21 13:11:22 ");
    source.rewind();
-   EXPECT_EQ(pearlrt::GetClock::fromT(c, 9, 0, source),
-             pearlrt::theClockValueSignal.whichRST());
+   EXPECT_THROW(pearlrt::GetClock::fromT(c, 9, 0, source),
+             pearlrt::ClockValueSignal);
    pearlrt::GetClock::fromT(c2, 9, 0, source);
    //ASSERT_EQ(c , pearlrt::Clock(((12*60+10)*60)+21) );
    ASSERT_TRUE((c2 == pearlrt::Clock(((13 * 60 + 11) * 60) + 22))
@@ -125,8 +125,8 @@ TEST(GetClock, conversions) {
    //                            12345678901234567890
    d = (pearlrt::Character<20>)("1T:10:21 13:11:22 ");
    source.rewind();
-   EXPECT_EQ(pearlrt::GetClock::fromT(c, 10, 0, source),
-             pearlrt::theClockValueSignal.whichRST());
+   EXPECT_THROW(pearlrt::GetClock::fromT(c, 10, 0, source),
+             pearlrt::ClockValueSignal);
    pearlrt::GetClock::fromT(c2, 9, 0, source);
    //ASSERT_EQ(c , pearlrt::Clock(((12*60+10)*60)+21) );
    ASSERT_TRUE((c2 == pearlrt::Clock(((3 * 60 + 11) * 60) + 22)).getBoolean());
@@ -147,8 +147,8 @@ TEST(GetClock, conversions) {
    source.rewind();
    EXPECT_EQ(pearlrt::GetClock::fromT(c, 9, 0, source), 0);
    ASSERT_TRUE((c == pearlrt::Clock(((12 * 60 + 13) * 60) + 23)).getBoolean());
-   EXPECT_EQ(pearlrt::GetClock::fromT(c, 9, 0, source),
-             pearlrt::theClockValueSignal.whichRST());
+   EXPECT_THROW(pearlrt::GetClock::fromT(c, 9, 0, source),
+             pearlrt::ClockValueSignal);
    //                            12345678901234567890
    d = (pearlrt::Character<20>)("12:13:23\n 13:11:22 ");
    rc.setWork(d);
