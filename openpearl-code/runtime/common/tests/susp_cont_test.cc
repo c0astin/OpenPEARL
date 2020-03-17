@@ -186,10 +186,10 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
-           Duration(4.0),
+           Duration(4,0),
            0);
    me->setLocation(__LINE__,fn);
-   if (d.compare(Duration(0.1)) < 0) {
+   if (d.compare(Duration(0,100000)) < 0) {
       printf("SUSP_CONT_TEST: not preemptied: ok\n");
    } else {
       printf("SUSP_CONT_TEST: preemptied by other task - fail\n");
@@ -202,10 +202,10 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
-           Duration(4.0),
+           Duration(4,0),
            0);
    me->setLocation(__LINE__,fn);
-   if (d.compare(Duration(0.1)) < 0) {
+   if (d.compare(Duration(0,100000)) < 0) {
       printf("priority change problem -- fail!\n");
    } else {
       printf("long delay is ok\n");
@@ -219,7 +219,7 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
-           Duration(5.0),
+           Duration(5,0),
            0);
 
    // perform remote termination of selfSUSPENDED_TASK task
@@ -233,7 +233,7 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
-           Duration(1.0),
+           Duration(1,0),
            0);
    me->setLocation(__LINE__,fn);
    SUSPENDED_TASK.terminate(me);
@@ -250,7 +250,7 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
-           Duration(1.0),
+           Duration(1,0),
            0);
    me->setLocation(__LINE__,fn);
    if (counter1.get() == 0 ) {
@@ -263,7 +263,7 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
-           Duration(1.0),
+           Duration(1,0),
            0);
    me->setLocation(__LINE__,fn);
    if (counter1.get() == 0 ) {
@@ -296,7 +296,7 @@ DCLTASK(CONTINUER,pearlrt::Prio(255),pearlrt::BitString<1>(0))
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
-           Duration(1.0),
+           Duration(1,0),
            0);
    me->setLocation(__LINE__,fn);
    s = Clock::now();
@@ -306,7 +306,7 @@ printf("CONTINUER: continue SUSPENDED_TASK\n");
 printf("CONTINUER: continue SUSPENDED_TASK done\n");
 
    me->setLocation(__LINE__,fn);
-   while ((s+Duration(3.0)).compare(Clock::now()) > 0) {
+   while ((s+Duration(3,0)).compare(Clock::now()) > 0) {
 //      me->setLocation(__LINE__,fn);
    }
 Log::info("CONTINUER: end of code\n");
@@ -322,7 +322,7 @@ DCLTASK(C1,pearlrt::Prio(35),pearlrt::BitString<1>(0))
    Fixed63 c2start;
    Clock e;
    me->setLocation(__LINE__,fn);
-   e = s + Duration(3.0);
+   e = s + Duration(3,0);
    c2start = counter2;
    while (e.compare(Clock::now()) > 0) {
       me->setLocation(__LINE__,fn);
@@ -340,7 +340,7 @@ DCLTASK(C2, pearlrt::Prio(33),pearlrt::BitString<1>(0))
 {
    Clock e;
    me->setLocation(__LINE__,fn);
-   e = s + Duration(1.0);
+   e = s + Duration(1,0);
 Log::info("C2: 1 sec active delay start");
    me->setLocation(__LINE__,fn);
    while (e.compare(Clock::now()) > 0) {
@@ -359,7 +359,7 @@ Log::info("C2: 1 sec active");
 Log::info("C2: C1.cont 30");
    C1.cont(me,pearlrt::Task::PRIO, pearlrt::Prio(30));
    me->setLocation(__LINE__,fn);
-   e = Clock::now() + Duration(3.0);
+   e = Clock::now() + Duration(3,0);
    me->setLocation(__LINE__,fn);
    while (e.compare(Clock::now())> 0) {
       me->setLocation(__LINE__,fn);
@@ -372,7 +372,7 @@ DCLTASK(COUNTER,pearlrt::Prio(255),pearlrt::BitString<1>(0))
 {
    Clock e;
    me->setLocation(__LINE__,fn);
-   e = Clock::now() + Duration(15.0);
+   e = Clock::now() + Duration(15,0);
    me->setLocation(__LINE__,fn);
    while (e.compare(Clock::now()) > 0) {
       me->setLocation(__LINE__,fn);

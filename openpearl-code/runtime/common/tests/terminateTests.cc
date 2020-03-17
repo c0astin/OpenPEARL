@@ -90,7 +90,7 @@ void t1SemaBlocked(pearlrt::Task* me) {
       T2SemaBlocked.activate(me);
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
-                 pearlrt::Clock(), pearlrt::Duration(0.1));
+                 pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
       ts = T2SemaBlocked.getTaskState();
 
@@ -104,7 +104,7 @@ void t1SemaBlocked(pearlrt::Task* me) {
       ts = T2SemaBlocked.getTaskState();
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
-                 pearlrt::Clock(), pearlrt::Duration(0.1));
+                 pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
 
       if (ts != pearlrt::TaskCommon::TERMINATED) {
@@ -163,7 +163,7 @@ void t1BoltBlocked(pearlrt::Task* me) {
    pearlrt::Log::info("****** t1BoltBlocked  -- do 10 slow terminates **********");
    T2BoltBlocker.activate(me);
     me->resume(pearlrt::Task::AFTER,
-                 pearlrt::Clock(), pearlrt::Duration(0.2));
+                 pearlrt::Clock(), pearlrt::Duration(0,200000));
 
    for (int i = 0; i < 10; i++) {
       printf("test #%d\n", i);
@@ -171,7 +171,7 @@ void t1BoltBlocked(pearlrt::Task* me) {
       T2BoltBlocked.activate(me);
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
-                 pearlrt::Clock(), pearlrt::Duration(0.1));
+                 pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
       ts = T2BoltBlocked.getTaskState();
 
@@ -185,7 +185,7 @@ void t1BoltBlocked(pearlrt::Task* me) {
       ts = T2BoltBlocked.getTaskState();
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
-                 pearlrt::Clock(), pearlrt::Duration(0.1));
+                 pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
 
       if (ts != pearlrt::TaskCommon::TERMINATED) {
@@ -276,7 +276,7 @@ void running(pearlrt::Task * me) {
       T2running.activate(me);
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
-                 pearlrt::Clock(), pearlrt::Duration(0.1));
+                 pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
       ts = T2running.getTaskState();
 
@@ -290,7 +290,7 @@ void running(pearlrt::Task * me) {
       ts = T2running.getTaskState();
       me->setLocation(__LINE__, __FILE__);
 //      me->resume(pearlrt::Task::AFTER,
-//                 pearlrt::Clock(), pearlrt::Duration(0.1));
+//                 pearlrt::Clock(), pearlrt::Duration(0,100000));
 //      me->setLocation(__LINE__, __FILE__);
 
       if (ts != pearlrt::TaskCommon::TERMINATED) {
@@ -341,7 +341,7 @@ void suspended(pearlrt::Task * me) {
       T2suspended.activate(me);
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
-                 pearlrt::Clock(), pearlrt::Duration(0.1));
+                 pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
       ts = T2suspended.getTaskState();
 
@@ -355,7 +355,7 @@ void suspended(pearlrt::Task * me) {
       ts = T2suspended.getTaskState();
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
-                 pearlrt::Clock(), pearlrt::Duration(0.1));
+                 pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
 
       if (ts != pearlrt::TaskCommon::TERMINATED) {

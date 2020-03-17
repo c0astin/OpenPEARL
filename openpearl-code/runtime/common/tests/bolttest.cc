@@ -122,13 +122,13 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
    *buffer = 0;
    _T2.activate(me);
    _T3.activate(me);
-  me->resume(Task::AFTER, Clock(), Duration(1.0),0);
+  me->resume(Task::AFTER, Clock(), Duration(1,0),0);
    if (n.x == 2) {
       printf("*** multiple enter is ok\n");
    } else {
       printf("*** multiple enter failed\n");
    }
-  me->resume(Task::AFTER, Clock(), Duration(3.0),0);
+  me->resume(Task::AFTER, Clock(), Duration(3,0),0);
    if (n.x == 0) {
       printf("*** multiple leave is ok\n");
    } else {
@@ -141,13 +141,13 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
    *buffer = 0;
    _R1.activate(me);
    _R2.activate(me);
-  me->resume(Task::AFTER, Clock(), Duration(1.0),0);
+  me->resume(Task::AFTER, Clock(), Duration(1,0),0);
    if (n.x == 1) {
       printf("*** multiple reserve is ok\n");
    } else {
       printf("*** multiple reserve failed\n");
    }
-  me->resume(Task::AFTER, Clock(), Duration(3.0),0);
+  me->resume(Task::AFTER, Clock(), Duration(3,0),0);
    if (n.x == 0) {
       printf("*** multiple free is ok\n");
    } else {
@@ -162,7 +162,7 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
    _R1.activate(me);
    _T2.activate(me);
    _R2.activate(me);
-  me->resume(Task::AFTER, Clock(), Duration(5.0),0);
+  me->resume(Task::AFTER, Clock(), Duration(5,0),0);
    if (strcmp(buffer,"R1 R2 T2 ") == 0) {
       printf("*** reserve has priority is ok\n");
    } else {
@@ -178,7 +178,7 @@ DCLTASK(_T2, pearlrt::Prio(20), pearlrt::BitString<1>(0)) {
   pearlrt::Bolt::enter(me, 2, s); 
   n.x++;
   strcat(buffer,"T2 ");
-  me->resume(Task::AFTER, Clock(), Duration(2.0),0);
+  me->resume(Task::AFTER, Clock(), Duration(2,0),0);
   pearlrt::Bolt::leave(me, 2, s); 
   n.x--;
 }
@@ -189,7 +189,7 @@ DCLTASK(_T3, pearlrt::Prio(30), pearlrt::BitString<1>(0)) {
   pearlrt::Bolt::enter(me, 2, s); 
   n.x++;
   strcat(buffer,"T3 ");
-  me->resume(Task::AFTER, Clock(), Duration(2.0),0);
+  me->resume(Task::AFTER, Clock(), Duration(2,0),0);
   pearlrt::Bolt::leave(me, 2, s); 
   n.x--;
 }
@@ -200,7 +200,7 @@ DCLTASK(_R1, pearlrt::Prio(30), pearlrt::BitString<1>(0)) {
   pearlrt::Bolt::reserve(me, 2, s); 
   n.x++;
   strcat(buffer,"R1 ");
-  me->resume(Task::AFTER, Clock(), Duration(1.0),0);
+  me->resume(Task::AFTER, Clock(), Duration(1,0),0);
   pearlrt::Bolt::free(me, 2, s); 
   n.x--;
 }
@@ -211,7 +211,7 @@ DCLTASK(_R2, pearlrt::Prio(30), pearlrt::BitString<1>(0)) {
   pearlrt::Bolt::reserve(me, 2, s); 
   n.x++;
   strcat(buffer,"R2 ");
-  me->resume(Task::AFTER, Clock(), Duration(1.0),0);
+  me->resume(Task::AFTER, Clock(), Duration(1,0),0);
   pearlrt::Bolt::free(me, 2, s); 
   n.x--;
 }
