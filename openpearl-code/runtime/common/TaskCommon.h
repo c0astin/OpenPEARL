@@ -384,7 +384,7 @@ namespace pearlrt {
                 int condition = 0,
                 Prio prio = Prio(),
                 Clock at = 0.0,
-                Duration after = 0.0,
+                Duration after = Duration(0,0),
                 Interrupt* when = 0);
 
       /**
@@ -417,10 +417,11 @@ namespace pearlrt {
       void activate(TaskCommon * me,
                     int condition = 0,
                     Prio prio = Prio(),
-                    Clock at = 0.0, Duration after = 0.0,
-                    Duration all = 0.0,
+                    Clock at = 0.0, 
+		    Duration after = Duration(0,0),
+                    Duration all = Duration(0,0),
                     Clock until = 0.0,
-                    Duration during = 0.0,
+                    Duration during = Duration(0,0),
                     Interrupt * when = 0);
 
 
@@ -484,7 +485,7 @@ namespace pearlrt {
       */
       void resume(int condition,
                   Clock at = 0.0,
-                  Duration after = 0.0,
+                  Duration after = Duration(0,0),
                   Interrupt* when = 0);
 
       /**
