@@ -103,8 +103,8 @@ namespace pearlrt {
                        Clock at, Duration after, Duration all,
                        Clock until, Duration during) {
       int counts;
-      static Duration nullDelay(0);
-      static Duration oneDay(24 * 60 * 60);
+      static const Duration nullDelay(0,0);
+      static const Duration oneDay(24 * 60 * 60,0);
       Clock now = Clock::now();
 
       // calculate start delay
@@ -116,7 +116,7 @@ namespace pearlrt {
 
          counts = 1;
       } else {
-         after = Duration(0.0);  // start immedially
+         after = nullDelay;  // start immedially
          counts = 0;
       }
 
@@ -129,7 +129,7 @@ namespace pearlrt {
 
             do {
                after += oneDay;
-            } while ((after < 0).getBoolean());
+            } while ((after < nullDelay).getBoolean());
          }
 
          counts = 1;
@@ -164,7 +164,7 @@ namespace pearlrt {
             if ((during <= nullDelay).getBoolean()) {
                do {
                   during += oneDay;
-               } while ((during < 0).getBoolean());
+               } while ((during < nullDelay).getBoolean());
             }
 
             counts = (during / all).x + 1;
