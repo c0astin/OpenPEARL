@@ -146,6 +146,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                 	   expressionResult = new ASTAttribute(((TypeArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
                 	}
                 }
+// 2020-03-14 (rm) TypeFormalParameterArray does not exist
 //                else if ( variable.getType() instanceof TypeFormalParameterArray ) {
 //                    expressionResult = new ASTAttribute(((TypeFormalParameterArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
 //                }
@@ -166,15 +167,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
-        } else if(ctx.name() != null) {
-            visit(ctx.name());
-            ASTAttribute expressionResult= m_ast.lookup(ctx.name());
-            if (expressionResult != null) {
-                m_ast.put(ctx, expressionResult);
-            } else {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-
+// 2020-03-14 (rm): duplicate alternative in if else-if chain             
+//        } else if(ctx.name() != null) {
+//          
+//            visit(ctx.name());
+//            ASTAttribute expressionResult= m_ast.lookup(ctx.name());
+//            if (expressionResult != null) {
+//                m_ast.put(ctx, expressionResult);
+//            } else {
+//                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//            }
+//
         } else if (ctx.semaTry() != null) {
             visit(ctx.semaTry());
             ASTAttribute expressionResult= m_ast.lookup(ctx.semaTry());
@@ -191,16 +194,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
-        } else if (ctx.name() != null) {
-            Log.debug("ExpressionTypeVisitor: visitPrimaryExpression: ctx.name=" + ctx.name().getText());
-            m_name = m_currentSymbolTable.lookup(ctx.name().ID().getText());
-
-            if (!(m_name instanceof VariableEntry)) {
-                throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-
-            visit(ctx.name());
-            m_name = null;
+// 2020-03-14 (rm): duplicate alternative in if else-if chain 
+//         else if (ctx.name() != null) {
+//            Log.debug("ExpressionTypeVisitor: visitPrimaryExpression: ctx.name=" + ctx.name().getText());
+//            m_name = m_currentSymbolTable.lookup(ctx.name().ID().getText());
+//
+//            if (!(m_name instanceof VariableEntry)) {
+//                throw  new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//            }
+//
+//            visit(ctx.name());
+//            m_name = null;
         } else if (ctx.expression() != null) {
             if ( ctx.expression() !=  null) {
                 visit(ctx.expression());
@@ -1523,7 +1527,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
         if (ctx.durationConstant() != null) {
             ASTAttribute expressionResult = new ASTAttribute(new TypeDuration(), true);
-            expressionResult.setConstant(getConstantDurationValue(ctx.durationConstant()));
+            expressionResult.setConstant(CommonUtils.getConstantDurationValue(ctx.durationConstant(),1));
             m_ast.put(ctx, expressionResult);
         } else if (ctx.floatingPointConstant() != null) {
             try {
@@ -1557,8 +1561,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             ASTAttribute expressionResult = new ASTAttribute(  new TypeBit(CommonUtils.getBitStringLength(ctx.BitStringLiteral().getText())), true);
             m_ast.put(ctx, expressionResult);
         } else if (ctx.fixedConstant() != null) {
+            long value=0;
+            int precision;
             try {
-                int precision = m_currentSymbolTable.lookupDefaultFixedLength();
+                precision = m_currentSymbolTable.lookupDefaultFixedLength();
                 
                 if (m_currFixedLength != null ) {
                     precision = m_currFixedLength;
@@ -1566,7 +1572,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
                 m_calculateRealFixedLength = true;
                 if ( m_calculateRealFixedLength) {
-                    long value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
+                    value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
 
                     precision = Long.toBinaryString(Math.abs(value)).length();
                     if ( value <  0) {
@@ -1582,6 +1588,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
 
                 ASTAttribute expressionResult = new ASTAttribute(new TypeFixed(precision), true);
+                ConstantFixedValue cfv = new ConstantFixedValue(value,precision);
+                ConstantValue cv = m_constantPool.add(cfv);   // add to constant pool; maybe we have it already
+                expressionResult.setConstant(cv);                
                 m_ast.put(ctx, expressionResult);
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -1644,33 +1653,33 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return new ConstantClockValue(hours,minutes,seconds);
     }
 
-    private ConstantDurationValue getConstantDurationValue(SmallPearlParser.DurationConstantContext ctx) {
-        Integer hours = 0;
-        Integer minutes = 0;
-        Double seconds = 0.0;
-
-        if (ctx.hours() !=  null) {
-           hours = (Integer.valueOf(ctx.hours().IntegerConstant().toString()) % 24);
-        }
-        
-        if (ctx.minutes()!= null) {
-           minutes = Integer.valueOf(ctx.minutes().IntegerConstant().toString());
-        }
-        
-        if (ctx.seconds() != null) {
-            if ( ctx.seconds().floatingPointConstant() != null ) {
-                seconds = CommonUtils.getFloatingPointConstantValue(ctx.seconds().floatingPointConstant());
-            } else if ( ctx.seconds().IntegerConstant() != null ) {
-                seconds = Double.valueOf(ctx.seconds().IntegerConstant().toString());
-            }
-        }
-
-        if (hours < 0 || minutes < 0 || minutes > 59) {
-            throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
-
-        return new ConstantDurationValue(hours,minutes,seconds);
-    }
+//    private ConstantDurationValue getConstantDurationValue(SmallPearlParser.DurationConstantContext ctx) {
+//        Long hours = (long) 0;
+//        Integer minutes = 0;
+//        Double seconds = 0.0;
+//
+//        if (ctx.hours() !=  null) {
+//           hours = (Long.valueOf(ctx.hours().IntegerConstant().toString()));
+//        }
+//        
+//        if (ctx.minutes()!= null) {
+//           minutes = Integer.valueOf(ctx.minutes().IntegerConstant().toString());
+//        }
+//        
+//        if (ctx.seconds() != null) {
+//            if ( ctx.seconds().floatingPointConstant() != null ) {
+//                seconds = CommonUtils.getFloatingPointConstantValue(ctx.seconds().floatingPointConstant());
+//            } else if ( ctx.seconds().IntegerConstant() != null ) {
+//                seconds = Double.valueOf(ctx.seconds().IntegerConstant().toString());
+//            }
+//        }
+//
+//        if (hours < 0 || minutes < 0 || minutes > 59) {
+//            throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//        }
+//
+//        return new ConstantDurationValue(hours,minutes,seconds);
+//    }
 
     @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {
@@ -2688,6 +2697,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
 
                 bits = (int)upperBoundary - (int)lowerBoundary + 1;
+            } else if ( ctx.bitSlice() instanceof SmallPearlParser.Case3BitSliceContext) {
+              ErrorStack.enter(ctx,".BIT(:)");
+              ErrorStack.addInternal("case3 missing");
+              ErrorStack.leave();
             }
 
            res = new ASTAttribute(new TypeBit(bits));
@@ -2696,28 +2709,28 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
 
             if ( ctx.charSlice() instanceof SmallPearlParser.Case1CharSliceContext) {
                  visitCase1CharSlice((SmallPearlParser.Case1CharSliceContext)ctx.charSlice());
-                 ASTAttribute expressionResult = m_ast.lookup(ctx.charSlice());
-                if (expressionResult != null) {
-                    m_ast.put(ctx, expressionResult);
-                } else {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-                }
+//                if (expressionResult != null) {
+//                    m_ast.put(ctx, expressionResult);
+//                } else {
+//                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//                }
             }
-            else if ( ctx.charSlice() instanceof SmallPearlParser.Case2CharSliceContext) {
-                visitCase2CharSlice((SmallPearlParser.Case2CharSliceContext) ctx.charSlice());
-                ASTAttribute expressionResult = m_ast.lookup(ctx.charSlice());
-                if (expressionResult != null) {
-                    m_ast.put(ctx, expressionResult);
-                } else {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-                }
-            }
+//            else if ( ctx.charSlice() instanceof SmallPearlParser.Case2CharSliceContext) {
+//                visitCase2CharSlice((SmallPearlParser.Case2CharSliceContext) ctx.charSlice());
+//                ASTAttribute expressionResult = m_ast.lookup(ctx.charSlice());
+//                if (expressionResult != null) {
+//                    m_ast.put(ctx, expressionResult);
+//                } else {
+//                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//                }
+//            }
             else if ( ctx.charSlice() instanceof SmallPearlParser.Case3CharSliceContext) {
                 visitCase3CharSlice((SmallPearlParser.Case3CharSliceContext) ctx.charSlice());
             }
             else if ( ctx.charSlice() instanceof SmallPearlParser.Case4CharSliceContext) {
                 visitCase4CharSlice((SmallPearlParser.Case4CharSliceContext) ctx.charSlice());
             }
+            res = m_ast.lookup(ctx.charSlice());
 //            HIER FEHLT NOCH ETWAS!!!!
         }
         else {
@@ -2907,45 +2920,117 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
 
-    @Override
-    public Void visitCase2CharSlice(SmallPearlParser.Case2CharSliceContext ctx) {
-        Log.debug("ExpressionTypeVisitor:visitCase3CharSlice:ctx" + CommonUtils.printContext(ctx));
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().getText());
-
-        visitChildren(ctx);
-
-        ASTAttribute lwb = m_ast.lookup(ctx.expression(0));
-        ASTAttribute uwb = m_ast.lookup(ctx.expression(0));
-
-        if ( lwb.isReadOnly() && uwb.isReadOnly()) {
-            Log.debug("ExpressionTypeVisitor:visitCase3CharSlice:ctx" + CommonUtils.printContext(ctx));
-        }
-
-        if ( entry instanceof VariableEntry) {
-            VariableEntry var = (VariableEntry) entry;
-            if ( var.getType() instanceof TypeChar) {
-                m_ast.put(ctx, new ASTAttribute(new TypeChar(((TypeChar) var.getType()).getPrecision())));
-            }
-            else {
-                throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-        } else {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
-
-        return null;
-    }
+// 2020-03-17 (rm) case2 of char slice mapped to case4 char slice
+//    @Override
+//    public Void visitCase2CharSlice(SmallPearlParser.Case2CharSliceContext ctx) {
+//        Log.debug("ExpressionTypeVisitor:visitCase2CharSlice:ctx" + CommonUtils.printContext(ctx) );
+//
+//        long lowerBoundary;
+//        long upperBoundary;
+//        ErrorStack.enter(ctx,":CHAR");
+//        
+//        ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
+//
+//        ConstantValue lower = evaluator.visit(ctx.constantFixedExpression(0));
+//        ConstantValue upper = evaluator.visit(ctx.constantFixedExpression(1));
+//
+//        if ( !(lower instanceof ConstantFixedValue)) {
+//            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//        }
+//
+//        if ( !(upper instanceof ConstantFixedValue)) {
+//            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//        }
+//
+//        lowerBoundary = ((ConstantFixedValue) lower).getValue();
+//        upperBoundary = ((ConstantFixedValue) upper).getValue();
+//
+//
+//        int characters = (int)upperBoundary - (int)lowerBoundary + 1;
+//        if (characters < 1) {
+//          ErrorStack.add("must select at least 1 character");
+//        }
+//        
+//        
+//        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().getText());
+//
+//        if ( entry instanceof VariableEntry) {
+//            VariableEntry var = (VariableEntry) entry;
+//            if ( var.getType() instanceof TypeChar) {
+//              TypeChar tc = new TypeChar(characters);
+//               m_ast.put(ctx, new ASTAttribute(tc));
+//            }
+//            else {
+//              ErrorStack.add("must be of type CHAR -- but is "+ var.getType().toString());
+//            }
+//        } else {
+//          ErrorStack.addInternal("no variable entry found");
+//        }
+//        ErrorStack.leave();
+//
+//        return null;
+//    }
 
     @Override
     public Void visitCase3CharSlice(SmallPearlParser.Case3CharSliceContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitCase3CharSlice:ctx" + CommonUtils.printContext(ctx));
-        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-    }
+        ErrorStack.enter(ctx,".CHAR(x:x+y)");
+        ErrorStack.addInternal("not implemented yet");
+        ErrorStack.leave();
+        return null;
+   }
 
     @Override
     public Void visitCase4CharSlice(SmallPearlParser.Case4CharSliceContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitCase4CharSlice:ctx" + CommonUtils.printContext(ctx));
-        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        long size = -1;  // preset with an illegal size
+        
+        ErrorStack.enter(ctx,".CHAR(:)");
+        
+        visitChildren(ctx);
+
+        ASTAttribute lwb = m_ast.lookup(ctx.expression(0));
+        ASTAttribute upb = m_ast.lookup(ctx.expression(1));
+        
+        if ( lwb.isReadOnly() && upb.isReadOnly()) {
+          size = upb.getConstantFixedValue().getValue() - lwb.getConstantFixedValue().getValue() + 1;
+          if (size < 1) {
+            ErrorStack.add("must select at least 1 character");
+          }
+          if (size > Defaults.CHARACTER_MAX_LENGTH) {
+            ErrorStack.add("must select max " + Defaults.CHARACTER_MAX_LENGTH+" characters");
+            size = Defaults.CHARACTER_MAX_LENGTH;
+          }
+          
+        }
+
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().getText());
+        if (entry instanceof VariableEntry) {
+          VariableEntry var = (VariableEntry) entry;
+          if (!( var.getType() instanceof TypeChar)) {
+            ErrorStack.add("must be of type CHAR -- but is "+var.getType().toString());
+          } else {
+            // dirty fix -- assume maximum size
+            // the correct solution is added a type TypeVariableChar 
+            // with the baseType of 'entry'
+            if (size == -1) {
+              size = var.getType().getPrecision();
+            }
+ 
+          }
+        } else {
+          ErrorStack.addInternal("visitCase4CharSlice: no variable entry found");
+        }
+        
+        m_ast.put(ctx, new ASTAttribute(new TypeChar((int)size)));
+        
+
+
+
+
+        ErrorStack.leave();
+        
+        return null;
     }
 
 
