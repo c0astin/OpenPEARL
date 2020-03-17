@@ -1,4 +1,3 @@
-take duration literal directly from ast attribute
 /*
  * [The "BSD license"]
  *  Copyright (c) 2018-2019 Marcel Schaible
