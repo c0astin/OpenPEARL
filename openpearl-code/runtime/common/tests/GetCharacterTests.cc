@@ -64,8 +64,9 @@ TEST(GetCharacter, A_format) {
       pearlrt::GetCharacter<5>::fromA(x, (pearlrt::Fixed<31>) - 1, source),
       pearlrt::CharacterFormatSignal);
    // test reading with width=0
-   ASSERT_NO_THROW(
-      pearlrt::GetCharacter<5>::fromA(x, (pearlrt::Fixed<31>)0, source));
+   ASSERT_THROW(
+      pearlrt::GetCharacter<5>::fromA(x, (pearlrt::Fixed<31>)0, source),
+      pearlrt::CharacterFormatSignal);
    {
       pearlrt::Character<5> x1("     ");
       ASSERT_TRUE((x == x1).getBoolean());

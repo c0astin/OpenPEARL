@@ -113,7 +113,7 @@ TEST(GetFixed, conversions) {
       rc.setWork(d);
       source.rewind();
       EXPECT_NO_THROW(pearlrt::GetFixed<15>::fromF(f15, 6, 1, source));
-      EXPECT_TRUE((f15 == pearlrt::Fixed<15>(-1234)).getBoolean());
+      EXPECT_TRUE((f15 == pearlrt::Fixed<15>(-1235)).getBoolean());
    }
    // range overflow
    {

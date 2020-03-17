@@ -64,9 +64,12 @@ TEST(PutCharacter, simpleCharacter) {
                                        sink),
          pearlrt::CharacterFormatSignal);
       rc.clear();
-      pearlrt::PutCharacter<5>::toA(x,
+      EXPECT_THROW(
+         pearlrt::PutCharacter<5>::toA(x,
                                     (pearlrt::Fixed<31>)0 ,
-                                    sink);
+                                    sink),
+         pearlrt::CharacterFormatSignal);
+
       EXPECT_EQ(rc.getCurrent(), 0);
       rc.clear();
       pearlrt::PutCharacter<5>::toA(x,
