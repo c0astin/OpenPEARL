@@ -140,16 +140,6 @@ TEST(Fixed63, AllTests) {
    y = (Fixed63::Fixed63_t)10;
    ASSERT_NO_THROW(x * y);
    ASSERT_EQ((x * y).get(), 1230);
-   /* cout << "Float constructor" << endl; */
-   /* cout << "   MaxInt + 1: "; */
-   dx = 0x7fffffffffffffffLL;
-   dx += 1 ;// 1010;
-   ASSERT_THROW(x = Fixed63(dx), ArithmeticOverflowSignal);
-   /* cout << "   MinInt - 1: "; */
-   dx = 0x8000000000000000LL;
-   dx = -dx;
-   dx -= 2000 ;// 1010;
-   ASSERT_THROW(x = Fixed63(dx), ArithmeticUnderflowSignal);
    /* cout << "    compare: " << endl; */
    x = Fixed63((Fixed63::Fixed63_t)10LL);
    y = x + (Fixed63::Fixed63_t)1LL;
