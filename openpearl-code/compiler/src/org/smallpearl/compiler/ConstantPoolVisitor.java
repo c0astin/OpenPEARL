@@ -210,7 +210,9 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         } else if (ctx.BitStringLiteral() != null) {
             long value = CommonUtils.convertBitStringToLong(ctx.BitStringLiteral().getText());
             int nb = CommonUtils.getBitStringLength(ctx.BitStringLiteral().getText());
-            m_constantPool.add(new ConstantBitValue(value, nb));
+            ConstantBitValue cbv = new ConstantBitValue(value, nb);
+            m_constantPool.add(cbv);
+            attr.setConstant(cbv);
         } else if (ctx.floatingPointConstant() != null) {
             try {
                 double value = 0.0;
@@ -218,8 +220,9 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
                 value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
 
-                m_constantPool.add(new ConstantFloatValue(value, precision));
-
+                ConstantFloatValue cfv = new ConstantFloatValue(value, precision);
+                m_constantPool.add(cfv);
+                attr.setConstant(cfv);
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
@@ -271,7 +274,9 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 	ErrorStack.leave();
                 }
 
-                m_constantPool.add(new ConstantFixedValue(value, precision));
+		ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
+                m_constantPool.add(cfv);
+                attr.setConstant(cfv);
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
