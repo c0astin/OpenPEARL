@@ -100,6 +100,7 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
     }
     else {
       id = ctx.ID().getText();
+   
     }
 
     SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
@@ -190,6 +191,16 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
 
         TypeBit rhs_type = (TypeBit) rhs;
 
+        if (rhs_type.getPrecision() > lhs_type.getPrecision()) {
+          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
+        }
+      }
+      else if (variable.getType() instanceof TypeChar) {
+        if (!(rhs instanceof TypeChar)) {
+          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
+        }
+        TypeChar lhs_type = (TypeChar) variable.getType();
+        TypeChar rhs_type = (TypeChar)rhs;
         if (rhs_type.getPrecision() > lhs_type.getPrecision()) {
           ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
         }
