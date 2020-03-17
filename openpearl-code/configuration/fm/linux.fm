@@ -67,7 +67,7 @@ config LINUX_Raspberry_reservedGpios
 	  14-15 for the UART
 	  7-10  for SPI0
 	multiple denotations of a gpio bit are accepted
-	If you use a hardware attached on top (HAT) add all 0-1 and 
+	If you use a hardware attached on top (HAT) add 0-1 and 
 	all gpio bits used by the HAT.
 
 
