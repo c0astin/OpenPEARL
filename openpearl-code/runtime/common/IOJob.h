@@ -630,7 +630,7 @@ namespace pearlrt {
       */
       union FormatParameter {
          /** FIXED(31) value to be used for the width in F-format */
-         int  f31;
+         Fixed<31>  f31;
          /** pointer to a FIXED(xx) value to receive results like in SOP */
          struct {
             /** start address of the value  */ 
