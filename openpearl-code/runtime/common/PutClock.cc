@@ -51,11 +51,10 @@ namespace pearlrt {
       char ch;
       ch = x / 10 + '0';
 
-      if (suppressLeadingZero && ch == '0') {
-         ch = ' ';
+      if (!suppressLeadingZero || ch != '0') {
+         sink.putChar(ch);
       }
 
-      sink.putChar(ch);
       sink.putChar(x % 10 + '0');
    }
 
@@ -70,36 +69,34 @@ namespace pearlrt {
       long us = x.getUsec();
       int d = decimals.x;
       int w = width.x;
+      int widthNeeded;
       hours = sec / 3600 ;
       sec %= 3600;
       min = sec / 60;
       sec %= 60;
 
-      if (d < 0 || d > 6) {
-         Log::info("decimals out of range %d (not in 0..6)", d);
+      if (d < 0) {
+         Log::info("decimals must be > 0");
          throw theClockFormatSignal;
       }
-
+    
+      widthNeeded = 7 + (hours >= 10); 
       if (d == 0) {
-         if (w < 8) {
-            Log::info("width too large %d (<8)", w);
+         if (widthNeeded > w) {
+            Log::info("T-format: width too small (%d need: %d)", w,widthNeeded);
             throw theClockFormatSignal;
-         }
-
-         while (w > 8) {
-            sink.putChar(' ');
-            w --;
          }
       } else {
-         if (w - d - 1 < 8) {
-            Log::info("T-format  width,decimal mismatch (%d,%d)", w,d);
+         widthNeeded += 1 + d;
+         if (widthNeeded > w) {
+            Log::info("T-format: width,decimal mismatch (%d,%d)", w,d);
             throw theClockFormatSignal;
          }
-
-         while (w - d - 1 > 8) {
-            sink.putChar(' ');
-            w --;
-         }
+      }
+ 
+      while(widthNeeded < w) {  
+         sink.putChar(' ');
+         w --;
       }
 
       i2sink(hours, true, sink);
@@ -112,14 +109,20 @@ namespace pearlrt {
          static int rounding[] = {0, 50000, 5000, 500, 50, 5, 0};
          sink.putChar('.');
          decimal = 100000;
-         us +=  rounding[d];   // d is from 1 to 6
+         if (d<= 6) {
+            us +=  rounding[d];   // d is from 1 to 6
+         }
 
-         do {
-            sink.putChar(us / decimal + '0');
-            us %= decimal;
-            decimal /= 10;
-            d--;
-         } while (d > 0);
+         // we have only 6 digits precision (micro seconds)
+         for (int i=0; i<d; i++) {
+            if (i<6) {
+               sink.putChar(us / decimal + '0');
+               us %= decimal;
+               decimal /= 10;
+            } else {
+               sink.putChar('0');
+            }
+         } 
       }
 
       return;

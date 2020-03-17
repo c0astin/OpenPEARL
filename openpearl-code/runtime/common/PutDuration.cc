@@ -40,33 +40,14 @@
 #include "Duration.h"
 #include "Signals.h"
 #include "Sink.h"
+#include <stdio.h>
+//#define __STDC_FORMAT_MACROS  // not required 
+#include <inttypes.h>
 
 using namespace std;
 
 namespace pearlrt {
 
-   /* add a decimal value with max 6 digits to the output sink */
-   /* leading zeros are suppressed and not printed             */
-   static void i6sink(int x, Sink& sink) {
-      bool suppressZero = true;
-      char ch;
-      int i;
-      int base = 100000;  // start with 100 thousend digit
-
-      for (i=0; i<5; i++) {
-         ch  = (x / base + '0');
-         if (suppressZero && ch == '0') {
-            // ch = ' ';
-         } else {
-            suppressZero = false;
-            sink.putChar(ch);
-         }
-         x %= base;
-         base /= 10;
-      }
-
-      sink.putChar(x % 10 + '0');
-   }
 
    /* add a decimal value with max 2 digits to the output sink */
    static void i2sink(int x, bool suppressZero, Sink& sink) {
@@ -94,16 +75,16 @@ namespace pearlrt {
                          const Fixed<31>& decimals,
                          Sink& sink) {
       int decimal;        // helper value for decimal digits
-      int sec;
+      int64_t sec;
       long us;
-      int hours;
+      int64_t hours;
       int min;
-      int w = width.x;   // int represetation of width
+      int w = width.x;   // int representation of width
       int d = decimals.x; // int representation of decimals
       int digitsNeeded;
       int fillZeros;     // number of artifical 0 decimals
       int isNegativ = 0;
-      Duration dur = _dur;;
+      Duration dur = _dur;  // need a copy due to reference parameter
       bool leadingSpace;
       bool showHours, showMinutes;
 
@@ -111,13 +92,8 @@ namespace pearlrt {
         isNegativ = 1;
         dur = - _dur;
       } 
-#if 0
-      if (dur.get().get() >= (Fixed63::Fixed63_t)(24 * 3600 * 1000000LL)  ||
-            dur.get().get() < (Fixed63::Fixed63_t)0) {
-Log::error("??? %d", dur.get().get());
-         throw  theDurationValueSignal;
-      }
-#endif
+//printf("isnegative %d %" PRIx64 " \n", isNegativ,dur.get().get());
+
       sec = dur.getSec();
       us = dur.getUsec();
 
@@ -126,11 +102,18 @@ Log::error("??? %d", dur.get().get());
       min = sec / 60;
       sec %= 60;
 
+      int64_t help = hours;
+      int digitsForHours = 1;
+      while (help >= 10) {
+        digitsForHours ++;
+        help /= 10;
+      } 
+
       //                           vvv add character for decimal point
       showMinutes = (w > d + 12 + (d>0)); // one digit for min
       showHours   = (w > d + 19 + (d>0)); // one digit for hour
 
-      digitsNeeded = d + 4 + (d>0); // decimals + "_SEC"
+      digitsNeeded = d + 4 + (d>0); // decimals + "_SEC" + "."
      
       if (isNegativ) {
         digitsNeeded ++;
@@ -147,17 +130,7 @@ Log::error("??? %d", dur.get().get());
       }
 
       if (showHours) {
-        if (hours < 10) {
-          digitsNeeded += 15;    // "x_HRS_xx_MIN_xx"
-        } else if (hours < 100) {
-          digitsNeeded += 16;   // "xx_HRS_xx_MIN_xx"
-        } else if (hours < 1000) {
-           digitsNeeded += 17;   // "xxx_HRS_xx_MIN_xx"
-        } else if (hours < 10000) {
-           digitsNeeded += 18;   // "xxxx_HRS_xx_MIN_xx"
-        } else {
-          digitsNeeded += 19;   // "xxxxx_HRS_xx_MIN_xx" sufficient for 100 days
-        }
+        digitsNeeded += 14 + digitsForHours; //"_HRS_xx_MIN_xx"
       } else if (showMinutes) {
         if (min < 10) {
           digitsNeeded += 8;    // "x_MIN_xx"
@@ -189,12 +162,23 @@ Log::error("??? %d", dur.get().get());
       if (isNegativ) {
          sink.putChar('-');
       }
+
  
       leadingSpace = true;
       if (showHours) {
-         i6sink(hours, sink);
-         leadingSpace = false;
-         s2sink(" HRS ", sink);
+         help = 1;
+         for (int i=0; i<digitsForHours-1; i++) {
+            help *= 10;
+         }
+
+         for (int i=0; i<digitsForHours; i++) {
+            char ch = hours/help;
+            sink.putChar(ch+'0');
+            hours %= help;
+            help /= 10;
+        }
+        leadingSpace = false;
+        s2sink(" HRS ", sink);
       } 
       if (showMinutes) {
          i2sink(min, leadingSpace, sink);

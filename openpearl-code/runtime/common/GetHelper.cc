@@ -96,7 +96,7 @@ namespace pearlrt {
       }
    }
 
-   int GetHelper::readInteger(int * x, int digits) {
+   int GetHelper::readInteger(uint64_t * x, int digits) {
       int ch;
       int digitsProcessed = 0;
       *x = 0;
@@ -130,12 +130,12 @@ namespace pearlrt {
          // stop reading at MAX_INT
          ch -= '0';
 
-         if ((INT_MAX - ch) / 10 >= *x) {
+         if ((UINT64_MAX - ch) / 10 >= *x) {
             *x *= 10;
             *x += ch;
             digitsProcessed ++;
          } else {
-            source->unGetChar(ch + '0');
+            source->unGetChar(ch+'0');
             width ++;
             return digitsProcessed;
          }
@@ -277,105 +277,60 @@ endSampling:
       return digitsProcessed;
    }
 
-   int GetHelper::readSeconds(double * x, const int w, const int d) {
-      int postPointDigits;
-      bool goOn, decimalPointFound;
+   int GetHelper::readSeconds(double * x, const int d) {
+      int postPointDigits=0;
       int c1;
-      int value;
+      double result=0.0; 
       int digitsProcessed = 0;
-      c1 = readChar();
 
-      if (isdigit(c1)) {
-         value = c1 - '0';
-         digitsProcessed ++;
-      } else {
-         if (c1 > 0) { // end field markers are not returned to the input
-            source->unGetChar(c1);
-            width ++;
-         }
-
-         return -1;
-      }
-
-      c1 = readChar();
-
-      if (isdigit(c1)) {
-         value = value * 10 + c1 - '0';
-         digitsProcessed ++;
-      } else {
-         if (c1 > 0) { // end of field markers are not returned to the input
-            source->unGetChar(c1);
-            width ++;
-         }
-
-         return -1;
-      }
-
-      // decimals
-      goOn = true;
-      decimalPointFound = false;
-      postPointDigits = 0;
-      * x = value;
-
-      if (width > 0) {
+      do {
          c1 = readChar();
 
-         if (c1 == '.') {
-            decimalPointFound = true;
-         } else {
-            if (c1 > 0) { // end of field markers are not returned to the input
-               width++;
-               source->unGetChar(c1);
-            }
+         if (isdigit(c1)) {
+            result = result*10+(c1-'0');
+            digitsProcessed ++;
          }
+      } while (isdigit(c1) && width>0);
 
-         while (width > 1 && goOn) {
-            c1 = readChar();
+      if (c1 == '.' && width > 0) {
+         // get decimals 
+         do {
+           c1 = readChar();
+           if (isdigit(c1)) {
+              result = result*10+(c1 - '0');
+              digitsProcessed ++;
+              postPointDigits ++;
+           } else {
+              if (c1 > 0) { // end field markers are not returned to the input
+                 source->unGetChar(c1);
+                 width ++;
+              }
+              return -1;
+           }
+         } while (isdigit(c1) && width>0 && postPointDigits<6);
+      } else if (c1 == ' ') {
+         // no decimal point 
+      } else if (c1 != '.') {
+         if (c1 > 0) { // end field markers are not returned to the input
+             source->unGetChar(c1);
+             width ++;
+          }
+          return -1;
+      } 
 
-            if (c1 == '.' && !decimalPointFound) {
-               decimalPointFound = true;
-            } else if (c1 == '.' && decimalPointFound) {
-               // end of field markers are not returned to the input
-               if (c1 > 0) {
-                  source->unGetChar(c1);
-                  width ++;
-               }
-
-               return -1;
-            } else if (isdigit(c1)) {
-               if (decimalPointFound) {
-                  postPointDigits ++;
-               }
-
-               value = value * 10 + c1 - '0';
-               digitsProcessed ++;
-            } else {
-               if (c1 > 0) {  // end of field markers are not returned to input
-                  source->unGetChar(c1);
-                  width ++;
-               }
-
-               goOn = false;
-            }
-         }
-
-         if (!decimalPointFound && d > 0) {
-            postPointDigits = d;
-
-            if (digitsProcessed != d + 2) {
-               return -1;  // ether < 2 or > 2 digits for full seconds
-            }
-         }
-
-         * x = value;
-
-         while (postPointDigits > 0) {
-            * x /= 10.0;
-            postPointDigits --;
-         }
+      while (isdigit(c1) && width>0) {
+           c1 = readChar();  // discard decimals beyond 1 micro second
       }
 
-      return (digitsProcessed);
+      while (postPointDigits > 0) {
+          result /= 10.0;
+          postPointDigits --;
+      }
+      if (result < 60.0) {
+        *x = result;
+        return (digitsProcessed);
+      }
+      return -1;   // number too large
    }
 
    int GetHelper::readString(const char * s) {
@@ -489,43 +444,75 @@ endSampling:
       int sampledBits = 0;
       int shifts;
       int cc, c;
+      uint64_t result = 0;
 
       if (skipSpaces() == 0) {
          do {
             c = readChar();
 
             if (c > 0 && isxdigit(c))  {
-               if (sampledBits < nbrOfBitsToSample) {
+               //if (sampledBits < nbrOfBitsToSample) {
                   cc = c - '0';
 
                   if (cc > 9) {
                      cc -= 'A' - '9' - 1;
                   }
 
-                  *value <<= 4;
-                  *value |= cc;
+                  result <<= 4;
+                  result |= cc;
                   sampledBits += 4;
-               }
+               //}
             } else if (c < 0 || c == ' ') {
                // do nothing - is treated in while condition
+               // we need this empty clause to avoid the else-clause
+               // in this case
             } else {
+               Log::error("B-format: illegal character (0x%x)",c);
                throw theBitValueSignal;
             }
-         } while (c > 0 && isxdigit(c) && getRemainingWidth() > 0);
+         } while (isxdigit(c)  &&
+          sampledBits < nbrOfBitsToSample && getRemainingWidth() > 0);
 
-         skipSpaces();
+         if (skipSpaces() == 0) {
+           c = readChar();
+           if (isxdigit(c)) {
+              Log::error("B-format: bit string too long");
+           } else {
+              Log::error("B-format: illegal character (0x%x)",c);
+           }
+           discardRemaining();
+           throw theBitValueSignal;
+         }
          
          while (sampledBits > 0 && (sampledBits < nbrOfBitsToSample)) {
             // delimiter detected
-            *value <<= 4;
+            result <<= 4;
             sampledBits += 4;
+//printf("   fill with zeros: value = 0x%" PRIx64 "\n", result);
          } 
 
+         result <<= 64-sampledBits;
+//printf("adjust to the left: %" PRIx64 "\n", result);
+
          shifts = (4 - (nbrOfBitsToSample % 4)) % 4;
-         *value >>= shifts;   // remove padding bits at right side
+//printf("bits to ignore on the right %d\n", shifts);
+
+         uint64_t mask = 0;
+         for (int i=0; i< shifts; i++) {
+            mask <<= 1;
+            mask |= 1;
+         }
+         mask <<= 64-sampledBits;
+//printf("   value = 0x%" PRIx64 " mask = 0x%" PRIx64 "\n", result,mask);
+         if (result & mask) {
+           Log::error("B-format: bit string too long");
+           throw theBitValueSignal;
+         }
+
+         *value = result;
          return;
       }
-
+      Log::error("B-format: field empty");
       throw theBitValueSignal;
    }
 
@@ -535,7 +522,7 @@ endSampling:
       int sampledBits = 0;
       int c;
       int shifts;
-
+      uint64_t result;
       char maxDigit = '1';;
       if (base == 1) {
           maxDigit = '1';
@@ -545,39 +532,71 @@ endSampling:
           maxDigit = '7';
       } 
 
-//printf("GetHelper::readB123: maxDigit=%x base=%d\n", maxDigit, base);
+      result = 0;
+//printf("GetHelper::readB123: maxDigit=%c base=%d nbrBitsToSample = %d width=%d\n",
+ //     maxDigit, base, nbrOfBitsToSample,getRemainingWidth());
           
       if (skipSpaces() == 0) {
          do {
             c = readChar();
 
             if (c  >= '0' && c <= maxDigit)  {
-               if (sampledBits < nbrOfBitsToSample) {
-                  *value <<= base;
-                  *value |= c - '0';
-                  sampledBits +=base;
-//printf("   got %c: new value = 0x%" PRIx64 "\n", c, *value);
-               }
+               result <<= base;
+               result |= c - '0';
+               sampledBits +=base;
             } else if (c < 0 || c == ' ') {
-               // do nothing - is treated n´in while condition
+               // do nothing - is treated in while condition
+               // we need this empty clause to avoid the else-clause
+               // in this case
             } else {
+               Log::error("B-format: illegal character (0x%x)",c);
+               discardRemaining();
                throw theBitValueSignal;
             }
-         } while ((c >= '0' && c <= maxDigit) && getRemainingWidth() > 0);
+         } while ((c >= '0' && c <= maxDigit)  &&
+          sampledBits < nbrOfBitsToSample && getRemainingWidth() > 0);
 
-         skipSpaces();
+         if (skipSpaces() == 0) {
+           c = readChar();
+           if (c>='0' && c <=maxDigit) {
+              Log::error("B-format: bit string too long");
+           } else {
+              Log::error("B-format: illegal character (0x%x)",c);
+           }
+           discardRemaining();
+           throw theBitValueSignal;
+         }
          
          while (sampledBits > 0 && (sampledBits < nbrOfBitsToSample)) {
             // delimiter detected
-            *value <<= base;
+            result <<= base;
             sampledBits += base;
+//printf("   fill with zeros: value = 0x%" PRIx64 "\n", result);
          } 
 
+         result <<= 64-sampledBits;
+//printf("adjust to the left: %" PRIx64 "\n", result);
+
          shifts = (base - (nbrOfBitsToSample % base)) % base;
-         *value >>= shifts;   // remove padding bits at right side
+//printf("bits to ignore on the right %d\n", shifts);
+
+         uint64_t mask = 0;
+         for (int i=0; i< shifts; i++) {
+            mask <<= 1;
+            mask |= 1;
+         }
+         mask <<= 64-sampledBits;
+//printf("   value = 0x%" PRIx64 " mask = 0x%" PRIx64 "\n", result,mask);
+         if (result & mask) {
+           Log::error("B-format: bit string too long");
+           throw theBitValueSignal;
+         }
+
+         *value = result;
          return;
       }
 
+      Log::error("B-format: field empty");
       throw theBitValueSignal;
    }
 
@@ -733,7 +752,7 @@ endSampling:
    void GetHelper::readFloatByE(Float<52> * value) {
       int sign = 1;
       int expSign = 0;
-      int expValue;
+      uint64_t expValue;
       int ch; 
       double x;
 
@@ -742,7 +761,8 @@ endSampling:
           sign = -1;
         }
         if (readMantissa(&x, width, 0) > 0) {
-           if (readString("E") == 0) {
+           // need at least 2 characters eg. E1
+           if (width > 2 && readString("E") == 0) {
               // treat exponent
               ch = readChar();
               if (ch > 0) {
@@ -777,6 +797,7 @@ endSampling:
                    Log::info("E: illegal character in field");
                    throw theExpValueSignal;
                 }
+
                 if (expSign < 0) {
                    value->x = x * sign / pow10(expValue);
                 } else {
