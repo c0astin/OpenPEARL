@@ -109,8 +109,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 this.m_currentSymbolTable.getStructureDeclarations();
         */
 
-        // generateProlog is invoked via visitModule!!
-        generatePrologue();
+       // generateProlog is invoked via visitModule!!
+       generatePrologue();
     }
 
     private Void ReadTemplate(String filename) {
@@ -226,8 +226,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 ST entry = m_group.getInstanceOf("ConstantPoolDurationEntry");
                 entry.add("name", value.toString());
                 entry.add("type", value.getBaseType());
-                entry.add("value", value.getValue());
-
+                entry.add("valueSec", value.getValueSec());
+                entry.add("valueUsec", value.getValueUsec());
+                entry.add("valueSign", value.getSign());
                 pool.add("constants", entry);
             }
         }
@@ -2659,9 +2660,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx.charSlice() instanceof SmallPearlParser.Case1CharSliceContext) {
             st = visitCase1CharSlice((SmallPearlParser.Case1CharSliceContext) (ctx
                     .charSlice()));
-        } else if (ctx.charSlice() instanceof SmallPearlParser.Case2CharSliceContext) {
-            st = visitCase2CharSlice((SmallPearlParser.Case2CharSliceContext) (ctx
-                    .charSlice()));
+//        } else if (ctx.charSlice() instanceof SmallPearlParser.Case2CharSliceContext) {
+//            st = visitCase2CharSlice((SmallPearlParser.Case2CharSliceContext) (ctx
+//                    .charSlice()));
         } else if (ctx.charSlice() instanceof SmallPearlParser.Case3CharSliceContext) {
             st = visitCase3CharSlice((SmallPearlParser.Case3CharSliceContext) (ctx
                     .charSlice()));
@@ -3054,69 +3055,19 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST literal = m_group.getInstanceOf("literal");
         ASTAttribute attr = m_ast.lookup(ctx);
 
+	 if (attr == null || attr.m_constant == null) {
+            ErrorStack.enter(ctx);
+            ErrorStack.addInternal("AST attribute for constant missing type="+attr.m_type.toString());
+            ErrorStack.leave();
+            return null;
+        }
+
         if (ctx.durationConstant() != null) {
-            ConstantDurationValue value = CommonUtils.getConstantDurationValue(ctx.durationConstant(), m_sign);
-            ConstantDurationValue constDuration = ConstantPool
-                    .lookupDurationValue(value.getHours(),
-                            value.getMinutes(), value.getSeconds(), value.getSign());
-
-            if (constDuration != null) {
-                literal.add("duration", constDuration);
-            } else {
-                throw new InternalCompilerErrorException(ctx.getText(),
-                        ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
+           literal.add("duration", attr.m_constant);
         } else if (ctx.floatingPointConstant() != null) {
-
-          ConstantFloatValue constFloat;
-          if (attr == null || attr.m_constant == null) {
-            try {
-              Double value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
-              int precision = CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(),m_currentSymbolTable.lookupDefaultFloatLength())
-                  ;
-              constFloat = ConstantPool.lookupFloatValue(
-                  value, precision);
-            } catch (NumberFormatException ex) {
-              throw new NumberOutOfRangeException(ctx.getText(),
-                  ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-          } else {
-            constFloat = attr.getConstantFloatValue();
-          }  
-          if (constFloat != null) {
-            literal.add("float", constFloat);
-          } else {
-            throw new InternalCompilerErrorException(ctx.getText(),
-                ctx.start.getLine(),
-                ctx.start.getCharPositionInLine());
-          }
+           literal.add("float", attr.getConstantFloatValue());
         } else if (ctx.timeConstant() != null) {
-          ConstantClockValue constClock;
-          if (attr == null || attr.m_constant == null) {
-            try {
-              Double value = getTime(ctx.timeConstant());
-              int hours = (int)(value / 3600);
-              value -= hours*3600;
-              int minutes = (int)(value/60);
-              value -= minutes * 60;
-              
-              constClock = ConstantPool.lookupClockValue(hours, minutes, value);
-                  
-            } catch (NumberFormatException ex) {
-              throw new NumberOutOfRangeException(ctx.getText(),
-                  ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-          } else {
-            constClock = (ConstantClockValue)(attr.getConstant());
-          }  
-          if (constClock != null) {
-            literal.add("time", constClock);
-          } else {
-            throw new InternalCompilerErrorException(ctx.getText(),
-                ctx.start.getLine(),
-                ctx.start.getCharPositionInLine());
-          }          
-          // literal.add("time", getTime(ctx.timeConstant()));
+            literal.add("time", attr.getConstant());
         } else if (ctx.StringLiteral() != null) {
             ConstantCharacterValue value = null;
             if (attr.m_constant != null) {
@@ -4129,8 +4080,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         //   addVariableConstantOrExpressionToDatalist(dataList,data,attr,ctx.expression(i),i);
                         dataList.add("dataelement", data);
                     }
-                } else if (ctx.ioListElement(i).arraySlice() != null) {
-                    System.out.println("io with array slice not implemented yet");
+//                } else if (ctx.ioListElement(i).arraySlice() != null) {
+//                    System.out.println("io with array slice not implemented yet");
                 }
             }
             return dataList;
@@ -6691,7 +6642,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             SmallPearlParser.ConvertFromStatementContext ctx) {
 
         ST stmt = m_group.getInstanceOf("iojob_convertFrom_statement");
-        stmt.add("char_string", getUserVariable(ctx.name().getText()));
+        stmt.add("char_string", getExpression(ctx.expression()));
 
         // this flag is set to true if at least one non static format parameter is detected
         m_isNonStatic = false;
@@ -6740,21 +6691,37 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return st;
     }
 
-    @Override
-    public ST visitCase2CharSlice(SmallPearlParser.Case2CharSliceContext ctx) {
-        ST st = m_group.getInstanceOf("StringSlice");
-
-        if (m_verbose > 0) {
-            System.out.println("CppCodeGeneratorVisitor: visitCase2CharSlice");
-        }
-
-        st.add("lwb", getExpression(ctx.expression(0)).render());
-        st.add("upb", getExpression(ctx.expression(1)).render());
-        st.add("id", ctx.ID().getText());
-        st.add("size", 1);
-
-        return st;
-    }
+//    @Override
+//    public ST visitCase2CharSlice(SmallPearlParser.Case2CharSliceContext ctx) {
+//        ST st = m_group.getInstanceOf("StringSlice");
+//
+//        if (m_verbose > 0) {
+//            System.out.println("CppCodeGeneratorVisitor: visitCase2CharSlice");
+//        }
+//
+//        ConstantValue lwb = m_constantExpressionEvaluatorVisitor.lookup(ctx
+//                .constantFixedExpression(0));
+//        ConstantValue upb = m_constantExpressionEvaluatorVisitor.lookup(ctx
+//                .constantFixedExpression(1));
+//
+//        if (lwb == null || upb == null
+//                || !(lwb instanceof ConstantFixedValue)
+//                || !(upb instanceof ConstantFixedValue)) {
+//            throw new InternalCompilerErrorException(ctx.getText(),
+//                    ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//        }
+//
+//        long size = ((ConstantFixedValue) upb).getValue()
+//                - ((ConstantFixedValue) lwb).getValue() + 1;
+//        
+//        
+//        st.add("lwb", lwb.toString());
+//        st.add("upb", upb.toString());
+//        st.add("id", ctx.ID().getText());
+//        st.add("size", size);
+//
+//        return st;
+//    }
 
     @Override
     public ST visitCase3CharSlice(SmallPearlParser.Case3CharSliceContext ctx) {
@@ -6772,14 +6739,25 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitCase4CharSlice(SmallPearlParser.Case4CharSliceContext ctx) {
         ST st = m_group.getInstanceOf("StringSlice");
-
+        long size = -1;
         if (m_verbose > 0) {
             System.out.println("CppCodeGeneratorVisitor: visitCase4CharSlice");
         }
+        
+        ASTAttribute lwb = m_ast.lookup(ctx.expression(0));
+        ASTAttribute upb = m_ast.lookup(ctx.expression(1));
+        
+        if ( lwb.isReadOnly() && upb.isReadOnly()) {
+          size = upb.getConstantFixedValue().getValue() - lwb.getConstantFixedValue().getValue() + 1;
+        }
+        
+        st.add("lwb", getExpression(ctx.expression(0)).render());
+        st.add("upb", getExpression(ctx.expression(1)).render());
+        st.add("id", ctx.ID().getText());
+        st.add("size", size);
 
-        throw new NotYetImplementedException("Char ConstantSlice Case4", 0, 0);
 
-        // return st;
+        return st;
     }
 
     @Override
