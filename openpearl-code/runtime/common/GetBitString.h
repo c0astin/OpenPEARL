@@ -41,6 +41,7 @@ for B1,B2,B3 and B4-format.
 #ifndef GETBITSTRING_H_INCLUDED
 #define GETBITSTRING_H_INCLUDED
 
+#include <inttypes.h>
 
 #include "Source.h"
 #include "GetHelper.h"
@@ -195,6 +196,8 @@ namespace pearlrt {
          uint64_t fixedValue = 0;
         
          helper.readB123(&fixedValue, S, base);
+printf("S=%d, w=%d fixedValue : %" PRIx64 "\n", S, w.x, fixedValue);
+
          BitString<S> retVal(fixedValue);
          bitstring.x = retVal.x;
          return;

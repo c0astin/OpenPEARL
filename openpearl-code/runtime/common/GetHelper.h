@@ -116,14 +116,16 @@ namespace pearlrt {
       /**
       read integral value with maximum digits
 
-      The reading stops if the value is larger than the MAX_INT
+      The reading stops if the value is larger than the UINT32_MAX
 
       \param x pointer to int value for the data element
       \param digits number of digits allowed
 
       \returns number of processed digits (> 0 on normal execution)
+               If the number is too large the scanning is aborted 
+               before UINT64_MAX
       */
-      int readInteger(int * x, const int digits);
+      int readInteger(uint64_t * x, const int digits);
 
 
       /**
@@ -160,22 +162,16 @@ namespace pearlrt {
        The point value may not contain a sign ('-' or '+').
        If there is a decimal point, the parameter d is obsolete.
 
-       If there is no decimal point, the last d digits are interpreted
-       as 'post decimal point'. Obviously there must be at least d digits
-       in the field for this case. If not -1 is returned
-
-       If no decimal point is detected, it is ok, if no prepoint digits
-       are present.
+       If no decimal point is detected, it is ok --- the value must be less than 60
 
        Any non digit character, or second '.' terminated to scanning.
        If no legal numerical value was found an error is returned.
 
        \param x pointer to the double value for the read data
-       \param w input field width
        \param d number of decimals
        \returns number of treated digits (>0 on normal execution)
       */
-      int readSeconds(double * x, const int w, const int d);
+      int readSeconds(double * x, const int d);
 
       /**
       read given string pattern
