@@ -107,7 +107,7 @@ TEST(Pipe, openClose) {
    //---------------------------------------------------
    // tests on non existing file
    // create+ delete file
-   pearlrt::SystemDationNB* work;
+   pearlrt::SystemDationNB* work=0;
    pearlrt::Pipe pipe(HOME, 10, "OPEN1 CAN");
    // should throw due to given IDF
    ASSERT_THROW(
@@ -184,8 +184,8 @@ TEST(Pipe, capacity) {
 TEST(Pipe, writeRead) {
    pearlrt::Log::info("**** Pipe write/read start ***");
    //---------------------------------------------------
-   pearlrt::SystemDationNB* wrt;
-   pearlrt::SystemDationNB* rd;
+   pearlrt::SystemDationNB* wrt=0;
+   pearlrt::SystemDationNB* rd=0;
    pearlrt::Pipe pipe(HOME, 10, "OPEN1 CAN");
    int x;
    ASSERT_NO_THROW(
