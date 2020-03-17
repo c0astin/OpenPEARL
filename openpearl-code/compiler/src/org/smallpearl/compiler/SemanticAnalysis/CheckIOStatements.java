@@ -300,7 +300,7 @@ SmallPearlVisitor<Void> {
 	
 	    
 	
-	}
+	}  // end of class CheckDationDeclaration
 
 	private int m_verbose;
 	private boolean m_debug;
@@ -313,6 +313,7 @@ SmallPearlVisitor<Void> {
 	private AST m_ast = null;
     private boolean m_formatListAborted=false;
     private boolean m_directionInput;
+    private TypeDation m_typeDation;
 
 	public CheckIOStatements(String sourceFileName, int verbose, boolean debug,
 			SymbolTableVisitor symbolTableVisitor,
@@ -560,10 +561,11 @@ SmallPearlVisitor<Void> {
 	  ErrorStack.enter(ctx, "PUT");
 	  m_directionInput = false;
 	  
-	  TypeDation d = lookupDation(ctx.dationName());
+	 
+	  m_typeDation = lookupDation(ctx.dationName());
 	  
       // enshure that the dation id of type ALPHIC
-	  if (!d.isAlphic()) {
+	  if (!m_typeDation.isAlphic()) {
 	    ErrorStack.enter(ctx.dationName());
 	    ErrorStack.add("need ALPHIC dation");
 	    ErrorStack.leave();
@@ -571,7 +573,7 @@ SmallPearlVisitor<Void> {
 
 	  visitChildren(ctx);
 
-	  checkPutGetDataFormat(d, ctx.ioDataList(), ctx.listOfFormatPositions());
+	  checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
 
 	  ErrorStack.leave();
 	  return null;
@@ -591,10 +593,10 @@ SmallPearlVisitor<Void> {
         ErrorStack.enter(ctx, "GET");
         m_directionInput = true;
 
-        TypeDation d = lookupDation(ctx.dationName());
+        m_typeDation = lookupDation(ctx.dationName());
 
         // enshure that the dation id of type ALPHIC
-        if (!d.isAlphic()) {
+        if (!m_typeDation.isAlphic()) {
             ErrorStack.enter(ctx.dationName());
             ErrorStack.add("need ALPHIC dation");
             ErrorStack.leave();
@@ -602,7 +604,7 @@ SmallPearlVisitor<Void> {
         
         enshureDataForInput(ctx.ioDataList());
 
-        checkPutGetDataFormat(d, ctx.ioDataList(), ctx.listOfFormatPositions());
+        checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
         
         visitChildren(ctx);
         ErrorStack.leave();
@@ -615,17 +617,20 @@ SmallPearlVisitor<Void> {
             System.out.println( "Semantic: Check IOStatements: visitConvertTo");
         }
         
+ 
+        
         // create dummy Type Dation for reuse of checkPutGetDataFormat
-        TypeDation d = new TypeDation();
-        d.setTypeOfTransmission("ALPHIC");
-        d.setTfu(false);
+        m_typeDation = new TypeDation();
+        m_typeDation.setTypeOfTransmission("ALPHIC");
+        m_typeDation.setAlphic(true);
+        m_typeDation.setTfu(false);
         
         ErrorStack.enter(ctx, "CONVERT TO");
         m_directionInput = false;
 
         visitChildren(ctx);
 
-        checkPutGetDataFormat(d, ctx.ioDataList(), ctx.listOfFormatPositions());
+        checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
         if (ctx.ioDataList() == null || ctx.ioDataList().ioListElement().size() < 1) {
           ErrorStack.add("need at least one expression");
         }
@@ -654,28 +659,30 @@ SmallPearlVisitor<Void> {
             System.out.println( "Semantic: Check IOStatements: visitConvertFrom");
         }
 
-        // create dummy Type Dation for reuse of checkPutGetDataFormat
-        TypeDation d = new TypeDation();
-        d.setTypeOfTransmission("ALPHIC");
-        d.setTfu(false);
-
+        
         ErrorStack.enter(ctx, "CONVERT FROM");
+
+        
+        
+        ASTAttribute attr = m_ast.lookup(ctx.expression());
+        if (!(attr.m_type instanceof TypeChar)) {
+           ErrorStack.add("source must be of type CHAR");
+        }
+        
+        // create dummy Type Dation for reuse of checkPutGetDataFormat
+        m_typeDation = new TypeDation();
+        m_typeDation.setTypeOfTransmission("ALPHIC");
+        m_typeDation.setAlphic(true);
+        m_typeDation.setTfu(false);
+
+
         m_directionInput = true;
 
         visitChildren(ctx);
 
-        checkPutGetDataFormat(d, ctx.ioDataList(), ctx.listOfFormatPositions());
+        checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
         if (ctx.ioDataList() == null || ctx.ioDataList().ioListElement().size() < 1) {
           ErrorStack.add("need at least one expression");
-        }
-
-        ASTAttribute attr = m_ast.lookup(ctx.name());
-        if (attr == null) {
-          ErrorStack.add("internal compiler error: no ASTAttribute in CONVERT/FROM source");
-        } else {
-          if (! (attr.m_type instanceof TypeChar)) {
-            ErrorStack.add("source must be of type CHAR");
-          }
         }
         
         ErrorStack.leave();
@@ -692,9 +699,9 @@ SmallPearlVisitor<Void> {
         ErrorStack.enter(ctx, "READ");
         m_directionInput = true;
 
-        TypeDation d = lookupDation(ctx.dationName());
+        m_typeDation = lookupDation(ctx.dationName());
 
-        if (d.isAlphic() || d.isBasic()) {
+        if (m_typeDation.isAlphic() || m_typeDation.isBasic()) {
             ErrorStack.enter(ctx.dationName());
             ErrorStack.add("need 'type' dation");
             ErrorStack.leave();
@@ -702,8 +709,8 @@ SmallPearlVisitor<Void> {
         
         enshureDataForInput(ctx.ioDataList());
         
-        checkWriteReadFormat(d, ctx.listOfFormatPositions());
-        checkReadWriteTakeSendDataTypes(d,ctx.ioDataList());
+        checkWriteReadFormat(ctx.listOfFormatPositions());
+        checkReadWriteTakeSendDataTypes(ctx.ioDataList());
  
         visitChildren(ctx);
         ErrorStack.leave();
@@ -722,17 +729,17 @@ SmallPearlVisitor<Void> {
         ErrorStack.enter(ctx, "WRITE");
         m_directionInput = false;
 
-        TypeDation d = lookupDation(ctx.dationName());
+        m_typeDation = lookupDation(ctx.dationName());
 
-        if (d.isAlphic() || d.isBasic()) {
+        if (m_typeDation.isAlphic() || m_typeDation.isBasic()) {
             ErrorStack.enter(ctx.dationName());
             ErrorStack.add("need 'type' dation");
             ErrorStack.leave();
         }
 
         // check if absolute positions follow relative positions
-        checkWriteReadFormat(d, ctx.listOfFormatPositions());
-        checkReadWriteTakeSendDataTypes(d,ctx.ioDataList());
+        checkWriteReadFormat(ctx.listOfFormatPositions());
+        checkReadWriteTakeSendDataTypes(ctx.ioDataList());
 
         // TODO: (rm) check type of transfer data is missing!!
 
@@ -741,8 +748,8 @@ SmallPearlVisitor<Void> {
         return null;
     }
     
-    private void checkReadWriteTakeSendDataTypes(TypeDation d, IoDataListContext ioDataList) {
-      if (d.getTypeOfTransmissionAsType() == null) {
+    private void checkReadWriteTakeSendDataTypes(IoDataListContext ioDataList) {
+      if (m_typeDation.getTypeOfTransmissionAsType() == null) {
         // this is a type 'ALL' dation --> we are ready here
         return;
       }
@@ -751,14 +758,14 @@ SmallPearlVisitor<Void> {
           if (ioDataList.ioListElement(i).expression()!=null) {
             ASTAttribute attr = m_ast.lookup(ioDataList.ioListElement(i).expression());
             if (attr != null) {
-              if (!attr.getType().equals(d.getTypeOfTransmissionAsType())) {
+              if (!attr.getType().equals(m_typeDation.getTypeOfTransmissionAsType())) {
                 ErrorStack.enter(ioDataList.ioListElement(i).expression());
-                ErrorStack.add("type mismatch: allowed: "+d.getTypeOfTransmission()+" got "+attr.getType().toString());
+                ErrorStack.add("type mismatch: allowed: "+m_typeDation.getTypeOfTransmission()+" got "+attr.getType().toString());
                 ErrorStack.leave();
               }
             }
-          } else if (ioDataList.ioListElement(i).arraySlice()!=null) {
-            ErrorStack.addInternal("arraySlice stuff missing");
+//          } else if (ioDataList.ioListElement(i).arraySlice()!=null) {
+//            ErrorStack.addInternal("arraySlice stuff missing");
           }
         }
       }
@@ -770,8 +777,7 @@ SmallPearlVisitor<Void> {
      * @param d
      * @param listOfFormatPositions
      */
-    private void checkWriteReadFormat(TypeDation d,
-        ListOfFormatPositionsContext listOfFormatPositions) {
+    private void checkWriteReadFormat(ListOfFormatPositionsContext listOfFormatPositions) {
       int  nbrOfPositionsAlreadyFound = 0;
 
       if (listOfFormatPositions != null) {
@@ -815,15 +821,15 @@ SmallPearlVisitor<Void> {
         ErrorStack.enter(ctx, "TAKE");
         m_directionInput = true;
 
-        TypeDation d = lookupDation(ctx.dationName());
-        if (!d.isBasic()) {
+        m_typeDation = lookupDation(ctx.dationName());
+        if (!m_typeDation.isBasic()) {
             ErrorStack.enter(ctx.dationName());
             ErrorStack.add("need BASIC dation");
             ErrorStack.leave();
         }
 
         // check that only 1 time RST is allowed
-        checkTakeSendFormat(d, ctx.listOfFormatPositions());
+        checkTakeSendFormat(ctx.listOfFormatPositions());
         
         if (ctx.ioDataList() == null ||
             ctx.ioDataList().ioListElement().size()> 1) {
@@ -831,7 +837,7 @@ SmallPearlVisitor<Void> {
         }
         
         enshureDataForInput(ctx.ioDataList());
-        checkReadWriteTakeSendDataTypes(d,ctx.ioDataList());        
+        checkReadWriteTakeSendDataTypes(ctx.ioDataList());        
  
         
         visitChildren(ctx);
@@ -852,28 +858,27 @@ SmallPearlVisitor<Void> {
         ErrorStack.enter(ctx, "SEND");
         m_directionInput = false;
 
-        TypeDation d = lookupDation(ctx.dationName());
+        m_typeDation = lookupDation(ctx.dationName());
 
-        if (!d.isBasic()) {
+        if (!m_typeDation.isBasic()) {
             ErrorStack.add("need BASIC dation");
         }      
         // check that only 1 time RST is allowed
-        checkTakeSendFormat(d, ctx.listOfFormatPositions());
+        checkTakeSendFormat(ctx.listOfFormatPositions());
         
         if (ctx.ioDataList() == null ||
             ctx.ioDataList().ioListElement().size()> 1) {
           ErrorStack.add("need one expression");
         }
 
-        checkReadWriteTakeSendDataTypes(d,ctx.ioDataList());        
+        checkReadWriteTakeSendDataTypes(ctx.ioDataList());        
         
         visitChildren(ctx);
         ErrorStack.leave();
         return null;
     }
 
-    private void checkTakeSendFormat(TypeDation d,
-        ListOfFormatPositionsContext listOfFormatPositions) {
+    private void checkTakeSendFormat(ListOfFormatPositionsContext listOfFormatPositions) {
       if (listOfFormatPositions != null) {
         for (int i=0; i<listOfFormatPositions.formatPosition().size(); i++) {
           ErrorStack.enter(listOfFormatPositions.formatPosition(i));
@@ -886,11 +891,10 @@ SmallPearlVisitor<Void> {
           ErrorStack.leave();
         }
       }
-      // TODO Auto-generated method stub
-      
+           
     }
 
-	private void checkPutGetDataFormat(TypeDation d, IoDataListContext dataCtx, ListOfFormatPositionsContext fmtCtx) {
+	private void checkPutGetDataFormat(IoDataListContext dataCtx, ListOfFormatPositionsContext fmtCtx) {
 	    /* listOfExpressions   listOfFormats    reaction
 	     *    empty              empty          warning: no effect if no TFU is set
 	     *    empty              not empty      warning if format elements are in listOfFormats
@@ -900,7 +904,7 @@ SmallPearlVisitor<Void> {
 	     */
 	    if (dataCtx == null && fmtCtx == null) {
 	      // no data no formats
-	      if (!d.hasTfu()) {
+	      if (!m_typeDation.hasTfu()) {
 	        ErrorStack.warn("no data, no formats has no effect without TFU" );
 	      }
 	    }
@@ -1046,10 +1050,10 @@ SmallPearlVisitor<Void> {
       ASTAttribute attr = null;
       if (ctx.expression() != null) {
         attr = m_ast.lookup(ctx.expression());
-      } else if (ctx.arraySlice() != null) {
-        ErrorStack.enter(ctx.expression());
-        ErrorStack.addInternal("treatment of arraySlice missing");
-        ErrorStack.leave();
+//      } else if (ctx.arraySlice() != null) {
+//        ErrorStack.enter(ctx.expression());
+//        ErrorStack.addInternal("treatment of arraySlice missing");
+//        ErrorStack.leave();
       }
       //attr = m_ast.lookup(ctx);
       
@@ -1596,13 +1600,17 @@ SmallPearlVisitor<Void> {
 					")");
 
 			 */
-
+			
+		
 			if (checkWidth && checkDecimalPositions) {
 				// add 6 to decimal positions due to
 				// leading digit, decimal point ans 'SEC'
 				// if the output value is <0 or the value is larger than 1 sec,
 				// there may still occur a problem during run time
-				if (width < decimalPositions + 6) {
+                if (m_directionInput && width < 4) {
+                   ErrorStack.add("field width too small (at least 4 required)");
+                }
+				if (!m_directionInput && width < decimalPositions + 6) {
 					ErrorStack.add("field width too small (at least "
 							+ (decimalPositions + 6) + " required)");
 				}
@@ -1611,9 +1619,12 @@ SmallPearlVisitor<Void> {
 				// if the output value is <0 or > 9, there may still occur a
 				// problem during run time, since the sign is not mandatory
 				// this is already checkes in visitFieldWidth!
-				if (width < 5) {
-					ErrorStack.add("field width too small (at least 5 required)");
+				if (m_directionInput && width < 4) {
+					ErrorStack.add("field width too small (at least 4 required)");
 				}
+                if (!m_directionInput && width < 5) {
+                  ErrorStack.add("field width too small (at least 5 required)");
+              }
 			}
 		}
 		ErrorStack.leave();
@@ -1758,7 +1769,9 @@ SmallPearlVisitor<Void> {
 		// check the types of all children
 		visitChildren(ctx);
 		if (ErrorStack.getLocalCount() == 0) {
-
+		    if (m_directionInput && ctx.numberOfCharacters()==null) {
+		      ErrorStack.add("B-format needs width on direction input");
+		    }
 			// check of the parameters is possible if they are
 			// of type ConstantFixedValue
 			// or not given
@@ -1780,6 +1793,9 @@ SmallPearlVisitor<Void> {
 
 		// check the types of all children
 		visitChildren(ctx);
+        if (m_directionInput && ctx.numberOfCharacters()==null) {
+          ErrorStack.add("B2-format needs width on direction input");
+        }
 		if (ErrorStack.getLocalCount() == 0) {
 
 			// check of the parameters is possible if they are
@@ -1803,6 +1819,9 @@ SmallPearlVisitor<Void> {
 
 		// check the types of all children
 		visitChildren(ctx);
+        if (m_directionInput && ctx.numberOfCharacters()==null) {
+          ErrorStack.add("B3-format needs width on direction input");
+        }
 		if (ErrorStack.getLocalCount() == 0) {
 
 			// check of the parameters is possible if they are
@@ -1826,6 +1845,9 @@ SmallPearlVisitor<Void> {
 
 		// check the types of all children
 		visitChildren(ctx);
+        if (m_directionInput && ctx.numberOfCharacters()==null) {
+          ErrorStack.add("B4-format needs width on direction input");
+        }
 		if (ErrorStack.getLocalCount() == 0) {
 
 			// check of the parameters is possible if they are
@@ -2109,31 +2131,27 @@ SmallPearlVisitor<Void> {
 	}
 
 	private void enshureAlphicDation(RuleContext ctx) {
-		TypeDation d = lookupDation(ctx);
-		if (!d.isAlphic()) {
+		if (!m_typeDation.isAlphic()) {
 			ErrorStack.add("applies only on ALPHIC dations");
 		}
 	}
 
 	private void enshureDirectDation(RuleContext ctx) {
-		TypeDation d = lookupDation(ctx);
-		if (!d.isDirect()) {
+		if (!m_typeDation.isDirect()) {
 			ErrorStack.add("format applies only on DIRECT dations");
 		}
 	}
 
 	private void allowBackwardPositioning(RuleContext ctx) {
-		TypeDation d = lookupDation(ctx);
-		if (!d.isDirect() && !d.isForback()){
+		if (!m_typeDation.isDirect() && !m_typeDation.isForback()){
 			ErrorStack.add("backward positioning need DIRECT or FORBACK");
 		}
 	}
 
 	private void enshureDimensionsFit(RuleContext ctx, int nbr) {
-		TypeDation d = lookupDation(ctx);
 
-		if (d.getNumberOfDimensions() < nbr) {
-			ErrorStack.add("too many dimensions used (dation provides "+d.getNumberOfDimensions()+")"); 
+		if (m_typeDation.getNumberOfDimensions() < nbr) {
+			ErrorStack.add("too many dimensions used (dation provides "+m_typeDation.getNumberOfDimensions()+")"); 
 		}
 	}
 
@@ -2258,7 +2276,7 @@ SmallPearlVisitor<Void> {
 			}
 			if (p instanceof SmallPearlParser.ConvertFromStatementContext) {
 				SmallPearlParser.ConvertFromStatementContext stmnt = (SmallPearlParser.ConvertFromStatementContext) p;
-				userDation = stmnt.name().getText();   // name of the string
+				userDation = stmnt.expression().getText();   // name of the string
 				isConvert = true;
 				p=null;
 			}
