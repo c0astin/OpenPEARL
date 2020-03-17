@@ -135,8 +135,8 @@ ConstantPoolBitEntry(name,type,length,value) ::= <<
 static /*const*/ pearlrt::<type>\<<length>\>         <name>(<value>);
 >>
 
-ConstantPoolDurationEntry(name,type,value) ::= <<
-static /*const*/ pearlrt::<type>          <name>(<value>);
+ConstantPoolDurationEntry(name,type,valueSec, valueUsec,valueSign) ::= <<
+static /*const*/ pearlrt::<type>          <name>(<valueSec>,<valueUsec>,<valueSign>);
 >>
 
 ConstantPoolClockEntry(name,type,value) ::= <<
