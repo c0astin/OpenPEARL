@@ -222,7 +222,7 @@ public class ConstantPool {
         return null;
     }
 
-    static public ConstantDurationValue lookupDurationValue(int hours, int minutes, double seconds, int sign) {
+    static public ConstantDurationValue lookupDurationValue(long hours, int minutes, double seconds, int sign) {
         int i;
         ConstantDurationValue other = new ConstantDurationValue(hours,minutes,seconds,sign);
 
