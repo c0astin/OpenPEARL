@@ -307,52 +307,44 @@ public class SymbolTable {
         return listOfModules;
     }
 
-    /* TODO: MS
-    public LinkedList<StructureEntry> getStructureDeclarations() {
-        LinkedList<StructureEntry>  listOfStructureEntries = new  LinkedList<StructureEntry>();
+    public HashMap<String,TypeStructure> getStructureDeclarations() {
+        HashMap<String,TypeStructure>  structures = new  HashMap<>();
         SymbolTableEntry e;
 
         for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
             SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
-            if (symbolTableEntry instanceof StructureEntry) {
-                StructureEntry structEntry = (StructureEntry) symbolTableEntry;
-                listOfStructureEntries.add(structEntry);
-            }
-            else if (symbolTableEntry instanceof ModuleEntry) {
-                getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope, listOfStructureEntries);
+            if (symbolTableEntry instanceof ModuleEntry) {
+                getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope, structures);
+            } else if (symbolTableEntry instanceof ProcedureEntry) {
+                getStructureDeclarationsForSymboltable(((ProcedureEntry) symbolTableEntry).scope, structures);
             }
         }
-        return listOfStructureEntries;
+        return structures;
         
     }
-    */
 
-    /* TODO MS
-    private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable, LinkedList<StructureEntry> list) {
+    private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable, HashMap<String,TypeStructure>  structures) {
         SymbolTableEntry e;
 
         for (Iterator it = symbolTable.m_entries.values().iterator(); it.hasNext(); ) {
             SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
 
-            if (symbolTableEntry instanceof StructureEntry) {
-                StructureEntry structEntry = (StructureEntry) symbolTableEntry;
-                list.add(structEntry);
+            if (symbolTableEntry instanceof StructureComponentEntry) {
+                StructureComponentEntry structEntry = (StructureComponentEntry) symbolTableEntry;
+
             }
             else if (symbolTableEntry instanceof ModuleEntry) {
                 ModuleEntry entry = (ModuleEntry)symbolTableEntry;
-                getStructureDeclarationsForSymboltable(entry.scope, list);
+                getStructureDeclarationsForSymboltable(entry.scope, structures);
             }
             else if (symbolTableEntry instanceof VariableEntry) {
                 VariableEntry entry = (VariableEntry)symbolTableEntry;
                 if ( entry.getType() instanceof TypeStructure ) {
-                    System.out.println("**" + ((TypeStructure) entry.getType()).getStructureName());
-
+                    structures.put(entry.getName(), (TypeStructure)entry.getType());
                 }
             }
-
         }
     }
-*/
 
     public int lookupDefaultFixedLength() {
         SymbolTableEntry entry = this.lookup("~LENGTH_FIXED~");
@@ -431,7 +423,13 @@ public class SymbolTable {
 
         for (int i = 0; i < typ.m_listOfComponents.size(); i++ ) {
             TypeDefinition componentType = typ.m_listOfComponents.get(i).m_type;
-             numberOfComponents += getNumberOfComponents(componentType);
+
+            if (componentType instanceof TypeFixed) {
+                numberOfComponents++;
+            }
+            else {
+                numberOfComponents += getNumberOfComponents(componentType);
+            }
         }
 
         return numberOfComponents;

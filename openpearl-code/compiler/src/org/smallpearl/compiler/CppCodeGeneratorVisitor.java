@@ -104,11 +104,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         this.ReadTemplate(filename);
 
-        /* TODO: MS:
-        LinkedList<StructureEntry> listOfStructureDeclarations =
+        /* TODO: MS
+        HashMap<String,StructureComponent> structureDeclarations =
                 this.m_currentSymbolTable.getStructureDeclarations();
         */
-
+        
        // generateProlog is invoked via visitModule!!
        generatePrologue();
     }
@@ -782,9 +782,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST last_value = null;
         ArrayList<ST> initElementList = new ArrayList<ST>();
         int noOfElements = 0;
-
-
-
 /*
         if (noOfElements <  {
 
@@ -816,7 +813,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     initElementList.add(stValue);
                 }
             }
-
 
 //    private ST getArrayInitialisationAttribute(
 //            SmallPearlParser.ArrayInitialisationAttributeContext ctx,
@@ -2684,7 +2680,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         // st.add("id", ctx.charSlice().ID().getText());
         // st.add("lwb", getExpression(ctx.charSlice().expression(0)));
         //
-        // System.out.println(">>> EXPR="+ctx.charSlice().expression(0).getText());
+        // System.out.println("EXPR="+ctx.charSlice().expression(0).getText());
         //
         // if ( ctx.charSlice().expression().size() == 1) {
         // st.add("upb", getExpression(ctx.charSlice().expression(0)));
@@ -4016,12 +4012,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 stmt.add("format_list_is_static", "1");
             }
         }
-
         // create list of datas
         ST dataList = getIojobDataList(dataCtx);
-
         stmt.add("datalist", dataList);
-
     }
 
     private ST getIojobDataList(IoDataListContext ctx) {
@@ -6947,18 +6940,17 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 ListIterator structIterator = typ.m_listOfComponents.listIterator();
 
                 while (structIterator.hasNext()) {
-                    ST stComponent = m_group.getInstanceOf("StructComponent");
+                    ST stComponent = m_group.getInstanceOf("StructComponentDeclaration");
                     StructureComponent component = (StructureComponent) structIterator.next();
                     stComponent.add("name", component.m_alias);
 
                     if (component.m_type instanceof TypeStructure) {
-                        stComponent.add("type", ((TypeStructure) component.m_type).getStructureName());
+                        stComponent.add("TypeAttribute", ((TypeStructure) component.m_type).getStructureName());
                     } else {
-                        stComponent.add("type", component.m_type);
+                        stComponent.add("TypeAttribute", component.m_type.toST(m_group));
                     }
                     st.add("components", stComponent);
                 }
-
             }
         }
 

@@ -1861,8 +1861,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
                 component.m_id = ctx.ID(i).getText();
                 saved_typeStructure.add(component);
-                m_type = m_typeStructure;
             }
+            m_type = m_typeStructure;
         }
 
         return null;

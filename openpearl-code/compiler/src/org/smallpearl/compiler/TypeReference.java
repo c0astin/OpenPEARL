@@ -46,7 +46,6 @@ public class TypeReference extends TypeDefinition {
         this.m_baseType = type;
     }
 
-
     public Void setBaseType(TypeDefinition type) {
         this.m_baseType = type;
         return null;

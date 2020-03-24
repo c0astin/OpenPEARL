@@ -1436,7 +1436,6 @@ iojob_e_format(element,fieldwidth,decimalPositions,significance,exp23,direction)
 }
 >>
 
-
 iojob_character_string_format(element,fieldwidth,direction) ::= <<
 {
    <if(fieldwidth)>
@@ -2466,6 +2465,7 @@ struct <name> {<\n>
 };<\n>
 %>
 
-StructComponent(name,type) ::= <<
-    <type> <user_variable(name)>;<\n>
+StructComponentDeclaration(name,TypeAttribute) ::= <<
+   <TypeAttribute> <user_variable(name)>;<\n>
 >>
+

@@ -294,7 +294,7 @@ identification_attribute:
 ////////////////////////////////////////////////////////////////////////////////
 
 typeDefinition :
-    'TYPE' ID ( simpleType | typeStructure | ID) ';'
+    'TYPE' ID ( simpleType | typeStructure | ID ) ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -950,7 +950,6 @@ charSelectionSlice
     : '.' ( 'CHAR' | 'CHARACTER' ) '('  expression ( ':' expression )? ')'
     ;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 sequential_control_statement
@@ -1208,7 +1207,6 @@ startCondition
     | 'AT'      expression                                      # startConditionAT
     | 'WHEN'    ID  ( 'AFTER' expression)?                      # startConditionWHEN
     ;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

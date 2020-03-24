@@ -38,9 +38,6 @@ RANLIB	     = ranlib
 #RM	     = rm
 ECHO	     = echo
 SHELL	     = /bin/sh
-# ANTLR is obsolete -> use $(CONFIG_COMPILER_ANTLR) from menuconfig tool
-#ANTLR        = /usr/local/lib/antlr-4.5-complete.jar
-#ANTLR       = /opt/antlr/antlr.jar
 
 ################################
 # Where to install the compiler:
