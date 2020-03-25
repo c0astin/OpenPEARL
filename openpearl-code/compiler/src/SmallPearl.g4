@@ -294,7 +294,7 @@ identification_attribute:
 ////////////////////////////////////////////////////////////////////////////////
 
 typeDefinition :
-    'TYPE' ID ( simpleType | typeStructure | ID ) ';'
+    'TYPE' ID ( simpleType | typeStructure | ID) ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -892,21 +892,22 @@ exitStatement
 //    ScalarAssignment | StructureAssignment | RefProcAssignment
 ////////////////////////////////////////////////////////////////////////////////
 
-assignment_statement
-    : ( dereference? ID indices? | stringSelection | selector) ( ':=' | '=' ) expression ';'
+assignment_statement:
+//     ( dereference? ID indices? | stringSelection | selector) ( ':=' | '=' ) expression ';'
+     ( dereference? name | stringSelection) ( ':=' | '=' ) expression ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-selector
-    : ID indices? ( '.' selectors )*
-    ;
-
+// 2020-03-17 (rm) deprecated --> is covered by name
+//selector
+//    : ID indices? ( '.' selectors )*
+//    ;
+//
 ////////////////////////////////////////////////////////////////////////////////
-
-selectors
-    : ID indices? | stringSelection
-    ;
+//
+//selectors
+//    : ID indices? | stringSelection
+//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -921,39 +922,59 @@ dereference
 
 ////////////////////////////////////////////////////////////////////////////////
 
-stringSelection
-  	: bitSelection
+stringSelection:
+  	  bitSelection
    	| charSelection
    	;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bitSelection
-    : ID bitSelectionSlice+
+// 2020-03-17 (rm) language report defines that .BIT may be applied on a name
+//		x.BIT(3:5).BIT(2) is not allowed
+//bitSelection:
+//    name bitSelectionSlice+
+bitSelection:
+    name bitSelectionSlice
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bitSelectionSlice
-    : '.' 'BIT' '('  expression ( ':' expression )? ')'
+bitSelectionSlice:
+    '.' 'BIT' '(' 
+    (
+    	 expression
+       | expression ':' expression '+' IntegerConstant	    	 
+       | expression ':' expression   // << may be constant fixed or not
+    )  
+    ')'
+    ;
+
+////////////////////////////////////////////////////////////////////////////////
+// 2020-03-17 (rm) language report defines that .CHAR may be applied on a name
+//		x.CHAR(3:5).CHAR(2) is not allowed
+//charSelection:
+//    name charSelectionSlice+
+charSelection:
+    name charSelectionSlice    
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-charSelection
-    : ID charSelectionSlice+
-    ;
+charSelectionSlice:
+ //   '.' ( 'CHAR' | 'CHARACTER' ) '('  expression ( ':' expression )? ')'
+ //   ;
+     '.' 'CHAR' '(' 
+    (
+    	 expression
+       | expression ':' expression '+' IntegerConstant	    	 
+       | expression ':' expression  // << may be constant fixed or not
+    )  
+    ')'
+	;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-charSelectionSlice
-    : '.' ( 'CHAR' | 'CHARACTER' ) '('  expression ( ':' expression )? ')'
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-
-sequential_control_statement
-    : if_statement
+sequential_control_statement:
+      if_statement
     | case_statement
     ;
 
@@ -1207,6 +1228,7 @@ startCondition
     | 'AT'      expression                                      # startConditionAT
     | 'WHEN'    ID  ( 'AFTER' expression)?                      # startConditionWHEN
     ;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2212,8 +2234,8 @@ index:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-primaryExpression
-	: '(' expression ')'
+primaryExpression:
+	 '(' expression ')'
 //  | ID
 //  | ID indices
 //  | ID '(' expression  ( ',' expression )* ')'
@@ -2222,7 +2244,9 @@ primaryExpression
     | literal
     | semaTry
 //  | monadicExplicitTypeConversionOperators
-    | stringSlice
+// 2020-03-18 replaced by stringSelection
+//    | stringSlice
+	| stringSelection
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2380,7 +2404,7 @@ bitSlice:
 	;
 
 ////////////////////////////////////////////////////////////////////////////////
-
+//
 charSlice:
 	  ID '.' ( 'CHAR' | 'CHARACTER' ) '(' expression ')'                                            #case1CharSlice
 // 2020-03-17 (rm) the lexer does not distinguish between expression and constantFixedExpression
