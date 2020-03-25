@@ -167,6 +167,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         return null;
     }
 
+/*
     @Override
     public Void visitPrimaryExpression(SmallPearlParser.PrimaryExpressionContext ctx) {
         Log.debug("ConstantPoolVisitor:visitBaseExpression:visitPrimaryExpression:ctx" + CommonUtils.printContext(ctx));
@@ -175,13 +176,21 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
         return null;
     }
-
+*/
+    
     @Override
     public Void visitLiteral(SmallPearlParser.LiteralContext ctx) {
         Log.debug("ConstantPoolVisitor: visitLiteral");
 
         ASTAttribute attr = m_ast.lookup(ctx);
         
+        // we should have for all literal an ASTAttribute from the ExpressionTypeVisitor
+        if (attr == null) {
+          ErrorStack.enter(ctx,"visitLiteral");
+          ErrorStack.addInternal("no AST attribute found");
+          ErrorStack.leave();
+        }
+
         if (ctx.durationConstant() != null) {
             m_constantPool.add(CommonUtils.getConstantDurationValue(ctx.durationConstant(),1));
         } else if (ctx.timeConstant() != null) {
@@ -274,7 +283,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
                 	ErrorStack.leave();
                 }
 
-		ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
+                ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
                 m_constantPool.add(cfv);
                 attr.setConstant(cfv);
             } catch (NumberFormatException ex) {
@@ -636,40 +645,41 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
     public Void visitAssignment_statement(SmallPearlParser.Assignment_statementContext ctx) {
         Log.debug("ConstantPoolVisitor:visitAssignment_statement:ctx" + CommonUtils.printContext(ctx));
 
-        String id = null;
+//        String id = null;
 
         if (ctx.stringSelection() != null) {
             if (ctx.stringSelection().charSelection() != null) {
-                id = ctx.stringSelection().charSelection().ID().getText();
+//                id = ctx.stringSelection().charSelection().ID().getText();
             } else if (ctx.stringSelection().bitSelection() != null) {
-                id = ctx.stringSelection().bitSelection().ID().getText();
+//                id = ctx.stringSelection().bitSelection().ID().getText();
             } else {
                 throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else {
-            id = ctx.ID().getText();
+//            id = ctx.ID().getText();
         }
 
-        SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
-
-        if (!(entry instanceof VariableEntry)) {
-            throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
-
-        SmallPearlParser.ExpressionContext expr = ctx.expression();
-
-        VariableEntry var = (VariableEntry) entry;
-        if (var.getType() instanceof TypeFixed) {
-            TypeFixed typ = (TypeFixed) (var.getType());
-            m_currFixedLength = typ.getPrecision();
-        }
+//        SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
+//
+//        if (!(entry instanceof VariableEntry)) {
+//            throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//        }
+//
+//        SmallPearlParser.ExpressionContext expr = ctx.expression();
+//
+//        VariableEntry var = (VariableEntry) entry;
+//        if (var.getType() instanceof TypeFixed) {
+//            TypeFixed typ = (TypeFixed) (var.getType());
+//            m_currFixedLength = typ.getPrecision();
+//        }
 
         visitChildren(ctx);
 
         m_currFixedLength = null;
         return null;
     }
-
+    
+/*
     @Override
     public Void visitCase_list(SmallPearlParser.Case_listContext ctx) {
         Log.debug("ConstantPoolVisitor:visitCase_list:ctx" + CommonUtils.printContext(ctx));
@@ -701,6 +711,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         visitChildren(ctx);
         return null;
     }
+*/
 
     @Override
     public Void visitMultiplicativeExpression(SmallPearlParser.MultiplicativeExpressionContext ctx) {
@@ -713,6 +724,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         return null;
     }
 
+    /*
     @Override
     public Void visitRemainderExpression(SmallPearlParser.RemainderExpressionContext ctx) {
         visitChildren(ctx);
@@ -939,6 +951,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         visitChildren(ctx);
         return null;
     }
+*/
 
     @Override
     public Void visitInitElement(SmallPearlParser.InitElementContext ctx) {
@@ -947,7 +960,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         // visitChildren(ctx);
         return null;
     }
-
+/*
     @Override
     public Void visitConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
         visitChildren(ctx);
@@ -977,6 +990,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
         visitChildren(ctx);
         return null;
     }
+*/
 
     private boolean addFixedConstant(ParserRuleContext ctx) {
         ASTAttribute attr = null;

@@ -108,8 +108,11 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
 //            visitChildren(ctx);    // get constants also for array indices in expressions and proc parameters
         } else if (ctx.semaTry() != null) {
             visit(ctx.semaTry());
-        } else if (ctx.stringSlice() != null) {
-            visit(ctx.stringSlice());
+//        } else if (ctx.stringSlice() != null) {
+//            visit(ctx.stringSlice());
+          } else if (ctx.stringSelection() != null) {
+          visit(ctx.stringSelection());
+        
         } else if (ctx.name() != null) {
             Log.debug("ConstantFoldingVisitor: visitPrimaryExpression: ctx.name=" + ctx.name().getText());
             SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
