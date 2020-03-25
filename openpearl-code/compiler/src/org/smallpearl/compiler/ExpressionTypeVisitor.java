@@ -2478,7 +2478,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         }
 
         if (op.getType() instanceof TypeReference) {
-            ASTAttribute expressionResult = new ASTAttribute(op.getType());
+            ASTAttribute expressionResult = new ASTAttribute( ((TypeReference)(op.getType())).getBaseType());
             m_ast.put(ctx, expressionResult);
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: CONT: rule#1");
