@@ -36,36 +36,36 @@ public class ASTAttribute {
     public boolean m_readonly;
     public VariableEntry m_variable;
     public ConstantValue m_constant;
-    public ConstantSlice m_slice;
+    public ConstantSelection m_selection;
 
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
         m_readonly = false;
         m_variable = null;
         m_constant = null;
-        m_slice    = null;
+        m_selection    = null;
     }
 
-    ASTAttribute(ConstantSlice slice) {
+    ASTAttribute(ConstantSelection slice) {
         m_type     = null;
         m_readonly = false;
         m_variable = null;
         m_constant = null;
-        m_slice    = slice;
+        m_selection    = slice;
     }
 
     ASTAttribute(TypeDefinition type, boolean constant) {
         m_type = type;
         m_readonly = constant;
         m_variable = null;
-        m_slice    = null;
+        m_selection    = null;
     }
 
     ASTAttribute(TypeDefinition type, boolean constant, VariableEntry variable ) {
         m_type = type;
         m_variable = variable;
         m_constant = null;
-        m_slice    = null;
+        m_selection    = null;
 
         if ( variable.getLoopControlVariable()) {
             m_readonly = false;
@@ -138,15 +138,22 @@ public class ASTAttribute {
         }
     }
 
-    public ConstantSlice getConstantSlice() {
-        return this.m_slice;
+
+    public void setConstantSelection(ConstantSelection m_slice) {
+      this.m_selection = m_slice;
+    }
+    
+    public ConstantSelection getConstantSelection() {
+        return this.m_selection;
     }
 
     public String toString() {
-        return "(" + this.m_type + " " + this.isReadOnly() + " " + this.m_variable + " " + this.m_constant + " " + this.m_slice + ")";
+        return "(" + this.m_type + " " + this.isReadOnly() + " " + this.m_variable + " " + this.m_constant + " " + this.m_selection + ")";
     }
 
     public void setVariable(VariableEntry ve) {
       this.m_variable = ve;
     }
+
+
 }

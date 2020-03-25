@@ -29,40 +29,46 @@
 
 package org.smallpearl.compiler;
 
+/**
+ * .BIT(..) or .CHAR(..) selection on left and right hand side
+ * 
+ * @author mueller
+ *
+ */
+public class ConstantSelection {
+    private ConstantFixedValue m_lowerBoundary;
+    private ConstantFixedValue m_upperBoundary;
 
-public class ConstantSlice {
-    private int m_lowerBoundary;
-    private int m_upperBoundary;
-
-    ConstantSlice() {
-        this.m_lowerBoundary = 0;
-        this.m_upperBoundary = 0;
+    ConstantSelection() {
+        this.m_lowerBoundary = null;
+        this.m_upperBoundary = null;
     }
 
-    ConstantSlice(int lowerBoundary, int upperBoundary) {
+    ConstantSelection(ConstantFixedValue lowerBoundary, ConstantFixedValue upperBoundary) {
         this.m_lowerBoundary = lowerBoundary;
         this.m_upperBoundary = upperBoundary;
     }
 
 
     public String toString() {
-        return Integer.toString(this.m_lowerBoundary) + ":" + Integer.toString(this.m_upperBoundary);
+        return this.m_lowerBoundary.toString() + ":" + this.m_upperBoundary.toString();
     }
 
     public int getNoOfElements() {
-        return m_upperBoundary - m_lowerBoundary + 1;
+        long nbr = m_upperBoundary.getValue() - m_lowerBoundary.getValue() +1;
+        return (int)nbr;
     }
 
-    public int getLowerBoundary() { return this.m_lowerBoundary; }
-    public int getUpperBoundary() { return this.m_upperBoundary; }
+    public ConstantFixedValue getLowerBoundary() { return this.m_lowerBoundary; }
+    public ConstantFixedValue getUpperBoundary() { return this.m_upperBoundary; }
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ConstantSlice)) {
+        if (!(other instanceof ConstantSelection)) {
             return false;
         }
 
-        ConstantSlice that = (ConstantSlice) other;
+        ConstantSelection that = (ConstantSelection) other;
 
         // Custom equality check here.
         return this.m_lowerBoundary == that.m_lowerBoundary && this.m_upperBoundary == that.m_upperBoundary;
