@@ -207,16 +207,16 @@ public class CheckArrayDeclarationAccess extends SmallPearlBaseVisitor<Void> imp
 
 		if ( ctx.stringSelection() != null ) {
 			if ( ctx.stringSelection().charSelection() != null ) {
-				id = ctx.stringSelection().charSelection().ID().getText();
+				id = ctx.stringSelection().charSelection().name().getText();
 			}
 			else  if (ctx.stringSelection().bitSelection() != null) {
-				id = ctx.stringSelection().bitSelection().ID().getText();
+				id = ctx.stringSelection().bitSelection().name().getText();
 			} else {
 				throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
 			}
 		}
 		else {
-			id = ctx.ID().getText();
+			id = ctx.name().getText();
 		}
 
 
@@ -229,10 +229,10 @@ public class CheckArrayDeclarationAccess extends SmallPearlBaseVisitor<Void> imp
 					checkIndexValue = false;
 				}
 				TypeArray ta = (TypeArray)(variable.getType());
-				if (ctx.indices()!= null && 
-						ctx.indices().expression() != null && 
-						ctx.indices().expression().size() > 0 ) {
-					checkIndices(ta,ctx.indices().expression(),checkIndexValue);
+				
+				if (ctx.name().listOfExpression()!= null && 
+						ctx.name().listOfExpression().expression().size() > 0 ) {
+					checkIndices(ta,ctx.name().listOfExpression().expression(),checkIndexValue);
 				}
 			}
 		}
