@@ -83,26 +83,34 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
 
     String id = null;
     ErrorStack.enter(ctx,"assignment");
-
+    ASTAttribute attrLhs = null; 
+    ConstantSelection selection = null;
+    
+    SmallPearlParser.NameContext ctxName = null;
     if ( ctx.stringSelection() != null ) {
+      attrLhs = m_ast.lookup(ctx.stringSelection()); 
+      selection = attrLhs.getConstantSelection();
       if ( ctx.stringSelection().charSelection() != null ) {
-        id = ctx.stringSelection().charSelection().ID().getText();
+        ctxName = ctx.stringSelection().charSelection().name();
+   
       }
       else  if (ctx.stringSelection().bitSelection() != null) {
-        id = ctx.stringSelection().bitSelection().ID().getText();
+        ctxName = ctx.stringSelection().bitSelection().name();
       } else {
         throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
       }
-    } else if (ctx.selector() != null ) {
-      Log.debug("ExpressionTypeVisitor:visitAssignment_statement:selector:ctx" + CommonUtils.printContext(ctx.selector()));
-      visitSelector(ctx.selector());
-      id = ctx.selector().ID().getText();
+// deprecated --> covered by 'name'      
+//    } else if (ctx.selector() != null ) {
+//      Log.debug("ExpressionTypeVisitor:visitAssignment_statement:selector:ctx" + CommonUtils.printContext(ctx.selector()));
+//      visitSelector(ctx.selector());
+//      id = ctx.selector().ID().getText();
+    } else {
+      attrLhs = m_ast.lookup(ctx.name()); 
+      ctxName = ctx.name();
     }
-    else {
-      id = ctx.ID().getText();
-   
-    }
-
+    
+    id = ctxName.ID().getText();
+    
     SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
 
     Log.debug("CheckAssignment:visitAssignment_statement:ctx.expression" + CommonUtils.printContext(ctx.expression()));
@@ -196,13 +204,21 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
         }
       }
       else if (variable.getType() instanceof TypeChar) {
-        if (!(rhs instanceof TypeChar)) {
-          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
+        if (!(rhs instanceof TypeChar || rhs instanceof TypeVariableChar)) {
+          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().getName());
         }
         TypeChar lhs_type = (TypeChar) variable.getType();
-        TypeChar rhs_type = (TypeChar)rhs;
-        if (rhs_type.getPrecision() > lhs_type.getPrecision()) {
-          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
+        if (rhs instanceof TypeChar) {
+          TypeChar rhs_type = (TypeChar)rhs;
+          if (selection == null) {
+            if (rhs_type.getPrecision() > lhs_type.getPrecision()) {
+              ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
+            }
+          } else {
+            if (rhs_type.getPrecision() > selection.getNoOfElements()) {
+              ErrorStack.add("type mismatch: CHAR("+selection.getNoOfElements()+") := "+rhs1.getType().toString());
+            }
+          }
         }
       }
       else if ( variable.getType() instanceof TypeReference ) {
