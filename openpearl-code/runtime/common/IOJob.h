@@ -311,17 +311,12 @@ namespace pearlrt {
          FIXED, ///< FIXED types
          BIT,   ///< BIT types
          /**
-         a bit slice must be treated differently
+         a char slice must be treated differently
 
-         If only one bit is selected, the value of param2.end must be
-         identical to param1.start.
-
-         dataType.dataWidth is the number of bits in the parent bit string<br>
-         dataPtr is the pointer to the parent bit string<br>
-         param1.start is a pointer to the value of the starting bit<br>
-         param2.end is a pointer to the value of the last bit
+         dataPtr is the pointer to the first character<br>
+         param1.nbrOfElements is the number of chars to transmit<br>
          */
-         BITSLICE,
+         CHARSLICE,
          CLOCK, ///< CLOCK types
          DURATION, ///< DURATION types
          /** a virtual type, which enabled loops on parts
@@ -331,7 +326,7 @@ namespace pearlrt {
                 for the loop<br>
              dataPtr.offsetIncrement contains the number of bytes to increment
                       the base address in each loop <br>
-             numberOfElements contains the number of iterations
+             param1.numberOfElements contains the number of iterations
          */
          LoopStart,
 
@@ -379,8 +374,8 @@ namespace pearlrt {
       /**
       number of elements
 
-      For array slices in PUT and GET, we need the number of data elements
-      of the slice.
+      For arrays  in PUT and GET, we need the number of data elements
+      of the array.
       For scalar values this item must be 1.
 
       For data loops, this value is the number of repetitions
@@ -391,14 +386,16 @@ namespace pearlrt {
       union { 
          /** pointer to the number of data elements */
          size_t numberOfElements;
-         /** pointer to the first element in the array to be read */
-         size_t * start;
       } param1;  ///< start of array or slice
 
       union {
           /** the end value for loops */
           size_t * end;
-      } param2;  ///< end of array or slice
+          struct {
+             Fixed<15> lwb;
+             Fixed<15> upb;
+          } charSliceLimits; // type CHARSLICE
+      } param2;  ///< end of array or slice  
 
      /**
      deliver the size of one element of the given IODataType

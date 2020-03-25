@@ -311,18 +311,51 @@ namespace pearlrt {
       case IODataEntry::CHAR:
          if (fmtEntry->format == IOFormatEntry::A ||
              fmtEntry->format == IOFormatEntry::LIST) {
-            toA((char*)(dataEntry->dataPtr.inData) + loopOffset,
+              toA((char*)(dataEntry->dataPtr.inData) + loopOffset,
                 dataEntry->dataType.dataWidth,
                 (Fixed<31>)(dataEntry->dataType.dataWidth));
          } else if (fmtEntry->format == IOFormatEntry::Aw) {
-            toA((char*)(dataEntry->dataPtr.inData) + loopOffset,
+              toA((char*)(dataEntry->dataPtr.inData) + loopOffset,
                 dataEntry->dataType.dataWidth,
                 fmtEntry->fp1.f31);
          } else {
-            Log::error("type mismatch in A format");
-            throw theDationDatatypeSignal;
+              Log::error("type mismatch in A format");
+              throw theDationDatatypeSignal;
          }
+         break;
 
+      case IODataEntry::CHARSLICE:
+         { int lwb,upb;
+           lwb = dataEntry->param2.charSliceLimits.lwb.x - 1;
+           upb = dataEntry->param2.charSliceLimits.upb.x - 1;
+
+           if (lwb < 0 || lwb >= dataEntry->dataType.dataWidth) {
+		Log::error("lwb (%d) out of range",lwb+1); 
+                throw theCharacterIndexOutOfRangeSignal;
+           }
+           if (upb < 0 || upb >= dataEntry->dataType.dataWidth) {
+		Log::error("upb (%d) out of range",upb+1); 
+                throw theCharacterIndexOutOfRangeSignal;
+           }
+           if (upb < lwb) {
+		Log::error("upb >= lwb violation (lwb:upb=%d:%d)",lwb+1,upb+1); 
+                throw theCharacterIndexOutOfRangeSignal;
+           }
+
+           if (fmtEntry->format == IOFormatEntry::A ||
+             fmtEntry->format == IOFormatEntry::LIST) {
+              toA((char*)(dataEntry->dataPtr.inData) + loopOffset +  lwb,
+                  upb-lwb+1,
+                  (Fixed<31>)(upb-lwb +1));
+           } else if (fmtEntry->format == IOFormatEntry::Aw) {
+              toA((char*)(dataEntry->dataPtr.inData) + loopOffset + lwb,
+                  upb-lwb+1,
+                  fmtEntry->fp1.f31);
+           } else {
+              Log::error("type mismatch in A format");
+              throw theDationDatatypeSignal;
+           }
+         }
          break;
 
       case IODataEntry::FIXED:

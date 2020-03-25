@@ -117,9 +117,8 @@ namespace pearlrt {
          param1.start is a pointer to the value of the starting bit<br>
          param2.end is a pointer to the value of the last bit
          */
-        case BITSLICE:
-	   nbrOfBytes = *(param2.end)-*(param1.start)+1;
-   	   nbrOfBytes /= 8;
+        case CHARSLICE:
+	   nbrOfBytes = param1.numberOfElements;
 	   return nbrOfBytes;
         case CLOCK: ///< CLOCK types
 	   return sizeof (Clock);
