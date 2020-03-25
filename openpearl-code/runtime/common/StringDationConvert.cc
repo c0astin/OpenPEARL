@@ -224,10 +224,11 @@ namespace pearlrt {
       int formatItem = -1;
       int dataElement;
 
+      rstVoidPointer = NULL;
+
       // create a loop control structure for the format list treatment
       LoopControl formatLoop(formatList->nbrOfEntries, true);
       LoopControl dataLoop(dataList->nbrOfEntries, false);
-
 
       try {
 
@@ -270,7 +271,6 @@ namespace pearlrt {
                                      formatList->entry[formatItem].fp2.intValue);
                   }
                }
-
                putDataFormat(me, &dataList->entry[dataElement],
                              dataIndex,
                              dataLoop.getOffset(),
@@ -323,6 +323,8 @@ namespace pearlrt {
 
       int formatItem = -1;
       int dataElement;
+
+      rstVoidPointer = NULL;
 
       // create a loop control structure for the format list treatment
       LoopControl formatLoop(formatList->nbrOfEntries, true);
