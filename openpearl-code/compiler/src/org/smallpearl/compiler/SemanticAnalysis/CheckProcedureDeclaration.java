@@ -167,19 +167,6 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 			System.out.println("SymbolTableVisitor: visitProcedureDeclaration");
 		}
 		ErrorStack.enter(ctx,"PROC");
-/*
-		for (ParseTree c : ctx.children) {
-			if (c instanceof SmallPearlParser.ResultAttributeContext) {
-		//		resultType = new ASTAttribute(getResultAttribute((SmallPearlParser.ResultAttributeContext) c));
-			} else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
-				SmallPearlParser.GlobalAttributeContext globalCtx = (SmallPearlParser.GlobalAttributeContext) c;
-				globalId = ctx.ID().getText();
-			} else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
-				SmallPearlParser.ListOfFormalParametersContext listOfFormalParametersContext = (SmallPearlParser.ListOfFormalParametersContext) c;
-				getListOfFormalParameters((SmallPearlParser.ListOfFormalParametersContext) c);
-			}
-		}
-*/
 	
 		SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().toString());
 		if (entry == null) {
@@ -348,6 +335,8 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     					if (((TypeChar)m_typeOfReturns).getSize() < ((TypeChar) exprType).getSize()) {
     						typeIsCompatible = false;
     					}
+    				} else if (m_typeOfReturns instanceof TypeChar && exprType instanceof TypeVariableChar) { 
+    				  
     				} else {
     					typeIsCompatible = false;
     				}
@@ -400,7 +389,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     	if (formalParameter.passIdentical) {
     		// actual parameter must be LValue
     		if (actualVariableEntry == null) {
-    			ErrorStack.add("constants may not be passed by IDENT");
+    			ErrorStack.add("only variables may be passed by IDENT");
     			return;  // do no further checks on this parameter
     		} else {
     			if( actualIsInv && !formalParameter.getAssigmentProtection()) {
@@ -439,7 +428,14 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 
     			// easy stuff first -- check base types
     			// if they fit we must check length for FIXED,FLOAT,CHAR,BIT
-    			if (!formalBaseType.getName().equals(actualType.getName())) {
+    		    if (formalBaseType instanceof TypeChar &&
+    		        actualType instanceof TypeVariableChar) {
+    		      // this is ok -- mark the actual parameter in the AST Attribute
+    		      // this will be used by the CppCodeGeneratorVisitor to instanciate
+    		      // a temporary variable
+    		      ((TypeVariableChar)attr.getType()).setBaseType(formalBaseType);
+    		      
+    		    } else if (!formalBaseType.getName().equals(actualType.getName())) {
     				ErrorStack.add("type mismatch: expected "+formalBaseType.toString()+
     						"  -- got "+actualType.toString());
     			} else if (formalParameter.getType() instanceof TypeFixed) {
@@ -521,11 +517,6 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 					int min = Math.min(nbrActualParameters, nbrFormalParameters);
 					for (int i=0; i< min; i++) {
 			   		   ErrorStack.enter(ctx.name().listOfExpression().expression(i),"param");
-			   		   String s = ctx.getText();
-			   		   if (proc.getFormalParameters() != null) {
-			   			   int fp=proc.getFormalParameters().size();
-			   		   }
-			   		   int ap = ctx.name().listOfExpression().expression().size();
 				       checkParameter(proc, ctx.name().listOfExpression().expression(i), proc.getFormalParameters().get(i));
 					   ErrorStack.leave();				
 					}
