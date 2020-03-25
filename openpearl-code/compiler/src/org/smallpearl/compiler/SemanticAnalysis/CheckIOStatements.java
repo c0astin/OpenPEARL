@@ -1027,6 +1027,12 @@ SmallPearlVisitor<Void> {
     if (formatCtx.getChild(0) instanceof CharacterStringFormatContext && td instanceof TypeChar) {
       return true;
     }
+    if (formatCtx.getChild(0) instanceof CharacterStringFormatContext && 
+        td instanceof TypeVariableChar &&
+        m_directionInput == false) {
+      return true;
+    }
+    
     // D-Format
     if (formatCtx.getChild(0) instanceof DurationFormatContext && td instanceof TypeDuration) {
       return true;
