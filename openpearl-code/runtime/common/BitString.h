@@ -391,6 +391,7 @@ namespace pearlrt {
       template <int P> BitString<P>
       getSlice(const Fixed<15>start, BitString<P>* dummy) {
          if (start.x - 1 + P > S || start.x < 1) {
+            Log::error(".BIT(%d:%d) index out of range (1:%d)",start.x,start.x+P-1,S); 
             throw theBitIndexOutOfRangeSignal;
          }
 
@@ -413,8 +414,9 @@ namespace pearlrt {
       template <int P> void
       setSlice(const Fixed<15>start, const Fixed<15> end,
                const BitString<P> slice) {
-         if (start.x - 1 + P >= S || start.x < 1 ||
+         if (start.x - 1 + P > S || start.x < 1 ||
                end.x - start.x + 1 < P) {
+            Log::error("index out of range BIT(%d).setBit(%d:%d) := BIT(%d)",S,start.x,start.x+P-1,P); 
             throw theBitIndexOutOfRangeSignal;
          }
 
@@ -454,6 +456,7 @@ namespace pearlrt {
       */
       BitString<1> getBit(const Fixed<15>start) const {
          if (start.x > S || start.x < 1) {
+            Log::error("index out of range BIT(1:%d).BIT(%d)",S, start.x); 
             throw theBitIndexOutOfRangeSignal;
          }
 
@@ -473,6 +476,7 @@ namespace pearlrt {
       */
       void setBit(const Fixed<15>start, const BitString<1>newValue) {
          if (start.x > S || start.x < 1) {
+            Log::error(".BIT(%d) index out of range (1:%d)",start.x,S); 
             throw theBitIndexOutOfRangeSignal;
          }
 
