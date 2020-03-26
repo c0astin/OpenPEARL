@@ -4,6 +4,7 @@
 % 2020-03-11: rm: rounding in E-format added
 %	signal at B2/3/4 formats added
 %	D-format accept sign at input and set optional '-' at output
+% 2020-03-26: rm: StringSelection in i/o statements clearified
 \chapter{Input and Output}   % 10
 \label{sec_input_output}
 The input and output statements enable the transfer of data from the
@@ -798,6 +799,9 @@ The general forms of the read and write statements read:
 \index{RST@\textbf{RST}!\textbf{WRITE}}
 \end{grammarframe}
 
+\OpenPEARL{} regards \hyperlink{StringSelection}{string selections} as
+expressions. They are not accepted in the read statement.
+
 A slice may be defined as range of the last index of an array.
 \begin{grammarframe}
 \input{ArraySlice.bnf}
@@ -1172,6 +1176,9 @@ The general forms of the get and put statements read:
 \input{FormatFactor.bnf}
 \input{Format.bnf}
 \end{grammarframe}
+
+\OpenPEARL{} regards \hyperlink{StringSelection}{string selections} as
+expressions. They are not accepted in the get statement.
 
 Upon input with the get statement, the addressed data elements are
 read one after the other and correspondingly assigned to the variables
@@ -1984,6 +1991,9 @@ The general forms of the convert statement are:
 \index{RST@\textbf{RST}!\textbf{CONVERT}}
 \end{grammarframe}
 
+\OpenPEARL{} regards \hyperlink{StringSelection}{string selections} as
+expressions. They are not accepted in the convert-from statement.
+
 All permitted formats have the same meaning as for the \code{PUT} and \code{GET}
 statements 
 %%%\addedtext{
@@ -2031,6 +2041,9 @@ respectively. The data station must possess the class attribute BASIC.
 \input{RSTFormat.bnf}
 \index{RST@\textbf{RST}!\textbf{SEND}}
 \end{grammarframe}
+
+\OpenPEARL{} regards \hyperlink{StringSelection}{string selections} as
+expressions. They are not accepted in the take statement.
 
 %%%\begin{accepted}
 The types of the ``variable'' in the take statement or the
