@@ -208,6 +208,7 @@ namespace pearlrt {
       size_t formatItem;
       size_t dataElement;
       size_t nbrOfBytes;
+      char * startAddress;
 
       try {
          beginSequence(me, Dation::OUT);
@@ -229,8 +230,9 @@ namespace pearlrt {
                dataElement++) {
 	    nbrOfBytes = dataList->entry[dataElement].getSize();
 	    nbrOfBytes *= dataList->entry[dataElement].param1.numberOfElements;
-            dationWrite(dataList->entry[dataElement].dataPtr.inData,
-                        nbrOfBytes);
+            startAddress  = (char*)(dataList->entry[dataElement].dataPtr.inData);
+            startAddress += dataList->entry[dataElement].getStartOffset();
+            dationWrite(startAddress, nbrOfBytes);
          }
 
          endSequence(me);

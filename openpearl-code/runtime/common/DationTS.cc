@@ -130,6 +130,7 @@ namespace pearlrt {
                         IODataList * dataList, IOFormatList * formatList) {
 
       size_t nbrOfBytes;
+      char * startAddress;
 
       try {
          beginSequence(me, Dation::OUT);
@@ -142,8 +143,9 @@ namespace pearlrt {
 
 	 nbrOfBytes = dataList->entry[0].getSize();
  	 nbrOfBytes *= dataList->entry[0].param1.numberOfElements;
-
-         dationWrite(dataList->entry[0].dataPtr.inData,nbrOfBytes);
+         startAddress  = (char*)(dataList->entry[0].dataPtr.inData);
+         startAddress += dataList->entry[0].getStartOffset();
+         dationWrite(startAddress, nbrOfBytes);
 
          endSequence(me);
       } catch (Signal &s) {

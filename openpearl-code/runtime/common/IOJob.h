@@ -402,6 +402,15 @@ namespace pearlrt {
      */
      size_t getSize();
 
+     /**
+     check limits for CHARSLIZEs and deliver the start offsettart
+
+     \throws  CharacterIndexOutOfRangeSignal, if [lwb,upb] violates
+            the range of the base CHAR variable
+     \returns 0, if the DataEntry is no CHARSLIZE<br>
+              lwb-field for CHARSLICE
+     */
+    size_t getStartOffset();
    };
 
    /**

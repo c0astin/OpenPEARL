@@ -98,7 +98,7 @@ namespace pearlrt {
 
       switch (dataType.baseType) {
 	case CHAR: ///< CHAR types
-	   return 1;
+	   return dataType.dataWidth;
         case FLOAT: ///< FLOAT types
 	   if (dataType.dataWidth <24) {
  		return sizeof (Float<23>);
@@ -106,19 +106,15 @@ namespace pearlrt {
  		return sizeof (Float<52>);
 	   }
         case FIXED: ///< FIXED types
-	   nbrOfBytes =	(dataType.dataWidth+1)/8;
+	   nbrOfBytes =	(dataType.dataWidth+8)/8;
 	   return nbrOfBytes;
         case BIT:   ///< BIT types
-	   nbrOfBytes =	(dataType.dataWidth)/8;
+	   nbrOfBytes =	(dataType.dataWidth+7)/8;
 	   return nbrOfBytes;
-         /*
-	dataType.dataWidth is the number of bits in the parent bit string<br>
-         dataPtr is the pointer to the parent bit string<br>
-         param1.start is a pointer to the value of the starting bit<br>
-         param2.end is a pointer to the value of the last bit
-         */
         case CHARSLICE:
-	   nbrOfBytes = param1.numberOfElements;
+	   nbrOfBytes = // param1.numberOfElements;
+	 	param2.charSliceLimits.upb.x -  
+       	 	param2.charSliceLimits.lwb.x + 1; 
 	   return nbrOfBytes;
         case CLOCK: ///< CLOCK types
 	   return sizeof (Clock);
@@ -128,5 +124,30 @@ namespace pearlrt {
 	   printf("IODataType:get_size untreated type %d\n", dataType.baseType);
 	   return 0;
       }
+   }
+
+    size_t IODataEntry::getStartOffset() {
+       size_t result = 0;
+       int lwb,upb;
+
+       if (dataType.baseType == CHARSLICE) {
+         lwb = param2.charSliceLimits.lwb.x - 1;
+         upb = param2.charSliceLimits.upb.x - 1;
+
+         if (lwb < 0 || lwb >= dataType.dataWidth) {
+            Log::error("lwb (%d) out of range",lwb+1);
+            throw theCharacterIndexOutOfRangeSignal;
+         }
+         if (upb < 0 || upb >= dataType.dataWidth) {
+           Log::error("upb (%d) out of range",upb+1);
+           throw theCharacterIndexOutOfRangeSignal;
+         }
+         if (upb < lwb) {
+           Log::error("upb >= lwb violation (lwb:upb=%d:%d)",lwb+1,upb+1);
+           throw theCharacterIndexOutOfRangeSignal;
+         }
+         result = lwb;
+      }
+      return (result); 
    }
 }
