@@ -530,7 +530,7 @@ arrayDenotation :
 //  | TypeBitString | TypeCharacterString
 //  | TypeDefinition
 //  | REF { TypeDation | SEMA | BOLT
-//  | TypeProcedure | TASK | CHAR()
+//  | typeRefedure | TASK | CHAR()
 //  ??? INTERRUPT, IPRT,SIGNAL
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -558,6 +558,20 @@ typeReference
     : 'REF' typeReferences
     ;
 
+/*
+// better?
+typeReferences: assignmentProtection? virtualDimensionList?
+	( simpleType 
+	| typeStructure 
+	| typeDation
+//	| typeProcedure		// <<< not defined yet
+	| typeReferenceTaskType
+	| typeReferenceInterruptType
+	| typeReferenceSignalType
+	|  'CHAR' '('  ')' 
+	;
+	
+*/
 typeReferences
     : typeReferenceSimpleType
     | typeReferenceStructuredType
