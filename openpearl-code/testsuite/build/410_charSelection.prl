@@ -1,10 +1,13 @@
 MODULE(rst);
 SYSTEM;
 stdout: StdOut;
+disc: Disc('./',2);
 
 PROBLEM;
+   SPC disc   DATION INOUT SYSTEM ALL;
    SPC stdout DATION OUT SYSTEM ALPHIC;
    DCL so DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+   DCL file DATION INOUT ALL DIM(*) FORWARD CREATED(disc);
 
    DCL error CHAR(20) INIT('**** error: test ');
 
@@ -26,6 +29,8 @@ test: TASK MAIN;
    CALL compareCharSelection;
    CALL addTestSummary;
    CALL convertTo;
+   CALL addTestSummary;
+   CALL writeTo;
    CALL addTestSummary;
 
 
@@ -476,6 +481,94 @@ convertTo: PROC;
       fails := fails + 1;
    FIN;
 
+END;
+
+writeTo: PROC;
+   DCL char1 CHAR;
+   DCL char3 CHAR(3);
+   DCL data CHAR(20) INIT ('1234567890abcdefghij');
+   DCL (start,end) FIXED INIT(2,4);
+
+   PUT 'write to with char selection' TO so BY A,SKIP;
+
+
+
+   !--------------
+   testNbr := testNbr + 1;
+   char1 = 'x';
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE data.CHAR(2) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ char1 FROM file;
+   CLOSE file;
+
+   IF char1 NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+
+   !--------------
+   testNbr := testNbr + 1;
+   char1 = 'x';
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE data.CHAR(start) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ char1 FROM file;
+   CLOSE file;
+
+   IF char1 NE '2' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   char1 = 'x';
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE data.CHAR(2:4) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ char3 FROM file;
+   CLOSE file;
+PUT char3 TO so BY A, SKIP;
+
+   IF char3 NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   char1 = 'x';
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE data.CHAR(start:end) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ char3 FROM file;
+   CLOSE file;
+
+   IF char3 NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   char1 = 'x';
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE data.CHAR(start:start+2) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ char3 FROM file;
+   CLOSE file;
+
+   IF char3 NE '234' THEN
+      PUT error,testNbr TO so BY A,F(3),SKIP;
+      fails := fails + 1;
+   FIN;
 
 END;
 MODEND;

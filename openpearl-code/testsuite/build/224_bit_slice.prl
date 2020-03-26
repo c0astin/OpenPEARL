@@ -1,10 +1,14 @@
 MODULE(bitslice);
 SYSTEM;
 term: StdOut;
+disc: Disc('./',2);
 
 PROBLEM;
+ SPC disc   DATION INOUT SYSTEM ALL;
  SPC term DATION OUT SYSTEM ALPHIC;
  DCL console DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(term);
+ DCL file DATION INOUT ALL DIM(*) FORWARD CREATED(disc);
+
  DCL (testNbr,fails,totalTests, totalFails) FIXED INIT(0,0,0,0);
  DCL error INV CHAR(18) INIT ('* error *: test #');
 
@@ -31,6 +35,8 @@ T1: TASK MAIN;
     CALL convertTo;
     CALL updateTestResults;
 
+    CALL writeTo;
+    CALL updateTestResults;
 
     IF totalFails EQ 0 THEN
         PUT '*** success: ', totalTests,' completed' TO console 
@@ -442,7 +448,80 @@ convertTo: PROC;
       fails = fails + 1;
    FIN;
 
+END;
+
+writeTo: PROC;
+   DCL b9 BIT(9) INIT ('123'B3);  ! 001010011
+                                  !  ^^^
+   DCL start FIXED INIT(2);
+
+   DCL bit1 BIT(1);
+   DCL bit3 BIT(3);
+
+   PUT 'write to with bit selection' TO console BY A,SKIP;
+
+   !--------------
+   testNbr := testNbr + 1;
+   bit1 = '1'B1;
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE b9.BIT(2) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ bit1 FROM file;
+   CLOSE file;
+   IF bit1 NE '0'B THEN
+      PUT error, testNbr, bit1,' NE 0B1' TO console
+        BY A,F(3), X,B1(1),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   bit1 = '0'B1;
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE b9.BIT(3) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ bit1 FROM file;
+   CLOSE file;
+   IF bit1 NE '1'B THEN
+      PUT error, testNbr, bit1,' NE 1B1' TO console
+        BY A,F(3), X,B1(1),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   bit3 = '0'B1;
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE b9.BIT(2:4) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ bit3 FROM file;
+   CLOSE file;
+   IF bit3 NE '010'B THEN
+      PUT error, testNbr, bit1,' NE 010B1' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   !--------------
+   testNbr := testNbr + 1;
+   bit3 = '0'B1;
+   OPEN file BY IDF('writeCharSelection.txt'), ANY;
+   WRITE b9.BIT(start:start+2) TO file;
+   CLOSE file;
+   OPEN file BY IDF('writeCharSelection.txt'), OLD;
+   READ bit3 FROM file;
+   CLOSE file;
+   IF bit3 NE '010'B THEN
+      PUT error, testNbr, bit1,' NE 010B1' TO console
+        BY A,F(3), X,B1(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
 
 END;
+
 MODEND;
 
