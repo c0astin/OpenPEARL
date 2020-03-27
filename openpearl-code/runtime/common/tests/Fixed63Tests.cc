@@ -65,7 +65,6 @@ TEST(Fixed63, AllTests) {
    Fixed63 x((Fixed63::Fixed63_t)0x7fffffffffffffffLL),
            y((Fixed63::Fixed63_t)1LL),
            z((Fixed63::Fixed63_t)0LL);
-   double dx;
    ASSERT_EQ(sizeof(Fixed63::Fixed63_t), 8);
    /* maxint +1 */
    x = (Fixed63::Fixed63_t)0x7fffffffffffffffLL;
