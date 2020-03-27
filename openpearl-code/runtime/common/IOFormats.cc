@@ -300,7 +300,7 @@ namespace pearlrt {
       default:
          printf("put unsupported baseType %d\n",
                 dataEntry->dataType.baseType);
-         printf("fmt entry: format=%d data=%p type=%d width=%d, datasize=%zu\n",
+         printf("fmt entry: format=%d data=%p type=%d width=%d, datasize=%d\n",
                 fmtEntry->format,
                 dataEntry->dataPtr.inData,
                 dataEntry->dataType.baseType,
@@ -529,7 +529,7 @@ namespace pearlrt {
       switch (dataEntry->dataType.baseType) {
       default:
          printf("get unsupported format %d\n", fmtEntry->format);
-         printf("fmt entry: format=%d data=%p type=%d width=%d, datasize=%zu\n",
+         printf("fmt entry: format=%d data=%p type=%d width=%d, datasize=%d\n",
                 fmtEntry->format,
                 dataEntry->dataPtr.inData,
                 dataEntry->dataType.baseType,

@@ -178,6 +178,7 @@ namespace pearlrt {
             // test for begin of loop, repeatedly for nested loops
             while (dataList->entry[dataElement].dataType.baseType ==
                    IODataEntry::LoopStart) {
+
                dataElement = dataLoop.enter(
                                 dataList->entry[dataElement].dataType.dataWidth,
                                 dataList->entry[dataElement].param1.numberOfElements,
@@ -186,7 +187,7 @@ namespace pearlrt {
 
             // treat all data entries, which are  simple types or arrays of simple types
             // structs were unrolled by the compiler
-            for (size_t dataIndex = 0;
+            for (int32_t dataIndex = 0;
                   dataIndex < (dataList->entry[dataElement].param1.numberOfElements);
                   dataIndex++) {
 
@@ -210,6 +211,11 @@ namespace pearlrt {
                                      formatList->entry[formatItem].fp1.intValue,
                                      formatList->entry[formatItem].fp2.intValue);
                   }
+               }
+               if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
+                    Log::error("array slice select %d elements",
+                      dataList->entry[dataElement].param1.numberOfElements);
+                    throw theBadArraySliceSignal;
                }
                putDataFormat(me, &dataList->entry[dataElement],
                              dataIndex,
@@ -295,7 +301,8 @@ namespace pearlrt {
             }
 
             // treat arrays of simple types
-            for (size_t dataIndex = 0;
+
+            for (int32_t dataIndex = 0;
                   dataIndex < (dataList->entry[dataElement].param1.numberOfElements);
                   dataIndex++) {
 
@@ -321,6 +328,11 @@ namespace pearlrt {
                   }
                }
 
+               if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
+                  Log::error("array slice select %d elements",
+                    dataList->entry[dataElement].param1.numberOfElements);
+                  throw theBadArraySliceSignal;
+               }
                getDataFormat(me, &dataList->entry[dataElement],
                              dataIndex,
                              dataLoop.getOffset(),

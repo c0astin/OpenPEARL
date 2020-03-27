@@ -116,6 +116,10 @@ namespace pearlrt {
       Fixed<31> currentPosition;
       bool isOutput;
 
+      int formatItem;   // current item in the format list
+      TaskCommon* me;
+      IOFormatList * formatList;      
+
    public:
       /**
         create a StringDationConvert object for a CONVERT statement
@@ -165,6 +169,13 @@ namespace pearlrt {
                  1, if record wasd left
         */
       int fromPositioningFormat(TaskCommon * me, IOFormatEntry * jobFormat);
+
+
+      /**
+      apply all positioning formats until then nest data format is reached
+      */
+      void applyAllPositioningFormats(IOFormatList* formatList,
+			 LoopControl& formatLoop);
       
      public:
       /**

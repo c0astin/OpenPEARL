@@ -228,6 +228,12 @@ namespace pearlrt {
 
          for (dataElement = 0; dataElement < dataList->nbrOfEntries;
                dataElement++) {
+	    if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
+              Log::error("array slice select %d elements",
+	    	dataList->entry[dataElement].param1.numberOfElements);
+              throw theBadArraySliceSignal;
+            }
+
 	    nbrOfBytes = dataList->entry[dataElement].getSize();
 	    nbrOfBytes *= dataList->entry[dataElement].param1.numberOfElements;
             startAddress  = (char*)(dataList->entry[dataElement].dataPtr.inData);
@@ -270,6 +276,11 @@ namespace pearlrt {
 
          for (dataElement = 0; dataElement < dataList->nbrOfEntries;
                dataElement++) {
+            if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
+              Log::error("array slice select %d elements",
+                dataList->entry[dataElement].param1.numberOfElements);
+              throw theBadArraySliceSignal;
+            }
 	    nbrOfBytes = dataList->entry[dataElement].getSize();
 	    nbrOfBytes *= dataList->entry[dataElement].param1.numberOfElements;
 

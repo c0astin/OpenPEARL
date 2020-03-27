@@ -60,7 +60,7 @@ namespace pearlrt {
          throw theDationFormatRepetitionOverflow;
       }
 
-      if (nbrOfRepetitions <= 0) {
+      if (nbrOfRepetitions < 0) {
          Log::error("number of repetitions must be >0");
          throw theDationFormatRepetitionValue;
       }

@@ -36,6 +36,8 @@
 \brief classes for the definition of the structures for IOJobs
 */
 
+#include <stdint.h>
+
 #include "Fixed.h"
 #include "TaskCommon.h"
 #include "SystemDationNBSink.h"
@@ -384,8 +386,8 @@ namespace pearlrt {
       to transfer.
       */
       union { 
-         /** pointer to the number of data elements */
-         size_t numberOfElements;
+         /** number of data elements */
+         int32_t numberOfElements;
       } param1;  ///< start of array or slice
 
       union {
@@ -520,8 +522,9 @@ namespace pearlrt {
          Data entries will be treated inside the IOFormat class
          Format entries will be treated inside the
          UserDationNB class.
-         RST fits better to the format entries.<br>
-         This element ist never used by the applications
+         RST entries must be executed before the first data entry.
+         Thus is in the group 'positioning' <br>
+         The element 'IsPositioning' is never used by the applications
          */
          IsPositioning,
 
