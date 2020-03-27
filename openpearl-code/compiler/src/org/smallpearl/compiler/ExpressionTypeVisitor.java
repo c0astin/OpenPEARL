@@ -3205,15 +3205,14 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                 if (entry instanceof VariableEntry) {
                     VariableEntry var = (VariableEntry) entry;
                     TypeDefinition typ = var.getType();
+                    m_type = typ;
 
                     if ( typ instanceof TypeArray) {
-                        m_type = ((TypeArray) typ).getBaseType();
                         // resolve the index list if given for the array
                         if (ctx.listOfExpression()!= null) {
                            visit(ctx.listOfExpression());
+                           m_type = ((TypeArray) typ).getBaseType();
                         }
-                    } else {
-                        m_type = typ;
                     }
 
                     if ( ctx.name() != null) {
@@ -3286,11 +3285,31 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitArraySlice(SmallPearlParser.ArraySliceContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitArraySlice:ctx" + CommonUtils.printContext(ctx));
-        ASTAttribute attr = m_ast.lookup(ctx);
-        
-        // TypeArraySlice neu erstellen mit BaseTape TypeArray
-        // der Rest bleibt im ctx
+ 
+        ErrorStack.enter(ctx,"array slice");
+        visitChildren(ctx);
 
+        TypeArraySlice t = new TypeArraySlice();
+        ASTAttribute nameAttr = m_ast.lookup(ctx.name());
+        if (nameAttr.getType() instanceof TypeArray) {
+          t.setBaseType(nameAttr.getType());
+        } else {
+          ErrorStack.add("must be applied to an array");
+        }
+
+        int lastElementInList = ctx.startIndex().listOfExpression().expression().size()-1;
+        ASTAttribute startIndex = m_ast.lookup(ctx.startIndex().listOfExpression().expression(lastElementInList));
+        ASTAttribute endIndex = m_ast.lookup(ctx.endIndex().expression());
+        if (startIndex.getConstant() != null && endIndex.getConstant()!=null) {
+          t.setStartIndex(startIndex.getConstantFixedValue());
+          t.setEndIndex(endIndex.getConstantFixedValue());
+          if (t.getTotalNoOfElements()<1) {
+            ErrorStack.add("must select at lease 1 element");
+          }
+        }
+        ErrorStack.leave();
+        m_ast.put(ctx, new ASTAttribute(t));
+        
         return null;
     }
 

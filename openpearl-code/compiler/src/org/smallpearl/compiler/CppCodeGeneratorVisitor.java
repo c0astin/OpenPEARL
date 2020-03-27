@@ -4004,8 +4004,52 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         //   addVariableConstantOrExpressionToDatalist(dataList,data,attr,ctx.expression(i),i);
                         dataList.add("dataelement", data);
                     }
-//                } else if (ctx.ioListElement(i).arraySlice() != null) {
-//                    System.out.println("io with array slice not implemented yet");
+                } else if (ctx.ioListElement(i).arraySlice() != null) {
+                    ArraySliceContext slice = ctx.ioListElement(i).arraySlice();
+                    ASTAttribute attr = m_ast.lookup(slice);
+                    // we need
+                    //  + the base type of the array
+                    //  + the address of the name(startIndex)
+                    //  + number of elements
+                    TypeArraySlice tas = (TypeArraySlice)(attr.getType());
+                    TypeArray ta = (TypeArray)(tas.getBaseType());
+                    TypeDefinition t = ta.getBaseType();
+                    
+                    ST data = getIojobDataItem(t);
+
+                    ST firstElement = m_group.getInstanceOf("ArrayLHS");
+
+                    ParserRuleContext c = slice.name();
+                    if (c instanceof FormalParameterContext) {
+                      firstElement.add("descriptor", "ad_" + slice.name().ID());
+                    } else {
+                        ArrayDescriptor array_descriptor = new ArrayDescriptor(
+                                ta.getNoOfDimensions(), ta.getDimensions());
+                        firstElement.add("descriptor", array_descriptor.getName());
+                    }
+                    firstElement.add("name", slice.name().ID());
+
+                    // if no indices are given, the complete array is accessed
+                    firstElement.add("indices", getIndices(slice.startIndex().listOfExpression().expression()));
+
+                    data.add("variable", firstElement);
+                    
+                    int lastElementInList = slice.startIndex().listOfExpression().expression().size()-1;
+                    if (tas.hasConstantSize()) {
+                       // both limits are constant -- we know the nbr_of_elements
+                      data.add("nbr_of_elements",tas.getTotalNoOfElements()); 
+                    } else {
+                      ST nbr = m_group.getInstanceOf("expression");
+                      nbr.add("code", "(");
+                      nbr.add("code", getExpression(slice.endIndex().expression()));
+                      nbr.add("code", "-");
+
+                      nbr.add("code", getExpression(slice.startIndex().listOfExpression().expression(lastElementInList)));
+                      nbr.add("code", ").get()+1");
+             
+                      data.add("nbr_of_elements", nbr);
+                    }
+                    dataList.add("dataelement", data);
                 }
             }
             return dataList;
