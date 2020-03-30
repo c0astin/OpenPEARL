@@ -65,7 +65,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     private TypeDefinition m_resultType;     // result type of a PROC; required if a variable character string is returned
     private ST m_tempCharVariableList;  // variable character values must be assigned
     private int m_tempCharVariableNbr;  // to a temporary variable if use as proc parameter 
-    
+ 
     public enum Type {
         BIT, CHAR, FIXED
     }
@@ -91,6 +91,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
         m_ast = ast;
+        
 
         LinkedList<ModuleEntry> listOfModules = this.m_currentSymbolTable
                 .getModules();
@@ -1262,12 +1263,19 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                             .add("DationDeclarations",
                                     visitDationDeclaration((SmallPearlParser.DationDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.ProcedureDeclarationContext) {
+                    ST procedureDeclaration =  visitProcedureDeclaration((SmallPearlParser.ProcedureDeclarationContext) c);
+                    
                     problem_part
-                            .add("ProcedureDeclarations",
-                                    visitProcedureDeclaration((SmallPearlParser.ProcedureDeclarationContext) c));
-                    problem_part
-                            .add("ProcedureSpecifications",
-                                    getProcedureSpecification((SmallPearlParser.ProcedureDeclarationContext) c));
+                            .add("ProcedureDeclarations",procedureDeclaration);
+                    ST spc = m_group.getInstanceOf("ProcedureSpecification");
+                    spc.add("id",                    procedureDeclaration.getAttribute("id"));
+                    spc.add("listOfFormalParameters",procedureDeclaration.getAttribute("listOfFormalParameters"));
+                    spc.add("resultAttribute",       procedureDeclaration.getAttribute("resultAttribute"));
+                    spc.add("globalAttribute",       procedureDeclaration.getAttribute("globalAttribute"));
+                    
+                    problem_part.add("ProcedureSpecifications",spc);
+//     
+//                                    getProcedureSpecification((SmallPearlParser.ProcedureDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.InterruptSpecificationContext) {
                     problem_part
                             .add("InterruptSpecifications",
@@ -1276,6 +1284,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
 
+       
         ST semaphoreArrays = m_group.getInstanceOf("TemporarySemaphoreArrays");
         LinkedList<LinkedList<SemaphoreEntry>> listOfSemaphoreDeclarations = m_symbolTableVisitor
                 .getListOfTemporarySemaphoreArrays();
@@ -5446,31 +5455,32 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
 
+    
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return st;
     }
 
-    private ST getProcedureSpecification(
-            SmallPearlParser.ProcedureDeclarationContext ctx) {
-        ST st = m_group.getInstanceOf("ProcedureSpecification");
-
-        st.add("id", ctx.ID().getText());
-
-        for (ParseTree c : ctx.children) {
-            if (c instanceof SmallPearlParser.ResultAttributeContext) {
-                st.add("resultAttribute",
-                        visitResultAttribute((SmallPearlParser.ResultAttributeContext) c));
-            } else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
-                st.add("globalAttribute",
-                        visitGlobalAttribute((SmallPearlParser.GlobalAttributeContext) c));
-            } else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
-                st.add("listOfFormalParameters",
-                        visitListOfFormalParameters((SmallPearlParser.ListOfFormalParametersContext) c));
-            }
-        }
-
-        return st;
-    }
+// 2020-03-30 (rm) obsolete 
+//    private ST getProcedureSpecification(
+//            SmallPearlParser.ProcedureDeclarationContext ctx) {
+//        ST st = m_group.getInstanceOf("ProcedureSpecification");
+//        st.add("id", ctx.ID().getText());
+//
+//        for (ParseTree c : ctx.children) {
+//            if (c instanceof SmallPearlParser.ResultAttributeContext) {
+//                st.add("resultAttribute",
+//                        visitResultAttribute((SmallPearlParser.ResultAttributeContext) c));
+//            } else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
+//                st.add("globalAttribute",
+//                        visitGlobalAttribute((SmallPearlParser.GlobalAttributeContext) c));
+//            } else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
+//                st.add("listOfFormalParameters",
+//                        visitListOfFormalParameters((SmallPearlParser.ListOfFormalParametersContext) c));
+//            }
+//        }
+//
+//        return st;
+//    }
 
     @Override
     public ST visitListOfFormalParameters(
@@ -5506,11 +5516,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 }
 
                 if (treatArray) {
-                    param.add("id", ctx.ID(i).toString());
+                    //param.add("id", ctx.ID(i).toString());
                     param.add("isArrayDescriptor", "");
                     String s = param.toString();
-                    st.add("FormalParameter", param);
-                    param = m_group.getInstanceOf("FormalParameter");
+                    //st.add("FormalParameter", param);
+//                    param = m_group.getInstanceOf("FormalParameter");
                     param.add("isArray", "");
                 }
                 param.add("id", ctx.ID(i));
