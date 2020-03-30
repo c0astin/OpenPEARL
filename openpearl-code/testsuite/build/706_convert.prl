@@ -32,8 +32,6 @@ convertTests: TASK MAIN;
 END;
 
 convertTo: PROC;
-	convertArraySliceToFixedF;
-	addErrors;
 	convertToA;
 	addErrors;
 	convertToFixedF;
@@ -47,6 +45,8 @@ convertTo: PROC;
 	convertToT;
 	addErrors;
         convertToB;
+	addErrors;
+	convertArraySliceToFixedF;
 	addErrors;
 END;
 
@@ -65,58 +65,13 @@ convertFrom: PROC;
 	addErrors;
         convertFromB;
 	addErrors;
+	convertArraySliceFromFixedF;
+	addErrors;
 END;
 
 addErrors: PROC;
    totalNbrOfTests = totalNbrOfTests + testNbr;
    totalTestsFailed = totalTestsFailed + failed;
-END;
-
-convertArraySliceToFixedF: PROC;
-  DCL buffer CHAR(40);
-  DCL expect CHAR(40);
-  DCL error FIXED;
-  DCL width FIXED;
-  DCL x(10) FIXED;
-  DCL (start,end) FIXED INIT(2,4);
-
-  FOR i TO 10 REPEAT
-     x(i) := i;
-  END;
-
-  PUT 'convertArrayToFixedF tests start' TO stdout BY SKIP,A,SKIP;
-  testNbr = 0;
-  failed = 0;
-
-  !----------------
-  testNbr = testNbr + 1;
-  CONVERT x(2:4) TO buffer BY F(3);
-  expect := '  2  3  4';
-  IF buffer NE expect THEN
-     PUT errorText,testNbr, 'expected:', expect, ' got:', buffer TO stdout 
-	BY A,F(3),2A,SKIP,X(23),2A,SKIP;
-     failed = failed + 1;
-  FIN;
-
-  !----------------
-  testNbr = testNbr + 1;
-  CONVERT x(start:end) TO buffer BY F(3);
-  expect := '  2  3  4';
-  IF buffer NE expect THEN
-     PUT errorText,testNbr, 'expected:', expect, ' got:', buffer TO stdout 
-	BY A,F(3),2A,SKIP,X(23),2A,SKIP;
-     failed = failed + 1;
-  FIN;
-
-  !----------------
-  testNbr = testNbr + 1;
-  CONVERT x(end:start) TO buffer BY RST(error),F(3);
-  IF error NE 326  THEN
-     PUT errorText,testNbr, 'expected error: 226 --  got:', error TO stdout 
-       BY A,F(3),A,F(6),SKIP;
-  FIN;
-
-
 END;
 
 convertToA: PROC;
@@ -1311,6 +1266,53 @@ convertToB: PROC;
   FIN;
 END;
  
+convertArraySliceToFixedF: PROC;
+  DCL buffer CHAR(40);
+  DCL expect CHAR(40);
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL x(10) FIXED;
+  DCL (start,end) FIXED INIT(2,4);
+
+  FOR i TO 10 REPEAT
+     x(i) := i;
+  END;
+
+  PUT 'convertArrayToFixedF tests start' TO stdout BY SKIP,A,SKIP;
+  testNbr = 0;
+  failed = 0;
+
+  !----------------
+  testNbr = testNbr + 1;
+  CONVERT x(2:4) TO buffer BY F(3);
+  expect := '  2  3  4';
+  IF buffer NE expect THEN
+     PUT errorText,testNbr, 'expected:', expect, ' got:', buffer TO stdout 
+	BY A,F(3),2A,SKIP,X(23),2A,SKIP;
+     failed = failed + 1;
+  FIN;
+
+  !----------------
+  testNbr = testNbr + 1;
+  CONVERT x(start:end) TO buffer BY F(3);
+  expect := '  2  3  4';
+  IF buffer NE expect THEN
+     PUT errorText,testNbr, 'expected:', expect, ' got:', buffer TO stdout 
+	BY A,F(3),2A,SKIP,X(23),2A,SKIP;
+     failed = failed + 1;
+  FIN;
+
+  !----------------
+  testNbr = testNbr + 1;
+  CONVERT x(end:start) TO buffer BY RST(error),F(3);
+  IF error NE 326  THEN
+     PUT errorText,testNbr, 'expected error: 226 --  got:', error TO stdout 
+       BY A,F(3),A,F(6),SKIP;
+  FIN;
+
+
+END;
+
 /* =================================================== */
 convertFromA: PROC;
   DCL buffer  INV CHAR(40) INIT('abcdefghijklmnop') ;
@@ -3247,5 +3249,77 @@ convertFromB: PROC;
   FIN;
 END;
 
+convertArraySliceFromFixedF: PROC;
+  DCL buffer CHAR(40);
+  DCL error FIXED;
+  DCL width FIXED;
+  DCL x(10) FIXED;
+  DCL expect(10) FIXED INIT(0,2,3,4,0);
+
+
+  DCL (start,end) FIXED INIT(2,4);
+
+
+  PUT 'convertArrayFromFixedF tests start' TO stdout BY SKIP,A,SKIP;
+  testNbr = 0;
+  failed = 0;
+
+  !----------------
+  testNbr = testNbr + 1;
+  FOR i TO 10 REPEAT
+     x(i) := 0;
+  END;
+  CONVERT x(2:4) FROM '  2  3  4 ' BY F(3);
+  IF NOT arrayCompare(x,expect) THEN
+     PUT errorText,testNbr, 'expected:', expect, ' got:', x TO stdout 
+	BY A,F(3),A,10F(3),SKIP,X(23),A,10F(3),SKIP;
+     failed = failed + 1;
+  FIN;
+
+  !----------------
+  testNbr = testNbr + 1;
+  FOR i TO 10 REPEAT
+     x(i) := 0;
+  END;
+  CONVERT x(start:end) FROM '  2  3  4 ' BY F(3);
+  IF NOT arrayCompare(x,expect) THEN
+     PUT errorText,testNbr, 'expected:', expect, ' got:', x TO stdout 
+	BY A,F(3),A,10F(3),SKIP,X(23),A,10F(3),SKIP;
+     failed = failed + 1;
+  FIN;
+
+  !----------------
+  testNbr = testNbr + 1;
+  FOR i TO 10 REPEAT
+     x(i) := 0;
+  END;
+  CONVERT x(end:start) FROM '  2  3  4 ' BY RST(error),F(3);
+  IF error NE 326 THEN
+     PUT errorText,testNbr, 'expected: error 326 -- got:', error TO stdout 
+	BY A,F(3),A,F(3),SKIP;
+     failed = failed + 1;
+  FIN;
+
+  IF failed EQ 0 THEN
+     PUT testNbr,' tests performed -- all sucessful' TO stdout BY F(3),A,SKIP;
+  ELSE 
+     PUT testNbr,' tests performed.',failed,' errors detected' TO stdout
+     BY F(3),A,F(6),A,SKIP;
+  FIN;
+END;
+
+arrayCompare: PROC(x() FIXED IDENT, y() FIXED IDENT) RETURNS (BIT(1));
+   IF (UPB x NE UPB y) THEN
+      PUT 'arrayCompare: array size mismatch' TO stdout BY A, SKIP;
+      RETURN ('0'B1);
+   FIN;
+
+   FOR i TO UPB x REPEAT
+      IF x(i) NE y(i) THEN
+         RETURN ('0'B1);
+      FIN;
+   END;
+   RETURN ('1'B1);
+END;
 MODEND;
 
