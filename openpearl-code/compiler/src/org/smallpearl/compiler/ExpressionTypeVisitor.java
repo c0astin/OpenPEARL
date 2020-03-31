@@ -2917,33 +2917,34 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
     
-    // Note: intConst is -1, if we are in case 4
-    private TypeDefinition treatCase3And4CharSlice(TerminalNode id,  ASTAttribute lwb, ASTAttribute upb, long intConst) {
-      SymbolTableEntry entry = this.m_currentSymbolTable.lookup(id.getText());
-      long size=-1;  // no size calculatable
-      
-      
-      if (entry instanceof VariableEntry) {
-        VariableEntry var = (VariableEntry) entry;
-        if (!( var.getType() instanceof TypeChar)) {
-          ErrorStack.add("must be of type CHAR -- but is "+var.getType().toString());
-        } 
-      }  
-
-      if ( lwb.isReadOnly() && upb.isReadOnly()) {
-        size = upb.getConstantFixedValue().getValue() - lwb.getConstantFixedValue().getValue() + 1;
-        if (size < 1) {
-          ErrorStack.add("must select at least 1 character");
-        }
-        if (size > Defaults.CHARACTER_MAX_LENGTH) {
-          ErrorStack.add("must select max " + Defaults.CHARACTER_MAX_LENGTH+" characters");
-          size = Defaults.CHARACTER_MAX_LENGTH;
-        }
-        
-      }
-        
-      return new TypeChar((int)size);
-    }
+// 2020-03-27 (rm) obsolete    
+//    // Note: intConst is -1, if we are in case 4
+//    private TypeDefinition treatCase3And4CharSlice(TerminalNode id,  ASTAttribute lwb, ASTAttribute upb, long intConst) {
+//      SymbolTableEntry entry = this.m_currentSymbolTable.lookup(id.getText());
+//      long size=-1;  // no size calculatable
+//      
+//      
+//      if (entry instanceof VariableEntry) {
+//        VariableEntry var = (VariableEntry) entry;
+//        if (!( var.getType() instanceof TypeChar)) {
+//          ErrorStack.add("must be of type CHAR -- but is "+var.getType().toString());
+//        } 
+//      }  
+//
+//      if ( lwb.isReadOnly() && upb.isReadOnly()) {
+//        size = upb.getConstantFixedValue().getValue() - lwb.getConstantFixedValue().getValue() + 1;
+//        if (size < 1) {
+//          ErrorStack.add("must select at least 1 character");
+//        }
+//        if (size > Defaults.CHARACTER_MAX_LENGTH) {
+//          ErrorStack.add("must select max " + Defaults.CHARACTER_MAX_LENGTH+" characters");
+//          size = Defaults.CHARACTER_MAX_LENGTH;
+//        }
+//        
+//      }
+//        
+//      return new TypeChar((int)size);
+//    }
 
 
     @Override
@@ -3098,7 +3099,6 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
           ASTAttribute attr = new ASTAttribute(new TypeChar(1));
          
           if (attr0.getConstant() != null) {
-            long start = attr0.getConstantFixedValue().getValue();
             ConstantSelection slice = new ConstantSelection(attr0.getConstantFixedValue(),attr0.getConstantFixedValue());
             attr.setConstantSelection(slice);
           }
