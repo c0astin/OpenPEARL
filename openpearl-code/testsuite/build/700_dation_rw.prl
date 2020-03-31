@@ -10,6 +10,118 @@ PROBLEM;
    SPC stdout DATION OUT SYSTEM ALPHIC;
    DCL stdOut DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
 
+DCL tableAS DATION INOUT FIXED DIM(*) FORWARD CREATED(disc);
+
+writeArraySlice: PROC (errors FIXED(15) IDENT);
+   DCL data(10) FIXED;
+   DCL f FIXED;
+   DCL (start,end) FIXED INIT(2,4);
+
+   FOR i TO 10 REPEAT
+      data(i) := i;
+   END;
+
+   !---
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   WRITE data(2:4) TO tableAS;
+   CLOSE tableAS;
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   READ f FROM tableAS;
+   IF f NE 2 THEN
+      PUT 'writeArraySlice failed @1a' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   READ f FROM tableAS;
+   IF f NE 3 THEN
+      PUT 'writeArraySlice failed @1b' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   READ f FROM tableAS;
+   IF f NE 4 THEN
+      PUT 'writeArraySlice failed @1c' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+
+   !---
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   WRITE data(start:end) TO tableAS;
+   CLOSE tableAS;
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   READ f FROM tableAS;
+   IF f NE 2 THEN
+      PUT 'writeArraySlice failed @2a' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   READ f FROM tableAS;
+   IF f NE 3 THEN
+      PUT 'writeArraySlice failed @2b' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   READ f FROM tableAS;
+   IF f NE 4 THEN
+      PUT 'writeArraySlice failed @2c' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+
+   !---
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   WRITE data(end:start) TO tableAS BY RST(f);
+   CLOSE tableAS;
+   IF f NE 326 THEN
+      PUT 'writeArraySlice failed @3' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+END;
+
+readArraySlice: PROC (errors FIXED(15) IDENT);
+   DCL data(10) FIXED;
+   DCL f FIXED;
+   DCL (start,end) FIXED INIT(2,4);
+
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   FOR i TO 10 REPEAT
+      data(i) = 0;
+      f := i;   ! enshure proper type
+      WRITE f TO tableAS;
+   END;
+   CLOSE tableAS;
+
+   !---
+   FOR i TO 10 REPEAT
+      data(i) = 0;
+   END;
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   READ data(2:4) FROM tableAS;
+   IF data(2) NE 1 OR data(3) NE 2 OR data(4) NE 3 THEN
+      PUT 'readArraySlice failed @1' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+
+   !---
+   FOR i TO 10 REPEAT
+      data(i) = 0;
+   END;
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   READ data(start:end) FROM tableAS;
+   IF data(2) NE 1 OR data(3) NE 2 OR data(4) NE 3 THEN
+      PUT 'readArraySlice failed @2' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+
+   !---
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   READ data(end:start) FROM tableAS BY RST(f);
+   IF f NE 326  THEN
+      PUT 'readArraySlice failed @3' TO stdOut BY A,SKIP;
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+END;
+
 DCL table62 DATION INOUT ALL DIM(*) DIRECT CREATED(disc);
 ticket62: TASK;
      DCL f FIXED(15) INIT(42);
@@ -88,6 +200,8 @@ __cpp__("pearlrt::Control::setExitCode(1);");
        error = 1;
      FIN;
 
+     writeArraySlice(error);
+     readArraySlice(error);
 
     IF error == 0 THEN
       PUT 'success' TO stdOut BY A, SKIP;

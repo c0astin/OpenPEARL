@@ -3269,7 +3269,7 @@ convertArraySliceFromFixedF: PROC;
   FOR i TO 10 REPEAT
      x(i) := 0;
   END;
-  CONVERT x(2:4) FROM '  2  3  4 ' BY F(3);
+  CONVERT x(2:4) FROM '  2  3  4' BY F(3);
   IF NOT arrayCompare(x,expect) THEN
      PUT errorText,testNbr, 'expected:', expect, ' got:', x TO stdout 
 	BY A,F(3),A,10F(3),SKIP,X(23),A,10F(3),SKIP;
