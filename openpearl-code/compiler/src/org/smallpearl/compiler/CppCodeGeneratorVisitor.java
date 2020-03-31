@@ -786,6 +786,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST last_value = null;
         ArrayList<ST> initElementList = new ArrayList<ST>();
         int noOfElements = 0;
+        int noOfArrayElements = ((TypeArray) variableEntry
+            .getType()).getTotalNoOfElements();
 
 
 
@@ -798,28 +800,40 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
 */
         if (variableEntry.getInitializer() != null) {
+            ST stValue=null; // we need the last init element to fill up incomplete array initialisers 
+            
             if (variableEntry.getInitializer() instanceof SimpleInitializer) {
                 SimpleInitializer initializer = (SimpleInitializer) variableEntry.getInitializer();
                 ConstantValue value = initializer.getConstant();
-                ST stValue = m_group.getInstanceOf("expression");
+                stValue = m_group.getInstanceOf("expression");
 
                 if (value instanceof ConstantFixedValue) {
                     stValue.add("code", value.toString());
                 } else {
                     stValue.add("code", value);
                 }
-
+                noOfElements++;
                 initElementList.add(stValue);
             } else if (variableEntry.getInitializer() instanceof ArrayOrStructureInitializer) {
                 ArrayOrStructureInitializer initializer = (ArrayOrStructureInitializer) variableEntry.getInitializer();
                 ArrayList<Initializer> listOfInitializers = initializer.getInitElementList();
 
                 for ( int i = 0; i < listOfInitializers.size(); i++) {
-                    ST stValue = m_group.getInstanceOf("expression");
+                    stValue = m_group.getInstanceOf("expression");
                     stValue.add("code", listOfInitializers.get(i));
+                    noOfElements++;
                     initElementList.add(stValue);
                 }
+                
+                // fill array initializer with last value
+                while (noOfElements < noOfArrayElements) {
+                  initElementList.add(stValue);
+                  noOfElements++;
+                }
+                  
+                
             }
+            
 
 
 //    private ST getArrayInitialisationAttribute(
