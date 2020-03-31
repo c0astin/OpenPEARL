@@ -314,6 +314,7 @@ SmallPearlVisitor<Void> {
     private boolean m_formatListAborted=false;
     private boolean m_directionInput;
     private TypeDation m_typeDation;
+    private boolean abortCheck;     // flag to abort a check after a severe error was detected
 
 	public CheckIOStatements(String sourceFileName, int verbose, boolean debug,
 			SymbolTableVisitor symbolTableVisitor,
@@ -557,6 +558,7 @@ SmallPearlVisitor<Void> {
 	    System.out.println( "Semantic: Check IOStatements: visitPositionPUT");
 	  }
 
+	  abortCheck = false;
 
 	  ErrorStack.enter(ctx, "PUT");
 	  m_directionInput = false;
@@ -589,7 +591,7 @@ SmallPearlVisitor<Void> {
         if (m_debug) {
             System.out.println( "Semantic: Check IOStatements: visitPositionGET");
         }
-
+        abortCheck = false;
         ErrorStack.enter(ctx, "GET");
         m_directionInput = true;
 
@@ -617,7 +619,7 @@ SmallPearlVisitor<Void> {
             System.out.println( "Semantic: Check IOStatements: visitConvertTo");
         }
         
- 
+        abortCheck = false;
         
         // create dummy Type Dation for reuse of checkPutGetDataFormat
         m_typeDation = new TypeDation();
@@ -659,7 +661,7 @@ SmallPearlVisitor<Void> {
             System.out.println( "Semantic: Check IOStatements: visitConvertFrom");
         }
 
-        
+        abortCheck = false;        
         ErrorStack.enter(ctx, "CONVERT FROM");
 
         
@@ -679,6 +681,7 @@ SmallPearlVisitor<Void> {
         m_directionInput = true;
 
         visitChildren(ctx);
+        enshureDataForInput(ctx.ioDataList());
 
         checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
         if (ctx.ioDataList() == null || ctx.ioDataList().ioListElement().size() < 1) {
@@ -908,6 +911,7 @@ SmallPearlVisitor<Void> {
 	        ErrorStack.warn("no data, no formats has no effect without TFU" );
 	      }
 	    }
+	    
 	    m_formatListAborted = false;
 	    List<ParserRuleContext> fmtPos = null;
 	    if (fmtCtx != null) {
@@ -932,6 +936,10 @@ SmallPearlVisitor<Void> {
 
 	      }
 	    }
+	    if (abortCheck) {
+	      return;  // severe error (eg. factor <=0) detected --> no further checks
+	    }
+	    
 	    if (dataCtx != null && fmtCtx!= null) {
 	      // test if all expression types fit to the corresponding format
 	      // abort the search as soon as an non constant amount of expressions 
@@ -940,6 +948,7 @@ SmallPearlVisitor<Void> {
 
 	      // test if listOfFormatPosition contains at least 1 format
 	      boolean fmtFound = false;
+	      boolean endOfAbortedFormatListReached = false;
 	      for (int i=0; fmtFound==false && i<fmtPos.size(); i++) {
 	        if (fmtPos.get(i) instanceof FormatContext) {
 	          fmtFound = true;
@@ -953,13 +962,17 @@ SmallPearlVisitor<Void> {
 	        for (int i=0; i<expr.size(); i++) {
 	          IODataListElementWithCtx etc = expr.get(i);
 	          //            System.out.println(i+": "+etc.ctx.getText()+"  "+etc.td);
-	          if (!m_formatListAborted && fmtPosIndex == fmtPos.size()) {
-	            fmtPosIndex = 0;
+	          if (fmtPosIndex == fmtPos.size()) {
+	            if (!m_formatListAborted ) {
+	              fmtPosIndex = 0;
+	            } else { 
+	              endOfAbortedFormatListReached = true;
+	            }
 	          }
 
-	          if (fmtPos.isEmpty()) {
-	            ErrorStack.enter(fmtCtx.formatPosition(0),"expression type match format");
-	            ErrorStack.warn("check aborted due to non static format list");
+	          if (fmtPos.isEmpty() || endOfAbortedFormatListReached) {
+	            ErrorStack.enter(fmtCtx.formatPosition(fmtPosIndex),"expression type match format");
+	            ErrorStack.warn("check aborted: non static element after here");
 	            ErrorStack.leave();
 	            break;
 	          } else {
@@ -1056,12 +1069,9 @@ SmallPearlVisitor<Void> {
       ASTAttribute attr = null;
       if (ctx.expression() != null) {
         attr = m_ast.lookup(ctx.expression());
-//      } else if (ctx.arraySlice() != null) {
-//        ErrorStack.enter(ctx.expression());
-//        ErrorStack.addInternal("treatment of arraySlice missing");
-//        ErrorStack.leave();
+      } else if (ctx.arraySlice() != null) {
+        attr = m_ast.lookup(ctx.arraySlice());
       }
-      //attr = m_ast.lookup(ctx);
       
       if (attr != null) {
         if (attr.getType() instanceof TypeArray) {
@@ -1082,9 +1092,17 @@ SmallPearlVisitor<Void> {
               list.add(etc);
             }
           }
+        } else if (attr.getType() instanceof TypeArraySlice){
+          TypeArraySlice tas = (TypeArraySlice)(attr.getType());
+          if (tas.hasConstantSize()) {
+            etc.setType(((TypeArray)(tas.getBaseType())).getBaseType());
+            for (long j=0; j<tas.getTotalNoOfElements(); j++) {
+              list.add(etc);
+            }
+          }
         } else {
           etc.setType(attr.getType());
-           list.add(etc);
+          list.add(etc);
         }
       }
     }
@@ -2167,6 +2185,7 @@ SmallPearlVisitor<Void> {
 	  
 	  if (dataCtx != null) {
 	    for (int i=0; i<dataCtx.ioListElement().size(); i++) {
+          ErrorStack.enter(dataCtx.ioListElement(i));
 	      if (dataCtx.ioListElement(i).expression()!= null) {
 	        ExpressionContext expr = (ExpressionContext)(dataCtx.ioListElement(i).expression());
 	        // only name is allowed
@@ -2183,11 +2202,13 @@ SmallPearlVisitor<Void> {
 	        if (! isName) {
 	           ErrorStack.enter(dataCtx.ioListElement(i).expression());
 	           ErrorStack.add("only names allowed in input list");
-	           ErrorStack.leave();
 	        }
+	      } else if (dataCtx.ioListElement(i).arraySlice() != null) {
+	        enshureDataForInput(dataCtx.ioListElement(i).arraySlice().name().getText());
 	      } else {
-	         enshureDataForInput(dataCtx.ioListElement(i).getText());
+	        ErrorStack.addInternal("CheckIoStatment:enshureDataForInput: missing alternative");
 	      }
+          ErrorStack.leave();
 	    }
 	  }
 	}
@@ -2439,6 +2460,11 @@ SmallPearlVisitor<Void> {
               SimpleInitializer si = (SimpleInitializer)(ve.getInitializer());
               if (si.getConstant() instanceof ConstantFixedValue) {
                 value = ((ConstantFixedValue)(si.getConstant())).getValue();
+                if (value <=0) {
+                  ErrorStack.add("repetition factor must be >0");
+                  abortCheck = true;
+                  throw new FactorIsNotConstantException();
+                }
               } else {
                 ErrorStack.addInternal("type of initializer must be TypeFixed");
               }
