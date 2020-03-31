@@ -169,6 +169,12 @@ namespace pearlrt {
       SystemDationNBSink  sink;
       SystemDationNBSource   source;
 
+      int formatItem;
+      IOFormatList * formatList;
+      TaskCommon *me;
+      void applyAllPositioningFormats(LoopControl & formatLoop,
+             bool directionTo);
+
    public:
       /**
         create a new PUT/GET userdation (class attribute "ALPHIC")

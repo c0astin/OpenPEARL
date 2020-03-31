@@ -68,7 +68,7 @@ namespace pearlrt {
       // check 0 or negativ, which must be accepted to produce the
       // correct Signal from the I/O formats
       if (n.x <= 0) return;
-      if (string->getCurrent()+n.x >= string->getMax() ) {
+      if (string->getCurrent()+n.x > string->getMax() ) {
           Log::error("attempt to read/write past the string limits");
           throw theCharacterTooLongSignal;
       }
@@ -248,7 +248,7 @@ namespace pearlrt {
                                 dataList->entry[dataElement].dataPtr.offsetIncrement);
             }
 
-     	    applyAllPositioningFormats(formatList,formatLoop);
+     	    applyAllPositioningFormats(formatLoop,true);
             if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
                Log::error("array slice select %d elements",
                  dataList->entry[dataElement].param1.numberOfElements);
@@ -266,7 +266,7 @@ namespace pearlrt {
                              &formatList->entry[formatItem]);
               if ( dataIndex +1 < 
                    (dataList->entry[dataElement].param1.numberOfElements)) {
-     	          applyAllPositioningFormats(formatList,formatLoop);
+     	          applyAllPositioningFormats(formatLoop,true);
 	      }
             }
 
@@ -310,8 +310,8 @@ namespace pearlrt {
       }
    }
 
-   void StringDationConvert::applyAllPositioningFormats(
-      IOFormatList* formatList, LoopControl & formatLoop) {
+   void StringDationConvert::applyAllPositioningFormats(LoopControl & formatLoop,
+             bool directionTo) {
       formatItem = formatLoop.next();
 
       while (formatList->entry[formatItem].format ==
@@ -323,7 +323,12 @@ namespace pearlrt {
 
       while (formatList->entry[formatItem].format >=
                       IOFormatEntry::IsPositioning) {
-         toPositioningFormat(me, &formatList->entry[formatItem]);
+         if (directionTo) {
+            toPositioningFormat(me, &formatList->entry[formatItem]);
+         } else {
+            fromPositioningFormat(me, &formatList->entry[formatItem]);
+         } 
+
          formatItem = formatLoop.next();
 
          while (formatList->entry[formatItem].format ==
@@ -365,7 +370,7 @@ namespace pearlrt {
             }
 
             // treat arrays of simple types
-     	    applyAllPositioningFormats(formatList,formatLoop);
+     	    applyAllPositioningFormats(formatLoop,false);
 
             if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
                   Log::error("array slice select %d elements",
@@ -383,7 +388,7 @@ namespace pearlrt {
                              &formatList->entry[formatItem]);
                if (dataIndex +1 < 
                    dataList->entry[dataElement].param1.numberOfElements) {
-     	          applyAllPositioningFormats(formatList,formatLoop);
+     	          applyAllPositioningFormats(formatLoop,false);
                }
             }
 

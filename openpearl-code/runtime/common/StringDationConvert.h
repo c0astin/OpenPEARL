@@ -174,8 +174,7 @@ namespace pearlrt {
       /**
       apply all positioning formats until then nest data format is reached
       */
-      void applyAllPositioningFormats(IOFormatList* formatList,
-			 LoopControl& formatLoop);
+      void applyAllPositioningFormats( LoopControl& formatLoop, bool directionTo);
       
      public:
       /**
