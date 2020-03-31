@@ -76,7 +76,18 @@ public class TypeArraySlice extends TypeDefinition {
     }
 
     public String toString() {
-      String result = this.getName() + "(:)" + this.m_baseType;
+      String result = this.getName() + "(";
+      if (startIndex!=null) {
+        result += startIndex.getValue()+":";
+      } else {
+        result += "?:";
+      }
+      if (endIndex != null) {
+        result += endIndex.getValue();
+      } else {
+        result += "?";
+      }
+      result += ") " + this.m_baseType;
       return result;
     }
 
