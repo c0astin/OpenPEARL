@@ -167,16 +167,18 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 			System.out.println("SymbolTableVisitor: visitProcedureDeclaration");
 		}
 		ErrorStack.enter(ctx,"PROC");
-	
+
+		this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+
 		SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().toString());
 		if (entry == null) {
 			throw new InternalCompilerErrorException("PROC "+ctx.ID().toString()+" not found", ctx.start.getLine(), ctx.start.getCharPositionInLine());
 		}
 
-		
 		ProcedureEntry procedureEntry = (ProcedureEntry)entry;
 			
-		this.m_currentSymbolTable = this.m_currentSymbolTable.newLevel(procedureEntry);
+		//TODO: MS This caanot be corrected, because semancti check should not alter the symboltable
+		//this.m_currentSymbolTable = this.m_currentSymbolTable.newLevel(procedureEntry);
 		
 		if ( procedureEntry.getFormalParameters() != null && procedureEntry.getFormalParameters().size() > 0) {
 			/* check formal parameters of this procedure */
