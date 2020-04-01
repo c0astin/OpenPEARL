@@ -31,7 +31,14 @@ group smallpearl;
 
 /****************************************************************************/
 
-Prologue(src,headerfiles,namespaces,useSystemElements,taskSpecifierList,ConstantPoolList) ::= <<
+Prologue( src,
+          headerfiles,
+          namespaces,
+          useSystemElements,
+          taskSpecifierList,
+          ConstantPoolList,
+          StructureForwardDeclarationList,
+          StructureDeclarationList) ::= <<
 #include \<PearlIncludes.h>
 
 <if(useSystemElements)>
@@ -59,6 +66,20 @@ const char* filename = (char*) "<src>";
 // TASK SPECIFIERS
 /////////////////////////////////////////////////////////////////////////////
 <taskSpecifierList>
+<endif>
+
+<if(StructureForwardDeclarationList)>
+/////////////////////////////////////////////////////////////////////////////
+// STRUCTURE FORWARD DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<StructureForwardDeclarationList>
+<endif>
+
+<if(StructureDeclarationList)>
+/////////////////////////////////////////////////////////////////////////////
+// STRUCTURE DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<StructureDeclarationList>
 <endif>
 
 >>
@@ -1930,15 +1951,35 @@ TriggerStatement(id) ::= <%
 
 /* --------------------------- STRUCTURE -------------------------------------------*/
 StructVariableDeclarations(decl) ::= <%
-    *** StructVariableDeclarations: <decl> ***
+    StructVariableDeclarations: <decl>
 %>
 
-StructVariableDeclaration(name,components) ::= <%
+StructureDefinition(name,components) ::= <%
 struct <name> {<\n>
     <components: {component|<component>}>
 };<\n>
 %>
 
+StructureVariableDeclaration(name,type) ::= <%
+<type> <name>;<\n>
+%>
+
 StructComponentDeclaration(name,TypeAttribute) ::= <<
    <TypeAttribute> <user_variable(name)>;<\n>
+>>
+
+StructureForwardDeclarationList(declarations) ::= <<
+<declarations: {decl|<decl>}; separator="\n">
+>>
+
+StructureForwardDeclaration(name) ::= <<
+struct <name>;
+>>
+
+StructureDeclarationList(declarations) ::= <<
+<declarations: {decl|<decl>}; separator="\n">
+>>
+
+StructureDeclaration(name) ::= <<
+struct <name>;
 >>
