@@ -36,11 +36,12 @@ import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SmallPearlParser.*;
 import org.smallpearl.compiler.SymbolTable.*;
+import org.smallpearl.compiler.Graph.Graph;
+import org.smallpearl.compiler.Graph.Node;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
@@ -108,11 +109,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         this.ReadTemplate(filename);
 
-        /* TODO: MS
-        HashMap<String,StructureComponent> structureDeclarations =
-                this.m_currentSymbolTable.getStructureDeclarations();
-        */
-
        // generateProlog is invoked via visitModule!!
        generatePrologue();
     }
@@ -149,6 +145,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (m_module.scope.usesSystemElements()) {
             prologue.add("useSystemElements", true);
         }
+
+        prologue.add("StructureForwardDeclarationList", generateStructureForwardDeclarationList());
+        prologue.add("StructureDeclarationList", generateStructureDeclarationList());
 
         return prologue;
     }
@@ -252,6 +251,81 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         return pool;
     }
+
+
+    private ST generateStructureForwardDeclarationList() {
+        Log.debug("CppCodeGeneratorVisitor:generateStructureForwardDeclarationList:");
+
+        ST decls = m_group.getInstanceOf("StructureForwardDeclarationList");
+
+        HashMap<String,TypeStructure> structureDecls = m_symboltable.getStructureDeclarations();
+
+        for (String name : structureDecls.keySet()) {
+            ST decl = m_group.getInstanceOf("StructureForwardDeclaration");
+            decl.add("name", name);
+            decls.add("declarations", decl);
+        }
+
+        return decls;
+    }
+
+    private ST generateStructureDeclarationList() {
+        Log.debug("CppCodeGeneratorVisitor:generateStructureDeclarationList:");
+        ST decls = m_group.getInstanceOf("StructureDeclarationList");
+
+        HashMap<String,TypeStructure> structureDecls = m_symboltable.getStructureDeclarations();
+
+        // First create a dependency graph for the structure definitions:
+        Graph<String> graph = new Graph<>();
+
+        for (String name : structureDecls.keySet()) {
+            TypeStructure struct = structureDecls.get(name);
+            graph.addDependency(name, null);
+
+            for( int i = 0; i < struct.m_listOfComponents.size(); i++) {
+                StructureComponent component = struct.m_listOfComponents.get(i);
+                if (component.m_type instanceof TypeStructure) {
+                    TypeStructure innerStruct = (TypeStructure)component.m_type;
+                    graph.addDependency(name, innerStruct.getStructureName());
+                }
+            }
+        }
+
+        // Calculate the dependencies:
+        List<Node<String>> nodeList = graph.generateDependencies();
+
+        if ( nodeList != null ) {
+            for( int i = 0; i < nodeList.size(); i++) {
+                Node<String> node = nodeList.get(i);
+
+                if ( node.m_value != null ) {
+
+                    TypeStructure struct = structureDecls.get(node.m_value);
+                    ST decl = m_group.getInstanceOf("StructureDefinition");
+                    decl.add("name", struct.getStructureName());
+
+                    for (int j = 0; j < struct.m_listOfComponents.size(); j++) {
+                        ST stComponent = m_group.getInstanceOf("StructComponentDeclaration");
+
+                        StructureComponent component = struct.m_listOfComponents.get(j);
+                        stComponent.add("name", component.m_alias);
+
+                        if (component.m_type instanceof TypeStructure) {
+                            stComponent.add("TypeAttribute", ((TypeStructure) component.m_type).getStructureName());
+                        } else {
+                            stComponent.add("TypeAttribute", component.m_type.toST(m_group));
+                        }
+                        decl.add("components", stComponent);
+                    }
+
+                    decls.add("declarations", decl);
+                }
+            }
+        }
+
+        return decls;
+    }
+
 
 // obsolete 2020-02-26 (rm)    
 //    private double getDuration(SmallPearlParser.DurationConstantContext ctx) {
@@ -6036,7 +6110,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitStructVariableDeclaration(SmallPearlParser.StructVariableDeclarationContext ctx) {
         Log.debug("CppCodeGeneratorVisitor:visitStructVariableDeclaration:ctx" + CommonUtils.printContext(ctx));
-        ST st = m_group.getInstanceOf("StructVariableDeclaration");
+        ST st = m_group.getInstanceOf("StructureVariableDeclaration");
 
         for (int i = 0; i < ctx.structureDenotation().size(); i++) {
             String id = ctx.structureDenotation(i).ID().getText();
@@ -6048,22 +6122,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 ASTAttribute ast = m_ast.lookup(variable.getCtx());
                 TypeStructure typ = (TypeStructure) variable.getType();
 
-                st.add("name", ((TypeStructure) variable.getType()).getStructureName());
-                ListIterator structIterator = typ.m_listOfComponents.listIterator();
-
-                while (structIterator.hasNext()) {
-                    ST stComponent = m_group.getInstanceOf("StructComponentDeclaration");
-                    StructureComponent component = (StructureComponent) structIterator.next();
-                    stComponent.add("name", component.m_alias);
-
-                    if (component.m_type instanceof TypeStructure) {
-                        stComponent.add("TypeAttribute", ((TypeStructure) component.m_type).getStructureName());
-                    } else {
-                        stComponent.add("TypeAttribute", component.m_type.toST(m_group));
-                    }
-                    st.add("components", stComponent);
-                }
-
+                st.add("name", id);
+                st.add("type", ((TypeStructure) variable.getType()).getStructureName());
             }
         }
 

@@ -121,6 +121,7 @@ public class SymbolTable {
         int i;
         SymbolTable st;
         SymbolTableEntry se;
+        Log.debug("SymbolTable:lookup: name=" + name);
 
        for (st = this; st != null; st = st.parent) {
             if ((se = (SymbolTableEntry) st.m_entries.get(name)) != null) {
@@ -188,7 +189,7 @@ public class SymbolTable {
 
             return this;
         }
-        catch (Exception e) {	// ClassNotFound exceptin; this is a pain
+        catch (Exception e) {
             System.out.println(e);
             e.printStackTrace();
             return null;
@@ -315,12 +316,10 @@ public class SymbolTable {
             SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
             if (symbolTableEntry instanceof ModuleEntry) {
                 getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope, structures);
-            } else if (symbolTableEntry instanceof ProcedureEntry) {
-                getStructureDeclarationsForSymboltable(((ProcedureEntry) symbolTableEntry).scope, structures);
             }
         }
+
         return structures;
-        
     }
 
     private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable, HashMap<String,TypeStructure>  structures) {
@@ -329,19 +328,39 @@ public class SymbolTable {
         for (Iterator it = symbolTable.m_entries.values().iterator(); it.hasNext(); ) {
             SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
 
-            if (symbolTableEntry instanceof StructureComponentEntry) {
-                StructureComponentEntry structEntry = (StructureComponentEntry) symbolTableEntry;
-
-            }
-            else if (symbolTableEntry instanceof ModuleEntry) {
-                ModuleEntry entry = (ModuleEntry)symbolTableEntry;
-                getStructureDeclarationsForSymboltable(entry.scope, structures);
-            }
-            else if (symbolTableEntry instanceof VariableEntry) {
+            if (symbolTableEntry instanceof VariableEntry) {
                 VariableEntry entry = (VariableEntry)symbolTableEntry;
                 if ( entry.getType() instanceof TypeStructure ) {
-                    structures.put(entry.getName(), (TypeStructure)entry.getType());
+                    TypeStructure struct = (TypeStructure)entry.getType();
+                    getStructureDeclarationsForStructure(struct.getStructureName(),struct,structures);
                 }
+            }
+            else if (symbolTableEntry instanceof ProcedureEntry) {
+                getStructureDeclarationsForSymboltable(((ProcedureEntry) symbolTableEntry).scope, structures);
+            }
+            else if (symbolTableEntry instanceof TaskEntry) {
+                getStructureDeclarationsForSymboltable(((TaskEntry) symbolTableEntry).scope, structures);
+            }
+            else if (symbolTableEntry instanceof BlockEntry) {
+                getStructureDeclarationsForSymboltable(((BlockEntry) symbolTableEntry).scope, structures);
+            }
+            else if (symbolTableEntry instanceof LoopEntry) {
+                getStructureDeclarationsForSymboltable(((LoopEntry) symbolTableEntry).scope, structures);
+            }
+        }
+    }
+
+    private void getStructureDeclarationsForStructure(String name, TypeStructure structure, HashMap<String,TypeStructure>  structures) {
+        SymbolTableEntry e;
+
+        structures.put(name, structure);
+
+        for (Iterator it = structure.m_listOfComponents.iterator(); it.hasNext(); ) {
+            StructureComponent structureComponent = (StructureComponent) it.next();
+
+            if ( structureComponent.m_type instanceof TypeStructure) {
+                TypeStructure struct = (TypeStructure)structureComponent.m_type;
+                getStructureDeclarationsForStructure(struct.getStructureName(), struct,structures);
             }
         }
     }
