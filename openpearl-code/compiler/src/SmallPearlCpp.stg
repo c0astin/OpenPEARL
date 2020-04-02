@@ -1655,11 +1655,7 @@ ProcedureBody(declarations,statements) ::= <<
 <statements>
 >>
 
-ResultAttribute(resultType) ::= <%
-    <resultType>
-%>
-
-ResultType(type) ::= <%
+ResultAttribute(type) ::= <%
     <type>
 %>
 
@@ -1961,7 +1957,7 @@ struct <name> {<\n>
 %>
 
 StructureVariableDeclaration(name,type) ::= <%
-<type> <name>;<\n>
+<type>  <user_variable(name)>;<\n>
 %>
 
 StructComponentDeclaration(name,TypeAttribute) ::= <<
@@ -1983,3 +1979,11 @@ StructureDeclarationList(declarations) ::= <<
 StructureDeclaration(name) ::= <<
 struct <name>;
 >>
+
+StructureFormalParameter(type) ::= <%
+<type>
+%>
+
+StructureType(type) ::= <%
+<type>
+%>

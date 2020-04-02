@@ -304,10 +304,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     private Void getParameterType(SmallPearlParser.ParameterTypeContext ctx) {
         Log.debug("SymbolTableVisitor:getParameterType:ctx" + CommonUtils.printContext(ctx));
 
-        for (ParseTree c : ctx.children) {
-            if (c instanceof SmallPearlParser.SimpleTypeContext) {
-                visitSimpleType(ctx.simpleType());
-            }
+        if (ctx.simpleType() != null) {
+            visitSimpleType(ctx.simpleType());
+        } else if (ctx.typeStructure() != null) {
+            visitTypeStructure(ctx.typeStructure());
         }
 
         return null;
