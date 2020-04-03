@@ -95,7 +95,10 @@ namespace pearlrt {
    private:
       static int useNormalSchedulerFlag;
       static int schedPrioMax;
+      static int numberOfCores;
       Task();
+      // cpuset is presetted with NULL; no special core
+      cpu_set_t  * cpuset;
 
    public:
       /**
@@ -290,6 +293,12 @@ namespace pearlrt {
       static void useNormalScheduler();
 
       /**
+        set the number of cores to use according the setting 
+        in '.pearlrc'
+      */
+      static void setNumberOfCores(int nbrOfCores);
+
+      /**
          store best priority in the system
 
          Several code segments need to run without dusturbance
@@ -371,6 +380,31 @@ namespace pearlrt {
               false, if the delay passed without disturbion
       */
       static bool delayUs(uint64_t usecs);
+
+      /**
+      define the set of cpus for the execution of this thread
+
+      \param set is a bitmap of useable cpus
+      */
+      void setCpuSet(cpu_set_t *set);
+
+      /**
+      read the set of cpus for the execution of this thread
+
+      \return set is a bitmap of useable cpus
+      */
+      cpu_set_t * getCpuSet();
+
+      /**
+      convert cpu_set_t value into a comma separated list of integers
+      
+      If the list becomes longer than the given size, the list is aborted silently
+
+      \param set the cpu_set_t to convert
+      \param setAsText  the string to capture the list
+      \param size the size of the list 
+      */
+      static void getCpuSetAsText(cpu_set_t * set, char* setAsText, size_t size);
 
    private:
       void enableCancelIOSignalHandler(void);

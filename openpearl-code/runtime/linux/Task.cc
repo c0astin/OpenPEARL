@@ -139,6 +139,9 @@ namespace pearlrt {
          throw theInternalTaskSignal;
       }
 
+      // clear some fields for multicore support
+      cpuset = NULL;  // may use each core
+
       TaskList::Instance().add(this);
    }
 
@@ -373,6 +376,7 @@ namespace pearlrt {
    void Task::directActivate(const Fixed<15>& prio) {
       int ret;
       currentPrio = prio;
+      char cores[40];
 
       //set up the new scheduling policies for preemptive priority
       if (!useNormalSchedulerFlag) {
@@ -417,6 +421,29 @@ namespace pearlrt {
                     name, strerror(errno));
          throw theInternalTaskSignal;
       }
+
+      if (cpuset != NULL) {
+         // apply thread cpu affinity
+         ret = pthread_setaffinity_np(threadPid,
+                       CPU_COUNT(cpuset), cpuset);
+         if (ret != 0) {
+             Log::error("%s: could not set cpu affinity (%s)",name, strerror(ret));
+             throw theInternalTaskSignal;
+         }
+         getCpuSetAsText(cpuset,cores,sizeof(cores)-1);
+      } else {
+        // no special cpuset defined, get default set from pthread_*
+        cpu_set_t cpu;
+        ret = pthread_getaffinity_np(threadPid,sizeof(cpu),&cpu);
+        if (ret !=0 ) {
+           Log::error("%s: could not read cpu affinity (%s)",name, strerror(ret));
+           throw theInternalTaskSignal;
+        }
+   
+        getCpuSetAsText(&cpu,cores,sizeof(cores)-1); 
+      }
+      Log::info("%s: may use cores: %s",name, cores );
+
 
       return;
    }
@@ -535,6 +562,12 @@ namespace pearlrt {
       schedPrioMax = p;
    }
 
+   int Task::numberOfCores = 1;
+
+   void Task::setNumberOfCores(int n) {
+       numberOfCores = n;
+   }
+
    int Task::useNormalSchedulerFlag = 0;
 
    void Task::useNormalScheduler() {
@@ -611,5 +644,34 @@ namespace pearlrt {
           return true;
       }
       return false;
+   }
+
+   void Task::setCpuSet(cpu_set_t * set) {
+       cpuset = set;
+   }
+   
+   cpu_set_t * Task::getCpuSet() {
+       return cpuset;
+   }
+   
+   void Task::getCpuSetAsText(cpu_set_t * set, char* setAsText, size_t size) {
+        setAsText[0] = 0;
+        if (set) {
+           char num[5]; // max cores in kernel are 1024 
+           for (int i=0; i<numberOfCores; i++) {
+              if (CPU_ISSET_S(i,CPU_ALLOC_SIZE(numberOfCores),set)) {
+                 sprintf(num,"%d,", i);
+                 if (strlen(setAsText)+strlen(num) < size) {
+                   strcat(setAsText,num);
+                 }
+              }
+           }
+           int len = strlen(setAsText);
+           if (len >0) {
+              setAsText[len-1] = 0; // remove trailing comma 
+           }
+        } else {
+          strcpy(setAsText,"all");
+        }
    }
 }

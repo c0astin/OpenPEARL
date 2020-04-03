@@ -1,4 +1,4 @@
-LogLevel    0x0f   (1=debug, 2=info, 4=warn, 8=error)
+!LogLevel    0x0f   (1=debug, 2=info, 4=warn, 8=error)
 ! -------------------------------------
 ! PEARL runtime configuration file (.pearlrc)
 ! this file is searched in the current directory (first)
@@ -21,14 +21,24 @@ LogLevel    0x0f   (1=debug, 2=info, 4=warn, 8=error)
 !     The value (-1) defines eternal execution
 !     Default value is 300
 !
-! Cores (dec)
+! UseCores (dec)
 !     defines the number of used cores for the application.
 !     If less cores are available than specified in this command
 !     the maximum of possible cores is used.
 !     Default value: 1
+!
+! Cores (string) (dec),(dec),...
+!     defines that the specified task runs only on the given cores
+!     the cores are numbered starting with 0 .. (Cores-1)
+!     Example myTask42 may use only cores 1 and 2
+!     Core myTask42  1,2
+!
+! DefaultCores (dec),(dec),...
+!     defines that all tasks without a 'Core' statement run on the
+!     specified cores. If this statement is not given, all other 
+!     task may run on any core
 !  
 ! -------------------------------------
 !LogLevel    0x0e   (1=debug, 2=info, 4=warn, 8=error)
 !MaxCpuTime 300
-!Cores      1
-
+!UseCores      1
