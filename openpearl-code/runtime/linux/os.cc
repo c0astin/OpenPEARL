@@ -340,10 +340,10 @@ namespace pearlrt {
          int core = atoi(tok);
          if (core >= entries[CORES].value) {
             if (taskName) {
-               fprintf(stderr, "core number %d for task %s too large --> ignored\n",
+               fprintf(stderr, ".pearlrc: core number %d for task %s too large --> ignored\n",
                                 core, taskName);
             } else {
-               fprintf(stderr, "core number %d for 'DefaultCores' too large --> ignored\n",
+               fprintf(stderr, ".pearlrc: core number %d for 'DefaultCores' too large --> ignored\n",
                                 core);
             }
           } else {
@@ -385,6 +385,9 @@ namespace pearlrt {
             found = 0;
             fgets(line, sizeof(line) - 1, fp);
             if (!feof(fp) && line[0] != '!') {
+               if (line[strlen(line)-1] == '\n') {
+                  line[strlen(line)-1] = ' ';  // replace \n with space
+               }
                // this is no comment line
                for (unsigned int i = 0;
                      i < sizeof(entries) / sizeof(entries[0]) && found == 0;
@@ -395,7 +398,7 @@ namespace pearlrt {
                // check if it is the 'Cores' tag
                if (!found && strncmp(line,"Cores ",6) == 0) {
                    if (entries[CORES].value < 2) {
-   	              fprintf(stderr, "need more than 2 cores for statement 'Core'\n");
+   	              fprintf(stderr, ".pearlrc: need more than 2 cores for statement 'Core'\n");
                       pearlRcFileOk = false;
                    }
                      
@@ -416,17 +419,27 @@ namespace pearlrt {
                       if (t) {
                          t->setCpuSet(set);
                       } else {
-                         fprintf(stderr, "task %s not defined; Core-tag ignored\n",taskName);
+                         fprintf(stderr, ".pearlrc: task %s not defined; Core-tag ignored\n",taskName);
                          pearlRcFileOk = false;
                       }
 		   } 
                } else if (!found && strncmp(line,"DefaultCores ",13) == 0) {
                    if (entries[CORES].value < 2) {
-   	              fprintf(stderr, "need more than 2 cores for statement 'DefaultCores'\n");
+   	              fprintf(stderr, ".pearlrc: need more than 2 cores for statement 'DefaultCores'\n");
                       pearlRcFileOk = false;
                    }
                      
 		   defaultCpuSet = getCpuSet(line+13,NULL);
+               } else if (!found) {
+                   // let's ignore empty lines
+                   char * isEmptyCheck = line;
+                   while (isspace(*isEmptyCheck)) {
+                       isEmptyCheck ++;
+                   }
+                   if (*isEmptyCheck != '\0') {
+   	              fprintf(stderr, ".pearlrc: illegal command: '%s'\n",line);
+                      pearlRcFileOk = false;
+                   }
                }
             }
          }
@@ -563,7 +576,7 @@ int main() {
    signal(SIG_NO_MORE_TASKS, noMoreTasksPendingHandler);
 
    Log::info("Defined Tasks");
-   sprintf(line, "%-20.20s %4s %6s %s", "Name", "Prio", "isMain", "run on core");
+   sprintf(line, "  %-20.20s %4s %6s %s", "Name", "Prio", "isMain", "run on core");
    Log::info(line);
    TaskList::Instance().sort();	// sort taskList
 
@@ -576,7 +589,7 @@ int main() {
           set=defaultCpuSet;
       }
       Task::getCpuSetAsText(set, cores, sizeof(cores)-1);
-      sprintf(line, "%-20.20s  %3d  %2d     %s", t->getName(),
+      sprintf(line, "  %-20.20s  %3d  %2d     %s", t->getName(),
               (t->getPrio()).x,
               t->getIsMain(), cores);
       Log::info(line);
