@@ -80,8 +80,9 @@ namespace pearlrt {
 
    // tasks are created statically - no mutex protection needed
    Task::Task(void (*entry)(Task *),
-              char * n,
-              Prio prio, BitString<1> isMain) : TaskCommon(n, prio, isMain) {
+              char * n,                          
+              Prio prio, BitString<1> isMain)
+         : TaskCommon(n, prio, isMain) {
       int ret;
 
       entryPoint = entry;   //set thread execute function
@@ -353,7 +354,7 @@ namespace pearlrt {
    }
 
    void Task::entry() {
-
+      // Log::info("%s: starts on cpu %d", name, sched_getcpu());
       enableCancelIOSignalHandler();
       asyncTerminateRequested = false;
       asyncSuspendRequested = false;

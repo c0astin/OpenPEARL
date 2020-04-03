@@ -440,11 +440,11 @@ in a conventient way in there task-specification file
 */
 #define DCLTASK(x, prio, ismain) 			\
 namespace pearlrt {					\
-   static void x ## _entry (pearlrt::Task * me) ;		\
-   static void x ## _body (pearlrt::Task * me) ;		\
+   static void x ## _entry (pearlrt::Task * me) ;	\
+   static void x ## _body (pearlrt::Task * me) ;        \
 }							\
-pearlrt::Task x ( pearlrt::x ## _entry, (char*)#x, \
-                       prio, ismain);	\
+pearlrt::Task x ( pearlrt::x ## _entry, ((char*)#x)+1,  \
+                       prio, ismain);	                \
 namespace pearlrt {					\
 static void x ## _entry (pearlrt::Task * me) { 		\
       me->entry();  					\
