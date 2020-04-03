@@ -191,16 +191,16 @@ namespace pearlrt {
 
       int dataElement;
 
-      this->formatItem = -1;
-      this->formatList = formatList;
-      this->me = me;
- 
-      // create a loop control structure for the format list treatment
-      LoopControl formatLoop(formatList->nbrOfEntries, true);
-      LoopControl dataLoop(dataList->nbrOfEntries, false);
-
       try {
          beginSequence(me, Dation::OUT);
+         this->formatItem = -1;
+         this->formatList = formatList;
+         this->me = me;
+ 
+         // create a loop control structure for the format list treatment
+         LoopControl formatLoop(formatList->nbrOfEntries, true);
+         LoopControl dataLoop(dataList->nbrOfEntries, false);
+
 
          // get first data element
          dataElement = dataLoop.next();
@@ -293,17 +293,15 @@ namespace pearlrt {
                       IODataList * dataList, IOFormatList * formatList) {
 
       int dataElement;
-      this->formatList = formatList;
-      this->formatItem = -1;
-      this->me = me;
-
-      // create a loop control structure for the format list treatment
-      LoopControl formatLoop(formatList->nbrOfEntries, true);
-      LoopControl dataLoop(dataList->nbrOfEntries, false);
-
-
       try {
          beginSequence(me, Dation::IN);
+         this->formatList = formatList;
+         this->formatItem = -1;
+         this->me = me;
+
+         // create a loop control structure for the format list treatment
+         LoopControl formatLoop(formatList->nbrOfEntries, true);
+         LoopControl dataLoop(dataList->nbrOfEntries, false);
 
          // get first data element
          dataElement = dataLoop.next();
