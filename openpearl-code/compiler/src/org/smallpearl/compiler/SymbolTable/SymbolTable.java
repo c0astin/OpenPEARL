@@ -336,6 +336,15 @@ public class SymbolTable {
                 }
             }
             else if (symbolTableEntry instanceof ProcedureEntry) {
+                ProcedureEntry procedureEntry = (ProcedureEntry) symbolTableEntry;
+
+                if (procedureEntry.getResultType() != null) {
+                    if (procedureEntry.getResultType() instanceof TypeStructure) {
+                        TypeStructure result = (TypeStructure) procedureEntry.getResultType();
+                        structures.put(result.getStructureName(), result);
+                    }
+                }
+
                 getStructureDeclarationsForSymboltable(((ProcedureEntry) symbolTableEntry).scope, structures);
             }
             else if (symbolTableEntry instanceof TaskEntry) {

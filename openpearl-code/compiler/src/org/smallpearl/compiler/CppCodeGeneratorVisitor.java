@@ -648,6 +648,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     }
 
     @Override
+    public ST visitTypeStructure(SmallPearlParser.TypeStructureContext ctx) {
+        ST st = m_group.getInstanceOf("StructureFormalParameter");
+        st.add("type", "????");
+        return st;
+    }
+
+    @Override
     public ST visitVariableDenotation(
             SmallPearlParser.VariableDenotationContext ctx) {
         ST variableDenotation = m_group.getInstanceOf("variable_denotation");
@@ -5524,6 +5531,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST st = m_group.getInstanceOf("ProcedureDeclaration");
         st.add("id", ctx.ID().getText());
 
+        SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID().toString());
+
         this.m_currentSymbolTable = m_symbolTableVisitor
                 .getSymbolTablePerContext(ctx);
 
@@ -5532,8 +5541,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 st.add("body",
                         visitProcedureBody((SmallPearlParser.ProcedureBodyContext) c));
             } else if (c instanceof SmallPearlParser.ResultAttributeContext) {
-                st.add("resultAttribute",
-                        visitResultAttribute((SmallPearlParser.ResultAttributeContext) c));
+                st.add("resultAttribute", getResultAttributte((ProcedureEntry) se));
             } else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
                 st.add("globalAttribute",
                         visitGlobalAttribute((SmallPearlParser.GlobalAttributeContext) c));
@@ -5548,6 +5556,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return st;
     }
 
+    private ST getResultAttributte(ProcedureEntry pe) {
+        ST st = m_group.getInstanceOf("ResultAttribute");
+        st.add("type", pe.getResultType().toST(m_group));
+        return st;
+    }
 // 2020-03-30 (rm) obsolete 
 //    private ST getProcedureSpecification(
 //            SmallPearlParser.ProcedureDeclarationContext ctx) {
@@ -5592,14 +5605,22 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx != null) {
             for (int i = 0; i < ctx.ID().size(); i++) {
                 boolean treatArray = false;
+                boolean treatStructure = false;
+                String typeName = "";
+
                 ST param = m_group.getInstanceOf("FormalParameter");
 
                 // test if we have an parameter of type array
                 SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID(i).toString());
+
                 if (se instanceof VariableEntry) {
                     VariableEntry ve = (VariableEntry) se;
+
                     if (ve.getType() instanceof TypeArray) {
                         treatArray = true;
+                    } else if (ve.getType() instanceof TypeStructure) {
+                        treatStructure = true;
+                        typeName = ((TypeStructure) ve.getType()).getStructureName();
                     }
                 }
 
@@ -5612,8 +5633,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     param.add("isArray", "");
                 }
                 param.add("id", ctx.ID(i));
-                param.add("type", visitParameterType(ctx.parameterType()));
 
+                if (treatStructure) {
+                    param.add("type", typeName);
+                } else {
+                    param.add("type", visitParameterType(ctx.parameterType()));
+                }
                 if (ctx.assignmentProtection() != null) {
                     param.add("assignmentProtection", "");
                 }
@@ -5639,6 +5664,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 st.add("type", visitSimpleType(ctx.simpleType()));
             } else if (c instanceof SmallPearlParser.TypeReferenceContext) {
                 st.add("type", visitTypeReference(ctx.typeReference()));
+            } else if (c instanceof SmallPearlParser.TypeStructureContext) {
+                st.add("type", visitTypeStructure(ctx.typeStructure()));
             } else {
                 System.err.println("CppCodeGen:visitParameterType: untreated type " + c.getClass().getCanonicalName());
             }
@@ -5706,6 +5733,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 st.add("type", visitSimpleType(ctx.simpleType()));
             } else if (c instanceof SmallPearlParser.TypeReferenceContext) {
                 st.add("type", visitTypeReference(ctx.typeReference()));
+            } else if (c instanceof SmallPearlParser.TypeStructureContext) {
+                st.add("type", visitTypeStructure(ctx.typeStructure()));
             }
         }
 

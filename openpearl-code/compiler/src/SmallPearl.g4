@@ -717,6 +717,7 @@ parameterType :
       simpleType
     | typeDation
     | typeReference
+    | typeStructure
     ;
 
 
@@ -769,6 +770,7 @@ resultAttribute :
 resultType :
       simpleType
     | typeReference
+    | typeStructure
     | ID
     ;
 
