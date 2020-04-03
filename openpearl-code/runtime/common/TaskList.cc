@@ -100,6 +100,19 @@ namespace pearlrt {
       return t;
    }
 
+   Task * TaskList::getTaskByName(char * name) {
+      Task * t = NULL;
+
+      for (size_t i=0; i < taskList.size(); i++) {
+          if (strcmp(taskList[i]->getName(),name) == 0) {
+             t = taskList[i];
+             return t;
+          }
+      }
+      return t;
+
+   }
+
    int TaskList::getNbrOfMainTasks() {
       return nbrOfMainTasks;
    }
