@@ -1,7 +1,7 @@
 \subsection{Application Configuration File}
 
 The application parses at system start the file \texttt{.pearlrc} in
-the current directoy.
+the current directoy and in the home directory of the user.
 
 This file allows to set several parameters for the execution.
 The documentation is included in the configuration file.
@@ -13,6 +13,9 @@ It is possible to set
 \item maximum of allowed cpu time. The default value is 300s for safety reasons 
    when running in priviledged mode.
 \item the number of cpu cores to use. The default value is 1
+\item the core numbers to be used by specific tasks
 \end{itemize}
+
+For details about the commands, see the \ţexttt{.pearlrc} in the demo directory-
 
 
