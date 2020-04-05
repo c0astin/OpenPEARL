@@ -870,16 +870,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         int noOfArrayElements = ((TypeArray) variableEntry
             .getType()).getTotalNoOfElements();
 
-
-
 /*
         if (noOfElements <  {
 
         throw new NumberOfInitializerMismatchException(ctx.getText(),
                 ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
-
 */
+
         if (variableEntry.getInitializer() != null) {
             ST stValue=null; // we need the last init element to fill up incomplete array initialisers 
             
@@ -911,11 +909,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                   initElementList.add(stValue);
                   noOfElements++;
                 }
-                  
-                
             }
-            
-
 
 //    private ST getArrayInitialisationAttribute(
 //            SmallPearlParser.ArrayInitialisationAttributeContext ctx,
@@ -3428,10 +3422,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx.expression()!= null) {
            ST returnExpr = getExpression(ctx.expression());
            ASTAttribute attr = m_ast.lookup(ctx.expression());
+
            if (attr.getType() instanceof TypeVariableChar) {
-        
              stmt.add("char_size",m_resultType.getPrecision());
            }
+
            if (returnExpr != null) {
                stmt.add("expression", returnExpr);
            }
@@ -5559,6 +5554,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     private ST getResultAttributte(ProcedureEntry pe) {
         ST st = m_group.getInstanceOf("ResultAttribute");
         st.add("type", pe.getResultType().toST(m_group));
+        m_resultType = pe.getResultType();
         return st;
     }
 // 2020-03-30 (rm) obsolete 
