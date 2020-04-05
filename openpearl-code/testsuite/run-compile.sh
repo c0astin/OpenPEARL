@@ -36,21 +36,36 @@ do
 	fi
 done
 
-printf "Result:  no of tests/passed/failed: %d/%d/%d\n" "$nooftests" "$passed" "$failed"
+msg=$(printf "Result: no of tests/passed/failed: %d/%d/%d\n" "$nooftests" "$passed" "$failed")
+printf "$msg"
 
 if [ $PARAM -eq 0 ]; then
-   exit 0
+    if [ -x "$(command -v notify-send)" ]; then
+	notify-send -u normal "OpenPEARL: $msg"
+    fi
+    
+    exit 0
 fi
+
 if [ $PARAM -eq 1 ]; then
    if [ $failed -ne 0 ]; then
-      echo "at least 1 program did not compile"
+       echo "at least 1 program did not compile"
+
+       if [ -x "$(command -v notify-send)" ]; then
+	   notify-send -u critical "OpenPEARL: at least 1 program did not compile"
+       fi
       exit 1
    fi
    exit 0
 fi
+
 if [ $PARAM -eq 2 ]; then
    if [ $passed -ne 0 ]; then
       echo "at least 1 program did compile"
+
+      if [ -x "$(command -v notify-send)" ]; then
+	  notify-send -u critical "OpenPEARL: at least 1 program did not compile"
+      fi
       exit 1
    fi
    exit 0
