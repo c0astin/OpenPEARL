@@ -1084,6 +1084,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             visitArrayVariableDeclaration(ctx.arrayVariableDeclaration(i));
         }
 
+        for (int i = 0; i < ctx.structVariableDeclaration().size(); i++) {
+            visitStructVariableDeclaration(ctx.structVariableDeclaration(i));
+        }
+
         for (int i = 0; i < ctx.statement().size(); i++) {
             SmallPearlParser.StatementContext stmt = ctx.statement(i);
 
