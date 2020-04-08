@@ -56,9 +56,9 @@ namespace pearlrt {
 
    \code
    Fixed<15> x;
-   Ref< Fixed<15> > * y;
+   Ref< Fixed<15> > y;
    ...
-   Ref< Fixed<15> > * y1(&x);  // auto initialization
+   Ref< Fixed<15> > y1(&x);  // auto initialization
    ...
    y = & x;           // assignment to the reference variable
    x = *y + x;   // usage in an expression
@@ -106,6 +106,7 @@ namespace pearlrt {
          Log::error("Ref::use of uninitialized reference");
          throw theRefNotInitializedSignal;
       }
+
    };
    /** @} */
 }
