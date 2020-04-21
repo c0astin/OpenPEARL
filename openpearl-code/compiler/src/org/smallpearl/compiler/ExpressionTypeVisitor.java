@@ -29,6 +29,7 @@
 
 package org.smallpearl.compiler;
 
+import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
 import org.smallpearl.compiler.SmallPearlParser.GeRelationalExpressionContext;
 import org.smallpearl.compiler.SmallPearlParser.ListOfExpressionContext;
@@ -147,6 +148,10 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                 	   expressionResult = new ASTAttribute(((TypeArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
                 	}
                 }
+                else  if ( variable.getType() instanceof TypeStructure ) {
+                        expressionResult = new ASTAttribute(m_type);
+                }
+
 // 2020-03-14 (rm) TypeFormalParameterArray does not exist
 //                else if ( variable.getType() instanceof TypeFormalParameterArray ) {
 //                    expressionResult = new ASTAttribute(((TypeFormalParameterArray) variable.getType()).getBaseType(), variable.getAssigmentProtection(), variable);
@@ -3199,6 +3204,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         Log.debug("ExpressionTypeVisitor:visitName:id=" + ctx.ID().toString());
 
         if ( m_nameDepth == 0 ) {
+            ErrorStack.enter(ctx,ctx.ID().toString());
+
             SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
 
             if ( entry != null ) {
@@ -3220,13 +3227,18 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
                         visitName(ctx.name());
                         m_nameDepth--;
                     }
+
                     ASTAttribute attr = new ASTAttribute(m_type);
                  //   attr.setVariable(var);
                     m_ast.put(ctx, attr);
+                } else {
+                    checkForArrayOrStructureUsage(ctx, entry);
                 }
             } else {
                 throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(),(ctx.ID().toString()));
             }
+
+            ErrorStack.leave();
         } else {
             if ( m_type instanceof TypeArray) {
                 m_type = ((TypeArray)m_type).getBaseType();
@@ -3258,6 +3270,29 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         }
 
         return null;
+    }
+
+    /**
+     * Check if rule is using array or structure subscription
+     *
+     * @param ctx  Context of a name rule
+     * @param entry SymboltableEntry of the variable
+     * @return null
+     */
+    private void checkForArrayOrStructureUsage(SmallPearlParser.NameContext ctx, SymbolTableEntry entry) {
+        if (entry instanceof TaskEntry ||
+                entry instanceof SemaphoreEntry ||
+                entry instanceof BoltEntry ||
+                entry instanceof ModuleEntry ||
+                entry instanceof TypeEntry) {
+            if ( ctx.listOfExpression() != null) {
+                ErrorStack.add("cannot be  used as an array");
+            }
+
+            if ( ctx.name() != null ) {
+                ErrorStack.add("cannot be  used as a structure");
+            }
+        }
     }
 
     /**

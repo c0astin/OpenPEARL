@@ -296,7 +296,7 @@ variable_declaration(name,type,init,global,inv,no_decoration) ::= <%
 %>
 
 variable(name) ::= <<
-_<name>
+<user_variable(name)>
 >>
 
 variable_init(value) ::= <<
@@ -1961,11 +1961,10 @@ StructureVariableDeclaration(name,type) ::= <%
 %>
 
 StructComponentDeclaration(name,TypeAttribute) ::= <<
-   <TypeAttribute> <user_variable(name)>;<\n>
+   <TypeAttribute> <name>;<\n>
 >>
 
 StructureForwardDeclarationList(declarations) ::= <<
-<declarations: {decl|<decl>}; separator="\n">
 >>
 
 StructureForwardDeclaration(name) ::= <<
@@ -1986,4 +1985,13 @@ StructureFormalParameter(type) ::= <%
 
 StructureType(type) ::= <%
 <type>
+%>
+
+StructureComponent(component) ::= <%
+.<component>
+%>
+
+/* explode a name definition: */
+Name(id, name) ::= <%
+<user_variable(id)><if(name)>.<endif><name: {name|<name>}; separator=".">
 %>

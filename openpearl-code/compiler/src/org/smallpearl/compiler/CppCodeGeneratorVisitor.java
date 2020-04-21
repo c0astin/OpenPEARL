@@ -66,7 +66,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     private TypeDefinition m_resultType;     // result type of a PROC; required if a variable character string is returned
     private ST m_tempCharVariableList;  // variable character values must be assigned
     private int m_tempCharVariableNbr;  // to a temporary variable if use as proc parameter 
- 
+
     public enum Type {
         BIT, CHAR, FIXED
     }
@@ -92,7 +92,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
         m_ast = ast;
-        
+
 
         LinkedList<ModuleEntry> listOfModules = this.m_currentSymbolTable
                 .getModules();
@@ -109,8 +109,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         this.ReadTemplate(filename);
 
-       // generateProlog is invoked via visitModule!!
-       generatePrologue();
+        // generateProlog is invoked via visitModule!!
+        generatePrologue();
     }
 
     private Void ReadTemplate(String filename) {
@@ -258,7 +258,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         ST decls = m_group.getInstanceOf("StructureForwardDeclarationList");
 
-        HashMap<String,TypeStructure> structureDecls = m_symboltable.getStructureDeclarations();
+        HashMap<String, TypeStructure> structureDecls = m_symboltable.getStructureDeclarations();
 
         for (String name : structureDecls.keySet()) {
             ST decl = m_group.getInstanceOf("StructureForwardDeclaration");
@@ -273,7 +273,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         Log.debug("CppCodeGeneratorVisitor:generateStructureDeclarationList:");
         ST decls = m_group.getInstanceOf("StructureDeclarationList");
 
-        HashMap<String,TypeStructure> structureDecls = m_symboltable.getStructureDeclarations();
+        HashMap<String, TypeStructure> structureDecls = m_symboltable.getStructureDeclarations();
 
         // First create a dependency graph for the structure definitions:
         Graph<String> graph = new Graph<>();
@@ -282,10 +282,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             TypeStructure struct = structureDecls.get(name);
             graph.addDependency(name, null);
 
-            for( int i = 0; i < struct.m_listOfComponents.size(); i++) {
+            for (int i = 0; i < struct.m_listOfComponents.size(); i++) {
                 StructureComponent component = struct.m_listOfComponents.get(i);
                 if (component.m_type instanceof TypeStructure) {
-                    TypeStructure innerStruct = (TypeStructure)component.m_type;
+                    TypeStructure innerStruct = (TypeStructure) component.m_type;
                     graph.addDependency(name, innerStruct.getStructureName());
                 }
             }
@@ -294,11 +294,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         // Calculate the dependencies:
         List<Node<String>> nodeList = graph.generateDependencies();
 
-        if ( nodeList != null ) {
-            for( int i = 0; i < nodeList.size(); i++) {
+        if (nodeList != null) {
+            for (int i = 0; i < nodeList.size(); i++) {
                 Node<String> node = nodeList.get(i);
 
-                if ( node.m_value != null ) {
+                if (node.m_value != null) {
 
                     TypeStructure struct = structureDecls.get(node.m_value);
                     ST decl = m_group.getInstanceOf("StructureDefinition");
@@ -683,7 +683,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 v.add("inv", var.getAssigmentProtection());
 
                 if (var.getInitializer() != null) {
-                    if ( var.getInitializer() instanceof SimpleInitializer) {
+                    if (var.getInitializer() instanceof SimpleInitializer) {
                         v.add("InitElement", ((SimpleInitializer) var.getInitializer()).getConstant());
                     }
                 }
@@ -868,7 +868,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ArrayList<ST> initElementList = new ArrayList<ST>();
         int noOfElements = 0;
         int noOfArrayElements = ((TypeArray) variableEntry
-            .getType()).getTotalNoOfElements();
+                .getType()).getTotalNoOfElements();
 
 /*
         if (noOfElements <  {
@@ -879,8 +879,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 */
 
         if (variableEntry.getInitializer() != null) {
-            ST stValue=null; // we need the last init element to fill up incomplete array initialisers 
-            
+            ST stValue = null; // we need the last init element to fill up incomplete array initialisers
+
             if (variableEntry.getInitializer() instanceof SimpleInitializer) {
                 SimpleInitializer initializer = (SimpleInitializer) variableEntry.getInitializer();
                 ConstantValue value = initializer.getConstant();
@@ -897,17 +897,17 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 ArrayOrStructureInitializer initializer = (ArrayOrStructureInitializer) variableEntry.getInitializer();
                 ArrayList<Initializer> listOfInitializers = initializer.getInitElementList();
 
-                for ( int i = 0; i < listOfInitializers.size(); i++) {
+                for (int i = 0; i < listOfInitializers.size(); i++) {
                     stValue = m_group.getInstanceOf("expression");
                     stValue.add("code", listOfInitializers.get(i));
                     noOfElements++;
                     initElementList.add(stValue);
                 }
-                
+
                 // fill array initializer with last value
                 while (noOfElements < noOfArrayElements) {
-                  initElementList.add(stValue);
-                  noOfElements++;
+                    initElementList.add(stValue);
+                    noOfElements++;
                 }
             }
 
@@ -1352,17 +1352,17 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                             .add("DationDeclarations",
                                     visitDationDeclaration((SmallPearlParser.DationDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.ProcedureDeclarationContext) {
-                    ST procedureDeclaration =  visitProcedureDeclaration((SmallPearlParser.ProcedureDeclarationContext) c);
-                    
+                    ST procedureDeclaration = visitProcedureDeclaration((SmallPearlParser.ProcedureDeclarationContext) c);
+
                     problem_part
-                            .add("ProcedureDeclarations",procedureDeclaration);
+                            .add("ProcedureDeclarations", procedureDeclaration);
                     ST spc = m_group.getInstanceOf("ProcedureSpecification");
-                    spc.add("id",                    procedureDeclaration.getAttribute("id"));
-                    spc.add("listOfFormalParameters",procedureDeclaration.getAttribute("listOfFormalParameters"));
-                    spc.add("resultAttribute",       procedureDeclaration.getAttribute("resultAttribute"));
-                    spc.add("globalAttribute",       procedureDeclaration.getAttribute("globalAttribute"));
-                    
-                    problem_part.add("ProcedureSpecifications",spc);
+                    spc.add("id", procedureDeclaration.getAttribute("id"));
+                    spc.add("listOfFormalParameters", procedureDeclaration.getAttribute("listOfFormalParameters"));
+                    spc.add("resultAttribute", procedureDeclaration.getAttribute("resultAttribute"));
+                    spc.add("globalAttribute", procedureDeclaration.getAttribute("globalAttribute"));
+
+                    problem_part.add("ProcedureSpecifications", spc);
 //     
 //                                    getProcedureSpecification((SmallPearlParser.ProcedureDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.InterruptSpecificationContext) {
@@ -1373,7 +1373,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
 
-       
+
         ST semaphoreArrays = m_group.getInstanceOf("TemporarySemaphoreArrays");
         LinkedList<LinkedList<SemaphoreEntry>> listOfSemaphoreDeclarations = m_symbolTableVisitor
                 .getListOfTemporarySemaphoreArrays();
@@ -2086,7 +2086,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
         if (m_tempCharVariableNbr > 0) {
-          stmt.add("TempCharVariableList", m_tempCharVariableList);
+            stmt.add("TempCharVariableList", m_tempCharVariableList);
         }
         return stmt;
     }
@@ -2393,77 +2393,73 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitAssignment_statement(
-        SmallPearlParser.Assignment_statementContext ctx) {
-      ST stmt = null;
-      String id = null;
+            SmallPearlParser.Assignment_statementContext ctx) {
+        ST stmt = null;
+        String id = null;
 
+        ErrorStack.enter(ctx, ":=");
 
-      ErrorStack.enter(ctx,":=");
-
-      
-      if (ctx.name() != null) {
-        id = ctx.name().ID().getText();
-       
-      } else if (ctx.stringSelection() != null) {
-       
-        if (ctx.stringSelection().charSelection() != null) {
-          id = ctx.stringSelection().charSelection().name().ID().getText();
-        } else if (ctx.stringSelection().bitSelection() != null) {
-          id = ctx.stringSelection().bitSelection().name().ID().getText();
+        if (ctx.name() != null) {
+            id = ctx.name().ID().getText();
+        } else if (ctx.stringSelection() != null) {
+            if (ctx.stringSelection().charSelection() != null) {
+                id = ctx.stringSelection().charSelection().name().ID().getText();
+            } else if (ctx.stringSelection().bitSelection() != null) {
+                id = ctx.stringSelection().bitSelection().name().ID().getText();
+            }
         }
-      }
         SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
 
         if (entry == null) {
-          m_currentSymbolTable.dump();
-          throw new InternalCompilerErrorException(ctx.getText(),
-              ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            m_currentSymbolTable.dump();
+            throw new InternalCompilerErrorException(ctx.getText(),
+                    ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         TypeDefinition rhs_type = m_ast.lookupType(ctx.expression());
 
         if (entry instanceof VariableEntry) {
-          VariableEntry variable = (VariableEntry) entry;
-          TypeDefinition lhs_type = variable.getType();
+            VariableEntry variable = (VariableEntry) entry;
+            TypeDefinition lhs_type = variable.getType();
 
-          if (lhs_type instanceof TypeFixed) {
-            TypeFixed typ = (TypeFixed) (lhs_type);
-            m_currFixedLength = typ.getPrecision();
-          } else {
-            m_currFixedLength = null;
-          }
-
-          if (lhs_type instanceof TypeReference) {
-            ST st = m_group.getInstanceOf("assignment_statement");
-
-            if (ctx.dereference() != null) {
-// CONT ref2CHAR := c.CHAR(a:b); not treated yet!
-              
-              ST dereference = m_group.getInstanceOf("CONT");
-              dereference.add("operand", getUserVariable(ctx.name().ID()
-                  .getText()));
-              st.add("lhs", dereference);
-              st.add("rhs", getExpression(ctx.expression()));
-              stmt = st;
+            if (lhs_type instanceof TypeFixed) {
+                TypeFixed typ = (TypeFixed) (lhs_type);
+                m_currFixedLength = typ.getPrecision();
             } else {
-              st.add("lhs", getUserVariable(ctx.name().ID().getText()));
-
-              if (rhs_type instanceof TypeReference) {
-                st.add("rhs", getExpression(ctx.expression()));
-              } else if (rhs_type instanceof TypeTask) {
-                ST stTask = m_group.getInstanceOf("TASK");
-                st.add("rhs", stTask);
-              } else {
-                st.add("rhs", getReferenceExpression(ctx.expression()));
-              }
-              stmt = st;
+                m_currFixedLength = null;
             }
-          } else {
-            if (lhs_type instanceof TypeArray) {
-    // treatment of references missing;
-    // treatment of a(i) := c.CHAR(c:d);  missing
-              ST st = m_group.getInstanceOf("assignment_statement");
-              ST array = m_group.getInstanceOf("ArrayLHS");
+
+            if (lhs_type instanceof TypeReference) {
+                ST st = m_group.getInstanceOf("assignment_statement");
+
+                if (ctx.dereference() != null) {
+// CONT ref2CHAR := c.CHAR(a:b); not treated yet!
+
+                    ST dereference = m_group.getInstanceOf("CONT");
+                    dereference.add("operand", getUserVariable(ctx.name().ID()
+                            .getText()));
+                    st.add("lhs", dereference);
+                    st.add("rhs", getExpression(ctx.expression()));
+                    stmt = st;
+                } else {
+                    st.add("lhs", getUserVariable(ctx.name().ID().getText()));
+
+                    if (rhs_type instanceof TypeReference) {
+                        st.add("rhs", getExpression(ctx.expression()));
+                    } else if (rhs_type instanceof TypeTask) {
+                        ST stTask = m_group.getInstanceOf("TASK");
+                        st.add("rhs", stTask);
+                    } else {
+                        st.add("rhs", getReferenceExpression(ctx.expression()));
+                    }
+                    stmt = st;
+                }
+            } else {
+                if (lhs_type instanceof TypeArray) {
+                    // treatment of references missing;
+                    // treatment of a(i) := c.CHAR(c:d);  missing
+                    ST st = m_group.getInstanceOf("assignment_statement");
+                    ST array = m_group.getInstanceOf("ArrayLHS");
 
               /*
 					ParserRuleContext c= variable.getCtx();
@@ -2477,112 +2473,120 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 						array.add("descriptor", array_descriptor.getName());
 					}
                */
-              array.add("descriptor", getArrayDescriptor(variable));
+                    array.add("descriptor", getArrayDescriptor(variable));
 
-              array.add("name", variable.getName());
-              ST indices = m_group.getInstanceOf("ArrayIndices");
+                    array.add("name", variable.getName());
+                    ST indices = m_group.getInstanceOf("ArrayIndices");
 
-              indices.add("indices", visitListOfExpression(ctx.name().listOfExpression()));
-              array.add("indices", indices);
-              st.add("lhs", array);
-              st.add("rhs", getExpression(ctx.expression()));
-              stmt = st;
-            } else {
-              if (ctx.stringSelection() != null) {
-                if (ctx.stringSelection().charSelection() != null) {
-                  
-                  ST st = m_group
-                      .getInstanceOf("Assign2CharSelection");
-
-                  st.add("id", getUserVariable(id));
-                  ASTAttribute attr = m_ast.lookup(ctx.stringSelection());
-
-                  SmallPearlParser.CharSelectionContext c = ctx
-                      .stringSelection().charSelection();
-                  ST slice = m_group.getInstanceOf("GetCharSelection");
-                  if (attr.getConstantSelection()!= null)  {
-                    slice.add("lwb", attr.getConstantSelection().getLowerBoundary());
-                    slice.add("upb", attr.getConstantSelection().getUpperBoundary());
-                  } else {
-                    slice.add("lwb", getExpression(c.charSelectionSlice().expression(0)));
-                    if (c.charSelectionSlice().expression(1) != null) {
-                      slice.add("upb", getExpression(c.charSelectionSlice().expression(1)));
-                    } else {
-                      slice.add("upb",slice.getAttribute("lwb"));
-                    }
-                    if (c.charSelectionSlice().IntegerConstant() != null) {
-                      slice.add("offset", c.charSelectionSlice().IntegerConstant().getText());
-                    }
-            
-                  }
-                  st.add("lhs", slice);
-                  
-                  ST setCharSelection = m_group
-                      .getInstanceOf("SetCharSelection");
-
-                  setCharSelection.add("expr",
-                      getExpression(ctx.expression()));
-                  st.add("lhs", setCharSelection);
-                  stmt = st;
-                } else if (ctx.stringSelection().bitSelection() != null) {
-                  ST st = m_group.getInstanceOf("AssignmentStatementBitSlice");
-
-                  st.add("id", getUserVariable(id));
-                  SmallPearlParser.BitSelectionSliceContext c = ctx.stringSelection().bitSelection().bitSelectionSlice();
-                  ASTAttribute attr = m_ast.lookup(ctx.stringSelection().bitSelection());
-                  if (attr.getConstantSelection() != null) {
-                    st.add("lwb", attr.getConstantSelection().getLowerBoundary());
-                    st.add("upb", attr.getConstantSelection().getUpperBoundary());
-                  } else {
-                    st.add("lwb", getExpression(c. expression(0)));
-                    if (c.expression(1) == null) {
-                      st.add("upb", st.getAttribute("lwb"));
-                    } else {
-                      ST upb = m_group.getInstanceOf("expression");
-                      upb.add("code",getExpression(c. expression(1)));
-                      TerminalNode intConst = ctx.stringSelection().bitSelection().bitSelectionSlice().IntegerConstant();
-                    
-                      if (intConst!= null) {
-                        upb.add("code","+");
-                        upb.add("code","(pearlrt::Fixed<15>)"+ intConst.getText());
-                      }
-                      st.add("upb", upb);
-                    }
-                  }
-
-                  st.add("rhs",
-                      getExpression(ctx.expression()));
-
-                  stmt = st;
+                    indices.add("indices", visitListOfExpression(ctx.name().listOfExpression()));
+                    array.add("indices", indices);
+                    st.add("lhs", array);
+                    st.add("rhs", getExpression(ctx.expression()));
+                    stmt = st;
                 } else {
-                  ErrorStack.addInternal("missing alternative in CppCoeGeneratorVisitot::visitAssignment");
+                    if (ctx.stringSelection() != null) {
+                        if (ctx.stringSelection().charSelection() != null) {
+
+                            ST st = m_group
+                                    .getInstanceOf("Assign2CharSelection");
+
+                            st.add("id", getUserVariable(id));
+                            ASTAttribute attr = m_ast.lookup(ctx.stringSelection());
+
+                            SmallPearlParser.CharSelectionContext c = ctx
+                                    .stringSelection().charSelection();
+                            ST slice = m_group.getInstanceOf("GetCharSelection");
+                            if (attr.getConstantSelection() != null) {
+                                slice.add("lwb", attr.getConstantSelection().getLowerBoundary());
+                                slice.add("upb", attr.getConstantSelection().getUpperBoundary());
+                            } else {
+                                slice.add("lwb", getExpression(c.charSelectionSlice().expression(0)));
+                                if (c.charSelectionSlice().expression(1) != null) {
+                                    slice.add("upb", getExpression(c.charSelectionSlice().expression(1)));
+                                } else {
+                                    slice.add("upb", slice.getAttribute("lwb"));
+                                }
+                                if (c.charSelectionSlice().IntegerConstant() != null) {
+                                    slice.add("offset", c.charSelectionSlice().IntegerConstant().getText());
+                                }
+
+                            }
+                            st.add("lhs", slice);
+
+                            ST setCharSelection = m_group
+                                    .getInstanceOf("SetCharSelection");
+
+                            setCharSelection.add("expr",
+                                    getExpression(ctx.expression()));
+                            st.add("lhs", setCharSelection);
+                            stmt = st;
+                        } else if (ctx.stringSelection().bitSelection() != null) {
+                            ST st = m_group.getInstanceOf("AssignmentStatementBitSlice");
+
+                            st.add("id", getUserVariable(id));
+                            SmallPearlParser.BitSelectionSliceContext c = ctx.stringSelection().bitSelection().bitSelectionSlice();
+                            ASTAttribute attr = m_ast.lookup(ctx.stringSelection().bitSelection());
+                            if (attr.getConstantSelection() != null) {
+                                st.add("lwb", attr.getConstantSelection().getLowerBoundary());
+                                st.add("upb", attr.getConstantSelection().getUpperBoundary());
+                            } else {
+                                st.add("lwb", getExpression(c.expression(0)));
+                                if (c.expression(1) == null) {
+                                    st.add("upb", st.getAttribute("lwb"));
+                                } else {
+                                    ST upb = m_group.getInstanceOf("expression");
+                                    upb.add("code", getExpression(c.expression(1)));
+                                    TerminalNode intConst = ctx.stringSelection().bitSelection().bitSelectionSlice().IntegerConstant();
+
+                                    if (intConst != null) {
+                                        upb.add("code", "+");
+                                        upb.add("code", "(pearlrt::Fixed<15>)" + intConst.getText());
+                                    }
+                                    st.add("upb", upb);
+                                }
+                            }
+
+                            st.add("rhs",
+                                    getExpression(ctx.expression()));
+
+                            stmt = st;
+                        } else {
+                            ErrorStack.addInternal("missing alternative in CppCoeGeneratorVisitot::visitAssignment");
+                        }
+                    } else {
+                        if (lhs_type instanceof TypeStructure) {
+                            ST st = m_group.getInstanceOf("assignment_statement");
+                            Log.debug("Structure on LHS");
+                            st.add("lhs", traverseName(ctx.name(),null,null));
+                            st.add("rhs", getExpression(ctx.expression()));
+                            stmt = st;
+                        }
+                        else
+                        if (rhs_type instanceof TypeVariableChar) {
+                            ST st = m_group.getInstanceOf("AssignCharSelection2Char");
+                            // assign a TypeVariableChar to a Char<S> is very special
+                            // we must convert the Char<s> into a CharSlice and set the rhs-slice
+                            // via .setSlice -> CharSlice(lhs).setSlice(<rhs>);
+                            st.add("id", getUserVariable(id));
+                            st.add("expr", getExpression(ctx.expression()));
+                            stmt = st;
+                        } else {
+                            ST st = m_group.getInstanceOf("assignment_statement");
+                            st.add("lhs", getUserVariable(id));
+                            st.add("rhs", getExpression(ctx.expression()));
+                            stmt = st;
+                        }
+                    }
                 }
-              } else {
-                if (rhs_type instanceof TypeVariableChar) {
-                 ST st = m_group.getInstanceOf("AssignCharSelection2Char");
-                 // assign a TypeVariableChar to a Char<S> is very special
-                 // we must convert the Char<s> into a CharSlice and set the rhs-slice
-                 // via .setSlice -> CharSlice(lhs).setSlice(<rhs>);
-                 st.add("id", getUserVariable(id));
-                 st.add("expr", getExpression(ctx.expression()));
-                 stmt = st;
-                } else {
-                  ST st = m_group.getInstanceOf("assignment_statement");
-                   st.add("lhs", getUserVariable(id));
-                   st.add("rhs", getExpression(ctx.expression()));
-                   stmt = st;
-                }
-              }
             }
-          }
         } else {
-          ErrorStack.addInternal("no variable entry found");
+            ErrorStack.addInternal("no variable entry found");
         }
 
         m_currFixedLength = null;
         ErrorStack.leave();
         return stmt;
-      }
+    }
 
     @Override
     public ST visitListOfExpression(SmallPearlParser.ListOfExpressionContext ctx) {
@@ -2641,7 +2645,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx.literal() != null) {
             expression.add("code", visitLiteral(ctx.literal()));
         } else if (ctx.name() != null) {
-            expression.add("code",  visitName(ctx.name()));
+            expression.add("code", visitName(ctx.name()));
         } else if (ctx.semaTry() != null) {
             expression.add("code", visitSemaTry(ctx.semaTry()));
         } else if (ctx.stringSelection() != null) {
@@ -2657,148 +2661,150 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return expression;
     }
 
-    @Override 
+    @Override
     public ST visitName(SmallPearlParser.NameContext ctx) {
-      ST expression= m_group.getInstanceOf("expression");
-      SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID()
-              .getText());
+        ST expression = m_group.getInstanceOf("expression");
+        SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID()
+                .getText());
 
-      if (entry instanceof org.smallpearl.compiler.SymbolTable.ProcedureEntry) {
-          ST functionCall = m_group.getInstanceOf("FunctionCall");
+        if (entry instanceof org.smallpearl.compiler.SymbolTable.ProcedureEntry) {
+            ST functionCall = m_group.getInstanceOf("FunctionCall");
 
-          functionCall.add("callee", ctx.ID().getText());
+            functionCall.add("callee", ctx.ID().getText());
 
-          if (ctx.listOfExpression() != null && ctx.listOfExpression().expression().size() > 0) {
+            if (ctx.listOfExpression() != null && ctx.listOfExpression().expression().size() > 0) {
 
-              //if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
-             
-              functionCall.add("ListOfActualParameters",
-                      getActualParameters(ctx.listOfExpression().expression()));
-              
-          }
+                //if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
 
-          expression.add("functionCall", functionCall);
-      } else if (entry instanceof org.smallpearl.compiler.SymbolTable.VariableEntry) {
-          org.smallpearl.compiler.SymbolTable.VariableEntry variable = (org.smallpearl.compiler.SymbolTable.VariableEntry) entry;
+                functionCall.add("ListOfActualParameters",
+                        getActualParameters(ctx.listOfExpression().expression()));
 
-          if (variable.getType() instanceof TypeBit) {
-              TypeBit type = (TypeBit) variable.getType();
-              expression.add("id", getUserVariable(ctx.ID().getText()));
-          } else if (variable.getType() instanceof TypeArray) {
-              ST array = m_group.getInstanceOf("ArrayLHS");
+            }
 
-              ParserRuleContext c = variable.getCtx();
-              if (c instanceof FormalParameterContext) {
-                  array.add("descriptor", "ad_" + variable.getName());
-              } else {
-                  TypeArray type = (TypeArray) variable.getType();
-                  ArrayDescriptor array_descriptor = new ArrayDescriptor(
-                          type.getNoOfDimensions(), type.getDimensions());
-                  array.add("descriptor", array_descriptor.getName());
-              }
-              array.add("name", variable.getName());
+            expression.add("functionCall", functionCall);
+        } else if (entry instanceof org.smallpearl.compiler.SymbolTable.VariableEntry) {
+            org.smallpearl.compiler.SymbolTable.VariableEntry variable = (org.smallpearl.compiler.SymbolTable.VariableEntry) entry;
 
-              // if no indices are given, the complete array is accessed
-              if (ctx.listOfExpression() != null) {
-                  array.add("indices", getIndices(ctx.listOfExpression().expression()));
-              }
+            if (variable.getType() instanceof TypeBit) {
+                TypeBit type = (TypeBit) variable.getType();
+                expression.add("id", getUserVariable(ctx.ID().getText()));
+            } else if (variable.getType() instanceof TypeArray) {
+                ST array = m_group.getInstanceOf("ArrayLHS");
 
-              expression.add("id", array);
-          } else {
-              expression.add("id", getUserVariable(ctx.ID().getText()));
-          }
-      } else {
-          expression.add("id", getUserVariable(ctx.ID().getText()));
-      }
-      return expression;
+                ParserRuleContext c = variable.getCtx();
+                if (c instanceof FormalParameterContext) {
+                    array.add("descriptor", "ad_" + variable.getName());
+                } else {
+                    TypeArray type = (TypeArray) variable.getType();
+                    ArrayDescriptor array_descriptor = new ArrayDescriptor(
+                            type.getNoOfDimensions(), type.getDimensions());
+                    array.add("descriptor", array_descriptor.getName());
+                }
+                array.add("name", variable.getName());
+
+                // if no indices are given, the complete array is accessed
+                if (ctx.listOfExpression() != null) {
+                    array.add("indices", getIndices(ctx.listOfExpression().expression()));
+                }
+
+                expression.add("id", array);
+            } else if (variable.getType() instanceof TypeStructure) {
+                expression.add("id", traverseName(ctx, null, null));
+            } else {
+                expression.add("id", getUserVariable(ctx.ID().getText()));
+            }
+        } else {
+            expression.add("id", getUserVariable(ctx.ID().getText()));
+        }
+        return expression;
     }
-    
+
     @Override
     public ST visitCharSelection(SmallPearlParser.CharSelectionContext ctx) {
-      ASTAttribute attr = m_ast.lookup(ctx);
+        ASTAttribute attr = m_ast.lookup(ctx);
 
-      if (m_verbose > 0) {
-        System.out.println("CppCodeGeneratorVisitor: visitCharSelection");
-      }
-      
-      ST st=null;
-      if (attr.getType() instanceof TypeChar) {
-        st = m_group.getInstanceOf("MakeCharacterFromStringSelection");
-        
-        st.add("id", getUserVariable(ctx.name().ID().getText()));
-        st.add("size",attr.getType().getPrecision());
-        
-        if (attr.getConstantSelection() != null) {
-          st.add("lwb", attr.getConstantSelection().getLowerBoundary());
-          st.add("upb", attr.getConstantSelection().getUpperBoundary());
-        } else {
-          st.add("lwb", getExpression(ctx.charSelectionSlice().expression(0)));
-          if (ctx.charSelectionSlice().expression(1) != null) {
-            st.add("upb", getExpression(ctx.charSelectionSlice().expression(1)));
-          } else {
-            st.add("upb", getExpression(ctx.charSelectionSlice().expression(0)));
-          }
-          if (ctx.charSelectionSlice().IntegerConstant() != null) {
-            st.add("offset", ctx.charSelectionSlice().IntegerConstant().getText());
-          }
+        if (m_verbose > 0) {
+            System.out.println("CppCodeGeneratorVisitor: visitCharSelection");
         }
-      } else if (attr.getType() instanceof TypeVariableChar){
-          st = m_group.getInstanceOf("RhsCharSelection");
 
-          st.add("id", getUserVariable(ctx.name().ID().getText()));
-          
-          //expr.add("id", s1);
-          st.add("lwb", getExpression(ctx.charSelectionSlice().expression(0)));
-          if (ctx.charSelectionSlice().expression(1) != null) {
-            st.add("upb", getExpression(ctx.charSelectionSlice().expression(1)));
-          } else {
-            st.add("upb", getExpression(ctx.charSelectionSlice().expression(0)));
-          }
-          if (ctx.charSelectionSlice().IntegerConstant() != null) {
-            st.add("offset", ctx.charSelectionSlice().IntegerConstant().getText());
-          }
-       }
+        ST st = null;
+        if (attr.getType() instanceof TypeChar) {
+            st = m_group.getInstanceOf("MakeCharacterFromStringSelection");
+
+            st.add("id", getUserVariable(ctx.name().ID().getText()));
+            st.add("size", attr.getType().getPrecision());
+
+            if (attr.getConstantSelection() != null) {
+                st.add("lwb", attr.getConstantSelection().getLowerBoundary());
+                st.add("upb", attr.getConstantSelection().getUpperBoundary());
+            } else {
+                st.add("lwb", getExpression(ctx.charSelectionSlice().expression(0)));
+                if (ctx.charSelectionSlice().expression(1) != null) {
+                    st.add("upb", getExpression(ctx.charSelectionSlice().expression(1)));
+                } else {
+                    st.add("upb", getExpression(ctx.charSelectionSlice().expression(0)));
+                }
+                if (ctx.charSelectionSlice().IntegerConstant() != null) {
+                    st.add("offset", ctx.charSelectionSlice().IntegerConstant().getText());
+                }
+            }
+        } else if (attr.getType() instanceof TypeVariableChar) {
+            st = m_group.getInstanceOf("RhsCharSelection");
+
+            st.add("id", getUserVariable(ctx.name().ID().getText()));
+
+            //expr.add("id", s1);
+            st.add("lwb", getExpression(ctx.charSelectionSlice().expression(0)));
+            if (ctx.charSelectionSlice().expression(1) != null) {
+                st.add("upb", getExpression(ctx.charSelectionSlice().expression(1)));
+            } else {
+                st.add("upb", getExpression(ctx.charSelectionSlice().expression(0)));
+            }
+            if (ctx.charSelectionSlice().IntegerConstant() != null) {
+                st.add("offset", ctx.charSelectionSlice().IntegerConstant().getText());
+            }
+        }
         return st;
     }
-    
+
     @Override
     public ST visitBitSelection(SmallPearlParser.BitSelectionContext ctx) {
-      ASTAttribute attr = m_ast.lookup(ctx);
+        ASTAttribute attr = m_ast.lookup(ctx);
 
-      if (m_verbose > 0) {
-        System.out.println("CppCodeGeneratorVisitor: visitCharSelection");
-      }
-      
-      // we have different situations
-      //    for BIT(1) we may use  BitString.getBit
-      //    for BIT(2..) we may use BitString.getSlice
-      if (attr.getType().getPrecision() == 1) {
-        ST st = m_group.getInstanceOf("MakeBitString1FromStringSelection");
-        st.add("id", getUserVariable(ctx.name().ID().getText()));
-        if (attr.getConstantSelection() != null) {
-          ASTAttribute a = m_ast.lookup(ctx.bitSelectionSlice().expression(0));
-          st.add("lwb",a.getConstant()); //attr.getConstantSelection().getLowerBoundary());
-        } else {
-          st.add("lwb", getExpression(ctx.bitSelectionSlice().expression(0)));
+        if (m_verbose > 0) {
+            System.out.println("CppCodeGeneratorVisitor: visitCharSelection");
         }
-        return st;
-      } else {
-        ST st= m_group.getInstanceOf("MakeBitStringNFromStringSelection");
-        
-        st.add("id", getUserVariable(ctx.name().ID().getText()));
-        st.add("size",attr.getType().getPrecision());
-        
-        if (attr.getConstantSelection() != null) {
-          ASTAttribute a = m_ast.lookup(ctx.bitSelectionSlice().expression(0));
-          st.add("lwb", a.getConstant());
+
+        // we have different situations
+        //    for BIT(1) we may use  BitString.getBit
+        //    for BIT(2..) we may use BitString.getSlice
+        if (attr.getType().getPrecision() == 1) {
+            ST st = m_group.getInstanceOf("MakeBitString1FromStringSelection");
+            st.add("id", getUserVariable(ctx.name().ID().getText()));
+            if (attr.getConstantSelection() != null) {
+                ASTAttribute a = m_ast.lookup(ctx.bitSelectionSlice().expression(0));
+                st.add("lwb", a.getConstant()); //attr.getConstantSelection().getLowerBoundary());
+            } else {
+                st.add("lwb", getExpression(ctx.bitSelectionSlice().expression(0)));
+            }
+            return st;
         } else {
-          st.add("lwb", getExpression(ctx.bitSelectionSlice().expression(0)));
+            ST st = m_group.getInstanceOf("MakeBitStringNFromStringSelection");
+
+            st.add("id", getUserVariable(ctx.name().ID().getText()));
+            st.add("size", attr.getType().getPrecision());
+
+            if (attr.getConstantSelection() != null) {
+                ASTAttribute a = m_ast.lookup(ctx.bitSelectionSlice().expression(0));
+                st.add("lwb", a.getConstant());
+            } else {
+                st.add("lwb", getExpression(ctx.bitSelectionSlice().expression(0)));
+            }
+            return st;
         }
-        return st;
-      }
     }
 
-    
+
     @Override
     public ST visitAdditiveExpression(
             SmallPearlParser.AdditiveExpressionContext ctx) {
@@ -3137,17 +3143,17 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST literal = m_group.getInstanceOf("literal");
         ASTAttribute attr = m_ast.lookup(ctx);
 
-	 if (attr == null || attr.m_constant == null) {
+        if (attr == null || attr.m_constant == null) {
             ErrorStack.enter(ctx);
-            ErrorStack.addInternal("AST attribute for constant missing type="+attr.m_type.toString());
+            ErrorStack.addInternal("AST attribute for constant missing type=" + attr.m_type.toString());
             ErrorStack.leave();
             return null;
         }
 
         if (ctx.durationConstant() != null) {
-           literal.add("duration", attr.m_constant);
+            literal.add("duration", attr.m_constant);
         } else if (ctx.floatingPointConstant() != null) {
-           literal.add("float", attr.getConstantFloatValue());
+            literal.add("float", attr.getConstantFloatValue());
         } else if (ctx.timeConstant() != null) {
             literal.add("time", attr.getConstant());
         } else if (ctx.StringLiteral() != null) {
@@ -3213,7 +3219,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         ErrorStack.add("value exceeds precision");
                         ErrorStack.leave();
                     } else {
-                      precision = explicitPrecision;
+                        precision = explicitPrecision;
                     }
                 } else {
                     if (m_currFixedLength != null) {
@@ -3419,17 +3425,17 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitReturnStatement(SmallPearlParser.ReturnStatementContext ctx) {
         ST stmt = m_group.getInstanceOf("return_statement");
-        if (ctx.expression()!= null) {
-           ST returnExpr = getExpression(ctx.expression());
-           ASTAttribute attr = m_ast.lookup(ctx.expression());
+        if (ctx.expression() != null) {
+            ST returnExpr = getExpression(ctx.expression());
+            ASTAttribute attr = m_ast.lookup(ctx.expression());
 
-           if (attr.getType() instanceof TypeVariableChar) {
-             stmt.add("char_size",m_resultType.getPrecision());
-           }
+            if (attr.getType() instanceof TypeVariableChar) {
+                stmt.add("char_size", m_resultType.getPrecision());
+            }
 
-           if (returnExpr != null) {
-               stmt.add("expression", returnExpr);
-           }
+            if (returnExpr != null) {
+                stmt.add("expression", returnExpr);
+            }
         }
         return stmt;
     }
@@ -3825,7 +3831,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     }
 
 
-   
     @Override
     public ST visitOpen_parameterlist(
             SmallPearlParser.Open_parameterlistContext ctx) {
@@ -3938,12 +3943,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitGetStatement(SmallPearlParser.GetStatementContext ctx) {
         ST stmt = m_group.getInstanceOf("iojob_io_statement");
         stmt.add("command", "get");
-        ErrorStack.enter(ctx,"GET");
-        
+        ErrorStack.enter(ctx, "GET");
+
         stmt.add("dation", getUserVariable(ctx.dationName().ID().toString()));
 
         addDataAndFormatListToST(stmt, ctx.listOfFormatPositions(), ctx.ioDataList());
-        
+
         ErrorStack.leave();
         return stmt;
 
@@ -3953,14 +3958,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitPutStatement(SmallPearlParser.PutStatementContext ctx) {
         //ST stmt = m_group.getInstanceOf("put_statement");
         ST stmt = m_group.getInstanceOf("iojob_io_statement");
-        ErrorStack.enter(ctx,"PUT");
-        
+        ErrorStack.enter(ctx, "PUT");
+
         stmt.add("command", "put");
         stmt.add("dation", getUserVariable(ctx.dationName().ID().toString()));
         addDataAndFormatListToST(stmt, ctx.listOfFormatPositions(), ctx.ioDataList());
-        
+
         ErrorStack.leave();
-        
+
         return stmt;
     }
 
@@ -4031,14 +4036,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         //   TypeVariableChar need 'lwb' and 'upb'
                         ST data = getIojobDataItem(attr.m_type);
                         ExpressionContext e = ctx.ioListElement(i).expression();
-               
+
                         if (attr.getType() instanceof TypeVariableChar) {
-                          CharSelectionContext ssc = (CharSelectionContext)(e.getChild(0).getChild(0).getChild(0));
-                          data.add("variable", visitName(ssc.name()));
-                          data.add("nbr_of_elements", "1");
-                          data.add("lwb", getExpression(ssc.charSelectionSlice().expression(0)));
-                          data.add("upb", getExpression(ssc.charSelectionSlice().expression(1)));
-                          
+                            CharSelectionContext ssc = (CharSelectionContext) (e.getChild(0).getChild(0).getChild(0));
+                            data.add("variable", visitName(ssc.name()));
+                            data.add("nbr_of_elements", "1");
+                            data.add("lwb", getExpression(ssc.charSelectionSlice().expression(0)));
+                            data.add("upb", getExpression(ssc.charSelectionSlice().expression(1)));
+
                         } else if (attr.isReadOnly() || attr.m_variable != null) {
                             // constant or  variable with simple type
                             data.add("variable", getExpression(ctx.ioListElement(i).expression()));
@@ -4054,49 +4059,51 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                             }
 
                             // let's see if the expression is of type CharSelectionContext
-                            CharSelectionContext ssc=null;
+                            CharSelectionContext ssc = null;
                             try {
-                              ssc = (CharSelectionContext)(e.getChild(0).getChild(0).getChild(0));
-                            } catch ( ClassCastException ex) {}
-                             catch (NullPointerException ex ) {}; 
-                            
+                                ssc = (CharSelectionContext) (e.getChild(0).getChild(0).getChild(0));
+                            } catch (ClassCastException ex) {
+                            } catch (NullPointerException ex) {
+                            }
+                            ;
+
                             if (ssc != null) {
-                              // fixed size char selection 
-                              data.remove("type");
-                              data.add("type",  "CHARSLICE");
-                              data.remove("size");
-                              ASTAttribute attribName = m_ast.lookup(ssc.name());
-                              data.add("size", attribName.getType().getPrecision());
-                              data.add("nbr_of_elements", "1");
-                              data.add("variable", visitName(ssc.name()));
-                              if (attr.getConstantSelection() != null) {
-                                data.add("lwb", attr.getConstantSelection().getLowerBoundary());
-                                data.add("upb", attr.getConstantSelection().getUpperBoundary());
-                              } else {
-                                // must be of type .char(x:x+4) of type .char(x); with x is non constant expression
-                                data.add("lwb", getExpression(ssc.charSelectionSlice().expression(0)));
-                                ST upb = m_group.getInstanceOf("expression");
-                                upb.add("code",data.getAttribute("lwb") );
-                                if (ssc.charSelectionSlice().IntegerConstant()!= null) {
-                                   upb.add("code","+");
-                                   upb.add("code", "(pearlrt::Fixed<15>)("+(attr.getType().getPrecision()-1) +")");
+                                // fixed size char selection
+                                data.remove("type");
+                                data.add("type", "CHARSLICE");
+                                data.remove("size");
+                                ASTAttribute attribName = m_ast.lookup(ssc.name());
+                                data.add("size", attribName.getType().getPrecision());
+                                data.add("nbr_of_elements", "1");
+                                data.add("variable", visitName(ssc.name()));
+                                if (attr.getConstantSelection() != null) {
+                                    data.add("lwb", attr.getConstantSelection().getLowerBoundary());
+                                    data.add("upb", attr.getConstantSelection().getUpperBoundary());
+                                } else {
+                                    // must be of type .char(x:x+4) of type .char(x); with x is non constant expression
+                                    data.add("lwb", getExpression(ssc.charSelectionSlice().expression(0)));
+                                    ST upb = m_group.getInstanceOf("expression");
+                                    upb.add("code", data.getAttribute("lwb"));
+                                    if (ssc.charSelectionSlice().IntegerConstant() != null) {
+                                        upb.add("code", "+");
+                                        upb.add("code", "(pearlrt::Fixed<15>)(" + (attr.getType().getPrecision() - 1) + ")");
+                                    }
+                                    data.add("upb", upb);
                                 }
-                                data.add("upb",  upb);
-                              }
 
                             } else {
-                              // expression, which needs a temporary variable to store the result
-                              // since we pass a pointer to the formatting routines
-                              ST variable_declaration = m_group.getInstanceOf("variable_declaration");
-                              variable_declaration.add("name", "tempVar" + i);
-                              variable_declaration.add("type", t);
-                              variable_declaration.add("init", getExpression(ctx.ioListElement(i).expression()));
-                              variable_declaration.add("no_decoration", 1);
-                              dataList.add("data_variable", variable_declaration);
-                              dataList.add("data_index", i);
+                                // expression, which needs a temporary variable to store the result
+                                // since we pass a pointer to the formatting routines
+                                ST variable_declaration = m_group.getInstanceOf("variable_declaration");
+                                variable_declaration.add("name", "tempVar" + i);
+                                variable_declaration.add("type", t);
+                                variable_declaration.add("init", getExpression(ctx.ioListElement(i).expression()));
+                                variable_declaration.add("no_decoration", 1);
+                                dataList.add("data_variable", variable_declaration);
+                                dataList.add("data_index", i);
 
-                              data.add("variable", "tempVar" + i);
-                              data.add("nbr_of_elements", "1");
+                                data.add("variable", "tempVar" + i);
+                                data.add("nbr_of_elements", "1");
                             }
                         }
 
@@ -4110,17 +4117,17 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     //  + the base type of the array
                     //  + the address of the name(startIndex)
                     //  + number of elements
-                    TypeArraySlice tas = (TypeArraySlice)(attr.getType());
-                    TypeArray ta = (TypeArray)(tas.getBaseType());
+                    TypeArraySlice tas = (TypeArraySlice) (attr.getType());
+                    TypeArray ta = (TypeArray) (tas.getBaseType());
                     TypeDefinition t = ta.getBaseType();
-                    
+
                     ST data = getIojobDataItem(t);
 
                     ST firstElement = m_group.getInstanceOf("ArrayLHS");
 
                     ParserRuleContext c = slice.name();
                     if (c instanceof FormalParameterContext) {
-                      firstElement.add("descriptor", "ad_" + slice.name().ID());
+                        firstElement.add("descriptor", "ad_" + slice.name().ID());
                     } else {
                         ArrayDescriptor array_descriptor = new ArrayDescriptor(
                                 ta.getNoOfDimensions(), ta.getDimensions());
@@ -4132,21 +4139,21 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     firstElement.add("indices", getIndices(slice.startIndex().listOfExpression().expression()));
 
                     data.add("variable", firstElement);
-                    
-                    int lastElementInList = slice.startIndex().listOfExpression().expression().size()-1;
-                    if (tas.hasConstantSize()) {
-                       // both limits are constant -- we know the nbr_of_elements
-                      data.add("nbr_of_elements",tas.getTotalNoOfElements()); 
-                    } else {
-                      ST nbr = m_group.getInstanceOf("expression");
-                      nbr.add("code", "(");
-                      nbr.add("code", getExpression(slice.endIndex().expression()));
-                      nbr.add("code", "-");
 
-                      nbr.add("code", getExpression(slice.startIndex().listOfExpression().expression(lastElementInList)));
-                      nbr.add("code", ").get()+1");
-             
-                      data.add("nbr_of_elements", nbr);
+                    int lastElementInList = slice.startIndex().listOfExpression().expression().size() - 1;
+                    if (tas.hasConstantSize()) {
+                        // both limits are constant -- we know the nbr_of_elements
+                        data.add("nbr_of_elements", tas.getTotalNoOfElements());
+                    } else {
+                        ST nbr = m_group.getInstanceOf("expression");
+                        nbr.add("code", "(");
+                        nbr.add("code", getExpression(slice.endIndex().expression()));
+                        nbr.add("code", "-");
+
+                        nbr.add("code", getExpression(slice.startIndex().listOfExpression().expression(lastElementInList)));
+                        nbr.add("code", ").get()+1");
+
+                        data.add("nbr_of_elements", nbr);
                     }
                     dataList.add("dataelement", data);
                 }
@@ -4157,380 +4164,381 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     }
 
     private ST getIojobDataItem(TypeDefinition type) {
-       ST data = m_group.getInstanceOf("iojob_data_item");
+        ST data = m_group.getInstanceOf("iojob_data_item");
 
-    	if (type instanceof TypeFixed) {
-           data.add("type","FIXED");
-           data.add("size",((TypeFixed)(type)).getPrecision());
-    	} else if (type instanceof TypeFloat) {
-            data.add("type","FLOAT");
-            data.add("size",((TypeFloat)(type)).getPrecision());
-     	} else if (type instanceof TypeChar) {
-            data.add("type","CHAR");
-            data.add("size",((TypeChar)(type)).getSize());
+        if (type instanceof TypeFixed) {
+            data.add("type", "FIXED");
+            data.add("size", ((TypeFixed) (type)).getPrecision());
+        } else if (type instanceof TypeFloat) {
+            data.add("type", "FLOAT");
+            data.add("size", ((TypeFloat) (type)).getPrecision());
+        } else if (type instanceof TypeChar) {
+            data.add("type", "CHAR");
+            data.add("size", ((TypeChar) (type)).getSize());
         } else if (type instanceof TypeVariableChar) {
-          data.add("type","CHARSLICE");
-          data.add("size",((TypeVariableChar)(type)).getBaseType().getPrecision());
-    	} else 	if (type instanceof TypeBit) {
-            data.add("type","BIT");
-            data.add("size",((TypeBit)(type)).getPrecision());
-    	} else if (type instanceof TypeClock) {
-            data.add("type","CLOCK");
-    	} else if (type instanceof TypeDuration) {
-            data.add("type","DURATION");
-    	} else {
-    	  ErrorStack.addInternal("getIoJobDataItem: untreated type "+type );
-    	}
-		return data;
-	}
+            data.add("type", "CHARSLICE");
+            data.add("size", ((TypeVariableChar) (type)).getBaseType().getPrecision());
+        } else if (type instanceof TypeBit) {
+            data.add("type", "BIT");
+            data.add("size", ((TypeBit) (type)).getPrecision());
+        } else if (type instanceof TypeClock) {
+            data.add("type", "CLOCK");
+        } else if (type instanceof TypeDuration) {
+            data.add("type", "DURATION");
+        } else {
+            ErrorStack.addInternal("getIoJobDataItem: untreated type " + type);
+        }
+        return data;
+    }
 
-	private ST getTypeForTempVariable(TypeDefinition type) {
-    	ST st = null;
-    	if (type instanceof TypeFixed) {
-	       st = m_group.getInstanceOf("fixed_type");
-		   st.add("size",((TypeFixed)(type)).getPrecision());
-    	}
-    	if (type instanceof TypeFloat) {
-  	       st = m_group.getInstanceOf("float_type");
-  		   st.add("size",((TypeFloat)(type)).getPrecision());
-      	}
-    	if (type instanceof TypeChar) {
-  	       st = m_group.getInstanceOf("char_type");
-  		   st.add("size",((TypeChar)(type)).getSize());
-      	}
-    	if (type instanceof TypeBit) {
-   	       st = m_group.getInstanceOf("bit_type");
-   		   st.add("size",((TypeBit)(type)).getPrecision());
-       	}
-    	if (type instanceof TypeClock) {
-    	   st = m_group.getInstanceOf("clock_type");
-    	}
-    	if (type instanceof TypeDuration) {
-     	   st = m_group.getInstanceOf("duration_type");
-     	}
+    private ST getTypeForTempVariable(TypeDefinition type) {
+        ST st = null;
+        if (type instanceof TypeFixed) {
+            st = m_group.getInstanceOf("fixed_type");
+            st.add("size", ((TypeFixed) (type)).getPrecision());
+        }
+        if (type instanceof TypeFloat) {
+            st = m_group.getInstanceOf("float_type");
+            st.add("size", ((TypeFloat) (type)).getPrecision());
+        }
+        if (type instanceof TypeChar) {
+            st = m_group.getInstanceOf("char_type");
+            st.add("size", ((TypeChar) (type)).getSize());
+        }
+        if (type instanceof TypeBit) {
+            st = m_group.getInstanceOf("bit_type");
+            st.add("size", ((TypeBit) (type)).getPrecision());
+        }
+        if (type instanceof TypeClock) {
+            st = m_group.getInstanceOf("clock_type");
+        }
+        if (type instanceof TypeDuration) {
+            st = m_group.getInstanceOf("duration_type");
+        }
 
-		return st;
-	}
+        return st;
+    }
 
-	private void setIsNonStatic() {
-		m_isNonStatic = true;
-	}
-	private void updateIsNonStatic(ParserRuleContext ctx) {
-		ASTAttribute attr;
-		attr = m_ast.lookup(ctx);
-		if (attr == null) {
-			// we do not know details
-			System.out.println("no ASTAttributes on "+ctx.getText());
-			m_isNonStatic = true;
-		} else {
-			if (attr.m_constant == null && !attr.isReadOnly()) {
-				m_isNonStatic = true;  // no constant
-			}
-		}
-	}
+    private void setIsNonStatic() {
+        m_isNonStatic = true;
+    }
 
-	private int addFormatPositionToFormatList(ST formatList,
-	    FormatPositionContext ctx) {
-	  int nbrOfFormats = 0;
+    private void updateIsNonStatic(ParserRuleContext ctx) {
+        ASTAttribute attr;
+        attr = m_ast.lookup(ctx);
+        if (attr == null) {
+            // we do not know details
+            System.out.println("no ASTAttributes on " + ctx.getText());
+            m_isNonStatic = true;
+        } else {
+            if (attr.m_constant == null && !attr.isReadOnly()) {
+                m_isNonStatic = true;  // no constant
+            }
+        }
+    }
 
-	  // we have to deal with
-	  //   FactorFormatContext   like 3F(6)
-	  //   FactorPositionContext like 3X(4)
-	  //   FactorFormatPositionContext  like (3)(A,F(6),SKIP)
-	  //   factor is always aptional!
-	  if (ctx instanceof SmallPearlParser.FactorFormatContext) {
-	    FactorFormatContext c = (FactorFormatContext)(ctx);
-	    if (c.factor() != null) {
-	      addFactorToFormatList(formatList, c.factor());
-	      nbrOfFormats ++;
-	    }
+    private int addFormatPositionToFormatList(ST formatList,
+                                              FormatPositionContext ctx) {
+        int nbrOfFormats = 0;
 
-	    // add format
-	    if (c.format() instanceof SmallPearlParser.FormatContext) {
-	      FormatContext c1 = (FormatContext)(c.format());
-	      if (c1.fixedFormat() != null) {
-	        FixedFormatContext ffc = c1.fixedFormat();
-	        ST fmt = m_group.getInstanceOf("iojob_fixed_format");
-	        updateIsNonStatic(ffc.fieldWidth().expression());
-	        fmt.add("fieldwidth",  getExpression(ffc.fieldWidth().expression()));
-	        if (c1.fixedFormat().decimalPositions() != null) {
-	          updateIsNonStatic(ffc.decimalPositions().expression());
-	          fmt.add("decimalPositions",  getExpression(ffc.decimalPositions().expression()));
-	        }
-	        formatList.add("formats", fmt);
-	        nbrOfFormats ++;
-	      } else if (c1.floatFormat() != null) {
-	        ST fmt = m_group.getInstanceOf("iojob_e_format");
-	        if (c1.floatFormat() instanceof FloatFormatEContext) {
-	          FloatFormatEContext c2 = (FloatFormatEContext)c1.floatFormat();
-	          updateIsNonStatic(c2.fieldWidth().expression());
-	          fmt.add("fieldwidth", getExpression(c2.fieldWidth().expression()));
-	          fmt.add("exp23",2);
-	          if (c2.decimalPositions()!= null) {
-	            updateIsNonStatic(c2.decimalPositions().expression());
-	            fmt.add("decimalPositions", getExpression(c2.decimalPositions().expression()));
-	          }
-	          if (c2.significance()!= null) {
-	            updateIsNonStatic(c2.significance().expression());
-	            fmt.add("significance", getExpression(c2.significance().expression()));
-	          }
-	        } else 	if (c1.floatFormat() instanceof FloatFormatE3Context) {
-	          FloatFormatE3Context c2 = (FloatFormatE3Context)c1.floatFormat();
-	          updateIsNonStatic(c2.fieldWidth().expression());
-	          fmt.add("fieldwidth", getExpression(c2.fieldWidth().expression()));
-	          fmt.add("exp23",3);
-	          if (c2.decimalPositions()!= null) {
-	            updateIsNonStatic(c2.decimalPositions().expression());
-	            fmt.add("decimalPositions", getExpression(c2.decimalPositions().expression()));
-	          }
-	          if (c2.significance()!= null) {
-	            updateIsNonStatic(c2.significance().expression());
-	            fmt.add("significance", getExpression(c2.significance().expression()));
-	          }
-	        }
-	        formatList.add("formats", fmt);
-	        nbrOfFormats ++;
-	      } else if (c1.characterStringFormat()!= null) {
-	        if (c1.characterStringFormat() instanceof CharacterStringFormatAContext) {
-	          CharacterStringFormatAContext c2 = (CharacterStringFormatAContext)c1.characterStringFormat();
-	          ST fmt = m_group.getInstanceOf("iojob_character_string_format");
-	          if (c2.fieldWidth()!= null) {
-	            updateIsNonStatic(c2.fieldWidth().expression());
-	            fmt.add("fieldwidth",getExpression(c2.fieldWidth().expression()));
-	          }
-	          formatList.add("formats", fmt);
-	          nbrOfFormats ++;
-	        }
-	      } else if (c1.bitFormat() != null) {
-	        ST fmt = m_group.getInstanceOf("iojob_bit_format");
-	        if (c1.bitFormat() instanceof BitFormat1Context) {
-	          BitFormat1Context c2 = (BitFormat1Context)(c1.bitFormat());
-	          fmt.add("base",1);
-	          if (c2.numberOfCharacters()!= null) {
-	            updateIsNonStatic(c2.numberOfCharacters().expression());
-	            fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
-	          }
-	        } else if (c1.bitFormat() instanceof BitFormat2Context) {
-	          BitFormat2Context c2 = (BitFormat2Context)(c1.bitFormat());
-	          fmt.add("base",2);
-	          if (c2.numberOfCharacters()!= null) {
-	            updateIsNonStatic(c2.numberOfCharacters().expression());
-	            fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
-	          }
-	        } else if (c1.bitFormat() instanceof BitFormat3Context) {
-	          BitFormat3Context c2 = (BitFormat3Context)(c1.bitFormat());
-	          fmt.add("base",3);
-	          if (c2.numberOfCharacters()!= null) {
-	            updateIsNonStatic(c2.numberOfCharacters().expression());
-	            fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
-	          }
-	        } else if (c1.bitFormat() instanceof BitFormat4Context) {
-	          BitFormat4Context c2 = (BitFormat4Context)(c1.bitFormat());
-	          fmt.add("base",4);
-	          if (c2.numberOfCharacters()!= null) {
-	            updateIsNonStatic(c2.numberOfCharacters().expression());
-	            fmt.add("fieldwidth",getExpression(c2.numberOfCharacters().expression()));
-	          }
-	        }
-	        formatList.add("formats", fmt);
-	        nbrOfFormats ++;
-	      } else if (c1.timeFormat() != null) {
-	        TimeFormatContext ffc = c1.timeFormat();
-	        ST fmt = m_group.getInstanceOf("iojob_time_format");
-	        updateIsNonStatic(ffc.fieldWidth().expression());
-	        fmt.add("fieldwidth",  getExpression(ffc.fieldWidth().expression()));
-	        if (ffc.decimalPositions() != null) {
-	          updateIsNonStatic(ffc.decimalPositions().expression());
-	          fmt.add("decimalPositions",  getExpression(ffc.decimalPositions().expression()));
-	        }
-	        formatList.add("formats", fmt);
-	        nbrOfFormats ++;
-	      } else if (c1.durationFormat() != null) {
-	        DurationFormatContext ffc = c1.durationFormat();
-	        ST fmt = m_group.getInstanceOf("iojob_duration_format");
-	        fmt.add("fieldwidth",  getExpression(ffc.fieldWidth().expression()));
-	        updateIsNonStatic(ffc.fieldWidth().expression());
-	        if (ffc.decimalPositions() != null) {
-	          updateIsNonStatic(ffc.decimalPositions().expression());
-	          fmt.add("decimalPositions",  getExpression(ffc.decimalPositions().expression()));
-	        }
-	        formatList.add("formats", fmt);
-	        nbrOfFormats ++;
-	      } else if (c1.listFormat() != null) {
-	        ST fmt = m_group.getInstanceOf("iojob_list_format");
-	        formatList.add("formats", fmt);
-	        nbrOfFormats ++;
-	      } else {
-	        System.out.println("untreated format "+c.format().getText());
-	      }
+        // we have to deal with
+        //   FactorFormatContext   like 3F(6)
+        //   FactorPositionContext like 3X(4)
+        //   FactorFormatPositionContext  like (3)(A,F(6),SKIP)
+        //   factor is always aptional!
+        if (ctx instanceof SmallPearlParser.FactorFormatContext) {
+            FactorFormatContext c = (FactorFormatContext) (ctx);
+            if (c.factor() != null) {
+                addFactorToFormatList(formatList, c.factor());
+                nbrOfFormats++;
+            }
 
-	    }
-	  }
-	  if (ctx instanceof SmallPearlParser.FactorPositionContext) {
-	    FactorPositionContext c = (FactorPositionContext)(ctx);
-	    if (c.factor() != null) {
-	      updateIsNonStatic(c.factor());
-	      addFactorToFormatList(formatList, c.factor());
-	      nbrOfFormats ++;
-	    }
-	    // treat position
-	    if (c.position().positionRST()!= null) {
-	      ST fmt = m_group.getInstanceOf("iojob_rst");
-	      fmt.add("element", getUserVariable(c.position().positionRST().ID().getText()));
-	      SymbolTableEntry se = m_currentSymbolTable.lookup(c.position().positionRST().ID().getText());
-	      if (se instanceof VariableEntry) {
-	        TypeFixed tf = (TypeFixed)(((VariableEntry)se).getType());
-	        fmt.add("size",  tf.getPrecision());
-	      }
+            // add format
+            if (c.format() instanceof SmallPearlParser.FormatContext) {
+                FormatContext c1 = (FormatContext) (c.format());
+                if (c1.fixedFormat() != null) {
+                    FixedFormatContext ffc = c1.fixedFormat();
+                    ST fmt = m_group.getInstanceOf("iojob_fixed_format");
+                    updateIsNonStatic(ffc.fieldWidth().expression());
+                    fmt.add("fieldwidth", getExpression(ffc.fieldWidth().expression()));
+                    if (c1.fixedFormat().decimalPositions() != null) {
+                        updateIsNonStatic(ffc.decimalPositions().expression());
+                        fmt.add("decimalPositions", getExpression(ffc.decimalPositions().expression()));
+                    }
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (c1.floatFormat() != null) {
+                    ST fmt = m_group.getInstanceOf("iojob_e_format");
+                    if (c1.floatFormat() instanceof FloatFormatEContext) {
+                        FloatFormatEContext c2 = (FloatFormatEContext) c1.floatFormat();
+                        updateIsNonStatic(c2.fieldWidth().expression());
+                        fmt.add("fieldwidth", getExpression(c2.fieldWidth().expression()));
+                        fmt.add("exp23", 2);
+                        if (c2.decimalPositions() != null) {
+                            updateIsNonStatic(c2.decimalPositions().expression());
+                            fmt.add("decimalPositions", getExpression(c2.decimalPositions().expression()));
+                        }
+                        if (c2.significance() != null) {
+                            updateIsNonStatic(c2.significance().expression());
+                            fmt.add("significance", getExpression(c2.significance().expression()));
+                        }
+                    } else if (c1.floatFormat() instanceof FloatFormatE3Context) {
+                        FloatFormatE3Context c2 = (FloatFormatE3Context) c1.floatFormat();
+                        updateIsNonStatic(c2.fieldWidth().expression());
+                        fmt.add("fieldwidth", getExpression(c2.fieldWidth().expression()));
+                        fmt.add("exp23", 3);
+                        if (c2.decimalPositions() != null) {
+                            updateIsNonStatic(c2.decimalPositions().expression());
+                            fmt.add("decimalPositions", getExpression(c2.decimalPositions().expression()));
+                        }
+                        if (c2.significance() != null) {
+                            updateIsNonStatic(c2.significance().expression());
+                            fmt.add("significance", getExpression(c2.significance().expression()));
+                        }
+                    }
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (c1.characterStringFormat() != null) {
+                    if (c1.characterStringFormat() instanceof CharacterStringFormatAContext) {
+                        CharacterStringFormatAContext c2 = (CharacterStringFormatAContext) c1.characterStringFormat();
+                        ST fmt = m_group.getInstanceOf("iojob_character_string_format");
+                        if (c2.fieldWidth() != null) {
+                            updateIsNonStatic(c2.fieldWidth().expression());
+                            fmt.add("fieldwidth", getExpression(c2.fieldWidth().expression()));
+                        }
+                        formatList.add("formats", fmt);
+                        nbrOfFormats++;
+                    }
+                } else if (c1.bitFormat() != null) {
+                    ST fmt = m_group.getInstanceOf("iojob_bit_format");
+                    if (c1.bitFormat() instanceof BitFormat1Context) {
+                        BitFormat1Context c2 = (BitFormat1Context) (c1.bitFormat());
+                        fmt.add("base", 1);
+                        if (c2.numberOfCharacters() != null) {
+                            updateIsNonStatic(c2.numberOfCharacters().expression());
+                            fmt.add("fieldwidth", getExpression(c2.numberOfCharacters().expression()));
+                        }
+                    } else if (c1.bitFormat() instanceof BitFormat2Context) {
+                        BitFormat2Context c2 = (BitFormat2Context) (c1.bitFormat());
+                        fmt.add("base", 2);
+                        if (c2.numberOfCharacters() != null) {
+                            updateIsNonStatic(c2.numberOfCharacters().expression());
+                            fmt.add("fieldwidth", getExpression(c2.numberOfCharacters().expression()));
+                        }
+                    } else if (c1.bitFormat() instanceof BitFormat3Context) {
+                        BitFormat3Context c2 = (BitFormat3Context) (c1.bitFormat());
+                        fmt.add("base", 3);
+                        if (c2.numberOfCharacters() != null) {
+                            updateIsNonStatic(c2.numberOfCharacters().expression());
+                            fmt.add("fieldwidth", getExpression(c2.numberOfCharacters().expression()));
+                        }
+                    } else if (c1.bitFormat() instanceof BitFormat4Context) {
+                        BitFormat4Context c2 = (BitFormat4Context) (c1.bitFormat());
+                        fmt.add("base", 4);
+                        if (c2.numberOfCharacters() != null) {
+                            updateIsNonStatic(c2.numberOfCharacters().expression());
+                            fmt.add("fieldwidth", getExpression(c2.numberOfCharacters().expression()));
+                        }
+                    }
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (c1.timeFormat() != null) {
+                    TimeFormatContext ffc = c1.timeFormat();
+                    ST fmt = m_group.getInstanceOf("iojob_time_format");
+                    updateIsNonStatic(ffc.fieldWidth().expression());
+                    fmt.add("fieldwidth", getExpression(ffc.fieldWidth().expression()));
+                    if (ffc.decimalPositions() != null) {
+                        updateIsNonStatic(ffc.decimalPositions().expression());
+                        fmt.add("decimalPositions", getExpression(ffc.decimalPositions().expression()));
+                    }
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (c1.durationFormat() != null) {
+                    DurationFormatContext ffc = c1.durationFormat();
+                    ST fmt = m_group.getInstanceOf("iojob_duration_format");
+                    fmt.add("fieldwidth", getExpression(ffc.fieldWidth().expression()));
+                    updateIsNonStatic(ffc.fieldWidth().expression());
+                    if (ffc.decimalPositions() != null) {
+                        updateIsNonStatic(ffc.decimalPositions().expression());
+                        fmt.add("decimalPositions", getExpression(ffc.decimalPositions().expression()));
+                    }
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (c1.listFormat() != null) {
+                    ST fmt = m_group.getInstanceOf("iojob_list_format");
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else {
+                    System.out.println("untreated format " + c.format().getText());
+                }
 
-	      formatList.add("formats",fmt);
-	      setIsNonStatic();
-	      nbrOfFormats ++;
-	    } else if (c.position().relativePosition() != null) {
-	      RelativePositionContext rp = c.position().relativePosition();
+            }
+        }
+        if (ctx instanceof SmallPearlParser.FactorPositionContext) {
+            FactorPositionContext c = (FactorPositionContext) (ctx);
+            if (c.factor() != null) {
+                updateIsNonStatic(c.factor());
+                addFactorToFormatList(formatList, c.factor());
+                nbrOfFormats++;
+            }
+            // treat position
+            if (c.position().positionRST() != null) {
+                ST fmt = m_group.getInstanceOf("iojob_rst");
+                fmt.add("element", getUserVariable(c.position().positionRST().ID().getText()));
+                SymbolTableEntry se = m_currentSymbolTable.lookup(c.position().positionRST().ID().getText());
+                if (se instanceof VariableEntry) {
+                    TypeFixed tf = (TypeFixed) (((VariableEntry) se).getType());
+                    fmt.add("size", tf.getPrecision());
+                }
 
-	      if (rp.positionSKIP()!= null){
-	        ExpressionContext e = rp.positionSKIP().expression();
-	        ST fmt = m_group.getInstanceOf("iojob_position_skip");
-	        if (e != null) {
-	          updateIsNonStatic(e);
-	          fmt.add("element",getExpression(e));
-	        }
-	        formatList.add("formats",fmt);
-	        nbrOfFormats ++;
-	      } else if (rp.positionX()!= null) {
-	        ExpressionContext e = rp.positionX().expression();
-	        ST fmt = m_group.getInstanceOf("iojob_position_x");
-	        if (e != null) {
-	          updateIsNonStatic(e);
-	          fmt.add("element",getExpression(e));
-	        }
-	        formatList.add("formats",fmt);
-	        nbrOfFormats ++;
-	      } else if (rp.positionPAGE()!= null) {
-	        ExpressionContext e = rp.positionPAGE().expression();
-	        ST fmt = m_group.getInstanceOf("iojob_position_page");
-	        if (e != null) {
-	          updateIsNonStatic(e);
-	          fmt.add("element",getExpression(e));
-	        }
-	        formatList.add("formats",fmt);
-	        nbrOfFormats ++;
-	      } else if (rp.positionADV()!= null) {
-	        ST fmt = m_group.getInstanceOf("iojob_position_adv");
-	        for (int i=0; i<rp.positionADV().expression().size(); i++ ) {
-	          ExpressionContext e = rp.positionADV().expression(i);
-	          updateIsNonStatic(e);
-	          fmt.add("expression"+(i+1),getExpression(e));
-	        }
-	        fmt.add("dimensions",rp.positionADV().expression().size());
-	        formatList.add("formats",fmt);
-	        nbrOfFormats ++;
-	      } else if (rp.positionEOF()!= null) {
-	        ST fmt = m_group.getInstanceOf("iojob_position_eof");
-	        formatList.add("formats",fmt);
-	        nbrOfFormats ++;
-	      } else {
-	        System.out.println("untreated positioning: "+c.position().getText());
-	      }
-	    } else if (c.position().absolutePosition() != null) {
-	      AbsolutePositionContext ap = c.position().absolutePosition();
-	      if (ap.positionCOL()!= null) {
-	        ExpressionContext e = ap.positionCOL().expression();
-	        ST fmt = m_group.getInstanceOf("iojob_position_col");
-	        updateIsNonStatic(e);
-	        fmt.add("element",getExpression(e));
-	        formatList.add("formats",fmt);
-	        nbrOfFormats ++;
-	      } else if (ap.positionLINE()!= null) {
-	        ExpressionContext e = ap.positionLINE().expression();
-	        ST fmt = m_group.getInstanceOf("iojob_position_line");
-	        updateIsNonStatic(e);
-	        fmt.add("element",getExpression(e));
-	        formatList.add("formats",fmt);
-	        nbrOfFormats ++;
-	      } else if (ap.positionPOS() != null) {
-	        ST fmt = m_group.getInstanceOf("iojob_position_pos");
-	        for (int i=0; i<ap.positionPOS().expression().size(); i++ ) {
-	          ExpressionContext e = ap.positionPOS().expression(i);
-	          updateIsNonStatic(e);
-	          fmt.add("expression"+(i+1),getExpression(e));
-	        }
-	        fmt.add("dimensions",ap.positionPOS().expression().size());
-	        formatList.add("formats",fmt);
-	        nbrOfFormats ++;
-	      } else if (ap.positionSOP() != null) {
-	        ST fmt = m_group.getInstanceOf("iojob_position_sop");
-	        for (int i=0; i<ap.positionSOP().ID().size(); i++ ) {
-	          fmt.add("element"+(i+1), getUserVariable(ap.positionSOP().ID(i).getText()));
-	          SymbolTableEntry se = m_currentSymbolTable.lookup(ap.positionSOP().ID(i).getText());
-	          if (se instanceof VariableEntry) {
-	            TypeFixed tf = (TypeFixed)(((VariableEntry)se).getType());
-	            fmt.add("size"+(i+1),  tf.getPrecision());
-	          }
-	          setIsNonStatic();
-	        }
-	        fmt.add("dimensions", ap.positionSOP().ID().size());
-	        formatList.add("formats",fmt);
-	        nbrOfFormats ++;
-	      } else {
-	        System.out.println("untreated positioning: "+c.position().getText());
-	      }
-	    }
-	  }
+                formatList.add("formats", fmt);
+                setIsNonStatic();
+                nbrOfFormats++;
+            } else if (c.position().relativePosition() != null) {
+                RelativePositionContext rp = c.position().relativePosition();
 
-	  if (ctx instanceof SmallPearlParser.FactorFormatPositionContext) {
-	    // System.out.println("(x)( , , , )  treatment");
-	    FactorFormatPositionContext c = (FactorFormatPositionContext)(ctx);
-	    //System.out.println("FactorFormatPosition"+c.getText());
-	    ST loop = m_group.getInstanceOf("iojob_format_loopstart");
+                if (rp.positionSKIP() != null) {
+                    ExpressionContext e = rp.positionSKIP().expression();
+                    ST fmt = m_group.getInstanceOf("iojob_position_skip");
+                    if (e != null) {
+                        updateIsNonStatic(e);
+                        fmt.add("element", getExpression(e));
+                    }
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (rp.positionX() != null) {
+                    ExpressionContext e = rp.positionX().expression();
+                    ST fmt = m_group.getInstanceOf("iojob_position_x");
+                    if (e != null) {
+                        updateIsNonStatic(e);
+                        fmt.add("element", getExpression(e));
+                    }
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (rp.positionPAGE() != null) {
+                    ExpressionContext e = rp.positionPAGE().expression();
+                    ST fmt = m_group.getInstanceOf("iojob_position_page");
+                    if (e != null) {
+                        updateIsNonStatic(e);
+                        fmt.add("element", getExpression(e));
+                    }
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (rp.positionADV() != null) {
+                    ST fmt = m_group.getInstanceOf("iojob_position_adv");
+                    for (int i = 0; i < rp.positionADV().expression().size(); i++) {
+                        ExpressionContext e = rp.positionADV().expression(i);
+                        updateIsNonStatic(e);
+                        fmt.add("expression" + (i + 1), getExpression(e));
+                    }
+                    fmt.add("dimensions", rp.positionADV().expression().size());
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (rp.positionEOF() != null) {
+                    ST fmt = m_group.getInstanceOf("iojob_position_eof");
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else {
+                    System.out.println("untreated positioning: " + c.position().getText());
+                }
+            } else if (c.position().absolutePosition() != null) {
+                AbsolutePositionContext ap = c.position().absolutePosition();
+                if (ap.positionCOL() != null) {
+                    ExpressionContext e = ap.positionCOL().expression();
+                    ST fmt = m_group.getInstanceOf("iojob_position_col");
+                    updateIsNonStatic(e);
+                    fmt.add("element", getExpression(e));
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (ap.positionLINE() != null) {
+                    ExpressionContext e = ap.positionLINE().expression();
+                    ST fmt = m_group.getInstanceOf("iojob_position_line");
+                    updateIsNonStatic(e);
+                    fmt.add("element", getExpression(e));
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (ap.positionPOS() != null) {
+                    ST fmt = m_group.getInstanceOf("iojob_position_pos");
+                    for (int i = 0; i < ap.positionPOS().expression().size(); i++) {
+                        ExpressionContext e = ap.positionPOS().expression(i);
+                        updateIsNonStatic(e);
+                        fmt.add("expression" + (i + 1), getExpression(e));
+                    }
+                    fmt.add("dimensions", ap.positionPOS().expression().size());
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else if (ap.positionSOP() != null) {
+                    ST fmt = m_group.getInstanceOf("iojob_position_sop");
+                    for (int i = 0; i < ap.positionSOP().ID().size(); i++) {
+                        fmt.add("element" + (i + 1), getUserVariable(ap.positionSOP().ID(i).getText()));
+                        SymbolTableEntry se = m_currentSymbolTable.lookup(ap.positionSOP().ID(i).getText());
+                        if (se instanceof VariableEntry) {
+                            TypeFixed tf = (TypeFixed) (((VariableEntry) se).getType());
+                            fmt.add("size" + (i + 1), tf.getPrecision());
+                        }
+                        setIsNonStatic();
+                    }
+                    fmt.add("dimensions", ap.positionSOP().ID().size());
+                    formatList.add("formats", fmt);
+                    nbrOfFormats++;
+                } else {
+                    System.out.println("untreated positioning: " + c.position().getText());
+                }
+            }
+        }
 
-	    if (c.factor()!= null) {
-	      if (c.factor().expression() != null) {
-	        updateIsNonStatic(c.factor().expression());
-	        loop.add("repetitions", getExpression(c.factor().expression()));
-	        formatList.add("formats",loop);
-	        nbrOfFormats ++;
-	      } else if (c.factor().integerWithoutPrecision() != null) {
-	        String s = c.factor().integerWithoutPrecision().IntegerConstant().getText();
-	        loop.add("repetitions",s);
-	      }
-	    }
-	    nbrOfFormats += addFormatPositionToFormatList(formatList, c.listOfFormatPositions());
+        if (ctx instanceof SmallPearlParser.FactorFormatPositionContext) {
+            // System.out.println("(x)( , , , )  treatment");
+            FactorFormatPositionContext c = (FactorFormatPositionContext) (ctx);
+            //System.out.println("FactorFormatPosition"+c.getText());
+            ST loop = m_group.getInstanceOf("iojob_format_loopstart");
 
-	    // decrement the number of format element, since the start_loop element
-	    // does not count, but all containing start_loop elements count
-	    loop.add("elements", nbrOfFormats-1);
-	  }
-	  return nbrOfFormats;
+            if (c.factor() != null) {
+                if (c.factor().expression() != null) {
+                    updateIsNonStatic(c.factor().expression());
+                    loop.add("repetitions", getExpression(c.factor().expression()));
+                    formatList.add("formats", loop);
+                    nbrOfFormats++;
+                } else if (c.factor().integerWithoutPrecision() != null) {
+                    String s = c.factor().integerWithoutPrecision().IntegerConstant().getText();
+                    loop.add("repetitions", s);
+                }
+            }
+            nbrOfFormats += addFormatPositionToFormatList(formatList, c.listOfFormatPositions());
 
-	}
+            // decrement the number of format element, since the start_loop element
+            // does not count, but all containing start_loop elements count
+            loop.add("elements", nbrOfFormats - 1);
+        }
+        return nbrOfFormats;
+
+    }
 
     private int addFormatPositionToFormatList(ST formatList, ListOfFormatPositionsContext list) {
-         int length=0;
-         for (int i=0; i<list.formatPosition().size(); i++) {
-           length += addFormatPositionToFormatList(formatList, list.formatPosition(i));
-         }
-         return length;
+        int length = 0;
+        for (int i = 0; i < list.formatPosition().size(); i++) {
+            length += addFormatPositionToFormatList(formatList, list.formatPosition(i));
+        }
+        return length;
     }
 
 
-	private void addFactorToFormatList(ST formatList, FactorContext ctx) {
-		ST loopStart = m_group.getInstanceOf("iojob_format_loopstart");
+    private void addFactorToFormatList(ST formatList, FactorContext ctx) {
+        ST loopStart = m_group.getInstanceOf("iojob_format_loopstart");
 
-		if (ctx.expression()!= null) {
-			updateIsNonStatic(ctx.expression());
-			System.out.println("FactorPosition  ("+ctx.expression().getText()+")");
-			loopStart.add("repetitions",getExpression(ctx.expression()));
-		}
-		if (ctx.integerWithoutPrecision() != null) {
-			loopStart.add("repetitions",ctx.integerWithoutPrecision().IntegerConstant().getText());
-		}
-		loopStart.add("elements",1);
-		formatList.add("formats",loopStart);
-	}
+        if (ctx.expression() != null) {
+            updateIsNonStatic(ctx.expression());
+            System.out.println("FactorPosition  (" + ctx.expression().getText() + ")");
+            loopStart.add("repetitions", getExpression(ctx.expression()));
+        }
+        if (ctx.integerWithoutPrecision() != null) {
+            loopStart.add("repetitions", ctx.integerWithoutPrecision().IntegerConstant().getText());
+        }
+        loopStart.add("elements", 1);
+        formatList.add("formats", loopStart);
+    }
 
-	
+
     private ST getUserVariable(String user_variable) {
         ST st = m_group.getInstanceOf("user_variable");
         st.add("name", user_variable);
@@ -4548,7 +4556,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitSendStatement(SmallPearlParser.SendStatementContext ctx) {
         ST st = m_group.getInstanceOf("iojob_io_statement");
-        ErrorStack.enter(ctx,"SEND");
+        ErrorStack.enter(ctx, "SEND");
         st.add("command", "send");
 
         String dation = "";
@@ -4557,7 +4565,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         addDataAndFormatListToST(st, ctx.listOfFormatPositions(), ctx.ioDataList());
         ErrorStack.leave();
-        
+
         return st;
     }
 
@@ -4573,7 +4581,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitTakeStatement(SmallPearlParser.TakeStatementContext ctx) {
         ST st = m_group.getInstanceOf("iojob_io_statement");
         st.add("command", "take");
-        ErrorStack.enter(ctx,"TAKE");
+        ErrorStack.enter(ctx, "TAKE");
 
         String dation = "";
         dation = ctx.dationName().ID().getText();
@@ -4590,8 +4598,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitReadStatement(SmallPearlParser.ReadStatementContext ctx) {
         ST st = m_group.getInstanceOf("iojob_io_statement");
         st.add("command", "read");
-        
-        ErrorStack.enter(ctx,"READ");
+
+        ErrorStack.enter(ctx, "READ");
         String dation = "";
 
         dation = ctx.dationName().ID().getText();
@@ -4611,7 +4619,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         st.add("command", "write");
         String dation = "";
 
-        ErrorStack.enter(ctx,"WRITE");
+        ErrorStack.enter(ctx, "WRITE");
 
         dation = ctx.dationName().ID().getText();
 
@@ -4619,15 +4627,15 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         addDataAndFormatListToST(st, ctx.listOfFormatPositions(), ctx.ioDataList());
 
         ErrorStack.leave();
-       
+
         return st;
     }
 
-  
+
     @Override
     public ST visitCallStatement(SmallPearlParser.CallStatementContext ctx) {
         ST stmt = m_group.getInstanceOf("CallStatement");
-       
+
         stmt.add("callee", ctx.ID());
         if (ctx.listOfActualParameters() != null) {
             stmt.add("ListOfActualParameters",
@@ -4682,7 +4690,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
 
         if (treatArray) {
-           ST param = m_group.getInstanceOf("ActualParameters");
+            ST param = m_group.getInstanceOf("ActualParameters");
 			/*
 			ArrayDescriptor array_descriptor = new ArrayDescriptor(
 					ta.getNoOfDimensions(),
@@ -4697,24 +4705,24 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             stmt.add("ActualParameter", param);
         } else {
             // scalar type
-            if (attr.getType() instanceof TypeVariableChar ) {
-              ST temp = m_group.getInstanceOf("TempCharVariable");
+            if (attr.getType() instanceof TypeVariableChar) {
+                ST temp = m_group.getInstanceOf("TempCharVariable");
 
-              String tempVarName = "t"+m_tempCharVariableNbr++;
-              
-              TypeVariableChar t = (TypeVariableChar)(attr.getType());
-              temp.add("char_size", t.getBaseType().getPrecision());
-              temp.add("variable", tempVarName);
-              temp.add("expr", getExpression(expression));
-              ST param = m_group.getInstanceOf("ActualParameters");
-              param.add("ActualParameter", tempVarName);
-              stmt.add("ActualParameter", param);
-            
-              m_tempCharVariableList.add("variable",temp);
+                String tempVarName = "t" + m_tempCharVariableNbr++;
+
+                TypeVariableChar t = (TypeVariableChar) (attr.getType());
+                temp.add("char_size", t.getBaseType().getPrecision());
+                temp.add("variable", tempVarName);
+                temp.add("expr", getExpression(expression));
+                ST param = m_group.getInstanceOf("ActualParameters");
+                param.add("ActualParameter", tempVarName);
+                stmt.add("ActualParameter", param);
+
+                m_tempCharVariableList.add("variable", temp);
             } else {
-              ST param = m_group.getInstanceOf("ActualParameters");
-              param.add("ActualParameter", getExpression(expression));
-              stmt.add("ActualParameter", param);
+                ST param = m_group.getInstanceOf("ActualParameters");
+                param.add("ActualParameter", getExpression(expression));
+                stmt.add("ActualParameter", param);
             }
         }
     }
@@ -5220,7 +5228,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return st;
     }
 
-	
+
     @Override
     public ST visitTypology(SmallPearlParser.TypologyContext ctx) {
         ST st = m_group.getInstanceOf("Typology");
@@ -5350,7 +5358,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return st;
     }
 
-        
+
     @Override
     public ST visitAccessAttribute(SmallPearlParser.AccessAttributeContext ctx) {
         ST st = m_group.getInstanceOf("AccessAttribute");
@@ -5546,7 +5554,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
 
-    
+
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return st;
     }
@@ -5715,7 +5723,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         st.add("resultType", visitResultType(ctx.resultType()));
         ASTAttribute attr = m_ast.lookup(ctx);
         if (attr != null) {
-          m_resultType = attr.getType();
+            m_resultType = attr.getType();
         }
         return st;
     }
@@ -5948,7 +5956,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     .println("CppCodeGeneratorVisitor: visitConvertToStatement");
         }
         if (ctx.name() == null) {
-          int x=0;
+            int x = 0;
         }
         String s = ctx.name().getText();
 
@@ -6153,5 +6161,51 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         }
 
         return st;
+    }
+
+    private ST traverseName(SmallPearlParser.NameContext ctx, TypeStructure struct, ST st) {
+        if (struct == null) {
+            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
+
+            if (entry instanceof VariableEntry) {
+                VariableEntry var = (VariableEntry) entry;
+
+                if ( st == null ) {
+                    st = m_group.getInstanceOf("Name");
+                }
+
+                st.add("id",var.getName());
+
+                if (var.getType() instanceof TypeStructure) {
+                    return traverseName(ctx.name(), (TypeStructure) var.getType(), st);
+                } else {
+                    return st;
+                }
+            } else {
+                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            }
+        } else {
+            StructureComponent component = struct.lookup(ctx.ID().getText());
+
+            if ( component == null ) {
+                ErrorStack.add("not a structure component: " + component.m_id);
+            }
+
+            if ( ctx.name() == null ) {
+                st.add("name", component.m_alias);
+                return st;
+            }
+            else {
+                if ( component.m_type instanceof TypeStructure) {
+                    st.add("name", component.m_alias);
+                    return traverseName(ctx.name(), (TypeStructure) component.m_type, st);
+                }
+                else {
+                    ErrorStack.add("not a structure component: " + component.m_type);
+                }
+            }
+        }
+
+        return null;
     }
 }
