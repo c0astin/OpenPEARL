@@ -3218,6 +3218,8 @@ String s = ctx.getText();
                      }
                    }
                 }
+            } else if (entry instanceof ProcedureEntry) {
+                Log.debug("ExpressionTypeVisitor:visitName:Procedure:id=" + ctx.ID().toString());
             } else {
               ErrorStack.add("'"+ctx.ID().getText()+"' is not defined");
 //                throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine(),(ctx.ID().toString()));
