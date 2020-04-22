@@ -345,6 +345,14 @@ TypeReferenceSimpleType(BaseType) ::= <<
 pearlrt::Ref \< <BaseType> > 
 >>
 
+task_type() ::= <%
+pearlrt::Task
+%>
+
+sema_type() ::= <%
+pearlrt::Semaphore
+%>
+
 TypeReferenceTask(Task) ::= <<
 pearlrt::Task *
 >>
@@ -1360,6 +1368,11 @@ pearlrt::toChar(<operand>)
 
 TASK() ::= <%
 me
+%>
+
+/* a reference: TASK and PROC need not address operator */
+ReferableObject(obj) ::= <%
+&(<obj>)
 %>
 
 /* --------------------- Temporary Semaphore Arrays -------------------------- */

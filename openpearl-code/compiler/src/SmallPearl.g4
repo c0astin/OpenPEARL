@@ -555,23 +555,27 @@ typeAttributeForArray :
 ////////////////////////////////////////////////////////////////////////////////
 
 typeReference
-    : 'REF' typeReferences
-    ;
-
-/*
-// better?
-typeReferences: assignmentProtection? virtualDimensionList?
-	( simpleType 
+    : 'REF' assignmentProtection? virtualDimensionList?
+    (
+	 simpleType 
 	| typeStructure 
 	| typeDation
 //	| typeProcedure		// <<< not defined yet
-	| typeReferenceTaskType
-	| typeReferenceInterruptType
-	| typeReferenceSignalType
-	|  'CHAR' '('  ')' 
+	| typeReferenceTaskType				//<< should become renamed to taskType
+	| typeReferenceSemaType
+	| typeReferenceBoltType
+	| typeReferenceInterruptType		// << should become renamed to interruptType
+	| typeReferenceSignalType			// << should become renamed to signalType
+	| typeRefChar						// should stay typeRefChar; since typeCharacterString does not fit
+	)
+	;
+
+typeRefChar:
+	'CHAR' '('  ')' 
 	;
 	
-*/
+/*
+replaced by definition above
 typeReferences
     : typeReferenceSimpleType
     | typeReferenceStructuredType
@@ -583,6 +587,7 @@ typeReferences
     | typeReferenceInterruptType
     | typeReferenceSignalType
     ;
+*/
 
 typeReferenceSimpleType
     : assignmentProtection? simpleType
@@ -648,12 +653,19 @@ preset :
 //   END;
 ////////////////////////////////////////////////////////////////////////////////
 
-procedureDeclaration
-    : ID ':' ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute? globalAttribute? ';'
+  
+procedureDeclaration:
+	 ID ':' ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute? globalAttribute? ';'
+//	 ID ':' typeProcedure globalAttribute? ';'
         procedureBody
       'END' ';'
     ;
 
+/*
+typeProcedure:
+	 ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute?
+	 ;
+*/	 
 ////////////////////////////////////////////////////////////////////////////////
 // ProcedureBody ::=
 //   [ Declaration... ] [ Statement... ]

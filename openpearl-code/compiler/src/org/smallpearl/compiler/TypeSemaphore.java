@@ -29,6 +29,8 @@
 
 package org.smallpearl.compiler;
 
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 public class TypeSemaphore extends TypeDefinition {
 
@@ -44,5 +46,10 @@ public class TypeSemaphore extends TypeDefinition {
     public boolean equals(Object other) {
         return other instanceof TypeSemaphore;
     }
+    
+    public ST toST(STGroup group) {
+      ST st = group.getInstanceOf("sema_type");
+      return st;
+  }
 
 }

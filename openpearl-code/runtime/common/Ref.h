@@ -107,6 +107,15 @@ namespace pearlrt {
          throw theRefNotInitializedSignal;
       }
 
+      /**
+      set new reference
+
+      \param rhs the new object to point to
+      */
+      void operator=( C &rhs) {
+        x = &rhs;
+      }
+
    };
    /** @} */
 }

@@ -476,13 +476,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitTypeReference(SmallPearlParser.TypeReferenceContext ctx) {
+        // must become more sophisticated! (2020-04-07 rm)
         return visitChildren(ctx);
     }
 
-    @Override
-    public ST visitTypeReferences(SmallPearlParser.TypeReferencesContext ctx) {
-        return visitChildren(ctx);
-    }
 
     @Override
     public ST visitTypeReferenceSimpleType(
@@ -2446,9 +2443,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                     if (rhs_type instanceof TypeReference) {
                         st.add("rhs", getExpression(ctx.expression()));
-                    } else if (rhs_type instanceof TypeTask) {
-                        ST stTask = m_group.getInstanceOf("TASK");
-                        st.add("rhs", stTask);
+//                    } else if (rhs_type instanceof TypeTask) {
+//                        ST stTask = m_group.getInstanceOf("TASK");
+//                        st.add("rhs", stTask);
                     } else {
                         st.add("rhs", getReferenceExpression(ctx.expression()));
                     }

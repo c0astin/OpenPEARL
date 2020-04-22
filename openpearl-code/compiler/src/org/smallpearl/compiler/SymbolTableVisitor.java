@@ -360,6 +360,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         Log.debug("SymbolTableVisitor:visitVariableDenotation:ctx" + CommonUtils.printContext(ctx));
 
         m_type = null;
+        
 
         if (ctx != null) {
             for (ParseTree c : ctx.children) {
@@ -376,6 +377,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 }
             }
 
+            m_type.setHasAssignmentProtection(hasAllocationProtection);
+            
             if (initElementList != null && identifierDenotationList.size() != initElementList.size()) {
                 throw new NumberOfInitializerMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
