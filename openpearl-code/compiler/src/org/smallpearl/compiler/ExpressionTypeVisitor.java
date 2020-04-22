@@ -3204,10 +3204,14 @@ String s = ctx.getText();
                        ErrorStack.add("illegal usage of type name");
                      } else if (entry instanceof ProcedureEntry) {
                        m_type = ((ProcedureEntry)entry).getResultType();
+         
                        if (m_type != null) {
                          m_ast.put(ctx,  new ASTAttribute(m_type));
                        } else {
                          ErrorStack.add("procedure '"+((ProcedureEntry)entry).getName()+"' does not return a value");
+                       }
+                       if (ctx.listOfExpression()!= null) {
+                         visitChildren(ctx.listOfExpression());
                        }
                      } else {
                        ErrorStack.addInternal("illegal usage of ???");
@@ -3284,6 +3288,7 @@ String s = ctx.getText();
      * 
      */
     private  Void reVisitName(SmallPearlParser.NameContext ctx) {
+      TypeDefinition currentType = m_type;
       
 String s = ctx.getText();
       if ( m_type instanceof TypeArray) {
@@ -3292,7 +3297,7 @@ String s = ctx.getText();
             // array indices given -> m_type is baseType() and iterate on next levels
             // see next if with ctx.name() != null
             visit(ctx.listOfExpression());
-            m_type = ((TypeArray) m_type).getBaseType();
+            m_type = ((TypeArray) currentType).getBaseType();
           } else {
             // no array indices given --> no name may by given
             if (ctx.name() != null) {
