@@ -65,7 +65,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     private int m_tfuRecord;         // length of the TFU record, or -1
     private TypeDefinition m_resultType;     // result type of a PROC; required if a variable character string is returned
     private ST m_tempCharVariableList;  // variable character values must be assigned
-    private int m_tempCharVariableNbr;  // to a temporary variable if use as proc parameter 
+    private int m_tempCharVariableNbr;  // to a temporary variable if use as proc parameter
+    private TypeDefinition m_type = null;
 
     public enum Type {
         BIT, CHAR, FIXED
@@ -2388,6 +2389,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return statement;
     }
 
+/*
+    assignment_statement:
+       ( dereference? name | stringSelection) ( ':=' | '=' ) expression ';'
+       ;
+*/
+
     @Override
     public ST visitAssignment_statement(
             SmallPearlParser.Assignment_statementContext ctx) {
@@ -2405,6 +2412,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 id = ctx.stringSelection().bitSelection().name().ID().getText();
             }
         }
+
         SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
 
         if (entry == null) {
@@ -2553,8 +2561,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     } else {
                         if (lhs_type instanceof TypeStructure) {
                             ST st = m_group.getInstanceOf("assignment_statement");
-                            Log.debug("Structure on LHS");
-                            st.add("lhs", traverseName(ctx.name(),null,null));
+                            st.add("lhs", traverseNameForStruct(ctx.name(), lhs_type));
                             st.add("rhs", getExpression(ctx.expression()));
                             stmt = st;
                         }
@@ -2679,8 +2686,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
 
             expression.add("functionCall", functionCall);
-        } else if (entry instanceof org.smallpearl.compiler.SymbolTable.VariableEntry) {
-            org.smallpearl.compiler.SymbolTable.VariableEntry variable = (org.smallpearl.compiler.SymbolTable.VariableEntry) entry;
+        } else if (entry instanceof VariableEntry) {
+            VariableEntry variable = (VariableEntry) entry;
 
             if (variable.getType() instanceof TypeBit) {
                 TypeBit type = (TypeBit) variable.getType();
@@ -2706,7 +2713,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                 expression.add("id", array);
             } else if (variable.getType() instanceof TypeStructure) {
-                expression.add("id", traverseName(ctx, null, null));
+                if ( ctx.name() != null ) {
+                  expression.add("id", traverseNameForStruct(ctx,(TypeStructure) variable.getType()));
+                } else {
+                    expression.add("id", getUserVariable(variable.getName()));
+                }
             } else {
                 expression.add("id", getUserVariable(ctx.ID().getText()));
             }
@@ -4685,7 +4696,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
 
-
         if (treatArray) {
             ST param = m_group.getInstanceOf("ActualParameters");
 			/*
@@ -6160,45 +6170,34 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return st;
     }
 
-    private ST traverseName(SmallPearlParser.NameContext ctx, TypeStructure struct, ST st) {
-        if (struct == null) {
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
 
-            if (entry instanceof VariableEntry) {
-                VariableEntry var = (VariableEntry) entry;
 
-                if ( st == null ) {
-                    st = m_group.getInstanceOf("Name");
-                }
+    private ST traverseNameForStruct(SmallPearlParser.NameContext ctx, TypeDefinition type) {
+        ST st =  m_group.getInstanceOf("Name");
+        st.add("id", ctx.ID().getText());
 
-                st.add("id",var.getName());
+        if ( ctx.name() != null ) {
+            reVisitName(ctx.name(), type, st);
+        }
 
-                if (var.getType() instanceof TypeStructure) {
-                    return traverseName(ctx.name(), (TypeStructure) var.getType(), st);
-                } else {
-                    return st;
-                }
-            } else {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-        } else {
+        return st;
+    }
+
+    /**
+     * iterate over name recursion levels
+     */
+    private Void reVisitName(SmallPearlParser.NameContext ctx, TypeDefinition type, ST st) {
+        Log.debug("CppCodeGeneratorVisitor:reVisitName:ctx" + CommonUtils.printContext(ctx));
+
+        if ( type instanceof TypeStructure) {
+            TypeStructure struct = (TypeStructure) type;
             StructureComponent component = struct.lookup(ctx.ID().getText());
+            st.add("name", component.m_alias);
 
-            if ( component == null ) {
-                ErrorStack.add("not a structure component: " + component.m_id);
-            }
-
-            if ( ctx.name() == null ) {
-                st.add("name", component.m_alias);
-                return st;
-            }
-            else {
+            if ( ctx.name() != null ) {
                 if ( component.m_type instanceof TypeStructure) {
-                    st.add("name", component.m_alias);
-                    return traverseName(ctx.name(), (TypeStructure) component.m_type, st);
-                }
-                else {
-                    ErrorStack.add("not a structure component: " + component.m_type);
+                    TypeStructure subStruct = (TypeStructure)component.m_type;
+                    reVisitName(ctx.name(), subStruct, st);
                 }
             }
         }

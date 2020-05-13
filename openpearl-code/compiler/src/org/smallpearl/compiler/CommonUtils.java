@@ -826,11 +826,16 @@ public class CommonUtils {
 //    }
 
     public static String printContext(ParserRuleContext ctx) {
-        int a = ctx.start.getStartIndex();
-        int b = ctx.stop.getStopIndex();
+        if ( ctx != null ) {
 
-        Interval interval = new Interval(a, b);
-        return ctx + ":" + ctx.start.getInputStream().getText(interval);
+            int a = ctx.start.getStartIndex();
+            int b = ctx.stop.getStopIndex();
+
+            Interval interval = new Interval(a, b);
+            return ctx + ":" + ctx.start.getInputStream().getText(interval);
+        } else {
+            return "ctx is NULL";
+        }
     }
 
     public static String getFileExtension(File file) {

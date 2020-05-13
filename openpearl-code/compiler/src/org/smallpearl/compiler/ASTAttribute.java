@@ -154,6 +154,4 @@ public class ASTAttribute {
     public void setVariable(VariableEntry ve) {
       this.m_variable = ve;
     }
-
-
 }

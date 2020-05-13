@@ -2264,16 +2264,9 @@ index:
 
 primaryExpression:
 	 '(' expression ')'
-//  | ID
-//  | ID indices
-//  | ID '(' expression  ( ',' expression )* ')'
     | name
-//    | ID listOfActualParameters?
     | literal
     | semaTry
-//  | monadicExplicitTypeConversionOperators
-// 2020-03-18 replaced by stringSelection
-//    | stringSlice
 	| stringSelection
     ;
 
@@ -2284,8 +2277,8 @@ primaryExpression:
 //   | ConstantFIXEDExpression
 ////////////////////////////////////////////////////////////////////////////////
 
-constantExpression
-    : floatingPointConstant
+constantExpression:
+      floatingPointConstant
     | sign? durationConstant
     | constantFixedExpression
     ;
@@ -2295,8 +2288,8 @@ constantExpression
 //   Term [ { + | - } Term ] ...
 ////////////////////////////////////////////////////////////////////////////////
 
-constantFixedExpression
-    : constantFixedExpressionTerm ( additiveConstantFixedExpressionTerm | subtractiveConstantFixedExpressionTerm) *
+constantFixedExpression:
+    constantFixedExpressionTerm ( additiveConstantFixedExpressionTerm | subtractiveConstantFixedExpressionTerm) *
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
