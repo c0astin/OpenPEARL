@@ -63,12 +63,12 @@ namespace pearlrt {
       int  min = 0;
       int sec = 0;
       int usec = 0;
-      bool hasHours = false, hasMinutes=false, hasSeconds = false;
+      bool hasHours = false, hasMinutes=false, hasSeconds = false, hasNumber = false;
       int c1;
       int sign = 1 ;
       //                0123456789012345678901234567890123
-      char logText[] = "illegal D-format field (at: xxxxx)";
-      int setCharsAt = 28;
+      char logText[] = "D-format: illegal field (at: xxxxx)";
+      int setCharsAt = 29;
       int charsToSet = 5;
       bool errorExitWithoutLog=false;
       bool errorExitWithC1=false;
@@ -84,7 +84,7 @@ namespace pearlrt {
       }
 
       if (decimals < 0) {
-         Log::debug("fromD: width < 0");
+         Log::debug("fromD: decimals < 0");
          throw theDurationFormatSignal;
       }
 
@@ -111,10 +111,17 @@ namespace pearlrt {
          }
    
          if (possibleElements & NUMBER) {
-
             if (helper.readInteger(&number, width) > 0) {
+               hasNumber = true;
                possibleElements = SPACE | remainingElements; 
+               if (number > UINT32_MAX) {
+                  Log::error("D-format: number too large");
+		  errorExitWithoutLog = true;
+                  goto errorExit;
+               }
             } else {
+               Log::error("D-format: number expected");
+	       errorExitWithoutLog = true;
                goto errorExit;
             } 
          } else {
@@ -130,6 +137,7 @@ namespace pearlrt {
                      goto errorExit;
                   }
                   hours = number;
+                  hasNumber = false;
                   hasHours = true;
                   remainingElements &= ~ HRS;
                   possibleElements = SPACE | NUMBER | POINT; 
@@ -141,12 +149,14 @@ namespace pearlrt {
                   }
 
 		  if (number >= 60) {
-		     Log::error("D-format minutes too large");
+		     Log::error("D-format: minutes too large");
 		     errorExitWithoutLog = true;
 		     goto errorExit;
 		  }
                   min = number;
+                  hasNumber = false;
                   hasMinutes = true;
+                  hasHours = true;
                   remainingElements &= ~ MIN;
                   remainingElements &= ~ HRS;
                   possibleElements = SPACE | NUMBER | POINT; 
@@ -158,7 +168,7 @@ namespace pearlrt {
                   }
 
 		  if (number >= 60) {
-		     Log::error("D-format seconds too large");
+		     Log::error("D-format: seconds too large");
 		     errorExitWithoutLog = true;
 		     goto errorExit;
 		  }
@@ -166,7 +176,10 @@ namespace pearlrt {
                   remainingElements &= ~ (HRS | MIN | SEC | POINT);
                   possibleElements = 0;
                   sec = number;
+                  hasNumber = false;
                   hasSeconds = true;
+                  hasMinutes = true;
+                  hasHours = true;
                   break;
 
                case '.':
@@ -195,7 +208,7 @@ namespace pearlrt {
                      c1 = helper.readChar();
                   }
 		  if (number >= 60) {
-		     Log::error("D-format seconds too large");
+		     Log::error("D-format: seconds too large");
 		     errorExitWithoutLog = true;
 		     goto errorExit;
 		  }
@@ -205,15 +218,27 @@ namespace pearlrt {
                      }
 
                      hasSeconds = true;
+                     hasMinutes = true;
+                     hasHours = true;
                      possibleElements = 0;
-                  }
+                  } else {
+		     Log::error("D-format: no SEC token");
+	             errorExitWithoutLog = true;
+                     goto errorExit;
+		  }
                }
             }
          }
       } while (possibleElements );
 
-      if (!(hasHours || hasMinutes || hasSeconds)) {
-          Log::error("no data in field");
+      if (!(hasHours || hasMinutes || hasSeconds || hasNumber)) {
+          Log::error("D-format: no data in field");
+	  errorExitWithoutLog = true;
+	  goto errorExit;
+      }
+
+      if (!hasSeconds && hasNumber) {
+          Log::error("D-format: SEC missing");
 	  errorExitWithoutLog = true;
 	  goto errorExit;
       }

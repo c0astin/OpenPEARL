@@ -277,7 +277,7 @@ endSampling:
       return digitsProcessed;
    }
 
-   int GetHelper::readSeconds(double * x, const int d) {
+   int GetHelper::readSeconds(double * x) {
       int postPointDigits=0;
       int c1;
       double result=0.0; 
@@ -292,31 +292,36 @@ endSampling:
          }
       } while (isdigit(c1) && width>0);
 
-      if (c1 == '.' && width > 0) {
-         // get decimals 
-         do {
-           c1 = readChar();
-           if (isdigit(c1)) {
-              result = result*10+(c1 - '0');
-              digitsProcessed ++;
-              postPointDigits ++;
-           } else {
-              if (c1 > 0) { // end field markers are not returned to the input
-                 source->unGetChar(c1);
-                 width ++;
+      if (width > 0) {
+         if (c1 == '.') {
+            // get decimals 
+            do {
+              c1 = readChar();
+              if (isdigit(c1)) {
+                 result = result*10+(c1 - '0');
+                 digitsProcessed ++;
+                 postPointDigits ++;
+              } else {
+                 if (c1 > 0) { // end field markers are not returned to the input
+                    source->unGetChar(c1);
+                    width ++;
+                 }
+                 if (c1 != ' ') {
+                    return -1;
+                 }
               }
-              return -1;
-           }
-         } while (isdigit(c1) && width>0 && postPointDigits<6);
-      } else if (c1 == ' ') {
-         // no decimal point 
-      } else if (c1 != '.') {
-         if (c1 > 0) { // end field markers are not returned to the input
-             source->unGetChar(c1);
-             width ++;
-          }
-          return -1;
+            } while (isdigit(c1) && width>0 && postPointDigits<6);
+         } else if (c1 == ' ') {
+            // no decimal point 
+         } else if (c1 != '.') {
+            if (c1 > 0) { // end field markers are not returned to the input
+                source->unGetChar(c1);
+                width ++;
+             }
+             // eof is ok! return -1;
+         }
       } 
+
 
       while (isdigit(c1) && width>0) {
            c1 = readChar();  // discard decimals beyond 1 micro second
@@ -445,6 +450,7 @@ endSampling:
       int shifts;
       int cc, c;
       uint64_t result = 0;
+//printf("readB4(nbrOfBitsToSample=%d\n", nbrOfBitsToSample);
 
       if (skipSpaces() == 0) {
          do {
@@ -491,11 +497,11 @@ endSampling:
 //printf("   fill with zeros: value = 0x%" PRIx64 "\n", result);
          } 
 
-         result <<= 64-sampledBits;
-//printf("adjust to the left: %" PRIx64 "\n", result);
-
-         shifts = (4 - (nbrOfBitsToSample % 4)) % 4;
 //printf("bits to ignore on the right %d\n", shifts);
+         shifts = (4 - (nbrOfBitsToSample % 4)) % 4;
+         result <<= 64-sampledBits + shifts;
+//printf("adjusted to the left: %" PRIx64 "\n", result);
+
 
          uint64_t mask = 0;
          for (int i=0; i< shifts; i++) {
@@ -531,10 +537,10 @@ endSampling:
       } else if (base == 3) {
           maxDigit = '7';
       } 
-
+//printf("*** GetHelper::readB123()\n");
       result = 0;
 //printf("GetHelper::readB123: maxDigit=%c base=%d nbrBitsToSample = %d width=%d\n",
- //     maxDigit, base, nbrOfBitsToSample,getRemainingWidth());
+//      maxDigit, base, nbrOfBitsToSample,getRemainingWidth());
           
       if (skipSpaces() == 0) {
          do {

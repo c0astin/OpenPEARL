@@ -65,7 +65,7 @@ namespace pearlrt {
       double sec;
       int c1;
       double timeValue;
-      // 0123456789012345678901234567890123
+      //                0123456789012345678901234567890123
       char logText[] = "illegal T-format field (at: xxxxx)";
       int setCharsAt = 28;
       int charsToSet = 5;
@@ -80,6 +80,7 @@ namespace pearlrt {
          Log::debug("fromT: width < 0");
          throw theClockFormatSignal;
       }
+//printf("w=%d d= %d\n", width, decimals);
 
       GetHelper helper(w, &source);
       helper.setDelimiters(GetHelper::EndOfLine);
@@ -99,8 +100,9 @@ namespace pearlrt {
                } else {
                   // read seconds
                   width = helper.getRemainingWidth();
+//printf("h=%d min = %d\n", hours, min);
 
-                  if (helper.readSeconds(&sec, decimals) > 0) {
+                  if (helper.readSeconds(&sec) > 0) {
                      if (sec < 60) {
                         timeValue = sec;
                         hours %= 24;

@@ -168,10 +168,9 @@ namespace pearlrt {
        If no legal numerical value was found an error is returned.
 
        \param x pointer to the double value for the read data
-       \param d number of decimals
        \returns number of treated digits (>0 on normal execution)
       */
-      int readSeconds(double * x, const int d);
+      int readSeconds(double * x);
 
       /**
       read given string pattern

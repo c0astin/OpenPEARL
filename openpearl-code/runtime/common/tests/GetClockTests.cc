@@ -54,7 +54,7 @@ This program checks whether the Clock values are read as the expected.
 using namespace std;
 
 TEST(GetClock, conversions) {
-   //                             12345678901234567890
+   //                            12345678901234567890
    pearlrt::Character<20> d(20, "  12:10:21         X");
    pearlrt::RefCharacter rc;
    rc.setWork(d);
@@ -63,31 +63,36 @@ TEST(GetClock, conversions) {
    pearlrt::GetClock::fromT(c, 19, 0, source);
    // stops at right position?
    source.rewind();
+   //                            12345678901234567890
    d = (pearlrt::Character<20>)("  12:10:21.1234    X");
    ASSERT_EQ(pearlrt::GetClock::fromT(c, 19, 0, source), 0);
    source.rewind();
    d = (pearlrt::Character<20>)("  12:10:21.1234    X");
    ASSERT_THROW(pearlrt::GetClock::fromT(c, 20, 0, source),
              pearlrt::ClockValueSignal);
-   // cal hours mod 24?
+   // calculate hours mod 24?
    source.rewind();
    //                            12345678901234567890
    d = (pearlrt::Character<20>)("   25:10:21.1234   X");
    ASSERT_EQ(pearlrt::GetClock::fromT(c, 19, 0, source), 0);
-   //                              12345678901234567890
+   //                            12345678901234567890
    d = (pearlrt::Character<20>)("    1:10:21.1234   X");
    source.rewind();
    ASSERT_EQ(pearlrt::GetClock::fromT(c2, 19, 0, source), 0);
    ASSERT_TRUE((c == c2).getBoolean());
-   d = (pearlrt::Character<20>)("    1:10:211234    X");
+// no implicit decimal point 
+//   //                            12345678901234567890
+//   d = (pearlrt::Character<20>)("    1:10:211234    X");
+//   source.rewind();
+//   ASSERT_EQ(pearlrt::GetClock::fromT(c2, 19, 4, source), 0);
+//   ASSERT_TRUE((c == c2).getBoolean());
    source.rewind();
-   ASSERT_EQ(pearlrt::GetClock::fromT(c2, 19, 4, source), 0);
-   ASSERT_TRUE((c == c2).getBoolean());
-   source.rewind();
+   //                            12345678901234567890
    d = (pearlrt::Character<20>)("  12:60:21.1234    X");
    ASSERT_THROW(pearlrt::GetClock::fromT(c, 19, 0, source),
              pearlrt::ClockValueSignal);
    source.rewind();
+   //                            12345678901234567890
    d = (pearlrt::Character<20>)("  12:10:60.1234    X");
    ASSERT_THROW(pearlrt::GetClock::fromT(c, 19, 0, source),
              pearlrt::ClockValueSignal);
@@ -131,7 +136,7 @@ TEST(GetClock, conversions) {
    //ASSERT_EQ(c , pearlrt::Clock(((12*60+10)*60)+21) );
    ASSERT_TRUE((c2 == pearlrt::Clock(((3 * 60 + 11) * 60) + 22)).getBoolean());
    // test EOR behavior
-   //                            12345678901234567890
+   //                        12345678901234567890
    pearlrt::Character<8> d8("14:09:21");
    rc.setWork(d8);
    source.rewind();

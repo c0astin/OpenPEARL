@@ -49,7 +49,7 @@
 #include "PutCharacter.h"
 #include "GetCharacter.h"
 #include "PutBitString.h"
-#include "GetBitString.h"
+//#include "GetBitString.h"
 #include "IOJob.h"
 
 namespace pearlrt {

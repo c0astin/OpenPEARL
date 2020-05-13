@@ -55,8 +55,8 @@ CXX_COMMON = \
 	RefCharSink.cc RefCharSource.cc \
 	SystemDationNBSource.cc SystemDationNBSink.cc \
 	PutClock.cc GetClock.cc \
-	GetBitString.cc \
 	PutBitString.cc \
+	GetBitString.cc \
 	GetHelper.cc PutHelper.cc \
 	TaskWhenLinks.cc \
 	TaskCommon.cc \
@@ -113,7 +113,7 @@ HDR_COMMON = $(CXX_COMMON:%.cc=%.h) \
 	Device.h UserDation.h \
 	PutCharacter.h \
 	Float.h \
-	Ref.h 
+	Ref.h  RefArray.h
 
 
 ifeq ($(CONFIG_CANSUPPORT),y)
