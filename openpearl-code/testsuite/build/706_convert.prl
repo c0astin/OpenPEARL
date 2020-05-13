@@ -2567,6 +2567,64 @@ convertFromT: PROC;
      TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
   FIN;
 
+  ! happy day, ignore decimals
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '01:02:03.45       ';
+  CONVERT data FROM buffer BY RST(error),T(11,0);
+  expect = 1:2:3.45;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! happy day  skip training spaces
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '01:02:03.45       ';
+  CONVERT data FROM buffer BY RST(error),T(14,2);
+  expect = 1:2:3.45;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! happy day -- ignore decimals and skip trailing spaces
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = '01:02:03.45       ';
+  CONVERT data FROM buffer BY RST(error),T(14,0);
+  expect = 1:2:3.45;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF data NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',data,''''
+     TO stdout BY A,F(3),X,A,T(15,6),A,T(15,6),A,SKIP;
+  FIN;
+
+  ! happy day, ignore decimals
+  !         12345678901234567890123456
+  ! happy day, ignore decimals
+  !         12345678901234567890123456
   ! happy day
   !         12345678901234567890123456
   testNbr = testNbr + 1;
@@ -3083,16 +3141,22 @@ convertFromB: PROC;
      TO stdout BY A,F(3),X,A,B4(1),A,B4(1),A,SKIP;
   FIN;
 
-  ! error bit string too large 
+  ! ok, shift bits to left
   !         12345678901234567890123456
   testNbr = testNbr + 1;
   buffer = ' 12       ';
   CONVERT b6 FROM buffer BY RST(error),B4(4);
+  expect = '48'B4;
 
-  IF error NE 409 THEN
+  IF error NE 0 THEN
      failed = failed + 1;
-     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
      TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b6 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b6,''''
+     TO stdout BY A,F(3),X,A,B4(2),A,B4(2),A,SKIP;
   FIN;
 
   ! ok, trailing zero on input discarded
@@ -3100,11 +3164,11 @@ convertFromB: PROC;
   testNbr = testNbr + 1;
   buffer = ' 14       ';
   CONVERT b6 FROM buffer BY RST(error),B4(4);
-  expect = '000101'B1;
+  expect = '010100'B1;
 
   IF error NE 0 THEN
      failed = failed + 1;
-     PUT errorText,testNbr,' expected RST 409 -- got', error 
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
      TO stdout BY A,F(3),A,F(6),SKIP;
   FIN;
   IF b6 NE expect THEN
