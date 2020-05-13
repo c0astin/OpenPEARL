@@ -958,13 +958,13 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
           
           if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
             Integer precision = ((TypeFixed) op2.getType()).getPrecision();
-            res = new ASTAttribute(new TypeFixed(precision), op1.isReadOnly() && op2.isReadOnly());
+            res = new ASTAttribute(new TypeFixed(precision), isReadOnly);
             m_ast.put(ctx, res);
 
             Log.debug("ExpressionTypeVisitor: FitExpression: rule#1");
           } else if (type1 instanceof TypeFloat && type2 instanceof TypeFloat) {
             Integer precision = ((TypeFloat) op2.getType()).getPrecision();
-            res = new ASTAttribute(new TypeFloat(precision), op1.isReadOnly() && op2.isReadOnly());
+            res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
             m_ast.put(ctx, res);
 
             Log.debug("ExpressionTypeVisitor: FitExpression: rule#2");
@@ -1041,7 +1041,6 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitExpExpression(SmallPearlParser.ExpExpressionContext ctx) {
         ASTAttribute op;
-        ASTAttribute res;
 
         Log.debug("ExpressionTypeVisitor:visitExpExpression:ctx" + CommonUtils.printContext(ctx));
 
@@ -3118,8 +3117,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     public Void visitName(SmallPearlParser.NameContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitName:ctx=" + CommonUtils.printContext(ctx));
         Log.debug("ExpressionTypeVisitor:visitName:id=" + ctx.ID().toString());
-String s= ctx.getText();
+        //String s= ctx.getText();
         m_nameDepth =0 ;
+       // System.out.println("ctx: "+ctx.getText());          
         
         ErrorStack.enter(ctx,ctx.ID().toString());
 //System.out.println("visitName "+ctx.getText());
@@ -3309,18 +3309,21 @@ String s = ctx.getText();
                 }
             }
         } else if (m_type instanceof TypeStructure) {
-            String s = ctx.ID().getText();
-            /*
-            StructureComponent component = ((TypeStructure) m_type).lookup(ctx.ID().getText());
+          if (ctx.name()!= null) {
 
+            String s = ctx.name().ID().getText();
+            //StructureComponent component = ((TypeStructure) m_type).lookup(ctx.name().getText());
+            StructureComponent component = ((TypeStructure) m_type).lookup(s);
+            
             if (component == null) {
                 ErrorStack.add("unknown struct component");
                 return null; // abort type resolving
             }
 
             m_type = component.m_type;
-            */
+          
             reVisitName(ctx.name());
+          }
         }
 
         return null;
