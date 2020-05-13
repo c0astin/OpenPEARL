@@ -27,6 +27,9 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef REF_H_INCLUDED
+#define REF_H_INCLUDED
+
 #include "Signals.h"
 #include "Log.h"
 
@@ -86,6 +89,14 @@ namespace pearlrt {
       \param pValue the variable which should by adressed
                      by this REF
       */
+
+      Ref(C& pValue) : x(&pValue) {}
+
+      /**
+      ctor for REF variable declaration with preset
+      \param pValue the variable which should by adressed
+                     by this REF
+      */
       Ref(C* pValue) : x(pValue) {}
 
       /**
@@ -116,7 +127,26 @@ namespace pearlrt {
         x = &rhs;
       }
 
+      /**
+      set reference to NIL
+
+      \param rhs the new object to point to
+      */
+      void operator=( Ref<char> &rhs) {
+        x = (C*)0;
+      }
+
+      /**
+      get the reference
+
+      \returns the current reference value as pointer
+      */
+      C* get() {
+        return x;
+      }
+
    };
    /** @} */
 }
+#endif
 
