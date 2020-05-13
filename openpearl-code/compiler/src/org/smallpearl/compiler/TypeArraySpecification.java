@@ -27,23 +27,36 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.smallpearl.compiler;
 
+package org.smallpearl.compiler;
 
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
-public class TypeReference extends TypeDefinition {
-    private TypeDefinition m_baseType;
+/**
+this type is used for arrays of REF variables. It could also be used in the formatParamters
 
-    TypeReference() {
-        super("REF");
+*/
+public class TypeArraySpecification extends TypeDefinition {
+    private TypeDefinition m_baseType;
+    private int m_dimensions;
+
+
+    public TypeArraySpecification() {
+        super("ARRAY");
         this.m_baseType = null;
+        this.m_dimensions = 0;
     }
 
-    TypeReference(TypeDefinition type) {
-        super("REF");
+    public TypeArraySpecification(TypeDefinition type, int dimensions) {
+        super("ARRAY");
         this.m_baseType = type;
+        this.m_dimensions = dimensions;
+    }
+
+    public Void setDimension(int dimension) {
+        m_dimensions = dimension;
+        return null;
     }
 
     public Void setBaseType(TypeDefinition type) {
@@ -55,33 +68,37 @@ public class TypeReference extends TypeDefinition {
         return this.m_baseType;
     }
 
-    public String toString() {
-        return this.getName() + " " + this.m_baseType;
+    public int getNoOfDimensions() {
+        return m_dimensions;
     }
+
+
+
+
+    public String toString() {
+      String s = this.getName()+"(";
+      for (int i=0; i<m_dimensions-1; i++) {
+        s+=",";
+      }
+      s += ") "+this.getBaseType();
+      return s;
+    }
+    
+    public ST toST(STGroup group) {
+      ST st = group.getInstanceOf("array_specification_type");
+      st.add("BaseType", m_baseType.toST(group));
+      return st;
+  }
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof TypeReference)) {
+        if (!(other instanceof TypeArraySpecification)) {
             return false;
         }
 
-        TypeReference that = (TypeReference) other;
+        TypeArraySpecification that = (TypeArraySpecification) other;
 
         // Custom equality check here.
         return this.m_baseType.equals(that.getBaseType());
     }
-
-    public ST toST(STGroup group) {
-      if (m_baseType instanceof TypeArraySpecification) {
-        ST st = group.getInstanceOf("TypeReferenceArray");
-        
-        st.add("basetype", ((TypeArraySpecification)m_baseType).getBaseType().toST(group));
-        return st;
-      } else {
-        ST st = group.getInstanceOf("TypeReferenceSimpleType");
-        st.add("BaseType", m_baseType.toST(group));
-        return st;
-      }
-    }
-
 }

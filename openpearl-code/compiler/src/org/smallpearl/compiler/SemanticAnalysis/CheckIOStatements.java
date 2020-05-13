@@ -418,8 +418,9 @@ SmallPearlVisitor<Void> {
 		boolean hasCAN = false;
 		boolean hasPRM = false;
 
-
-		lookupDation(ctx.ID().toString());
+		visitDationName(ctx.dationName());
+		
+	//	lookupDation(ctx.dationName().name().getText().toString());
 
 		if (ctx.open_parameterlist() != null && ctx.open_parameterlist().open_parameter() != null) {
 
@@ -446,11 +447,13 @@ SmallPearlVisitor<Void> {
 					 both information should be places as ASTAttributes
 					 */
 				}
-				if (ctx.open_parameterlist().open_parameter(i).open_close_RST() != null) {
-					Open_close_RSTContext c = (Open_close_RSTContext)(ctx.open_parameterlist().open_parameter(i).open_close_RST() );
+				if (ctx.open_parameterlist().open_parameter(i).openClosePositionRST() != null) {
+					OpenClosePositionRSTContext c = (OpenClosePositionRSTContext)(ctx.open_parameterlist().open_parameter(i).openClosePositionRST() );
 					if (hasRST) ErrorStack.warn("multiple RST attributes");
+					
+					ASTAttribute attr = m_ast.lookup(ctx.open_parameterlist().open_parameter(i).openClosePositionRST());
+					checkPrecision(ctx.open_parameterlist().open_parameter(i).openClosePositionRST());
 					hasRST=true;
-					CheckPrecision(c.ID().toString(), c);
 				}
 
 				if (ctx.open_parameterlist().open_parameter(i).open_parameter_old_new_any() != null ) {
@@ -512,16 +515,16 @@ SmallPearlVisitor<Void> {
 		boolean hasCAN = false;
 		boolean hasPRM = false;
 
-
-		lookupDation(ctx.ID().toString());
+        visitDationName(ctx.dationName());
+        
+		//lookupDation(ctx.dationName().name().toString());
 		if (ctx.close_parameterlist() != null && ctx.close_parameterlist().close_parameter() != null) {
 			for (int i=0; i<ctx.close_parameterlist().close_parameter().size(); i++) {
 
-				if (ctx.close_parameterlist().close_parameter(i).open_close_RST() != null) {
-					Open_close_RSTContext c = (Open_close_RSTContext)(ctx.close_parameterlist().close_parameter(i).open_close_RST());
+				if (ctx.close_parameterlist().close_parameter(i).openClosePositionRST() != null) {
+				  checkPrecision(ctx.close_parameterlist().close_parameter(i).openClosePositionRST());
 					if (hasRST) ErrorStack.warn("multiple RST attributes");
 					hasRST=true;
-					CheckPrecision(c.ID().toString(), c);
 				}
 
 
@@ -551,6 +554,34 @@ SmallPearlVisitor<Void> {
 	}
 
 
+
+
+
+    @Override
+    public Void visitDationName(SmallPearlParser.DationNameContext ctx) {
+      ASTAttribute attr = m_ast.lookup(ctx.name());
+      TypeDefinition t= attr.getType();
+      TypeDation td=null;
+      if (t instanceof TypeReference) {
+        t =((TypeReference)t).getBaseType();
+      }
+      if (t instanceof TypeArraySpecification) {
+        if (ctx.name().listOfExpression()!= null) {
+          t =((TypeArraySpecification)t).getBaseType();
+        }
+      }
+      if (t instanceof TypeDation) {
+        td = (TypeDation)t;
+      } else {
+        ErrorStack.addInternal(ctx,null,"CheckIOStatements::visitDationName: type mismatch ("
+            +attr.getType()+")");
+      }
+      m_typeDation = td;
+      
+      return null;
+    }
+	
+
 	@Override
 	public Void visitPutStatement(SmallPearlParser.PutStatementContext ctx) {
 
@@ -563,17 +594,14 @@ SmallPearlVisitor<Void> {
 	  ErrorStack.enter(ctx, "PUT");
 	  m_directionInput = false;
 	  
-	 
-	  m_typeDation = lookupDation(ctx.dationName());
-	  
-      // enshure that the dation id of type ALPHIC
+	  visit(ctx.dationName());
+	   
+      // enshure that the dation is of type ALPHIC
 	  if (!m_typeDation.isAlphic()) {
 	    ErrorStack.enter(ctx.dationName());
 	    ErrorStack.add("need ALPHIC dation");
 	    ErrorStack.leave();
 	  }
-
-	  visitChildren(ctx);
 
 	  checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
 
@@ -595,9 +623,9 @@ SmallPearlVisitor<Void> {
         ErrorStack.enter(ctx, "GET");
         m_directionInput = true;
 
-        m_typeDation = lookupDation(ctx.dationName());
+        visit(ctx.dationName());
 
-        // enshure that the dation id of type ALPHIC
+        // enshure that the dation is of type ALPHIC
         if (!m_typeDation.isAlphic()) {
             ErrorStack.enter(ctx.dationName());
             ErrorStack.add("need ALPHIC dation");
@@ -702,7 +730,7 @@ SmallPearlVisitor<Void> {
         ErrorStack.enter(ctx, "READ");
         m_directionInput = true;
 
-        m_typeDation = lookupDation(ctx.dationName());
+        visit(ctx.dationName());
 
         if (m_typeDation.isAlphic() || m_typeDation.isBasic()) {
             ErrorStack.enter(ctx.dationName());
@@ -732,7 +760,7 @@ SmallPearlVisitor<Void> {
         ErrorStack.enter(ctx, "WRITE");
         m_directionInput = false;
 
-        m_typeDation = lookupDation(ctx.dationName());
+        visit(ctx.dationName());
 
         if (m_typeDation.isAlphic() || m_typeDation.isBasic()) {
             ErrorStack.enter(ctx.dationName());
@@ -805,7 +833,7 @@ SmallPearlVisitor<Void> {
               }
             }
             
-            if (pc.positionRST() == null) {
+            if (pc.openClosePositionRST() == null) {
               nbrOfPositionsAlreadyFound++;
             }
           }
@@ -823,8 +851,9 @@ SmallPearlVisitor<Void> {
         // enshure that the dation id of type BASIC
         ErrorStack.enter(ctx, "TAKE");
         m_directionInput = true;
-
-        m_typeDation = lookupDation(ctx.dationName());
+        
+        visit(ctx.dationName());
+        
         if (!m_typeDation.isBasic()) {
             ErrorStack.enter(ctx.dationName());
             ErrorStack.add("need BASIC dation");
@@ -861,7 +890,7 @@ SmallPearlVisitor<Void> {
         ErrorStack.enter(ctx, "SEND");
         m_directionInput = false;
 
-        m_typeDation = lookupDation(ctx.dationName());
+        visit(ctx.dationName());
 
         if (!m_typeDation.isBasic()) {
             ErrorStack.add("need BASIC dation");
@@ -887,7 +916,7 @@ SmallPearlVisitor<Void> {
           ErrorStack.enter(listOfFormatPositions.formatPosition(i));
           if (listOfFormatPositions.formatPosition(i) instanceof FactorPositionContext) {
             FactorPositionContext fpc = (FactorPositionContext)(listOfFormatPositions.formatPosition(i));
-            if (fpc.factor() != null || fpc.position().positionRST() == null) {
+            if (fpc.factor() != null || fpc.position().openClosePositionRST() == null) {
               ErrorStack.add("only RST allowed once");
             }
           }
@@ -978,6 +1007,9 @@ SmallPearlVisitor<Void> {
 	          } else {
 
 	            while (!fmtPos.isEmpty() && fmtPos.get(fmtPosIndex) instanceof PositionContext) {
+
+	              visit(fmtPos.get(fmtPosIndex));
+	              
 	              fmtPosIndex ++;
 
 	              if (fmtPosIndex == fmtPos.size()) {
@@ -1017,6 +1049,11 @@ SmallPearlVisitor<Void> {
     // LIST matches all types
     if (formatCtx.getChild(0) instanceof ListFormatContext) {
       return true;
+    }
+    
+    // implicit dereference
+    if (td instanceof TypeReference) {
+      td = ((TypeReference)td).getBaseType();
     }
     // treat only simple types
     // F-format
@@ -1113,12 +1150,12 @@ SmallPearlVisitor<Void> {
   
   
 	@Override
-	public Void visitPositionRST(SmallPearlParser.PositionRSTContext ctx) {
+	public Void visitOpenClosePositionRST(SmallPearlParser.OpenClosePositionRSTContext ctx) {
 		if (m_debug) {
-			System.out.println( "Semantic: Check IOStatements: visitPositionRST");
+			System.out.println( "Semantic: Check IOStatements: visitOpenClosePositionRST");
 		}
 
-		CheckPrecision(ctx.ID().getText(), ctx);
+		checkPrecision(ctx);
 		return null;
 	}
 
@@ -1917,8 +1954,8 @@ SmallPearlVisitor<Void> {
 			enshureTypeFixed(ctx.expression());
 		}
 
-		enshureDimensionsFit(ctx,2);
-
+	    enshureDimensionsFit(ctx,2);
+		
 		ErrorStack.leave();
 		return null;
 	}
@@ -1936,6 +1973,7 @@ SmallPearlVisitor<Void> {
 		if (ctx.expression() != null) {
 			enshureTypeFixed(ctx.expression());
 		}
+
 		enshureDimensionsFit(ctx,3);
 
 		ErrorStack.leave();
@@ -1955,8 +1993,9 @@ SmallPearlVisitor<Void> {
 		for (int i=0; i< ctx.expression().size(); i++) {
 			enshureTypeFixed(ctx.expression(i));
 		}
+	
+        enshureDimensionsFit(ctx,ctx.expression().size());
 
-		enshureDimensionsFit(ctx,ctx.expression().size());
 
 		ErrorStack.leave();
 		return null;
@@ -1978,7 +2017,9 @@ SmallPearlVisitor<Void> {
 			enshureTypeFixed(ctx.expression(i));
 			enshureGreaterZero(ctx.expression(i));
 		}
-		enshureDimensionsFit(ctx,ctx.expression().size());
+
+	     enshureDimensionsFit(ctx,ctx.expression().size());
+
 
 		ErrorStack.leave();
 		return null;
@@ -1999,8 +2040,10 @@ SmallPearlVisitor<Void> {
 		for (int i=0; i< ctx.ID().size(); i++) {
 			CheckFixedVariable(ctx.ID(i).getText(), ctx);
 		}
-		enshureDimensionsFit(ctx,ctx.ID().size());
-
+		
+	      
+	    enshureDimensionsFit(ctx,ctx.ID().size());
+	  
 		ErrorStack.leave();
 		return null;
 	}
@@ -2094,7 +2137,20 @@ SmallPearlVisitor<Void> {
 		ErrorStack.leave();	
 		return null;
 	}
-
+   
+	private void checkPrecision(OpenClosePositionRSTContext ctx) {
+	  ASTAttribute attr = m_ast.lookup(ctx.name());
+	  if (attr.getType() instanceof TypeFixed) {
+	    TypeFixed type = (TypeFixed)(attr.getType());
+	    if (((TypeFixed)(attr.getType())).getPrecision()< 15) {
+	      ErrorStack.add("must be at least FIXED(15) -- got FIXED("+type.getPrecision()+")");
+	    }
+	  } else {
+        ErrorStack.add("variable must be FIXED");
+	  }
+	  return;
+	}
+	
 	private Void CheckPrecision(String id, ParserRuleContext ctx) {
 
 		SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
@@ -2161,22 +2217,25 @@ SmallPearlVisitor<Void> {
 	}
 
 	private void enshureDirectDation(RuleContext ctx) {
+	  if (m_typeDation.hasAccessAttributes()) {
 		if (!m_typeDation.isDirect()) {
 			ErrorStack.add("format applies only on DIRECT dations");
 		}
+	  }
 	}
 
-	private void allowBackwardPositioning(RuleContext ctx) {
-		if (!m_typeDation.isDirect() && !m_typeDation.isForback()){
-			ErrorStack.add("backward positioning need DIRECT or FORBACK");
-		}
-	}
+//	private void allowBackwardPositioning(RuleContext ctx) {
+//		if (!m_typeDation.isDirect() && !m_typeDation.isForback()){
+//			ErrorStack.add("backward positioning need DIRECT or FORBACK");
+//		}
+//	}
 
 	private void enshureDimensionsFit(RuleContext ctx, int nbr) {
-
+      if (m_typeDation.hasTypology()) {
 		if (m_typeDation.getNumberOfDimensions() < nbr) {
 			ErrorStack.add("too many dimensions used (dation provides "+m_typeDation.getNumberOfDimensions()+")"); 
 		}
+      }
 	}
 
 
@@ -2224,31 +2283,31 @@ SmallPearlVisitor<Void> {
 		}
 	}
 
-	/**
-	 * check if the given name is defined and of type CHAR
-	 * return the element from thesymbol table
-	 * or return null
-	 * 
-	 * @param convertString
-	 * @return null, if no symbol was found, or symbol is not of typeChar<br>
-	 *    reference to the TypeChar for further analysis
-	 */
-	private TypeChar  enshureCharacterString(String convertString) {
-		SymbolTableEntry se = m_currentSymbolTable.lookup(convertString);
-		if (se == null) {
-			ErrorStack.add("'" + convertString+"' is not defined");
-		} else if ( (se instanceof VariableEntry) ) {
-			if (((VariableEntry)se).getType() instanceof TypeChar) {
-				// maybe we need further details about the variable 
-				// like INV
-				TypeChar c = (TypeChar)((VariableEntry)se).getType();
-				return c;
-			}
-		} else {
-			ErrorStack.add("'"+ convertString + "' must be CHAR -- has type "+ (((VariableEntry)se).getType().toString()));
-		}
-		return null;
-	}
+//	/**
+//	 * check if the given name is defined and of type CHAR
+//	 * return the element from thesymbol table
+//	 * or return null
+//	 * 
+//	 * @param convertString
+//	 * @return null, if no symbol was found, or symbol is not of typeChar<br>
+//	 *    reference to the TypeChar for further analysis
+//	 */
+//	private TypeChar  enshureCharacterString(String convertString) {
+//		SymbolTableEntry se = m_currentSymbolTable.lookup(convertString);
+//		if (se == null) {
+//			ErrorStack.add("'" + convertString+"' is not defined");
+//		} else if ( (se instanceof VariableEntry) ) {
+//			if (((VariableEntry)se).getType() instanceof TypeChar) {
+//				// maybe we need further details about the variable 
+//				// like INV
+//				TypeChar c = (TypeChar)((VariableEntry)se).getType();
+//				return c;
+//			}
+//		} else {
+//			ErrorStack.add("'"+ convertString + "' must be CHAR -- has type "+ (((VariableEntry)se).getType().toString()));
+//		}
+//		return null;
+//	}
 
 	private TypeDation lookupDation(String userDation) {
 		SymbolTableEntry se = m_currentSymbolTable.lookup(userDation);
@@ -2277,88 +2336,90 @@ SmallPearlVisitor<Void> {
 	}
 
 
-	private TypeDation lookupDation(RuleContext ctx) {
-		String userDation = "";
-		boolean isConvert = false;
-
-		// walk grammar up to put,get,read,write,take,send,convert_statement
-		RuleContext p= (RuleContext)ctx;
-		while ( p != null ) {
-			p=p.parent;
-			if (p instanceof SmallPearlParser.PutStatementContext) {
-				SmallPearlParser.PutStatementContext stmnt = (SmallPearlParser.PutStatementContext) p;
-				userDation = stmnt.dationName().ID().toString();
-				p=null;
-			}
-			if (p instanceof SmallPearlParser.GetStatementContext) {
-				SmallPearlParser.GetStatementContext stmnt = (SmallPearlParser.GetStatementContext) p;
-				userDation = stmnt.dationName().ID().toString();
-				p=null;
-			}
-			if (p instanceof SmallPearlParser.ConvertToStatementContext) {
-				SmallPearlParser.ConvertToStatementContext stmnt = (SmallPearlParser.ConvertToStatementContext) p;
-				userDation = stmnt.name().getText();  // name of the string
-				isConvert = true;
-				p=null;
-			}
-			if (p instanceof SmallPearlParser.ConvertFromStatementContext) {
-				SmallPearlParser.ConvertFromStatementContext stmnt = (SmallPearlParser.ConvertFromStatementContext) p;
-				userDation = stmnt.expression().getText();   // name of the string
-				isConvert = true;
-				p=null;
-			}
-			if (p instanceof SmallPearlParser.ReadStatementContext) {
-				SmallPearlParser.ReadStatementContext stmnt = (SmallPearlParser.ReadStatementContext) p;
-				userDation = stmnt.dationName().ID().toString();
-				p=null;
-			}
-			if (p instanceof SmallPearlParser.WriteStatementContext) {
-				SmallPearlParser.WriteStatementContext stmnt = (SmallPearlParser.WriteStatementContext) p;
-				userDation = stmnt.dationName().ID().toString();
-				p=null;
-			}
-			if (p instanceof SmallPearlParser.TakeStatementContext) {
-				SmallPearlParser.TakeStatementContext stmnt = (SmallPearlParser.TakeStatementContext) p;
-				userDation = stmnt.dationName().ID().toString();
-				p=null;
-			}
-			if (p instanceof SmallPearlParser.SendStatementContext) {
-				SmallPearlParser.SendStatementContext stmnt = (SmallPearlParser.SendStatementContext) p;
-				userDation = stmnt.dationName().ID().toString();
-				p=null;
-			}
-		}
-
-		if (userDation == null) {
-			ErrorStack.add("no userdation found");
-		} else {
-			TypeDation sd = lookupDation(userDation);
-			return sd;
-		}
-		return null;
-	}
-
-	private String lookupTypeOfExpressionOrConstant(ExpressionContext ctx) {
-
-		ASTAttribute attr = m_ast.lookup(ctx);
-		boolean isArray = false;
-
-		if (attr != null) {
-			String s = attr.getType().toString();
-
-			if (attr.isReadOnly()) {
-			} else {
-				VariableEntry ve = attr.getVariable();
-
-				if (ve != null && ve.getType() instanceof TypeArray) {
-					isArray = true;
-					s = ve.getType().toString();
-				}
-			}
-			return s;
-		}
-		return null;
-	}
+//	private TypeDation lookupDation(NameContext ctx) {
+//		String userDation = "";
+//		boolean isConvert = false;
+//
+//		// walk grammar up to put,get,read,write,take,send,convert_statement
+//		RuleContext p= (RuleContext)ctx;
+//		while ( p != null ) {
+//			p=p.parent;
+//			if (p instanceof SmallPearlParser.PutStatementContext) {
+//				SmallPearlParser.PutStatementContext stmnt = (SmallPearlParser.PutStatementContext) p;
+//				ASTAttribute attr = m_ast.lookup(stmnt.dationName());
+//				ASTAttribute a1 =  m_ast.lookup(stmnt.dationName().name());
+//				userDation = stmnt.dationName().name().toString();
+//				p=null;
+//			}
+//			if (p instanceof SmallPearlParser.GetStatementContext) {
+//				SmallPearlParser.GetStatementContext stmnt = (SmallPearlParser.GetStatementContext) p;
+//				userDation = stmnt.dationName().name().toString();
+//				p=null;
+//			}
+//			if (p instanceof SmallPearlParser.ConvertToStatementContext) {
+//				SmallPearlParser.ConvertToStatementContext stmnt = (SmallPearlParser.ConvertToStatementContext) p;
+//				userDation = stmnt.name().getText();  // name of the string
+//				isConvert = true;
+//				p=null;
+//			}
+//			if (p instanceof SmallPearlParser.ConvertFromStatementContext) {
+//				SmallPearlParser.ConvertFromStatementContext stmnt = (SmallPearlParser.ConvertFromStatementContext) p;
+//				userDation = stmnt.expression().getText();   // name of the string
+//				isConvert = true;
+//				p=null;
+//			}
+//			if (p instanceof SmallPearlParser.ReadStatementContext) {
+//				SmallPearlParser.ReadStatementContext stmnt = (SmallPearlParser.ReadStatementContext) p;
+//				userDation = stmnt.dationName().name().toString();
+//				p=null;
+//			}
+//			if (p instanceof SmallPearlParser.WriteStatementContext) {
+//				SmallPearlParser.WriteStatementContext stmnt = (SmallPearlParser.WriteStatementContext) p;
+//				userDation = stmnt.dationName().name().toString();
+//				p=null;
+//			}
+//			if (p instanceof SmallPearlParser.TakeStatementContext) {
+//				SmallPearlParser.TakeStatementContext stmnt = (SmallPearlParser.TakeStatementContext) p;
+//				userDation = stmnt.dationName().name().toString();
+//				p=null;
+//			}
+//			if (p instanceof SmallPearlParser.SendStatementContext) {
+//				SmallPearlParser.SendStatementContext stmnt = (SmallPearlParser.SendStatementContext) p;
+//				userDation = stmnt.dationName().name().toString();
+//				p=null;
+//			}
+//		}
+//
+//		if (userDation == null) {
+//			ErrorStack.add("no userdation found");
+//		} else {
+//			TypeDation sd = lookupDation(userDation);
+//			return sd;
+//		}
+//		return null;
+//	}
+//
+//	private String lookupTypeOfExpressionOrConstant(ExpressionContext ctx) {
+//
+//		ASTAttribute attr = m_ast.lookup(ctx);
+//		boolean isArray = false;
+//
+//		if (attr != null) {
+//			String s = attr.getType().toString();
+//
+//			if (attr.isReadOnly()) {
+//			} else {
+//				VariableEntry ve = attr.getVariable();
+//
+//				if (ve != null && ve.getType() instanceof TypeArray) {
+//					isArray = true;
+//					s = ve.getType().toString();
+//				}
+//			}
+//			return s;
+//		}
+//		return null;
+//	}
 
 	/**
 	 * parse a FactorFormatPositionContext and deliver a List of formats/positions
@@ -2427,7 +2488,7 @@ SmallPearlVisitor<Void> {
             m_formatListAborted = true;
             return fmtPos;
           }
-          List l = getFormatOrPositions(ctx.listOfFormatPositions());
+          List<ParserRuleContext>l = getFormatOrPositions(ctx.listOfFormatPositions());
           for (long j=0; j<repetitions; j++) {
             for (int k = 0; k<l.size(); k++) {
                fmtPos.add((ParserRuleContext)(l.get(k)));
@@ -2448,10 +2509,10 @@ SmallPearlVisitor<Void> {
           ASTAttribute attr = m_ast.lookup(factor.expression());
           if (attr.m_constant != null) {
             value = attr.getConstantFixedValue().getValue();
-          } else if (attr.isReadOnly() && attr.m_variable != null) {
+          } else if (attr.isReadOnly() && attr.getVariable() != null) {
             ErrorStack.enter(factor);
 
-            VariableEntry ve = attr.m_variable;
+            VariableEntry ve = attr.getVariable();
             if (ve.getType() instanceof TypeArray) {
               ErrorStack.warn("treatment of ARRAY components missing");
             } else if (ve.getType() instanceof TypeStructure) {

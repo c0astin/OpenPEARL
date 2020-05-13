@@ -73,7 +73,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     private ModuleEntry m_module;
     private AST m_ast = null;
 	private TypeDefinition m_typeOfReturns;
-	private TypeDefinition m_typeOfReturnExpression;
+	//private TypeDefinition m_typeOfReturnExpression;
 	
 	private ParseTreeProperty<SymbolTable> m_symboltablePerContext = null;
 
@@ -192,8 +192,8 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 		// reset the attribute before visitChildren()
 		// m_typeOfReturnExpression contains the type of the last RETURN statement
 		// in the procedure body
-		m_typeOfReturns = null;
-		m_typeOfReturnExpression = null;
+		m_typeOfReturns = procedureEntry.getResultType();
+//		m_typeOfReturnExpression = null;
 		
 		visitChildren(ctx);
 
@@ -220,20 +220,31 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 		return null;
 	}
     
-    @Override
-    public Void visitResultAttribute (SmallPearlParser.ResultAttributeContext ctx) {
-    	ErrorStack.enter(ctx.resultType(),"RETURNS");
-    	m_typeOfReturns = null;
-    	if (ctx.resultType().simpleType() != null) {
-        	m_typeOfReturns = CommonUtils.getTypeDefinitionForSimpleType(ctx.resultType().simpleType());
-    	} else if (ctx.resultType().typeReference() != null) {
-    		ErrorStack.add("type reference not supported ");
-    	} else if (ctx.resultType().ID() != null) {
-    		ErrorStack.add("TYPE not supported");
-    	}
-    	ErrorStack.leave();
-    	return null;
-    }
+
+//    obsolete - resultType is already in the symbol table
+//    @Override
+//    public Void visitResultAttribute (SmallPearlParser.ResultAttributeContext ctx) {
+//      	ErrorStack.enter(ctx.resultType(),"RETURNS");
+//    	m_typeOfReturns = null;
+//    	if (ctx.resultType().simpleType() != null) {
+//        	m_typeOfReturns = CommonUtils.getTypeDefinitionForSimpleType(ctx.resultType().simpleType());
+//    	} else if (ctx.resultType().typeReference() != null) {
+//    	  TypeDefinition baseType = CommonUtils.getBaseTypeForReferenceType(ctx.resultType().typeReference());
+//    	  if (ctx.resultType().typeReference().assignmentProtection()!= null) {
+//    	    baseType.setHasAssignmentProtection(true);
+//    	    m_typeOfReturns = baseType;
+//    	  }
+//    	  if (ctx.resultType().typeReference().virtualDimensionList() != null) {
+//    	    int dimensions =  ctx.resultType().typeReference().virtualDimensionList().commas().getChildCount();
+//    	    TypeArraySpecification array = new TypeArraySpecification(baseType,dimensions);
+//    	    m_typeOfReturns = array;
+//    	  }
+//    	} else if (ctx.resultType().ID() != null) {
+//    		ErrorStack.add("TYPE not supported");
+//    	}
+//    	ErrorStack.leave();
+//    	return null;
+//    }
     
     @Override
     public Void visitCallStatement(SmallPearlParser.CallStatementContext ctx) {
@@ -288,70 +299,79 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
         
         return null;
     }
+    
+    
     @Override 
     public Void visitReturnStatement(SmallPearlParser.ReturnStatementContext ctx) {
-    	RuleContext parent = ctx;
-    	ErrorStack.enter(ctx,"RETURN");
+      RuleContext parent = ctx;
+      ErrorStack.enter(ctx,"RETURN");
 
-    	while (!(parent instanceof ProcedureDeclarationContext) &&
-    			!(parent instanceof TaskDeclarationContext)) {
-    		parent = parent.parent;
-    	}
-    	if (parent instanceof TaskDeclarationContext) {
-    		ErrorStack.add("only allowed in PROCEDURE");
-    	} else {
 
-    		ResultAttributeContext resultAttribute = ((ProcedureDeclarationContext)parent).resultAttribute();
-    		if (resultAttribute == null && ctx.expression() != null) {
-    			ErrorStack.add("illegal without RETURNS in declaration");
-    		} else if (ctx.expression() != null) {
-    			// we have an expression at RETURN
-    			/*
-    			TypeDefinition resultType = null;
-    			if (resultAttribute.resultType().simpleType() != null) {
-    				resultType = CommonUtils.getTypeDefinitionForSimpleType(resultAttribute.resultType().simpleType());
-    			} else if (resultAttribute.resultType().typeReference() != null) {
-    				ErrorStack.add("typeReference not supported");
-    			} else if (resultAttribute.resultType().ID() != null) {
-    				ErrorStack.add("TYPE definitions not supported");
-    			}
-    			*/
-    			TypeDefinition exprType = m_ast.lookupType(ctx.expression());
+      if (m_typeOfReturns == null && ctx.expression() != null) {
+        ErrorStack.add("illegal without RETURNS in declaration");
+      } else if (ctx.expression() != null) {
+        // we have an expression at RETURN
+        TypeDefinition exprType = m_ast.lookupType(ctx.expression());
 
-    			// can be removed if all possible types are detected
-    			Boolean typeIsCompatible = true;
-    			if (m_typeOfReturns != null) {
-    				if (m_typeOfReturns instanceof TypeFixed && exprType instanceof TypeFixed) {
-    					if (((TypeFixed)m_typeOfReturns).getPrecision() < ((TypeFixed) exprType).getPrecision()) {
-    						typeIsCompatible = false;
-    					}
-    				} else if (m_typeOfReturns instanceof TypeFloat && exprType instanceof TypeFloat) {
-    					if (((TypeFloat)m_typeOfReturns).getPrecision() < ((TypeFloat) exprType).getPrecision()) {
-    						typeIsCompatible = false;
-    					}
-    				} else if (m_typeOfReturns instanceof TypeBit && exprType instanceof TypeBit) {
-    					if (((TypeBit)m_typeOfReturns).getPrecision() < ((TypeBit) exprType).getPrecision()) {
-    						typeIsCompatible = false;
-    					}
-    				} else if (m_typeOfReturns instanceof TypeChar && exprType instanceof TypeChar) {
-    					if (((TypeChar)m_typeOfReturns).getSize() < ((TypeChar) exprType).getSize()) {
-    						typeIsCompatible = false;
-    					}
-    				} else if (m_typeOfReturns instanceof TypeChar && exprType instanceof TypeVariableChar) { 
-    				  
-    				} else {
-    					typeIsCompatible = false;
-    				}
+        // can be removed if all possible types are detected
+        Boolean typeIsCompatible = true;
 
-    				if (!typeIsCompatible) {
-    					ErrorStack.add("expression does not fit to RETURN type: expected "+m_typeOfReturns.toString()+" -- got "+exprType.toString());
-    				}
-    				m_typeOfReturnExpression = exprType;
-    			}
-    		}
-    	}
-    	ErrorStack.leave();
-    	return null;
+        TypeDefinition tmpTypeOfResult = m_typeOfReturns;
+        TypeDefinition tmpExprType = exprType;
+
+        if (m_typeOfReturns != null) {
+          // check for implicit dereference /refernece possibilities
+          // --> base types must be compatible
+          if (tmpTypeOfResult instanceof TypeReference) {
+            tmpTypeOfResult = ((TypeReference)tmpTypeOfResult).getBaseType();
+          }
+          if (tmpExprType instanceof TypeReference) {
+            tmpExprType = ((TypeReference)tmpExprType).getBaseType();
+          }
+
+          // check compatibility of baseTypes
+          if (tmpTypeOfResult instanceof TypeFixed && tmpExprType instanceof TypeFixed) {
+            if (((TypeFixed)tmpTypeOfResult).getPrecision() < ((TypeFixed) tmpExprType).getPrecision()) {
+              typeIsCompatible = false;
+            }
+          } else if (tmpTypeOfResult instanceof TypeFloat && tmpExprType instanceof TypeFloat) {
+            if (((TypeFloat)tmpTypeOfResult).getPrecision() < ((TypeFloat) tmpExprType).getPrecision()) {
+              typeIsCompatible = false;
+            }
+          } else if (tmpTypeOfResult instanceof TypeBit && tmpExprType instanceof TypeBit) {
+            if (((TypeBit)tmpTypeOfResult).getPrecision() < ((TypeBit) tmpExprType).getPrecision()) {
+              typeIsCompatible = false;
+            }
+          } else if (tmpTypeOfResult instanceof TypeChar && tmpExprType instanceof TypeChar) {
+            if (((TypeChar)tmpTypeOfResult).getSize() < ((TypeChar) tmpExprType).getSize()) {
+              typeIsCompatible = false;
+            }
+          } else if (tmpTypeOfResult instanceof TypeChar && tmpExprType instanceof TypeVariableChar) { 
+            // this must be checked during runtime
+          } else {
+            if (!tmpTypeOfResult.equals(tmpExprType)) {
+              typeIsCompatible = false;
+            }
+          }
+
+          if (!typeIsCompatible) {
+            ErrorStack.add("expression does not fit to RETURN type: expected "+m_typeOfReturns.toString()+" -- got "+exprType.toString());
+          }
+          
+          if (m_typeOfReturns instanceof TypeReference) {
+             // check lifeCyle required
+            ASTAttribute attrRhs = m_ast.lookup(ctx.expression());
+            int level = attrRhs.getVariable().getLevel();
+            if (level >1) {
+              ErrorStack.add("life cycle of '"+attrRhs.getVariable().getName()+"' is too short");
+            }
+          }
+
+        }
+      }
+
+      ErrorStack.leave();
+      return null;
     }
 
 

@@ -29,10 +29,12 @@
 
 package org.smallpearl.compiler;
 
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 public class TypeBolt extends TypeDefinition {
 
-    TypeBolt() {
+    public TypeBolt() {
         super("BOLT");
     }
 
@@ -51,4 +53,10 @@ public class TypeBolt extends TypeDefinition {
         // Custom equality check here.
         return true;
     }
+    
+    public ST toST(STGroup group) {
+      ST st = group.getInstanceOf("bolt_type");
+      return st;
+  }
+
 }

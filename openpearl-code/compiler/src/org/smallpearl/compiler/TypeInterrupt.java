@@ -29,8 +29,11 @@
 
 package org.smallpearl.compiler;
 
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
+
 public class TypeInterrupt extends TypeDefinition {
-    TypeInterrupt() {
+    public TypeInterrupt() {
         super("INTERRUPT");
     }
 
@@ -49,5 +52,9 @@ public class TypeInterrupt extends TypeDefinition {
         // Custom equality check here.
         return true;
     }
+    public ST toST(STGroup group) {
+      ST st = group.getInstanceOf("interrupt_type");
+      return st;
+  }
 
 }

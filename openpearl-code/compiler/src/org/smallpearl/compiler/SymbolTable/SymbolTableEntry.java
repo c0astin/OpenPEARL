@@ -32,6 +32,7 @@ package org.smallpearl.compiler.SymbolTable;
 public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> {
 
     private String m_name;
+    private int m_level;
 
     SymbolTableEntry() {
         m_name = null;
@@ -72,5 +73,13 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
     @Override
     public int compareTo(SymbolTableEntry o) {
         return this.m_name.compareTo(o.m_name);
+    }
+
+    public int getLevel() {
+      return m_level;
+    }
+
+    public void setLevel(int level) {
+      this.m_level = level;
     }
 }

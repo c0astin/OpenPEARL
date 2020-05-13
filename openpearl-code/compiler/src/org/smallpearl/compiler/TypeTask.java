@@ -33,7 +33,7 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
 public class TypeTask extends TypeDefinition {
-    TypeTask() {
+    public TypeTask() {
         super("TASK");
     }
 

@@ -34,7 +34,7 @@ import org.stringtemplate.v4.STGroup;
 
 public class TypeSemaphore extends TypeDefinition {
 
-    TypeSemaphore() {
+    public TypeSemaphore() {
         super("SEMA");
     }
 

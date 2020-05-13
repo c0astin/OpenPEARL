@@ -29,59 +29,18 @@
 
 package org.smallpearl.compiler;
 
+public class ConstantNILReference extends ConstantValue {
 
-import org.stringtemplate.v4.ST;
-import org.stringtemplate.v4.STGroup;
-
-public class TypeReference extends TypeDefinition {
-    private TypeDefinition m_baseType;
-
-    TypeReference() {
-        super("REF");
-        this.m_baseType = null;
+    ConstantNILReference() {
     }
 
-    TypeReference(TypeDefinition type) {
-        super("REF");
-        this.m_baseType = type;
+/*
+    public String getBaseType() {
+        return "Fixed";
     }
-
-    public Void setBaseType(TypeDefinition type) {
-        this.m_baseType = type;
-        return null;
-    }
-
-    public TypeDefinition getBaseType() {
-        return this.m_baseType;
-    }
-
+*/
     public String toString() {
-        return this.getName() + " " + this.m_baseType;
+        String name = "CONST_Reference_NIL";
+        return name;
     }
-
-    @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof TypeReference)) {
-            return false;
-        }
-
-        TypeReference that = (TypeReference) other;
-
-        // Custom equality check here.
-        return this.m_baseType.equals(that.getBaseType());
-    }
-
-    public ST toST(STGroup group) {
-      if (m_baseType instanceof TypeArraySpecification) {
-        ST st = group.getInstanceOf("TypeReferenceArray");
-        
-        st.add("basetype", ((TypeArraySpecification)m_baseType).getBaseType().toST(group));
-        return st;
-      } else {
-        ST st = group.getInstanceOf("TypeReferenceSimpleType");
-        st.add("BaseType", m_baseType.toST(group));
-        return st;
-      }
-    }
-
 }

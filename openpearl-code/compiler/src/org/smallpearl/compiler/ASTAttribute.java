@@ -29,19 +29,22 @@
 
 package org.smallpearl.compiler;
 
+import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
 public class ASTAttribute {
     public TypeDefinition  m_type;
     public boolean m_readonly;
-    public VariableEntry m_variable;
+ //   public VariableEntry m_variable;
+    private SymbolTableEntry m_entry;
     public ConstantValue m_constant;
     public ConstantSelection m_selection;
 
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
         m_readonly = false;
-        m_variable = null;
+     //   m_variable = null;
+        m_entry = null;
         m_constant = null;
         m_selection    = null;
     }
@@ -49,7 +52,8 @@ public class ASTAttribute {
     ASTAttribute(ConstantSelection slice) {
         m_type     = null;
         m_readonly = false;
-        m_variable = null;
+      //  m_variable = null;
+        m_entry=null;
         m_constant = null;
         m_selection    = slice;
     }
@@ -57,13 +61,15 @@ public class ASTAttribute {
     ASTAttribute(TypeDefinition type, boolean constant) {
         m_type = type;
         m_readonly = constant;
-        m_variable = null;
+        //m_variable = null;
+        m_entry = null;
         m_selection    = null;
     }
 
     ASTAttribute(TypeDefinition type, boolean constant, VariableEntry variable ) {
         m_type = type;
-        m_variable = variable;
+        //m_variable = variable;
+        m_entry=variable;
         m_constant = null;
         m_selection    = null;
 
@@ -74,19 +80,47 @@ public class ASTAttribute {
             m_readonly = constant;
         }
     }
+    ASTAttribute(TypeDefinition type, SymbolTableEntry entry ) {
+      m_type = type;
+      //m_variable = variable;
+      m_entry=entry;
+      m_constant = null;
+      m_selection    = null;
 
+      if (getVariable()== null || getVariable().getLoopControlVariable()) {
+          m_readonly = false;
+      }
+   
+  }
+
+    /**
+     * indicate whether the element is a constant or an expression of constants
+     * 
+     * @return
+     */
     public boolean isReadOnly() {
         return this.m_readonly;
     }
 
     public boolean isLoopControlVariable() {
-        return ( m_variable != null && m_variable.getLoopControlVariable());
+      //  return ( m_variable != null && m_variable.getLoopControlVariable());
+      return m_entry != null && getVariable() != null && getVariable().getLoopControlVariable();
     }
 
 
     public boolean isWritable() { return !this.isReadOnly(); }
     public TypeDefinition getType() { return this.m_type; }
-    public VariableEntry getVariable() { return this.m_variable; }
+    public VariableEntry getVariable() {
+//    return this.m_variable; }
+      if (m_entry instanceof VariableEntry) {
+        return (VariableEntry)m_entry;
+      }
+      return null;
+    }
+    
+    public SymbolTableEntry getSymbolTableEntry() {
+      return m_entry;
+    }
 
     public ConstantValue getConstant() { return this.m_constant; }
 
@@ -148,10 +182,14 @@ public class ASTAttribute {
     }
 
     public String toString() {
-        return "(" + this.m_type + " " + this.isReadOnly() + " " + this.m_variable + " " + this.m_constant + " " + this.m_selection + ")";
+//        return "(" + this.m_type + " " + this.isReadOnly() + " " + this.m_variable + " " + this.m_constant + " " + this.m_selection + ")";
+      return "(" + this.m_type + " " + this.isReadOnly() + " " + this.m_entry + " " + this.m_constant + " " + this.m_selection + ")";
     }
 
     public void setVariable(VariableEntry ve) {
-      this.m_variable = ve;
+      //this.m_variable = ve;
+      m_entry = ve;
     }
+
+
 }

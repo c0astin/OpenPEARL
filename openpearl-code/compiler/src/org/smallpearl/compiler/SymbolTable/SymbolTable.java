@@ -147,6 +147,7 @@ public class SymbolTable {
         if (lookupLocal(se.getName()) != null) {
             return false;
         }
+        se.setLevel(m_level);
         m_entries.put(se.getName(), se);
         return true;
     }

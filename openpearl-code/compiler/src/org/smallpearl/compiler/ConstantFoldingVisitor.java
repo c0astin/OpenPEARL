@@ -333,9 +333,9 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
 
     private ConstantFixedValue look4ConstantFixedVariable(ASTAttribute op) {
       // let's see if we have an INV FIXED variable
-      if (op.isReadOnly() && op.m_variable != null && op.m_type instanceof TypeFixed) {
+      if (op.isReadOnly() && op.getVariable() != null && op.m_type instanceof TypeFixed) {
         // seem be be INV const
-        SymbolTableEntry se =  m_currentSymbolTable.lookup(op.m_variable.getName());
+        SymbolTableEntry se =  m_currentSymbolTable.lookup(op.getVariable().getName());
         if (se != null) {
           if (se instanceof VariableEntry) {
             Initializer ini = ((VariableEntry)se).getInitializer();

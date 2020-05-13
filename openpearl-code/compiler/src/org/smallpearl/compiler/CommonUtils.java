@@ -36,7 +36,7 @@ import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
 import org.smallpearl.compiler.Exception.ValueOutOfBoundsException;
 import org.smallpearl.compiler.SymbolTable.*;
 import org.smallpearl.compiler.*;
-
+import org.smallpearl.compiler.SmallPearlParser.TypeReferenceContext;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -826,16 +826,15 @@ public class CommonUtils {
 //    }
 
     public static String printContext(ParserRuleContext ctx) {
-        if ( ctx != null ) {
+      if (ctx != null) {
+        int a = ctx.start.getStartIndex();
+        int b = ctx.stop.getStopIndex();
 
-            int a = ctx.start.getStartIndex();
-            int b = ctx.stop.getStopIndex();
-
-            Interval interval = new Interval(a, b);
-            return ctx + ":" + ctx.start.getInputStream().getText(interval);
-        } else {
-            return "ctx is NULL";
-        }
+        Interval interval = new Interval(a, b);
+        return ctx + ":" + ctx.start.getInputStream().getText(interval);
+      } else {
+	return "ctx is NULL";
+      }
     }
 
     public static String getFileExtension(File file) {
@@ -1139,5 +1138,37 @@ public class CommonUtils {
         }
 
         return precision;
+    }
+
+    public static TypeDefinition getBaseTypeForReferenceType(
+        TypeReferenceContext typeReference) {
+      TypeDefinition type = null;
+      
+      if (typeReference.simpleType() != null) {
+        type = CommonUtils.getTypeDefinitionForSimpleType(typeReference.simpleType());
+      } else if (typeReference.typeStructure() != null) {
+        System.err.println("CommunUtils.getTypeDefinitionForReferenceType: missing alternative STRUCT");
+      } else if (typeReference.typeDation() != null) {
+        type = new TypeDation();
+      } else if (typeReference.typeReferenceSemaType() != null) {
+        type = new TypeSemaphore();
+      } else if (typeReference.typeReferenceBoltType() != null) {
+        type = new TypeBolt();
+//      } else if (typeReference.typeProcedure() != null) {
+        // typeProcedure not defined yet
+      } else if (typeReference.typeReferenceTaskType() != null) {
+         type = new TypeTask();
+      } else if (typeReference.typeReferenceInterruptType() != null) {
+         type = new TypeInterrupt();
+      } else if (typeReference.typeReferenceSignalType() != null) {
+          type = new TypeSignal();
+      } else if (typeReference.typeRefChar()!= null) {
+//        type = new TypeRefChar();
+        System.err.println("CommunUtils.getTypeDefinitionForReferenceType: missing alternative REF CHAR()");
+      } else {
+        System.err.println("CommunUtils.getTypeDefinitionForReferenceType: missing alternative ???");
+      }
+
+      return type;
     }
 }

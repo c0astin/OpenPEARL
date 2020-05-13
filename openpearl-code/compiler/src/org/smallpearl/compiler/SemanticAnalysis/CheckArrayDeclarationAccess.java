@@ -197,6 +197,7 @@ public class CheckArrayDeclarationAccess extends SmallPearlBaseVisitor<Void> imp
 
 		return null;
 	}
+	
 
 	@Override
 	public Void visitAssignment_statement(SmallPearlParser.Assignment_statementContext ctx) {

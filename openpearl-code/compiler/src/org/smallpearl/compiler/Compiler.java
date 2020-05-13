@@ -210,9 +210,9 @@ public class Compiler {
             }
             catch(Exception ex) {
                 System.err.println(ex.getMessage());
-
+                ex.printStackTrace();
                 if (debug) {
-                	ex.printStackTrace();
+                  ex.printStackTrace();
                 }
                 
                 if ( verbose > 0 ) {
