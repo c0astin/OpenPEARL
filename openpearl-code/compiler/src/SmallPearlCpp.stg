@@ -381,35 +381,6 @@ dation_type(isAlphic, isType, isBasic) ::= <%
 <endif>
 %>
 
-/* unused templates 2020-04-30 (rm)
-TypeReferenceTask(Task) ::= <<
-pearlrt::Task *
->>
-
-TypeReferenceProcedure() ::= <<
-//  REF PROC
-
-TypeReferenceSema() ::= <<
-// REF SEMA 
->>
-
-TypeReferenceBolt() ::= <<
-// REF BOLT 
->>
-
-TypeReferenceInterrupt() ::= <<
-//	REF INTERRUPT
->>
-
-TypeReferenceSignal() ::= <<
-//	 REF SIGNAL 
->>
-
-TypeReferenceChar() ::= <<
-//	 REF CHAR 
->>
-
-*/
 
 /*********************** STATEMENTS ***********************/
 
@@ -430,22 +401,6 @@ task_declaration(name,priority,main,body,cpp) ::= <<
 	<endif>
 >>
 
-/* unused templates 2020-04-30 (rm)
-method(documentation, modifiers, returnType, name, parameters, body) ::= <<
-	<documentation>
-	<modifiers; separator=" "> <returnType> <name>(<parameters; separator=", ">) {
-	  <body>
-	}
->>
-
-parameter(type, name) ::= <<
-	<type> <name>
->>
-
-PUTStatement(expression,format,destination) ::= <<
-	    PUT( <destination>, \"<expression>\");
->>
-*/
 
 assignment_statement(lhs,rhs) ::= <<
 	    <lhs><if(rhs)> = <rhs><endif>;
@@ -460,29 +415,14 @@ if_statement(rhs, then_block, else_block) ::= <<
 	}<endif>
 >>
 
-/* unused template
-module_global_declaration(variable) ::= <<
-	<variable>;
->>
 
-
-declaration(module_globals_declarations,task_declarations) ::= <<
-	<if(module_globals_declarations)><module_globals_declarations><\n><endif>
-	<task_declarations>
->>
-*/
 
 task_body(decls,statements) ::= <<
     <decls>
     <statements>
 >>
 
-/* unused template 
-iochannel(id) ::= "<id>"
 
-
-identifier(id) ::= "<id>"
-*/
 
 statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList) ::= <<
 	<if(srcFilename)>
@@ -497,12 +437,7 @@ statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList) ::= <<
 	<if(tempVariableList)>}<endif>
 >>
 
-/* unused template
-simpleConstruct(_construct) ::= <<
-	[simpleConstruct]
-	 <_construct>
->>
-*/
+
 
 label_statement(label) ::= <%
 	<user_label(label)>:<\n>
@@ -568,33 +503,7 @@ TaskResume(Condition,at,after,when) ::= <<
            );
 >>
 
-/* unused templates
-task_coordination_statement(code) ::= <<
-<code><\n>
->>
 
-
-task_enter(task) ::= <<
-_<task>.enter();
->>
-
-task_free(task) ::= <<
-_<task>.free();
->>
-
-
-task_leave(task) ::= <<
-_<task>.leave();
->>
-
-task_request(task) ::= <<
-_<task>.request();
->>
-
-task_reserve(task) ::= <<
-_<task>.reserve();
->>
-*/
 
 task_prevent(task) ::= <<
 	<if(task)>
@@ -704,11 +613,6 @@ literal(integer,float,string,time,duration,bitstring,nil) ::= <%
 	<if(nil)><nil><endif>
 %>
 
-/* unused template
-float(value,precision) ::= <%
-(pearlrt::Float\<<precision>>(<value>))
-%>
-*/
 
 /************************* I/O STATEMENTS ************************/
 
@@ -798,16 +702,6 @@ close_parameter_none(id) ::= <%
 0
 %>
 
-/* unused template
-idf(id,string) ::= <%
-**IDF***
-%>
-
-
-expressionList(expression) ::= <%
-    <expression>
-%>
-*/
 
 /* ---------------------------------------------------------- */
 
@@ -1154,11 +1048,7 @@ VariableDeclaration(name,TypeAttribute,InitElement,global,inv) ::= <%
 <if(inv)>const  <endif><TypeAttribute>  <variable(name)><if(InitElement)>(<InitElement>)<endif><if(global)>  (GLOBAL)<endif>; <\n>
 %>
 
-/* unused template
-InitElement(value) ::= <<
-<value>
->>
-*/
+
 
 GlobalAttribute() ::= <<
 *** GlobalAttribute ***
@@ -1193,11 +1083,7 @@ TypeDuration(code) ::= <<
 pearlrt::Duration
 >>
 
-/* unused template
-typeTime() ::= <%
-*** TypeTime ***
-%>
-*/
+
 
 TypeBitString(length) ::= <<
 pearlrt::BitString\<<length>\>
@@ -1447,11 +1333,7 @@ FIXEDTOCHARACTER(operand) ::= <%
 pearlrt::toChar(<operand>)
 %>
 
-/* unused template
-TASK() ::= <%
-me
-%>
-*/
+
 
 referenceOf(obj) ::= <%
 &(<obj>)
@@ -1494,10 +1376,6 @@ extern pearlrt::Device *d_<name>;
 <SpecifyTypeDation>
 >>
 
-/* unused template
-SpecifyTypeDation(SourceSinkAttribute,SystemDation,ClassAttribute) ::= <<
->>
-*/
 
 SpecificationSystemDationB(name,TypeDation,global) ::= <<
 extern pearlrt::Device *d_<name>;
@@ -1528,25 +1406,7 @@ extern pearlrt::DationRW <user_variable(name)>;
 
 >>
 
-/*
-renamed from DationSpecificationBasic to SystemDationSpecificationBasic
 
-DationSpecificationBasic(name,TypeDation,global) ::= <<
-*/
-/* unused template
-SystemDationSpecificationBasic(name,TypeDation,global) ::= <<
-extern pearlrt::Device *d_<name>;
-static pearlrt::SystemDationB* _<name> = static_cast\<pearlrt::SystemDationB*>(d_<name>); <\n>
-
->>
-
-
-SystemDationSpecificationNonBasic(name,TypeDation,global) ::= <<
-extern pearlrt::Device *d_<name>;
-static pearlrt::SystemDationNB* _<name> = static_cast\<pearlrt::SystemDationNB*>(d_<name>); <\n>
-
->>
-*/
 
 DationDeclarations(decl) ::= <<
 <decl>
@@ -1920,11 +1780,6 @@ ArrayIndex(index) ::= <<
     pearlrt::Fixed\<31>(<index>)
 >>
 
-/* unused template
-ArrayRHS(name,descriptor,indices) ::= <%
-*(data_<name> + <descriptor>->offset(<indices>))
-%>
-*/
 
 ArrayInitalisations(initElements)::= <%{<initElements: {initElement|<initElement>} ; separator=",">}
 %>
@@ -1938,11 +1793,7 @@ ArrayUPB(descriptor,index) ::= <%
 %>
 
 /* --------------------------- CONVERT STATEMENT -------------------------------------------*/
-/* unused template
-ConvertStatement(convert) ::= <%
-//*** CONVERT <convert> ***
-%>
-*/
+
 
 /* ---------------------------------------------------------- */
 ConvertToStatement(id, elements) ::= <<
