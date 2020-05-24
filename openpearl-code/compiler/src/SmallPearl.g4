@@ -1,6 +1,6 @@
 /*
  [The "BSD license"]
- Copyright (c) 2012-2017/mnt/sdb1/home/marcel/repositories/openpearl-code/openpearl-code/compiler/src/SmallPearl.g4 Marcel Schaible
+ Copyright (c) 2012-2020 Rainer Muelle & Marcel Schaible
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -655,7 +655,6 @@ preset :
 //   END;
 ////////////////////////////////////////////////////////////////////////////////
 
-  
 procedureDeclaration:
 //	 ID ':' ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute? globalAttribute? ';'
 	 ID ':' typeProcedure globalAttribute? ';'
@@ -918,21 +917,8 @@ exitStatement
 ////////////////////////////////////////////////////////////////////////////////
 
 assignment_statement:
-//     ( dereference? ID indices? | stringSelection | selector) ( ':=' | '=' ) expression ';'
      ( dereference? name | stringSelection) ( ':=' | '=' ) expression ';'
     ;
-
-////////////////////////////////////////////////////////////////////////////////
-// 2020-03-17 (rm) deprecated --> is covered by name
-//selector
-//    : ID indices? ( '.' selectors )*
-//    ;
-//
-////////////////////////////////////////////////////////////////////////////////
-//
-//selectors
-//    : ID indices? | stringSelection
-//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -944,6 +930,8 @@ dereference
 // StructureAssignment ::=
 //    Name§Structure 1 { := | = } Expression§Structure 2;
 ////////////////////////////////////////////////////////////////////////////////
+
+// TODO: MS: 2020-05-23 Is this still relevant?
 
 ////////////////////////////////////////////////////////////////////////////////
 

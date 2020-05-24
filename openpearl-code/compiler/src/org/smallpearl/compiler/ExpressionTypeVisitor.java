@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- *  Copyright (c) 2012-2016 Marcel Schaible
+ *  Copyright (c) 2012-2020 Rainer Mueller & Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -1718,7 +1718,6 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             ((TypeFixed)(ve.getType())).setPrecision(precisionFor);
           }
         }
-        
 
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;
@@ -1776,20 +1775,17 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
               selection = m_ast.lookup(ctx.stringSelection().charSelection().charSelectionSlice());
               if (!(attrName.getType()  instanceof TypeChar)) {
                 ErrorStack.add(".CHAR must be applied on variable of type CHAR -- used with "+attrName.getType());
-              }   
-              
+              }
             }
             else  if (ctx.stringSelection().bitSelection() != null) {
               attrName = m_ast.lookup(ctx.stringSelection().bitSelection().name());
               selection = m_ast.lookup(ctx.stringSelection().bitSelection().bitSelectionSlice());
               if (!(attrName.getType()  instanceof TypeBit)) {
                 ErrorStack.add(".BIT must be applied on variable of type BIT -- used with "+attrName.getType());
-              }   
-
+              }
             } else {
                 ErrorStack.addInternal("visitAssignment_statement: missing alternative for stringSelection");
             }
- 
 
             if (selection.getConstantSelection() != null) {
               long lower = selection.getConstantSelection().getLowerBoundary().getValue();
@@ -1801,9 +1797,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
               }
               
             }
-            
         } else if (ctx.name() != null) {
-            visit(ctx.name());
+            //TODO: MS This looks not correct:
+//            visit(ctx.name());
             attrName = m_ast.lookup(ctx.name());
         } else {
           ErrorStack.addInternal("visitAssignment_statement: missing alternative");
@@ -2935,7 +2931,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
      */
     @Override
     public Void visitBitSelectionSlice(SmallPearlParser.BitSelectionSliceContext ctx) {
-        Log.debug("ExpressionTypeVisitor:visitCharSelectionSlice:ctx" + CommonUtils.printContext(ctx));
+        Log.debug("ExpressionTypeVisitor:visitBitSelectionSlice:ctx" + CommonUtils.printContext(ctx));
         
         ASTAttribute attr0 = null;
         ASTAttribute attr1 = null;
@@ -2972,7 +2968,6 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
           ErrorStack.addInternal("visitBitSelectionSlice: missing first expression"); 
         }
 
-        
         if (ctx.expression(1) != null) {
            attr1 = m_ast.lookup(ctx.expression(1));
            expr1 = ctx.expression(1).getText();
@@ -3078,8 +3073,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             if (size <= 0) {
               ErrorStack.add("must select at least 1 character");
             }
-            
-       
+
             ConstantSelection slice = new ConstantSelection(attr0.getConstantFixedValue(),
                                                             attr1.getConstantFixedValue());
   
@@ -3117,56 +3111,53 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     public Void visitName(SmallPearlParser.NameContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitName:ctx=" + CommonUtils.printContext(ctx));
         Log.debug("ExpressionTypeVisitor:visitName:id=" + ctx.ID().toString());
-        //String s= ctx.getText();
-        m_nameDepth =0 ;
-       // System.out.println("ctx: "+ctx.getText());          
-        
-        ErrorStack.enter(ctx,ctx.ID().toString());
-//System.out.println("visitName "+ctx.getText());
+
+        m_nameDepth = 0;
+
+        ErrorStack.enter(ctx, ctx.ID().toString());
+
         SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
 
-        if ( entry != null ) {
-          if (entry instanceof VariableEntry) {
-             VariableEntry var = (VariableEntry) entry;
-             TypeDefinition typ = var.getType();
-             m_type = typ;
+        if (entry != null) {
+            if (entry instanceof VariableEntry) {
+                VariableEntry var = (VariableEntry) entry;
+                TypeDefinition typ = var.getType();
+                m_type = typ;
 
-             reVisitName(ctx);
-             
-             ASTAttribute attr = new ASTAttribute(m_type,var.getAssigmentProtection(),var);
-             m_ast.put(ctx, attr);
-          }
-          else {
-             //  checkForArrayOrStructureUsage(ctx, entry);
-             if (treatTaskSemaBoltSignalInterruptDation(ctx, entry)) {
-                ASTAttribute attr = new ASTAttribute(m_type);
-                m_ast.put(ctx,attr);
-             } else {
-                 if (entry instanceof ModuleEntry) {
-                    ErrorStack.add("illegal usage of module name");
-                 } else if (entry instanceof TypeEntry) {
-                    ErrorStack.add("illegal usage of type name");
-                 } else if (entry instanceof ProcedureEntry) {
-                    m_type = ((ProcedureEntry)entry).getResultType();
-                    if (m_type != null) {
-                       m_ast.put(ctx,  new ASTAttribute(m_type,entry));
+                reVisitName(ctx);
+
+                ASTAttribute attr = new ASTAttribute(m_type, var.getAssigmentProtection(), var);
+                m_ast.put(ctx, attr);
+            } else {
+                if (treatTaskSemaBoltSignalInterruptDation(ctx, entry)) {
+                    ASTAttribute attr = new ASTAttribute(m_type);
+                    m_ast.put(ctx, attr);
+                } else {
+                    if (entry instanceof ModuleEntry) {
+                        ErrorStack.add("illegal usage of module name");
+                    } else if (entry instanceof TypeEntry) {
+                        ErrorStack.add("illegal usage of type name");
+                    } else if (entry instanceof ProcedureEntry) {
+                        m_type = ((ProcedureEntry) entry).getResultType();
+                        if (m_type != null) {
+                            m_ast.put(ctx, new ASTAttribute(m_type, entry));
+                        } else {
+                            ErrorStack.add("procedure '" + ((ProcedureEntry) entry).getName() + "' does not return a value");
+                        }
+                        if (ctx.listOfExpression() != null) {
+                            visitChildren(ctx.listOfExpression());
+                        }
                     } else {
-                       ErrorStack.add("procedure '"+((ProcedureEntry)entry).getName()+"' does not return a value");
+                        ErrorStack.addInternal("illegal usage of ???");
                     }
-                    if (ctx.listOfExpression()!= null) {
-                       visitChildren(ctx.listOfExpression());
-                    }
-                 } else {
-                    ErrorStack.addInternal("illegal usage of ???");
-                 }
-             }
-          }
-       } else {
-              ErrorStack.add("'"+ctx.ID().getText()+"' is not defined");
-       }
+                }
+            }
+        } else {
+            ErrorStack.add("'" + ctx.ID().getText() + "' is not defined");
+        }
 
-       ErrorStack.leave();
-       return null;
+        ErrorStack.leave();
+        return null;
     }
 
     private boolean treatTaskSemaBoltSignalInterruptDation(NameContext ctx,

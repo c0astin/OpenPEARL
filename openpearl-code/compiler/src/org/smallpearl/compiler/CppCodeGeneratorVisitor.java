@@ -306,6 +306,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 if (component.m_type instanceof TypeStructure) {
                     TypeStructure innerStruct = (TypeStructure) component.m_type;
                     graph.addDependency(name, innerStruct.getStructureName());
+                } else if (component.m_type instanceof TypeArray) {
+                    TypeArray array = (TypeArray) component.m_type;
+
+                    if (array.getBaseType() instanceof TypeStructure) {
+                        TypeStructure innerStruct = (TypeStructure) array.getBaseType();
+                        graph.addDependency(name, innerStruct.getStructureName());
+                    }
                 }
             }
         }
@@ -318,7 +325,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 Node<String> node = nodeList.get(i);
 
                 if (node.m_value != null) {
-
                     TypeStructure struct = structureDecls.get(node.m_value);
                     ST decl = m_group.getInstanceOf("StructureDefinition");
                     decl.add("name", struct.getStructureName());
@@ -327,14 +333,31 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         ST stComponent = m_group.getInstanceOf("StructComponentDeclaration");
 
                         StructureComponent component = struct.m_listOfComponents.get(j);
-                        stComponent.add("name", component.m_alias);
 
                         if (component.m_type instanceof TypeStructure) {
+                            stComponent.add("name", component.m_alias);
                             stComponent.add("TypeAttribute", ((TypeStructure) component.m_type).getStructureName());
+                            decl.add("components", stComponent);
+                        } else  if (component.m_type instanceof TypeArray) {
+                            TypeArray array = (TypeArray)component.m_type;
+
+                            if ( array.getBaseType() instanceof TypeStructure) {
+                                TypeStructure arraystruct = (TypeStructure) array.getBaseType();
+                                ST declaration = m_group.getInstanceOf("StructureArrayComponentDeclaration");
+
+                                declaration.add("name", component.m_alias);
+                                declaration.add("type", arraystruct.getStructureName());
+                                declaration.add("totalNoOfElements", array.getTotalNoOfElements());
+
+                                stComponent.add("TypeAttribute", declaration);
+                                decl.add("components", stComponent);
+                            }
                         } else {
+                            stComponent.add("name", component.m_alias);
                             stComponent.add("TypeAttribute", component.m_type.toST(m_group));
+                            decl.add("components", stComponent);
                         }
-                        decl.add("components", stComponent);
+
                     }
 
                     decls.add("declarations", decl);
@@ -2448,12 +2471,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             functionCall.add("callee", ctx.ID().getText());
 
             if (ctx.listOfExpression() != null && ctx.listOfExpression().expression().size() > 0) {
-
                 //if (ctx.listOfActualParameters() != null && ctx.listOfActualParameters().expression().size() > 0) {
-
                 functionCall.add("ListOfActualParameters",
                         getActualParameters(ctx.listOfExpression().expression()));
-
             }
 
             expression.add("functionCall", functionCall);
@@ -5981,11 +6001,20 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
             if (symbolTableEntry != null && symbolTableEntry instanceof VariableEntry) {
                 VariableEntry variable = (VariableEntry) symbolTableEntry;
-                ASTAttribute ast = m_ast.lookup(variable.getCtx());
-                TypeStructure typ = (TypeStructure) variable.getType();
 
-                st.add("name", id);
-                st.add("type", ((TypeStructure) variable.getType()).getStructureName());
+                if ( variable.getType() instanceof TypeStructure) {
+                    TypeStructure typ = (TypeStructure) variable.getType();
+                    st.add("name", id);
+                    st.add("type", typ.getStructureName());
+                } else if  ( variable.getType() instanceof TypeArray) {
+                    TypeArray array = (TypeArray) variable.getType();
+
+                    if ( array.getBaseType() instanceof TypeStructure) {
+                        TypeStructure typ = (TypeStructure) array.getBaseType();
+                        st.add("name", id);
+                        st.add("type", typ.getStructureName());
+                    }
+                }
             }
         }
 

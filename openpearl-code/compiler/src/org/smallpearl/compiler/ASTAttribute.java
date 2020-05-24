@@ -172,7 +172,6 @@ public class ASTAttribute {
         }
     }
 
-
     public void setConstantSelection(ConstantSelection m_slice) {
       this.m_selection = m_slice;
     }
