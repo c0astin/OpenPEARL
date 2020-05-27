@@ -334,6 +334,12 @@ public class SymbolTable {
                 if ( entry.getType() instanceof TypeStructure ) {
                     TypeStructure struct = (TypeStructure)entry.getType();
                     getStructureDeclarationsForStructure(struct.getStructureName(),struct,structures);
+                } else if (entry.getType() instanceof TypeArray) {
+                    TypeArray array = (TypeArray)entry.getType();
+                    if ( array.getBaseType() instanceof TypeStructure) {
+                        TypeStructure struct = (TypeStructure) array.getBaseType();
+                        getStructureDeclarationsForStructure(struct.getStructureName(), struct, structures);
+                    }
                 }
             }
             else if (symbolTableEntry instanceof ProcedureEntry) {
@@ -371,6 +377,14 @@ public class SymbolTable {
             if ( structureComponent.m_type instanceof TypeStructure) {
                 TypeStructure struct = (TypeStructure)structureComponent.m_type;
                 getStructureDeclarationsForStructure(struct.getStructureName(), struct,structures);
+            }
+            else if ( structureComponent.m_type instanceof TypeArray) {
+                TypeArray array = (TypeArray)structureComponent.m_type;
+
+                if ( array.getBaseType() instanceof TypeStructure) {
+                    TypeStructure struct = (TypeStructure) array.getBaseType();
+                    getStructureDeclarationsForStructure(struct.getStructureName(), struct, structures);
+                }
             }
         }
     }

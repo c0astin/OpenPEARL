@@ -389,22 +389,22 @@ empty_statement() ::= <<
 >>
 
 statements(statement) ::= <<
-    <statement>
+<statement>
 >>
 
 task_declaration(name,priority,main,body,cpp) ::= <<
-	DCLTASK(_<name>, (pearlrt::Prio( (pearlrt::Fixed\<15>)<priority>)), ((pearlrt::BitString\<1>)<main>)) {
-	    <body>
-	}
-	<if(cpp)>
-	<cpp_inline(cpp)>
-	<endif>
+DCLTASK(_<name>, (pearlrt::Prio( (pearlrt::Fixed\<15>)<priority>)), ((pearlrt::BitString\<1>)<main>)) {
+    <body>
+}
+<if(cpp)>
+<cpp_inline(cpp)>
+<endif>
 >>
 
 
-assignment_statement(lhs,rhs) ::= <<
-	    <lhs><if(rhs)> = <rhs><endif>;
->>
+assignment_statement(lhs,rhs) ::= <%
+<lhs><if(rhs)> = <rhs><endif>;
+%>
 
 if_statement(rhs, then_block, else_block) ::= <<
 	if (<rhs>) {
@@ -425,16 +425,16 @@ task_body(decls,statements) ::= <<
 
 
 statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList) ::= <<
-	<if(srcFilename)>
-	me->setLocation(<srcLine>, filename);
-	<endif>
-	<if(label)><label><endif>
-	<if(tempVariableList)>{<tempVariableList><endif>
-	<if(cpp)>
-	<cpp_inline(cpp)>
-	<endif>
-	<if(code)><code><endif>
-	<if(tempVariableList)>}<endif>
+<if(srcFilename)>
+me->setLocation(<srcLine>, filename);
+<endif>
+<if(label)><label><endif>
+<if(tempVariableList)>{<tempVariableList><endif>
+<if(cpp)>
+<cpp_inline(cpp)>
+<endif>
+<if(code)><code><endif>
+<if(tempVariableList)>}<endif>
 >>
 
 
@@ -1741,11 +1741,11 @@ ArrayVariableDeclarations(declarations) ::= <<
 >>
 
 ArrayVariableDeclaration(name,type,assignmentProtection,totalNoOfElements,initElements) ::= <%
-<type> data_<name>[<totalNoOfElements>] <if(initElements)> = <initElements><endif>; <\n>
+<type> data_<name>[<totalNoOfElements>]<if(initElements)> = <initElements><endif>;<\n>
 %>
 
 ArrayDescriptors(descriptors) ::= <<
-<descriptors: {descriptor|<descriptor>} ; separator="\n">
+<descriptors: {descriptor|<descriptor>}; separator="\n">
 >>
 
 ArrayDescriptor(name,dimensions,limits) ::= <%
@@ -1889,7 +1889,7 @@ MakeBitStringNFromStringSelection(id,lwb,size) ::= <%
 %>
 
 AssignmentStatementBitSlice(id,lwb,upb,rhs) ::= <%
-   <id>.setSlice(<lwb>,<upb>,<rhs>);
+<id>.setSlice(<lwb>,<upb>,<rhs>);
 %>
 
 
@@ -1937,11 +1937,17 @@ StructComponentDeclaration(name,TypeAttribute) ::= <<
 >>
 
 StructureForwardDeclarationList(declarations) ::= <<
+<declarations: {decl|<decl>}; separator="\n">
 >>
 
 StructureForwardDeclaration(name) ::= <<
 struct <name>;
 >>
+
+StructureArrayComponentDeclaration(name,type,assignmentProtection,totalNoOfElements) ::= <%
+<type> data_<name>[<totalNoOfElements>]
+%>
+
 
 StructureDeclarationList(declarations) ::= <<
 <declarations: {decl|<decl>}; separator="\n">
