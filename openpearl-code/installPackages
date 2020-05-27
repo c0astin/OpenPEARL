@@ -22,8 +22,12 @@ then
    echo "detected: Fedora 31 (Workstation Edition) "
    AptPackageList+=" gcc g++ make"
    AptPackageList+=" java-1.8.0-openjdk.x86_64"
+<<<<<<< Updated upstream
    AptPackageList+=" flex flex-devel"
    AptPackageList+=" ncurses-libs.x86_64 ncurses-devel"
+=======
+   AptPackageList+=" flex ncurses-libs.x86_64 ncurses-devel"
+>>>>>>> Stashed changes
    AptPackageList+=" expat expat-devel.x86_64"
    AptPackageList+=" cpan"
    PackageManager="dnf"

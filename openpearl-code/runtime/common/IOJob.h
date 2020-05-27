@@ -36,6 +36,8 @@
 \brief classes for the definition of the structures for IOJobs
 */
 
+#include <stdint.h>
+
 #include "Fixed.h"
 #include "TaskCommon.h"
 #include "SystemDationNBSink.h"
@@ -311,17 +313,12 @@ namespace pearlrt {
          FIXED, ///< FIXED types
          BIT,   ///< BIT types
          /**
-         a bit slice must be treated differently
+         a char slice must be treated differently
 
-         If only one bit is selected, the value of param2.end must be
-         identical to param1.start.
-
-         dataType.dataWidth is the number of bits in the parent bit string<br>
-         dataPtr is the pointer to the parent bit string<br>
-         param1.start is a pointer to the value of the starting bit<br>
-         param2.end is a pointer to the value of the last bit
+         dataPtr is the pointer to the first character<br>
+         param1.nbrOfElements is the number of chars to transmit<br>
          */
-         BITSLICE,
+         CHARSLICE,
          CLOCK, ///< CLOCK types
          DURATION, ///< DURATION types
          /** a virtual type, which enabled loops on parts
@@ -331,7 +328,7 @@ namespace pearlrt {
                 for the loop<br>
              dataPtr.offsetIncrement contains the number of bytes to increment
                       the base address in each loop <br>
-             numberOfElements contains the number of iterations
+             param1.numberOfElements contains the number of iterations
          */
          LoopStart,
 
@@ -379,8 +376,8 @@ namespace pearlrt {
       /**
       number of elements
 
-      For array slices in PUT and GET, we need the number of data elements
-      of the slice.
+      For arrays  in PUT and GET, we need the number of data elements
+      of the array.
       For scalar values this item must be 1.
 
       For data loops, this value is the number of repetitions
@@ -389,22 +386,33 @@ namespace pearlrt {
       to transfer.
       */
       union { 
-         /** pointer to the number of data elements */
-         size_t numberOfElements;
-         /** pointer to the first element in the array to be read */
-         size_t * start;
+         /** number of data elements */
+         int32_t numberOfElements;
       } param1;  ///< start of array or slice
 
       union {
           /** the end value for loops */
           size_t * end;
-      } param2;  ///< end of array or slice
+          struct {
+             Fixed<15> lwb;
+             Fixed<15> upb;
+          } charSliceLimits; // type CHARSLICE
+      } param2;  ///< end of array or slice  
 
      /**
      deliver the size of one element of the given IODataType
      */
      size_t getSize();
 
+     /**
+     check limits for CHARSLIZEs and deliver the start offsettart
+
+     \throws  CharacterIndexOutOfRangeSignal, if [lwb,upb] violates
+            the range of the base CHAR variable
+     \returns 0, if the DataEntry is no CHARSLIZE<br>
+              lwb-field for CHARSLICE
+     */
+    size_t getStartOffset();
    };
 
    /**
@@ -514,8 +522,9 @@ namespace pearlrt {
          Data entries will be treated inside the IOFormat class
          Format entries will be treated inside the
          UserDationNB class.
-         RST fits better to the format entries.<br>
-         This element ist never used by the applications
+         RST entries must be executed before the first data entry.
+         Thus is in the group 'positioning' <br>
+         The element 'IsPositioning' is never used by the applications
          */
          IsPositioning,
 
@@ -630,7 +639,7 @@ namespace pearlrt {
       */
       union FormatParameter {
          /** FIXED(31) value to be used for the width in F-format */
-         int  f31;
+         Fixed<31>  f31;
          /** pointer to a FIXED(xx) value to receive results like in SOP */
          struct {
             /** start address of the value  */ 

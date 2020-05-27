@@ -208,6 +208,7 @@ namespace pearlrt {
       size_t formatItem;
       size_t dataElement;
       size_t nbrOfBytes;
+      char * startAddress;
 
       try {
          beginSequence(me, Dation::OUT);
@@ -227,10 +228,17 @@ namespace pearlrt {
 
          for (dataElement = 0; dataElement < dataList->nbrOfEntries;
                dataElement++) {
+	    if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
+              Log::error("array slice select %d elements",
+	    	dataList->entry[dataElement].param1.numberOfElements);
+              throw theBadArraySliceSignal;
+            }
+
 	    nbrOfBytes = dataList->entry[dataElement].getSize();
 	    nbrOfBytes *= dataList->entry[dataElement].param1.numberOfElements;
-            dationWrite(dataList->entry[dataElement].dataPtr.inData,
-                        nbrOfBytes);
+            startAddress  = (char*)(dataList->entry[dataElement].dataPtr.inData);
+            startAddress += dataList->entry[dataElement].getStartOffset();
+            dationWrite(startAddress, nbrOfBytes);
          }
 
          endSequence(me);
@@ -268,6 +276,11 @@ namespace pearlrt {
 
          for (dataElement = 0; dataElement < dataList->nbrOfEntries;
                dataElement++) {
+            if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
+              Log::error("array slice select %d elements",
+                dataList->entry[dataElement].param1.numberOfElements);
+              throw theBadArraySliceSignal;
+            }
 	    nbrOfBytes = dataList->entry[dataElement].getSize();
 	    nbrOfBytes *= dataList->entry[dataElement].param1.numberOfElements;
 

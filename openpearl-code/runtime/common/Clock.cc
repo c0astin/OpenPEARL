@@ -101,9 +101,11 @@ namespace pearlrt {
 
    Duration Clock::operator-(const Clock& a) {
       Fixed63 d = (intval - a.intval);
-      double dur;
-      dur = d.get() / 1e6;
-      return Duration(dur);
+      //double dur;
+      //dur = d.get() / 1e6;
+      //return Duration(dur);
+      int64_t dur = d.get();
+      return Duration(dur/1000000, dur%1000000);
    }
 
 

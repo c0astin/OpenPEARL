@@ -4,6 +4,7 @@
 
 CXX_COMMON_TESTS1 := \
 	ArrayTests.cc\
+	RefArrayTests.cc\
 	BitTests.cc\
 	BitSliceTests.cc\
 	CharacterTests.cc\
@@ -15,13 +16,13 @@ CXX_COMMON_TESTS1 := \
 	ClockTests.cc
 
 CXX_COMMON_TESTS2 := \
-	GetBitStringTests.cc  \
 	GetCharacterTests.cc \
 	GetClockTests.cc \
 	GetDurationTests.cc \
 	GetFixedTests.cc \
 	GetFloatTests.cc \
 	GetUtils.cc \
+	GetBitStringTests.cc  \
 	PutBitStringTests.cc\
 	PutCharacterTests.cc\
 	PutClockTests.cc\

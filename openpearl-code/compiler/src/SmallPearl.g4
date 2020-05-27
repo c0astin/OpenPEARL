@@ -312,6 +312,7 @@ scalarVariableDeclaration :
 //      IdentifierDenotation [ AllocationProtection ] TypeAttribute [ GlobalAttribute ] [ InitialisationAttribute ]
 ////////////////////////////////////////////////////////////////////////////////
 
+
 variableDenotation :
     identifierDenotation allocationProtection? typeAttribute globalAttribute? initialisationAttribute?
     ;
@@ -530,7 +531,7 @@ arrayDenotation :
 //  | TypeBitString | TypeCharacterString
 //  | TypeDefinition
 //  | REF { TypeDation | SEMA | BOLT
-//  | TypeProcedure | TASK | CHAR()
+//  | typeRefedure | TASK | CHAR()
 //  ??? INTERRUPT, IPRT,SIGNAL
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -554,10 +555,28 @@ typeAttributeForArray :
 //   }
 ////////////////////////////////////////////////////////////////////////////////
 
-typeReference
-    : 'REF' typeReferences
-    ;
+typeReference :
+	'REF' assignmentProtection? virtualDimensionList?
+    (
+	 simpleType 
+	| typeStructure 
+	| typeDation
+	| typeProcedure		
+	| typeReferenceTaskType				//<< should become renamed to typeTask as well as taskType -> typeTask
+	| typeReferenceSemaType
+	| typeReferenceBoltType
+	| typeReferenceInterruptType		// << should become renamed to interruptType
+	| typeReferenceSignalType			// << should become renamed to signalType
+	| typeRefChar						// should stay typeRefChar; since type_char is in simpleType
+	)
+	;
 
+typeRefChar:
+	'CHAR' '('  ')' 
+	;
+	
+/*
+replaced by definition above
 typeReferences
     : typeReferenceSimpleType
     | typeReferenceStructuredType
@@ -570,9 +589,11 @@ typeReferences
     | typeReferenceSignalType
     ;
 
+
 typeReferenceSimpleType
     : assignmentProtection? simpleType
     ;
+*/
 
 typeReferenceStructuredType
     :
@@ -634,12 +655,19 @@ preset :
 //   END;
 ////////////////////////////////////////////////////////////////////////////////
 
-procedureDeclaration
-    : ID ':' ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute? globalAttribute? ';'
+  
+procedureDeclaration:
+//	 ID ':' ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute? globalAttribute? ';'
+	 ID ':' typeProcedure globalAttribute? ';'
         procedureBody
       'END' ';'
     ;
 
+
+typeProcedure:
+	 ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute?
+	 ;
+	 
 ////////////////////////////////////////////////////////////////////////////////
 // ProcedureBody ::=
 //   [ Declaration... ] [ Statement... ]
@@ -703,13 +731,9 @@ parameterType :
       simpleType
     | typeDation
     | typeReference
+    | typeStructure
     ;
 
-
-////////////////////////////////////////////////////////////////////////////////
-// TODO: TypeRealTimeObject ::=
-//   SEMA | BOLT | IRPT | INTERRUPT | SIGNAL
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // DisableStatement ::=
@@ -717,7 +741,7 @@ parameterType :
 ////////////////////////////////////////////////////////////////////////////////
 
 disableStatement :
-    'DISABLE' ID ';'
+    'DISABLE' name ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -726,7 +750,7 @@ disableStatement :
 ////////////////////////////////////////////////////////////////////////////////
 
 enableStatement :
-    'ENABLE' ID ';'
+    'ENABLE' name ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -735,7 +759,7 @@ enableStatement :
 ////////////////////////////////////////////////////////////////////////////////
 
 triggerStatement :
-    'TRIGGER' ID ';'
+    'TRIGGER' name ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -755,6 +779,7 @@ resultAttribute :
 resultType :
       simpleType
     | typeReference
+    | typeStructure
     | ID
     ;
 
@@ -892,21 +917,22 @@ exitStatement
 //    ScalarAssignment | StructureAssignment | RefProcAssignment
 ////////////////////////////////////////////////////////////////////////////////
 
-assignment_statement
-    : ( dereference? ID indices? | stringSelection | selector) ( ':=' | '=' ) expression ';'
+assignment_statement:
+//     ( dereference? ID indices? | stringSelection | selector) ( ':=' | '=' ) expression ';'
+     ( dereference? name | stringSelection) ( ':=' | '=' ) expression ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-selector
-    : ID indices? ( '.' selectors )*
-    ;
-
+// 2020-03-17 (rm) deprecated --> is covered by name
+//selector
+//    : ID indices? ( '.' selectors )*
+//    ;
+//
 ////////////////////////////////////////////////////////////////////////////////
-
-selectors
-    : ID indices? | stringSelection
-    ;
+//
+//selectors
+//    : ID indices? | stringSelection
+//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -921,40 +947,59 @@ dereference
 
 ////////////////////////////////////////////////////////////////////////////////
 
-stringSelection
-  	: bitSelection
+stringSelection:
+  	  bitSelection
    	| charSelection
    	;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bitSelection
-    : ID bitSelectionSlice+
+// 2020-03-17 (rm) language report defines that .BIT may be applied on a name
+//		x.BIT(3:5).BIT(2) is not allowed
+//bitSelection:
+//    name bitSelectionSlice+
+bitSelection:
+    name bitSelectionSlice
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bitSelectionSlice
-    : '.' 'BIT' '('  expression ( ':' expression )? ')'
+bitSelectionSlice:
+    '.' 'BIT' '(' 
+    (
+    	 expression
+       | expression ':' expression '+' IntegerConstant	    	 
+       | expression ':' expression   // << may be constant fixed or not
+    )  
+    ')'
+    ;
+
+////////////////////////////////////////////////////////////////////////////////
+// 2020-03-17 (rm) language report defines that .CHAR may be applied on a name
+//		x.CHAR(3:5).CHAR(2) is not allowed
+//charSelection:
+//    name charSelectionSlice+
+charSelection:
+    name charSelectionSlice    
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-charSelection
-    : ID charSelectionSlice+
-    ;
+charSelectionSlice:
+ //   '.' ( 'CHAR' | 'CHARACTER' ) '('  expression ( ':' expression )? ')'
+ //   ;
+     '.' 'CHAR' '(' 
+    (
+    	 expression
+       | expression ':' expression '+' IntegerConstant	    	 
+       | expression ':' expression  // << may be constant fixed or not
+    )  
+    ')'
+	;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-charSelectionSlice
-    : '.' ( 'CHAR' | 'CHARACTER' ) '('  expression ( ':' expression )? ')'
-    ;
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-sequential_control_statement
-    : if_statement
+sequential_control_statement:
+      if_statement
     | case_statement
     ;
 
@@ -1122,15 +1167,15 @@ task_control_statement
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-
+// 2020-05-06: ID -> name for task control statements
 task_terminating
-    : 'TERMINATE' ID? ';'
+    : 'TERMINATE' name? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 task_suspending
-    : 'SUSPEND' ID? ';'
+    : 'SUSPEND' name? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1142,7 +1187,7 @@ task_suspending
 ////////////////////////////////////////////////////////////////////////////////
 
 taskContinuation
-    : startCondition? 'CONTINUE' ID? priority? ';'
+    : startCondition? 'CONTINUE' name? priority? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1161,7 +1206,7 @@ taskResume
 ////////////////////////////////////////////////////////////////////////////////
 
 task_preventing
-    : 'PREVENT' ID? ';'
+    : 'PREVENT' name? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1170,7 +1215,7 @@ task_preventing
 ////////////////////////////////////////////////////////////////////////////////
 
 taskStart
-    : startCondition? frequency? 'ACTIVATE' ID  priority? ';'
+    : startCondition? frequency? 'ACTIVATE' name  priority? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1202,13 +1247,31 @@ frequency
 //   AT Expression§Time | AFTER Expression§Duration | WHEN Name§Interrupt
 ////////////////////////////////////////////////////////////////////////////////
 
-startCondition
-    :
-      'AFTER'   expression                                      # startConditionAFTER
-    | 'AT'      expression                                      # startConditionAT
-    | 'WHEN'    ID  ( 'AFTER' expression)?                      # startConditionWHEN
+// need default visitor for startCondition
+//startCondition													
+//    :
+//      'AFTER'   expression                                      # startConditionAFTER
+//    | 'AT'      expression                                      # startConditionAT
+//    | 'WHEN'    name  ( 'AFTER' expression)?                      # startConditionWHEN
+//    ;
+startCondition :
+    (startConditionAFTER
+    | startConditionAT
+    | startConditionWHEN
+    )
     ;
 
+startConditionAFTER: 
+    'AFTER'   expression
+	;
+
+startConditionAT: 
+    'AT'   expression
+	;
+
+startConditionWHEN: 
+    'WHEN'    name  ( 'AFTER' expression)?
+	;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1220,13 +1283,18 @@ task_coordination_statement
     | boltEnter
     | boltLeave
     ;
+    
+// generic rule for semaphore and bolt operations, which have a list of names     
+listOfNames : 
+	name ( ',' name)* 
+	;    
 
 ////////////////////////////////////////////////////////////////////////////////
 // REQUEST Name§Sema [ , Name§Sema ]... ;
 ////////////////////////////////////////////////////////////////////////////////
 
 semaRequest
-    : 'REQUEST' ID ( ',' ID)* ';'
+    : 'REQUEST' listOfNames ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1234,7 +1302,7 @@ semaRequest
 ////////////////////////////////////////////////////////////////////////////////
 
 semaRelease
-    : 'RELEASE' ID ( ',' ID)* ';'
+    : 'RELEASE' listOfNames ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1242,8 +1310,9 @@ semaRelease
 ////////////////////////////////////////////////////////////////////////////////
 
 semaTry
-    : 'TRY' ID ( ',' ID)*
+    : 'TRY' listOfNames
     ;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // BoltDeclaration ::=
@@ -1269,25 +1338,25 @@ boltDeclaration :
 ////////////////////////////////////////////////////////////////////////////////
 
 boltReserve:
-     'RESERVE'  ID ( ',' ID)* ';'
+     'RESERVE'  listOfNames ';'
       ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 boltFree:
-     'FREE' ID ( ',' ID)* ';'
+     'FREE' listOfNames ';'
       ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 boltEnter:
-     'ENTER'   ID ( ',' ID)* ';'
+     'ENTER'   listOfNames ';'
      ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 boltLeave:
-     'LEAVE'   ID ( ',' ID)* ';'
+     'LEAVE'  listOfNames ';'
      ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1331,7 +1400,7 @@ io_statement:
 //      { CAN | PRM }
 
 open_statement:
-    'OPEN' ID ( 'BY' open_parameterlist )? ';'
+    'OPEN' dationName ( 'BY' open_parameterlist )? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1344,7 +1413,7 @@ open_parameterlist:
 
 open_parameter:
     open_parameter_idf
-    | open_close_RST                  
+    | openClosePositionRST                 
     | open_parameter_old_new_any         
     | open_close_parameter_can_prm      
     ;
@@ -1355,9 +1424,9 @@ open_parameter_idf:
     'IDF' '(' ( ID | StringLiteral ) ')'  	
     ;
 
-open_close_RST :
-	'RST' ( '(' ID ')' )
-	;
+//open_close_RST :
+//	'RST' ( '(' ID ')' )
+//	;
 
 
 open_parameter_old_new_any:
@@ -1377,7 +1446,7 @@ open_close_parameter_can_prm:
 ////////////////////////////////////////////////////////////////////////////////
 
 close_statement:
-    'CLOSE' ID ( 'BY' close_parameterlist)? ';'
+    'CLOSE' dationName ( 'BY' close_parameterlist)? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1393,7 +1462,7 @@ close_parameterlist:
 
 close_parameter :
       open_close_parameter_can_prm
-    | open_close_RST                  
+    | openClosePositionRST                 
      ;
 
 //////////////////////////////////////////////////////////////////////////////////    
@@ -1513,7 +1582,7 @@ listOfFormatPositions:
 	;
 
 dationName: 
-	ID
+	name
 	;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1602,7 +1671,7 @@ positionSOP:
 //   | SOP ( Name [ , Name [ , Name ] ] /∗ PositionVariables-FIXED ∗/ )
 ////////////////////////////////////////////////////////////////////////////////
 position:
-      positionRST
+      openClosePositionRST
     | relativePosition
     | absolutePosition
     ;
@@ -1621,8 +1690,8 @@ relativePosition:
     ;
 
 
-positionRST :
-	'RST' ( '(' ID ')' )
+openClosePositionRST :
+	'RST' '(' name ')' 
 	;
 
 positionPAGE:
@@ -1893,7 +1962,7 @@ dationSpecification
 /*
 
 change in grammar 2019-10-12
-dationSpoecification and dationDeclaration 
+  dationSpecification and dationDeclaration 
   - uses typeDation and specifyTypeDation, resp.
   - typeDation and specifyTapeDation were identical
   - classAttribute had an optional element 'SYSTEM' which is only possible 
@@ -1913,7 +1982,7 @@ specifyTypeDation
 ////////////////////////////////////////////////////////////////////////////////
 
 dationDeclaration
-    : ( 'DECLARE' | 'DCL' ) identifierDenotation typeDation typology? accessAttribute? globalAttribute? 'CREATED' '(' ID  ')' ';'
+    : ( 'DECLARE' | 'DCL' ) identifierDenotation typeDation  globalAttribute? 'CREATED' '(' ID  ')' ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1921,8 +1990,8 @@ dationDeclaration
 //    DATION SourceSinkAttribute ClassAttribute [ Structure ] [ AccessAttribute ]
 ////////////////////////////////////////////////////////////////////////////////
 
-typeDation
-    : 'DATION' sourceSinkAttribute classAttribute
+typeDation:
+    'DATION' sourceSinkAttribute classAttribute typology? accessAttribute?
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2136,6 +2205,8 @@ expression:
     | expression op=( '>='|'GE') expression                 # geRelationalExpression
     | expression op=( '=='|'EQ') expression                 # eqRelationalExpression
     | expression op=( '/='|'NE') expression                 # neRelationalExpression
+    | expression op='IS' expression                      # isRelationalExpression
+    | expression op='ISNT' expression               # isntRelationalExpression
     | expression op='AND' expression                        # AndExpression
     | expression op='OR' expression                         # OrExpression
     | expression op='EXOR' expression                       # ExorExpression
@@ -2214,17 +2285,12 @@ index:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-primaryExpression
-	: '(' expression ')'
-//  | ID
-//  | ID indices
-//  | ID '(' expression  ( ',' expression )* ')'
+primaryExpression:
+    '(' expression ')'
     | name
-//    | ID listOfActualParameters?
     | literal
     | semaTry
-//  | monadicExplicitTypeConversionOperators
-    | stringSlice
+    | stringSelection
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2234,8 +2300,8 @@ primaryExpression
 //   | ConstantFIXEDExpression
 ////////////////////////////////////////////////////////////////////////////////
 
-constantExpression
-    : floatingPointConstant
+constantExpression:
+    floatingPointConstant
     | sign? durationConstant
     | constantFixedExpression
     ;
@@ -2245,8 +2311,8 @@ constantExpression
 //   Term [ { + | - } Term ] ...
 ////////////////////////////////////////////////////////////////////////////////
 
-constantFixedExpression
-    : constantFixedExpressionTerm ( additiveConstantFixedExpressionTerm | subtractiveConstantFixedExpressionTerm) *
+constantFixedExpression:
+    constantFixedExpressionTerm ( additiveConstantFixedExpressionTerm | subtractiveConstantFixedExpressionTerm) *
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2342,7 +2408,8 @@ convertToStatement:
 //   [ BY FormatOrPositionConvert [ , FormatOrPositionConvert ] ... ] ;
 ////////////////////////////////////////////////////////////////////////////////
 convertFromStatement:
-	'CONVERT' ioDataList? 'FROM' name ( 'BY' listOfFormatPositions )? ';'
+	//'CONVERT' ioDataList? 'FROM' name ( 'BY' listOfFormatPositions )? ';'
+	'CONVERT' ioDataList? 'FROM' expression ( 'BY' listOfFormatPositions )? ';'
 	;
 
 
@@ -2374,16 +2441,19 @@ stringSlice
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bitSlice
-	: ID '.' 'BIT' '(' constantFixedExpression ')'                                                  #case1BitSlice
+bitSlice:
+	  ID '.' 'BIT' '(' constantFixedExpression ')'                                                  #case1BitSlice
 	| ID '.' 'BIT' '(' constantFixedExpression ( ':' constantFixedExpression ) ')'                  #case2BitSlice
+	| ID '.' 'BIT' '(' expression ':' expression '+' IntegerConstant  ')'     					    #case3BitSlice
 	;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-charSlice
-	: ID '.' ( 'CHAR' | 'CHARACTER' ) '(' expression ')'                                            #case1CharSlice
-	| ID '.' ( 'CHAR' | 'CHARACTER' ) '(' expression ':' expression ')'                             #case2CharSlice
+//
+charSlice:
+	  ID '.' ( 'CHAR' | 'CHARACTER' ) '(' expression ')'                                            #case1CharSlice
+// 2020-03-17 (rm) the lexer does not distinguish between expression and constantFixedExpression
+// map case2CharSlice to case4CharSlice	
+//	| ID '.' ( 'CHAR' | 'CHARACTER' ) '(' constantFixedExpression ':' constantFixedExpression ')'   #case2CharSlice
 	| ID '.' ( 'CHAR' | 'CHARACTER' ) '(' expression ':' expression '+' IntegerConstant  ')'        #case3CharSlice
 	| ID '.' ( 'CHAR' | 'CHARACTER' ) '(' expression ':' expression ')'                             #case4CharSlice
 	;
@@ -2397,7 +2467,12 @@ literal:
     | StringLiteral
     | timeConstant
     | durationConstant
+    | referenceConstant
     ;
+    
+referenceConstant:
+	'NIL'
+	;    
 
 ////////////////////////////////////////////////////////////////////////////////
 

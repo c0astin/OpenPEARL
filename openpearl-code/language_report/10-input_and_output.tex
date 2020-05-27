@@ -1,7 +1,10 @@
 % labels and refs added
 % grammar for 'SYSTEM' added
 % signals in put/get formats added; behavior clearified
-
+% 2020-03-11: rm: rounding in E-format added
+%	signal at B2/3/4 formats added
+%	D-format accept sign at input and set optional '-' at output
+% 2020-03-26: rm: StringSelection in i/o statements clearified
 \chapter{Input and Output}   % 10
 \label{sec_input_output}
 The input and output statements enable the transfer of data from the
@@ -497,7 +500,7 @@ MODULE(modulename);
 SYSTEM;
 disc: Disc('/home', 10);
 ... 
-ROBLEM;
+PROBLEM;
   SPC disc DATION INOUT SYSTEM ALL;
   DCL table DATION IN FLOAT DIM(300, 5) DIRECT GLOBAL CREATED (disc);
  ...
@@ -795,6 +798,9 @@ The general forms of the read and write statements read:
 \index{BY@\textbf{BY}!\textbf{WRITE}}
 \index{RST@\textbf{RST}!\textbf{WRITE}}
 \end{grammarframe}
+
+\OpenPEARL{} regards \hyperlink{StringSelection}{string selections} as
+expressions. They are not accepted in the read statement.
 
 A slice may be defined as range of the last index of an array.
 \begin{grammarframe}
@@ -1171,6 +1177,9 @@ The general forms of the get and put statements read:
 \input{Format.bnf}
 \end{grammarframe}
 
+\OpenPEARL{} regards \hyperlink{StringSelection}{string selections} as
+expressions. They are not accepted in the get statement.
+
 Upon input with the get statement, the addressed data elements are
 read one after the other and correspondingly assigned to the variables
 in the variable list (analogously to the read statement). The
@@ -1439,8 +1448,8 @@ mantissa does not equal zero, if the number is different from zero.
 value  & format    & output \\ \hline
 -0.07  & \code{E(9,1)}    & \_-7.0E-02 \\
 2713.5 & \code{E(11,2,4)} & \_\_27.14E+02 & rounding occurs\\
-2721   & \code{E(8)}      & \_\_\_2E+03 \\
-2721   & \code{E3(8)}      & \_\_2E+003
+2721   & \code{E(8)}      & \_\_\_3E+03 & rounding occurs\\
+2721   & \code{E3(8)}      & \_\_3E+003 & rounding occurs
 \end{tabular}
 
 \end{enumerate}
@@ -1633,17 +1642,17 @@ string.
 \item The expression must be given.
 \item A field of length w is read in, which must contain a bit string of the
 above described form.
-If the data field does not match a valid bit representation, 
-or the field consists completely of spaces,
-the
-\code{BitValueSignal} is induced.
+If the data field does not match a valid bit representation,
+    or represents more bits than the input element, 
+   or the field consists completely of spaces,
+the \code{BitValueSignal} is induced.
 \item Spaces preceding or following the string are ignored.
 
 %%%\begin{accepted}
 \item If w $<=$ 0, no data is assigned and the \code{BitFormatSignal} is induced.
-
-
 %%%\end{accepted}
+\item The B2/3/4 formats may inherently specify more bits as the input element contains. 
+   These bits must be cleared. The \code{BitValueSignal} is induced else. 
 \end{enumerate}
 \end{enumerate}
 
@@ -1665,7 +1674,7 @@ following possibilities:
 data element to be entered & format & value of bit string \\ \hline
 11111                      & \code{B(5)}   &         11111000    \\
 201                        & \code{B2(3)}  &         10000100    \\
-235                        & \code{B3(3)}  &         01001110    \\
+235                        & \code{B3(3)}  &   \textit{BitValueSignal} \\
 AB                         & \code{B4(2)}  &         10101011
 \end{tabular}
 
@@ -1710,7 +1719,9 @@ form
 
 [ \code{Digit} ] \code{Digit : Digit Digit : Digit Digit} [ \code{. pi} ]
 
-\item If the first digit is zero, it is replaced by spaces. In case d = 0,
+\item 
+%If the first digit is zero, it is replaced by spaces. 
+In case d = 0,
 decimal point and fractional parts of seconds are not written out.
 
 \item If the output value does not occupy the entire field, the left part is
@@ -1777,7 +1788,7 @@ the duration.
 \item  The duration is written out right-justified in a field of length w in
 the form
 
-[ [ [ [ [ \code{Digit} ] \code{Digit} \kw{HRS} ]
+[ \code{-} ] [ [ [ [ \code{Digit} $^{...}$ \kw{HRS} ]
           \code{Digit}] \code{Digit} \kw{MIN} ] 
 	 \code{Digit} ] \code{Digit} [ \kw{.} \code{pi} ] \kw{SEC}
 
@@ -1829,6 +1840,7 @@ ignored.
 %%%\begin{added}
 \item A valid duration constant from chapter \ref{sec_type_duration} is accepted.
 No delimiting spaces are required.
+\item OpenPEARL accepts a leading sign \code{[+  $\mid$ -]} 
 \item The value of d is not used in input. A decimal point is required in the
 input field for precisions better than \code{1 SEC}.
 
@@ -1979,6 +1991,9 @@ The general forms of the convert statement are:
 \index{RST@\textbf{RST}!\textbf{CONVERT}}
 \end{grammarframe}
 
+\OpenPEARL{} regards \hyperlink{StringSelection}{string selections} as
+expressions. They are not accepted in the convert-from statement.
+
 All permitted formats have the same meaning as for the \code{PUT} and \code{GET}
 statements 
 %%%\addedtext{
@@ -2026,6 +2041,9 @@ respectively. The data station must possess the class attribute BASIC.
 \input{RSTFormat.bnf}
 \index{RST@\textbf{RST}!\textbf{SEND}}
 \end{grammarframe}
+
+\OpenPEARL{} regards \hyperlink{StringSelection}{string selections} as
+expressions. They are not accepted in the take statement.
 
 %%%\begin{accepted}
 The types of the ``variable'' in the take statement or the

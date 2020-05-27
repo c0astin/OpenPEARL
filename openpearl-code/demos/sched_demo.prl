@@ -40,6 +40,7 @@ DCL console DATION OUT ALPHIC DIM(*,80) FORWARD /* GLOBAL */ CREATED(termout);
 DCL common_x FIXED;
 
 DCL stop_rr_test BIT(1) INIT('0'B1);
+DCL put SEMA PRESET(1);
 
 rr_test: PROC;
    DCL end CLOCK;
@@ -90,8 +91,11 @@ rr_test_function: PROC (id FIXED);
    END;
 
    IF stop_rr_test AND loopcounter EQ 0 THEN
+       REQUEST put;  ! avoid intermixing of result log
        PUT 'RR',id,': round robin seems to be off' TO console BY A,F(1),A,SKIP;
+       RELEASE put;
    ELSE
+       REQUEST put;  ! avoid intermixing of result log
        PUT 'RR',id,':+++++++++++++++++++++++',
                 'round robin scheduling works' TO console
            BY A,F(1),A,SKIP,A,SKIP;
@@ -107,6 +111,7 @@ rr_test_function: PROC (id FIXED);
        sum := sum / loopcounter;
        PUT 'RR',id,' time slice avg:=',sum TO console
           BY A,F(1),A,D(30,6),SKIP;
+       RELEASE put;
    FIN;
    
 END;

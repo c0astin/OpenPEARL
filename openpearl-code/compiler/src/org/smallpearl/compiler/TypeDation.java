@@ -29,7 +29,21 @@
 
 package org.smallpearl.compiler;
 
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
+/**
+ * type DATION
+ * 
+ * the comparison of TypeDation is difficult, since there are a lot of
+ * optional od defaulted parameters
+ * 
+ * The .equals() must check the equality of specified attributes
+ * - eq. if no dimensions are specified at one element this must no be checked
+ *   
+ * @author mueller
+ *
+ */
 public class TypeDation extends TypeDefinition {
 	private boolean m_in;  ///< is IN
 	private boolean m_out;    ///< is OUT; INOUT sets both
@@ -38,6 +52,7 @@ public class TypeDation extends TypeDefinition {
 	private boolean m_basic;
 	private String m_typeOfTransmission;
 	private TypeDefinition m_typeOfTransmissionAsType;
+	private boolean m_hasAccessAttributes;
 	private boolean m_direct;
 	private boolean m_forward;
 	private boolean m_forback;
@@ -45,11 +60,13 @@ public class TypeDation extends TypeDefinition {
 	private boolean m_stream;
 	private boolean m_isDeclaration;
 	private String m_global;
+	private boolean m_hasTypology;
 	private int m_dimension1;
 	private int m_dimension2;
 	private int m_dimension3;
 	private boolean m_tfu;
 	private String m_created_on;
+	private boolean m_hasSourceSinkAttribute;
 	
 	
 	// typology not added yet
@@ -57,12 +74,15 @@ public class TypeDation extends TypeDefinition {
 	
     public TypeDation() {
         super("DATION");
+        m_hasSourceSinkAttribute=false;
         m_in = false;
         m_out = false;
         m_systemDation = false;
         m_alphic = false;
         m_basic = false;
         m_typeOfTransmission = null;
+        m_hasAccessAttributes = false;
+        m_hasTypology = false;
         m_direct = false;
         m_forward = false;
         m_forback = false;
@@ -90,19 +110,27 @@ public class TypeDation extends TypeDefinition {
     	if (m_typeOfTransmission!= null) {
     		s+=" "+m_typeOfTransmission;
     	}
-    	if (m_direct) s+= " DIRECT";
-    	if (m_forward) s+= " FORWARD";
-    	if (m_forback) s+= " FORBACK";
-    	if (m_dimension1>=0) s+=" DIM("+m_dimension1;
-    	if (m_dimension2>=0) s+= ","+m_dimension2;
-    	if (m_dimension3>=0) s+= "," +m_dimension3;
-    	if (m_dimension1>= 0) s+= ")";
-    	// s += " (numberOfDimensions="+getNumberOfDimensions()+")";
-    	if (m_tfu) s+= " TFU";
-    	if (m_cyclic) s+= " CYCLIC";
-    	else s+= " NOCYCL";
-    	if (m_stream) s+= " STREAM";
-    	else s+=" NOSTREAM";
+    	if (m_hasAccessAttributes) {
+    	  if (m_direct) s+= " DIRECT";
+    	  if (m_forward) s+= " FORWARD";
+    	  if (m_forback) s+= " FORBACK";
+          if (m_cyclic) s+= " CYCLIC";
+            else s+= " NOCYCL";
+          if (m_stream) s+= " STREAM";
+            else s+=" NOSTREAM";    	  
+    	}
+    	if (m_hasTypology) {
+    	  s += " DIM(";
+    	  if (m_dimension1>0) s+=m_dimension1;
+    	  if (m_dimension1==0) s+= '*'; 
+    	  if (m_dimension2>0) s+= ","+m_dimension2;
+          if (m_dimension2==0) s+= ",*";
+    	  if (m_dimension3>0) s+= "," +m_dimension3;
+          if (m_dimension3==0) s+= ",*";
+    	  if (m_dimension1>= 0) s+= ")";
+    	  if (m_tfu) s+= " TFU";
+    	}
+    	
     	if (m_global != null) s+= " GLOBAL("+m_global+")";	
     	if (m_created_on != null) s+= " CREATED("+m_created_on+")";
         return s;
@@ -114,6 +142,7 @@ public class TypeDation extends TypeDefinition {
 
 	public void setIn(boolean m_in) {
 		this.m_in = m_in;
+		this.m_hasSourceSinkAttribute = true;
 	}
 	
 	public boolean isOut() {
@@ -121,6 +150,7 @@ public class TypeDation extends TypeDefinition {
 	}
 
 	public void setOut(boolean m_out) {
+	    this.m_hasSourceSinkAttribute = true;
 		this.m_out = m_out;
 	}
 
@@ -174,6 +204,7 @@ public class TypeDation extends TypeDefinition {
 	}
 
 	public void setDirect(boolean m_direct) {
+	  this.m_hasAccessAttributes = true;
 		this.m_direct = m_direct;
 	}
 
@@ -182,6 +213,7 @@ public class TypeDation extends TypeDefinition {
 	}
 
 	public void setForward(boolean m_forward) {
+	  this.m_hasAccessAttributes = true;
 		this.m_forward = m_forward;
 	}
 
@@ -190,6 +222,7 @@ public class TypeDation extends TypeDefinition {
 	}
 
 	public void setForback(boolean m_forback) {
+	  this.m_hasAccessAttributes = true;
 		this.m_forback = m_forback;
 	}
 
@@ -198,6 +231,7 @@ public class TypeDation extends TypeDefinition {
 	}
 
 	public void setCyclic(boolean m_cyclic) {
+	  this.m_hasAccessAttributes = true;
 		this.m_cyclic = m_cyclic;
 	}
 
@@ -206,6 +240,7 @@ public class TypeDation extends TypeDefinition {
 	}
 
 	public void setStream(boolean m_stream) {
+	  this.m_hasAccessAttributes = true;
 		this.m_stream = m_stream;
 	}
 
@@ -241,6 +276,7 @@ public class TypeDation extends TypeDefinition {
 	}
 
 	public void setDimension1(int m_dimension1) {
+	  this.m_hasTypology = true;
 		this.m_dimension1 = m_dimension1;
 	}
 
@@ -249,6 +285,7 @@ public class TypeDation extends TypeDefinition {
 	}
 
 	public void setDimension2(int m_dimension2) {
+	   this.m_hasTypology = true;
 		this.m_dimension2 = m_dimension2;
 	}
 	public int getDimension3() {
@@ -256,6 +293,7 @@ public class TypeDation extends TypeDefinition {
 	}
 
 	public void setDimension3(int m_dimension3) {
+	   this.m_hasTypology = true;
 		this.m_dimension3 = m_dimension3;
 	}
 	
@@ -268,6 +306,7 @@ public class TypeDation extends TypeDefinition {
 		return nbr;
 	}
 	public void setTfu(boolean tfu) {
+	   this.m_hasTypology = true;
 		m_tfu = tfu;
 	}
 	
@@ -275,6 +314,36 @@ public class TypeDation extends TypeDefinition {
 		return m_tfu;
 	}
 	
+    public ST toST(STGroup group) {
+      ST st = group.getInstanceOf("dation_type");
+      if (m_alphic) {
+        st.add("isAlphic",1);
+      } 
+      if (m_typeOfTransmission != null) {
+        st.add("isType", 1);
+      }
+      if (m_basic) {
+        st.add("isBasic",1);
+      } 
+      
+      return st;
+    }
+    
+    public boolean hasTypology() {
+      return m_hasTypology;
+    }
+    
+    public boolean hasAccessAttributes() {
+      return m_hasAccessAttributes;
+    }
+    /**
+     * Attention:
+     * For the assigment to reference, the attributes of the lhs must be present
+     * at the rhs. Additional parameters at the rhs are possible
+     * 
+     * Thus the comparison checks first whether 'this' has an attribute.
+     * If the attribute(s) are poresent, they must be equal to the attributes in 'that'
+     */
 	@Override
     public boolean equals(Object other) {
         if (!(other instanceof TypeDation)) {
@@ -284,23 +353,38 @@ public class TypeDation extends TypeDefinition {
         TypeDation that = (TypeDation) other;
         
         // Custom equality check here.
-        if (this.m_in != that.m_in) return false;
-        if (this.m_out != that.m_out) return false;
-        if (this.m_systemDation != that.m_systemDation) return false;
+        if (this.m_hasSourceSinkAttribute) {
+          if (this.m_in == true && this.m_in != that.m_in) return false;
+          if (this.m_out == true && this.m_out != that.m_out) return false;
+
+        }
+//        if (this.m_systemDation != that.m_systemDation) return false;
         if (this.m_alphic != that.m_alphic) return false;
         if (this.m_basic != that.m_basic) return false;
-        if (this.m_typeOfTransmission.equals(that.m_typeOfTransmission)) return false;
-        if (this.m_direct != that.m_direct) return false;
-        if (this.m_forward != that.m_forward) return false;
-        if (this.m_cyclic != that.m_cyclic) return false;
-        if (this.m_stream != that.m_stream) return false;
-        if (this.m_isDeclaration != that.m_isDeclaration) return false;
-        if (this.m_global != that.m_global) return (false);
-        if (this.m_global != null && that.m_global != null &&
-        	!this.m_global.equals(that.m_global)) return (false);	
-        if (this.m_created_on != that.m_created_on) return (false);
-        if (this.m_created_on != null && that.m_created_on != null &&
-        	!this.m_created_on.equals(that.m_created_on)) return (false);	
+        if (this.m_typeOfTransmission != null && that.m_typeOfTransmission != null) { 
+           if (this.m_typeOfTransmission.equals(that.m_typeOfTransmission)) return false;
+        }
+        if (this.m_hasAccessAttributes) {
+          if (this.m_direct != that.m_direct) return false;
+          if (this.m_forward != that.m_forward) return false;
+          if (this.m_cyclic != that.m_cyclic) return false;
+          if (this.m_stream != that.m_stream) return false;
+        }
+        
+        if (this.m_hasTypology) {
+          if (this.getDimension1() != that.getDimension1()) return false;
+          if (this.getDimension2() != that.getDimension2()) return false;
+          if (this.getDimension3() != that.getDimension3()) return false;
+          if (this.hasTfu() != that.hasTfu()) return false;
+        }
+//        if (this.m_isDeclaration != that.m_isDeclaration) return false;
+//        if (this.m_global != that.m_global) return (false);
+//        if (this.m_global != null && that.m_global != null &&
+//        	!this.m_global.equals(that.m_global)) return (false);	
+        
+//        if (this.m_created_on != that.m_created_on) return (false);
+//        if (this.m_created_on != null && that.m_created_on != null &&
+//        	!this.m_created_on.equals(that.m_created_on)) return (false);	
 
         return true;
     }

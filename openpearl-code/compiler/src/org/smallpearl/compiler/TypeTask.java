@@ -29,9 +29,11 @@
 
 package org.smallpearl.compiler;
 
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 public class TypeTask extends TypeDefinition {
-    TypeTask() {
+    public TypeTask() {
         super("TASK");
     }
 
@@ -43,4 +45,9 @@ public class TypeTask extends TypeDefinition {
     public boolean equals(Object other) {
         return other instanceof TypeTask;
     }
+    
+    public ST toST(STGroup group) {
+      ST st = group.getInstanceOf("task_type");
+      return st;
+  }
 }

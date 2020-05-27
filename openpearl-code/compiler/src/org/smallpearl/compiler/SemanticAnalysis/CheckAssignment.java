@@ -33,6 +33,7 @@ import org.smallpearl.compiler.*;
 import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
 import org.smallpearl.compiler.Exception.TypeMismatchException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
+import org.smallpearl.compiler.SymbolTable.ProcedureEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
@@ -75,164 +76,238 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
   //      the value of the expression.
   //  (3) A bit or character string, resp., to the left may have a greater length than the value to be assigned; if
   //      needed, the latter is extended by zeros or spaces, resp., on the right.
+  //  (4) A variable (no expression) may be assigned to a REF. In this case the type must match exactly
+  //  (5) A reference may be assigned to a variable, implicit dereferencing occurs
+  //  (6) special for assignments to references: rhs must live longer or equal as lhs
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   @Override
   public Void visitAssignment_statement(SmallPearlParser.Assignment_statementContext ctx) {
     Log.debug("CheckAssignment:visitAssignment_statement:ctx" + CommonUtils.printContext(ctx));
-
     String id = null;
-    ErrorStack.enter(ctx,"assignment");
 
+    ErrorStack.enter(ctx,"assignment");
+    ASTAttribute lhsAttr = null; 
+    TypeDefinition lhsType = null;
+
+    SmallPearlParser.NameContext ctxName = null;
     if ( ctx.stringSelection() != null ) {
+      lhsAttr = m_ast.lookup(ctx.stringSelection()); 
       if ( ctx.stringSelection().charSelection() != null ) {
-        id = ctx.stringSelection().charSelection().ID().getText();
+        ctxName = ctx.stringSelection().charSelection().name();
       }
       else  if (ctx.stringSelection().bitSelection() != null) {
-        id = ctx.stringSelection().bitSelection().ID().getText();
+        ctxName = ctx.stringSelection().bitSelection().name();
       } else {
-        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        ErrorStack.addInternal("CheckAssignment: missing alternative");
+        ErrorStack.leave();
+        return null; 
       }
-    } else if (ctx.selector() != null ) {
-      Log.debug("ExpressionTypeVisitor:visitAssignment_statement:selector:ctx" + CommonUtils.printContext(ctx.selector()));
-      visitSelector(ctx.selector());
-      id = ctx.selector().ID().getText();
-    }
-    else {
-      id = ctx.ID().getText();
+    } else {
+      // no selection; is  ('CONT')? name  
+      lhsAttr = m_ast.lookup(ctx.name()); 
+      ctxName = ctx.name();
     }
 
+    lhsType = lhsAttr.getType();
+    id = ctxName.ID().getText();
     SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
+    VariableEntry lhsVariable = null;
+    if (lhs != null && lhs instanceof VariableEntry) {
+      lhsVariable = (VariableEntry)lhs;
+    } else {
+      ErrorStack.addInternal(id+" not in symbol table or is no variable");
+    }
 
     Log.debug("CheckAssignment:visitAssignment_statement:ctx.expression" + CommonUtils.printContext(ctx.expression()));
 
-    SmallPearlParser.ExpressionContext expr = ctx.expression();
+    if (!(lhsType instanceof TypeStructure ||
+        lhsType instanceof TypeReference ||
+        lhsType instanceof TypeVariableChar ||
+        isSimpleType(lhsType))) {
+      ErrorStack.add(lhsAttr.getType().toString() +" not allowed on lhs"); 
+    } else { 
 
-    TypeDefinition rhs = m_ast.lookupType(ctx.expression());
-    ASTAttribute rhs1 = m_ast.lookup(ctx.expression());
 
-    if ( lhs instanceof VariableEntry) {
-      VariableEntry variable = (VariableEntry) lhs;
-      if (variable.getAssigmentProtection()) {
-        ErrorStack.add("left hand side is INV");
+      TypeDefinition rhsType = m_ast.lookupType(ctx.expression());
+      ASTAttribute rhsAttr = m_ast.lookup(ctx.expression());
+      VariableEntry rhsVariable = rhsAttr.getVariable();
+      SymbolTableEntry rhsSymbol = rhsAttr.getSymbolTableEntry();
+      if (rhsVariable == null && rhsSymbol != null) {
+        // we have no variable, but a symbol exists --> may be a procedure
+        //if (rhsSymbol instanceof ProcedureEntry) {
+        //
+        //  rhsType = new TypeProcedure(((ProcedureEntry) rhsSymbol).getFormalParameters(),
+        //                ((ProcedureEntry) rhsSymbol).getResultType());
+        //}
       }
-      if ( lhs == null ) {
-        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-      }
+      
 
-      if ( variable.getLoopControlVariable()) {
-        ErrorStack.add("left hand side is loop variable");
-      }
-
-      if ( rhs == null ) {
-        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-      }
-
-      if ( variable.getType() instanceof TypeFloat ) {
-        TypeFloat lhs_type = (TypeFloat) variable.getType();
-
-        if ( !(rhs instanceof  TypeFloat || rhs instanceof TypeFixed) ) {
-          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-          //  throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+      if (lhsType instanceof TypeReference && ctx.dereference() == null &&
+          rhsType instanceof TypeReference) {
+        // pointer assignment refVar1 := refVar2;
+        // base types must be identical
+        // rhs must live longer or equal to lhs!
+        checkLifeCycle(lhsVariable,rhsVariable);
+        
+        lhsType = ((TypeReference)lhsType).getBaseType();
+        rhsType = ((TypeReference)rhsType).getBaseType();
+        if (rhsType != null) {
+          checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, true); // match exactly
+        } else {
+          // assignment of NIL to any reference is ok
         }
-
-        if ( rhs instanceof TypeFloat ) {
-          TypeFloat rhs_type = (TypeFloat)rhs;
-
-          if ( rhs_type.getPrecision() >  lhs_type.getPrecision() ) {
-            ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-          }
-        }
-        else if ( rhs instanceof TypeFixed ) {
-          TypeFixed rhs_type = (TypeFixed) rhs;
-        }
+      } else if (lhsType instanceof TypeReference && ctx.dereference() != null &&   
+          !(rhsType instanceof TypeReference)) {
+        // CONT refVar = expr
+        // types must match relaxed
+        lhsType = ((TypeReference)lhsType).getBaseType();
+        checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, false); // lhs may be larger
+      } else if (lhsType instanceof TypeReference &&
+          !(rhsType instanceof TypeReference)) {
+        // refVar = var; no expression allowed on rhs!
+        // need variable or TASK,SEMA,...INTERRUPT
+        if  (isReferableType(rhsType) ||
+            rhsAttr.getVariable() != null) {
+          lhsType = ((TypeReference)lhsType).getBaseType();
+          checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, true); // match exactly
+        } else {
+          ErrorStack.add("reference must point to a variable or TASK,SEMA,BOLT,INTERRUPT or SIGNAL");
+        } 
+        // rhs must live longer or equal to lhs!
+        checkLifeCycle(lhsVariable,rhsVariable);
+        
+      } else if (!(lhsType instanceof TypeReference) &&
+          !(rhsType instanceof TypeReference)) {
+        // simple assignment var:= expr
+        checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, false); // lhs may be larger
+      } else if (!(lhsType instanceof TypeReference) &&
+          rhsType instanceof TypeReference) {
+        // assignment var:= refVar
+        // ok auto dereference
+        rhsType = ((TypeReference)rhsType).getBaseType();
+        checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, false); // lhs may be larger
+      } else {
+        ErrorStack.add("type mismatch: "+lhsAttr.getType().toString()+":="+rhsAttr.getType().toString());
       }
-      else if ( variable.getType() instanceof TypeFixed ) {
-        TypeFixed lhs_type = (TypeFixed) variable.getType();
 
-        if ( rhs instanceof TypeReference &&
-            ((TypeReference)rhs).getBaseType() instanceof TypeFixed) {
-          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-        } else if ( !(rhs instanceof TypeFixed) ) {
-          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-        } else { 
 
-          int rhs_precision = 0;
-          if (rhs instanceof TypeReference) {
-            TypeFixed typ = (TypeFixed) ((TypeReference) rhs).getBaseType();
-            rhs_precision = typ.getPrecision();
-          }
-          else {
-            rhs_precision = ((TypeFixed) rhs).getPrecision();
-          }
-
-          if ( ((TypeFixed) variable.getType()).getPrecision() < rhs_precision ) {
-            ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-          }
-        }
-      }
-      else if ( variable.getType() instanceof TypeClock ) {
-        if ( !(rhs instanceof TypeClock) ) {
-          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-        }
-      }
-      else if ( variable.getType() instanceof TypeDuration ) {
-        if ( !(rhs instanceof TypeDuration) ) {
-          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-        }
-      }
-      else if ( variable.getType() instanceof TypeBit ) {
-        TypeBit lhs_type = (TypeBit) variable.getType();
-
-        if (!(rhs instanceof TypeBit)) {
-          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-        }
-
-        TypeBit rhs_type = (TypeBit) rhs;
-
-        if (rhs_type.getPrecision() > lhs_type.getPrecision()) {
-          ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-        }
-      }
-      else if ( variable.getType() instanceof TypeReference ) {
-        TypeReference lhs_type = (TypeReference) variable.getType();
-        TypeDefinition rhs_type;
-
-        if ( ctx.dereference() == null ) {
-          if ( (rhs1.getVariable() == null) && ( !(rhs1.getType() instanceof TypeTask))) {
-            ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-          }
-
-          TypeDefinition lt = lhs_type.getBaseType();
-
-          if ( rhs instanceof TypeReference) {
-            rhs_type = ((TypeReference) rhs).getBaseType();
-          }
-          else {
-            rhs_type = rhs;
-          }
-
-          if ( !(lt.equals(rhs_type))) {
-            ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-          }
-        }
-        else {
-          TypeDefinition lt = lhs_type.getBaseType();
-          if ( !(lt.equals(rhs))) {
-            ErrorStack.add("type mismatch: "+variable.getType().toString()+":="+rhs1.getType().toString());
-          }
-        }
-      }
-      else if ( variable.getType() instanceof TypeTask ) {
-        System.out.println("Semantic: visitAssignment_statement: TASK");
-      }
     }
-    else {
-      throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-    }
+
     ErrorStack.leave();
-
     return null;
+  }
+
+  
+  private void checkLifeCycle(VariableEntry lhsVariable, VariableEntry rhsVariable) {
+    if (rhsVariable != null) {
+      if (lhsVariable.getLevel() < rhsVariable.getLevel()) {
+        ErrorStack.add("life cycle of '" + rhsVariable.getName()+ "' is shorter than '"+ lhsVariable.getName()+"'");
+      }
+    } else {
+      // rhs is NIL, TASK or PROC
+    }
+    
+  }
+
+  private void checkTypes(TypeDefinition lhsType, ASTAttribute lhsAttr,
+      TypeDefinition rhsType, ASTAttribute rhsAttr,
+      boolean matchExact) {
+    
+    boolean typeMismatch = false;
+
+
+    
+    if (matchExact) {
+      if (lhsType instanceof TypeArraySpecification && rhsType instanceof TypeArray) {
+        int lhsDim = ((TypeArraySpecification)lhsType).getNoOfDimensions();
+        lhsType = ((TypeArraySpecification)lhsType).getBaseType();
+        int rhsDim = ((TypeArray)rhsType).getNoOfDimensions();
+        rhsType = ((TypeArray)rhsType).getBaseType();
+        if (lhsDim != rhsDim || !lhsType.equals(rhsType)) {
+          typeMismatch = true;
+        } 
+      }
+      if (!lhsType.equals(rhsType)) {
+        typeMismatch = true; 
+      }
+    } else {
+      // 1) assignment to float must accept also fixed on the rhs
+      // 2) TypeVariableChar on lhs or rhs without ConstantSelection fit to char of any length
+      //    the check is done during runtime
+      if (getTypeWithoutPrecision(lhsType) instanceof TypeFloat) {
+        if (getTypeWithoutPrecision(rhsType) instanceof TypeFloat ||
+            getTypeWithoutPrecision(rhsType) instanceof TypeFixed) {
+          if (lhsType.getPrecision() < rhsType.getPrecision()) {
+             typeMismatch = true; 
+          }          
+        } else {
+          typeMismatch = true;
+        }
+      } else if (lhsType instanceof TypeVariableChar) {
+        if (!(rhsType instanceof TypeVariableChar || rhsType instanceof TypeChar)) {
+          typeMismatch = true; 
+        }
+      } else if (rhsType instanceof TypeVariableChar) {
+        if (!(lhsType instanceof TypeVariableChar || lhsType instanceof TypeChar)) {
+          typeMismatch = true; 
+        }
+      } else if (!getTypeWithoutPrecision(lhsType).equals(getTypeWithoutPrecision(rhsType))) {
+          typeMismatch = true; 
+      } else if (lhsType.getPrecision() < rhsType.getPrecision()) {
+        typeMismatch = true; 
+      }
+    
+    }
+    if (typeMismatch) {
+      ErrorStack.add("type mismatch: " +lhsAttr.getType().toString() +" := " + rhsAttr.getType().toString());
+    }
+    return;
+  }
+  
+  private TypeDefinition getTypeWithoutPrecision(TypeDefinition t) {
+    if (t instanceof TypeFixed) {
+      return new TypeFixed();
+    }
+    if (t instanceof TypeFloat) {
+      return new TypeFloat();
+    }
+    if (t instanceof TypeChar) {
+      return new TypeChar();
+    }
+    if (t instanceof TypeBit) {
+      return new TypeBit();
+    }
+    return t;
+  }
+  
+  private boolean isSimpleType(TypeDefinition type) {
+    boolean result = false;
+
+    if (type instanceof TypeFixed    ||
+        type instanceof TypeFloat    ||
+        type instanceof TypeBit      ||
+        type instanceof TypeChar     ||
+        type instanceof TypeDuration ||
+        type instanceof TypeClock ) {
+      result = true;
+    }
+    return result;
+  }
+  
+  // naming not good, since simple types are also referable
+  private boolean isReferableType(TypeDefinition rhsType) {
+    boolean result = false;
+
+    if (rhsType instanceof TypeTask      ||
+        rhsType instanceof TypeProcedure ||
+        rhsType instanceof TypeSemaphore ||
+        rhsType instanceof TypeBolt      ||
+        rhsType instanceof TypeSignal    ||
+        rhsType instanceof TypeDation    ||
+        rhsType instanceof TypeInterrupt) {
+      result = true;
+    }
+    return result;
   }
 
   @Override

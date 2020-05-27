@@ -78,11 +78,14 @@ END;
 
 
 T1: TASK MAIN;
-   DCL f FIXED;
+   DCL f FIXED INIT(0);
    DCL f15 FIXED(15);
+   DCL af(10) FIXED;
 
    CALL proc_001;
    CALL proc_002(f);
+   CALL proc_002(af(1));
+   CALL proc_002(af(f+1));
    CALL proc_003(f, f15);
    CALL proc_003(f, f15+1);
    CALL proc_004(f, f15);

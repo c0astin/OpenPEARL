@@ -135,7 +135,7 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
       buffer[bp++] = 1;
    }
    printf("T1\n");
-   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(10),
+   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(10,0),
               0);
    printf("sequence: ");
    fail = 0;
@@ -172,7 +172,7 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
 
 DCLTASK(_T2, pearlrt::Prio(20), pearlrt::BitString<1>(1)) {
    buffer[bp++] = 2;
-   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5));
+   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5,0));
    {
       //   printf("t2\n");
       pearlrt::Semaphore* s[2] = {&_s1};
@@ -180,14 +180,14 @@ DCLTASK(_T2, pearlrt::Prio(20), pearlrt::BitString<1>(1)) {
    }
    // change prio of t3 -> is must run before t1
    _T3.cont(me, pearlrt::Task::PRIO, pearlrt::Prio(5));
-   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5));
+   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5,0));
    {
       buffer[bp++] = 2;
       //   printf("t2\n");
       pearlrt::Semaphore* s[2] = {&_s2};
       pearlrt::Semaphore::release(me, 1, s);
    }
-   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5));
+   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5,0));
    {
       buffer[bp++] = 2;
       //  printf("t2\n");
@@ -198,7 +198,7 @@ DCLTASK(_T2, pearlrt::Prio(20), pearlrt::BitString<1>(1)) {
 
 DCLTASK(_T3, pearlrt::Prio(15), pearlrt::BitString<1>(1)) {
    buffer[bp++] = 3;
-   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(3));
+   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(3,0));
    {
       pearlrt::Semaphore* s[2] = {&_s2};
       pearlrt::Semaphore::request(me, 1, s);

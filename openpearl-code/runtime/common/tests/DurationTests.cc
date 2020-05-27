@@ -63,6 +63,8 @@ In case that all tests pass the return value is 0.
 using namespace std;
 
 TEST(Duration, Operations) {
+/*
+  removed -- no double ctor available
    ASSERT_NO_THROW(
 //       pearlrt::Duration c(9223372036854.775807));
       pearlrt::Duration c(922337203685.775));
@@ -70,8 +72,9 @@ TEST(Duration, Operations) {
       // threshold shuold should be +0.000001
       pearlrt::Duration c(9223372036854.775807 + 0.001),
       pearlrt::DurationRangeSignal);
+*/
    {
-      pearlrt::Duration d(24 * 3600.0); // 1 day
+      pearlrt::Duration d(24 * 3600.0,0); // 1 day
       pearlrt::Duration d2;
       pearlrt::Fixed<31> preset(100000000);
       int i = 0;
@@ -91,7 +94,7 @@ TEST(Duration, Operations) {
       ASSERT_EQ(test, 1);
    }
    {
-      pearlrt::Duration d(24 * 3600.0); // 1 day
+      pearlrt::Duration d(24 * 3600, 0); // 1 day
       pearlrt::Duration d2;
       pearlrt::Fixed<31> preset(100000000);
       int i = 0;
@@ -112,70 +115,70 @@ TEST(Duration, Operations) {
       ASSERT_EQ(test, 1);
    }
    {
-      pearlrt::Duration d(10.0);
-      pearlrt::Duration d2(5.0);
+      pearlrt::Duration d(10,0);
+      pearlrt::Duration d2(5,0);
       d = d - d2;
       ASSERT_TRUE((d == d2).getBoolean());
    }
 
    {
-      pearlrt::Duration d(5.0);
-      pearlrt::Duration d2(5.0);
+      pearlrt::Duration d(5,0);
+      pearlrt::Duration d2(5,0);
       d = d + d2;
-      ASSERT_TRUE((d == pearlrt::Duration(10.0)).getBoolean());
+      ASSERT_TRUE((d == pearlrt::Duration(10,0)).getBoolean());
    }
 
    {
-      pearlrt::Duration d(5.0);
+      pearlrt::Duration d(5,0);
       d = d * pearlrt::Fixed<31>(2);
-      ASSERT_TRUE((d == pearlrt::Duration(10.0)).getBoolean());
+      ASSERT_TRUE((d == pearlrt::Duration(10,0)).getBoolean());
       d = d / pearlrt::Fixed<31>(2);
-      ASSERT_TRUE((d == pearlrt::Duration(5)).getBoolean());
+      ASSERT_TRUE((d == pearlrt::Duration(5,0)).getBoolean());
    }
 
    {
-      pearlrt::Duration d(5.0);
+      pearlrt::Duration d(5,0);
       d = pearlrt::Fixed<31>(2) * d;
-      ASSERT_TRUE((d == pearlrt::Duration(10.0)).getBoolean());
+      ASSERT_TRUE((d == pearlrt::Duration(10,0)).getBoolean());
    }
 
 
    {
-      pearlrt::Duration d(5.0);
+      pearlrt::Duration d(5,0);
       d = pearlrt::Float<23>(2.5) * d;
-      ASSERT_TRUE((d == pearlrt::Duration(12.5)).getBoolean());
+      ASSERT_TRUE((d == pearlrt::Duration(12,500000)).getBoolean());
    }
    {
-      pearlrt::Duration d(5.0);
+      pearlrt::Duration d(5,0);
       d = d / (pearlrt::Float<23>)(0.5);
-      ASSERT_TRUE((d == pearlrt::Duration(10.0)).getBoolean());
+      ASSERT_TRUE((d == pearlrt::Duration(10,0)).getBoolean());
    }
-   ASSERT_THROW(pearlrt::Duration(5.0) / pearlrt::Float<23>(0.0),
+   ASSERT_THROW(pearlrt::Duration(5,0) / pearlrt::Float<23>(0.0),
                 pearlrt::DurationDivideByZeroSignal);
    {
-      pearlrt::Duration d(5.0);
-      pearlrt::Duration d2(2.5);
+      pearlrt::Duration d(5,0);
+      pearlrt::Duration d2(2,500000);
       ASSERT_TRUE((d / d2 == pearlrt::Float<23>(2.0)).getBoolean());
    }
    {
-      pearlrt::Duration d(5.0);
-      ASSERT_TRUE((-d == pearlrt::Duration(-5.0)).getBoolean());
+      pearlrt::Duration d(5,0);
+      ASSERT_TRUE((-d == pearlrt::Duration(-5,0)).getBoolean());
       ASSERT_TRUE((d.abs() == d).getBoolean());
       ASSERT_TRUE((d.sign() == pearlrt::Fixed<1>(1)).getBoolean());
    }
    {
-      pearlrt::Duration d(-5.0);
-      ASSERT_TRUE((-d == pearlrt::Duration(5.0)).getBoolean());
-      ASSERT_TRUE((d.abs() == pearlrt::Duration(5.0)).getBoolean());
+      pearlrt::Duration d(-5,0);
+      ASSERT_TRUE((-d == pearlrt::Duration(5,0)).getBoolean());
+      ASSERT_TRUE((d.abs() == pearlrt::Duration(5,0)).getBoolean());
       ASSERT_TRUE((d.sign() == pearlrt::Fixed<1>(-1)).getBoolean());
    }
    {
-      pearlrt::Duration d(0.0);
+      pearlrt::Duration d(0,0);
       ASSERT_TRUE((-d == d).getBoolean());
       ASSERT_TRUE((d.abs() == d).getBoolean());
       ASSERT_TRUE((d.sign() == pearlrt::Fixed<1>(0)).getBoolean());
    }
-   ASSERT_THROW(pearlrt::Duration(5.0) / pearlrt::Duration(),
+   ASSERT_THROW(pearlrt::Duration(5,0) / pearlrt::Duration(),
                 pearlrt::DurationDivideByZeroSignal);
 }
 

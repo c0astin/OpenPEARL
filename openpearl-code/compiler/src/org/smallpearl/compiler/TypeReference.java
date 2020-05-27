@@ -46,7 +46,6 @@ public class TypeReference extends TypeDefinition {
         this.m_baseType = type;
     }
 
-
     public Void setBaseType(TypeDefinition type) {
         this.m_baseType = type;
         return null;
@@ -73,9 +72,16 @@ public class TypeReference extends TypeDefinition {
     }
 
     public ST toST(STGroup group) {
+      if (m_baseType instanceof TypeArraySpecification) {
+        ST st = group.getInstanceOf("TypeReferenceArray");
+        
+        st.add("basetype", ((TypeArraySpecification)m_baseType).getBaseType().toST(group));
+        return st;
+      } else {
         ST st = group.getInstanceOf("TypeReferenceSimpleType");
         st.add("BaseType", m_baseType.toST(group));
         return st;
+      }
     }
 
 }

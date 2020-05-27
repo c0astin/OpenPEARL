@@ -140,7 +140,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    // wait for completion and reset x in case of used as
    // non root
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(1.5), 0);
+               pearlrt::Clock(), pearlrt::Duration(1,500000), 0);
    x = 0;
 
    TASK2.activate(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
@@ -155,7 +155,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    printf("TASK1 test immediate triggered activate disabled interrupt \n");
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.5), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,500000), 0);
 
    if (x != 0) {
       printf("simple trigger disabled fail (x=%d)\n", x);
@@ -168,7 +168,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    printf("TASK1 test immediate triggered activate\n");
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.5), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,500000), 0);
 
    if (x != 1) {
       printf("simple trigger 1 fail (x=%d)\n", x);
@@ -177,7 +177,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.5), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,500000), 0);
 
    if (x != 2) {
       printf("simple trigger 2 fail (x=%d)\n", x);
@@ -187,7 +187,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    TASK2.prevent(me);
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.5), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,500000), 0);
 
    if (x != 2) {
       printf("prevent task2 fail (x=%d)\n", x);
@@ -203,7 +203,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
                   pearlrt::Task::AFTER,
                   pearlrt::Prio(10),
                   pearlrt::Clock(),
-                  pearlrt::Duration(1.0),  // after
+                  pearlrt::Duration(1,0),  // after
                   pearlrt::Duration(),
                   pearlrt::Clock(),
                   pearlrt::Duration(),
@@ -211,7 +211,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
 
    if (x != 0) {
       printf("delayed trigger 1a fail (x=%d)\n", x);
@@ -219,7 +219,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    }
 
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.4), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,400000), 0);
 
    if (x != 1) {
       printf("delayed trigger 1b fail (x=%d)\n", x);
@@ -232,13 +232,13 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    pearlrt::Log::info("delayed trigger 2.0");
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.7), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,700000), 0);
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.7), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,700000), 0);
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.7), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,700000), 0);
 
    if (x != 0) {
       printf("delayed trigger 2a fail (x=%d)\n", x);
@@ -246,7 +246,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    }
 
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.5), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,500000), 0);
 
    if (x != 1) {
       printf("delayed trigger 2b fail (x=%d)\n", x);
@@ -268,7 +268,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
 
    if (x != 1) {
       printf("delayed trigger 2 tasks fail@1  (x=%d)\n", x);
@@ -276,7 +276,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    }
 
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.4), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,400000), 0);
 
    if (x != 2) {
       printf("delayed trigger 2 tasks fail@2 (x=%d)\n", x);
@@ -302,7 +302,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
 
    if (x != 0) {
       printf("delayed trigger 2 tasks fail@1 (x=%d)\n", x);
@@ -310,7 +310,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    }
 
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.4), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,400000), 0);
 
    if (x != 1) {
       printf("delayed trigger 2 tasks fail@2 (x=%d)\n", x);
@@ -319,13 +319,13 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.3), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,300000), 0);
    _ctrlc->trigger();  // Task4 active --> buffer activation
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.3), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,300000), 0);
    _ctrlc->trigger();  // Task4 active --> overrun
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.3), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,300000), 0);
 
    if (x != 1) {
       printf("delayed trigger 2 tasks fail@3 (x=%d)\n", x);
@@ -334,7 +334,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 
    // wait for pending run to be finished
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(1.0), 0);
+               pearlrt::Clock(), pearlrt::Duration(1,0), 0);
 
    if (x != 2) {
       printf("delayed trigger 2 tasks fail@4 (x=%d)\n", x);
@@ -342,7 +342,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    }
 
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
 
    if (x != 3) {
       printf("delayed trigger 2 tasks fail@5 (x=%d)\n", x);
@@ -363,7 +363,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
                   _ctrlc);
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
 
    if (x != 1) {
       printf("simple activate must remove when fail@1 (x=%d)\n", x);
@@ -379,7 +379,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
                   pearlrt::Duration(),
                   _ctrlc);
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
 
    if (x != 2) {
       printf("simple activate must memove when fail@2 (x=%d)\n", x);
@@ -388,7 +388,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
 
    if (x != 2) {
       printf("simple activate must memove when fail@3 (x=%d)\n", x);
@@ -410,13 +410,13 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
                   pearlrt::Duration(),
                   _ctrlc);
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
    TASK5.cont(me, pearlrt::Task::WHEN,
               pearlrt::Prio(), pearlrt::Clock(), pearlrt::Duration(),
               _ctrlc);
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
 
    if (c != 1) {
       printf("when continue failed (c=%d)\n", c);
@@ -425,7 +425,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
 
    if (c != 1) {
       printf("when continue failed -- still triggered (c=%d)\n", c);
@@ -437,7 +437,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
               _ctrlc);
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.8), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
 
    if (c != 2) {
       printf("when continue failed -- still triggered (c=%d)\n", c);
@@ -452,16 +452,16 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    TASK6.cont(me, pearlrt::Task::WHEN | pearlrt::Task::AFTER,
               pearlrt::Prio(),
               pearlrt::Clock(),
-              pearlrt::Duration(1.0), // after
+              pearlrt::Duration(1,0), // after
               _ctrlc);
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.1), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,100000), 0);
    TASK6.activate(me);
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.5), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,500000), 0);
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
-               pearlrt::Clock(), pearlrt::Duration(0.5), 0);
+               pearlrt::Clock(), pearlrt::Duration(0,500000), 0);
 
    if (c != 0) {
       printf("when after continue failed@1 (c=%d)\n", c);
@@ -470,7 +470,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 
    me ->resume(pearlrt::Task::AFTER,
                pearlrt::Clock(),
-               pearlrt::Duration(0.8), 0);
+               pearlrt::Duration(0,800000), 0);
 
    if (c != 1) {
       printf("when after continue failed@2 (c=%d)\n", c);
@@ -503,7 +503,7 @@ DCLTASK(TASK3, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
 DCLTASK(TASK4, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
    me ->resume(pearlrt::Task::AFTER,
                pearlrt::Clock(),
-               pearlrt::Duration(1.0), 0);
+               pearlrt::Duration(1,0), 0);
    x ++;
    printf("Task4: x=%d\n", x);
 }

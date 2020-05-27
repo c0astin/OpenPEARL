@@ -69,7 +69,6 @@ namespace pearlrt {
 
    char RefCharacter::getNextChar() {
       char result;
-
       if (current + 1 > max) {
          throw theCharacterTooLongSignal;
       }

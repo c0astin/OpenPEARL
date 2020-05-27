@@ -49,7 +49,7 @@
 #include "PutCharacter.h"
 #include "GetCharacter.h"
 #include "PutBitString.h"
-#include "GetBitString.h"
+//#include "GetBitString.h"
 #include "IOJob.h"
 
 namespace pearlrt {
@@ -168,6 +168,12 @@ namespace pearlrt {
 
       SystemDationNBSink  sink;
       SystemDationNBSource   source;
+
+      int formatItem;
+      IOFormatList * formatList;
+      TaskCommon *me;
+      void applyAllPositioningFormats(LoopControl & formatLoop,
+             bool directionTo);
 
    public:
       /**

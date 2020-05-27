@@ -121,6 +121,7 @@ public class SymbolTable {
         int i;
         SymbolTable st;
         SymbolTableEntry se;
+        Log.debug("SymbolTable:lookup: name=" + name);
 
        for (st = this; st != null; st = st.parent) {
             if ((se = (SymbolTableEntry) st.m_entries.get(name)) != null) {
@@ -146,6 +147,7 @@ public class SymbolTable {
         if (lookupLocal(se.getName()) != null) {
             return false;
         }
+        se.setLevel(m_level);
         m_entries.put(se.getName(), se);
         return true;
     }
@@ -188,7 +190,7 @@ public class SymbolTable {
 
             return this;
         }
-        catch (Exception e) {	// ClassNotFound exceptin; this is a pain
+        catch (Exception e) {
             System.out.println(e);
             e.printStackTrace();
             return null;
@@ -307,52 +309,71 @@ public class SymbolTable {
         return listOfModules;
     }
 
-    /* TODO: MS
-    public LinkedList<StructureEntry> getStructureDeclarations() {
-        LinkedList<StructureEntry>  listOfStructureEntries = new  LinkedList<StructureEntry>();
+    public HashMap<String,TypeStructure> getStructureDeclarations() {
+        HashMap<String,TypeStructure>  structures = new  HashMap<>();
         SymbolTableEntry e;
 
         for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
             SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
-            if (symbolTableEntry instanceof StructureEntry) {
-                StructureEntry structEntry = (StructureEntry) symbolTableEntry;
-                listOfStructureEntries.add(structEntry);
-            }
-            else if (symbolTableEntry instanceof ModuleEntry) {
-                getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope, listOfStructureEntries);
+            if (symbolTableEntry instanceof ModuleEntry) {
+                getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope, structures);
             }
         }
-        return listOfStructureEntries;
-        
-    }
-    */
 
-    /* TODO MS
-    private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable, LinkedList<StructureEntry> list) {
+        return structures;
+    }
+
+    private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable, HashMap<String,TypeStructure>  structures) {
         SymbolTableEntry e;
 
         for (Iterator it = symbolTable.m_entries.values().iterator(); it.hasNext(); ) {
             SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
 
-            if (symbolTableEntry instanceof StructureEntry) {
-                StructureEntry structEntry = (StructureEntry) symbolTableEntry;
-                list.add(structEntry);
-            }
-            else if (symbolTableEntry instanceof ModuleEntry) {
-                ModuleEntry entry = (ModuleEntry)symbolTableEntry;
-                getStructureDeclarationsForSymboltable(entry.scope, list);
-            }
-            else if (symbolTableEntry instanceof VariableEntry) {
+            if (symbolTableEntry instanceof VariableEntry) {
                 VariableEntry entry = (VariableEntry)symbolTableEntry;
                 if ( entry.getType() instanceof TypeStructure ) {
-                    System.out.println("**" + ((TypeStructure) entry.getType()).getStructureName());
-
+                    TypeStructure struct = (TypeStructure)entry.getType();
+                    getStructureDeclarationsForStructure(struct.getStructureName(),struct,structures);
                 }
             }
+            else if (symbolTableEntry instanceof ProcedureEntry) {
+                ProcedureEntry procedureEntry = (ProcedureEntry) symbolTableEntry;
 
+                if (procedureEntry.getResultType() != null) {
+                    if (procedureEntry.getResultType() instanceof TypeStructure) {
+                        TypeStructure result = (TypeStructure) procedureEntry.getResultType();
+                        structures.put(result.getStructureName(), result);
+                    }
+                }
+
+                getStructureDeclarationsForSymboltable(((ProcedureEntry) symbolTableEntry).scope, structures);
+            }
+            else if (symbolTableEntry instanceof TaskEntry) {
+                getStructureDeclarationsForSymboltable(((TaskEntry) symbolTableEntry).scope, structures);
+            }
+            else if (symbolTableEntry instanceof BlockEntry) {
+                getStructureDeclarationsForSymboltable(((BlockEntry) symbolTableEntry).scope, structures);
+            }
+            else if (symbolTableEntry instanceof LoopEntry) {
+                getStructureDeclarationsForSymboltable(((LoopEntry) symbolTableEntry).scope, structures);
+            }
         }
     }
-*/
+
+    private void getStructureDeclarationsForStructure(String name, TypeStructure structure, HashMap<String,TypeStructure>  structures) {
+        SymbolTableEntry e;
+
+        structures.put(name, structure);
+
+        for (Iterator it = structure.m_listOfComponents.iterator(); it.hasNext(); ) {
+            StructureComponent structureComponent = (StructureComponent) it.next();
+
+            if ( structureComponent.m_type instanceof TypeStructure) {
+                TypeStructure struct = (TypeStructure)structureComponent.m_type;
+                getStructureDeclarationsForStructure(struct.getStructureName(), struct,structures);
+            }
+        }
+    }
 
     public int lookupDefaultFixedLength() {
         SymbolTableEntry entry = this.lookup("~LENGTH_FIXED~");
@@ -431,7 +452,13 @@ public class SymbolTable {
 
         for (int i = 0; i < typ.m_listOfComponents.size(); i++ ) {
             TypeDefinition componentType = typ.m_listOfComponents.get(i).m_type;
-             numberOfComponents += getNumberOfComponents(componentType);
+
+            if (componentType instanceof TypeFixed) {
+                numberOfComponents++;
+            }
+            else {
+                numberOfComponents += getNumberOfComponents(componentType);
+            }
         }
 
         return numberOfComponents;

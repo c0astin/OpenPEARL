@@ -37,6 +37,7 @@
 
 #include "Fixed63.h"
 #include "Signals.h"
+#include <stdio.h>
 
 namespace pearlrt {
 
@@ -69,6 +70,7 @@ namespace pearlrt {
 
    */
 
+#if 0
    Fixed63::Fixed63(double y) {
       if (y < MinInt) {
          throw theArithmeticUnderflowSignal;
@@ -86,7 +88,7 @@ namespace pearlrt {
          throw theArithmeticUnderflowSignal;
       }
    }
-
+#endif
 
    /**
    return the internal value as Fixed64_t (long long)

@@ -30,41 +30,54 @@
 package org.smallpearl.compiler;
 
 
-public class ConstantSlice {
-    private int m_lowerBoundary;
-    private int m_upperBoundary;
+/**
+ * Variable Chars are mentioned in the language report if
+ * the size of a StringSelection is not calculatable by the compiler
+ * the baseType is set in the SemanticAnalysis to the target type 
+ * in function or procedure calls 
+ * 
+ * eg. xxx.CHAR(a:b)
+ * 
+ * @author mueller
+ *
+ */
 
-    ConstantSlice() {
-        this.m_lowerBoundary = 0;
-        this.m_upperBoundary = 0;
+public class TypeVariableChar extends TypeDefinition {
+    private TypeDefinition m_baseType;
+
+    TypeVariableChar() {
+        super("VariableChar");
+        this.m_baseType = null;
     }
 
-    ConstantSlice(int lowerBoundary, int upperBoundary) {
-        this.m_lowerBoundary = lowerBoundary;
-        this.m_upperBoundary = upperBoundary;
+//    TypeVariableChar(TypeDefinition type) {
+//        super("VariableChar");
+//        this.m_baseType = type;
+//    }
+//    
+    public void setBaseType(TypeDefinition m_baseType) {
+      this.m_baseType = m_baseType;
     }
-
+    
+    public TypeDefinition getBaseType() {
+        return this.m_baseType;
+    }
 
     public String toString() {
-        return Integer.toString(this.m_lowerBoundary) + ":" + Integer.toString(this.m_upperBoundary);
+        return this.getName() + " " + this.m_baseType;
     }
-
-    public int getNoOfElements() {
-        return m_upperBoundary - m_lowerBoundary + 1;
-    }
-
-    public int getLowerBoundary() { return this.m_lowerBoundary; }
-    public int getUpperBoundary() { return this.m_upperBoundary; }
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ConstantSlice)) {
+        if (!(other instanceof TypeVariableChar)) {
             return false;
         }
 
-        ConstantSlice that = (ConstantSlice) other;
+        TypeVariableChar that = (TypeVariableChar) other;
 
         // Custom equality check here.
-        return this.m_lowerBoundary == that.m_lowerBoundary && this.m_upperBoundary == that.m_upperBoundary;
+        return this.m_baseType.equals(that.getBaseType());
     }
+
+
 }

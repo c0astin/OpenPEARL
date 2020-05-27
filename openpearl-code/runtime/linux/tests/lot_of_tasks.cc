@@ -112,7 +112,7 @@ DCLTASK(startup,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    } 
    /*do something*/
   
-   start= Clock::now() + Duration(4);
+   start= Clock::now() + Duration(4,0);
 
    printf("activating %d tasks \n", N);
    Log::warn("activate %d tasks", N);
@@ -129,7 +129,7 @@ DCLTASK(startup,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    for (i=1; i<=8 && startcounter != N; i++) { 
      me ->resume(Task::AFTER, 
            Clock(), 
-           Duration(1.0));
+           Duration(1,0));
      printf("%d sec: %d (of %d) tasks finished\n",i, startcounter,N);
    }
    if (startcounter == N) {

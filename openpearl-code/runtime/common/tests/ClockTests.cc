@@ -79,7 +79,7 @@ TEST(Clock, Ctors) {
 TEST(Clock, Operations) {
    pearlrt::Clock c1(1 * 3600 + 2 * 60 + 0);
    pearlrt::Clock c2(1 * 3600 + 2 * 60 + 3);
-   pearlrt::Duration d(1.9);
+   pearlrt::Duration d(1,900000);
    ASSERT_TRUE((c1 < c2).getBoolean());
    ASSERT_TRUE((c2 == c2).getBoolean());
    ASSERT_TRUE((c2 > c1).getBoolean());
@@ -90,33 +90,33 @@ TEST(Clock, Operations) {
    }
    {
       c1 = pearlrt::Clock(10.1);
-      d = pearlrt::Duration(1.9);
+      d = pearlrt::Duration(1,900000);
       ASSERT_TRUE((c1 + d == pearlrt::Clock(12.0)).getBoolean());
    }
    {
       c1 = pearlrt::Clock(23 * 3600 + 59 * 60 + 59.0);
-      d = pearlrt::Duration(1.0);
+      d = pearlrt::Duration(1,0);
       ASSERT_TRUE((c1 + d == pearlrt::Clock()).getBoolean());
    }
    {
       c1 = pearlrt::Clock();
-      d = pearlrt::Duration(-1.0);
+      d = pearlrt::Duration(-1,0);
       ASSERT_TRUE((c1 + d == pearlrt::Clock(23 * 3600 + 59 * 60 + 59.0))
                   .getBoolean());
    }
    {
       c1 = pearlrt::Clock(10.1);
-      d = pearlrt::Duration(1.9);
+      d = pearlrt::Duration(1,900000);
       ASSERT_TRUE((c1 - d == pearlrt::Clock(8.2)).getBoolean());
    }
    {
       c1 = pearlrt::Clock(23 * 3600 + 59 * 60 + 59.0);
-      d = pearlrt::Duration(-1.0);
+      d = pearlrt::Duration(-1,0);
       ASSERT_TRUE((c1 - d == pearlrt::Clock(0)).getBoolean());
    }
    {
       c1 = pearlrt::Clock();
-      d = pearlrt::Duration(1.0);
+      d = pearlrt::Duration(1,0);
       ASSERT_TRUE((c1 - d == pearlrt::Clock(23 * 3600 + 59 * 60 + 59.0))
                   .getBoolean());
    }
@@ -124,7 +124,7 @@ TEST(Clock, Operations) {
       c1 = pearlrt::Clock(10.1);
       c2 = pearlrt::Clock(11.1);
       d = c2 - c1;
-      ASSERT_TRUE((d == pearlrt::Duration(1.0)).getBoolean());
+      ASSERT_TRUE((d == pearlrt::Duration(1,0)).getBoolean());
    }
 }
 

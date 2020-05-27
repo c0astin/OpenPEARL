@@ -29,25 +29,67 @@
 
 package org.smallpearl.compiler;
 
+import java.util.LinkedList;
+import org.smallpearl.compiler.SymbolTable.FormalParameter;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
+
 public class TypeProcedure extends TypeDefinition {
+  private LinkedList<FormalParameter> m_formalParameters;
+  private TypeDefinition m_resultType;
+  
     TypeProcedure() {
         super("PROC");
+        m_formalParameters = null;
+        m_resultType = null;
+    }
+
+    public TypeProcedure(LinkedList<FormalParameter> formalParameters, TypeDefinition resultType) {
+      m_formalParameters = formalParameters;
+      m_resultType = resultType;
     }
 
     public String toString() {
-        return this.getName();
+      String s = this.getName();
+      if (m_formalParameters.size()> 0) {
+        s += " ("+m_formalParameters.get(0).toString();
+        for (int i=1; i<m_formalParameters.size(); i++) {
+          s += ", "+m_formalParameters.get(i).toString();
+        }
+        s += ")";
+      }
+      if (m_resultType != null) {
+        s += m_resultType.toString();
+      }
+
+      return s;
     }
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof TypeReference)) {
+        if (!(other instanceof TypeProcedure)) {
             return false;
         }
 
         TypeProcedure that = (TypeProcedure) other;
 
-        // Custom equality check here.
+        if (!this.m_resultType.equals(that.m_resultType)) return false;
+        if (!this.m_formalParameters.equals(that.m_formalParameters)) return false;
+        
         return true;
     }
+    
+    public ST toST(STGroup group) {
+      ST st = group.getInstanceOf("TypeProcedure");
+      if (m_resultType!= null) {
+        st.add("resultAttribute", m_resultType.toST(group));
+      }
+      if (m_formalParameters!= null) {
+        for (int i=0; i<m_formalParameters.size(); i++) {
+          st.add("listOfFormalParameters", m_formalParameters.get(i).getType().toST(group));
+        }
+      }
+      return st;
+  }
 
 }

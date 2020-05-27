@@ -161,7 +161,7 @@ DCLTASK(TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    printf("%s: activate TASK2\n", rc.getCstring());
    TASK2.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(10)); //  priority
 
-   end = Clock::now() + Duration(10);
+   end = Clock::now() + Duration(10,0);
 
    while( Clock::now().compare(end) < 0)
    {
@@ -172,7 +172,7 @@ DCLTASK(TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
 
      me ->resume(Task::AFTER, 
            Clock(), 
-           Duration(2.0),
+           Duration(2,0),
            0);
    }
    c = Clock::now();
@@ -213,10 +213,10 @@ DCLTASK(TASK2,pearlrt::Prio(4),pearlrt::BitString<1>(0)) {
    TASK3.activate(me, pearlrt::Task::PRIO | Task::AFTER | Task::ALL ,
                         pearlrt::Prio(3),  // prio
 			Clock(0.0),  // at
-			Duration(5.0),  // after
-			Duration(3.0),  // all
+			Duration(5,0),  // after
+			Duration(3,0),  // all
    			Clock(0.0),		// until
-			Duration(0.0));		// during
+			Duration(0,0));		// during
    while(1)
    {
      Clock c = Clock::now();
@@ -227,7 +227,7 @@ DCLTASK(TASK2,pearlrt::Prio(4),pearlrt::BitString<1>(0)) {
      
      me->resume(Task::AFTER, 
 			Clock(0.0), // at
-			Duration(5.0), // after
+			Duration(5,0), // after
 			0); // when
 
    }

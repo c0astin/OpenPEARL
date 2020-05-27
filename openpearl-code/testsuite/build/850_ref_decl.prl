@@ -1,6 +1,15 @@
 MODULE(ref_decl);
+SYSTEM;
+stdout: StdOut;
 
 PROBLEM;
+SPC stdout DATION OUT SYSTEM ALPHIC ;
+DCL so                 DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+/* DATION not accepted by parser 
+DCL dationArray(4) REF DATION OUT ALPHIC DIM(*,80) FORWARD;
+*/
+DCL refArray(10) REF FIXED;
 
 DCL
     (k,l)         FIXED,
@@ -13,14 +22,19 @@ DCL t         CLOCK;
 
 /*==========================================================================*/
 p0: PROC;
-   ! we need the explicit dereference (2019-sep-24)
-   ! this will induce a signal 
+   rk1 := k;
    k := CONT rk1;
+   k := rk1;
+
 END;
 
 /*==========================================================================*/
 
 p1 : PROC;
+   refArray(1) = k;
+   k = CONT refArray(1);  ! dereference allowed
+   k = refArray(1);  ! no dereference required
+
    rk1 := k;                    /* rk1 points at k */
 
    __cpp__ (
@@ -82,6 +96,7 @@ p1 : PROC;
 !   k   := CONT rx;              /* wrong, type unequal */
 !   rk2 := 3;                    /* wrong, 3 is no variable */
 
+   /* Assignmen REF FIXED:=FIXED not supported  */
    CONT rk2 := 3;               /* l obtains value 3 */
 
   __cpp__ (
@@ -115,17 +130,18 @@ END;
 
 /*==========================================================================*/
 
-
+/* return type REF FLOAT not supported
 p3: PROC(fixed FIXED, fixed_ptr REF FIXED) RETURNS (REF FLOAT);
     DCL local_ptr REF FLOAT;
     DCL local_float FLOAT INIT(3.1415926);
 
-    ! error -- returning uninitialized pointer !
+    ! error 1 -- returning uninitialized pointer !
+    ! error 2 -- returning REF to object with shorter life cycle !
     RETURN(local_ptr);
 END;
-
+*/
 /*==========================================================================*/
-
+/* return type REF FLOAT not supported   
 p4: PROC RETURNS (REF FLOAT);
     DCL local_ptr REF FLOAT;
     DCL local_float FLOAT INIT(3.1415926);
@@ -134,7 +150,6 @@ p4: PROC RETURNS (REF FLOAT);
     ! error -- returning pointer to stack variable!
     RETURN(local_ptr);
 END;
-
 /*==========================================================================*/
 
 p5: PROC;

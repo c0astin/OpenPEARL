@@ -212,7 +212,7 @@ printf("rr_test func %d\n",id);
   } else {
       printf("RR%d: +++++++++++++++++++\n"
              "round robin scheduling works (%d loops)\n",id,loopcounter);
-      if (first[0].compare(Duration(1.0)) > 0 ) {
+      if (first[0].compare(Duration(1,0)) > 0 ) {
           printf("    !!! first time slice > 1s \n");
           sum -= first[0];
           loopcounter --;
@@ -237,7 +237,7 @@ void rr_test(Task * me) {
    Clock end;
 Log::info("rrtest: called");
    printf("RR1 and RR2 start in 2s running 10s\n");
-   end = Clock::now() + Duration(2.0);
+   end = Clock::now() + Duration(2,0);
    RR1.activate(me, pearlrt::Task::PRIO | Task::AT ,
                         pearlrt::Prio(3), 
 			end,  // at
@@ -249,7 +249,7 @@ Log::info("rrtest: RR1 scheduled");
 			Duration(), Duration(),Clock(), Duration());
    me->resume(Task::AFTER, 
            Clock(), 
-           Duration(10.0),
+           Duration(10,0),
            0);
    stop_rr_test = 1 ;
    printf("RR1 and RR2 will stop  soon\n");

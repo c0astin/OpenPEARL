@@ -258,7 +258,7 @@ TEST(BitTests, BitSlice) {
    x36.setSlice(2,3, slice);
    EXPECT_TRUE((x36 == (pearlrt::BitString<16>)0x06005).getBoolean());
    ASSERT_THROW(x.setSlice(0,1, slice), pearlrt::BitIndexOutOfRangeSignal);
-   ASSERT_THROW(x.setSlice(5,6, slice), pearlrt::BitIndexOutOfRangeSignal);
+   ASSERT_THROW(x.setSlice(6,7, slice), pearlrt::BitIndexOutOfRangeSignal);
    ASSERT_NO_THROW(x.setSlice(4,5, slice));
    x36 = pearlrt::BitString<16>(0x05);
    slice = x36.getSlice(15, &slice);

@@ -35,13 +35,14 @@ import org.smallpearl.compiler.Exception.IllegalCharacterException;
 import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
 import org.smallpearl.compiler.Exception.ValueOutOfBoundsException;
 import org.smallpearl.compiler.SymbolTable.*;
-
+import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.SmallPearlParser.TypeReferenceContext;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
-import java.io.File;
+
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -825,11 +826,15 @@ public class CommonUtils {
 //    }
 
     public static String printContext(ParserRuleContext ctx) {
+      if (ctx != null) {
         int a = ctx.start.getStartIndex();
         int b = ctx.stop.getStopIndex();
 
         Interval interval = new Interval(a, b);
         return ctx + ":" + ctx.start.getInputStream().getText(interval);
+      } else {
+	return "ctx is NULL";
+      }
     }
 
     public static String getFileExtension(File file) {
@@ -929,7 +934,7 @@ public class CommonUtils {
      * @return ConstantDurationValue
      */
     public static ConstantDurationValue getConstantDurationValue(SmallPearlParser.DurationConstantContext ctx, int sign) {
-        int hours = 0;
+        long hours = 0;
         int minutes = 0;
         double seconds = 0.0;
 
@@ -946,8 +951,17 @@ public class CommonUtils {
                 seconds = getSeconds(ctx.seconds());
             }
         }
-
-        return new ConstantDurationValue(hours, minutes, seconds, sign);
+        
+        
+        ConstantDurationValue c=null;
+        try {
+          c = new ConstantDurationValue(hours, minutes, seconds, sign);
+        } catch (ArithmeticException e) {
+          ErrorStack.enter(ctx);
+          ErrorStack.add("duration constant exeeds limit");
+          ErrorStack.leave();
+        }
+        return c; 
     }
 
     /**
@@ -956,14 +970,22 @@ public class CommonUtils {
      * @param ctx the HoursContext
      * @return number of hours
      */
-    private static Integer getHours(SmallPearlParser.HoursContext ctx) {
-        Integer hours = 0;
+    private static Long getHours(SmallPearlParser.HoursContext ctx) {
+        Long hours = (long) 0;
 
         if (ctx.IntegerConstant() != null) {
-            hours = Integer.parseInt(ctx.IntegerConstant().getText());
+          try {
+            hours = Long.parseLong(ctx.IntegerConstant().getText());
             if (hours < 0) {
-                throw new ValueOutOfBoundsException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+              ErrorStack.enter(ctx);
+              ErrorStack.add("hours must be >= 0");
+              ErrorStack.leave();
             }
+          } catch (NumberFormatException e) {
+            ErrorStack.enter(ctx);
+            ErrorStack.add("value for hours too large");
+            ErrorStack.leave();            
+          }
         }
 
         return hours;
@@ -979,10 +1001,18 @@ public class CommonUtils {
         Integer minutes = 0;
 
         if (ctx.IntegerConstant() != null) {
+          try {
             minutes = Integer.parseInt(ctx.IntegerConstant().getText());
             if (minutes < 0 || minutes > 59) {
-                throw new ValueOutOfBoundsException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+              ErrorStack.enter(ctx);
+              ErrorStack.add("minutes must be in range [0..59]");
+              ErrorStack.leave();
             }
+          } catch (NumberFormatException e) {
+            ErrorStack.enter(ctx);
+            ErrorStack.add("value for minutes too large");
+            ErrorStack.leave();
+          }
         }
 
         return minutes;
@@ -1000,17 +1030,36 @@ public class CommonUtils {
         Double seconds = 0.0;
 
         if (ctx.IntegerConstant() != null) {
+          try {
             seconds = (double) Integer.parseInt(ctx.IntegerConstant().getText());
             if (seconds < 0) {
-                throw new ValueOutOfBoundsException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+              ErrorStack.enter(ctx);
+              ErrorStack.add("seconds must be >= 0");
+              ErrorStack.leave();
             }
+          } catch (NumberFormatException e) {
+            ErrorStack.enter(ctx);
+            ErrorStack.add("value for seconds too large");
+            ErrorStack.leave();
+          }
         } else if (ctx.floatingPointConstant() != null) {
-            Integer sign = 1;
-
+          String s = ctx.floatingPointConstant().getText();
+            if (s.contains("(")   ) {
+              ErrorStack.enter(ctx);
+              ErrorStack.add("seconds must not contain a precision");
+              ErrorStack.leave();
+            }
+            if (s.contains("E")   ) {
+              ErrorStack.enter(ctx);
+              ErrorStack.add("seconds must not contain an exponent");
+              ErrorStack.leave();
+            }
             seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
 
-            if (seconds < 0) {
-                throw new ValueOutOfBoundsException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            if (seconds < 0 || seconds >= 60) {
+              ErrorStack.enter(ctx);
+              ErrorStack.add("seconds must be in range [0..59]");
+              ErrorStack.leave();
             }
         }
 
@@ -1091,4 +1140,35 @@ public class CommonUtils {
         return precision;
     }
 
+    public static TypeDefinition getBaseTypeForReferenceType(
+        TypeReferenceContext typeReference) {
+      TypeDefinition type = null;
+      
+      if (typeReference.simpleType() != null) {
+        type = CommonUtils.getTypeDefinitionForSimpleType(typeReference.simpleType());
+      } else if (typeReference.typeStructure() != null) {
+        System.err.println("CommunUtils.getTypeDefinitionForReferenceType: missing alternative STRUCT");
+      } else if (typeReference.typeDation() != null) {
+        type = new TypeDation();
+      } else if (typeReference.typeReferenceSemaType() != null) {
+        type = new TypeSemaphore();
+      } else if (typeReference.typeReferenceBoltType() != null) {
+        type = new TypeBolt();
+//      } else if (typeReference.typeProcedure() != null) {
+        // typeProcedure not defined yet
+      } else if (typeReference.typeReferenceTaskType() != null) {
+         type = new TypeTask();
+      } else if (typeReference.typeReferenceInterruptType() != null) {
+         type = new TypeInterrupt();
+      } else if (typeReference.typeReferenceSignalType() != null) {
+          type = new TypeSignal();
+      } else if (typeReference.typeRefChar()!= null) {
+//        type = new TypeRefChar();
+        System.err.println("CommunUtils.getTypeDefinitionForReferenceType: missing alternative REF CHAR()");
+      } else {
+        System.err.println("CommunUtils.getTypeDefinitionForReferenceType: missing alternative ???");
+      }
+
+      return type;
+    }
 }

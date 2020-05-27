@@ -32,6 +32,8 @@ package org.smallpearl.compiler;
 
 import org.smallpearl.compiler.Exception.NotYetImplementedException;
 import org.smallpearl.compiler.SymbolTable.SemaphoreEntry;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -190,4 +192,11 @@ public class TypeStructure extends TypeDefinition {
 
         return null;
     }
+
+    public ST toST(STGroup group) {
+        ST st = group.getInstanceOf("StructureType");
+        st.add("type", getStructureName());
+        return st;
+    }
+
 }

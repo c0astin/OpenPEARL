@@ -52,7 +52,7 @@ import org.smallpearl.compiler.Exception.*;
  * the parser context of the part.
  */
 public class ErrorStack {
-	private static final int maxStackSize = 20;
+	private static final int maxStackSize = 100;
 	private static ErrorEnvironment m_stack[] = new ErrorEnvironment[maxStackSize];
 	private static int m_sp = -1;
 	private static int m_totalErrorCount = 0;
@@ -72,7 +72,13 @@ public class ErrorStack {
 		
 		m_sp++;
 		if (m_sp >= maxStackSize) {
-			throw new InternalCompilerErrorException("ErrorStack overflow");
+	        String prefix = "";
+	        for (int i = 0; i <= m_sp; i++) {
+	            if (m_stack[i].getErrorPrefix() != null) {
+	               prefix += m_stack[i].getErrorPrefix() + ":";
+	            }
+	        }
+			throw new InternalCompilerErrorException("ErrorStack overflow ("+prefix+")");
 		}
 
 		m_stack[m_sp] = env;
@@ -143,7 +149,33 @@ public class ErrorStack {
 	}
 
 	/**
-     * add a new error
+     * add a new error in a temporary new error context
+     * 
+     * emits an error message to System.err with
+     * 
+     * <ul>
+     * <li>the corresponding source code
+     * <li>colored region for the error
+     * <li>complete hierarchy of the error stack and the error message<br>
+     * like PUT:E-format:fieldWidth: must be positive
+     * </ul>
+     * 
+     * The error counters are incremented
+     * @param ctx the current ParserRuleContext
+     * @param prefix the error prefix
+     * @param msg the concrete error message
+     */
+    public static Void add(ParserRuleContext ctx, String prefix, String msg) {
+        enter(ctx,prefix);
+        m_stack[m_sp].incLocalCount();
+        m_totalErrorCount++;
+        printMessage(msg,"error");
+        leave();
+        return null;
+    }
+    
+	/**
+     * add a new internal compiler error
      * 
      * emits an internal compiler error message to System.err with
      * <ul>
@@ -163,6 +195,31 @@ public class ErrorStack {
         printMessage(msg+"\n\tplease send a bug report","internet compiler error");
         return null;
     }
+    /**
+     * add a new internal compiler error
+     * 
+     * emits an internal compiler error message to System.err with
+     * <ul>
+     * <li>the corresponding source code
+     * <li>colored region for the error
+     * <li>complete hierarchy of the error stack and the error message<br>
+     * like PUT:E-format:fieldWidth: must be positive
+     * </ul>
+     * 
+     * The error counters are incremented
+     * 
+     * @param msg the concrete error message
+     */
+    public static Void addInternal(ParserRuleContext ctx, String prefix,String msg) {
+        enter(ctx,prefix);
+        m_stack[m_sp].incLocalCount();
+        m_totalErrorCount++;
+        printMessage(msg+"\n\tplease send a bug report","internet compiler error");
+        leave();
+        return null;
+    }
+    
+    
 	/**
 	 * add a new warning
 	 * 

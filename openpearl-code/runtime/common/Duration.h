@@ -95,13 +95,15 @@ namespace pearlrt {
       /**
       create a DURATION from a double value secifying the seconds
 
-      \param d the seconds, may by > 60
+      \param sec the seconds, may by > 60 and may be <0
+      \param us the micro seconds must be > 0
+      \param sign default to 1 (+), must be set tu -1 for (-)
 
       \return the duration
       \throws DurationRangeSignal
       */
 
-      Duration(const double d);
+      Duration(const int64_t sec, const int us, const int sign=1);
 
       /**
       retrieve the interval value
@@ -115,7 +117,7 @@ namespace pearlrt {
 
       \returns full seconds of the given duration
       */
-      int getSec() const;
+      int64_t getSec() const;
 
       /**
       retrieve micro seconds part of the given duration
@@ -186,7 +188,8 @@ namespace pearlrt {
       \throws DurationRangeSignal
       */
       template <int S>Duration& operator*=(const Fixed<S>& rhs) {
-         intval = intval.get() * rhs.x;
+         Fixed63 r((Fixed63::Fixed63_t)(rhs.x));
+         intval = intval * r; 
          return *this;
       }
 
@@ -429,7 +432,6 @@ namespace pearlrt {
       result *= lhs;
       return result;
    }
-
 
    /**
    multiply with float*dur

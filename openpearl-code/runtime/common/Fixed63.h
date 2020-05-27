@@ -95,7 +95,7 @@ namespace pearlrt {
    public:
       Fixed63();
       Fixed63(Fixed63_t y);
-      Fixed63(double y);
+ //     Fixed63(double y);
       Fixed63_t get() const;
 
       Fixed63 operator+=(const Fixed63& rhs);

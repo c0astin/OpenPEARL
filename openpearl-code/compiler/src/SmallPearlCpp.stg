@@ -31,7 +31,14 @@ group smallpearl;
 
 /****************************************************************************/
 
-Prologue(src,headerfiles,namespaces,useSystemElements,taskSpecifierList,ConstantPoolList) ::= <<
+Prologue( src,
+          headerfiles,
+          namespaces,
+          useSystemElements,
+          taskSpecifierList,
+          ConstantPoolList,
+          StructureForwardDeclarationList,
+          StructureDeclarationList) ::= <<
 #include \<PearlIncludes.h>
 
 <if(useSystemElements)>
@@ -59,6 +66,20 @@ const char* filename = (char*) "<src>";
 // TASK SPECIFIERS
 /////////////////////////////////////////////////////////////////////////////
 <taskSpecifierList>
+<endif>
+
+<if(StructureForwardDeclarationList)>
+/////////////////////////////////////////////////////////////////////////////
+// STRUCTURE FORWARD DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<StructureForwardDeclarationList>
+<endif>
+
+<if(StructureDeclarationList)>
+/////////////////////////////////////////////////////////////////////////////
+// STRUCTURE DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+<StructureDeclarationList>
 <endif>
 
 >>
@@ -135,12 +156,16 @@ ConstantPoolBitEntry(name,type,length,value) ::= <<
 static /*const*/ pearlrt::<type>\<<length>\>         <name>(<value>);
 >>
 
-ConstantPoolDurationEntry(name,type,value) ::= <<
-static /*const*/ pearlrt::<type>          <name>(<value>);
+ConstantPoolDurationEntry(name,type,valueSec, valueUsec,valueSign) ::= <<
+static /*const*/ pearlrt::<type>          <name>(<valueSec>,<valueUsec>,<valueSign>);
 >>
 
 ConstantPoolClockEntry(name,type,value) ::= <<
 static /*const*/ pearlrt::<type>          <name>(<value>);
+>>
+
+ConstantPoolNILReferenceEntry(name) ::= <<
+static /*const*/ pearlrt::Ref \< char>   <name>;
 >>
 
 /*********************** GLOBAL DECLARATIONS ***********************/
@@ -156,7 +181,7 @@ globalDecl(decls) ::= <<
 ProblemPart(ScalarVariableDeclarations,
             SemaDeclarations,
             BoltDeclarations,
-            temporarySemaphoreArrays,temporaryBoltArrays,
+            semaphoreArrays,boltArrays,
             ArrayDescriptors, ArrayVariableDeclarations,TaskDeclarations,DationSpecifications,DationDeclarations,
             StructVariableDeclarations,
             ProcedureSpecifications,ProcedureDeclarations,
@@ -208,11 +233,11 @@ ProblemPart(ScalarVariableDeclarations,
 <SemaDeclarations>
 <endif>
 
-<if(temporarySemaphoreArrays)>
+<if(semaphoreArrays)>
 /////////////////////////////////////////////////////////////////////////////
-// TEMPORARY SEMAPHORE ARRAYS
+// CONSTANT SEMAPHORE ARRAYS
 /////////////////////////////////////////////////////////////////////////////
-<temporarySemaphoreArrays>
+<semaphoreArrays>
 <endif>
 
 <if(BoltDeclarations)>
@@ -222,11 +247,11 @@ ProblemPart(ScalarVariableDeclarations,
 <BoltDeclarations>
 <endif>
 
-<if(temporaryBoltArrays)>
+<if(boltArrays)>
 /////////////////////////////////////////////////////////////////////////////
-// TEMPORARY BOLT ARRAYS
+// CONSTANT BOLT ARRAYS
 /////////////////////////////////////////////////////////////////////////////
-<temporaryBoltArrays>
+<boltArrays>
 <endif>
 
 <if(ArrayDescriptors)>
@@ -265,6 +290,7 @@ ProblemPart(ScalarVariableDeclarations,
 <endif>
 >>
 
+
 /*********************** VARIABLE DECLARATION ***********************/
 
 variable_declaration(name,type,init,global,inv,no_decoration) ::= <%
@@ -274,7 +300,7 @@ variable_declaration(name,type,init,global,inv,no_decoration) ::= <%
 %>
 
 variable(name) ::= <<
-_<name>
+<user_variable(name)>
 >>
 
 variable_init(value) ::= <<
@@ -323,164 +349,150 @@ TypeReferenceSimpleType(BaseType) ::= <<
 pearlrt::Ref \< <BaseType> > 
 >>
 
-TypeReferenceTask(Task) ::= <<
-pearlrt::Task *
+array_specification_type(BaseType) ::= <<
+pearlrt::RefArray\< <BaseType> >
 >>
 
-TypeReferenceProcedure() ::= <<
-/* REF PROC */
+task_type() ::= <%
+pearlrt::Task
+%>
+
+sema_type() ::= <%
+pearlrt::Semaphore
+%>
+
+bolt_type() ::= <%
+pearlrt::Bolt
+%>
+
+
+interrupt_type() ::= <%
+pearlrt::Interrupt*
+%>
+
+dation_type(isAlphic, isType, isBasic) ::= <%
+<if(isAlphic)>pearlrt::DationPG
+<else>
+  <if(isType)>pearlrt::DationRW
+  <else>
+    <if(isBasic)>pearlrt::DationTS
+    <endif>
+  <endif>
+<endif>
+%>
+
+
+/*********************** STATEMENTS ***********************/
+
+empty_statement() ::= <<
+    ;
 >>
 
-TypeReferenceSema() ::= <<
-/*  REF SEMA */
+statements(statement) ::= <<
+    <statement>
 >>
 
-TypeReferenceBolt() ::= <<
-/* REF BOLT */
->>
-
-	TypeReferenceInterrupt() ::= <<
-	/* REF INTERRUPT */
-	>>
-
-	TypeReferenceSignal() ::= <<
-	/* REF SIGNAL */
-	>>
-
-	TypeReferenceChar() ::= <<
-	/* REF CHAR */
-	>>
-
-
-
-	/*********************** STATEMENTS ***********************/
-
-	empty_statement() ::= <<
-	    ;
-	>>
-
-	statements(statement) ::= <<
-	    <statement>
-	>>
-
-	task_declaration(name,priority,main,body,cpp) ::= <<
+task_declaration(name,priority,main,body,cpp) ::= <<
 	DCLTASK(_<name>, (pearlrt::Prio( (pearlrt::Fixed\<15>)<priority>)), ((pearlrt::BitString\<1>)<main>)) {
 	    <body>
 	}
 	<if(cpp)>
 	<cpp_inline(cpp)>
 	<endif>
-	>>
+>>
 
-	method(documentation, modifiers, returnType, name, parameters, body) ::= <<
-	<documentation>
-	<modifiers; separator=" "> <returnType> <name>(<parameters; separator=", ">) {
-	  <body>
-	}
-	>>
 
-	parameter(type, name) ::= <<
-	<type> <name>
-	>>
+assignment_statement(lhs,rhs) ::= <<
+	    <lhs><if(rhs)> = <rhs><endif>;
+>>
 
-	PUTStatement(expression,format,destination) ::= <<
-	    PUT( <destination>, \"<expression>\");
-	>>
-
-	assignment_statement(lhs,rhs) ::= <<
-	    <lhs> = <rhs>;
-	>>
-
-	if_statement(rhs, then_block, else_block) ::= <<
+if_statement(rhs, then_block, else_block) ::= <<
 	if (<rhs>) {
 	    <then_block>
 	}
 	<if(else_block)>else {
 	    <else_block>
 	}<endif>
-	>>
+>>
 
-	module_global_declaration(variable) ::= <<
-	<variable>;
-	>>
 
-	declaration(module_globals_declarations,task_declarations) ::= <<
-	<if(module_globals_declarations)><module_globals_declarations><\n><endif>
-	<task_declarations>
-	>>
 
-	task_body(decls,statements) ::= <<
-	    <decls>
-	    <statements>
-	>>
+task_body(decls,statements) ::= <<
+    <decls>
+    <statements>
+>>
 
-	iochannel(id) ::= "<id>"
 
-	identifier(id) ::= "<id>"
 
-	statement(srcFilename,srcLine,srcColumn,label,code,cpp) ::= <<
-	<if(label)><label><endif>
-	<if(cpp)>
-	<cpp_inline(cpp)>
-	<endif>
+statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList) ::= <<
 	<if(srcFilename)>
 	me->setLocation(<srcLine>, filename);
 	<endif>
+	<if(label)><label><endif>
+	<if(tempVariableList)>{<tempVariableList><endif>
+	<if(cpp)>
+	<cpp_inline(cpp)>
+	<endif>
 	<if(code)><code><endif>
-	>>
+	<if(tempVariableList)>}<endif>
+>>
 
-	simpleConstruct(_construct) ::= <<
-	[simpleConstruct]
-	 <_construct>
-	 >>
 
-	label_statement(label) ::= <%
+
+label_statement(label) ::= <%
 	<user_label(label)>:<\n>
-	%>
+%>
 
-	goto_statement(label) ::= <<
+goto_statement(label) ::= <<
 	goto <user_label(label)>;
-	>>
+>>
 
-	ExitStatement(label) ::= <<
+ExitStatement(label) ::= <<
 	<if(label)>
 	    goto <user_label(label)>;
 	<else>
 	    break;
 	<endif>
-	>>
+>>
 
-	return_statement(expression) ::= <<
-	<if(expression)>
-	return (<expression>);
+return_statement(expression,char_size) ::= <<
+	<if(char_size)>
+	{ pearlrt::Character\< <char_size> > result;
+	  pearlrt::CharSlice(result).setSlice(<expression>);
+	  return result;
+	}
 	<else>
-	return;
+	   <if(expression)>
+	   return (<expression>);
+	<else>
+	   return;
 	<endif>
-	>>
+<endif>
+>>
 
-	task_control_statement(code) ::= <<
-	<code><\n>
-	>>
+task_control_statement(code) ::= <<
+<code><\n>
+>>
 
-	task_start(task,Condition,startCondition,priority,at,after,all,until,during,when) ::= <<
-	    _<task>.activate( me,
-		     <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
-		    /* prio   */  pearlrt::Prio(<priority>),
-		    /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
-		    /* after  */  <if(after)><after><else>pearlrt::Duration()<endif>,
-		    /* all    */  <if(all)><all><else>pearlrt::Duration()<endif>,
-		    /* until  */  <if(until)><until><else>pearlrt::Clock()<endif>,
-		    /* during */  <if(during)><during><else>pearlrt::Duration()<endif>,
-		    /* when   */  <if(when)><when><else>0<endif>
-                    );
+task_start(task,Condition,startCondition,priority,at,after,all,until,during,when) ::= <<
+    <task>.activate( me,
+	     <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
+	    /* prio   */  pearlrt::Prio(<priority>),
+	    /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
+	    /* after  */  <if(after)><after><else>pearlrt::Duration()<endif>,
+	    /* all    */  <if(all)><all><else>pearlrt::Duration()<endif>,
+	    /* until  */  <if(until)><until><else>pearlrt::Clock()<endif>,
+	    /* during */  <if(during)><during><else>pearlrt::Duration()<endif>,
+	    /* when   */  <if(when)><when><else>0<endif>
+                   );
 >>
 
 task_terminate(task) ::= <%
-<if(task)>
-_<task>.terminate(me);
-<else>
-me->terminate(me);
-<endif>
+	<if(task)>
+		<task>.terminate(me);
+	<else>
+		me->terminate(me);
+	<endif>
 %>
 
 TaskResume(Condition,at,after,when) ::= <<
@@ -491,50 +503,27 @@ TaskResume(Condition,at,after,when) ::= <<
            );
 >>
 
-task_coordination_statement(code) ::= <<
-<code><\n>
->>
 
-task_enter(task) ::= <<
-_<task>.enter();
->>
-
-task_free(task) ::= <<
-_<task>.free();
->>
-
-task_leave(task) ::= <<
-_<task>.leave();
->>
-
-task_request(task) ::= <<
-_<task>.request();
->>
-
-task_reserve(task) ::= <<
-_<task>.reserve();
->>
 
 task_prevent(task) ::= <<
-<if(task)>
-_<task>.prevent(me);
-<else>
-me->prevent(me);
-<endif>
-
+	<if(task)>
+		<task>.prevent(me);
+	<else>
+		me->prevent(me);
+	<endif>
 >>
 
 task_suspend(task) ::= <<
-<if(task)>
-_<task>.suspend(me);
-<else>
-me->suspend(me);
-<endif>
+	<if(task)>
+		<task>.suspend(me);
+	<else>
+		me->suspend(me);
+	<endif>
 >>
 
 TaskContinuation(task,Condition,priority,at,after,when) ::= <<
 <if(task)>
-    _<task>.cont( me,
+    <task>.cont( me,
                   <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
            /* prio   */  pearlrt::Prio(<priority>),
            /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
@@ -601,31 +590,29 @@ BitCatExpression(op1,op2) ::= <%
 
 CharCatExpression(op1,op2) ::= <%
   <op1>.catChar(<op2>)
- %>
+%>
 
 ReferenceExpression(code,id,bitstring,operator,functionCall) ::= <%
-<if(id)>&<id><elseif(code)>&<code; wrap><elseif(bitstring)><bitstring><endif>
-<if(operator)><operator><endif>
-<if(functionCall)><functionCall><endif>
+	<if(id)>&<id><elseif(code)>&<code; wrap><elseif(bitstring)><bitstring><endif>
+	<if(operator)><operator><endif>
+	<if(functionCall)><functionCall><endif>
 %>
 
 
 FunctionCall(callee,ListOfActualParameters) ::= <%
-<user_procedure(callee)>( me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>)
+	<user_procedure(callee)>( me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>)
 %>
 
-literal(integer,float,string,time,duration,bitstring) ::= <%
-<if(integer)><integer><endif>
-<if(float)><float><endif>
-<if(string)><string><endif>
-<if(time)><time><endif>
-<if(duration)><duration><endif>
-<if(bitstring)><bitstring><endif>
+literal(integer,float,string,time,duration,bitstring,nil) ::= <%
+	<if(integer)><integer><endif>
+	<if(float)><float><endif>
+	<if(string)><string><endif>
+	<if(time)><time><endif>
+	<if(duration)><duration><endif>
+	<if(bitstring)><bitstring><endif>
+	<if(nil)><nil><endif>
 %>
 
-float(value,precision) ::= <%
-(pearlrt::Float\<<precision>>(<value>))
-%>
 
 /************************* I/O STATEMENTS ************************/
 
@@ -633,231 +620,10 @@ io_statement(code) ::= <<
 <code><\n>
 >>
 
-readStatement(id,channel,Position_absolute,Column_absolute,Line_absolute,Sop_absolute) ::= <<
-*** READ STATEMENT (<id>,<channel>) ***
-<if(Position_absolute)> <Position_absolute:absolutePosition_pos(); separator=", "> <endif>
-<if(Column_absolute)> <Column_absolute:absolutePosition_col(); separator=", "> <endif>
-<if(Line_absolute)> <_absolute:absolutePosition_line(); separator=", "> <endif>
-<if(Sop_absolute)> <_absolute:absolutePosition_sop(); separator=", "> <endif>
-*** READ STATEMENT END ***
->>
-
-absolutePosition_pos(pos) ::= <<
-POS_<pos>
->>
-
-absolutePosition_col(col) ::= <<
-COL=<col>
->>
-
-absolutePosition_line(line) ::= <<
-LINE=<line>
->>
-
-absolutePosition_sop(sop) ::= <<
-SOP=<sop>
->>
-
-write_statement(dation,elements) ::= <<
-// WRITE STATEMENT BEGIN
-try {
-    <dation>.beginSequence(me,pearlrt::Dation::OUT);
-    <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence(me);
-} catch(pearlrt::TerminateRequestSignal  &s) {
-     <dation>.endSequence(me);
-     me->terminate(me);
-} catch(pearlrt::Signal &s) {
-    if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence(me);
-        throw;
-    }
-    <dation>.endSequence(me);
-}
-// WRITE STATEMENT END
->>
-
-read_statement(dation,elements) ::= <<
-// READ STATEMENT BEGIN
-try {
-    <dation>.beginSequence(me,pearlrt::Dation::IN);
-    <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence(me);
-} catch(pearlrt::TerminateRequestSignal  &s) {
-     <dation>.endSequence(me);
-     me->terminate(me);
-} catch(pearlrt::Signal &s) {
-    if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence(me);
-        throw;
-    }
-    <dation>.endSequence(me);
-}
-// READ STATEMENT END
->>
-
-read_take_expression(dation,id,isArray) ::= <%
-<if(isArray)>
-   <dation>.dationRead( <id>, sizeof(<id>));
-<else>
-   <dation>.dationRead( &<id>, sizeof(<id>));
-<endif>
-%>
-
-write_send_expression(dation,expression,isArray) ::= <%
-<if(isArray)>
-	<dation>.dationWrite( data<expression>, sizeof(data<expression>));
-<else>
-	<dation>.dationWrite( &<expression>, sizeof(<expression>));
-<endif>
-%>
-
-read_write_col_position(dation,expression) ::= <%
-<dation>.col(<expression>);
-%>
-
-read_write_line_position(dation,expression) ::= <%
-<dation>.line(<expression>);
-%>
-
-read_write_rst_position(dation,id) ::= <%
-<dation>.rst(<id>);
-%>
-
-read_write_absolute_position_col(dation,expression) ::= <%
-<dation>.col(<expression>);
-%>
-
-read_write_eof_position(dation) ::= <%
-<dation>.eof();
-%>
-
-read_write_adv_position(dation,expression1,expression2,expression3) ::= <%
-<if(expression1 && expression2 && expression3)>
-<dation>.adv(<expression1>,<expression2>,<expression3>);
-<else>
-<if(expression1 && expression2)>
-<dation>.adv(<expression1>,<expression2>);
-<else>
-<if(expression1)>
-<dation>.adv(<expression1>);
-<endif>
-<endif>
-<endif>
-%>
-
-read_write_pos_position(dation,expression1,expression2,expression3) ::= <%
-<if(expression1 && expression2 && expression3)>
-<dation>.pos(<expression1>,<expression2>,<expression3>);
-<else>
-<if(expression1 && expression2)>
-<dation>.pos(<expression1>,<expression2>);
-<else>
-<if(expression1)>
-<dation>.pos(<expression1>);
-<endif>
-<endif>
-<endif>
-%>
-
-read_write_sop_position(dation,id1,id2,id3) ::= <%
-<if(id1 && id2 && id3)>
-<dation>.sop(<id1>,<id2>,<id3>);
-<else>
-<if(id1 && id2)>
-<dation>.sop(<id1>,<id2>);
-<else>
-<if(id1)>
-<dation>.sop(<id1>);
-<endif>
-<endif>
-<endif>
-%>
-
-take_statement(dation,elements) ::= <<
-// TAKE STATEMENT BEGIN
-try {
-    <dation>.beginSequence(me, pearlrt::Dation::IN);
-    <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence(me);
-} catch(pearlrt::TerminateRequestSignal  &s) {
-     <dation>.endSequence(me);
-     me->terminate(me);
-} catch(pearlrt::Signal &s) {
-    if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence(me);
-        throw;
-    }
-    <dation>.endSequence(me);
-}
-// TAKE STATEMENT END
->>
-
-/*
-obsolete: mapped to read_tage_expression
-
-take_id(dation,id,isArray) ::= <%
-<dation>.dationRead(&<id>, sizeof(<id>));
-%>
-*/
-send_statement(dation,elements) ::= <<
-// SEND STATEMENT BEGIN
-try {
-    <dation>.beginSequence(me, pearlrt::Dation::OUT);
-    <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence(me);
-} catch(pearlrt::TerminateRequestSignal  &s) {
-     <dation>.endSequence(me);
-     me->terminate(me);
-} catch(pearlrt::Signal &s) {
-    if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence(me);
-        throw;
-    }
-    <dation>.endSequence(me);
-}
-// SEND STATEMENT END
->>
-
-/*
-obsolete --> mapped to write_send_expression
-send_expression(dation,expression,isArray) ::= <%
-<dation>.dationWrite(&<expression>, sizeof(<expression>));
-%>
-*/
-take_send_rst(dation,id) ::= <%
-<dation>.rst(<id>);
-%>
-
-/*
-obsolete 2019-10-11 TAKE/SEND support only RST
-take_send_rst_position(dation,id) ::= <%
-<dation>.rst(<id>);
-%>
-
-take_send_s_position(dation,id) ::= <%
-<dation>.s(<id>);
-%>
-
-take_send_control_position(dation,expression1,expression2,expression3) ::= <%
-<if(expression1 && expression2 && expression3)>
-<dation>.control(<expression1>,<expression2>,<expression3>);
-<else>
-<if(expression1 && expression2)>
-<dation>.control(<expression1>,<expression2>);
-<else>
-<if(expression1)>
-<dation>.control(<expression1>);
-<endif>
-<endif>
-<endif>
-%>
-*/
-
 open_statement(id,paramlist,declFileName,refFileName,flen,rst_var) ::= <<
 {
     <if(declFileName)><declFileName><endif>
-    _<id>.dationOpen(
+    <id>.dationOpen(
     <if(paramlist)>
         <paramlist>
     <else>
@@ -869,7 +635,7 @@ open_statement(id,paramlist,declFileName,refFileName,flen,rst_var) ::= <<
     , (pearlrt::Character\<1>*) 0
     <endif>
     <if(rst_var)>
-    , &_<rst_var>
+    , &(<rst_var>)
     <else>
     , (pearlrt::Fixed\<31>*) 0
     <endif>
@@ -917,7 +683,7 @@ close_parameterlist(parameter) ::= <%
 %>
 
 close_statement(id,paramlist,rst_var) ::= <<
-_<id>.dationClose(<paramlist>, <if(rst_var)>&_<rst_var><else>(pearlrt::Fixed\<15>*) 0<endif>);
+  <id>.dationClose(<paramlist>, <if(rst_var)>&(<rst_var>)<else>(pearlrt::Fixed\<15>*) 0<endif>);
 >>
 
 close_parameter_can(attribute) ::= <%
@@ -937,248 +703,11 @@ close_parameter_none(id) ::= <%
 %>
 
 
-idf(id,string) ::= <%
-**IDF***
-%>
-
-expressionList(expression) ::= <%
-    <expression>
-%>
-
-/************************* PUT STATEMENT *************************/
-
-put_statement(dation,elements) ::= <<
-// PUT STATEMENT BEGIN
-try {
-    <dation>.beginSequence(me, pearlrt::Dation::OUT);
-    <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence(me);
-} catch(pearlrt::TerminateRequestSignal  &s) {
-     <dation>.endSequence(me);
-     me->terminate(me);
-} catch(pearlrt::Signal &s) {
-    if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence(me);
-        throw;
-    }
-    <dation>.endSequence(me);
-}
-// PUT STATEMENT END
->>
-
 /* ---------------------------------------------------------- */
-/* put_statement_*
-   get_statement_*
-   replaced with ioformat_* or iopostion_*
-
-put_statement_factor_format(dation,format) ::= <%
-    <dation>.<format>;
-%>
-
-put_statement_factor_position(dation,format) ::= <%
-    <dation>.<format>;
-%>
-
-put_statement_factor_position_rst(element) ::= <%
-    rst(<element>)
-%>
-
-put_statement_factor_position_skip(element) ::= <%
-    toSkip(<element>)
-%>
-
-put_statement_factor_position_page(element) ::= <%
-    toPage(<element>)
-%>
-
-put_statement_factor_position_x(element) ::= <%
-    toX(<element>)
-%>
-
-put_statement_factor_position_eof() ::= <%
-    eof()
-%>
-
-put_statement_factor_position_adv(expression1,expression2,expression3) ::= <%
-    adv(<expression1>
-	<if(expression2)>,<expression2>
-		<if(expression3)>,<expression3><endif>
-	<endif>)
-%>
-
-put_statement_factor_position_col(expression) ::= <%
-    col(<expression>)
-%>
-
-put_statement_factor_position_line(expression) ::= <%
-    line(<expression>)
-%>
-
-put_statement_factor_position_pos(expression1,expression2,expression3) ::= <%
-    pos(<expression1>
-	<if(expression2)>,<expression2>
-		<if(expression3)>,<expression3><endif>
-	<endif>)
-%>
-
-put_statement_factor_position_sop(element1,element2,element3) ::= <%
-    sop(&<element1>
-	<if(element2)>,&<element2>
-		<if(element3)>,&<element3><endif>
-	<endif>)
-%>
-
-put_statement_fixed_format(element,fieldwidth,decimalPositions,scaleFactor) ::= <%
-    toF(<element>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
-%>
-
-put_statement_duration_format(element,fieldwidth,decimalPositions) ::= <%
-    toD(<element>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
-%>
-
-put_statement_time_format(element,fieldwidth,decimalPositions) ::= <%
-    toT(<element>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
-%>
-
-put_statement_float_format_E(element,fieldwidth,decimalPositions,significance,esize) ::= <%
-    toE(<element>, <fieldwidth>,<decimalPositions>,<significance>,(pearlrt::Fixed\<31>)(<esize>))
-%>
-
-put_statement_character_string_format(element,fieldwidth) ::= <%
-toA(<element><if(fieldwidth)>,<fieldwidth><endif>)
- %>
-
-put_statement_bit_format_1(element,numberOfCharacters) ::= <%
-    toB1(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
-put_statement_bit_format_2(element,numberOfCharacters) ::= <%
-    toB2(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
-put_statement_bit_format_3(element,numberOfCharacters) ::= <%
-    toB3(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
-put_statement_bit_format_4(element,numberOfCharacters) ::= <%
-    toB4(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
--------------- end of removed block -----------------------
-*/
-/************************* GET STATEMENT *************************/
-
-get_statement(dation,elements) ::= <<
-// GET STATEMENT BEGIN
-try {
-    <dation>.beginSequence(me, pearlrt::Dation::IN);
-    <elements: {e|<e>} ; separator="\n">
-    <dation>.endSequence(me);
-} catch(pearlrt::TerminateRequestSignal  &s) {
-     <dation>.endSequence(me);
-     me->terminate(me);
-} catch(pearlrt::Signal &s) {
-    if ( ! <dation>.updateRst(&s) ) {
-        <dation>.endSequence(me);
-        throw;
-    }
-    <dation>.endSequence(me);
-}
-// GET STATEMENT END
->>
-
-/* -------------------------------------------------- */
-/* put_statement_*
-   get_statement_*
-   replaced with ioformat_* or iopostion_*
-
-get_statement_factor_position(dation,format) ::= <%
-    <dation>.<format>;
-%>
-
-get_statement_factor_position_rst(element) ::= <%
-    rst(<element>)
-%>
-
-get_statement_factor_position_skip(element) ::= <%
-    fromSkip((pearlrt::Fixed\<31>)(<element>))
-%>
-
-get_statement_factor_position_page(element) ::= <%
-    fromPage((pearlrt::Fixed\<31>)(<element>))
-%>
-
-get_statement_factor_position_x(element) ::= <%
-    fromX((pearlrt::Fixed\<31>)(<element>))
-%>
-
-get_statement_factor_position_eof() ::= <%
-    eof()
-%>
-
-get_statement_fixed_format(element,fieldwidth,decimalPositions,scaleFactor) ::= <%
-    fromF(<element>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
- %>
-
-get_statement_float_format_E(element,fieldwidth,decimalPositions,significance,esize) ::= <%
-    fromE(<user_variable(element)>, <fieldwidth>, <decimalPositions>,<significance>)
-%>
-
-get_statement_duration_format(element,fieldwidth,decimalPositions) ::= <%
-    fromD(<user_variable(element)>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
-%>
-
-get_statement_time_format(element,fieldwidth,decimalPositions) ::= <%
-    fromT(<user_variable(element)>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
-%>
-
-get_statement_bit_format_1(element,numberOfCharacters) ::= <%
-    fromB1(<user_variable(element)><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
-get_statement_bit_format_2(element,numberOfCharacters) ::= <%
-    fromB2(<user_variable(element)><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
-get_statement_bit_format_3(element,numberOfCharacters) ::= <%
-    fromB3(<user_variable(element)><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
-get_statement_bit_format_4(element,numberOfCharacters) ::= <%
-    fromB4(<user_variable(element)><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
-get_statement_character_string_format(element,fieldwidth) ::= <%
-fromA(<element><if(fieldwidth)>,<fieldwidth><endif>)
- %>
- ---------------- end of removed block -------------------------- */
-/*
-   replaced io_postion_*
-*/
-
-get_factor_format(dation,format,direction) ::= <%
-    <dation>.<format>;
-%>
-
-put_factor_format(dation,format,direction) ::= <%
-    <dation>.<format>;
-%>
-
-io_factor_position(dation,format,direction) ::= <%
-    <dation>.<format>;
-%>
-
-io_rst(dation,element,direction) ::= <%
-    rst(<element>)
-%>
-
-io_position_skip(element,direction) ::= <%
-    <direction>Skip(<element>)
-%>
 
 // generic template for READ/WRITE/TAKE/SEND/PUT/GET
 iojob_io_statement(dation,command,datalist,formatlist,format_list_is_static) ::= <<
-//<command> statement
+// <command> statement 
 {
    <if(format_list_is_static)>static <endif><formatlist>
 
@@ -1204,41 +733,6 @@ iojob_io_statement(dation,command,datalist,formatlist,format_list_is_static) ::=
 }
 >>
 
-iojob_put_statement(dation,datalist,formatlist,format_list_is_static) ::= <<
-//PUT statement
-{
-   <if(format_list_is_static)>static <endif><formatlist>
-
-   <datalist>
-
-   pearlrt::IODataList dataList = {
-     .nbrOfEntries=<if(datalist)>sizeof(dataEntries)/sizeof(dataEntries[0])<else>0<endif>,
-     .entry=<if(datalist)>dataEntries<else>NULL<endif>};
-   <if(format_list_is_static)>static <endif>pearlrt::IOFormatList formatList = {
-     .nbrOfEntries=sizeof(formatEntries)/sizeof(formatEntries[0]),
-     .entry=formatEntries};
-
-   <dation>.put(me, &dataList , &formatList);
-}
->>
-
-iojob_get_statement(dation,datalist,formatlist,format_list_is_static) ::= <<
-//GET statement
-{
-   <if(format_list_is_static)>static <endif><formatlist>
-
-   <datalist>
-
-   pearlrt::IODataList dataList = {
-     .nbrOfEntries=<if(datalist)>sizeof(dataEntries)/sizeof(dataEntries[0])<else>0<endif>,
-     .entry=<if(datalist)>dataEntries<else>NULL<endif>};
-   <if(format_list_is_static)>static <endif>pearlrt::IOFormatList formatList = {
-     .nbrOfEntries=sizeof(formatEntries)/sizeof(formatEntries[0]),
-     .entry=formatEntries};
-
-   <dation>.get(me, &dataList , &formatList);
-}
->>
 
 iojob_convertTo_statement(char_string,datalist,formatlist,format_list_is_static) ::= <<
 //CONVERT TO statement
@@ -1282,6 +776,7 @@ iojob_convertFrom_statement(char_string,datalist,formatlist,format_list_is_stati
 }
 >>
 
+
 iojob_datalist(dataelement, data_variable, expression, data_index) ::= <<
 <data_variable: {v|<v>} ; separator="\n">
 
@@ -1290,11 +785,22 @@ pearlrt::IODataEntry dataEntries[]  = {
 };
 >>
 
-iojob_data_item(variable,type,size,nbr_of_elements) ::= <<
+/*
+variable is the address of the data storage
+type     is the type of the data
+nbr_of_elements is the number of (array-)elements to be transmitted
+lbw,upb   defines a variable character selection limits .CHAR(lwb,upb)
+*/
+iojob_data_item(variable,type,size,nbr_of_elements,lwb,upb) ::= <<
 {
    .dataType={pearlrt::IODataEntry::<type>,<size>},
    .dataPtr={.outData=&<variable>},
+   <if(lwb)>
+   .param1={.numberOfElements = <nbr_of_elements>},
+   .param2={.charSliceLimits={<lwb>,<upb>}}
+   <else>
    .param1={.numberOfElements = <nbr_of_elements>}
+   <endif>
 }
 >>
 
@@ -1483,83 +989,6 @@ iojob_duration_format(element,fieldwidth,decimalPositions,direction) ::= <<
 }
 >>
 
-io_position_page(element,direction) ::= <%
-    <direction>Page(<element>)
-%>
-
-io_position_x(element,direction) ::= <%
-    <direction>X(<element>)
-%>
-
-io_position_eof(direction) ::= <%
-    eof()
-%>
-
-io_position_adv(expression1,expression2,expression3,direction) ::= <%
-    <direction>Adv(<expression1>
-	<if(expression2)>,<expression2>
-		<if(expression3)>,<expression3><endif>
-	<endif>)
-%>
-
-io_position_col(expression,direction) ::= <%
-    col(<expression>)
-%>
-
-io_position_line(expression,direction) ::= <%
-    line(<expression>)
-%>
-
-io_position_pos(expression1,expression2,expression3,direction) ::= <%
-    pos(<expression1>
-	<if(expression2)>,<expression2>
-		<if(expression3)>,<expression3><endif>
-	<endif>)
-%>
-
-io_position_sop(element1,element2,element3,direction) ::= <%
-    sop(&<element1>
-	<if(element2)>,&<element2>
-		<if(element3)>,&<element3><endif>
-	<endif>)
-%>
-
-io_fixed_format(element,fieldwidth,decimalPositions,direction) ::= <%
-    <direction>F(<element>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
-%>
-
-io_duration_format(element,fieldwidth,decimalPositions,direction) ::= <%
-    <direction>D(<element>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
-%>
-
-io_time_format(element,fieldwidth,decimalPositions,direction) ::= <%
-    <direction>T(<element>,<fieldwidth><if(decimalPositions)>,<decimalPositions><endif>)
-%>
-
-io_float_format_E(element,fieldwidth,decimalPositions,significance,esize,direction) ::= <%
-    <direction>E(<element>, <fieldwidth>,<decimalPositions>,<significance>
-	<if(esize)>,(pearlrt::Fixed\<31>)(<esize>)<endif>)
-%>
-
-io_character_string_format(element,fieldwidth,direction) ::= <%
-	<direction>A(<element><if(fieldwidth)>,<fieldwidth><endif>)
- %>
-
-io_bit_format_1(element,numberOfCharacters,direction) ::= <%
-    <direction>B1(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
-io_bit_format_2(element,numberOfCharacters,direction) ::= <%
-    <direction>B2(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
-io_bit_format_3(element,numberOfCharacters,direction) ::= <%
-    <direction>B3(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
-
-io_bit_format_4(element,numberOfCharacters,direction) ::= <%
-    <direction>B4(<element><if(numberOfCharacters)>,<numberOfCharacters><endif>)
-%>
 
 /******************************** CALL Statement *********************************/
 
@@ -1567,13 +996,24 @@ CallStatement(callee, ListOfActualParameters) ::= <<
 <user_procedure(callee)>(me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>);
 >>
 
+
 ListOfActualParameters(ActualParameters) ::= <%
 <ActualParameters: {param|<param>} ; separator=", ">
 %>
 
+
 ActualParameters(ActualParameter) ::= <%
 <ActualParameter: {param|<param>} ; separator=", ">
 %>
+
+TempCharVariable(char_size,variable,expr) ::= <<
+pearlrt::Character\< <char_size> > <variable>;
+pearlrt::CharSlice(<variable>).setSlice(<expr>);
+>>
+
+TempVariableList(variable) ::= <<	
+<variable: {v|<v>} ; separator="\n">	 	
+>>
 
 /******************************** CPP INLINING *********************************/
 
@@ -1594,6 +1034,7 @@ me->setLocation(<lineno>, "<src>");
 
 /*******************************************************************************/
 
+
 ScalarVariableDeclaration(variable_denotations,cpp) ::= <<
 <variable_denotations>
 <if(cpp)><cpp_inline(cpp)><endif>
@@ -1607,9 +1048,7 @@ VariableDeclaration(name,TypeAttribute,InitElement,global,inv) ::= <%
 <if(inv)>const  <endif><TypeAttribute>  <variable(name)><if(InitElement)>(<InitElement>)<endif><if(global)>  (GLOBAL)<endif>; <\n>
 %>
 
-InitElement(value) ::= <<
-<value>
->>
+
 
 GlobalAttribute() ::= <<
 *** GlobalAttribute ***
@@ -1645,9 +1084,7 @@ pearlrt::Duration
 >>
 
 
-eypeTime() ::= <%
-*** TypeTime ***
-%>
+
 TypeBitString(length) ::= <<
 pearlrt::BitString\<<length>\>
 >>
@@ -1689,6 +1126,12 @@ BitConstant(value) ::= <<
 <value>
 >>
 
+
+TaskCoordinationStatement(statement) ::= <<
+<statement>
+>>
+
+/* --------------------- SEMAPHORE -------------------------- */
 sema_declaration(name,global,preset) ::= <<
 DCLSEMA(_<name>,<if(preset)><preset><else>0<endif>);
 
@@ -1698,21 +1141,32 @@ SemaDeclaration(decl) ::= <%
 <decl>
 %>
 
-TaskCoordinationStatement(statement) ::= <<
-<statement>
+SemaTry(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+  pearlrt::Semaphore::dotry( me, <nbrOfElements>, <localArrayname>)
+<else>
+  pearlrt::Semaphore::dotry( me, <nbrOfElements>, semas<names: {name|_<name>}>)
+<endif>    
 >>
 
-SemaTry(names,noofsemas) ::= <%
-    pearlrt::Semaphore::dotry( me, <noofsemas>, <names: {name|<name>_}>semas)
-%>
 
-SemaRequest(names,noofsemas) ::= <<
-    pearlrt::Semaphore::request( me, <noofsemas>, <names: {name|<name>_}>semas);
+SemaRequest(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+   pearlrt::Semaphore::request( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Semaphore::request( me, <nbrOfElements>, semas<names: {name|_<name>}>);
+<endif>    
 >>
 
-SemaRelease(names,noofsemas) ::= <<
-    pearlrt::Semaphore::release( me, <noofsemas>, <names: {name|<name>_}>semas);
+
+SemaRelease(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+  pearlrt::Semaphore::release( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Semaphore::release( me, <nbrOfElements>, semas<names: {name|_<name>}>);
+<endif>    
 >>
+
 
 /* --------------------- BOLT -------------------------- */
 
@@ -1725,27 +1179,37 @@ BoltDeclaration(decl) ::= <%
 <decl>
 %>
 
-BoltReserve(names,noofbolts) ::= <%
-    pearlrt::Bolt::reserve( me, <noofbolts>, <names: {name|<name>_}>bolts);
+BoltReserve(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+   pearlrt::Bolt::reserve( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Bolt::reserve( me, <nbrOfElements>, bolts<names: {name|_<name>}>);
+<endif>    
+>>
 
-%>
+BoltFree(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+   pearlrt::Bolt::free( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Bolt::free( me, <nbrOfElements>, bolts<names: {name|_<name>}>);
+<endif>    
+>>
 
-BoltFree(names,noofbolts) ::= <%
-    pearlrt::Bolt::free( me, <noofbolts>, <names: {name|<name>_}>bolts);
+BoltEnter(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+   pearlrt::Bolt::enter( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Bolt::enter( me, <nbrOfElements>, bolts<names: {name|_<name>}>);
+<endif>    
+>>
 
-%>
-
-BoltEnter(names,noofbolts) ::= <%
-    pearlrt::Bolt::enter( me, <noofbolts>, <names: {name|<name>_}>bolts);
-
-
-%>
-
-BoltLeave(names,noofbolts) ::= <%
-    pearlrt::Bolt::leave( me, <noofbolts>, <names: {name|<name>_}>bolts);
-
-
-%>
+BoltLeave(names,nbrOfElements,array,localArrayname) ::= <<
+<if(localArrayname)>
+   pearlrt::Bolt::leave( me, <nbrOfElements>, <localArrayname>);
+<else>
+  pearlrt::Bolt::leave( me, <nbrOfElements>, bolts<names: {name|_<name>}>);
+<endif>    
+>>
 
 /* --------------------- Arithmetic Operators -------------------------- */
 
@@ -1869,28 +1333,36 @@ FIXEDTOCHARACTER(operand) ::= <%
 pearlrt::toChar(<operand>)
 %>
 
-TASK() ::= <%
-me
+
+
+referenceOf(obj) ::= <%
+&(<obj>)
 %>
 
-/* --------------------- Temporary Semaphore Arrays -------------------------- */
+/* ---------------------  Semaphore Arrays -------------------------- */
+/* Semaphore arrays may be static for the module - or must be created locally to
+  the semaphore operation if variable array indices or references are used */
 
-TemporarySemaphoreArrays(array) ::= <<
+SemaphoreArrays(array) ::= <<
 <array: {temp|<temp>}>
 >>
 
-TemporarySemaphoreArray(semaphore) ::= <%
-static pearlrt::Semaphore *<semaphore: {sema|<sema>} ; separator="_">_semas[] = {<semaphore: {sema|&_<sema>} ; separator=",">}; <\n>
+SemaphoreArray(element,nameOfArray,isConstant) ::= <%
+<if(isConstant)>static <endif>pearlrt::Semaphore *
+    <if(isConstant)>semas<endif><nameOfArray>[] = {<element: {e|&<e>} ; separator=",">}; <\n>
+   
 %>
 
-/* --------------------- Temporary Bolt Arrays -------------------------- */
+/* --------------------- Bolt Arrays -------------------------- */
 
-TemporaryBoltArrays(array) ::= <<
+BoltArrays(array) ::= <<
 <array: {temp|<temp>}>
 >>
 
-TemporaryBoltArray(bolt) ::= <%
-static pearlrt::Bolt *<bolt: {bo|<bo>} ; separator="_">_bolts[] = {<bolt: {bo|&_<bo>} ; separator=",">}; <\n>
+
+BoltArray(element,nameOfArray,isConstant) ::= <%
+<if(isConstant)>static <endif>pearlrt::Bolt *
+    <if(isConstant)>bolts<endif><nameOfArray>[] = {<element: {e|&<e>} ; separator=",">}; <\n>
 %>
 
 /* --------------------- DATION -------------------------- */
@@ -1904,8 +1376,6 @@ extern pearlrt::Device *d_<name>;
 <SpecifyTypeDation>
 >>
 
-SpecifyTypeDation(SourceSinkAttribute,SystemDation,ClassAttribute) ::= <<
->>
 
 SpecificationSystemDationB(name,TypeDation,global) ::= <<
 extern pearlrt::Device *d_<name>;
@@ -1913,11 +1383,13 @@ static pearlrt::SystemDationB* <user_variable(name)> = static_cast\<pearlrt::Sys
 
 >>
 
+
 SpecificationSystemDationNB(name,TypeDation,global) ::= <<
 extern pearlrt::Device *d_<name>;
 static pearlrt::SystemDationNB* <user_variable(name)> = static_cast\<pearlrt::SystemDationNB*>(d_<name>); <\n>
 
 >>
+
 
 SpecificationSystemDationPG(name,TypeDation,global) ::= <<
 extern pearlrt::DationPG <user_variable(name)>;
@@ -1934,27 +1406,7 @@ extern pearlrt::DationRW <user_variable(name)>;
 
 >>
 
-/*
-renamed from DationSpecificationBasic to SystemDationSpecificationBasic
 
-DationSpecificationBasic(name,TypeDation,global) ::= <<
-*/
-SystemDationSpecificationBasic(name,TypeDation,global) ::= <<
-extern pearlrt::Device *d_<name>;
-static pearlrt::SystemDationB* _<name> = static_cast\<pearlrt::SystemDationB*>(d_<name>); <\n>
-
->>
-
-/*
-renamed from DationSpecificationBasic to SystemDationSpecificationBasic
-
-DationSpecificationNonBasic(name,TypeDation,global) ::= <<
-*/
-SystemDationSpecificationNonBasic(name,TypeDation,global) ::= <<
-extern pearlrt::Device *d_<name>;
-static pearlrt::SystemDationNB* _<name> = static_cast\<pearlrt::SystemDationNB*>(d_<name>); <\n>
-
->>
 
 DationDeclarations(decl) ::= <<
 <decl>
@@ -2031,13 +1483,16 @@ block_statement(code,id) ::= <<
 // BLOCK END <if(id)>Block-ID:<id><endif>
 >>
 
+
 user_procedure(name) ::= <%
     _<name>
 %>
 
+
 user_variable(name) ::= <%
     _<name>
 %>
+
 
 user_label(name) ::= <%
     _<name>
@@ -2046,6 +1501,8 @@ user_label(name) ::= <%
 user_argument(name) ::= <%
     _<name>
 %>
+
+
 
 /* --------------------- LOOPS -------------------------- */
 
@@ -2149,6 +1606,11 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,rangePrecision,from,fromPreci
 
 /* --------------------- PROCEDURES -------------------------- */
 
+TypeProcedure(listOfFormalParameters, resultAttribute) ::= <%
+<resultAttribute> ( <listOfFormalParameters> )
+%>
+
+
 ProcedureSpecification(id,listOfFormalParameters,body,resultAttribute,globalAttribute) ::= <<
 <if(resultAttribute)><resultAttribute><else>void<endif>
 <user_procedure(id)>(pearlrt::Task *me<if(listOfFormalParameters)>, <listOfFormalParameters><endif>);
@@ -2162,7 +1624,6 @@ ProcedureDeclaration(id,listOfFormalParameters,body,resultAttribute,globalAttrib
     <body>
 }
 
-
 >>
 
 ProcedureBody(declarations,statements) ::= <<
@@ -2170,11 +1631,7 @@ ProcedureBody(declarations,statements) ::= <<
 <statements>
 >>
 
-ResultAttribute(resultType) ::= <%
-    <resultType>
-%>
-
-ResultType(type) ::= <%
+ResultAttribute(type) ::= <%
     <type>
 %>
 
@@ -2187,13 +1644,13 @@ FormalParameters(FormalParameter) ::= <%
 %>
 
 FormalParameter(id,type,assignmentProtection,passIdentical,isArray,isArrayDescriptor) ::= <%
-<if(isArrayDescriptor)>pearlrt::Array* ad<user_argument(id)><else>
+<if(isArrayDescriptor)>pearlrt::Array* ad<user_argument(id)>, <endif>
 <if(isArray)>
   <if(assignmentProtection)>const <endif><type>  * data<user_argument(id)>
 <else>
    <if(assignmentProtection)>const <endif><type>  <if(passIdentical)>&<endif> <user_argument(id)>
 <endif>
-<endif>
+
 %>
 
 ParameterType(type) ::= <%
@@ -2323,9 +1780,6 @@ ArrayIndex(index) ::= <<
     pearlrt::Fixed\<31>(<index>)
 >>
 
-ArrayRHS(name,descriptor,indices) ::= <%
-*(data_<name> + <descriptor>->offset(<indices>))
-%>
 
 ArrayInitalisations(initElements)::= <%{<initElements: {initElement|<initElement>} ; separator=",">}
 %>
@@ -2340,9 +1794,6 @@ ArrayUPB(descriptor,index) ::= <%
 
 /* --------------------------- CONVERT STATEMENT -------------------------------------------*/
 
-ConvertStatement(convert) ::= <%
-//*** CONVERT <convert> ***
-%>
 
 /* ---------------------------------------------------------- */
 ConvertToStatement(id, elements) ::= <<
@@ -2394,42 +1845,51 @@ ConvertFromStatement(id, elements) ::= <<
 
 /* --------------------------- STRING SLICE -------------------------------------------*/
 
-StringSlice(lwb,upb,id,size) ::= <%
-*(pearlrt::CharSlice(<user_variable(id)>).getSlice(<lwb>,<upb>).mkCharPtr((pearlrt::Character\<<size>>*)0))
+// conversion from char selection to type Character if the length in known
+// note: rename in progress: Compiler use StringSelection; runtime use CharSlice / BitSlice
+MakeCharacterFromStringSelection(lwb,upb,id,size,offset) ::= <%
+    *(pearlrt::CharSlice(<id>)
+    	.getSlice(<lwb>,<upb><if(offset)>+(pearlrt::Fixed\<15>)<offset><endif>)
+    		.mkCharPtr((pearlrt::Character\<<size>>*)0))
 %>
 
-CharSlice(lwb,upb) ::= <<
-    .getSlice(<lwb>,<upb>)<\n>
->>
+// rhs variable char selection in assignment or comparison
+GetCharSelection(lwb,upb,offset) ::= <%
+	.getSlice(<lwb>,<upb><if(offset)>+(pearlrt::Fixed\<15>)<offset><endif>)
+%>
 
 
-SetCharSlice(expr) ::= <<
-    .setSlice(<expr>)<\n>
->>
+SetCharSelection(expr) ::= <%
+	.setSlice(<expr>)
+%>
+
+AssignCharSelection2Char(id,expr) ::= <%
+	pearlrt::CharSlice(<id>).setSlice(<expr>);
+%>
+
+// variable character string e.g. in compare
+RhsCharSelection(id,lwb,upb,offset) ::= <%
+pearlrt::CharSlice(<id>).getSlice(<lwb>,<upb><if(offset)>+pearlrt::Fixed\<15>(<offset>)<endif>)
+%>
+
+Assign2CharSelection(id,lhs) ::= <%
+	pearlrt::CharSlice(<id>)<lhs>;
+%>
+
 
 /* --------------------------- BIT SLICE -------------------------------------------*/
 
-
-assignmentStatementCharSlice(id,lhs) ::= <<
-    pearlrt::CharSlice(<id>)<lhs>;
->>
-
-assignmentStatementBitSlice(id,slices,rhs) ::= <<
-    pearlrt::BitSlice(<id>)<\n><slices><rhs>;
->>
-
-BitSliceRHS(id,lwb,upb,size) ::= <%
-    pearlrt::BitSlice(<user_variable(id)>)<\n>
-      .getSlice(<lwb>,<upb>)<\n>
-      ->mkBitString((pearlrt::BitString\<<size>>*) 0)
+// used for x.BIT(..) on rhs
+MakeBitString1FromStringSelection(id,lwb) ::= <%
+<id>.getBit(<lwb>)
 %>
 
-GetBitSlice(lwb,upb) ::= <<
-    .getSlice(<lwb>,<upb>)<\n>
->>
+MakeBitStringNFromStringSelection(id,lwb,size) ::= <%
+<id>.getSlice(<lwb>,(pearlrt::BitString\< <size> >*) 0)
+%>
 
-SetBitSlice(expr,size) ::= <%
-    ->setSlice(<expr>)
+AssignmentStatementBitSlice(id,lwb,upb,rhs) ::= <%
+   <id>.setSlice(<lwb>,<upb>,<rhs>);
 %>
 
 
@@ -2444,28 +1904,85 @@ extern pearlrt::Interrupt *<user_variable(id)>;<\n>
 %>
 
 EnableStatement(id) ::= <%
-  <user_variable(id)>->enable();
+  <id>->enable();
 %>
 
 DisableStatement(id) ::= <%
-  <user_variable(id)>->disable();
+  <id>->disable();
 %>
 
 TriggerStatement(id) ::= <%
-  <user_variable(id)>->trigger();
+  <id>->trigger();
 %>
 
 /* --------------------------- STRUCTURE -------------------------------------------*/
+/* unused template
 StructVariableDeclarations(decl) ::= <%
-    *** StructVariableDeclarations: <decl> ***
+    StructVariableDeclarations: <decl>
 %>
+*/
 
-StructVariableDeclaration(name,components) ::= <%
+StructureDefinition(name,components) ::= <%
 struct <name> {<\n>
     <components: {component|<component>}>
 };<\n>
 %>
 
-StructComponent(name,type) ::= <<
-    <type> <user_variable(name)>;<\n>
+StructureVariableDeclaration(name,type) ::= <%
+<type>  <user_variable(name)>;<\n>
+%>
+
+StructComponentDeclaration(name,TypeAttribute) ::= <<
+   <TypeAttribute> <name>;<\n>
 >>
+
+StructureForwardDeclarationList(declarations) ::= <<
+>>
+
+StructureForwardDeclaration(name) ::= <<
+struct <name>;
+>>
+
+StructureDeclarationList(declarations) ::= <<
+<declarations: {decl|<decl>}; separator="\n">
+>>
+
+/* unused template
+StructureDeclaration(name) ::= <<
+struct <name>;
+>>
+*/
+StructureFormalParameter(type) ::= <%
+<type>
+%>
+
+/* unused template
+StructureType(type) ::= <%
+<type>
+%>
+
+
+StructureComponent(component) ::= <%
+.<component>
+%>
+*/
+
+/* explode a name definition: */
+Name(id, name) ::= <%
+<user_variable(id)><if(name)>.<endif><name: {name|<name>}; separator=".">
+%>
+
+// for variable definition 
+TypeReferenceArray(basetype) ::= <%
+pearlrt::RefArray\< <basetype> >
+%>
+
+// for assignment
+arrayReference(basetype,descriptor,data) ::= <%
+pearlrt::RefArray\< <basetype> > (<descriptor>, <data>)
+%>
+
+// for read/write access
+RefArrayReadWrite(name,indices) ::= <%
+(*( <user_variable(name)>.getArrayData() +  <user_variable(name)>.getArrayDescriptor()->offset(<indices>)))
+%>

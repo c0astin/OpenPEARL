@@ -127,6 +127,11 @@ public class ConstantPool {
                         break;
                     }
                 }
+            } else if (value instanceof ConstantNILReference) {
+              if (constantPool.get(i) instanceof ConstantNILReference) {
+                found = true;  // check for equality for NIL symbol not necessary
+                break;
+              }
             }
 
         }
@@ -222,7 +227,7 @@ public class ConstantPool {
         return null;
     }
 
-    static public ConstantDurationValue lookupDurationValue(int hours, int minutes, double seconds, int sign) {
+    static public ConstantDurationValue lookupDurationValue(long hours, int minutes, double seconds, int sign) {
         int i;
         ConstantDurationValue other = new ConstantDurationValue(hours,minutes,seconds,sign);
 
@@ -292,4 +297,17 @@ public class ConstantPool {
         return null;
     }
 
+
+    static public ConstantNILReference lookupConstantNILReference() {
+        int i;
+
+        for (i = 0; i < constantPool.size(); i++) {
+            if (constantPool.get(i) instanceof ConstantNILReference) {
+               return (ConstantNILReference) (constantPool.get(i));
+           }
+        }
+
+        return null;
+    }
+    
 }

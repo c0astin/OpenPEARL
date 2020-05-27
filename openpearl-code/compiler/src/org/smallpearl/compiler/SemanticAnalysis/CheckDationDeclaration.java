@@ -240,6 +240,7 @@ public class CheckDationDeclaration extends SmallPearlBaseVisitor<Void> implemen
             	   if (!sd.isAlphic()) {
             	      // the system dation misses some data -- this should be detected by the
             	      // imc in all compilations
+            	     System.out.println("ctx: "+ctx.getText());
             	      throw new InternalCompilerErrorException(sd+" has no typeOfTransmission");
             	   }
                } else if (!sd.getTypeOfTransmission().equals("ALL")) {

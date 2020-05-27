@@ -217,6 +217,7 @@ namespace pearlrt {
          PutBitString<S>::toB1(s, w, *sink);
       }
 
+#if 0
       /**
       input format B1(w)
 
@@ -230,6 +231,7 @@ namespace pearlrt {
          GetBitString<S>::fromB123(s, w, 1, *source);
          return;
       }
+#endif
 
       /**
       output format B2(w)
@@ -244,6 +246,7 @@ namespace pearlrt {
          PutBitString<S>::toB2(s, w, *sink);
       }
 
+#if 0
       /**
       input format B2(w)
 
@@ -257,7 +260,7 @@ namespace pearlrt {
          GetBitString<S>::fromB123(s, w, 2, *source);
          return;
       }
-
+#endif
 
       /**
       output format B3(w)
@@ -272,6 +275,7 @@ namespace pearlrt {
          PutBitString<S>::toB3(s, w, *sink);
       }
 
+#if 0
       /**
       input format B3(w)
 
@@ -285,7 +289,7 @@ namespace pearlrt {
          GetBitString<S>::fromB123(s, w, 3, *source);
          return;
       }
-
+#endif
 
       /**
       output format B4(w)
@@ -300,6 +304,7 @@ namespace pearlrt {
          PutBitString<S>::toB4(s, w, *sink);
       }
 
+#if 0
       /**
       input format B4(w)
 
@@ -313,7 +318,7 @@ namespace pearlrt {
          GetBitString<S>::fromB4(s, w, *source);
          return;
       }
-
+#endif
 
       /**
        output format F with Fixed

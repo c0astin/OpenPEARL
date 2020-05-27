@@ -43,6 +43,7 @@ of a new day. Without special treatment of a time zone, GMT is used.
 
 #include <stdio.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #include "Clock.h"
 #include "GetClock.h"
@@ -53,79 +54,101 @@ of a new day. Without special treatment of a time zone, GMT is used.
 
 namespace pearlrt {
 
-   int GetClock::fromT(Clock&c ,
+   int GetClock::fromT(Clock&c,
                        const Fixed<31> w,
                        const Fixed<31> d,
                        Source & source) {
       int width = w.x;
       int decimals = d.x;
-      int hours = 0, min = 0;
+      uint64_t hours = 0;
+      int min = 0;
       double sec;
       int c1;
       double timeValue;
-      // 0123456789012345678901234567890123
+      //                0123456789012345678901234567890123
       char logText[] = "illegal T-format field (at: xxxxx)";
       int setCharsAt = 28;
       int charsToSet = 5;
+      bool errorWithLog = true;
 
       if (width <= 0) {
          Log::debug("fromT: width <= 0");
-         return theClockFormatSignal.whichRST();
+         throw theClockFormatSignal;
       }
 
       if (decimals < 0) {
          Log::debug("fromT: width < 0");
-         return theClockFormatSignal.whichRST();
+         throw theClockFormatSignal;
       }
+//printf("w=%d d= %d\n", width, decimals);
 
       GetHelper helper(w, &source);
       helper.setDelimiters(GetHelper::EndOfLine);
 
       if (helper.skipSpaces() == 0) {
          if (helper.readInteger(&hours, 2) > 0) {
-            if (helper.readString(":") == 0) {
-               if (helper.readFixedInteger(&min, 2) > 0) {
-                  if (min <= 59 && helper.readString(":") == 0) {
-                     // read seconds
-                     width = helper.getRemainingWidth();
+            if (helper.readString(":") != 0) {
+               Log::error("T-format: colon after hours expected");
+               errorWithLog = false;
+            } else if (helper.readFixedInteger(&min, 2) > 0) {
+               if (min >= 60) {
+                  Log::error("T-format: minutes too large");
+                  errorWithLog = false;
+               } else if (min < 60 && helper.readString(":") != 0) {
+                  Log::error("T-format: colon after minutes expected");
+                  errorWithLog = false;
+               } else {
+                  // read seconds
+                  width = helper.getRemainingWidth();
+//printf("h=%d min = %d\n", hours, min);
 
-                     if (helper.readSeconds(&sec, width, decimals) > 0) {
-                        if (sec < 60) {
-                           timeValue = sec;
-                           hours %= 24;
-                           timeValue += ((hours * 60) + min) * 60;
-                           c = Clock(timeValue);
+                  if (helper.readSeconds(&sec) > 0) {
+                     if (sec < 60) {
+                        timeValue = sec;
+                        hours %= 24;
+                        timeValue += ((hours * 60) + min) * 60;
+                        c = Clock(timeValue);
 
-                           if (helper.skipSpaces() < 0) {
-                              return 0;
-                           }
+                        if (helper.skipSpaces() < 0) {
+                           return 0;
                         }
                      }
+                  } else {
+                     Log::error("T-format: no value for second");
+                     errorWithLog = false;
                   }
                }
             }
+         } else {
+            Log::error("T-format: no value for hours");
+            errorWithLog = false;
          }
       }
 
-      // format error at all else cases
+      // discard remaining input bytes
       width = helper.getRemainingWidth();
 
       while (width > 0) {
          width --;
          c1 = source.getChar();
 
-         if (charsToSet > 0) {
-            logText[setCharsAt++] = c1;
-            charsToSet --;
+         if (errorWithLog) {
+            if (charsToSet > 0) {
+               logText[setCharsAt++] = c1;
+               charsToSet --;
+            }
          }
       }
 
-      while (charsToSet > 0) {
+      while (errorWithLog && charsToSet > 0) {
          logText[setCharsAt++] = ' ';
          charsToSet --;
       }
 
-      Log::info(logText);
+      if (errorWithLog) {
+         Log::info(logText);
+      }
+
       throw theClockValueSignal;
    }
 }

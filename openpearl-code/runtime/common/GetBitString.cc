@@ -57,8 +57,8 @@ namespace pearlrt {
 
         BitString<64>::DataType b;
         GetBits<8>::fromBit(b, len, width, base, source);
+// printf("as Bit(64): b: %" PRIx64 " len=%d, width=%d base=%d\n", b, len, width, base);
         bits = b >> (64-8);
-// printf("as Bit(32): %x len=%d, width=%d base=%d\n", b, len, width, base);
    }
 
    void GetBits<2>::fromBit(Bits<2>::BitType& bits, int len, int width,

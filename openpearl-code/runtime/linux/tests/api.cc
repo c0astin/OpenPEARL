@@ -83,7 +83,7 @@ SPCTASK(t2);
 
 DCLTASK(t1,pearlrt::Prio(10),pearlrt::BitString<1>(1)) {
    me->setLocation(10,filename);
-   pearlrt::Duration d(5.0);
+   pearlrt::Duration d(5,0);
    me->setLocation(11,filename);
    pearlrt::Duration dur;
    pearlrt::Float<23> f(10.0);
@@ -102,7 +102,7 @@ DCLTASK(t1,pearlrt::Prio(10),pearlrt::BitString<1>(1)) {
    t2.activate(&t2, pearlrt::Task::PRIO |
                pearlrt::Task::AFTER|pearlrt::Task::DURING|pearlrt::Task::ALL, 
 	       pearlrt::Prio(30),
-               pearlrt::Clock(), d, pearlrt::Duration(2.0), // at, all 
+               pearlrt::Clock(), d, pearlrt::Duration(2,0), // at, all 
                pearlrt::Clock(),d*(pearlrt::Float<23>)6.0) ; 
 }
 
@@ -111,7 +111,7 @@ DCLTASK(t2,pearlrt::Prio(20),pearlrt::BitString<1>(0)) {
    me->setLocation(17,filename);
    printf("t2 started %d\n", ++t2counter);
    me->setLocation(18,filename);
-   pearlrt::Duration d(10.0);
+   pearlrt::Duration d(1,0);
    me->setLocation(19,filename);
    d = d / pearlrt::Float<23>(t2counter-2);
 }

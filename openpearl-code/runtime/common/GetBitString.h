@@ -41,6 +41,7 @@ for B1,B2,B3 and B4-format.
 #ifndef GETBITSTRING_H_INCLUDED
 #define GETBITSTRING_H_INCLUDED
 
+#include <inttypes.h>
 
 #include "Source.h"
 #include "GetHelper.h"
@@ -152,6 +153,13 @@ namespace pearlrt {
        are provided. They need no objects.
       */
       GetBitString() {}
+
+     /**
+      number of bytes in the data storage
+      */
+      static const int len=NumberOfBytes<S>::resultBitString;
+
+
    public:
 
       /**
@@ -181,25 +189,17 @@ namespace pearlrt {
          const Fixed<31> w,
          const int base,
          Source & source) {
-         if (w.x < 0) {
+
+         if (w.x <= 0 ) {
+            Log::error("B-format: w<= 0");
             throw theBitFormatSignal;
          }
-
-         if (w.x == 0) {
-            bitstring.x = 0;
-            return;
-         }
-
+ 
          GetHelper helper(w, &source);
          helper.setDelimiters(GetHelper::EndOfLine);
-         uint64_t fixedValue = 0;
-        
-         helper.readB123(&fixedValue, S, base);
-         BitString<S> retVal(fixedValue);
-         bitstring.x = retVal.x;
+         GetBits<len>::fromBit(bitstring.x,S,w.x,base,source);
          return;
       }
-
 
       /**
       convert the bit string from a character stream in hex-format.
@@ -226,21 +226,15 @@ namespace pearlrt {
          BitString<S> &bitstring,
          const Fixed<31> w,
          Source & source) {
-         if (w.x < 0) {
-            throw theBitFormatSignal;
-         }
 
-         if (w.x == 0) {
-            bitstring.x = 0;
-            return;
+         if (w.x <= 0 ) {
+            Log::error("B-format: w<= 0");
+            throw theBitFormatSignal;
          }
 
          GetHelper helper(w, &source);
          helper.setDelimiters(GetHelper::EndOfLine);
-         uint64_t fixedValue=0;
-         helper.readB4(&fixedValue, S);
-         BitString<S> retVal(fixedValue);
-         bitstring.x = retVal.x;
+         GetBits<len>::fromBit(bitstring.x,S,w.x,4,source);
          return;
       }
 

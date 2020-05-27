@@ -4,26 +4,25 @@ SYSTEM;
 ! Disc defines a folder on the file system. The second parameters
 ! denotes the maximum number of simultaneous open files
 disc: Disc('/tmp/' ,10);
+stdout: StdOut;
 
-/* expected C++ code  
-__cpp__(
-     'static pearlrt::Disc s_disc("/tmp/", 10);'
-     'pearlrt::Device * d_disc = & s_disc;'
-);
-/*  */
 PROBLEM;
 
    SPC disc DATION INOUT SYSTEM  ALL;
+   SPC stdout DATION OUT SYSTEM  ALPHIC;
 
    DCL table DATION INOUT ALPHIC DIM(*,80)
              FORWARD NOCYCL  NOSTREAM 
              CREATED(disc);
+   DCL term DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
 
 FileTest1: TASK MAIN;
      DCL f FIXED(15);
      DCL f1 FIXED(15);
      DCL text CHAR(5) INIT(' f = ');
      DCL text1 CHAR(5);
+
+     OPEN term;
  
      OPEN table BY ANY, IDF('file1.txt');
      PUT text, f TO table BY  X(3), A,F(3), SKIP;
@@ -49,6 +48,10 @@ FileTest1: TASK MAIN;
      CLOSE table;
 
      testFormats;
+     putArraySlice;
+     getArraySlice;
+
+     CLOSE term;
 END;
 
 testFormats: PROC;
@@ -99,5 +102,92 @@ testFormats: PROC;
    CLOSE table;
 
 END;
+
+putArraySlice: PROC;
+   DCL data(10) FIXED;
+   DCL error FIXED;
+   DCL text CHAR(20);
+   DCL (start,end) FIXED INIT(2,4);
+
+   FOR i TO 10 REPEAT
+      data(i) := i;
+   END; 
+   !---
+   OPEN table BY ANY, IDF('file1.txt');
+   PUT data(2:4) TO table BY F(3);
+   CLOSE table;
+   OPEN table BY ANY, IDF('file1.txt');
+   GET text FROM table BY A(9);
+   CLOSE table;
+   IF text NE '  2  3  4' THEN
+      PUT 'putArraySlice failed @1' TO term BY A, SKIP;
+   FIN; 
+
+   !---
+   OPEN table BY ANY, IDF('file1.txt');
+   PUT data(start:end) TO table BY F(3);
+   CLOSE table;
+   OPEN table BY ANY, IDF('file1.txt');
+   GET text FROM table BY A(9);
+   CLOSE table;
+   IF text NE '  2  3  4' THEN
+      PUT 'putArraySlice failed @2' TO term BY A, SKIP;
+   FIN; 
+
+   !---
+   OPEN table BY ANY, IDF('file1.txt');
+   PUT data(end:start) TO table BY RST(error),F(3);
+   CLOSE table;
+   IF error NE 326 THEN
+      PUT 'putArraySlice failed @3' TO term BY A, SKIP;
+   FIN; 
+
+END;
+
+
+getArraySlice: PROC;
+   DCL data(10) FIXED;
+   DCL expect(10) FIXED INIT(0,2,3,4,0,0,0,0,0,0);
+   DCL error FIXED;
+   DCL text CHAR(20);
+   DCL (start,end) FIXED INIT(2,4);
+
+   FOR i TO 10 REPEAT
+      data(i) := 0;
+   END; 
+   !---
+   OPEN table BY ANY, IDF('file1.txt');
+   PUT '  2  3  4' TO table BY A;
+   CLOSE table;
+   OPEN table BY ANY, IDF('file1.txt');
+
+   GET data(2:4) FROM table BY F(3);
+   CLOSE table;
+   FOR i TO 10 REPEAT
+      IF data(i) NE expect(i) THEN
+         PUT 'getArraySlice failed @1' TO term BY A, SKIP;
+      FIN; 
+   END;
+
+   !---
+   OPEN table BY ANY, IDF('file1.txt');
+   GET data(start:end) FROM table BY F(3);
+   CLOSE table;
+   FOR i TO 10 REPEAT
+      IF data(i) NE expect(i) THEN
+         PUT 'getArraySlice failed @2' TO term BY A, SKIP;
+      FIN; 
+   END;
+
+   !---
+   OPEN table BY ANY, IDF('file1.txt');
+   GET data(end:start) FROM table BY RST(error),F(3);
+   CLOSE table;
+   IF error NE 326 THEN
+      PUT 'getArraySlice failed @3' TO term BY A, SKIP;
+   FIN; 
+
+END;
+
 MODEND;
 

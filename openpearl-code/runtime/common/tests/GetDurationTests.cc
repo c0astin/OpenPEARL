@@ -42,6 +42,7 @@ This program checks whether the Duration values are read as the expected.
 \cond TREAT_EXAMPLES
 */
 #include "gtest.h"
+#include "inttypes.h"
 
 #include "Duration.h"
 #include "GetDuration.h"
@@ -60,29 +61,37 @@ TEST(GetDuration, conversions) {
    rc.setWork(d);
    pearlrt::RefCharSource source(rc);
    pearlrt::Duration dur;
+
+
    // normal operation
-   EXPECT_EQ(0, pearlrt::GetDuration::fromD(dur, 22, 0, source));
-   EXPECT_TRUE((dur == pearlrt::Duration((12 * 60 + 5) * 60 + 12.0))
+   EXPECT_NO_THROW(pearlrt::GetDuration::fromD(dur, 22, 0, source));
+//printf("dur.sec=%" PRId64 " sec %d usec\n",dur.getSec(), dur.getUsec());
+
+   EXPECT_TRUE((dur == pearlrt::Duration((12 * 60 + 5) * 60 + 12,0))
                .getBoolean());
    // test format parameters
    {
       pearlrt::Character<30> d(" 12 HRS 05 MIN 12 SEC        X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationFormatSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, -1, 0, source));
-      EXPECT_EQ(pearlrt::theDurationFormatSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 0, 0, source));
-      EXPECT_EQ(pearlrt::theDurationFormatSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 20, -1, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, -1, 0, source),
+        	pearlrt::DurationFormatSignal);
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 0, 0, source),
+		pearlrt::DurationFormatSignal);
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 20, -1, source),
+		pearlrt::DurationFormatSignal);
    }
    {
       //                        123456789012345678901234567890
       pearlrt::Character<30> d("2 HRS 05 MIN 12 SEC        X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 18, 0, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 18, 0, source),
+		pearlrt::DurationValueSignal);
    }
    // min width
    {
@@ -91,7 +100,7 @@ TEST(GetDuration, conversions) {
       rc.setWork(d);
       source.rewind();
       EXPECT_EQ(0, pearlrt::GetDuration::fromD(dur, 19, 0, source));
-      EXPECT_TRUE((dur == pearlrt::Duration((2 * 60 + 5) * 60 + 12.0))
+      EXPECT_TRUE((dur == pearlrt::Duration((2 * 60 + 5) * 60 + 12,0))
                   .getBoolean());
    }
    // min width with decimals
@@ -101,52 +110,9 @@ TEST(GetDuration, conversions) {
       rc.setWork(d);
       source.rewind();
       EXPECT_EQ(0, pearlrt::GetDuration::fromD(dur, 21, 0, source));
-      EXPECT_TRUE((dur == pearlrt::Duration((2 * 60 + 5) * 60 + 12.5))
+      EXPECT_TRUE((dur == pearlrt::Duration((2 * 60 + 5) * 60 + 12,500000))
                   .getBoolean());
    }
-#if 0
-   // min width with implicit decimals
-   {
-      //                        123456789012345678901234567890
-      pearlrt::Character<30> d("2 HRS 05 MIN 125 SEC        X");
-      rc.setWork(d);
-      source.rewind();
-      EXPECT_EQ(0, pearlrt::GetDuration::fromD(dur, 21, 1, source));
-      EXPECT_TRUE((dur == pearlrt::Duration((2 * 60 + 5) * 60 + 12.5))
-                  .getBoolean());
-   }
-   // min width with implicit decimals missing prepoint seconds
-   {
-      //                        123456789012345678901234567890
-      pearlrt::Character<30> d("2 HRS 05 MIN 0125 SEC       X");
-      rc.setWork(d);
-      source.rewind();
-      EXPECT_EQ(0, pearlrt::GetDuration::fromD(dur, 22, 2, source));
-      EXPECT_TRUE((dur == pearlrt::Duration((2 * 60 + 5) * 60 + 1.25))
-                  .getBoolean());
-   }
-   // large hours value with implicit decimals missing prepoint seconds
-   {
-      //                        123456789012345678901234567890
-      pearlrt::Character<30> d("12342 HRS 05 MIN 0125 SEC    X");
-      rc.setWork(d);
-      source.rewind();
-      EXPECT_EQ(0, pearlrt::GetDuration::fromD(dur, 25, 2, source));
-      EXPECT_TRUE((dur == pearlrt::Duration((12342 * 60 + 5) * 60 + 1.25))
-                  .getBoolean());
-   }
-   // negative large hours value with implicit decimals
-   //  missing prepoint seconds
-   {
-      //                        123456789012345678901234567890
-      pearlrt::Character<30> d("-12342 HRS 05 MIN 0125 SEC  X");
-      rc.setWork(d);
-      source.rewind();
-      EXPECT_EQ(0, pearlrt::GetDuration::fromD(dur, 27, 2, source));
-      EXPECT_TRUE((dur == pearlrt::Duration(-((12342 * 60 + 5) * 60 + 1.25)))
-                  .getBoolean());
-   }
-#endif
 }
 
 TEST(GetDuration, errorDetection) {
@@ -158,14 +124,27 @@ TEST(GetDuration, errorDetection) {
    pearlrt::Duration dur;
    // error detection tests
 
+
    // overflow in hours
    {
       //                        1234567890123456789012345678901234567890
       pearlrt::Character<50> d("1234567890123 HRS 05 MIN 12 SEC        X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 35, 0, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 35, 0, source),
+		pearlrt::DurationValueSignal);
+   }
+   
+   // no 'SEC' tag
+   {
+      //                        123456789012345678901234567890
+      pearlrt::Character<30> d("12 HRS 05 MIN 12          X");
+      rc.setWork(d);
+      source.rewind();
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 25, 2, source),
+		pearlrt::DurationValueSignal);
    }
    
    // no 'SEC' tag
@@ -174,68 +153,39 @@ TEST(GetDuration, errorDetection) {
       pearlrt::Character<30> d("12 HRS 05 MIN 12.5        X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 2, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 25, 2, source),
+		pearlrt::DurationValueSignal);
    }
-#if 0
-   // only 1 digit sec
-   {
-      //                        123456789012345678901234567890
-      pearlrt::Character<30> d("12 HRS 05 MIN 2.5 SEC    X");
-      rc.setWork(d);
-      source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 2, source));
-   }
-#endif
-   // only 1 digit sec with implicit decimals
+   // only 3 digit sec 
    {
       //                        123456789012345678901234567890
       pearlrt::Character<30> d("12 HRS 05 MIN 251 SEC    X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 2, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 25, 2, source),
+		pearlrt::DurationValueSignal);
    }
-   // 3 digit sec with implicit decimals
-   {
-      //                        123456789012345678901234567890
-      pearlrt::Character<30> d("12 HRS 05 MIN 00251 SEC    X");
-      rc.setWork(d);
-      source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 2, source));
-   }
-   // no 'MIN' tag
+   // wrong 'MIN' tag
    {
       //                        123456789012345678901234567890
       pearlrt::Character<30> d("12 HRS 05 min 12.5        X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 2, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 25, 2, source),
+		pearlrt::DurationValueSignal);
    }
-#if 0
-   // removed due to relaxed behavior of D-format
-   // only 1 digit min
-   {
-      //                        123456789012345678901234567890
-      pearlrt::Character<30> d("12 HRS  5 MIN 2.5 SEC    X");
-      rc.setWork(d);
-      source.rewind();
-
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 2, source));
-   }
-#endif
    // X in field
    {
       //                        123456789012345678901234567890
       pearlrt::Character<30> d("12 HRS 5 MIN 2.5 SEC    X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 2, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 25, 2, source),
+		pearlrt::DurationValueSignal);
    }
    // only 3 digit min
    {
@@ -243,8 +193,9 @@ TEST(GetDuration, errorDetection) {
       pearlrt::Character<30> d("12 HRS 112 MIN 2.5 SEC    X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 2, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 25, 2, source),
+		pearlrt::DurationValueSignal);
    }
    // only 60 min
    {
@@ -252,8 +203,9 @@ TEST(GetDuration, errorDetection) {
       pearlrt::Character<30> d("12 HRS 60 MIN 2.5 SEC    X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 2, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 25, 2, source),
+		pearlrt::DurationValueSignal);
    }
    // no 'HRS' tag
    {
@@ -261,8 +213,9 @@ TEST(GetDuration, errorDetection) {
       pearlrt::Character<30> d("12 hrs 05 MIN 12.5        X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 2, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 25, 2, source),
+		pearlrt::DurationValueSignal);
    }
    // no hours value
    {
@@ -270,8 +223,9 @@ TEST(GetDuration, errorDetection) {
       pearlrt::Character<30> d("  HRS 05 MIN 12.5 SEC        X");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 21, 2, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 21, 2, source),
+		pearlrt::DurationValueSignal);
    }
    // test for proper continuation after error in reading
    {
@@ -281,10 +235,11 @@ TEST(GetDuration, errorDetection) {
       d("12 hrs 05 MIN 12.5       12 HRS 10 MIN 01 SECX");
       rc.setWork(d);
       source.rewind();
-      EXPECT_EQ(pearlrt::theDurationValueSignal.whichRST(),
-                pearlrt::GetDuration::fromD(dur, 25, 0, source));
+      EXPECT_THROW(
+                pearlrt::GetDuration::fromD(dur, 25, 0, source),
+		pearlrt::DurationValueSignal);
       EXPECT_EQ(0, pearlrt::GetDuration::fromD(dur, 20, 0, source));
-      EXPECT_TRUE((dur == pearlrt::Duration((12 * 60 + 10) * 60 + 1))
+      EXPECT_TRUE((dur == pearlrt::Duration((12 * 60 + 10) * 60 + 1,0))
                   .getBoolean());
    }
 }

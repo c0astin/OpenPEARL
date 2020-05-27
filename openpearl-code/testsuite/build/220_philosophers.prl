@@ -6,7 +6,7 @@ SYSTEM;
 PROBLEM;
    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
    DCL termout DATION OUT ALPHIC DIM(*, 80) FORWARD STREAM CREATED(stdout);
-   DCL semaTermout SEMA PRESET(1);
+!   DCL semaTermout SEMA PRESET(1);
 
    DCL semaFork1 SEMA PRESET(1);
    DCL semaFork2 SEMA PRESET(1);
@@ -15,29 +15,32 @@ PROBLEM;
    DCL semaFork5 SEMA PRESET(1);
 
    eat: PROC(num FIXED);	  
-      REQUEST semaTermout;
-      OPEN termout;
+!      REQUEST semaTermout;
+!      OPEN termout;
       PUT 'Philosopher #', num, ': I am eating!' TO termout BY A, F(1), A, SKIP;
-      CLOSE termout;
-      RELEASE semaTermout;
-      AFTER 1 SEC RESUME;
+!      CLOSE termout;
+!      RELEASE semaTermout;
+      AFTER 0.5 SEC RESUME;
    END;
    
    think: PROC(num FIXED);
-      REQUEST semaTermout;
-      OPEN termout;
+!      REQUEST semaTermout;
+!      OPEN termout;
       PUT 'Philosopher #', num, ': I am thinking!' TO termout BY A, F(1), A, SKIP;
-      CLOSE termout;
-      RELEASE semaTermout;
+!      CLOSE termout;
+!      RELEASE semaTermout;
       AFTER 1 SEC RESUME;
    END;
 
 main: TASK PRIO 1 MAIN;
+   ! open termout only once
+   OPEN termout;
    ACTIVATE taskPhilo1;
    ACTIVATE taskPhilo2;
    ACTIVATE taskPhilo3;
    ACTIVATE taskPhilo4;
    ACTIVATE taskPhilo5;
+!      CLOSE termout;
 END;
 
 taskPhilo1: TASK PRIO 5;

@@ -458,56 +458,57 @@ TEST(Fixed, AssignViaVoidPtr) {
     pearlrt::Fixed<63> x63;
 
     ASSERT_NO_THROW(
-      assignIntToFixedViaVoidPointer(&x0,0,0)
+      assignInt32ToFixedViaVoidPointer(&x0,0,0)
     );
 
     ASSERT_NO_THROW(
-      assignIntToFixedViaVoidPointer(&x0,0,-1)
+      assignInt32ToFixedViaVoidPointer(&x0,0,-1)
     );
 
     ASSERT_THROW(
-      assignIntToFixedViaVoidPointer(&x0,0,1),pearlrt::FixedRangeSignal
+      assignInt32ToFixedViaVoidPointer(&x0,0,1),pearlrt::FixedRangeSignal
     );
 
     ASSERT_THROW(
-      assignIntToFixedViaVoidPointer(&x5,5,32),pearlrt::FixedRangeSignal
+      assignInt32ToFixedViaVoidPointer(&x5,5,32),pearlrt::FixedRangeSignal
     );
 
     ASSERT_THROW(
-      assignIntToFixedViaVoidPointer(&x5,5,-33),pearlrt::FixedRangeSignal
+      assignInt32ToFixedViaVoidPointer(&x5,5,-33),pearlrt::FixedRangeSignal
     );
 
     ASSERT_THROW(
-      assignIntToFixedViaVoidPointer(&x15,15,32768),pearlrt::FixedRangeSignal
+      assignInt32ToFixedViaVoidPointer(&x15,15,32768),pearlrt::FixedRangeSignal
     );
 
     ASSERT_THROW(
-      assignIntToFixedViaVoidPointer(&x16,16,65536),pearlrt::FixedRangeSignal
+      assignInt32ToFixedViaVoidPointer(&x16,16,65536),pearlrt::FixedRangeSignal
     );
 
     ASSERT_THROW(
-      assignIntToFixedViaVoidPointer(&x16,16,-65537),pearlrt::FixedRangeSignal
+      assignInt32ToFixedViaVoidPointer(&x16,16,-65537),pearlrt::FixedRangeSignal
     );
 
     // since int is 32 bit we need no further overflow tests
     ASSERT_TRUE(sizeof(int)==4);
 
     // test the values
-    assignIntToFixedViaVoidPointer(&x5,5,3);
+    assignInt32ToFixedViaVoidPointer(&x5,5,3);
     ASSERT_EQ(x5.x, 3);
      
-    assignIntToFixedViaVoidPointer(&x15,15,3);
+    assignInt32ToFixedViaVoidPointer(&x15,15,3);
     ASSERT_EQ(x15.x, 3);
-    assignIntToFixedViaVoidPointer(&x31,31,3);
+    assignInt32ToFixedViaVoidPointer(&x31,31,3);
     ASSERT_EQ(x31.x, 3);
-    assignIntToFixedViaVoidPointer(&x31,31,0x0000AAAA);
+    assignInt32ToFixedViaVoidPointer(&x31,31,0x0000AAAA);
     ASSERT_EQ(x31.x, 0x0000AAAA);
      
-    assignIntToFixedViaVoidPointer(&x31,31,0xAAAA0000);
+    assignInt32ToFixedViaVoidPointer(&x31,31,0xAAAA0000);
     ASSERT_EQ(x31.x, (int32_t)0xAAAA0000);
-    
-    int64_t i64 = 0xFFFFFFFFAAAA0000ull; 
-    assignIntToFixedViaVoidPointer(&x63,63,0xAAAA0000);
-    ASSERT_EQ(x63.x, i64);
+
+// no 64 bit support     
+//    int64_t i64 = 0xFFFFFFFFAAAA0000ull; 
+//    assignInt32ToFixedViaVoidPointer(&x63,63,0xAAAA0000);
+//    ASSERT_EQ(x63.x, i64);
      
 }

@@ -130,6 +130,16 @@ namespace pearlrt {
 
       Task* getTaskByIndex(unsigned int i);
 
+   
+      /**
+          find a task by the name in the TaskList
+
+          \param name is the tasks name
+
+          \returns the pointer to the task object
+      */
+      Task* getTaskByName(char * name);
+
       /**
           get number of main tasks
           \returns number of registered task with attribute MAIN

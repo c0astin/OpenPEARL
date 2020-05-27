@@ -263,11 +263,20 @@ C++ source code.
 */
 namespace pearlrt {
 // ------------------------ prototypes of static functions
-#if 0
-   static char* task_state(enum Task::TaskState t);
-   static void treat_command(char * line);
-#endif
 
+  // data for scanPearlRc
+  enum {LOGLEVEL = 0, MAXCPUTIME, CORES};
+  static struct Entry {
+     char  format[20];
+     int value;
+   } entries[] = {
+      {"LogLevel   %x", -1},
+      {"MaxCpuTime %d", 300},
+      {"UseCores   %d", 1}
+   };
+   // cpu_set for task with no explicit  'Cores' statement
+   static cpu_set_t * defaultCpuSet=NULL;
+   static bool pearlRcFileOk = true;
 
 //signal handler for SIGXCPU - cpu time limit exeeded
    static void sigXCPU(int dummy) {
@@ -298,10 +307,11 @@ namespace pearlrt {
 
       //get the size in bytes of to hold cpu sets for n cores
       size = CPU_ALLOC_SIZE(n);
+
       //clear the cpu set
       CPU_ZERO_S(size, mask);
 
-      //set the cpu set to the given number of  core
+      // allow operation on all cores
       for (cpu = 0; cpu < n; cpu ++) {
          CPU_SET_S(cpu, size, mask);
       }
@@ -311,24 +321,53 @@ namespace pearlrt {
          perror("setaffinity:");
          exit(1);
       }
+
+      CPU_FREE(mask);
+
    }
 
+   static cpu_set_t * getCpuSet(char * line, char* taskName) {
+      bool atLeast1CoreFound = false;
+      cpu_set_t *cpuset;
+      char * tok;
 
-   enum {LOGLEVEL = 0, MAXCPUTIME, CORES};
-   static struct Entry {
-      char  format[20];
-      int value;
-   } entries[] = {
-      {"LogLevel   %x", -1},
-      {"MaxCpuTime %d", 300},
-      {"Cores      %d", 1}
-   };
+      cpuset = CPU_ALLOC(entries[CORES].value);
+      size_t size = CPU_ALLOC_SIZE(entries[CORES].value);
+      CPU_ZERO_S(size,cpuset);
+      tok = strtok(line," ,\n");
 
-   static void scanPearlRc(void) {
+      while(tok != NULL) {
+         int core = atoi(tok);
+         if (core >= entries[CORES].value) {
+            if (taskName) {
+               fprintf(stderr, ".pearlrc: core number %d for task %s too large --> ignored\n",
+                                core, taskName);
+            } else {
+               fprintf(stderr, ".pearlrc: core number %d for 'DefaultCores' too large --> ignored\n",
+                                core);
+            }
+          } else {
+              atLeast1CoreFound = true;
+              CPU_SET_S(core,size,cpuset);
+          }
+          tok = strtok(NULL," ,\n");
+       }
+
+       if (atLeast1CoreFound) {
+          return cpuset;
+       } else {
+          CPU_FREE(cpuset);
+          fprintf(stderr, ".pearlrc: no core defined in Cores/DefaultCores\n");
+          pearlRcFileOk = false;
+          return NULL;
+       } 
+   }
+
+   static void scanPearlRc() {
       FILE * fp;
       int found;
       char line[80];
-
+      
       // search .pearlrc in current folder
       fp = fopen("./.pearlrc", "r");
 
@@ -345,21 +384,71 @@ namespace pearlrt {
          while (!feof(fp)) {
             found = 0;
             fgets(line, sizeof(line) - 1, fp);
-
-            if (line[0] != '!') {
+            if (!feof(fp) && line[0] != '!') {
+               if (line[strlen(line)-1] == '\n') {
+                  line[strlen(line)-1] = ' ';  // replace \n with space
+               }
                // this is no comment line
                for (unsigned int i = 0;
                      i < sizeof(entries) / sizeof(entries[0]) && found == 0;
                      i++) {
                   found = sscanf(line, entries[i].format, &entries[i].value);
                }
+
+               // check if it is the 'Cores' tag
+               if (!found && strncmp(line,"Cores ",6) == 0) {
+                   if (entries[CORES].value < 2) {
+   	              fprintf(stderr, ".pearlrc: need more than 2 cores for statement 'Core'\n");
+                      pearlRcFileOk = false;
+                   }
+                     
+                   char * taskName = line+6;
+                   while(isspace(*taskName)) {
+                       taskName++;
+                   }
+                   char * startOfCores = taskName;
+                   while(!isspace(*startOfCores)) {
+                       startOfCores ++;
+                   }
+                   *startOfCores = '\0'; // set end of taskname
+                   startOfCores ++;
+
+		   cpu_set_t * set = getCpuSet(startOfCores,taskName);
+                   if (set) {
+                      Task *t = TaskList::Instance().getTaskByName(taskName);
+                      if (t) {
+                         t->setCpuSet(set);
+                      } else {
+                         fprintf(stderr, ".pearlrc: task %s not defined; Core-tag ignored\n",taskName);
+                         pearlRcFileOk = false;
+                      }
+		   } 
+               } else if (!found && strncmp(line,"DefaultCores ",13) == 0) {
+                   if (entries[CORES].value < 2) {
+   	              fprintf(stderr, ".pearlrc: need more than 2 cores for statement 'DefaultCores'\n");
+                      pearlRcFileOk = false;
+                   }
+                     
+		   defaultCpuSet = getCpuSet(line+13,NULL);
+               } else if (!found) {
+                   // let's ignore empty lines
+                   char * isEmptyCheck = line;
+                   while (isspace(*isEmptyCheck)) {
+                       isEmptyCheck ++;
+                   }
+                   if (*isEmptyCheck != '\0') {
+   	              fprintf(stderr, ".pearlrc: illegal command: '%s'\n",line);
+                      pearlRcFileOk = false;
+                   }
+               }
             }
          }
 
          fclose(fp);
       } else {
-         Log::warn("no .pearlrc found");
+         Log::info("no .pearlrc found");
       }
+      return;
    }
 
    static void setLimits() {
@@ -413,6 +502,9 @@ int main() {
    //new Log(logfile, (char*)"EWDI"); // all levels enabled
 
    scanPearlRc();
+   if (pearlRcFileOk == false) {
+      exit(1);
+   }
 
    if (!logFromSystemPart) {
       if (entries[LOGLEVEL].value != -1) {
@@ -433,6 +525,8 @@ int main() {
    }
 
    set_cores(numberOfCpus);
+   Task::setNumberOfCores(numberOfCpus);
+
    Log::info("   setting number of used cpus to %d", numberOfCpus);
    signal(SIGXCPU, sigXCPU);
    setLimits();
@@ -482,15 +576,22 @@ int main() {
    signal(SIG_NO_MORE_TASKS, noMoreTasksPendingHandler);
 
    Log::info("Defined Tasks");
-   sprintf(line, "%-10.10s %4s %s", "Name", "Prio", "isMain");
+   sprintf(line, "  %-20.20s %4s %6s %s", "Name", "Prio", "isMain", "run on core");
    Log::info(line);
    TaskList::Instance().sort();	// sort taskList
 
    for (int i = 0; i < TaskList::Instance().size(); i++) {
       Task *t = TaskList::Instance().getTaskByIndex(i);
-      sprintf(line, "%-20.20s  %3d  %2d", t->getName(),
+      char cores[40];
+      cpu_set_t * set = t->getCpuSet();
+      if (set==NULL && defaultCpuSet != NULL) {
+          t->setCpuSet(defaultCpuSet);
+          set=defaultCpuSet;
+      }
+      Task::getCpuSetAsText(set, cores, sizeof(cores)-1);
+      sprintf(line, "  %-20.20s  %3d  %2d     %s", t->getName(),
               (t->getPrio()).x,
-              t->getIsMain());
+              t->getIsMain(), cores);
       Log::info(line);
    }
 

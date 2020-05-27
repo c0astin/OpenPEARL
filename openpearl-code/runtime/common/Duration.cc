@@ -52,8 +52,8 @@ namespace pearlrt {
    }
 
 
-   int Duration::getSec() const {
-      int sec;
+   int64_t Duration::getSec() const {
+      int64_t sec;
       sec =  intval.get() / 1000000LL;
       return (sec);
    }
@@ -66,17 +66,17 @@ namespace pearlrt {
    }
 
 
-   Duration::Duration(const double d) {
-      try {
-         if (d > 0) {
-            intval = Fixed63(d * 1000000.0 + 0.5);
-         } else {
-            intval = Fixed63(d * 1000000.0 - 0.5);
-         }
-      } catch (ArithmeticOverflowSignal &s) {
-         throw theDurationRangeSignal;
-      }
+   Duration::Duration(const int64_t sec, const int us, const int sign) {
+       intval = Fixed63(sec);
+       intval *= 1000000;
+       intval += us;
+       if (sign != 1 && sign != -1) {
+          Log::error("Duration illegal sign");
+          throw theInternalDatatypeSignal;
+       }
+       intval *= sign;
    }
+
 
    Duration& Duration::operator+=(const Duration& rhs) {
       try {
@@ -112,7 +112,7 @@ namespace pearlrt {
    }
 
    Duration Duration::operator-() const {
-      return Duration(Duration(0) - (*this));
+      return Duration(Duration(0,0) - (*this));
    }
 
 

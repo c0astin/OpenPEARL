@@ -1,3 +1,4 @@
+% 2020-03-26: rm: string selection as proc parameter clearified
 \chapter{Procedures}   % 8
 \index{Procedure}
 
@@ -296,6 +297,8 @@ are assigned to the corresponding formal parameters. An assignment to a
 formal parameter by a statement in the procedure body, hence, does not
 result in a change of the actual parameter. Furthermore, in this case
 any expressions may be passed as actual parameters.
+\OpenPEARL{} regards \hyperlink{StringSelection}{string selections} as
+expressions. 
 
 When associating with the help of identification (also called {\em call
 by reference}), a formal parameter is identified with the corresponding
@@ -304,7 +307,9 @@ parameter are referred to under the name of the formal parameter. An
 assignment to a formal parameter in the procedure body means, thus, an
 assignment to the variable passed as corresponding actual parameter.
 Hence, in this case, not expressions, but only names (of variables) may
-be passed as actual parameters.
+be passed as actual parameters. In \OpenPEARL{} this does apply to
+\hyperlink{StringSelection}{string selections}, too.
+ 
 
 Example:
 

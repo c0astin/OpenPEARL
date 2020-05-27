@@ -965,8 +965,6 @@ namespace pearlrt {
 
 
    void UserDationNB::beginSequenceHook(TaskCommon * me) {
-      struct BlockData bd;
-
       if (tfuBuffer.isUsed()) {
          tfuBuffer.markEmpty();
 

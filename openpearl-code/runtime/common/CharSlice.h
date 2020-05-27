@@ -63,7 +63,7 @@ namespace pearlrt {
      DCL y CHAR(3);
 
      y := x.CHAR(3:5);  ! select digits# 345 from  x
-     y.CHAR(1:5).CHAR(2:3) := x.CHAR(1:2);
+     y.CHAR(1:5) := x.CHAR(1:2);
 
      ! pass shorter string to the proc
      CALL proc(x.CHAR(1:3), y.CHAR(1:5));
@@ -84,7 +84,6 @@ namespace pearlrt {
     // y.CHAR(1:5).CHAR(2:3) := x.CHAR(1:2);
     CharSlice(y)
        .getSlice(one,five)
-       .getSlice(two, three)
        .setSlice(CharSlice(x).getSlice(one,two));
 
     {

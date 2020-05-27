@@ -159,8 +159,7 @@ public class Compiler {
                         symbolTableVisitor.symbolTable.dump();
                     }
                 }
-                    
-                
+
                 ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose, debug, symbolTableVisitor, constantPool, ast);
                 if (ErrorStack.getTotalErrorCount()<=0) {
                        expressionTypeVisitor.visit(tree);
@@ -211,9 +210,9 @@ public class Compiler {
             }
             catch(Exception ex) {
                 System.err.println(ex.getMessage());
-
+                ex.printStackTrace();
                 if (debug) {
-                	ex.printStackTrace();
+                  ex.printStackTrace();
                 }
                 
                 if ( verbose > 0 ) {

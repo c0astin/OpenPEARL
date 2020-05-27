@@ -157,19 +157,50 @@ namespace pearlrt {
       adv(n);
    }
 
+   void DationPG::applyAllPositioningFormats(LoopControl & formatLoop,
+         bool directionTo) {
+       formatItem = formatLoop.next();
+
+       while (formatList->entry[formatItem].format ==
+              IOFormatEntry::LoopStart) {
+         formatItem = formatLoop.enter(
+                         formatList->entry[formatItem].fp1.intValue,
+                         formatList->entry[formatItem].fp2.intValue);
+       }
+
+       while (formatList->entry[formatItem].format >=
+                   IOFormatEntry::IsPositioning) {
+          if (directionTo) {
+             toPositioningFormat(me, &formatList->entry[formatItem]);
+          } else {
+             fromPositioningFormat(me, &formatList->entry[formatItem]);
+          }
+          formatItem = formatLoop.next();
+
+          while (formatList->entry[formatItem].format ==
+                  IOFormatEntry::LoopStart) {
+             formatItem = formatLoop.enter(
+                               formatList->entry[formatItem].fp1.intValue,
+                               formatList->entry[formatItem].fp2.intValue);
+          }
+       }
+   }
 
    void DationPG::put(TaskCommon * me,
                       IODataList * dataList, IOFormatList * formatList) {
 
-      int formatItem = -1;
       int dataElement;
-
-      // create a loop control structure for the format list treatment
-      LoopControl formatLoop(formatList->nbrOfEntries, true);
-      LoopControl dataLoop(dataList->nbrOfEntries, false);
 
       try {
          beginSequence(me, Dation::OUT);
+         this->formatItem = -1;
+         this->formatList = formatList;
+         this->me = me;
+ 
+         // create a loop control structure for the format list treatment
+         LoopControl formatLoop(formatList->nbrOfEntries, true);
+         LoopControl dataLoop(dataList->nbrOfEntries, false);
+
 
          // get first data element
          dataElement = dataLoop.next();
@@ -178,43 +209,34 @@ namespace pearlrt {
             // test for begin of loop, repeatedly for nested loops
             while (dataList->entry[dataElement].dataType.baseType ==
                    IODataEntry::LoopStart) {
+
                dataElement = dataLoop.enter(
                                 dataList->entry[dataElement].dataType.dataWidth,
                                 dataList->entry[dataElement].param1.numberOfElements,
                                 dataList->entry[dataElement].dataPtr.offsetIncrement);
             }
 
+	    applyAllPositioningFormats(formatLoop, true);
+
+            if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
+                Log::error("array slice select %d elements",
+                  dataList->entry[dataElement].param1.numberOfElements);
+                throw theBadArraySliceSignal;
+            }
             // treat all data entries, which are  simple types or arrays of simple types
             // structs were unrolled by the compiler
-            for (size_t dataIndex = 0;
+            for (int32_t dataIndex = 0;
                   dataIndex < (dataList->entry[dataElement].param1.numberOfElements);
                   dataIndex++) {
-
-               formatItem = formatLoop.next();
-
-               while (formatList->entry[formatItem].format ==
-                      IOFormatEntry::LoopStart) {
-                  formatItem = formatLoop.enter(
-                                  formatList->entry[formatItem].fp1.intValue,
-                                  formatList->entry[formatItem].fp2.intValue);
-               }
-
-               while (formatList->entry[formatItem].format >=
-                      IOFormatEntry::IsPositioning) {
-                  toPositioningFormat(me, &formatList->entry[formatItem]);
-                  formatItem = formatLoop.next();
-
-                  while (formatList->entry[formatItem].format ==
-                         IOFormatEntry::LoopStart) {
-                     formatItem = formatLoop.enter(
-                                     formatList->entry[formatItem].fp1.intValue,
-                                     formatList->entry[formatItem].fp2.intValue);
-                  }
-               }
                putDataFormat(me, &dataList->entry[dataElement],
                              dataIndex,
                              dataLoop.getOffset(),
                              &formatList->entry[formatItem]);
+               if ( dataIndex +1 <
+                   (dataList->entry[dataElement].param1.numberOfElements)) {
+                  applyAllPositioningFormats(formatLoop, true);
+               }
+
             }
 
             // end of array of simple type
@@ -270,16 +292,16 @@ namespace pearlrt {
    void DationPG::get(TaskCommon * me,
                       IODataList * dataList, IOFormatList * formatList) {
 
-      int formatItem = -1;
       int dataElement;
-
-      // create a loop control structure for the format list treatment
-      LoopControl formatLoop(formatList->nbrOfEntries, true);
-      LoopControl dataLoop(dataList->nbrOfEntries, false);
-
-
       try {
          beginSequence(me, Dation::IN);
+         this->formatList = formatList;
+         this->formatItem = -1;
+         this->me = me;
+
+         // create a loop control structure for the format list treatment
+         LoopControl formatLoop(formatList->nbrOfEntries, true);
+         LoopControl dataLoop(dataList->nbrOfEntries, false);
 
          // get first data element
          dataElement = dataLoop.next();
@@ -294,37 +316,29 @@ namespace pearlrt {
                                 dataList->entry[dataElement].dataPtr.offsetIncrement);
             }
 
+            applyAllPositioningFormats(formatLoop,false);
+
+            if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
+               Log::error("array slice select %d elements",
+                 dataList->entry[dataElement].param1.numberOfElements);
+               throw theBadArraySliceSignal;
+            }
+
             // treat arrays of simple types
-            for (size_t dataIndex = 0;
+            for (int32_t dataIndex = 0;
                   dataIndex < (dataList->entry[dataElement].param1.numberOfElements);
                   dataIndex++) {
 
-               formatItem = formatLoop.next();
-
-               while (formatList->entry[formatItem].format ==
-                      IOFormatEntry::LoopStart) {
-                  formatItem = formatLoop.enter(
-                                  formatList->entry[formatItem].fp1.intValue,
-                                  formatList->entry[formatItem].fp2.intValue);
-               }
-
-               while (formatList->entry[formatItem].format >=
-                      IOFormatEntry::IsPositioning) {
-                  fromPositioningFormat(me, &formatList->entry[formatItem]);
-                  formatItem = formatLoop.next();
-
-                  while (formatList->entry[formatItem].format ==
-                         IOFormatEntry::LoopStart) {
-                     formatItem = formatLoop.enter(
-                                     formatList->entry[formatItem].fp1.intValue,
-                                     formatList->entry[formatItem].fp2.intValue);
-                  }
-               }
 
                getDataFormat(me, &dataList->entry[dataElement],
                              dataIndex,
                              dataLoop.getOffset(),
                              &formatList->entry[formatItem]);
+               if (dataIndex +1 <
+                   dataList->entry[dataElement].param1.numberOfElements) {
+                  applyAllPositioningFormats(formatLoop,false);
+               }
+
             }
 
             // end of array od simple type

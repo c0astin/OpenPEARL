@@ -67,4 +67,12 @@ public class AST {
 
         return attr;
     }
+
+    public ParserRuleContext lookup(ASTAttribute attr) {
+        ParserRuleContext ctx = null;
+
+
+        return ctx;
+    }
+
 }

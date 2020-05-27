@@ -38,6 +38,7 @@
 */
 
 #include <stdio.h>
+#include <inttypes.h>
 #include <ctype.h>
 
 #include "Duration.h"
@@ -49,36 +50,42 @@
 
 namespace pearlrt {
 
+
    int GetDuration::fromD(Duration& dur ,
                           const Fixed<31> w,
                           const Fixed<31> d,
                           Source & source) {
       int width = w.x;
       int decimals = d.x;
-      int number;
-      int hours = 0;
+      uint64_t number;
+      Fixed63 durF63;
+      uint64_t hours = 0;
       int  min = 0;
-      double sec = 0;
+      int sec = 0;
+      int usec = 0;
+      bool hasHours = false, hasMinutes=false, hasSeconds = false, hasNumber = false;
       int c1;
-      double timeValue;
-      double sign = 1.0 ;
+      int sign = 1 ;
       //                0123456789012345678901234567890123
-      char logText[] = "illegal D-format field (at: xxxxx)";
-      int setCharsAt = 28;
+      char logText[] = "D-format: illegal field (at: xxxxx)";
+      int setCharsAt = 29;
       int charsToSet = 5;
+      bool errorExitWithoutLog=false;
+      bool errorExitWithC1=false;
 
-      enum {NUMBER = 1, HRS = 2, MIN = 4, POINT = 8, SEC = 16, SPACE = 32};
+      enum {NUMBER = 1, HRS = 2, MIN = 4, POINT = 8, 
+ 	    SEC = 16, SPACE = 32};
       int possibleElements = NUMBER | SPACE;
       int remainingElements = HRS | MIN | SEC | POINT;
 
-      if (width <= 0) {
-         Log::debug("fromD: width <= 0");
-         return theDurationFormatSignal.whichRST();
+      if (width <= 3) {
+         Log::debug("fromD: width <= 3");
+         throw theDurationFormatSignal;
       }
 
       if (decimals < 0) {
-         Log::debug("fromD: width < 0");
-         return theDurationFormatSignal.whichRST();
+         Log::debug("fromD: decimals < 0");
+         throw theDurationFormatSignal;
       }
 
       GetHelper helper(w, &source);
@@ -91,20 +98,30 @@ namespace pearlrt {
       if (helper.readString("-") == 0) {
          sign = -1;
       }
+      if (helper.readString("+") == 0) {
+         sign = 1;
+      }
 
       do {
-
          if (possibleElements & SPACE) {
             if (helper.skipSpaces() != 0) {
-               goto errorExit;
+               // end of field reached
+               possibleElements = 0;
             }
          }
-
+   
          if (possibleElements & NUMBER) {
-
             if (helper.readInteger(&number, width) > 0) {
+               hasNumber = true;
                possibleElements = SPACE | remainingElements; 
+               if (number > UINT32_MAX) {
+                  Log::error("D-format: number too large");
+		  errorExitWithoutLog = true;
+                  goto errorExit;
+               }
             } else {
+               Log::error("D-format: number expected");
+	       errorExitWithoutLog = true;
                goto errorExit;
             } 
          } else {
@@ -112,14 +129,16 @@ namespace pearlrt {
                c1 = helper.readChar();
                switch (c1) {
                default:
+                  errorExitWithC1 = true;
                   goto errorExit;
 
                case 'H':
                   if (helper.readString("RS") != 0) {
                      goto errorExit;
                   }
-
                   hours = number;
+                  hasNumber = false;
+                  hasHours = true;
                   remainingElements &= ~ HRS;
                   possibleElements = SPACE | NUMBER | POINT; 
                   break;
@@ -129,8 +148,17 @@ namespace pearlrt {
                      goto errorExit;
                   }
 
+		  if (number >= 60) {
+		     Log::error("D-format: minutes too large");
+		     errorExitWithoutLog = true;
+		     goto errorExit;
+		  }
                   min = number;
+                  hasNumber = false;
+                  hasMinutes = true;
+                  hasHours = true;
                   remainingElements &= ~ MIN;
+                  remainingElements &= ~ HRS;
                   possibleElements = SPACE | NUMBER | POINT; 
                   break;
 
@@ -139,49 +167,95 @@ namespace pearlrt {
                      goto errorExit;
                   }
 
-                  remainingElements &= ~ (SEC | POINT);
+		  if (number >= 60) {
+		     Log::error("D-format: seconds too large");
+		     errorExitWithoutLog = true;
+		     goto errorExit;
+		  }
+
+                  remainingElements &= ~ (HRS | MIN | SEC | POINT);
                   possibleElements = 0;
                   sec = number;
+                  hasNumber = false;
+                  hasSeconds = true;
+                  hasMinutes = true;
+                  hasHours = true;
                   break;
 
                case '.':
                   sec = number;
                   c1 = helper.readChar();
-                  double factor = 0.1;
-
-                  while (isdigit(c1)) {
-                     sec += factor * (c1 - '0');
+                  decimals = 0;
+                  while (isdigit(c1) && decimals < 6) {
+                     usec *= 10;
+                     usec += (c1 - '0');
                      c1 = helper.readChar();
-                     factor /= 10.0;
+                     decimals ++;
                   }
+                  if (decimals == 6) {
+                     if (isdigit(c1) && c1 > '4') {
+                        usec += 1;
+                     }
+                     while (isdigit(c1)) {
+                        c1 = helper.readChar();
+                    }
+                  }
+                  while (decimals <6) {
+                    usec*=10;
+                    decimals ++;
+                  } 
                   while ( c1 == ' ') { 
                      c1 = helper.readChar();
                   }
+		  if (number >= 60) {
+		     Log::error("D-format: seconds too large");
+		     errorExitWithoutLog = true;
+		     goto errorExit;
+		  }
                   if (c1 == 'S') {
                      if (helper.readString("EC") != 0) {
                         goto errorExit;
                      }
 
+                     hasSeconds = true;
+                     hasMinutes = true;
+                     hasHours = true;
                      possibleElements = 0;
-                  }
+                  } else {
+		     Log::error("D-format: no SEC token");
+	             errorExitWithoutLog = true;
+                     goto errorExit;
+		  }
                }
             }
          }
-      } while (possibleElements);
+      } while (possibleElements );
 
-
-      timeValue = sec;
-      timeValue += ((hours * 60) + min) * 60;
-      dur = Duration(timeValue * sign);
-
-      if (sec >= 60) {
-         goto errorExit;
+      if (!(hasHours || hasMinutes || hasSeconds || hasNumber)) {
+          Log::error("D-format: no data in field");
+	  errorExitWithoutLog = true;
+	  goto errorExit;
       }
 
-      if (min >= 60) {
-         goto errorExit;
+      if (!hasSeconds && hasNumber) {
+          Log::error("D-format: SEC missing");
+	  errorExitWithoutLog = true;
+	  goto errorExit;
       }
 
+      // let's calculate in Fixed63
+      try {
+         durF63 = Fixed63(hours);
+         durF63 *= 60;
+         durF63 += min;
+         durF63 *= 60;
+         durF63 += sec;
+         dur = Duration(durF63.get(), usec, sign);
+      } catch (Signal &s) {
+          Log::error("D-format: value too large");
+          throw theDurationValueSignal;
+      } 
+      
       if ( helper.skipSpaces() == -1) {
          // end of field reached with spaces
          return 0;
@@ -191,12 +265,17 @@ namespace pearlrt {
 
 errorExit:
       // format error at all else cases
+
+      if (errorExitWithC1) {
+        logText[setCharsAt++] = c1;
+        charsToSet --;
+      }
+
       width = helper.getRemainingWidth();
 
       while (width > 0) {
          width --;
          c1 = source.getChar();
-
          if (charsToSet > 0) {
             logText[setCharsAt++] = c1;
             charsToSet --;
@@ -208,8 +287,10 @@ errorExit:
          charsToSet --;
       }
 
-      Log::info(logText);
-      return theDurationValueSignal.whichRST();
+      if (!errorExitWithoutLog) {
+         Log::error(logText);
+      }
+      throw theDurationValueSignal;
    }
 }
 

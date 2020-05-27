@@ -27,6 +27,9 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * 2020-04-07: rm : m_hasAssignmentProtection added
+ */
 package org.smallpearl.compiler;
 
 import org.stringtemplate.v4.ST;
@@ -34,13 +37,25 @@ import org.stringtemplate.v4.STGroup;
 
 public abstract class TypeDefinition {
     private String m_name;
+    private boolean m_hasAssignmentProtection;
+    
+
+    public boolean hasAssignmentProtection() {
+      return m_hasAssignmentProtection;
+    }
+
+    public void setHasAssignmentProtection(boolean m_hasAssignmentProtection) {
+      this.m_hasAssignmentProtection = m_hasAssignmentProtection;
+    }
 
     public TypeDefinition() {
         this.m_name = null;
+        this.m_hasAssignmentProtection = false;
     }
 
     public TypeDefinition(String name) {
         this.m_name = name;
+        this.m_hasAssignmentProtection = false;
     }
 
     public Void setName(String name) {
@@ -57,7 +72,12 @@ public abstract class TypeDefinition {
     }
 
     public String toString() {
-        return this.getName();
+      String s="";
+      if (m_hasAssignmentProtection) {
+        s += "INV ";
+      }
+      s += this.getName();
+        return s;
     }
 
     public ST toST(STGroup group) {

@@ -214,20 +214,21 @@ namespace pearlrt {
          BitString<8> * f = (BitString<8>*)s;
          f += index;
          PutBits<1>::toBit(f->x, len, w.x, base, *sink);
-      } else if (len <= 15) {
+      } else if (len <= 16) {
          BitString<16> * f = (BitString<16>*)s;
          f += index;
          PutBits<2>::toBit(f->x, len, w.x, base, *sink);
-      } else if (len <= 31) {
+      } else if (len <= 32) {
          BitString<32> * f = (BitString<32>*)s;
          f += index;
          PutBits<4>::toBit(f->x, len, w.x, base, *sink);
-      } else if (len <= 63) {
+      } else if (len <= 64) {
          BitString<64> * f = (BitString<64>*)s;
          f += index;
          PutBits<8>::toBit(f->x, len, w.x, base, *sink);
       } else {
-         Log::error("unsupported length of fixed B-format (len=%zu)", len);
+         Log::error("unsupported length of fixed B-format (len=%zu)",
+		 (unsigned long) len);
          throw theInternalDationSignal;
       }
    }
@@ -242,20 +243,21 @@ namespace pearlrt {
 	 BitString<8> *f = (BitString<8>*)s;
          f += index;
          GetBits<1>::fromBit(f->x, len, w.x, base, *source);
-      } else if (len <= 15) {
+      } else if (len <= 16) {
 	 BitString<16> *f = (BitString<16>*)s;
          f += index;
          GetBits<2>::fromBit(f->x, len, w.x, base, *source);
-      } else if (len <= 31) {
+      } else if (len <= 32) {
 	 BitString<32> *f = (BitString<32>*)s;
          f += index;
          GetBits<4>::fromBit(f->x, len, w.x, base, *source);
-      } else if (len <= 63) {
+      } else if (len <= 64) {
 	 BitString<64> *f = (BitString<64>*)s;
          f += index;
          GetBits<8>::fromBit(f->x, len, w.x, base, *source);
       } else {
-         Log::error("unsupported length of fixed B-format (len=%zu)", len);
+         Log::error("unsupported length of fixed B-format (len=%zu)",
+		 (unsigned long) len);
          throw theInternalDationSignal;
       }
    }
@@ -298,7 +300,7 @@ namespace pearlrt {
       default:
          printf("put unsupported baseType %d\n",
                 dataEntry->dataType.baseType);
-         printf("fmt entry: format=%d data=%p type=%d width=%d, datasize=%zu\n",
+         printf("fmt entry: format=%d data=%p type=%d width=%d, datasize=%d\n",
                 fmtEntry->format,
                 dataEntry->dataPtr.inData,
                 dataEntry->dataType.baseType,
@@ -309,18 +311,51 @@ namespace pearlrt {
       case IODataEntry::CHAR:
          if (fmtEntry->format == IOFormatEntry::A ||
              fmtEntry->format == IOFormatEntry::LIST) {
-            toA((char*)(dataEntry->dataPtr.inData) + loopOffset,
+              toA((char*)(dataEntry->dataPtr.inData) + loopOffset,
                 dataEntry->dataType.dataWidth,
                 (Fixed<31>)(dataEntry->dataType.dataWidth));
          } else if (fmtEntry->format == IOFormatEntry::Aw) {
-            toA((char*)(dataEntry->dataPtr.inData) + loopOffset,
+              toA((char*)(dataEntry->dataPtr.inData) + loopOffset,
                 dataEntry->dataType.dataWidth,
                 fmtEntry->fp1.f31);
          } else {
-            Log::error("type mismatch in A format");
-            throw theDationDatatypeSignal;
+              Log::error("type mismatch in A format");
+              throw theDationDatatypeSignal;
          }
+         break;
 
+      case IODataEntry::CHARSLICE:
+         { int lwb,upb;
+           lwb = dataEntry->param2.charSliceLimits.lwb.x - 1;
+           upb = dataEntry->param2.charSliceLimits.upb.x - 1;
+
+           if (lwb < 0 || lwb >= dataEntry->dataType.dataWidth) {
+		Log::error("lwb (%d) out of range",lwb+1); 
+                throw theCharacterIndexOutOfRangeSignal;
+           }
+           if (upb < 0 || upb >= dataEntry->dataType.dataWidth) {
+		Log::error("upb (%d) out of range",upb+1); 
+                throw theCharacterIndexOutOfRangeSignal;
+           }
+           if (upb < lwb) {
+		Log::error("upb >= lwb violation (lwb:upb=%d:%d)",lwb+1,upb+1); 
+                throw theCharacterIndexOutOfRangeSignal;
+           }
+
+           if (fmtEntry->format == IOFormatEntry::A ||
+             fmtEntry->format == IOFormatEntry::LIST) {
+              toA((char*)(dataEntry->dataPtr.inData) + loopOffset +  lwb,
+                  upb-lwb+1,
+                  (Fixed<31>)(upb-lwb +1));
+           } else if (fmtEntry->format == IOFormatEntry::Aw) {
+              toA((char*)(dataEntry->dataPtr.inData) + loopOffset + lwb,
+                  upb-lwb+1,
+                  fmtEntry->fp1.f31);
+           } else {
+              Log::error("type mismatch in A format");
+              throw theDationDatatypeSignal;
+           }
+         }
          break;
 
       case IODataEntry::FIXED:
@@ -444,13 +479,13 @@ namespace pearlrt {
 
       case IODataEntry::CLOCK:
          if (fmtEntry->format == IOFormatEntry::T) {
-            toT(*(pearlrt::Clock*)
-		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+            toT(*((pearlrt::Clock*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index) ,
                      fmtEntry->fp1.f31,
                      fmtEntry->fp2.f31);
          } else if (fmtEntry->format == IOFormatEntry::LIST) {
-            toT(*(pearlrt::Clock*)
-		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+            toT(*((pearlrt::Clock*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index) ,
                      8,0);
          } else {
             Log::error("type mismatch in T format");
@@ -462,13 +497,13 @@ namespace pearlrt {
 
       case IODataEntry::DURATION:
          if (fmtEntry->format == IOFormatEntry::D) {
-            toD(*(pearlrt::Duration*)
-		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+            toD(*((pearlrt::Duration*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index) ,
                      fmtEntry->fp1.f31,
                      fmtEntry->fp2.f31);
          } else if (fmtEntry->format == IOFormatEntry::LIST) {
-            toD(*(pearlrt::Duration*)
-		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+            toD(*((pearlrt::Duration*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index) ,
                      20,0);
          } else {
             Log::error("type mismatch in D format");
@@ -494,7 +529,7 @@ namespace pearlrt {
       switch (dataEntry->dataType.baseType) {
       default:
          printf("get unsupported format %d\n", fmtEntry->format);
-         printf("fmt entry: format=%d data=%p type=%d width=%d, datasize=%zu\n",
+         printf("fmt entry: format=%d data=%p type=%d width=%d, datasize=%d\n",
                 fmtEntry->format,
                 dataEntry->dataPtr.inData,
                 dataEntry->dataType.baseType,
@@ -639,13 +674,13 @@ namespace pearlrt {
 
       case IODataEntry::CLOCK:
          if (fmtEntry->format == IOFormatEntry::T) {
-            fromT(*(pearlrt::Clock*)
-		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+            fromT(*((pearlrt::Clock*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index) ,
                      fmtEntry->fp1.f31,
                      fmtEntry->fp2.f31);
          } else if (fmtEntry->format == IOFormatEntry::LIST) {
-            fromT(*(pearlrt::Clock*)
-		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index ,
+            fromT(*((pearlrt::Clock*)
+		   ((char*)(dataEntry->dataPtr.inData) + loopOffset)+ index) ,
                      8,0);
          } else {
             Log::error("type mismatch in T format");

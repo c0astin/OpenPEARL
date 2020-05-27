@@ -130,6 +130,7 @@ namespace pearlrt {
                         IODataList * dataList, IOFormatList * formatList) {
 
       size_t nbrOfBytes;
+      char * startAddress;
 
       try {
          beginSequence(me, Dation::OUT);
@@ -139,11 +140,17 @@ namespace pearlrt {
             rst(formatList->entry[0].fp1.fxxPtr.voidPtr,
                 formatList->entry[0].fp1.fxxPtr.size);
  	 } 
+         if (dataList->entry[0].param1.numberOfElements <= 0) {
+            Log::error("array slice select %d elements",
+              dataList->entry[0].param1.numberOfElements);
+            throw theBadArraySliceSignal;
+         }
 
 	 nbrOfBytes = dataList->entry[0].getSize();
  	 nbrOfBytes *= dataList->entry[0].param1.numberOfElements;
-
-         dationWrite(dataList->entry[0].dataPtr.inData,nbrOfBytes);
+         startAddress  = (char*)(dataList->entry[0].dataPtr.inData);
+         startAddress += dataList->entry[0].getStartOffset();
+         dationWrite(startAddress, nbrOfBytes);
 
          endSequence(me);
       } catch (Signal &s) {
@@ -169,6 +176,12 @@ namespace pearlrt {
             rst(formatList->entry[0].fp1.fxxPtr.voidPtr,
                 formatList->entry[0].fp1.fxxPtr.size);
  	 } 
+
+         if (dataList->entry[0].param1.numberOfElements <= 0) {
+            Log::error("array slice select %d elements",
+              dataList->entry[0].param1.numberOfElements);
+            throw theBadArraySliceSignal;
+         }
 
 	 nbrOfBytes = dataList->entry[0].getSize();
  	 nbrOfBytes *= dataList->entry[0].param1.numberOfElements;
