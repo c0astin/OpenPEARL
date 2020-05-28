@@ -37,6 +37,7 @@ import org.smallpearl.compiler.SymbolTable.ProcedureEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
+import org.smallpearl.compiler.SmallPearlParser.*;
 
 public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
 
@@ -89,25 +90,16 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
     ASTAttribute lhsAttr = null; 
     TypeDefinition lhsType = null;
 
-    SmallPearlParser.NameContext ctxName = null;
-    if ( ctx.stringSelection() != null ) {
-      lhsAttr = m_ast.lookup(ctx.stringSelection()); 
-      if ( ctx.stringSelection().charSelection() != null ) {
-        ctxName = ctx.stringSelection().charSelection().name();
-      }
-      else  if (ctx.stringSelection().bitSelection() != null) {
-        ctxName = ctx.stringSelection().bitSelection().name();
-      } else {
-        ErrorStack.addInternal("CheckAssignment: missing alternative");
-        ErrorStack.leave();
-        return null; 
-      }
-    } else {
-      // no selection; is  ('CONT')? name  
+    SmallPearlParser.NameContext ctxName = ctx.name();
+//    if ( ctx.charSelectionSlice() != null ) {
+//      lhsAttr = m_ast.lookup(ctx.charSelectionSlice())); 
+//    else  if (ctx.bitSelectionSlice() != null) {
+//      lhsAttr = m_ast.lookup(ctx.bitSelectionSlice()); 
+//    } else {
+//      // no selection; is  ('CONT')? name  
       lhsAttr = m_ast.lookup(ctx.name()); 
       ctxName = ctx.name();
-    }
-
+//    }
     lhsType = lhsAttr.getType();
     id = ctxName.ID().getText();
     SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
@@ -132,14 +124,51 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
       ASTAttribute rhsAttr = m_ast.lookup(ctx.expression());
       VariableEntry rhsVariable = rhsAttr.getVariable();
       SymbolTableEntry rhsSymbol = rhsAttr.getSymbolTableEntry();
+      
+      // problem with procedure call or procedure address
+      // if the ASTAttributes indicate TypeProcedure with parameters
+      // and no parameters are given, then we must treat the TypeProcedure, else
+      // we may easily use the result type
+      //
+      // the difficult situation is a procedure without parameters.
+      // in this case we must use the result type, if the left hand side is
+      // not of the REF PROC
+      
       if (rhsVariable == null && rhsSymbol != null) {
         // we have no variable, but a symbol exists --> may be a procedure
-        //if (rhsSymbol instanceof ProcedureEntry) {
-        //
-        //  rhsType = new TypeProcedure(((ProcedureEntry) rhsSymbol).getFormalParameters(),
-        //                ((ProcedureEntry) rhsSymbol).getResultType());
-        //}
+        if (rhsSymbol instanceof ProcedureEntry) {
+          // let's have a look if we have actual parameters for procedure 
+          
+          ProcedureEntry pe = (ProcedureEntry )rhsAttr.getSymbolTableEntry();
+          if (pe.getFormalParameters() != null) {
+            // we must look in the context for parameters!
+            // if it is not a nameContext with listOfExpression we get a 
+            // nullPointerException - if not we have the result type
+            try {
+              BaseExpressionContext bctx = ((BaseExpressionContext) (ctx.expression()));
+              if (bctx.primaryExpression().name().listOfExpression() != null) {
+                rhsType = pe.getResultType();
+                rhsAttr.setIsFunctionCall(true);
+              }
+            } catch (NullPointerException e) {};
+           
+          } else {
+            rhsType = rhsAttr.getType();  // work with complete type
+          }
+        }
       }
+      
+//      // treat second case; lhs is not REF PROC and rhs is PROC or REF PROC without formal parameters
+//      if ( (! (lhsType instanceof TypeReference)) || 
+//           ((!(((TypeReference)lhsType).getBaseType() instanceof TypeProcedure)))) {
+//        if (rhsType instanceof TypeReference) {
+//          rhsType = ((TypeReference)rhsType).getBaseType();
+//        }
+//        if (rhsType instanceof TypeProcedure && ((TypeProcedure)rhsType).getFormalParameters()==null) {
+//          rhsType = ((TypeProcedure)rhsType).getResultType();
+//          rhsAttr.setIsFunctionCall(true);
+//        }
+//      }
       
 
       if (lhsType instanceof TypeReference && ctx.dereference() == null &&
@@ -179,6 +208,15 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
       } else if (!(lhsType instanceof TypeReference) &&
           !(rhsType instanceof TypeReference)) {
         // simple assignment var:= expr
+        if (rhsType instanceof TypeProcedure) {
+          // the type procedure does not work
+          // let's try with the result type
+          // we mark this in the ASTAttribute, if the type does not fit
+          // we abort the compilation after the semantic check anf the attempt does not bother 
+          rhsAttr.setIsFunctionCall(true);
+          rhsType = ((TypeProcedure)rhsType).getResultType();
+          
+        }
         checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, false); // lhs may be larger
       } else if (!(lhsType instanceof TypeReference) &&
           rhsType instanceof TypeReference) {
