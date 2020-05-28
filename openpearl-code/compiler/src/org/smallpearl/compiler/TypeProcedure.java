@@ -45,13 +45,14 @@ public class TypeProcedure extends TypeDefinition {
     }
 
     public TypeProcedure(LinkedList<FormalParameter> formalParameters, TypeDefinition resultType) {
+      super("PROC");
       m_formalParameters = formalParameters;
       m_resultType = resultType;
     }
 
     public String toString() {
       String s = this.getName();
-      if (m_formalParameters.size()> 0) {
+      if (m_formalParameters != null && m_formalParameters.size()> 0) {
         s += " ("+m_formalParameters.get(0).toString();
         for (int i=1; i<m_formalParameters.size(); i++) {
           s += ", "+m_formalParameters.get(i).toString();
@@ -59,7 +60,7 @@ public class TypeProcedure extends TypeDefinition {
         s += ")";
       }
       if (m_resultType != null) {
-        s += m_resultType.toString();
+        s += " RETURNS ("+m_resultType.toString()+")";
       }
 
       return s;
@@ -73,8 +74,14 @@ public class TypeProcedure extends TypeDefinition {
 
         TypeProcedure that = (TypeProcedure) other;
 
-        if (!this.m_resultType.equals(that.m_resultType)) return false;
-        if (!this.m_formalParameters.equals(that.m_formalParameters)) return false;
+        if ((this.m_resultType != null) != (that.m_resultType != null)) return false;
+        if (this.m_resultType != null && (!this.m_resultType.equals(that.m_resultType))) return false;
+        if ((this.m_formalParameters != null) != (that.m_formalParameters != null)) return false;
+        if (this.m_formalParameters == null) return true;
+        if (this.m_formalParameters.size()  != that.m_formalParameters.size() ) return false;
+        for (int i=0; i<this.m_formalParameters.size(); i++) {
+          if (!this.m_formalParameters.get(i).getType().equals(that.m_formalParameters.get(i).getType())) return false;
+        }
         
         return true;
     }
@@ -84,12 +91,23 @@ public class TypeProcedure extends TypeDefinition {
       if (m_resultType!= null) {
         st.add("resultAttribute", m_resultType.toST(group));
       }
+      ST parameters = group.getInstanceOf("ListOfFormalParameters");
+//      parameters.add("FormalParameters", group.getInstanceOf("TypeReferenceTaskType"));
       if (m_formalParameters!= null) {
         for (int i=0; i<m_formalParameters.size(); i++) {
-          st.add("listOfFormalParameters", m_formalParameters.get(i).getType().toST(group));
+          parameters.add("FormalParameters", m_formalParameters.get(i).getType().toST(group));
         }
+  
+        st.add("listOfFormalParameters", parameters);
       }
       return st;
   }
 
+    public TypeDefinition getResultType() {
+      return m_resultType;
+    }
+    
+    public LinkedList<FormalParameter> getFormalParameters() {
+      return m_formalParameters;
+    }
 }
