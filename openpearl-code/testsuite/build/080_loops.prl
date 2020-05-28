@@ -22,9 +22,10 @@ T1: TASK MAIN;
      local_var := local_var + i FIT local_var;
   END;
 
-  FOR i REPEAT
-     local_var := local_var + i;
-  END;
+! will cause FixedOverflow
+!  FOR i REPEAT
+!     local_var := local_var + i;
+!  END;
 
   WHILE local_var < 10 REPEAT
      local_var := local_var + 1;
