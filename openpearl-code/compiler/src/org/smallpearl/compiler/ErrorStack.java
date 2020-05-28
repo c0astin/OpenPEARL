@@ -192,7 +192,7 @@ public class ErrorStack {
     public static Void addInternal(String msg) {
         m_stack[m_sp].incLocalCount();
         m_totalErrorCount++;
-        printMessage(msg+"\n\tplease send a bug report","internet compiler error");
+        printMessage(msg+"\n\tplease send a bug report","internal compiler error");
         return null;
     }
     /**
