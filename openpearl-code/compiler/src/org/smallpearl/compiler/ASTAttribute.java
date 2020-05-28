@@ -32,17 +32,30 @@ package org.smallpearl.compiler;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
+/*
+ * change for support of multiple flags
+ * boolean m_readOnly replaced by 
+ * int m_flags
+ * 
+ * all flags are cleared at creation of an ASTAttribute
+ * the individual flags are defined as static final in bitReadOnly, ..
+ * they are set and cleared via bit operations in the m_flags attribute
+ */
 public class ASTAttribute {
     public TypeDefinition  m_type;
-    public boolean m_readonly;
+    //public boolean m_readonly;
+    private int m_flags=0;
  //   public VariableEntry m_variable;
     private SymbolTableEntry m_entry;
     public ConstantValue m_constant;
     public ConstantSelection m_selection;
-
+    private static final int bitReadOnly = 0x01;
+    private static final int bitIsFunctionCall = 0x02;
+    
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
-        m_readonly = false;
+      //  m_readonly = false;
+        m_flags = 0;
      //   m_variable = null;
         m_entry = null;
         m_constant = null;
@@ -51,7 +64,8 @@ public class ASTAttribute {
 
     ASTAttribute(ConstantSelection slice) {
         m_type     = null;
-        m_readonly = false;
+       // m_readonly = false;
+        m_flags = 0;
       //  m_variable = null;
         m_entry=null;
         m_constant = null;
@@ -60,7 +74,8 @@ public class ASTAttribute {
 
     ASTAttribute(TypeDefinition type, boolean constant) {
         m_type = type;
-        m_readonly = constant;
+       // m_readonly = constant;
+        setReadOnly(constant);
         //m_variable = null;
         m_entry = null;
         m_selection    = null;
@@ -74,10 +89,12 @@ public class ASTAttribute {
         m_selection    = null;
 
         if ( variable.getLoopControlVariable()) {
-            m_readonly = false;
+            //m_readonly = false;
+          setReadOnly(false);
         }
         else {
-            m_readonly = constant;
+            //m_readonly = constant;
+          setReadOnly(constant);
         }
     }
     ASTAttribute(TypeDefinition type, SymbolTableEntry entry ) {
@@ -88,7 +105,8 @@ public class ASTAttribute {
       m_selection    = null;
 
       if (getVariable()== null || getVariable().getLoopControlVariable()) {
-          m_readonly = false;
+        setReadOnly(false);
+//          m_readonly = false;
       }
    
   }
@@ -99,7 +117,12 @@ public class ASTAttribute {
      * @return
      */
     public boolean isReadOnly() {
-        return this.m_readonly;
+      return getFlag(bitReadOnly);
+//        return this.m_readonly;
+    }
+    
+    public void setReadOnly(boolean newValue) {
+      setFlag(bitReadOnly, newValue);
     }
 
     public boolean isLoopControlVariable() {
@@ -126,13 +149,15 @@ public class ASTAttribute {
 
     public Void setConstant(ConstantValue val) {
         m_constant = val;
-        m_readonly = true;
+        //m_readonly = true;
+        setReadOnly(true);
         return null;
     }
 
     public Void setConstantFixedValue(ConstantFixedValue val) {
         m_constant = val;
-        m_readonly = true;
+        //m_readonly = true;
+        setReadOnly(true);
         return null;
     }
 
@@ -146,7 +171,8 @@ public class ASTAttribute {
 
     public Void setConstantFloatValue(ConstantFloatValue val) {
         m_constant = val;
-        m_readonly = true;
+        //m_readonly = true;
+        setReadOnly(true);
         return null;
     }
 
@@ -160,7 +186,8 @@ public class ASTAttribute {
 
     public Void setConstantDurationValue(ConstantDurationValue val) {
         m_constant = val;
-        m_readonly = true;
+        //m_readonly = true;
+        setReadOnly(true);
         return null;
     }
 
@@ -171,6 +198,7 @@ public class ASTAttribute {
             return null;
         }
     }
+
 
     public void setConstantSelection(ConstantSelection m_slice) {
       this.m_selection = m_slice;
@@ -190,5 +218,25 @@ public class ASTAttribute {
       m_entry = ve;
     }
 
+    public void setIsFunctionCall(boolean newValue) {
+      setFlag(bitIsFunctionCall, newValue);
+    }
+    
+    public boolean isFunctionCall() {
+      return getFlag(bitIsFunctionCall);
+    }
+
+    private boolean getFlag(int whichFlag) {
+      return ((m_flags & whichFlag) == whichFlag);
+
+    }
+
+    private void setFlag(int whichFlag, boolean set) {
+      if (set) {
+        m_flags = m_flags | whichFlag;
+      } else {
+        m_flags = m_flags & ~whichFlag;
+      }
+    }
 
 }

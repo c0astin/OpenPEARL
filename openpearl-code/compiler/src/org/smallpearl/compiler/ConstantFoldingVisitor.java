@@ -1119,7 +1119,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void> implemen
             // is INV
             Initializer ini = ve.getInitializer();
             if (ini != null && ini instanceof SimpleInitializer) {
-              res.m_readonly = true;
+              res.setReadOnly(true);
               res.setConstant(((SimpleInitializer)ini).getConstant());
               res.setVariable(ve);
             }
