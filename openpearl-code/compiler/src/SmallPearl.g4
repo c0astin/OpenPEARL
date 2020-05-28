@@ -474,7 +474,7 @@ structureComponent :
 ////////////////////////////////////////////////////////////////////////////////
 
 typeAttributeInStructureComponent :
-    (simpleType | structuredType )
+    (simpleType | structuredType | typeReference )
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -917,7 +917,8 @@ exitStatement
 ////////////////////////////////////////////////////////////////////////////////
 
 assignment_statement:
-     ( dereference? name | stringSelection) ( ':=' | '=' ) expression ';'
+     (dereference)? name ( bitSelectionSlice | charSelectionSlice)?
+       ( ':=' | '=' ) expression ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -932,6 +933,7 @@ dereference
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO: MS: 2020-05-23 Is this still relevant?
+// 2020-05-28: stringSelection is still used in primaryExpression
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2170,7 +2172,8 @@ expression:
     | op='UPB' expression                                   # upbMonadicExpression
     | op='NOW'                                              # nowFunction
     | op='DATE'                                             # dateFunction
-    | op='TASK'                                             # taskFunction
+    | op='TASK' ( '(' expression ')' )?                     # taskFunction
+    | op='PRIO' ( '(' expression ')' )?                     # prioFunction
     | <assoc=right> expression op='**'  expression          # exponentiationExpression
     | <assoc=right> expression op='FIT' expression          # fitExpression
     | <assoc=right> expression op='LWB' expression          # lwbDyadicExpression

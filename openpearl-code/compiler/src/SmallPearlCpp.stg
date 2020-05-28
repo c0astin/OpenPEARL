@@ -541,6 +541,14 @@ TaskContinuation(task,Condition,priority,at,after,when) ::= <<
 <endif>
 >>
 
+taskAddress(taskName) ::= <%
+<if(taskName)><taskName><else>me<endif>
+%>
+
+taskPrio(taskName) ::= <%
+<if(taskName)>(<taskName>.getPrio())<else>(me->getPrio())<endif>
+%>
+
 expression(code,id,bitstring,operator,functionCall) ::= <%
 <if(id)><id><elseif(code)><code; wrap><elseif(bitstring)><bitstring><endif>
 <if(operator)><operator><endif>
@@ -600,7 +608,7 @@ ReferenceExpression(code,id,bitstring,operator,functionCall) ::= <%
 
 
 FunctionCall(callee,ListOfActualParameters) ::= <%
-	<user_procedure(callee)>( me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>)
+	<callee>( me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>)
 %>
 
 literal(integer,float,string,time,duration,bitstring,nil) ::= <%
@@ -1505,41 +1513,41 @@ user_argument(name) ::= <%
 
 
 /* --------------------- LOOPS -------------------------- */
-
-LoopStatement(srcLine,variable,GenerateLoopCounter,rangePrecision,from,fromPrecision,by,byPrecision,to,toPrecision,countLoopPass,while_cond,body,label_end) ::= <<
+// all control elements have the same precision to avoid type conversions during loop execution  
+LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoopPass,while_cond,body,label_end) ::= <<
 {
     <if(from)>
-    pearlrt::Fixed\<<fromPrecision>\> a_value;
+    pearlrt::Fixed\<<precision>\> a_value;
     a_value = <from>;
     <else>
     <if(GenerateLoopCounter)>
-    pearlrt::Fixed\<<rangePrecision>\> a_value(CONST_FIXED_P_1_<rangePrecision>);
+    pearlrt::Fixed\<<precision>\> a_value(CONST_FIXED_P_1_<precision>);
     <endif>
     <endif>
 
     <if(to)>
-    pearlrt::Fixed\<<toPrecision>\> e_value;
+    pearlrt::Fixed\<<precision>\> e_value;
     e_value = <to>;
     <endif>
 
     <if(by)>
-    pearlrt::Fixed\<<byPrecision>\> s_value;
+    pearlrt::Fixed\<<precision>\> s_value;
     s_value = <by>;
     <else>
     <if(GenerateLoopCounter)>
-    pearlrt::Fixed\<<rangePrecision>\> s_value(CONST_FIXED_P_1_<rangePrecision>);
+    pearlrt::Fixed\<<precision>\> s_value(CONST_FIXED_P_1_<precision>);
     <endif>
     <endif>
 
     <if(variable)>
-    pearlrt::Fixed\<<rangePrecision>\> <user_variable(variable)>;
+    pearlrt::Fixed\<<precision>\> <user_variable(variable)>;
     <user_variable(variable)> = a_value;
     <endif>
 
     <if(to)>
-        while ((((s_value > CONST_FIXED_P_0_<rangePrecision>).getBoolean()) &&
+        while ((((s_value > CONST_FIXED_P_0_<precision>).getBoolean()) &&
                 ((a_value \<= e_value).getBoolean())) ||
-                (((s_value \< CONST_FIXED_P_0_<rangePrecision>).getBoolean()) &&
+                (((s_value \< CONST_FIXED_P_0_<precision>).getBoolean()) &&
                 ((a_value >= e_value).getBoolean())))
         {<\n>
             <if(variable)>
@@ -1571,7 +1579,7 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,rangePrecision,from,fromPreci
         while ( 1 )
         {<\n>
             <if(variable)>
-            pearlrt::Fixed\<<rangePrecision>\> <user_variable(variable)>;
+            pearlrt::Fixed\<<precision>\> <user_variable(variable)>;
             <user_variable(variable)> = a_value;
             <endif>
 
@@ -1607,7 +1615,8 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,rangePrecision,from,fromPreci
 /* --------------------- PROCEDURES -------------------------- */
 
 TypeProcedure(listOfFormalParameters, resultAttribute) ::= <%
-<resultAttribute> ( <listOfFormalParameters> )
+<if(resultAttribute)><resultAttribute><else>void<endif> 
+(pearlrt::Task* me<if(listOfFormalParameters)>, <listOfFormalParameters><endif> )
 %>
 
 
@@ -1962,7 +1971,6 @@ StructureFormalParameter(type) ::= <%
 <type>
 %>
 
-/* unused template
 StructureType(type) ::= <%
 <type>
 %>
@@ -1971,7 +1979,6 @@ StructureType(type) ::= <%
 StructureComponent(component) ::= <%
 .<component>
 %>
-*/
 
 /* explode a name definition: */
 Name(id, name) ::= <%
