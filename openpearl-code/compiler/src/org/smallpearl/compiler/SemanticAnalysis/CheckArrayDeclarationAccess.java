@@ -206,19 +206,20 @@ public class CheckArrayDeclarationAccess extends SmallPearlBaseVisitor<Void> imp
 		String id = null;
 		ErrorStack.enter(ctx,"array index");
 
-		if ( ctx.stringSelection() != null ) {
-			if ( ctx.stringSelection().charSelection() != null ) {
-				id = ctx.stringSelection().charSelection().name().getText();
-			}
-			else  if (ctx.stringSelection().bitSelection() != null) {
-				id = ctx.stringSelection().bitSelection().name().getText();
-			} else {
-				throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-			}
-		}
-		else {
-			id = ctx.name().getText();
-		}
+//		if ( ctx.stringSelection() != null ) {
+//			if ( ctx.stringSelection().charSelection() != null ) {
+//				id = ctx.stringSelection().charSelection().name().getText();
+//			}
+//			else  if (ctx.stringSelection().bitSelection() != null) {
+//				id = ctx.stringSelection().bitSelection().name().getText();
+//			} else {
+//				throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//			}
+//		}
+//		else {
+//			id = ctx.name().getText();
+//		}
+		id = ctx.name().ID().toString();
 
 
 		SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
