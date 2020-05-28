@@ -306,11 +306,13 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     private Void getParameterType(SmallPearlParser.ParameterTypeContext ctx) {
         Log.debug("SymbolTableVisitor:getParameterType:ctx" + CommonUtils.printContext(ctx));
 
-        if (ctx.simpleType() != null) {
-            visitSimpleType(ctx.simpleType());
-        } else if (ctx.typeStructure() != null) {
-            visitTypeStructure(ctx.typeStructure());
-        }
+	visitChildren(ctx);
+
+       // if (ctx.simpleType() != null) {
+       //     visitSimpleType(ctx.simpleType());
+       // } else if (ctx.typeStructure() != null) {
+       //     visitTypeStructure(ctx.typeStructure());
+       // }
 
         return null;
     }
@@ -377,6 +379,24 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 } else if (c instanceof SmallPearlParser.InitialisationAttributeContext) {
                     initElementList = getInitialisationAttribute((SmallPearlParser.InitialisationAttributeContext) c);
                 }
+            }
+
+            // check allowed REF types; only types which may be used as arrays are allowed
+            // REF () is not allowed on TASK, INTERRUPT, SIGNAL, PROCEDURE, FORMAT
+            //         in OpenPEARL additionally not for DATION
+            if (m_type instanceof TypeReference) {
+              TypeDefinition base = ((TypeReference)m_type).getBaseType();
+              if (base instanceof TypeArraySpecification) {
+                TypeDefinition arraySpec = ((TypeArraySpecification)base).getBaseType();
+                if (arraySpec instanceof TypeTask      ||
+                    arraySpec instanceof TypeInterrupt ||
+                    arraySpec instanceof TypeSignal    ||
+                    arraySpec instanceof TypeProcedure) {
+                  ErrorStack.add(ctx.typeAttribute(),null," REF () not allowed on "+arraySpec.toString());
+                } else if (arraySpec instanceof TypeDation) {
+                  ErrorStack.add(ctx.typeAttribute(),null," REF () DATION is not supported");
+                }
+              }
             }
 
             m_type.setHasAssignmentProtection(hasAllocationProtection);
@@ -1210,6 +1230,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
 
         if (ctx.loopStatement_for() != null) {
+          // we define the symbol with the default length
+          // the ExpressionTypeVisitor checks the LoopStatement with types and precisions
+          // and updates the precision of the loop control variable to fit with start-value,
+          // increment nad end-value as far as they are given
             VariableEntry controlVariable = new VariableEntry(ctx.loopStatement_for().ID().getText(), new TypeFixed(Defaults.FIXED_LENGTH), true, null, null);
             controlVariable.setLoopControlVariable();
             m_currentSymbolTable.enter(controlVariable);
@@ -1937,8 +1961,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         else if ( ctx.structuredType() != null ) {
             visitStructuredType( ctx.structuredType());
         }
+        else if ( ctx.typeReference() != null ) {
+          visitTypeReference( ctx.typeReference());
+        }
         else {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+           ErrorStack.addInternal(ctx,"SymbolTableVisitor::visitTypeAttributeInStructureComponent","missing alternative");
         }
 
         return null;

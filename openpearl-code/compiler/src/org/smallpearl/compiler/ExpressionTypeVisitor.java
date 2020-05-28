@@ -29,20 +29,53 @@
 
 package org.smallpearl.compiler;
 
-import org.smallpearl.compiler.SmallPearlParser.AdditiveExpressionContext;
+//import org.smallpearl.compiler.SmallPearlParser.AdditiveExpressionContext;
 //import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
-import org.smallpearl.compiler.SmallPearlParser.GeRelationalExpressionContext;
-import org.smallpearl.compiler.SmallPearlParser.ListOfExpressionContext;
+//import org.smallpearl.compiler.SmallPearlParser.GeRelationalExpressionContext;
+//import org.smallpearl.compiler.SmallPearlParser.ListOfExpressionContext;
 import org.smallpearl.compiler.SmallPearlParser.NameContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
-import org.stringtemplate.v4.ST;
+//import org.stringtemplate.v4.ST;
 
 import java.util.LinkedList;
 
+/*
+ * notes about implicit dereferenciations:
+ *  1) there are xxx cases of implicit dereferenciations
+ *     the deferenciation inside of the rule name
+ *      eq x STRUCT [ a REF STRUCT [ b FIXED,
+ *                                   c REF FIXED,
+ *                                   d REF PROC(FIXED) RETURNS(FIXED),
+ *                                   e REF PROC RETURNS(FIXED),
+ *                                   f REF PROC RETURNS(REF FIXED),
+ *                                   g REF PROC ]]; 
+ *      x.a.b need implicit dereferenciation on lhs and rhs
+ *            and is of type FIXED
+ *      x.a.c is REF FIXED
+ *  2) 1) hold also for intermediated array elements like
+ *     x STRUCT [ a(10) REF STRUCT [ b FIXED, .. ]
+ *       x.a(2).b
+ *  3) x.a.d(3) is a function call with implicit derefenciation
+ *  4) x.a.e may be TypeProcedure or TypeFixed. This is decided by the usage in assigment
+ *     or procedure parameter
+ *  5) x.a.f may be on lhs and rhs!
+ *     on lhs: function call with result REF FIXED with may be used with CONT
+ *     on rhs: is TypProcedure or function call depending on the usage
+ *  6) x.a.g depends on usage: ether REF PROC or procedure call
+ *  7) REFs should not become dereferenced it
+ *     rhs of assignments if lhs is a REF
+ *     as procedure parameters is the formal parameter is a REF
+ *     in expressions with IS or ISNT
+ *   
+ *  current state ( 2020-05-21)  
+ *  * STRUCT is not tested
+ *  * REF PROC RETURNS(..) is not supported
+ *  * REF PROC(...) works        
+ */
 public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
 
     private int m_verbose;
@@ -58,6 +91,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     private SymbolTableEntry m_name = null;
     private TypeDefinition m_type = null;
     private int m_nameDepth = 0;
+    private boolean m_autoDereference=false;
+    private boolean m_isFunctionCall = false;
 
     public ExpressionTypeVisitor(int verbose, boolean debug, SymbolTableVisitor symbolTableVisitor, 
         ConstantPool constantPool, org.smallpearl.compiler.AST ast) {
@@ -158,9 +193,39 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     public Void visitTaskFunction(SmallPearlParser.TaskFunctionContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitTaskFunction");
         Log.debug("ExpressionTypeVisitor:visitTaskFunction:ctx" + CommonUtils.printContext(ctx));
-
+        SymbolTableEntry se = null;
+        visitChildren(ctx);
         TypeTask type = new TypeTask();
-        ASTAttribute expressionResult = new ASTAttribute(type);
+
+        if (ctx.expression() != null) {
+          ASTAttribute tsk = m_ast.lookup(ctx.expression());
+          se = tsk.getSymbolTableEntry();
+          if (!(se instanceof TaskEntry ) ) {
+            ErrorStack.add(ctx.expression(),"TASK","need task -- got "+se.getClass().getSimpleName());
+          }
+        }
+        ASTAttribute expressionResult = new ASTAttribute(type,se);
+        m_ast.put(ctx, expressionResult);
+
+        return null;
+    }
+    
+    @Override
+    public Void visitPrioFunction(SmallPearlParser.PrioFunctionContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitPrioFunction");
+        Log.debug("ExpressionTypeVisitor:visitPrioFunction:ctx" + CommonUtils.printContext(ctx));
+        SymbolTableEntry se = null;
+        visitChildren(ctx);
+        TypeFixed type = new TypeFixed(15);
+       
+        if (ctx.expression() != null) {
+          ASTAttribute tsk = m_ast.lookup(ctx.expression());
+          se = tsk.getSymbolTableEntry();
+          if (!(se instanceof TaskEntry ) ) {
+            ErrorStack.add(ctx.expression(),"PRIO","need task -- got "+se.getClass().getSimpleName());
+          }
+        }
+        ASTAttribute expressionResult = new ASTAttribute(type,se);
         m_ast.put(ctx, expressionResult);
 
         return null;
@@ -1650,7 +1715,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     }
     
     // set an ast attribute if we have a CHAR-type as result attribut
-    // 2020-04-23 (rm): why only for CHAR-type??
+    // we need for all result types the AST Attribute 
     @Override
     public Void visitResultAttribute(SmallPearlParser.ResultAttributeContext ctx) {
       if (ctx.resultType().simpleType() != null) {
@@ -1675,14 +1740,14 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     @Override
     public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitLoopStatement:ctx" + CommonUtils.printContext(ctx));
-
+        
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
 
-        visitChildren(ctx);
-        
-        // check the precision of the 
-        int precisionFor =0;
+        // check the precision of loop expressions and loop control variable 
+        int precisionFor = 1;  // FROM defaults to 1 which is FIXED(1)
+
         if (ctx.loopStatement_from() != null) {
+           visit(ctx.loopStatement_from());
            ASTAttribute attr = m_ast.lookup(ctx.loopStatement_from().expression());
            if (! (attr.getType() instanceof TypeFixed) ) {
              ErrorStack.add(ctx.loopStatement_from().expression(),"FOR","type must be FIXED - but is "+attr.getType().toString());
@@ -1690,13 +1755,21 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
            precisionFor = Math.max(precisionFor, attr.getType().getPrecision());
         }
         if (ctx.loopStatement_to() != null) {
+          visit(ctx.loopStatement_to());
           ASTAttribute attr = m_ast.lookup(ctx.loopStatement_to().expression());
           if (! (attr.getType() instanceof TypeFixed) ) {
             ErrorStack.add(ctx.loopStatement_to().expression(),"TO","type must be FIXED - but is "+attr.getType().toString());
-          }
+          } 
           precisionFor = Math.max(precisionFor, attr.getType().getPrecision());
+        } else {
+            // if no TO is present, the loop is indefinite
+            // --> let's use the current fixed length for loop variable as long as
+            //     the FROM expression was not larger
+            precisionFor =  Math.max(precisionFor, m_currentSymbolTable.lookupDefaultFixedLength());
         }
+
         if (ctx.loopStatement_by() != null) {
+          visit(ctx.loopStatement_by());
           ASTAttribute attr = m_ast.lookup(ctx.loopStatement_by().expression());
           if (! (attr.getType() instanceof TypeFixed) ) {
             ErrorStack.add(ctx.loopStatement_by().expression(),"BY","type must be FIXED - but is "+attr.getType().toString());
@@ -1704,6 +1777,7 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
           precisionFor = Math.max(precisionFor, attr.getType().getPrecision());
         }
         if (ctx.loopStatement_while()!= null) {
+          visit(ctx.loopStatement_while());
           ASTAttribute attr = m_ast.lookup(ctx.loopStatement_while().expression());
           if (! (attr.getType() instanceof TypeBit) || attr.getType().getPrecision()!= 1) {
             ErrorStack.add(ctx.loopStatement_by().expression(),"WHILE","type must be BIT(1) - but is "+attr.getType().toString());
@@ -1718,6 +1792,9 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
             ((TypeFixed)(ve.getType())).setPrecision(precisionFor);
           }
         }
+        
+        // no treat all child nodes - the look control elements are parsed again!
+        visitChildren(ctx);
 
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;
@@ -1756,7 +1833,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         return null;
     }
 
-    @Override
+ /*
+   @Override
     public Void visitAssignment_statement(SmallPearlParser.Assignment_statementContext ctx) {
       Log.debug("ExpressionTypeVisitor:visitAssignment_statement_by:ctx" + CommonUtils.printContext(ctx));
       Log.debug("ExpressionTypeVisitor:visitAssignment_statement:" + ctx.getText());
@@ -1809,6 +1887,67 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
        
         ErrorStack.leave();
         
+        return null;
+    }
+*/
+
+    @Override
+    public Void visitAssignment_statement(SmallPearlParser.Assignment_statementContext ctx) {
+      Log.debug("ExpressionTypeVisitor:visitAssignment_statement_by:ctx" + CommonUtils.printContext(ctx));
+      Log.debug("ExpressionTypeVisitor:visitAssignment_statement:" + ctx.getText());
+      String s = ctx.getText();
+        ASTAttribute attrName=null;
+        ASTAttribute selection = null;
+
+        Log.debug("ExpressionTypeVisitor:visitAssignment_statement:ctx" + CommonUtils.printContext(ctx));
+        ErrorStack.enter(ctx,"assignment");
+        
+        m_autoDereference = false;
+        visit(ctx.name());
+        
+        m_autoDereference = true;
+        
+        attrName = m_ast.lookup(ctx.name());
+        if (attrName==null) {
+          // lhs not found --> error already issued --> just leave check
+          ErrorStack.leave();
+          return null;
+        }
+        
+        if ( ctx.charSelectionSlice() != null ) {
+          visit(ctx.charSelectionSlice());
+          selection = m_ast.lookup(ctx.charSelectionSlice());
+          if (!(attrName.getType()  instanceof TypeChar)) {
+            ErrorStack.add(".CHAR must be applied on variable of type CHAR -- used with "+attrName.getType());
+          }   
+        } else if (ctx.bitSelectionSlice() != null) {
+          visit(ctx.bitSelectionSlice());
+          selection = m_ast.lookup(ctx.bitSelectionSlice());
+          if (!(attrName.getType()  instanceof TypeBit)) {
+            ErrorStack.add(".BIT must be applied on variable of type BIT -- used with "+attrName.getType());
+          }   
+        }
+ 
+        if (selection != null && selection.getConstantSelection() != null) {
+           long lower = selection.getConstantSelection().getLowerBoundary().getValue();
+           long upper = selection.getConstantSelection().getUpperBoundary().getValue();
+           if (lower < 1 || upper < 1 
+                  || attrName.getType().getPrecision() < lower
+                  || attrName.getType().getPrecision() < upper) {
+                ErrorStack.add("selection beyond variable size");
+           }
+        }
+        
+        if (attrName.getType() instanceof TypeReference &&
+            ((TypeReference)(attrName.getType())).getBaseType() instanceof TypeProcedure) {
+           m_autoDereference = false;
+        }
+        visit(ctx.expression());
+
+        m_autoDereference = false;
+        
+        ErrorStack.leave();
+
         return null;
     }
 
@@ -2170,14 +2309,20 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     }
 
     public Void visitIsRelationalExpression(SmallPearlParser.IsRelationalExpressionContext ctx) {
+      Boolean old_autoDereference;
       ASTAttribute op1;
       ASTAttribute op2;
 
       Log.debug("ExpressionTypeVisitor:visitIsRelationalExpression:ctx" + CommonUtils.printContext(ctx));
 
+      old_autoDereference = m_autoDereference;
+      m_autoDereference = false;
+
       visit(ctx.expression(0));
       visit(ctx.expression(1));
-      
+
+      m_autoDereference = old_autoDereference;      
+
       op1 = saveGetAttribute(ctx.expression(0), ctx, "IS", "no AST attribute found for lhs of operation IS");
       op2 = saveGetAttribute(ctx.expression(1), ctx, "IS", "no AST attribute found for rhs of operation IS");
 
@@ -2187,14 +2332,20 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     }
 
     public Void visitIsntRelationalExpression(SmallPearlParser.IsntRelationalExpressionContext ctx) {
+      Boolean old_autoDereference;
       ASTAttribute op1;
       ASTAttribute op2;
 
       Log.debug("ExpressionTypeVisitor:visitIsntRelationalExpression:ctx" + CommonUtils.printContext(ctx));
 
+      old_autoDereference = m_autoDereference;
+      m_autoDereference = false;
+
       visit(ctx.expression(0));
       visit(ctx.expression(1));
       
+      m_autoDereference = old_autoDereference;      
+
       op1 = saveGetAttribute(ctx.expression(0), ctx, "ISNT", "no AST attribute found for lhs of operation ISNT");
       op2 = saveGetAttribute(ctx.expression(1), ctx, "ISNT", "no AST attribute found for rhs of operation ISNT");
 
@@ -2494,12 +2645,19 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
     
     @Override
     public Void visitCONTExpression(SmallPearlParser.CONTExpressionContext ctx) {
+        Boolean old_m_autoDereference;
         ASTAttribute op;
         ASTAttribute res;
 
         Log.debug("ExpressionTypeVisitor:visitCONTExpression:ctx" + CommonUtils.printContext(ctx));
 
+        old_m_autoDereference = m_autoDereference;
+        m_autoDereference = false;
+
         visit(ctx.expression());
+
+        m_autoDereference = old_m_autoDereference;
+
         op = saveGetAttribute(ctx.expression(), ctx, "CONT", "no AST attribute found for CONT");
         
         ErrorStack.enter(ctx, "CONT");
@@ -3113,88 +3271,106 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
         Log.debug("ExpressionTypeVisitor:visitName:id=" + ctx.ID().toString());
 
         m_nameDepth = 0;
+        m_isFunctionCall = false;
 
         ErrorStack.enter(ctx, ctx.ID().toString());
 
         SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
 
         if (entry != null) {
-            if (entry instanceof VariableEntry) {
-                VariableEntry var = (VariableEntry) entry;
-                TypeDefinition typ = var.getType();
-                m_type = typ;
+          if (entry instanceof VariableEntry) {
+             VariableEntry var = (VariableEntry) entry;
+             TypeDefinition typ = var.getType();
+             m_type = typ;
 
+             if (ctx.name() != null || ctx.listOfExpression() != null) {
+               // we must have a more detailed look if there is 
+               // another name (--> struct component)
+               // or a listOfExpression (-->array or procedure call)
                 reVisitName(ctx);
+             }
 
-                ASTAttribute attr = new ASTAttribute(m_type, var.getAssigmentProtection(), var);
-                m_ast.put(ctx, attr);
-            } else {
-                if (treatTaskSemaBoltSignalInterruptDation(ctx, entry)) {
-                    ASTAttribute attr = new ASTAttribute(m_type);
-                    m_ast.put(ctx, attr);
-                } else {
-                    if (entry instanceof ModuleEntry) {
-                        ErrorStack.add("illegal usage of module name");
-                    } else if (entry instanceof TypeEntry) {
-                        ErrorStack.add("illegal usage of type name");
-                    } else if (entry instanceof ProcedureEntry) {
-                        m_type = ((ProcedureEntry) entry).getResultType();
-                        if (m_type != null) {
-                            m_ast.put(ctx, new ASTAttribute(m_type, entry));
-                        } else {
-                            ErrorStack.add("procedure '" + ((ProcedureEntry) entry).getName() + "' does not return a value");
-                        }
-                        if (ctx.listOfExpression() != null) {
-                            visitChildren(ctx.listOfExpression());
-                        }
-                    } else {
-                        ErrorStack.addInternal("illegal usage of ???");
-                    }
-                }
-            }
-        } else {
-            ErrorStack.add("'" + ctx.ID().getText() + "' is not defined");
-        }
+		     ASTAttribute attr = new ASTAttribute(m_type, var.getAssigmentProtection(), var);
+		     m_ast.put(ctx, attr);
+		    } else {
+			if (treatTaskSemaBoltSignalInterruptDation(ctx, entry)) {
+			    ASTAttribute attr = new ASTAttribute(m_type,entry);
+			    m_ast.put(ctx, attr);
+			} else {
+			    if (entry instanceof ModuleEntry) {
+				ErrorStack.add("illegal usage of module name");
+			    } else if (entry instanceof TypeEntry) {
+				ErrorStack.add("illegal usage of type name");
+			    } else if (entry instanceof ProcedureEntry) {
+			       ProcedureEntry pe = (ProcedureEntry) entry;
+			       if (ctx.listOfExpression() != null) {
+				 m_isFunctionCall = true;
+				 visitChildren(ctx.listOfExpression());
+				 m_type = ((ProcedureEntry) entry).getResultType();
+			       } else {
+				 // maybe it is a function call, or not
+				 // this depends if it is on rhs of an assignment
+				 // this is checked in the semantic analysis CheckAssignment
+				 m_type = new TypeProcedure(((ProcedureEntry) entry).getFormalParameters(),
+				     ((ProcedureEntry) entry).getResultType());
+			      }
+			      m_ast.put(ctx,  new ASTAttribute(m_type,pe)); 
+			      if (m_type != null) {
+	//                       m_ast.put(ctx, new ASTAttribute(m_type, entry));
+			      } else {
+				 ErrorStack.add("procedure '" + ((ProcedureEntry) entry).getName() + "' does not return a value");
+			      }
+			      //if (ctx.listOfExpression() != null) {
+			      //      visitChildren(ctx.listOfExpression());
+			      //  }
+			    } else {
+				ErrorStack.addInternal("illegal usage of ???");
+			    }
+			}
+		    }
+		} else {
+		    ErrorStack.add("'" + ctx.ID().getText() + "' is not defined");
+		}
 
-        ErrorStack.leave();
-        return null;
-    }
+		ErrorStack.leave();
+		return null;
+	    }
 
-    private boolean treatTaskSemaBoltSignalInterruptDation(NameContext ctx,
-        SymbolTableEntry entry) {
-      TypeDefinition typ = null;
-    
-      if (entry instanceof TaskEntry) {
-         typ = new TypeTask();  
-      } else if (entry instanceof SemaphoreEntry) {
-        typ = new TypeSemaphore();
-      } else if (entry instanceof BoltEntry) {
-        typ = new TypeBolt();
-      } else if (entry instanceof InterruptEntry) {
-        typ = new TypeInterrupt();
-    
-// the following elements are not supported yet        
- //     } else if (entry instanceof DationEntry) {
- //       typ = new TypeDation();
- //     } else if (entry instanceof SignalEntry) {
- //       typ = new TypeSignal();
-      } 
-      
-      if (typ != null) {
-          m_type = typ;
-          return true;
-      }
-      return false;
-      
-    }
+	    private boolean treatTaskSemaBoltSignalInterruptDation(NameContext ctx,
+		SymbolTableEntry entry) {
+	      TypeDefinition typ = null;
+	    
+	      if (entry instanceof TaskEntry) {
+		 typ = new TypeTask();  
+	      } else if (entry instanceof SemaphoreEntry) {
+		typ = new TypeSemaphore();
+	      } else if (entry instanceof BoltEntry) {
+		typ = new TypeBolt();
+	      } else if (entry instanceof InterruptEntry) {
+		typ = new TypeInterrupt();
+	    
+	// the following elements are not supported yet        
+	 //     } else if (entry instanceof DationEntry) {
+	 //       typ = new TypeDation();
+	 //     } else if (entry instanceof SignalEntry) {
+	 //       typ = new TypeSignal();
+	      } 
+	      
+	      if (typ != null) {
+		  m_type = typ;
+		  return true;
+	      }
+	      return false;
+	      
+	    }
 
-    /**
-     * iterate over name recursion levels
-     * 
-     */
+	    /**
+	     * iterate over name recursion levels
+	     * 
+	     */
 
-/*
-    private  Void reVisitName(SmallPearlParser.NameContext ctx) {
+	/*
+	    private  Void reVisitName(SmallPearlParser.NameContext ctx) {
       TypeDefinition currentType = m_type;
       
 String s = ctx.getText();
@@ -3285,6 +3461,29 @@ String s = ctx.getText();
             return null;
         }
 
+        
+        // auto dereference on rhs
+        // do this only on intermediate elements
+        // do not dereference of no listOfExpressions or no name is present
+        if (m_type instanceof TypeReference && m_autoDereference == true &&
+            (ctx.listOfExpression() != null || ctx.name() != null)) {
+          m_type = ((TypeReference)m_type).getBaseType(); 
+          currentType = m_type;
+        } 
+        if (m_type instanceof TypeProcedure) {
+          if (ctx.listOfExpression() != null) {
+            m_isFunctionCall = true;
+            // array indices given -> m_type is baseType() and iterate on next levels
+            // see next if with ctx.name() != null
+            visit(ctx.listOfExpression());
+            m_type = ((TypeProcedure) m_type).getResultType();
+            reVisitName(ctx);
+          } else {
+            //if (!m_beOnLhs) {
+            //  m_type = ((TypeProcedure) m_type).getResultType();
+            //}
+          }
+        } else 
         if (m_type instanceof TypeArray) {
             // resolve the index list if given for the array
             if (ctx.listOfExpression() != null) {
@@ -3292,6 +3491,8 @@ String s = ctx.getText();
                 // see next if with ctx.name() != null
                 visit(ctx.listOfExpression());
                 m_type = ((TypeArray) currentType).getBaseType();
+                // maybe we have also an name
+                reVisitName(ctx.name());
             } else {
                 // no array indices given --> no name may by given
                 if (ctx.name() != null) {
@@ -3299,7 +3500,25 @@ String s = ctx.getText();
                     return null; // abort type resolving
                 }
             }
-        } else if (m_type instanceof TypeStructure) {
+        } else
+        if (m_type instanceof TypeArraySpecification) {
+          // resolve the index list if given for the array
+          if (ctx.listOfExpression() != null) {
+              // array indices given -> m_type is baseType() and iterate on next levels
+              // see next if with ctx.name() != null
+              visit(ctx.listOfExpression());
+              m_type = ((TypeArraySpecification) currentType).getBaseType();
+              // maybe we have also an name
+              reVisitName(ctx.name());
+          } else {
+              // no array indices given --> no name may by given
+              if (ctx.name() != null) {
+                  ErrorStack.add("need array element for next struct component");
+                  return null; // abort type resolving
+              }
+          }
+        } else
+        if (m_type instanceof TypeStructure) {
           if (ctx.name()!= null) {
 
             String s = ctx.name().ID().getText();
