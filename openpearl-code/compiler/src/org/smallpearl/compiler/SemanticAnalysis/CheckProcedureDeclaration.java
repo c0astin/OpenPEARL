@@ -320,7 +320,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
         TypeDefinition tmpExprType = exprType;
 
         if (m_typeOfReturns != null) {
-          // check for implicit dereference /refernece possibilities
+          // check for implicit dereference /reference possibilities
           // --> base types must be compatible
           if (tmpTypeOfResult instanceof TypeReference) {
             tmpTypeOfResult = ((TypeReference)tmpTypeOfResult).getBaseType();
@@ -361,10 +361,14 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
           if (m_typeOfReturns instanceof TypeReference) {
              // check lifeCyle required
             ASTAttribute attrRhs = m_ast.lookup(ctx.expression());
-            int level = attrRhs.getVariable().getLevel();
-            if (level >1) {
-              ErrorStack.add("life cycle of '"+attrRhs.getVariable().getName()+"' is too short");
-            }
+            if (attrRhs.getVariable() != null) {
+              int level = attrRhs.getVariable().getLevel();
+              if (level >1) {
+                ErrorStack.add("life cycle of '"+attrRhs.getVariable().getName()+"' is too short");
+              }
+            } else if (attrRhs.getType() instanceof TypeProcedure) {
+              // ok - we have a procedure name
+            } 
           }
 
         }
@@ -529,12 +533,14 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 				if (proc.getFormalParameters()!= null)  {
 					nbrFormalParameters = proc.getFormalParameters().size();
 				}
+				/*
+				 * not useful for ref proc assignments
 				if (nbrActualParameters != nbrFormalParameters) {
 					ErrorStack.enter(ctx);
 					ErrorStack.add("number of parameters mismatch: given "+nbrActualParameters+" expected: "+nbrFormalParameters);
 					ErrorStack.leave();
 				}
-
+                */
 				if (ctx.name().listOfExpression() != null && ctx.name().listOfExpression().expression().size() > 0) {
 					int min = Math.min(nbrActualParameters, nbrFormalParameters);
 					for (int i=0; i< min; i++) {
