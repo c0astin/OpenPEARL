@@ -1239,20 +1239,20 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             m_currentSymbolTable.enter(controlVariable);
         }
 
-        for (int i = 0; i < ctx.scalarVariableDeclaration().size(); i++) {
-            visitScalarVariableDeclaration(ctx.scalarVariableDeclaration(i));
+        for (int i = 0; i < ctx.loopBody().scalarVariableDeclaration().size(); i++) {
+            visitScalarVariableDeclaration(ctx.loopBody().scalarVariableDeclaration(i));
         }
 
-        for (int i = 0; i < ctx.arrayVariableDeclaration().size(); i++) {
-            visitArrayVariableDeclaration(ctx.arrayVariableDeclaration(i));
+        for (int i = 0; i < ctx.loopBody().arrayVariableDeclaration().size(); i++) {
+            visitArrayVariableDeclaration(ctx.loopBody().arrayVariableDeclaration(i));
         }
 
-        for (int i = 0; i < ctx.structVariableDeclaration().size(); i++) {
-            visitStructVariableDeclaration(ctx.structVariableDeclaration(i));
+        for (int i = 0; i < ctx.loopBody().structVariableDeclaration().size(); i++) {
+            visitStructVariableDeclaration(ctx.loopBody().structVariableDeclaration(i));
         }
 
-        for (int i = 0; i < ctx.statement().size(); i++) {
-            SmallPearlParser.StatementContext stmt = ctx.statement(i);
+        for (int i = 0; i < ctx.loopBody().statement().size(); i++) {
+            SmallPearlParser.StatementContext stmt = ctx.loopBody().statement(i);
 
             if (stmt.block_statement() != null) {
                 visitBlock_statement(stmt.block_statement());

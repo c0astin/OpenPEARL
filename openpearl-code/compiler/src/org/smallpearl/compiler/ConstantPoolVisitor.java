@@ -634,8 +634,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
             }
         }
 
-        for (int i = 0; i < ctx.statement().size(); i++) {
-            visit(ctx.statement(i));
+        for (int i = 0; i < ctx.loopBody().statement().size(); i++) {
+            visit(ctx.loopBody().statement(i));
         }
 
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();

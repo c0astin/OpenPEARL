@@ -26,7 +26,11 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+ 
+/* changelog
+2020-05-50 (rm): loopStatement: loopBody now as separate rule to  simplify the 
+   treatment in the ExpressionTypeVisitor 
+*/
 grammar SmallPearl;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1109,9 +1113,13 @@ block_statement:
 loopStatement:
     loopStatement_for? loopStatement_from? loopStatement_by? loopStatement_to? loopStatement_while?
     'REPEAT'
+       loopBody
+    loopStatement_end ';'
+    ;
+
+loopBody:
     ( scalarVariableDeclaration | structVariableDeclaration | arrayVariableDeclaration | dationDeclaration | lengthDefinition)*
     statement*
-    loopStatement_end ';'
     ;
 
 loopStatement_for:

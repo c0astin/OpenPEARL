@@ -1793,8 +1793,8 @@ public  class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implemen
           }
         }
         
-        // no treat all child nodes - the look control elements are parsed again!
-        visitChildren(ctx);
+        // now treat the loop body
+        visit(ctx.loopBody());
 
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;

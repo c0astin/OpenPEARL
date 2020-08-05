@@ -5446,22 +5446,22 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
 
-        for (int i = 0; i < ctx.scalarVariableDeclaration().size(); i++) {
-            st.add("body", visitScalarVariableDeclaration(ctx
+        for (int i = 0; i < ctx.loopBody().scalarVariableDeclaration().size(); i++) {
+            st.add("body", visitScalarVariableDeclaration(ctx.loopBody()
                     .scalarVariableDeclaration(i)));
         }
 
-        for (int i = 0; i < ctx.arrayVariableDeclaration().size(); i++) {
-            st.add("body", visitArrayVariableDeclaration(ctx
+        for (int i = 0; i < ctx.loopBody().arrayVariableDeclaration().size(); i++) {
+            st.add("body", visitArrayVariableDeclaration(ctx.loopBody()
                     .arrayVariableDeclaration(i)));
         }
 
-        for (int i = 0; i < ctx.structVariableDeclaration().size(); i++) {
-            st.add("body", visitStructVariableDeclaration(ctx.structVariableDeclaration(i)));
+        for (int i = 0; i < ctx.loopBody().structVariableDeclaration().size(); i++) {
+            st.add("body", visitStructVariableDeclaration(ctx.loopBody().structVariableDeclaration(i)));
         }
 
-        for (int i = 0; i < ctx.statement().size(); i++) {
-            st.add("body", visitStatement(ctx.statement(i)));
+        for (int i = 0; i < ctx.loopBody().statement().size(); i++) {
+            st.add("body", visitStatement(ctx.loopBody().statement(i)));
         }
 
         if (ctx.loopStatement_end().ID() != null) {
