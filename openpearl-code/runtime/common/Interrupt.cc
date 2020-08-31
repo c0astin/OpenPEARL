@@ -65,16 +65,19 @@ namespace pearlrt {
    void Interrupt::trigger() {
       TaskWhenLinks * current;
 
-      Log::info("Interrupt: triggered (enable=%d)", isEnabled);
-      mutex.lock();
+      Log::info("%s: Interrupt: triggered (enable=%d)",
+         TaskCommon::getCallingTaskName(),isEnabled);
+
+      TaskCommon::mutexLock();
+//      mutex.lock();
 
       if (isEnabled) {
-         TaskCommon::mutexLock();
 
          while (headContinueTaskQueue) {
             current = headContinueTaskQueue;
             headContinueTaskQueue = headContinueTaskQueue->getNextContinue();
             current -> triggeredContinue();
+Log::info("waiting task triggered");
          }
 
          for (TaskWhenLinks * h = headActivateTaskQueue;
@@ -83,29 +86,30 @@ namespace pearlrt {
             h->triggeredActivate();
          }
 
-         TaskCommon::mutexUnlock();
+Log::info("Interrupt::trigger released taskCommon.lock");
       }
-      mutex.unlock();
+//      mutex.unlock();
+      TaskCommon::mutexUnlock();
    }
 
    void Interrupt::registerActivate(TaskWhenLinks * t, TaskWhenLinks ** next) {
-      mutex.lock();
+//      mutex.lock();
       *next = headActivateTaskQueue;
       headActivateTaskQueue = t;
-      mutex.unlock();
+//      mutex.unlock();
    }
 
    void Interrupt::registerContinue(TaskWhenLinks * t, TaskWhenLinks ** next) {
-      mutex.lock();
+//      mutex.lock();
       *next = headContinueTaskQueue;
       headContinueTaskQueue = t;
-      mutex.unlock();
+//      mutex.unlock();
    }
 
    void Interrupt::unregisterActivate(TaskWhenLinks * t) {
       TaskWhenLinks * last = 0;
 
-      mutex.lock();
+//      mutex.lock();
       for (TaskWhenLinks * h = headActivateTaskQueue;
             h != 0;
             h = h->getNextActivate()) {
@@ -122,13 +126,13 @@ namespace pearlrt {
 
          last = h;
       }
-      mutex.unlock();
+//      mutex.unlock();
    }
 
    void Interrupt::unregisterContinue(TaskWhenLinks * t) {
       TaskWhenLinks * last = 0;
 
-      mutex.lock();
+//      mutex.lock();
       for (TaskWhenLinks * h = headContinueTaskQueue;
             h != 0;
             h = h->getNextContinue()) {
@@ -145,7 +149,7 @@ namespace pearlrt {
 
          last = h;
       }
-      mutex.unlock();
+//      mutex.unlock();
    }
 
 }

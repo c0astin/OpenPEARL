@@ -78,7 +78,7 @@ namespace pearlrt {
       TaskWhenLinks * headContinueTaskQueue;
       TaskWhenLinks * headActivateTaskQueue;
       bool         isEnabled;
-      Mutex		mutex;
+      //Mutex		mutex;
 
    public:
       /**
