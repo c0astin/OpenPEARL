@@ -762,6 +762,12 @@ namespace pearlrt {
       */
       int detailedTaskState(char * lines[3]);
 
+      /** deliver the name of the calling task 
+         or *anon* if the method is invoked of an background
+         service
+      */
+      static char * getCallingTaskName();
+
    private:
       /**
          perform required operations to adjust priority, semaphore

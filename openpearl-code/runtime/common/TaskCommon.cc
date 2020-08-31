@@ -85,10 +85,21 @@ namespace pearlrt {
 
    void TaskCommon::mutexLock() {
       mutexTasks.name("MutexTasks");
-//    Log::debug("MUTEX TASK: LOCKING...cccc= %d", cccc);
+/*
+    Task* current = Task::currentTask();
+    char * name;
+
+    if (current) {
+       name = current->getName();
+    } else {
+       name = (char*)"*anon*";
+    }
+ */
+    Log::debug("%s: MUTEX TASK: LOCKING...cccc= %d", getCallingTaskName(),cccc);
 //    printf("MUTEX TASK: LOCKING...cccc= %d\n", cccc);
 
       mutexTasks.request();
+    Log::debug("%s: MUTEX TASK: LOCKED", getCallingTaskName());
 
       // decrement monitoring variable
       cccc --;
@@ -99,6 +110,17 @@ namespace pearlrt {
 
    void TaskCommon::mutexUnlock() {
 //    printf("MUTEX TASK: UNLOCKING...cccc= %d\n", cccc);
+/*
+    Task* current = Task::currentTask();
+    char * name;
+
+    if (current) {
+       name = current->getName();
+    } else {
+       name = (char*)"*anon*";
+    }
+*/
+     Log::debug("%s: MUTEX TASK: UNLOCKING...cccc= %d", getCallingTaskName(),cccc);
 
       // increment monitoring variable
       cccc ++;
@@ -154,6 +176,7 @@ namespace pearlrt {
    }
 
    void TaskCommon::setLocation(int l, const char *f) {
+      Log::lineTrace("%s:%d", getName(), l);
       sourceLine = l;
       fileName = f;
       scheduleCallback();
@@ -574,7 +597,8 @@ namespace pearlrt {
             throw;
          }
 
-         taskState = SUSPENDED;
+         // the taskState is modified in suspendMySelf() and suspendRunning()
+         //taskState = SUSPENDED;
          break;
 
       case BLOCKED:
@@ -655,8 +679,8 @@ namespace pearlrt {
       // unlocking is done in calling function, except
       // this function throws an exception
 
-      DEBUG("%s: continueFromOtherTask: taskState=%d bp.reason=%d",
-            name, taskState, blockParams.why.reason);
+      DEBUG("%s: continueFromOtherTask:'%s' taskState=%d bp.reason=%d",
+            getCallingTaskName(), name, taskState, blockParams.why.reason);
 
       if (condition & PRIO) {
          changeThreadPrio(prio.get());
@@ -811,6 +835,9 @@ namespace pearlrt {
       }
 
 
+      // thread safe protection starts here; above code is reentrant
+      mutexLock();
+
       if (condition & (AT | AFTER | WHEN )) {
 
          // test calculation of system priority.
@@ -820,8 +847,6 @@ namespace pearlrt {
          // mappable to the system priorities
          PrioMapper::getInstance()->fromPearl(p);
 
-         // thread safe protection starts here; above code is reentrant
-         mutexLock();
 
          if (schedContinueData.whenRegistered) {
             schedContinueData.when->unregisterContinue(this);
@@ -862,11 +887,9 @@ namespace pearlrt {
             }
          }
 
-         mutexUnlock();
       } else {
          DEBUG("%s: continue task %s with prio %d",
                me->getName(), name, p.x);
-         mutexLock();
 
          // cancel continue schedules if set
          if (schedContinueData.whenRegistered) {
@@ -899,7 +922,7 @@ namespace pearlrt {
          return;
       }
 
-      Log::info("%s: resume (cond=%d)", name, condition);
+      Log::info("%s: resume (cond=%d)", getCallingTaskName(), condition);
 
       mutexLock();
       if (condition & Task::WHEN) {
@@ -948,7 +971,7 @@ namespace pearlrt {
       }
 
       // do the plattform specific part ... and release the mutexTasks lock
-      DEBUG("%s: call suspendMySelf", name);
+      DEBUG("%s: call suspendMySelf", getCallingTaskName());
       suspendMySelf();
       mutexUnlock();
    }
@@ -1105,7 +1128,8 @@ namespace pearlrt {
 
 // call with locked task lock
    void TaskCommon::triggeredContinue() {
-      DEBUG("%s: triggeredContinue called", name);
+      DEBUG("%s: triggeredContinue called", getCallingTaskName());
+
       schedContinueData.whenRegistered = false;  // automatically unregistered
 
       if (schedContinueData.taskTimer->isSet()) {
@@ -1125,7 +1149,7 @@ namespace pearlrt {
 
 // call with locked task lock
    void TaskCommon::triggeredActivate() {
-      DEBUG("%s: triggeredActivate called", name);
+      DEBUG("%s: triggeredActivate called for task '%s'", getCallingTaskName(), name);
 
       if (schedActivateData.taskTimer->isSet()) {
          if (schedActivateData.taskTimer->start()) {
@@ -1134,13 +1158,13 @@ namespace pearlrt {
          }
       } else {
          if (taskState == Task::TERMINATED) {
-            DEBUG("%s: scheduled activate (when): starts", name);
+            DEBUG("%s: scheduled activate (when): '%s' starts", getCallingTaskName(),name);
             directActivate(schedActivateData.prio);
             activateDone.request();
          } else {
             if (schedActivateOverrun) {
                // warn that this activation is skipped
-               Log::warn("%s: scheduled activate: overrun", name);
+               Log::warn("%s: scheduled activate: overrun for task '%s'", getCallingTaskName(), name);
             }
 
             schedActivateOverrun = true;
@@ -1274,4 +1298,17 @@ namespace pearlrt {
       mutexUnlock();
       return i;
    }
+
+   char * TaskCommon::getCallingTaskName() {
+      Task* current = Task::currentTask();
+      char * name;
+
+      if (current) {
+         name = current->getName();
+      } else {
+         name = (char*)"*anon*";
+      }
+      return (name);
+   }
+
 }
