@@ -56,7 +56,7 @@
 #include "Bolt.h"
 
 //          remove this vv comment to enable debug messages
-#define DEBUG(fmt, ...) //  Log::debug(fmt, ##__VA_ARGS__)
+#define DEBUG(fmt, ...)   Log::debug(fmt, ##__VA_ARGS__)
 
 namespace pearlrt {
 
@@ -148,7 +148,7 @@ namespace pearlrt {
 
 
    void Task::continueSuspended() {
-      DEBUG("%s: send continuation data", name);
+      DEBUG("%s: send continuation data to '%s'", getCallingTaskName(), name);
       char dummy = 'c';
       continueWaiters++;
 
@@ -158,7 +158,8 @@ namespace pearlrt {
          write(pipeResume[1], &dummy, 1);
          mutexUnlock();
          continueDone.request();
-         DEBUG("%s: continuation data received and acknowledged", name);
+         DEBUG("%s: continuation data transmitted to '%s' and acknowledged",
+            getCallingTaskName(),name);
          mutexLock();
       }
 
@@ -227,7 +228,8 @@ namespace pearlrt {
          suspendDone.release();
       }
 
-      DEBUG("%s:   suspended (wait for contine data) ", name);
+      DEBUG("%s:   suspended (wait for continue data) ",
+          getCallingTaskName());
       taskState = SUSPENDED;
 
       // be not disturbed by application threads
@@ -236,14 +238,14 @@ namespace pearlrt {
          mutexUnlock();
          result = read(pipeResume[0], &dummy, 1);
          if (result != 1) {
-            DEBUG("%s: read returned %d", name, result);
+            DEBUG("%s: read returned %d", getCallingTaskName(), result);
          } else {
-            DEBUG("%s: suspendMySelf got %c", name, dummy);
+            DEBUG("%s: suspendMySelf got %c", getCallingTaskName(), dummy);
          }
          mutexLock();
       }
       switchToThreadPrioCurrent();
-      DEBUG("%s:   suspendMySelf: got data %c", name, dummy);
+      DEBUG("%s:   suspendMySelf: got data %c", getCallingTaskName(), dummy);
 
       switch (dummy) {
       case 't' :
@@ -252,14 +254,14 @@ namespace pearlrt {
 
       case 'c' :
          DEBUG("%s: suspendMySelf: continued: old taskState=%d",
-               name, taskState);
+               getCallingTaskName(), taskState);
 
          if (taskState == SUSPENDED) {
             taskState = Task::RUNNING;
          } else if (taskState == SUSPENDED_BLOCKED) {
             taskState = Task::BLOCKED;
          } else {
-            Log::error("%s: suspendMySelf: unexpected taskState = %d", name, taskState);
+            Log::error("%s: suspendMySelf: unexpected taskState = %d", getCallingTaskName(), taskState);
             mutexUnlock();
             throw theInternalTaskSignal;
          }
@@ -268,13 +270,13 @@ namespace pearlrt {
             continueDone.release();
          }
 
-         DEBUG("%s:  continue from suspend done - new state %d", name, taskState);
+         DEBUG("%s:  continue from suspend done - new state %d", getCallingTaskName(), taskState);
          switchToThreadPrioCurrent();
          break;
 
       default:
          Log::error("%s:   resume: received unknown continue (%c)",
-                    name, dummy);
+                    getCallingTaskName(), dummy);
          break;
       }
    }
@@ -304,7 +306,7 @@ namespace pearlrt {
    }
 
    void Task::setThreadPrio(int p) {
-      DEBUG("%s: set ThreadPrio to %d", name, p);
+      DEBUG("%s: set ThreadPrio for '%s' to %d", getCallingTaskName(), name, p);
 
       if (! useNormalSchedulerFlag) {
          struct sched_param sp;
@@ -536,25 +538,29 @@ namespace pearlrt {
          terminateDone.release();
       }
 
-      if (schedActivateOverrun) {
-         // missed one scheduled activation --> do it immediatelly now
-         DEBUG("%s:   terminates with missed scheduled"
-               " activate pending", name);
-         schedActivateOverrun = false;
-         directActivate(schedActivateData.prio);
-      } else {
+      if (!schedActivateOverrun) {
          /* still pending ? */
          if (schedActivateData.taskTimer->isActive() == false &&
                schedActivateData.whenRegistered == false) {
             TaskMonitor::Instance().decPendingTasks();
          }
+         taskState = Task::TERMINATED;
+         threadPid = 0; // invalidate thread id
+         DEBUG("%s: terminates now", name);
+         mutexUnlock();
+         pthread_exit(0);
+      } else {
+         // missed one scheduled activation --> do it immediatelly now
+         DEBUG("%s:   terminates with missed scheduled"
+               " activate pending", name);
+         schedActivateOverrun = false;
+         taskState = Task::TERMINATED;
+         threadPid = 0; // invalidate thread id
+         DEBUG("%s: terminates now", name);
+         directActivate(schedActivateData.prio);
+         mutexUnlock();
       }
 
-      taskState = Task::TERMINATED;
-      threadPid = 0; // invalidate thread id
-      DEBUG("%s: terminates now", name);
-      mutexUnlock();
-      pthread_exit(0);
    }
 
    int Task::schedPrioMax = 0;
