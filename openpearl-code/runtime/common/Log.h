@@ -117,7 +117,7 @@ message if an error message is too long
       /**
         constants for log level setting
       */
-      enum LogLevel {DEBUG = 1, INFO = 2, WARN = 4, ERROR = 8};
+      enum LogLevel {DEBUG = 1, INFO = 2, WARN = 4, ERROR = 8, LINETRACE=16};
 
       /**
        set log level
@@ -166,6 +166,7 @@ message if an error message is too long
       */
       static void info(const char * format, ...)
       __attribute__((format(printf, 1, 2)));
+
       /**
       write an error log message
 
@@ -173,6 +174,15 @@ message if an error message is too long
       \param ... as required in format
       */
       static void error(const char * format, ...)
+      __attribute__((format(printf, 1, 2)));
+
+      /**
+      write a line trace log message
+
+      \param format the message format (like in printf) to be written
+      \param ... as required in format
+      */
+      static void lineTrace(const char * format, ...)
       __attribute__((format(printf, 1, 2)));
 
       /**

@@ -98,6 +98,8 @@ namespace pearlrt {
                        break;
              case 'I': newLogLevel |= INFO;
                        break;
+             case 'L': newLogLevel |= LINETRACE;
+                       break;
              /* no error handling here ! */
              /* ignore other characters  */
           }
@@ -132,6 +134,16 @@ namespace pearlrt {
    void Log::error(const char * format, ...) {
       if (logLevel & Log::ERROR) {
          Character<7> type("ERROR:");
+         va_list args;
+         va_start(args, format);
+         Log::getInstance()->doit(type, format, args);
+         va_end(args);
+      }
+   }
+
+   void Log::lineTrace(const char * format, ...) {
+      if (logLevel & Log::LINETRACE) {
+         Character<7> type("LINE:");
          va_list args;
          va_start(args, format);
          Log::getInstance()->doit(type, format, args);
