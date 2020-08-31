@@ -46,8 +46,5 @@ namespace pearlrt {
       nextActivate = next;
    }
 
-   void TaskWhenLinks::triggeredContinue() {};
-   void TaskWhenLinks::triggeredActivate() {};
-
 }
 

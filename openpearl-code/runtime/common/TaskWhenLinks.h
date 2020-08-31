@@ -51,7 +51,7 @@ namespace pearlrt {
    interrupt. When the interrupt occurs, all scheduled tasking
    operation must be executed.
    To realize this behavior, a linked list of tasks is established.
-   The links are strore in the task control block, which is derived
+   The links are store in the task control block, which is derived
    from this class.
 
    This class provides attributes and methods to create two linked
