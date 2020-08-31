@@ -71,12 +71,12 @@ MODEND.
 
 using namespace std;
 
-SPCTASK(TASK1);
-SPCTASK(TASK2);
-SPCTASK(TASK3);
-SPCTASK(TASK4);
-SPCTASK(TASK5);
-SPCTASK(TASK6);
+SPCTASK(_TASK1);
+SPCTASK(_TASK2);
+SPCTASK(_TASK3);
+SPCTASK(_TASK4);
+SPCTASK(_TASK5);
+SPCTASK(_TASK6);
 
 //static pearlrt::UnixSignal sys_ctrlc(2);
 static pearlrt::SoftInt sys_ctrlc(2);
@@ -86,7 +86,7 @@ volatile int x = 0;
 volatile int c = 0;
 int success = 1;
 //execute function for working thread 1
-DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
+DCLTASK(_TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    /*do something*/
 //   int caught;
    printf("TASK1 laeuft\n");
@@ -94,7 +94,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 //   caught = 0;
 
 //   try {
-   TASK2.cont(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
+   _TASK2.cont(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
               pearlrt::Prio(80),
               pearlrt::Clock(),
               pearlrt::Duration(),
@@ -111,12 +111,12 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    //    success = 0;
    //}
 
-   TASK2.prevent(me);
+   _TASK2.prevent(me);
 
    //caught = 0;
 
 //  try {
-   TASK2.activate(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
+   _TASK2.activate(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
                   pearlrt::Prio(80),
                   pearlrt::Clock(),
                   pearlrt::Duration(),
@@ -143,7 +143,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
                pearlrt::Clock(), pearlrt::Duration(1,500000), 0);
    x = 0;
 
-   TASK2.activate(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
+   _TASK2.activate(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
                   pearlrt::Prio(20),
                   pearlrt::Clock(),
                   pearlrt::Duration(),
@@ -184,7 +184,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
       success = 0;
    }
 
-   TASK2.prevent(me);
+   _TASK2.prevent(me);
    _ctrlc->trigger();
    me ->resume(pearlrt::Task::AFTER,
                pearlrt::Clock(), pearlrt::Duration(0,500000), 0);
@@ -198,7 +198,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    x = 0;
    printf("TASK1 test delayed activate\n");
    pearlrt::Log::info("delayed trigger start");
-   TASK3.activate(me,
+   _TASK3.activate(me,
                   pearlrt::Task::PRIO | pearlrt::Task::WHEN |
                   pearlrt::Task::AFTER,
                   pearlrt::Prio(10),
@@ -257,7 +257,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    pearlrt::Log::error("********************************");
    x = 0;
    printf("TASK1 test immediate and delayed activate (TASK2 and TASK3)\n");
-   TASK2.activate(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
+   _TASK2.activate(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
                   pearlrt::Prio(10),
                   pearlrt::Clock(),
                   pearlrt::Duration(),
@@ -283,14 +283,14 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
       success = 0;
    }
 
-   TASK2.prevent(me);
-   TASK3.prevent(me);
+   _TASK2.prevent(me);
+   _TASK3.prevent(me);
 
 
    // ---------------------------------------------------------
    printf("TASK1 test long working activate\n");
    x = 0;
-   TASK4.activate(me,
+   _TASK4.activate(me,
                   pearlrt::Task::PRIO | pearlrt::Task::WHEN,
                   pearlrt::Prio(10),
                   pearlrt::Clock(),
@@ -349,11 +349,11 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
       success = 0;
    }
 
-   TASK4.prevent(me);
+   _TASK4.prevent(me);
    // ---------------------------------------------------------
    pearlrt::Log::info("simple activate must remove when");
    x = 0;
-   TASK2.activate(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
+   _TASK2.activate(me, pearlrt::Task::PRIO | pearlrt::Task::WHEN,
                   pearlrt::Prio(10),
                   pearlrt::Clock(),
                   pearlrt::Duration(),
@@ -370,7 +370,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
       success = 0;
    }
 
-   TASK2.activate(me, pearlrt::Task::PRIO ,
+   _TASK2.activate(me, pearlrt::Task::PRIO ,
                   pearlrt::Prio(10),
                   pearlrt::Clock(),
                   pearlrt::Duration(),
@@ -395,13 +395,13 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
       success = 0;
    }
 
-   TASK2.prevent(me);
+   _TASK2.prevent(me);
 
    // ---------------------------------------------------------
    printf("test when on continue   \n");
    c = 0;
 
-   TASK5.activate(me, pearlrt::Task::PRIO,
+   _TASK5.activate(me, pearlrt::Task::PRIO,
                   pearlrt::Prio(10),
                   pearlrt::Clock(),
                   pearlrt::Duration(),
@@ -411,7 +411,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
                   _ctrlc);
    me ->resume(pearlrt::Task::AFTER,
                pearlrt::Clock(), pearlrt::Duration(0,800000), 0);
-   TASK5.cont(me, pearlrt::Task::WHEN,
+   _TASK5.cont(me, pearlrt::Task::WHEN,
               pearlrt::Prio(), pearlrt::Clock(), pearlrt::Duration(),
               _ctrlc);
    _ctrlc->trigger();
@@ -432,7 +432,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
       success = 0;
    }
 
-   TASK5.cont(me, pearlrt::Task::WHEN,
+   _TASK5.cont(me, pearlrt::Task::WHEN,
               pearlrt::Prio(), pearlrt::Clock(), pearlrt::Duration(),
               _ctrlc);
    _ctrlc->trigger();
@@ -444,19 +444,19 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
       success = 0;
    }
 
-   TASK5.prevent(me);
+   _TASK5.prevent(me);
 
    // ----------------------------------------------------
    printf("WHEN ... AFTER ... CONTINUE\n");
    c = 0;
-   TASK6.cont(me, pearlrt::Task::WHEN | pearlrt::Task::AFTER,
+   _TASK6.cont(me, pearlrt::Task::WHEN | pearlrt::Task::AFTER,
               pearlrt::Prio(),
               pearlrt::Clock(),
               pearlrt::Duration(1,0), // after
               _ctrlc);
    me ->resume(pearlrt::Task::AFTER,
                pearlrt::Clock(), pearlrt::Duration(0,100000), 0);
-   TASK6.activate(me);
+   _TASK6.activate(me);
    me ->resume(pearlrt::Task::AFTER,
                pearlrt::Clock(), pearlrt::Duration(0,500000), 0);
    _ctrlc->trigger();
@@ -476,7 +476,7 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
       printf("when after continue failed@2 (c=%d)\n", c);
       success = 0;
       pearlrt::Log::error("*** emergency contine for TASK6");
-      TASK6.cont(me); // emergency continue
+      _TASK6.cont(me); // emergency continue
    }
 
 
@@ -490,17 +490,17 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
 }
 
 //execute function for working thread 2
-DCLTASK(TASK2, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
+DCLTASK(_TASK2, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
    x ++;
    printf("Task2: x=%d\n", x);
 }
 //execute function for working thread 3
-DCLTASK(TASK3, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
+DCLTASK(_TASK3, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
    x ++;
    printf("Task3: x=%d\n", x);
 }
 //execute function for working thread 4
-DCLTASK(TASK4, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
+DCLTASK(_TASK4, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
    me ->resume(pearlrt::Task::AFTER,
                pearlrt::Clock(),
                pearlrt::Duration(1,0), 0);
@@ -508,16 +508,23 @@ DCLTASK(TASK4, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
    printf("Task4: x=%d\n", x);
 }
 //execute function for working thread 5
-DCLTASK(TASK5, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
+DCLTASK(_TASK5, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
+   me->setLocation(1,"t5");
    me->suspend(me);
+   me->setLocation(2,"t5");
    c ++;
+   me->setLocation(3,"t5");
    printf("Task5: c=%d\n", c);
+   me->setLocation(4,"t5");
    me->suspend(me);
+   me->setLocation(5,"t5");
    c ++;
+   me->setLocation(6,"t5");
    printf("Task5: c=%d\n", c);
+   me->setLocation(7,"t5");
 }
 
-DCLTASK(TASK6, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
+DCLTASK(_TASK6, pearlrt::Prio(4), pearlrt::BitString<1>(0)) {
    me->suspend(me);
    c ++;
    printf("Task6: c=%d\n", c);
