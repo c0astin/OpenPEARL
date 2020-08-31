@@ -346,7 +346,7 @@ namespace pearlrt {
 
       // input line ready
       //   preset return values with complete line
-      //   this may be truncates if a taskname was detected
+      //   this may be truncated if a taskname was detected
       compress();
       *length = nbrEnteredCharacters;
       *inputBuffer = inputLine.compressedLine;
@@ -373,7 +373,7 @@ namespace pearlrt {
                         t != NULL; t = t->getNext()) {
                      // ignore leading underscore in task name
 
-                     if (strcmp(t->getName() + 1,
+                     if (strcmp(t->getName(),
                                 inputLine.compressedLine + 1) == 0) {
                         // found adressed task
 
@@ -602,7 +602,7 @@ namespace pearlrt {
       for (int i = 0; i < TaskList::Instance().size();  i++) {
          t = TaskList::Instance().getTaskByIndex(i);
          sprintf(line1, "%-10.10s  %3d  %2d  %-20.20s (%s:%d)\n",
-                 t->getName() + 1, (t->getPrio()).x, t->getIsMain(),
+                 t->getName(), (t->getPrio()).x, t->getIsMain(),
                  t->getTaskStateAsString(),
                  t->getLocationFile(), t->getLocationLine());
          putString(line1);
