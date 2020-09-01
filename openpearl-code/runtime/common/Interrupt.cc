@@ -68,16 +68,17 @@ namespace pearlrt {
       Log::info("%s: Interrupt: triggered (enable=%d)",
          TaskCommon::getCallingTaskName(),isEnabled);
 
-      TaskCommon::mutexLock();
-//      mutex.lock();
+ //     TaskCommon::mutexLock();
+      mutexOfInterrupt.lock();
 
       if (isEnabled) {
 
          while (headContinueTaskQueue) {
             current = headContinueTaskQueue;
             headContinueTaskQueue = headContinueTaskQueue->getNextContinue();
+            Log::info("%s: trigger: waiting task triggered",
+                  TaskCommon::getCallingTaskName());
             current -> triggeredContinue();
-Log::info("waiting task triggered");
          }
 
          for (TaskWhenLinks * h = headActivateTaskQueue;
@@ -86,30 +87,30 @@ Log::info("waiting task triggered");
             h->triggeredActivate();
          }
 
-Log::info("Interrupt::trigger released taskCommon.lock");
       }
-//      mutex.unlock();
-      TaskCommon::mutexUnlock();
+Log::info("Interrupt::trigger released taskCommon.lock");
+      mutexOfInterrupt.unlock();
+//      TaskCommon::mutexUnlock();
    }
 
    void Interrupt::registerActivate(TaskWhenLinks * t, TaskWhenLinks ** next) {
-//      mutex.lock();
+      mutexOfInterrupt.lock();
       *next = headActivateTaskQueue;
       headActivateTaskQueue = t;
-//      mutex.unlock();
+      mutexOfInterrupt.unlock();
    }
 
    void Interrupt::registerContinue(TaskWhenLinks * t, TaskWhenLinks ** next) {
-//      mutex.lock();
+      mutexOfInterrupt.lock();
       *next = headContinueTaskQueue;
       headContinueTaskQueue = t;
-//      mutex.unlock();
+      mutexOfInterrupt.unlock();
    }
 
    void Interrupt::unregisterActivate(TaskWhenLinks * t) {
       TaskWhenLinks * last = 0;
 
-//      mutex.lock();
+      mutexOfInterrupt.lock();
       for (TaskWhenLinks * h = headActivateTaskQueue;
             h != 0;
             h = h->getNextActivate()) {
@@ -126,13 +127,13 @@ Log::info("Interrupt::trigger released taskCommon.lock");
 
          last = h;
       }
-//      mutex.unlock();
+      mutexOfInterrupt.unlock();
    }
 
    void Interrupt::unregisterContinue(TaskWhenLinks * t) {
       TaskWhenLinks * last = 0;
 
-//      mutex.lock();
+      mutexOfInterrupt.lock();
       for (TaskWhenLinks * h = headContinueTaskQueue;
             h != 0;
             h = h->getNextContinue()) {
@@ -149,7 +150,7 @@ Log::info("Interrupt::trigger released taskCommon.lock");
 
          last = h;
       }
-//      mutex.unlock();
+      mutexOfInterrupt.unlock();
    }
 
 }

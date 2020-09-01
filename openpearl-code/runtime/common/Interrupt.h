@@ -59,6 +59,11 @@ namespace pearlrt {
    the tasks mutex is locked. Rescheduling may happen first after the
    completion of a trigger()-operation.
 
+   The linked lists are individual for each interrupts.
+   They are protected by another mutex (mutexOfInterrupt). This
+   mutex enshures that no modification occurs in the linked list
+   while executing the trigger oporation.
+
    Individual interrupt sources must be derived from Interrupt.
    Usually the ctor must register the object to the real interrupt
    source. The execution is usually triggered by a signal handler (UNIX)
@@ -78,7 +83,7 @@ namespace pearlrt {
       TaskWhenLinks * headContinueTaskQueue;
       TaskWhenLinks * headActivateTaskQueue;
       bool         isEnabled;
-      //Mutex		mutex;
+      Mutex	mutexOfInterrupt;
 
    public:
       /**

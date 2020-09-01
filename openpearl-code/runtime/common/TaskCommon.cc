@@ -1128,7 +1128,8 @@ namespace pearlrt {
 
 // call with locked task lock
    void TaskCommon::triggeredContinue() {
-      DEBUG("%s: triggeredContinue called", getCallingTaskName());
+      DEBUG("%s: triggeredContinue called for %s", getCallingTaskName(),
+     getName());
 
       schedContinueData.whenRegistered = false;  // automatically unregistered
 
