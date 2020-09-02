@@ -1,0 +1,10 @@
+# sample setting for udev-rules for the esp32 to ditinguish 
+# console and flash device 
+# adopt to your setting and copy to /etc/udev/rules.d and execute 'udevadm trigger'
+
+# setting for esp-flash interface CP2102/CP2109
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE="0666", SYMLINK+="ttyESP32flash"
+
+# setting for ftdi adapter for uart0 (FTDI)
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6015", ATTRS{serial}=="DA00874N", MODE="0666", SYMLINK+="ttyESP32con"
+
