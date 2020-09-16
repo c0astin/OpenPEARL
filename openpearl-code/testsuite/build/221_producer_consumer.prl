@@ -1,0 +1,91 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! The producer–consumer problem is a classic example of a
+!! synchronization problem.  It was first proposed by Edsger
+!! W. Dijkstra in the year 1972.  The porblem consists of a producer
+!! process, which generates asynchronously data. The consumer process
+!! reads this data and does its processing. Both processes share a
+!! commom data structure often called a buffer to hold the data.  The
+!! buffer has a fixed amount to holding capacity. The producer tries to
+!! write dfata into the buffer and possibly at the same time the
+!! consumer wants to access the buffer. Accessing the buffer involves
+!! manipulating the buffer, read and write pointer. Furthermore
+!! precautions have to be taken, that the producer writes not beyond the
+!! buffer capacity and the consumer tries to read data from an empty
+!! buffer. The solution is inter-process communictaion. In this PEARL
+!! example semaphores are used. This solution can be easily extented to
+!! multiple producers and/or consumers.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+MODULE(ProducerConsumer);
+SYSTEM;
+  stdout: StdOut;
+
+PROBLEM;
+  SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+  DCL termout DATION OUT ALPHIC DIM(*, 80) FORWARD STREAM CREATED(stdout);
+
+  DCL MAXBUFFER INV FIXED INIT(5);
+  DCL buffer(1:MAXBUFFER) FIXED;
+
+  DCL semaWrite SEMA PRESET(5);
+  DCL semaRead  SEMA PRESET(0);	
+  DCL semaWait  SEMA PRESET(1);
+
+  DCL bufferIn FIXED INIT(1);
+  DCL bufferOut FIXED INIT(1);	
+  DCL counter FIXED INIT(0);
+  
+producer: TASK PRIO 5;
+  TO 10 REPEAT
+     PUT 'Producer bufferIn=', bufferIn, ': counter=', counter TO termout BY A, F(1), A, F(1), SKIP;
+
+     REQUEST semaWrite;
+     REQUEST semaWait;
+
+     counter := counter + 1;
+     buffer(bufferIn) := counter;
+
+     bufferIn := bufferIn + 1;
+     IF ( bufferIn > MAXBUFFER) THEN
+     	bufferIn := 1;
+     FIN;
+
+     RELEASE semaWait;
+     RELEASE semaRead;
+
+     AFTER 0.5 SEC RESUME;	
+  END;
+END;
+
+consumer: TASK PRIO 5;
+  DCL item FIXED INIT(0);
+  
+  TO 10 REPEAT
+     PUT 'Consumer bufferOut=', bufferOut, ': counter=', counter TO termout BY A, F(1), A, F(1), SKIP;
+
+     REQUEST semaRead;
+     REQUEST semaWait;
+
+     item := buffer(bufferOut);
+     bufferOut := bufferOut + 1;
+
+     IF ( bufferOut > MAXBUFFER) THEN
+     	bufferOut := 1;
+     FIN;
+
+     RELEASE semaWait;
+     RELEASE semaWrite;
+  END;
+END;
+
+main: TASK PRIO 1 MAIN;
+   OPEN termout;
+   PUT 'Start producer and consumer tasks:' TO termout BY A, SKIP;
+   
+   ACTIVATE producer;
+   ACTIVATE consumer;
+
+   CLOSE termout;
+END;
+
+MODEND;
