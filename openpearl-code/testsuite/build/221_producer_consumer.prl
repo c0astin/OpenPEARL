@@ -27,7 +27,8 @@ PROBLEM;
   DCL MAXBUFFER INV FIXED INIT(5);
   DCL buffer(1:MAXBUFFER) FIXED;
 
-  DCL semaWrite SEMA PRESET(5);
+!!  DCL semaWrite SEMA PRESET(MAXBUFFER);
+  DCL semaWrite SEMA PRESET(5);	!! workaround for compiler bug
   DCL semaRead  SEMA PRESET(0);	
   DCL semaWait  SEMA PRESET(1);
 
@@ -37,13 +38,13 @@ PROBLEM;
   
 producer: TASK PRIO 5;
   TO 10 REPEAT
-     PUT 'Producer bufferIn=', bufferIn, ': counter=', counter TO termout BY A, F(1), A, F(1), SKIP;
-
      REQUEST semaWrite;
      REQUEST semaWait;
 
      counter := counter + 1;
      buffer(bufferIn) := counter;
+
+     PUT 'Producer write ', counter TO termout BY A, F(2), SKIP;
 
      bufferIn := bufferIn + 1;
      IF ( bufferIn > MAXBUFFER) THEN
@@ -53,7 +54,7 @@ producer: TASK PRIO 5;
      RELEASE semaWait;
      RELEASE semaRead;
 
-     AFTER 0.5 SEC RESUME;	
+     AFTER 1.0 SEC RESUME;	
   END;
 END;
 
@@ -61,12 +62,13 @@ consumer: TASK PRIO 5;
   DCL item FIXED INIT(0);
   
   TO 10 REPEAT
-     PUT 'Consumer bufferOut=', bufferOut, ': counter=', counter TO termout BY A, F(1), A, F(1), SKIP;
-
      REQUEST semaRead;
      REQUEST semaWait;
 
      item := buffer(bufferOut);
+
+     PUT 'Consumer read ', item TO termout BY A, F(2), SKIP;
+
      bufferOut := bufferOut + 1;
 
      IF ( bufferOut > MAXBUFFER) THEN
@@ -75,17 +77,26 @@ consumer: TASK PRIO 5;
 
      RELEASE semaWait;
      RELEASE semaWrite;
+
+     !! Simulate the case, that the the consumer takes more time to
+     !! process one buffer element:
+     AFTER 2.0 SEC RESUME;	
   END;
 END;
 
-main: TASK PRIO 1 MAIN;
-   OPEN termout;
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! The main task open the terminal and activates the producer and 
+!! consumer tasks. Afterwards it terminates.  !! The terminal will be
+!! closed automatically by the runtime system after the last task was
+!! finsihed.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+main: TASK PRIO 1 MAIN; OPEN termout;
+
    PUT 'Start producer and consumer tasks:' TO termout BY A, SKIP;
    
    ACTIVATE producer;
    ACTIVATE consumer;
-
-   CLOSE termout;
 END;
 
 MODEND;
