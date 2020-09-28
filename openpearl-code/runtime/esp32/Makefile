@@ -1,4 +1,3 @@
-# cc_bin missing create of .bin in Repo
 # lets get the absolute path of this directory
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
@@ -242,6 +241,7 @@ cc_bin:
 	@echo "[create] $@"
 	@echo "# auto generated " > cc_bin.inc
 	@echo '$(CXX) -g -DTARGET=3 -std=c++11 -nostdlib -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,-static -Wl,--start-group -mlongcalls -frtti -u call_user_start_cpu0 -Os -I $(CONFIG_INSTALL_Target)/include $$SYSTEM $$fn.cc $(RUNTIMELIBS) $(LINKERSCRIPTS) -o $$fn -Wl,-Map=$$fn.map' >> cc_bin.inc
+	@echo 'python $(CURRENT_DIR)esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 elf2image --flash_mode "dio" --flash_freq "40m" --flash_size "2MB"  -o $$fn.bin $$fn' >> cc_bin.inc
 
 phony += run_bin
 run_bin:
