@@ -1,3 +1,4 @@
+# cc_bin missing create of .bin in Repo
 # lets get the absolute path of this directory
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
