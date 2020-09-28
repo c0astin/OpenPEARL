@@ -18,11 +18,14 @@ ESP_IDF_PATH:= $(subst $\",,$(CONFIG_ESP32_IDF_PATH))
 export IDF_PATH=$(ESP_IDF_PATH)
 
 #and have a look into this folder
-ifeq (,$(wildcard $(ESP_IDF_PATH)/add_path.sh))
+UID=$(shell id -u)
+ifneq (0,$(UID))
+  ifeq (,$(wildcard $(ESP_IDF_PATH)/add_path.sh))
      $(error ESP_IDF_PATH seems to be wrong ($(ESP_IDF_PATH)))
-endif
-ifeq (,$(wildcard $(ESP_IDF_PATH)/components))
+  endif
+  ifeq (,$(wildcard $(ESP_IDF_PATH)/components))
      $(error ESP_IDF_PATH seems to be wrong ($(ESP_IDF_PATH)))
+  endif
 endif
 
 #$(warning CURRENT_DIR: $(CURRENT_DIR))
@@ -96,6 +99,9 @@ CXXFLAGS += $(INCS)
 
 # TARGET 3 is the ESP32
 CXXFLAGS += -DTARGET=3
+
+# allow non pod union members
+CXXFLAGS += -std=c++11
 
 # list of files to check for code convention (make checkformat)
 CHECK_FILES := $(wildcard openpearlComponent/*.cc)
@@ -235,10 +241,8 @@ phony += cc_bin
 cc_bin:
 	@echo "[create] $@"
 	@echo "# auto generated " > cc_bin.inc
-	@echo '$(CXX) -g -DTARGET=3 -nostdlib -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,-static -Wl,--start-group -mlongcalls -frtti -u call_user_start_cpu0 -Os -I $(CONFIG_INSTALL_Target)/include $$SYSTEM $$fn.cc $(RUNTIMELIBS) $(LINKERSCRIPTS) -o $$fn -Wl,-Map=$$fn.map' >> cc_bin.inc
-	@echo 'python $(CURRENT_DIR)esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 elf2image --flash_mode "dio" --flash_freq "40m" --flash_size "2MB"  -o $$fn.bin $$fn' >> cc_bin.inc
+	@echo '$(CXX) -g -DTARGET=3 -std=c++11 -nostdlib -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,-static -Wl,--start-group -mlongcalls -frtti -u call_user_start_cpu0 -Os -I $(CONFIG_INSTALL_Target)/include $$SYSTEM $$fn.cc $(RUNTIMELIBS) $(LINKERSCRIPTS) -o $$fn -Wl,-Map=$$fn.map' >> cc_bin.inc
 
-######## TODO
 phony += run_bin
 run_bin:
 	@echo "[create] $@"

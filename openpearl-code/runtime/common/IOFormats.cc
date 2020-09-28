@@ -227,8 +227,7 @@ namespace pearlrt {
          f += index;
          PutBits<8>::toBit(f->x, len, w.x, base, *sink);
       } else {
-         Log::error("unsupported length of fixed B-format (len=%zu)",
-		 (unsigned long) len);
+         Log::error("unsupported length of fixed B-format (len=%zu)", len);
          throw theInternalDationSignal;
       }
    }
@@ -256,8 +255,7 @@ namespace pearlrt {
          f += index;
          GetBits<8>::fromBit(f->x, len, w.x, base, *source);
       } else {
-         Log::error("unsupported length of fixed B-format (len=%zu)",
-		 (unsigned long) len);
+         Log::error("unsupported length of fixed B-format (len=%zu)", len);
          throw theInternalDationSignal;
       }
    }

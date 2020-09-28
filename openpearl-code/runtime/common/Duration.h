@@ -97,7 +97,7 @@ namespace pearlrt {
 
       \param sec the seconds, may by > 60 and may be <0
       \param us the micro seconds must be > 0
-      \param sign default to 1 (+), must be set tu -1 for (-)
+      \param sign default to 1 (+), must be set to -1 for (-)
 
       \return the duration
       \throws DurationRangeSignal
