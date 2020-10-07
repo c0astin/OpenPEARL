@@ -1,0 +1,16 @@
+MODULE(m);
+
+SYSTEM;
+  so: StdOut;
+
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC;
+
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+t: TASK;
+   DCL dur DURATION;
+
+   PUT dur TO so BY D(10),SKIP;
+END;
+MODEND;
