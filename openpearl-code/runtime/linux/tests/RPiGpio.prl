@@ -20,18 +20,16 @@ PROBLEM;
    DCL led DATION OUT BASIC BIT(4) CREATED(bito);
 
 T1: TASK MAIN;
-!   DCL on BIT(1) INIT ('1'B1);
-!   DCL off BIT(1) INIT ('0'B1);
-   __cpp__( 'pearlrt::BitString<1> _on(1);');
-   __cpp__( 'pearlrt::BitString<1> _off(0);');
-   __cpp__( 'pearlrt::BitString<5> _work(1);');
+   DCL on BIT(1) INIT ('1'B1);
+   DCL off BIT(1) INIT ('0'B1);
+   DCL work BIT(4);
    OPEN taste;
    OPEN led;
    REPEAT
 !      TAKE  work FROM taste;
       SEND  work TO led;
       AFTER 1 SEC RESUME;
-     __cpp__ ('_work = _work.bitCshift(1);');
+      work := work CSHIFT 1;
    END;
 END;
 
