@@ -66,7 +66,7 @@ namespace pearlrt {
    signal handler
    */
    static void eintrSignalHandler(int sig) {
-      // Log::info("%s: eintrSignalHandler got signal %d",
+      // Log::debug("%s: eintrSignalHandler got signal %d",
       //          Task::currentTask()->getName(), sig);
    }
 
@@ -192,7 +192,7 @@ namespace pearlrt {
       {
 
          while (asyncSuspendRequested) {
-            Log::info("%s: send SIG_CANCEL", name);
+            Log::debug("%s: send SIG_CANCEL", name);
             pthread_kill(threadPid, SIG_CANCEL_IO);
             usleep(100000);
          }
@@ -356,7 +356,7 @@ namespace pearlrt {
    }
 
    void Task::entry() {
-      // Log::info("%s: starts on cpu %d", name, sched_getcpu());
+      // Log::debug("%s: starts on cpu %d", name, sched_getcpu());
       enableCancelIOSignalHandler();
       asyncTerminateRequested = false;
       asyncSuspendRequested = false;
@@ -445,7 +445,7 @@ namespace pearlrt {
    
         getCpuSetAsText(&cpu,cores,sizeof(cores)-1); 
       }
-      Log::info("%s: may use cores: %s",name, cores );
+      Log::debug("%s: may use cores: %s",name, cores );
 
 
       return;
@@ -517,7 +517,7 @@ namespace pearlrt {
 
 
       if (suspendWaiters > 0) {
-         Log::info("%s:   terminates while %d other tasks wait"
+         Log::debug("%s:   terminates while %d other tasks wait"
                    " to suspend it",
                    name, suspendWaiters);
       }

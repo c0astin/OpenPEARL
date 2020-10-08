@@ -164,7 +164,7 @@ namespace pearlrt {
          }
       }
 
-      Log::info("Disc: folder %s provides %s ", devicePath, rc.getCstring());
+      Log::debug("Disc: folder %s provides %s ", devicePath, rc.getCstring());
    }
 
    int Disc::capabilities() {
@@ -372,7 +372,7 @@ namespace pearlrt {
             if (ret < 1) {
                if (errnoCopy == EINTR) {
                   Task::currentTask()->treatCancelIO();
-                  Log::info("DiscFile: treatCancelIO finished");
+                  Log::debug("DiscFile: treatCancelIO finished");
                } else if (feof(fp)) {
                   Log::error("DiscFile: error read across EOF");
                   throw theDationEOFSignal;
@@ -410,7 +410,7 @@ namespace pearlrt {
             if (ret < 1) {
                if (errnoCopy == EINTR) {
                   Task::currentTask()->treatCancelIO();
-                  Log::info("Pipe: treatCancelIO finished");
+                  Log::debug("Pipe: treatCancelIO finished");
                } else if (feof(fp)) {
                   Log::error("Pipe: error read across EOF");
                   throw theDationEOFSignal;

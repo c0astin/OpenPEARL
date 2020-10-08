@@ -270,7 +270,7 @@ namespace pearlrt {
          }
       }
 
-      Log::info("Pipe: %s provides %s ", devicePath, rc.getCstring());
+      Log::debug("Pipe: %s provides %s ", devicePath, rc.getCstring());
       defaultReader = NULL;
 
       if (open1) {
@@ -280,7 +280,7 @@ namespace pearlrt {
             Log::error("Pipe: %s: failed to open default reader", devicePath);
             throw theOpenFailedSignal;
          } else {
-            Log::info("Pipe: %s: default reader opened", devicePath);
+            Log::debug("Pipe: %s: default reader opened", devicePath);
          }
       }
    }
@@ -430,7 +430,7 @@ namespace pearlrt {
             if (ret < 1) {
                if (errnoCopy == EINTR) {
                   Task::currentTask()->treatCancelIO();
-                  Log::info("Pipe: treatCancelIO finished");
+                  Log::debug("Pipe: treatCancelIO finished");
                } else if (feof(fp)) {
                   Log::error("Pipe: error read across EOF");
                   throw theDationEOFSignal;
@@ -469,7 +469,7 @@ namespace pearlrt {
             if (ret < 1) {
                if (errnoCopy == EINTR) {
                   Task::currentTask()->treatCancelIO();
-                  Log::info("Pipe: treatCancelIO finished");
+                  Log::debug("Pipe: treatCancelIO finished");
                } else {
                   // other read errors
                   Log::error("Pipe: error at write (%s)",

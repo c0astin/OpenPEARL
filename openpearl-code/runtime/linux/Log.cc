@@ -43,7 +43,7 @@ namespace pearlrt {
       // create default log as ./pearl_log.txt
       Disc * disc = new Disc("./", 1);
       LogFile * logfile = new LogFile(disc, "pearl_log.txt");
-      Log(logfile, (char*)"EWDI"); // all levels enabled
+      Log(logfile, (char*)"EWI"); // no debug and line trace
 
       //static StdError stdError;
       //provider = &stdError;
