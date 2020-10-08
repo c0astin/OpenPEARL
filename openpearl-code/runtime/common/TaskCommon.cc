@@ -148,7 +148,7 @@ namespace pearlrt {
    }
 
    TaskCommon::TaskState TaskCommon::getTaskState() {
-//    Log::info("%s : taskState = %d", name, taskState);
+//    Log::debug("%s : taskState = %d", name, taskState);
       return taskState;
    }
 
@@ -300,7 +300,7 @@ namespace pearlrt {
       blockParams.why.reason = IO;
       blockParams.why.u.io.dation = d;
       blockParams.why.u.io.direction = d->getCurrentDirection();
-      Log::info("%s: starts io-operation (reason=%d) direction=%d",
+      Log::debug("%s: starts io-operation (reason=%d) direction=%d",
                 name, blockParams.why.reason, d->getCurrentDirection());
    }
 
@@ -524,7 +524,7 @@ namespace pearlrt {
    }
 
    void TaskCommon::terminate(TaskCommon * me) {
-      Log::info("%s: terminate request: received for task %s (with taskState=%d)",
+      Log::debug("%s: terminate request: received for task %s (with taskState=%d)",
                 me->getName(), name, taskState);
       mutexLock();
 
@@ -563,7 +563,7 @@ namespace pearlrt {
    void TaskCommon::suspend(TaskCommon * me) {
       bool doReleaseMutex = true;  // special treatment for blocked at IO
 
-      Log::info("%s: suspend for %s request: received state=%d",
+      Log::debug("%s: suspend for %s request: received state=%d",
                 me->getName(), name, taskState);
       mutexLock();
 
@@ -826,7 +826,7 @@ namespace pearlrt {
       // these conditions are not allowed
       condition = condition & ~(ALL | UNTIL | DURING);
 
-      Log::info("%s: continue task %s: condition=%d",
+      Log::debug("%s: continue task %s: condition=%d",
                 me->getName(), name, condition);
       p = currentPrio;
 
@@ -922,7 +922,7 @@ namespace pearlrt {
          return;
       }
 
-      Log::info("%s: resume (cond=%d)", getCallingTaskName(), condition);
+      Log::debug("%s: resume (cond=%d)", getCallingTaskName(), condition);
 
       mutexLock();
       if (condition & Task::WHEN) {
@@ -1026,7 +1026,7 @@ namespace pearlrt {
       //struct itimerspec its;
       bool schedActivateWasSet = false;
 
-      Log::info("%s: prevent %s", me->getName(), name);
+      Log::debug("%s: prevent %s", me->getName(), name);
       mutexLock();
 
       // check if number of pending must be reduced

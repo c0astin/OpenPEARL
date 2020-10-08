@@ -65,10 +65,9 @@ namespace pearlrt {
    void Interrupt::trigger() {
       TaskWhenLinks * current;
 
-      Log::info("%s: Interrupt: triggered (enable=%d)",
+      Log::debug("%s: Interrupt: triggered (enable=%d)",
          TaskCommon::getCallingTaskName(),isEnabled);
 
- //     TaskCommon::mutexLock();
       mutexOfInterrupt.lock();
 
       if (isEnabled) {
@@ -76,7 +75,7 @@ namespace pearlrt {
          while (headContinueTaskQueue) {
             current = headContinueTaskQueue;
             headContinueTaskQueue = headContinueTaskQueue->getNextContinue();
-            Log::info("%s: trigger: waiting task triggered",
+            Log::debug("%s: trigger: waiting task triggered",
                   TaskCommon::getCallingTaskName());
             current -> triggeredContinue();
          }
@@ -88,9 +87,8 @@ namespace pearlrt {
          }
 
       }
-Log::info("Interrupt::trigger released taskCommon.lock");
+      Log::debug("Interrupt::trigger released taskCommon.lock");
       mutexOfInterrupt.unlock();
-//      TaskCommon::mutexUnlock();
    }
 
    void Interrupt::registerActivate(TaskWhenLinks * t, TaskWhenLinks ** next) {

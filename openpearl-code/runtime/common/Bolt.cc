@@ -149,10 +149,10 @@ namespace pearlrt {
       TaskCommon::mutexLock();
 
       if (operation == ENTER) {
-         Log::info("%s: ENTER for %d bolts", me->getName(),
+         Log::debug("%s: ENTER for %d bolts", me->getName(),
                    nbrOfBolts);
       } else {
-         Log::info("%s: RESERVE for %d bolts", me->getName(),
+         Log::debug("%s: RESERVE for %d bolts", me->getName(),
                    nbrOfBolts);
       }
 
@@ -273,7 +273,7 @@ namespace pearlrt {
 
                   waiters.remove(t);
                   t->unblock();
-                  Log::info("%s: unblocking from ENTER", t->getName());
+                  Log::debug("%s: unblocking from ENTER", t->getName());
                }
             }
          }

@@ -54,7 +54,7 @@ namespace pearlrt {
       int i;
 
       if (width <= 0) {
-         Log::info("width < 0");
+         Log::error("width < 0");
          throw theCharacterFormatSignal;
       }
 

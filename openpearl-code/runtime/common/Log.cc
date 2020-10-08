@@ -48,14 +48,20 @@ namespace pearlrt {
    bool definedInSystemPart;
 
    Log* Log::getInstance() {
+      /* note:
+       * if there is a definition of Log in the system part
+       * we have already an instance  of Log.
+       * We we no instance yet the platform dependend default Log setting
+       * must be invoked
+       */ 
       if (!instance) {
         try {
          instance = new Log();
         
-         // if no Log instance existed yet --> no entry
-         // in the system part present
 	 instance->setDefinedInSystemPart(false);  
         } catch ( ... ) {
+          // in case of failure of creation the Log facility
+          // inform the user by printf
           printf("failed to create logger\n");
         }
       }
@@ -80,7 +86,7 @@ namespace pearlrt {
       definedInSystemPart = true;
       
       if (ctorIsActive) {
-         printf("RECURSION!\n");
+         printf("RECURSION of Log::Log(..)!\n");
       }
       ctorIsActive = true;
       if (initialized) {
