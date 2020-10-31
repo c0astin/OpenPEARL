@@ -1,0 +1,96 @@
+MODULE(x);
+
+PROBLEM;
+
+! --------------------------------------------------
+! simple cases with proceudures with parameters
+simpleProcWithParam: PROC ( x FIXED);
+   RETURN;
+END;
+
+simpleProcWithoutParam: PROC;
+   RETURN;
+END;
+
+
+simpleTests1: TASK MAIN;
+
+   DCL refSimpleProcWithParam REF PROC ( x FIXED);
+   DCL refSimpleProcWithoutParam REF PROC;
+
+   ! proc with parameter returning nothing
+   refSimpleProcWithParam := simpleProcWithParam;   ! reference assignment
+   simpleProcWithParam(2); ! procedure call
+   refSimpleProcWithParam(2); ! procedure call
+
+   refSimpleProcWithoutParam := simpleProcWithoutParam;   ! reference assignment
+   CALL simpleProcWithoutParam; ! procedure call
+   CALL refSimpleProcWithoutParam; ! procedure call
+   simpleProcWithoutParam; ! procedure call, derived from usage context
+   refSimpleProcWithoutParam; ! procedure call, derived from usage context
+END;
+
+! --------------------------------------------------
+! simple cases with functions
+simpleProcReturnsFixed: PROC RETURNS(FIXED);
+   RETURN(1);
+END;
+
+simpleTests2: TASK MAIN;
+  DCL refSimpleProcReturnsFixed REF PROC RETURNS(FIXED);
+  DCL x FIXED;
+
+  refSimpleProcReturnsFixed := simpleProcReturnsFixed; ! reference assignment
+  x = refSimpleProcReturnsFixed; ! function call, derived from usage
+  x := simpleProcReturnsFixed; ! function call, derived from usage
+END;
+
+! ----------------------------------------------------
+! Ambiguous cases with functions returning REF PROC
+! note: result type may be typeReference
+DCL selected FIXED INIT(2);
+
+proc1ReturningRefProc: PROC RETURNS(REF PROC);
+  RETURN (proc1ReturningRefProc);
+  ! Problem: may be (endless) recursive function call or
+  !          reference expression
+  !  I would assume that it is a reference expression,
+  !  since the dereference is applied automatically if required
+END;
+proc2ReturningRefProc: PROC RETURNS(REF PROC);
+  RETURN (proc2ReturningRefProc);
+  ! same as above
+END;
+procOtherReturningRefProc: PROC RETURNS(REF PROC);
+  RETURN (proc2ReturningRefProc);
+  ! same as above
+END;
+
+procXReturningRefProc: PROC RETURNS(REF PROC);
+  CASE selected
+  ALT RETURN (proc1ReturningRefProc);
+  ALT RETURN (proc2ReturningRefProc);
+  FIN;
+  RETURN (procOtherReturningRefProc);
+END;
+
+
+ambiguousCases: TASK MAIN;
+  DCL refProcReturningRefProc REF PROC RETURNS(REF PROC);
+  DCL refProcXReturningRefProc REF PROC RETURNS(REF PROC);
+  refProcReturningRefProc := proc1ReturningRefProc;
+                           ! same as above
+
+  refProcReturningRefProc; ! is function call discarding result value
+  proc1ReturningRefProc;   ! is function call discarding result value
+ 
+  ! what is this??  
+  refProcXReturningRefProc = refProcXReturningRefProc;
+  /*
+  1) it is a reference assignment
+  2) is right hand side a function call, or a simle PROF reference?
+  */
+END;
+
+MODEND;
+
