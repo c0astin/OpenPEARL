@@ -69,6 +69,7 @@ independent parts.
 //#include "chip.h"
 #include "service.h"
 #include "Esp32Clock.h"
+//#include "Esp32WifiConfig.h"
 
 // read options from menuconfig
 #include "../../configuration/include/autoconf.h"
@@ -81,6 +82,7 @@ static void testException() {
    } catch (int e) {
       printf("got int exception %d\n", e);
    }
+//  static  pearlrt::Esp32WifiConfig cfg((char*)"", (char*)"");
 }
 extern "C" {
    extern int _write(int fd, char * ptr, int len);
@@ -137,7 +139,8 @@ extern "C" {
 
 
       printf("set log level \n");
-      Log::getInstance()->setLevel(0x0c);
+//      Log::getInstance()->setLevel(0x0c); //e+w
+      Log::getInstance()->setLevel(0x0e);   //e+w+i
 //      Log::getInstance()->setLevel(0x0f);
 
       // start background service task
