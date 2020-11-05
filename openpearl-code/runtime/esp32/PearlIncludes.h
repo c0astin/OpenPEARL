@@ -107,5 +107,7 @@ Only this file mus be included.
 
 #include "Console.h"
 #include "Esp32Uart.h"
+#include "Esp32WifiConfig.h"
+#include "Esp32MqttTcpClient.h"
 
 
