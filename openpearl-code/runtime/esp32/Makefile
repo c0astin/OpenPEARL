@@ -64,6 +64,7 @@ CRCS =
 targets := esp32.xml
 
 # ------------------- add plattform independent PEARL classes to project
+CONFIG_HAS_I2C=y
 include ../common/Files.common
 XMLFILES  += $(addprefix ../common/,$(XML_COMMON))
 
@@ -77,6 +78,8 @@ INCS += esp-idf/components/openpearl/common
 XMLFILES += openpearlComponent/StdOut.xml
 XMLFILES += openpearlComponent/Console.xml
 XMLFILES += openpearlComponent/Esp32Uart.xml
+XMLFILES += openpearlComponent/Esp32WifiConfig.xml
+XMLFILES += openpearlComponent/Esp32MqttTcpClient.xml
 #XMLFILES += esp-idf/components/boardsupport/Esp32BME280.xml
 #XMLFILES += esp-idf/components/boardsupport/Esp32Wifi.xml
 #XMLFILES += esp-idf/components/boardsupport/TcpIpServer.xml
@@ -216,20 +219,41 @@ install: all cc_bin run_bin
 	cp esp-idf-project/build/partitions_singleapp.bin $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
 	@cp esp32.xml $(CONFIG_INSTALL_Target)/lib
 
-####### TODO
-RUNTIMELIBS :=-L/usr/local/lib/OpenPEARLesp32  -lapp_trace -lapp_update\
-		-laws_iot -lbootloader_support -lbt -lcoap -lconsole \
+####### TODO 
+### 2020-11-05: library list cleaned
+## currently unused libraries
+# -lapp_trace 
+# -laws_iot 
+# -lbootloader_support  
+# -lbt -lcoap -lconsole
+# -lespnow 
+# -lesp_adc_cal -lethernet
+# -lexpat -lfatfs 
+# -lidf_test -ljsmn 
+# -ljson -llibsodium 
+# -lopenssl 
+# -lsdmmc
+# -lspiffs 
+# -lulp 
+# -lwear_levelling 
+
+RUNTIMELIBS :=-L/usr/local/lib/OpenPEARLesp32  \
+		-lapp_update\
 		-lcxx -u __cxa_guard_dummy -ldriver \
 		-lesp_ringbuf \
 		-lesp32 -lhal  -lcore -lrtc -lnet80211 -lpp -lwpa \
-		-lsmartconfig -lcoexist -lwps -lwpa2 -lespnow -lphy \
-		-lesp_adc_cal -lethernet -lexpat -lfatfs \
+		-lsmartconfig -lsmartconfig_ack \
+		 -lmqtt -lcoexist -lwps -lwpa2 -lphy \
+	-ltcp_transport \
+		-lesp-tls -lmesh\
 		-lfreertos -Wl,--undefined=uxTopUsedPriority -lheap \
-		-lidf_test -ljsmn -ljson -llibsodium -llog -llwip \
+		-llog -llwip \
 		-lmbedtls -lmdns -lmicro-ecc -lc -lm -lnewlib -lnghttp \
-		-lnvs_flash -lopenpearl -lfreertos_specific -lopenssl \
-		-lpthread -lsdmmc -lsoc -lspi_flash -lspiffs \
-		-ltcpip_adapter -lulp -lvfs -lwear_levelling \
+		-lnvs_flash -lopenpearl -lfreertos_specific \
+		-lpthread \
+		-lsoc -lspi_flash \
+		-ltcpip_adapter \
+		-lvfs \
 		-lwpa_supplicant -lxtensa-debug-module \
 		-lgcc -lstdc++ -lgcov -Wl,--end-group -Wl,-EL
 LINKERSCRIPTS:= -T esp32_out.ld -u ld_include_panic_highint_hdl \
@@ -247,7 +271,8 @@ phony += run_bin
 run_bin:
 	@echo "[create] $@"
 	@echo "# auto generated " > run_bin.inc
-	@echo 'python $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 --port $$INTERFACE --baud 115200 --before default_reset --after hard_reset write_flash -u --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/bootloader.bin 0x10000 $$fn.bin 0x8000 $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/partitions_singleapp.bin' >>run_bin.inc
+#	@echo 'python $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 --port $$INTERFACE --baud 115200 --before default_reset --after hard_reset write_flash -u --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/bootloader.bin 0x10000 $$fn.bin 0x8000 $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/partitions_singleapp.bin' >>run_bin.inc
+	@echo 'python $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 --port $$INTERFACE --baud 115200 --before default_reset --after hard_reset write_flash -u --flash_mode dio --flash_freq 40m --flash_size detect 0x10000 $$fn.bin' >>run_bin.inc
 	@echo 'python -m serial.tools.miniterm --rts 0 --dtr 0 --eol CR --raw $$INTERFACE 115200' >>run_bin.inc
 
 # -------------------------------------------------
@@ -269,12 +294,15 @@ checkformat:
 
 -include .depend
 
-phone += help
+phony += help
 help:
 	@echo make setup	- setup links to esp-idf
 	@echo make prepare	- setup rw/permissions to installation files
 	@echo make install	- build esp-specific OpenPEARL library and install
 
+phony += partition_table-flash
+partition_table-flash:
+	$(call esp32build) partition_table-flash 
 
 phony += info
 info:
