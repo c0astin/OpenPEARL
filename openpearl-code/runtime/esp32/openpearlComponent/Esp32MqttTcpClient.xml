@@ -1,0 +1,5 @@
+  <configuration name ="Esp32MqttTcpClient">
+  <parameters>
+    <CHAR name="BrokerIp" length="32"><NotEmpty/></CHAR>
+  </parameters>
+  </configuration>
