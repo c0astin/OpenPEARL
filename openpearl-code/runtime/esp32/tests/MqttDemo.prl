@@ -1,0 +1,57 @@
+MODULE(mqttDemo);
+SYSTEM;
+!   Esp32MqttTcpClient('mqtt://192.168.178.78', 1883);
+   Esp32MqttTcpClient('mqtt://ra-tow', 1883);
+   con: Console;
+PROBLEM;
+   SPC con DATION INOUT SYSTEM ALPHIC;
+   DCL console DATION INOUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(con);
+   DCL consoleMutex SEMA PRESET(1);
+   
+mqttPublish: PROC(topic CHAR(40) , data CHAR(40) );
+  DCL xx CHAR(40);
+  xx = topic;
+
+   __cpp__(
+    "pearlrt::Esp32MqttTcpClient* cl = pearlrt::Esp32MqttTcpClient::getInstance();"
+    "cl->publish(_topic, _data);"
+);
+END;
+
+pub: TASK MAIN;
+    DCL topic CHAR(40) INIT('/topic/prl');
+    DCL data CHAR(40);
+    DCL count FIXED INIT(0);
+   
+    OPEN console;
+
+    ACTIVATE receiver;
+
+    REPEAT
+       count := count + 1;
+       CONVERT 'count=',count TO data BY A, F(4);
+       REQUEST consoleMutex;
+       PUT 'publish: topic=',topic,' data=',data TO console BY A,A,SKIP;
+       RELEASE consoleMutex;
+       mqttPublish(topic, data);
+       AFTER 1 SEC RESUME;
+    END;
+END;
+
+receiver: TASK;
+   DCL topic CHAR(40) INIT('/topic/prl');
+   DCL data CHAR(40);
+     __cpp__(
+          "pearlrt::Esp32MqttTcpClient* cl = pearlrt::Esp32MqttTcpClient::getInstance();"
+         "cl->subscribe(_topic);"
+   );
+   REPEAT
+     __cpp__(
+          "cl->readMessage(_topic, _data);"
+     );
+       REQUEST consoleMutex;
+     PUT 'received topic:',topic,'data: ',data TO console BY A,A,SKIP,A,A,SKIP;
+       RELEASE consoleMutex;
+   END; 
+END;
+MODEND;
