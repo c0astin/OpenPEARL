@@ -78,6 +78,7 @@ Only this file mus be included.
 #include "DationPG.h"
 #include "DationRW.h"
 #include "DationTS.h"
+#include "StringDationConvert.h"
 #include "UserDationNB.h"
 #include "DationDim.h"
 #include "DationDim1.h"
