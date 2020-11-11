@@ -15,14 +15,36 @@ For the usage of the ESP-IDF by OpenPEARL, the files of the IDF should NOT
 become compiled for each PEARL application build.
 
 \subsection{Integration of the ESP-IDF with the OpenPEARL-Repostory}
-The ESP-IDF is extended in high rate. Thus we do not copy a specific
+The ESP-IDF becomes extended in high rate. Thus we do not copy a specific
 version of the ESP-IDF in our repository.
+The integration of OpenPEARL and the ESP-IDF is done via the following steps:
+\begin{enumerate}
+\item the toolchain of the ESP-IDF expects an environment variable
+   for the location of the \texttt{esp-idf} folder.
+   This location may be set via \texttt{make menuconfig}
+   of the concrete project 
+   (run \texttt{make menuconfig} in \texttt{esp-idf-project}) 
+\item There is a need for a concrete project to build.
+   This project is located in the folder \texttt{.../runtime/esp32/esp-idf-project}
+   This folder contains the \texttt{sdkconfig} for the setting for the 
+   OpenPEARL usage of the components. During build, the libraries are created and moved to
+   the installation location.
+\item The folder \texttt{.../runtime/esp32} contains also a link the
+  to the esp-idf folder.
+\item OpenPEARL needs some changes in the FreeRTOS implementation.
+  The folder \texttt{patchFiles} contains the expected and patched 
+  version of some esp-idf releases.
+\item the setup of the links is done von \texttt{make setuplinks patch},
+   which is automatically done at \texttt{make all} 
+\end{enumerate}
 
-The OpenPEARL build system is based on \verb|make|. The build is done 
-currently {\em in place}.
+The OpenPEARL build system is based on \verb|make|.
 The OpenPEARL specific parts of the runtime system is added to the ESP-IDF
 by setting some links into the OpenPEARL working directory.
-E.g. \verb|/user/xxx/Openpearl/openpearl-code/runtime/esp32/openpearlspecific ~/esp/esp-idf/components/openpearl|
+E.g.
+\begin{lstlisting}[breaklines]
+ln -s /user/xxx/Openpearl/openpearl-code/runtime/esp32/openpearlspecific ~/esp/esp-idf/components/openpearl
+\end{lstlisting}
 After this, the ESP-IDF recognize a new component named 'openpearl' and
  treat this like any other ESP-IDF component.
 
@@ -69,6 +91,44 @@ If a new release of ESP-IDF should be used, several checks must be done:
 \item the FreeRTOS implementation of tasks.c and tasks.h was extended by one
   funktion. This must be added by include in taskAddOns.c.inc and taskAddOns.h
 \end{itemize}
+
+\section{Partitions on the Flash Memory}
+There are some partitions like:
+
+\begin{verbatim}
+# ESP-IDF Partition Table
+# Name,   Type, SubType, Offset,  Size, Flags
+nvs,      data, nvs,     0x9000,  0x4000,
+otadata,  data, ota,     0xd000,  0x2000,
+phy_init, data, phy,     0xf000,  0x1000,
+factory,  0,    0,       0x10000, 1M,
+ota_0,    0,    ota_0,  0x110000, 1M,
+ota_1,    0,    ota_1,  0x210000, 1M,
+\end{verbatim}
+The bootloader starts the application in the partition \texttt{factory}.
+The partition \texttt{nvs} store non volatile data.
+The partition \texttt{ota-1} and \texttt{ota-2} are used for updates over the air.
+
+\subsection{Resize the Application Partition}
+For larger applications, the size of 1MB of the partition \texttt{factory} is too small.
+The project \texttt{esp-idf-project} in OpenPEARL development region contain a custom 
+partition table --- currently with a 2MB partition for the application.
+
+To enable this partition table, you must flash it manually in the esp-if-project folder:
+\begin{verbatim}
+make partition_table-flash
+\end{verbatim}
+
+\subsection{Non Volatile Storage Partition (nvs)}
+The nvs is used be several examples of the espressif ide. 
+The nvs-storage is used by OpenPEARL in the namespace \texttt{OpenPEARL} for
+\begin{itemize}
+\item Wifi-Parameters may be placed with the configutarion itemEsp32WifiConfig
+\item \textit{others may follow}
+\end{itemize}
+
+
+
 
 \section{Open Issues}
 \subsection{Core Usage}
