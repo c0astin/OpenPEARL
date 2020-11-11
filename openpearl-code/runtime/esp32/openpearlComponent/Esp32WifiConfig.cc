@@ -198,9 +198,9 @@ static void wifiTaskWrapper(void * parameters) {
 */
 
 namespace pearlrt {
-#define STACK_SIZE 1000
-static uint32_t  stack[STACK_SIZE/4];
-static StaticTask_t tcb;
+//#define STACK_SIZE 1000
+//static uint32_t  stack[STACK_SIZE/4];
+//static StaticTask_t tcb;
 
    Esp32WifiConfig::Esp32WifiConfig(char* sid, char* pwd) {
      TaskHandle_t tskHandle;
