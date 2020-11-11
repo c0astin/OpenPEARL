@@ -139,8 +139,8 @@ extern "C" {
 
 
       printf("set log level \n");
-//      Log::getInstance()->setLevel(0x0c); //e+w
-      Log::getInstance()->setLevel(0x0e);   //e+w+i
+      Log::getInstance()->setLevel(0x0c); //e+w
+//      Log::getInstance()->setLevel(0x0e);   //e+w+i
 //      Log::getInstance()->setLevel(0x0f);
 
       // start background service task
@@ -150,12 +150,10 @@ extern "C" {
        * This task starts all PEARL90 main tasks, afterwards the
        * task suspends itself until another task resume it
        */
-      printf("task list \n");
       Log::info("Defined Tasks");
 
       // format with sprintf, since Log does not allow format parameters
       sprintf(line, "%-10.10s %4s %s", "Name", "Prio", "isMain");
-      printf("%s\n", line);
       Log::info(line);
       TaskList::Instance().sort(); // sort taskList
 
@@ -167,7 +165,6 @@ extern "C" {
                  (t->getPrio()).x,
                  t->getIsMain());
          Log::info(line);
-         printf("%s\n", line);
          t->init();
       }
 
@@ -180,7 +177,6 @@ extern "C" {
       /*****************init end*******************/
       //activate all threads which declared with "main"
       Log::info("start all main-threads");
-      printf("start all main-threads\n");
 
       for (int i = 0; i < TaskList::Instance().size();  i++) {
          Task *t = TaskList::Instance().getTaskByIndex(i);
@@ -195,10 +191,13 @@ extern "C" {
       Log::info("Free Heap size: %d byte", xPortGetFreeHeapSize());
 
 
+/*
       xTaskCreate(&blink_task, "blink_task",
                   5000, //configMINIMAL_STACK_SIZE,
                   NULL, 5, NULL);
       printf("blink started\n");
+*/
+
    }
 
 }
