@@ -29,7 +29,6 @@
 
 #include "Esp32MqttTcpClient.h"
 
-//extern "C" {
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -43,33 +42,32 @@
 #include "lwip/sys.h"
 #include "mqtt_client.h"
 
-//}
 #include "Log.h"
 #include "Esp32Nvs.h"
 
 /* FreeRTOS event group to signal when we are connected*/
-static EventGroupHandle_t wifi_event_group;
+static EventGroupHandle_t event_group;
 static const char *TAG = "MQTT_EXAMPLE";
 
 /* The event group allows multiple bits for each event,
    but we only care about one event - are we connected
    to the AP with an IP? */
 const static int CONNECTED_BIT = BIT0;
+const static int RECEIVED_MQTT_MSG_BIT = BIT1;
 
 static bool connected=false;
 
 static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 {
-printf("wifi_event_handler: id=%d\n", event->event_id);
     switch(event->event_id) {
     case SYSTEM_EVENT_STA_START:
         printf("SYSTEM_EVENT_STA_STARTED\n");
         esp_wifi_connect();
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
-        printf("got ip:%s\n",
+        pearlrt::Log::info("got ip:%s",
                  ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
-        xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+        xEventGroupSetBits(event_group, CONNECTED_BIT);
         connected = true;
         break;
     case SYSTEM_EVENT_AP_STACONNECTED:
@@ -83,9 +81,10 @@ printf("wifi_event_handler: id=%d\n", event->event_id);
                  event->event_info.sta_disconnected.aid);
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
-        printf("DISCONNECTED\n");
+        connected = false;
+        //printf("DISCONNECTED\n");
         esp_wifi_connect();
-        xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+        xEventGroupClearBits(event_group, CONNECTED_BIT);
         break;
     default:
         break;
@@ -95,13 +94,14 @@ printf("wifi_event_handler: id=%d\n", event->event_id);
 
 static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
-    esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
+    //esp_mqtt_client_handle_t client = event->client;
+    //int msg_id;
     // your_context_t *context = event->context;
-printf("mqtt_event_handler: id=%d\n", event->event_id);
+    //printf("mqtt_event_handler: id=%d client=%p\n", event->event_id,client);
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+/*
             msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);
             ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 
@@ -113,14 +113,16 @@ printf("mqtt_event_handler: id=%d\n", event->event_id);
 
             msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
             ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+*/
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
             break;
         case MQTT_EVENT_SUBSCRIBED:
-            ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+/*            ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
             msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "data", 0, 0, 0);
             ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+*/
             break;
         case MQTT_EVENT_UNSUBSCRIBED:
             ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -130,8 +132,13 @@ printf("mqtt_event_handler: id=%d\n", event->event_id);
             break;
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-            printf("DATA=%.*s\r\n", event->data_len, event->data);
+    pearlrt::Esp32MqttTcpClient::getInstance()->
+            received(
+             event->topic_len, event->topic, 
+             event->data_len, event->data);
+            //printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
+            //printf("DATA=%.*s\r\n", event->data_len, event->data);
+
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -153,31 +160,32 @@ static void wifiTask(char * brokerIp) {
    char ssid[32];
    char passwd[32];
 
-   printf("wifiTask started\n");
+//   printf("wifiTask started\n");
 
-   ESP_LOGI(TAG, "[APP] Startup..");
-   ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
-   ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
+//   ESP_LOGI(TAG, "[APP] Startup..");
+//   ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
+//   ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
 
-   esp_log_level_set("*", ESP_LOG_INFO);
-   esp_log_level_set("MQTT_CLIENT", ESP_LOG_VERBOSE);
-   esp_log_level_set("TRANSPORT_TCP", ESP_LOG_VERBOSE);
-   esp_log_level_set("TRANSPORT_SSL", ESP_LOG_VERBOSE);
-   esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
-   esp_log_level_set("OUTBOX", ESP_LOG_VERBOSE);
+   esp_log_level_set("*", ESP_LOG_ERROR);
+   esp_log_level_set("wifi", ESP_LOG_WARN); 
+   esp_log_level_set("MQTT_CLIENT", ESP_LOG_INFO);
+//   esp_log_level_set("TRANSPORT_TCP", ESP_LOG_VERBOSE);
+//   esp_log_level_set("TRANSPORT_SSL", ESP_LOG_VERBOSE);
+//   esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
+//   esp_log_level_set("OUTBOX", ESP_LOG_VERBOSE);
 
    pearlrt::Esp32Nvs* nvs = pearlrt::Esp32Nvs::getInstance();
 
    tcpip_adapter_init();
 
-   wifi_event_group = xEventGroupCreate();
+   event_group = xEventGroupCreate();
 
    ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL) );
 
      nvs->getItem((char*)"wifi_SSID", ssid,sizeof(ssid));
      nvs->getItem((char*)"wifi_PASS", passwd, sizeof(passwd));
-     printf("try to connect to SSID: >%s< with password: >%s<\n",
-             ssid, passwd);
+     //printf("try to connect to SSID: >%s< with password: >%s<\n",
+     //        ssid, passwd);
 
       wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
       ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -194,26 +202,19 @@ static void wifiTask(char * brokerIp) {
       ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
       ESP_ERROR_CHECK(esp_wifi_start() );
       ESP_LOGI(TAG, "Waiting for wifi");
-    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
-
-   printf("connected\n"); 
-
+    xEventGroupWaitBits(event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
 
     esp_mqtt_client_config_t mqtt_cfg;
     memset(&mqtt_cfg,0,sizeof(mqtt_cfg));
     mqtt_cfg.event_handle = mqtt_event_handler;
-    mqtt_cfg.uri= brokerIp;
-printf("broker.uri=%s\n", mqtt_cfg.uri);
-
-//        .uri = brokerIp,   //CONFIG_BROKER_URL,
-//        .event_handle = mqtt_event_handler,
-//        // .user_context = (void *)your_context
-//    };
+    mqtt_cfg.uri = brokerIp;
+    mqtt_cfg.port = pearlrt::Esp32MqttTcpClient::getInstance()->getPort();
+//printf("broker.uri=%s\n", mqtt_cfg.uri);
 
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+    pearlrt::Esp32MqttTcpClient::getInstance()->setClient(client);
     esp_mqtt_client_start(client);
 
-    printf("after mqtt_client_start\n");
    while(1) {        
       vTaskDelay(1);
    }
@@ -231,15 +232,120 @@ static void wifiTaskWrapper(void * parameters) {
 
 namespace pearlrt {
 
-   Esp32MqttTcpClient::Esp32MqttTcpClient(char* brokerIp) {
-     TaskHandle_t tskHandle;
-Log::info("Esp32MqttTcpClient: %s", brokerIp);
+   static void wait4Connection() {
+      while(!connected) {
+         printf("wait for connection...\n");
+         vTaskDelay(1000 / portTICK_PERIOD_MS);
+         
+      }
+   }
+   static void trimString(char* string, size_t length) {
+      int index=length-1;
+      for (int i=0; i<length; i++) {
+         if (string[i] != ' ') {
+            index = i+1;
+         }
+      } 
+      string[index] = '\0';
+   }
+   Esp32MqttTcpClient* Esp32MqttTcpClient::instance = NULL;
 
-     xTaskCreate(&wifiTaskWrapper, "wifiTask",
-                  5000, //configMINIMAL_STACK_SIZE,
+   Esp32MqttTcpClient::Esp32MqttTcpClient(char* brokerIp, uint32_t port) {
+      TaskHandle_t tskHandle;
+      Log::info("Esp32MqttTcpClient: %s:%d", brokerIp,port);
+      instance = this;
+      brokerPort = port;
+
+      xTaskCreate(&wifiTaskWrapper, "wifiTask",
+                  5000,
                   brokerIp, 5, &tskHandle);
- printf(" try to start wifiTask done\n");
-    
+   }
+
+   Esp32MqttTcpClient* Esp32MqttTcpClient::getInstance() {
+       return instance;
+   }
+
+   uint32_t Esp32MqttTcpClient::getPort() {
+      return brokerPort;
+   }
+
+   void Esp32MqttTcpClient::setClient(void* esp_mqtt_client_handle) {
+      client = esp_mqtt_client_handle;
+   }
+
+   void Esp32MqttTcpClient::subscribe(Character<40> topic) {
+       char * topic_c;
+       topic_c = topic.data;
+       int msg_id;
+
+       wait4Connection();
+
+       mutex.lock();
+         trimString(topic_c,sizeof(topic));
+         msg_id = esp_mqtt_client_subscribe((esp_mqtt_client_handle_t)client,
+                                           topic_c, 0);
+       mutex.unlock();
+   }
+
+   void Esp32MqttTcpClient::publish(Character<40> topic, Character<40> data) {
+       char * topic_c;
+       char * data_c;
+       int msg_id;
+
+       wait4Connection();
+
+       mutex.lock();
+         topic_c = topic.data;
+         trimString(topic_c,sizeof(topic));
+         data_c = data.data;
+         trimString(data_c,sizeof(data));
+//printf("publish(%p,>%s<,>%s<\n", client,topic_c, data_c);
+         msg_id = esp_mqtt_client_publish((esp_mqtt_client_handle_t)client,
+                           topic_c, data_c, 0, 1, 0);
+       mutex.unlock();
+   }
+
+   void Esp32MqttTcpClient::received(size_t tl, char* t, size_t dl, char*d) {
+       mutex.lock();
+          receiveTopic = t;
+          receiveTopicLength = tl;
+          receiveData = d;
+          receiveDataLength= dl;
+          xEventGroupSetBits(event_group, RECEIVED_MQTT_MSG_BIT);
+       mutex.unlock();
+   }
+
+   static void copyCStringToPrlString(char*prlString, size_t prlStringLength,
+                                      char* cString, size_t cStringLength) {
+      for (int i=0; i<cStringLength; i++) {
+         *prlString++ = *cString ++;
+      }
+      for (int i = 0; i< prlStringLength - cStringLength;i++) {
+         *prlString++ = ' ';
+      } 
+   }
+
+   void Esp32MqttTcpClient::readMessage(Character<40> & topic,
+                                        Character<40> & data) {
+       wait4Connection();
+      xEventGroupWaitBits(event_group, RECEIVED_MQTT_MSG_BIT,
+                           true, true, portMAX_DELAY);
+       mutex.lock();
+          if (receiveTopicLength > sizeof(topic)) {
+             pearlrt::Log::error("MQTT Client: topic too long");
+             mutex.unlock();
+             throw theCharacterTooLongSignal;
+          } 
+          if (receiveDataLength > sizeof(data)) {
+             pearlrt::Log::error("MQTT Client: data too long");
+             mutex.unlock();
+             throw theCharacterTooLongSignal;
+          } 
+          copyCStringToPrlString(topic.data, sizeof(topic),
+                          receiveTopic,receiveTopicLength);
+          copyCStringToPrlString(data.data, sizeof(data),
+                          receiveData,receiveDataLength);
+       mutex.unlock();
    }
 }
 

@@ -27,15 +27,36 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "Character.h"
+#include "Mutex.h"
+
 namespace pearlrt {
 
 /**
  \brief Implementation of Esp32MqttTcpClient 
 
+  Only 1 instance is allowed. 
 */
    class Esp32MqttTcpClient {
     public:
-      Esp32MqttTcpClient(char* brokerIp);
+      Esp32MqttTcpClient(char* brokerIp, uint32_t port);
+      static Esp32MqttTcpClient* getInstance();
+      void publish(Character<40> topic, Character<40> data);
+      void subscribe(Character<40> topic);
+      void readMessage(Character<40> & topic, Character<40> & data);
+      void setClient(void* esp_mqtt_client_handle);
+      uint32_t getPort();
+      void received(size_t tl, char* t, size_t dl, char*d);
+    private:
+      static Esp32MqttTcpClient* instance;
+      // real type is esp_mqtt_client_handle_t, which is a pointer 
+      void * client;
+      uint32_t brokerPort;
+      char* receiveTopic;
+      size_t receiveTopicLength;
+      char* receiveData;
+      size_t receiveDataLength;
+      Mutex mutex;
    };
 }
 
