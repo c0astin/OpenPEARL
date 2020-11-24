@@ -1,0 +1,25 @@
+
+MODULE(mhello);
+
+SYSTEM;
+   stdout: StdOut;
+
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+
+hello: TASK MAIN;
+   DCL (f,g,f2) FIXED INIT(-4,3,0);
+   DCL f1 FLOAT(52);
+   f1 = f / g;
+   f2 = f // g;
+   
+   OPEN termout;
+   !PUT f,'/',g,'=>',fl TO termout BY F(4),A,F(4),A,F(13,6), SKIP;
+   PUT f,' /',g,'=>',f1 TO termout BY F(4),A,F(4),A,F(8,5), SKIP;
+   PUT f,' //',g,'=>',f2 TO termout BY F(4),A,F(4),A,F(6), SKIP;
+   CLOSE termout;
+END;
+
+MODEND;
+
