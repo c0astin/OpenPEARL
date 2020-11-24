@@ -117,6 +117,15 @@ public class Compiler {
             Log.debug("Performing syntax check");
 
             try {
+                /* MS: Replacement for deprecated ANTLRFileStream:
+                CharStream codePointCharStream = CharStreams.fromFileName("myfile.testlang");
+                TESTLANGLexer lexer = new TESTLANGLexer(codePointCharStream);
+                TESTLANGParser parser = new TESTLANGParser(new CommonTokenStream(lexer));
+                parser.addParseListener(new TESTLANGEventListener());
+                // Start parsing
+                parser.testlangFile();
+                */
+
                 lexer = new SmallPearlLexer(new ANTLRFileStream(m_sourceFilename));
             }
             catch(IOException ex) {
