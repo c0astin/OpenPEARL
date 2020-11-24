@@ -1,0 +1,208 @@
+MODULE(DirectFileAccess);
+
+SYSTEM;
+   so: StdOut;
+   disc: Disc('./',1);
+
+PROBLEM;
+   SPC so DATION OUT SYSTEM ALPHIC;
+
+   SPC disc DATION INOUT SYSTEM ALL ;
+   DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED(so);
+   DCL dataFile DATION INOUT FIXED(15) DIM(10,10) DIRECT  CREATED(disc);
+   DCL readFile DATION IN FIXED(15) DIM(*) FORWARD NOCYCL STREAM CREATED(disc);
+   DCL size FIXED INIT(10);
+
+t: TASK MAIN;
+   OPEN terminal;
+   PUT 'Test of direct access operations on a disc file' TO terminal BY A, SKIP;
+   zeroFill;
+   dump; 
+   lineColFill;
+   dump; 
+   colLineFill;
+   dump; 
+   zeroFill;
+   numberedRectanglePos;
+   dump; 
+   zeroFill;
+   numberedRectangleLineCol;
+   dump; 
+   zeroFill;
+   numberedRectangleColLine;
+   dump; 
+   zeroFill;
+   numberedRectangleAdv;
+   dump; 
+   CLOSE terminal;
+END;
+
+zeroFill: PROC;
+   DCL data FIXED(15) INIT(0);
+   DCL d15 FIXED;
+   PUT 'set all elements to 0' TO terminal BY A, SKIP;
+   OPEN dataFile BY IDF('dataFile.bin'), ANY;
+   FOR i TO size REPEAT
+      FOR j TO size REPEAT
+         WRITE data TO dataFile BY POS(i,j);
+      END;
+   END;
+   CLOSE dataFile;
+END;
+
+lineColFill: PROC;
+   DCL data FIXED(15);
+   PUT 'set all elements to 10*line+col' TO terminal BY A, SKIP;
+   OPEN dataFile BY IDF('dataFile.bin'), ANY;
+   FOR i TO size REPEAT
+      FOR j TO size REPEAT
+         data = 10*i+j;
+         WRITE data TO dataFile BY POS(i,j);
+      END;
+   END;
+   CLOSE dataFile;
+END;
+
+colLineFill: PROC;
+   DCL data FIXED(15);
+   PUT 'set all elements to 10*col+line' TO terminal BY A, SKIP;
+   OPEN dataFile BY IDF('dataFile.bin'), ANY;
+   FOR i TO size REPEAT
+      FOR j TO size REPEAT
+         data = 10*i+j;
+         WRITE data TO dataFile BY POS(j,i);
+      END;
+   END;
+   CLOSE dataFile;
+END;
+
+numberedRectanglePos: PROC;
+   DCL data FIXED(15) INIT(1);
+   PUT 'draw line with numbers (line,col): (2,3)-(2,8)-(7,8)-(7,3)-(2-3) with POS'
+     TO terminal BY A, SKIP;
+
+   OPEN dataFile BY IDF('dataFile.bin'), ANY;
+  
+   FOR i FROM 3 TO 8 REPEAT
+      WRITE data TO dataFile BY POS(2,i);
+      data = data + 1;
+   END;
+   FOR i FROM 3 TO 7 REPEAT
+      WRITE data TO dataFile BY POS(i,8);
+      data = data + 1;
+   END;
+   FOR i FROM 7 BY -1 TO 3 REPEAT
+      WRITE data TO dataFile BY POS(7,i);
+      data = data + 1;
+   END;
+   FOR i FROM 6 BY -1 TO 3 REPEAT
+      WRITE data TO dataFile BY POS(i,3);
+      data = data + 1;
+   END;
+   CLOSE dataFile;
+END;
+
+
+numberedRectangleLineCol: PROC;
+   DCL data FIXED(15) INIT(1);
+   PUT 'draw line with numbers (line,col): (2,3)-(2,8)-(7,8)-(7,3)-(2-3) with LINE,COL'
+     TO terminal BY A, SKIP;
+
+   OPEN dataFile BY IDF('dataFile.bin'), ANY;
+  
+   FOR i FROM 3 TO 8 REPEAT
+      WRITE data TO dataFile BY LINE(2),COL(i);
+      data = data + 1;
+   END;
+   FOR i FROM 3 TO 7 REPEAT
+      WRITE data TO dataFile BY LINE(i),COL(8);
+      data = data + 1;
+   END;
+   FOR i FROM 7 BY -1 TO 3 REPEAT
+      WRITE data TO dataFile BY LINE(7),COL(i);
+      data = data + 1;
+   END;
+   FOR i FROM 6 BY -1 TO 3 REPEAT
+      WRITE data TO dataFile BY LINE(i),COL(3);
+      data = data + 1;
+   END;
+   CLOSE dataFile;
+END;
+
+numberedRectangleColLine: PROC;
+   DCL data FIXED(15) INIT(1);
+   PUT 'draw line with numbers (line,col): (2,3)-(2,8)-(7,8)-(7,3)-(2-3) with COL,LINE'
+     TO terminal BY A, SKIP;
+
+   OPEN dataFile BY IDF('dataFile.bin'), ANY;
+  
+   FOR i FROM 3 TO 8 REPEAT
+      WRITE data TO dataFile BY COL(i),LINE(2);
+      data = data + 1;
+   END;
+   FOR i FROM 3 TO 7 REPEAT
+      WRITE data TO dataFile BY COL(8),LINE(i);
+      data = data + 1;
+   END;
+   FOR i FROM 7 BY -1 TO 3 REPEAT
+      WRITE data TO dataFile BY COL(i),LINE(7);
+      data = data + 1;
+   END;
+   FOR i FROM 6 BY -1 TO 3 REPEAT
+      WRITE data TO dataFile BY COL(3),LINE(i);
+      data = data + 1;
+   END;
+   CLOSE dataFile;
+END;
+
+numberedRectangleAdv: PROC;
+   DCL data FIXED(15) INIT(1);
+   DCL (r,c) FIXED(31);
+
+   PUT 'draw line with numbers (line,col): (2,3)-(2,8)-(7,8)-(7,3)-(2-3) with ADV' TO terminal BY A, SKIP;
+   OPEN dataFile BY IDF('dataFile.bin'), ANY;
+  
+   WRITE data TO dataFile BY ADV(1,2),SOP(r,c);
+PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
+   data = data + 1;
+   FOR i FROM 4 TO 8 REPEAT
+      WRITE data TO dataFile BY SOP(r,c);
+PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
+      data = data + 1;
+   END;
+   FOR i FROM 3 TO 7 REPEAT
+      WRITE data TO dataFile BY ADV(1,-1),SOP(r,c);
+PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
+      data = data + 1;
+   END;
+   FOR i FROM 7 BY -1 TO 3 REPEAT
+      WRITE data TO dataFile BY ADV(-2),SOP(r,c);
+PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
+      data = data + 1;
+   END;
+   FOR i FROM 6 BY -1 TO 3 REPEAT
+      WRITE data TO dataFile BY ADV(-1,-1),SOP(r,c);
+PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
+      data = data + 1;
+   END;
+   CLOSE dataFile;
+END;
+
+
+dump: PROC;
+   DCL data FIXED(15);
+
+   PUT 'Matrix is now:' TO terminal BY A, SKIP;
+   OPEN readFile BY IDF('dataFile.bin'), OLD;
+   FOR i TO size REPEAT
+      FOR j TO size REPEAT
+         READ data FROM readFile;
+         PUT data TO terminal BY F(4),X;
+      END;
+      PUT TO terminal BY SKIP;
+   END;
+   CLOSE readFile;
+END;
+
+MODEND;   
+ 
