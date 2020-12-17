@@ -1,0 +1,19 @@
+MODULE(d);
+
+PROBLEM;
+
+x: TASK MAIN;
+
+   DCL f FIXED INIT(2);
+   DCL fl FLOAT INIT(2.0);
+   DCL d DURATION INIT(1 SEC);
+
+   d := fl * d;
+   d := d * fl;
+   d := d / fl;
+   d := f * d;
+   d := d * f;  ! not accepted by the compiler
+   d := d / f;  ! not accepted by the compiler
+END;
+MODEND;
+ 

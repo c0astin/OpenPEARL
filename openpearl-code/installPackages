@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# exit on errors immediatelly
-set -e
 
 if [ `id -u` -ne 0 ]
 then
@@ -254,6 +252,24 @@ then
    SystemKnown=1
 fi
 
+grep "PRETTY_NAME=\"Raspbian GNU/Linux 10 (buster)\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Raspbian 10 buster "
+   AptPackageList+=" default-jdk"    # is open-jdk 11 in buster
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   PackageManager="apt-get"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
+      AptPackageList+=" texlive-latex-extra"
+   fi
+   SystemKnown=1
+fi
+
 if [ "$SystemKnown" -ne "1" ] 
 then
    echo "host linux version not detected"
@@ -263,6 +279,9 @@ fi
 
 echo "required apt-packages"
 echo $AptPackageList
+
+# exit on errors immediatelly
+set -e
 
 if [ "$SystemKnown" -eq "1" ] 
 then

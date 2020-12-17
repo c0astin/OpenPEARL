@@ -1,0 +1,14 @@
+MODULE(d);
+
+PROBLEM;
+
+x: TASK MAIN;
+
+   DCL d DURATION INIT(1 SEC);
+   IF d < -0.001 SEC THEN ; FIN;
+   IF d < -0.0001 SEC THEN ; FIN;
+   IF d < 0.001 SEC THEN ; FIN;
+   IF d < 0.0001 SEC THEN ; FIN;
+END;
+MODEND;
+ 

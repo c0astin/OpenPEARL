@@ -1,4 +1,4 @@
-/*
+	/*
  [The "BSD license"]
  Copyright (c) 2013-2014 Florian Mahlecke
                2014-2019 Rainer Mueller
@@ -229,6 +229,17 @@ namespace pearlrt {
       thus we must unlock it in case of termination.
       */
       void treatCancelIO(void);
+
+      /**
+      delay the current task by the given amount of time.
+      This method must be implemented by the platform specific code
+      in Task.cc
+
+      \param usec  number of micro seconds to delay
+      \return true, if the delay was interrupted<br>
+              false, if the delay passed without disturbion
+      */
+      static bool delayUs(uint64_t usecs);
 
       /**
       the tasks body.

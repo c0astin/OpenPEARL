@@ -128,7 +128,7 @@ namespace pearlrt {
             if (ret < 1) {
                if (errnoCopy == EINTR) {
                   Task::currentTask()->treatCancelIO();
-                  Log::info("StdOut: treatCancelIO finished");
+                  Log::debug("StdOut: treatCancelIO finished");
                } else {
                   // other read errors
                   Log::error("StdOut: error at write (%s)",

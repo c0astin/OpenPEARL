@@ -1,0 +1,4 @@
+MODULE(t);
+PROBLEM;
+DCL  c STRUCT [ a FIXED, b FLOAT, c CHAR(10)] INIT (1,2.0,'3');
+MODEND;

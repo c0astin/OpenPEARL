@@ -257,7 +257,7 @@ endSampling:
 /*
       if (skipSpaces() == 0) {
          discardRemaining();
-         Log::info("F: illegal character in field");
+         Log::error("F: illegal character in field");
          throw theFixedValueSignal;
       }
 */
@@ -651,7 +651,7 @@ endSampling:
 
             if (skipSpaces() == 0) {
                discardRemaining();
-               Log::info("F: illegal character in field");
+               Log::error("F: illegal character in field");
                throw theFixedValueSignal;
             }
 
@@ -707,14 +707,14 @@ endSampling:
         if (readMantissa(&x, width, d) > 0) {
            if (skipSpaces() == 0) {
               discardRemaining();
-              Log::info("F: illegal character in field");
+              Log::error("F: illegal character in field");
               throw theFixedValueSignal;
            }
            value->x = x * sign;
            return;
         } else if (skipSpaces() == 0) {
            discardRemaining();
-           Log::info("F: illegal character in field");
+           Log::error("F: illegal character in field");
            throw theFixedValueSignal;
         } 
      }
@@ -800,7 +800,7 @@ endSampling:
                 }
                 if (skipSpaces() == 0) {
                    discardRemaining();
-                   Log::info("E: illegal character in field");
+                   Log::error("E: illegal character in field");
                    throw theExpValueSignal;
                 }
 
@@ -819,7 +819,7 @@ endSampling:
            }
         }
         discardRemaining();
-        Log::info("E: illegal character in field");
+        Log::error("E: illegal character in field");
         throw theExpValueSignal;
      }
 

@@ -76,20 +76,20 @@ namespace pearlrt {
       sec %= 60;
 
       if (d < 0) {
-         Log::info("decimals must be > 0");
+         Log::error("decimals must be > 0");
          throw theClockFormatSignal;
       }
     
       widthNeeded = 7 + (hours >= 10); 
       if (d == 0) {
          if (widthNeeded > w) {
-            Log::info("T-format: width too small (%d need: %d)", w,widthNeeded);
+            Log::error("T-format: width too small (%d need: %d)", w,widthNeeded);
             throw theClockFormatSignal;
          }
       } else {
          widthNeeded += 1 + d;
          if (widthNeeded > w) {
-            Log::info("T-format: width,decimal mismatch (%d,%d)", w,d);
+            Log::error("T-format: width,decimal mismatch (%d,%d)", w,d);
             throw theClockFormatSignal;
          }
       }

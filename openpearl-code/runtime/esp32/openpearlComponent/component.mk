@@ -1,5 +1,5 @@
 include $(OPENPEARL_DIR)/configuration/.config
-CONFIG_HAS_I2C=n
+CONFIG_HAS_I2C=y
 CONFIG_CANSUPPORT=n
 
 include $(OPENPEARL_DIR)/runtime/common/Files.common
@@ -9,10 +9,13 @@ $(warning $(OPENPEARL_DIR))
 COMPONENT_EXTRA_INCLUDES := . $(OPENPEARL_DIR)/runtime/common \
 	$(OPENPEARL_DIR)/runtime/FreeRTOS/PEARL 
 
-#COMPONENT_PRIV_INCLUDEDIRS := driver/include driver/include/driver
+#COMPONENT_PRIV_INCLUDEDIRS := $(OPENPEARL_DIR)/runtime/common/bosch 
+#driver/include driver/include/driver
+
+COMPONENT_OBJS += Esp32Nvs.o Esp32WifiConfig.o Esp32MqttTcpClient.o
 
 COMMON_SRCS := $(addprefix common/,$(CXX_COMMON))
-COMPONENT_OBJS := $(addsuffix .o,$(basename $(COMMON_SRCS)))
+COMPONENT_OBJS += $(addsuffix .o,$(basename $(COMMON_SRCS)))
 
 COMPONENT_OBJS += main.o  Log.o Esp32Clock.o
 # StdOut.o
@@ -24,7 +27,7 @@ COMPONENT_OBJS += Console.o
 
 $(warning $(COMPONENT_OBJS))
 
-COMPONENT_SRCDIRS := . common
+COMPONENT_SRCDIRS := . common common/bosch
 #$(warning $(COMPONENT_SRCDIRS))
 #$(warning $(COMPONENT_ADD_INCLUDEDIRS))
 

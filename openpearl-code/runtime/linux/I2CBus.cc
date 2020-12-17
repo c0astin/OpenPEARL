@@ -100,7 +100,7 @@ namespace pearlrt {
             if (received < 1) {
                if (errnoCopy == EINTR) {
                   Task::currentTask()->treatCancelIO();
-                  Log::info("I2CBus: treatCancelIO finished");
+                  Log::debug("I2CBus: treatCancelIO finished");
                } else {
                   // other read errors
                   Log::error("I2CBus: error at read (%s)", strerror(errnoCopy));
@@ -152,7 +152,7 @@ namespace pearlrt {
             if (written < 1) {
                if (errnoCopy == EINTR) {
                   Task::currentTask()->treatCancelIO();
-                  Log::info("I2CBus: treatCancelIO finished");
+                  Log::debug("I2CBus: treatCancelIO finished");
                } else {
                   // other write errors
                   Log::error("I2CBus: error at write (%s)", strerror(errnoCopy));

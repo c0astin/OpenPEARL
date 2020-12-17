@@ -63,7 +63,7 @@ namespace pearlrt {
       \param ioPerformingTask pointer to the task which should stop the i/o operation
       */
       void FullDuplexDationAbortNB::terminate(TaskCommon* ioPerformingTask) {
-printf("FullDuplexDationAbort: terminate\n");
+          Log::debug("FullDuplexDationAbort: terminate called");
           if (ioPerformingTask == readingTask) {
              terminateReader(ioPerformingTask);
           } else if (ioPerformingTask == writingTask) {
@@ -76,7 +76,7 @@ printf("FullDuplexDationAbort: terminate\n");
 
 
       void FullDuplexDationAbortNB::suspend(TaskCommon* ioPerformingTask) {
-Log::info("FullDuplexDationAbortNB::suspend called");
+          Log::debug("FullDuplexDationAbortNB::suspend called");
           if (ioPerformingTask == readingTask) {
              suspendReader(ioPerformingTask);
           } else if (ioPerformingTask == writingTask) {

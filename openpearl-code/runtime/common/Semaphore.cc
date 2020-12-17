@@ -100,7 +100,7 @@ namespace pearlrt {
       bd.u.sema.semas = semas;
 
       TaskCommon::mutexLock();
-      Log::info("request from task %s for %d semaphores", me->getName(),
+      Log::debug("request from task %s for %d semaphores", me->getName(),
                 nbrOfSemas);
 
       wouldBlock = check(&(bd.u.sema));
@@ -113,7 +113,7 @@ namespace pearlrt {
          // critival region end
          TaskCommon::mutexUnlock();
       } else {
-         Log::info("   task: %s going to blocked", me->getName());
+         Log::debug("   task: %s going to blocked", me->getName());
          waiters.insert(me);
          // critical region ends in block()
          me->block(&bd);
@@ -159,7 +159,7 @@ namespace pearlrt {
 
             waiters.remove(t);
             t->unblock();
-            Log::info("   unblocking: %s", t->getName());
+            Log::debug("   unblocking: %s", t->getName());
          } else {
             Log::debug("   task %s still blocked", t->getName());
          }

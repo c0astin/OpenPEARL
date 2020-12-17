@@ -1,0 +1,20 @@
+MODULE(m_paritaet);
+SYSTEM;
+  so: StdOut;	! Terminal Ausgabe bei OpenPEARL
+
+PROBLEM;	
+  SPC so DATION OUT SYSTEM ALPHIC;
+
+  DCL stdOut DATION OUT ALPHIC DIM(*,80) FORWARD CREATED (so);
+  
+paritaet: TASK MAIN;   
+
+  DCL (a,b) FIXED INIT(3,4);
+  DCL f FLOAT; 
+  OPEN stdOut;
+  f:= a/b;
+  PUT 'f=',f TO stdOut BY A,E(13,6), SKIP;
+ 
+END;
+
+MODEND;

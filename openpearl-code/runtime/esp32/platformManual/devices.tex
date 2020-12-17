@@ -1,0 +1,383 @@
+
+
+\section{Console (preliminary)}
+The system device \verb|Console| allows adressing in input tasks
+and some system diagnostics.
+
+The device operates upon \verb|StdOut| and \verb|StdIn|. 
+It is recommended that theses devices are not used simultaneously.
+
+\begin{tabular}{ll}
+Synopsis: & \verb|Console| \\
+\end{tabular}
+
+Sample usage:
+\begin{PEARLCode}
+...
+SYSTEM;
+  console: Console;
+
+PROBLEM;
+   SPC console DATION INOUT SYSTEM ALPHIC;
+   DCL con     DATION INOUT ALPHIC DIM(*,80) FORWARD  CREATED(console);
+
+ttt: TASK;
+   PUT 'hallo' TO con BY A, SKIP;
+...
+END;
+
+input1: TASK;
+   DCL x FIXED;
+   ...
+   GET x FROM con BY F(6), SKIP;
+END
+
+input2: TASK;
+   DCL x CHAR(6);
+   ...
+   GET x FROM con BY A(6), SKIP;
+END
+
+...
+\end{PEARLCode}
+
+
+\paragraph{Note:}\ 
+\begin{itemize}
+\item until TFU is supported we must end the format list with SKIP, 
+   which is not allowed in PEARL90
+\item Supported attributes: FORWARD, INOUT
+\item The first input at all must be prefixed with the task name
+ quoted with colons. Eg. \verb|:input1:13|. Otherwise the error message
+ \verb|:???: no default task| is emitted.
+\item subsequent input are directed automatically to the same task
+\item if the adressed task is not waiting for input from the console an
+  error message is shown \verb|:???: not waiting|. The next input must be 
+  prefixed with a task name.
+\item outputs are blocked and queued as long as an input is in progress
+\item system control is possible via input lines startinmg with slash (/).
+  The available commands may be obtained with the command \verb|/HELP|
+\item if adata with leading slash should  be entered to an appilication
+   the taskname must be prefixed quoted with colons (e.g. \verb|:input2:/foo|)
+\item line edit features are supported with 
+   insert on/off, cursor movement left and right, delete, backspace keys
+\item UTF-8 characters are processed. The user is responsible that 
+   the two byte characters are not separated by too small input buffers.
+   Regard, that e.g. the character "a consists of  two characters in the 
+   scope of OpenPEARL.
+\item try \verb|consoleDemo.prl|  in the OpenPEARL demo folder of your installation
+\end{itemize}
+
+
+\section{Esp32WifiConfig}
+\label{esp32wificonfig}
+
+The configuration element Esp32WifiConfig may be used to configure the
+wifi parameters SSID and Password.
+
+Synopsis: \verb|Esp32WifiConfig(ssid,passwd)|
+
+\begin{description}
+\item [ssid] specifies the SSID of the WLAN. If SSID is not empty string, 
+   the system tries to connect to the WLAN. If the connection succeeds, 
+   your may decide to store the parameters in the non volatile storage.
+   If the connection fails or if SSID is empty, you may enter SSID and password
+   and try again.
+\item[passwd] specifies WLAN password. 
+     This is used only if \texttt{ssid} is not empty.
+\end{description}
+
+
+Sample Usage:
+\begin{PEARLCode}
+MODULE(wificonfig);
+SYSTEM;
+   Esp32WifiConfig('mySSID' ,'secret');
+MODEND;
+\end{PEARLCode}
+
+\paragraph{Notes:}\ \\
+\begin{itemize}
+\item It is intended that the wifi configuration is done once for
+  a concrete ESP32-module.
+\item The parameters of the configuration item helps entering 
+  long and difficults access parameters.
+\item The wifi connection must succeed to store the values in the non
+  volatile storage
+\end{itemize}
+
+
+\section{Esp32MqttTcpClient}
+The configuration item Esp32MqttTcpClient provides access to the MQTT implementation of 
+espressiv.
+The Wifi-parameters must have been already stored in the non volatile storage (see \ref{esp32wificonfig})
+
+\begin{tabular}{ll}
+Synopsis: & \verb|Esp32MqttTcpClient(broker_uri, port)| \\
+\end{tabular}
+
+\begin{description}
+\item [broker\_uri] specifies the the uid of the broker, 
+	with the prefix \texttt{mqtt://}
+\item[port] specifies  TCP/IP port number (usually  1883)
+\end{description}
+
+The access to the publish and subscribe methods is provided by functions.
+
+Sample usage:
+\begin{PEARLCode}
+MODULE(mqttDemo);
+SYSTEM;
+   Esp32MqttTcpClient('mqtt://192.168.178.78', 1883);
+   con: Console;
+PROBLEM;
+   SPC con DATION INOUT SYSTEM ALPHIC;
+   DCL console DATION INOUT ALPHIC DIM(*,80) FORWARD
+       STREAM CREATED(con);
+   DCL consoleMutex SEMA PRESET(1);
+
+mqttPublish: PROC(topic CHAR(40) , data CHAR(40) );
+   __cpp__(
+    "pearlrt::Esp32MqttTcpClient* cl = pearlrt::Esp32MqttTcpClient::getInstance();"
+    "cl->publish(_topic, _data);"
+);
+END;
+
+pub: TASK MAIN;
+    DCL topic CHAR(40) INIT('/topic/prl');
+    DCL data CHAR(40);
+    DCL count FIXED INIT(0);
+
+    OPEN console;
+
+    ACTIVATE receiver;
+
+    REPEAT
+       count := count + 1;
+       CONVERT 'count=',count TO data BY A, F(4);
+       REQUEST consoleMutex;
+          PUT 'publish: topic=',topic,' data=',data TO console 
+           BY A,A,SKIP;
+       RELEASE consoleMutex;
+       mqttPublish(topic, data);
+       AFTER 1 SEC RESUME;
+    END;
+END;
+
+receiver: TASK;
+   DCL topic CHAR(40) INIT('/topic/prl');
+   DCL data CHAR(40);
+
+   __cpp__(
+          "pearlrt::Esp32MqttTcpClient* cl = pearlrt::Esp32MqttTcpClient::getInstance();"
+         "cl->subscribe(_topic);"
+   );
+
+   REPEAT
+     __cpp__(
+          "cl->readMessage(_topic, _data);"
+     );
+     REQUEST consoleMutex;
+        PUT 'received topic:',topic,'data: ',data TO console 
+         BY A,A,SKIP,A,A,SKIP;
+     RELEASE consoleMutex;
+   END;
+END;
+MODEND;
+\end{PEARLCode}
+
+\paragraph{Notes:}\ 
+\begin{itemize}
+\item A special task should receive incoming messages.
+   Regard that PEARL stores CHARACTER values which padded spaces to the end.
+\item As long as OpenPEARL does not support multiple modules,
+  the PEARL procedures with \texttt{\_\_cpp\_\_} insertions must be 
+  placed in the application.
+\item only numeric IPv4 adresses are checked up to now
+\item The \texttt{consoleMutex} is required here due to a bug in 
+    the Console-device. This should become resolved soon 
+\item \textit{QoS} and \textit{last will} require detailed tests,
+ which are scheduled.
+ The signature of \texttt{publish} and \texttt{subspribe} 
+is subject of change according the results of the tests.
+\item As soon as the type \texttt{REF CHAR()} is supported by the compiler,
+the interface will become much more flexible instead of the arbitrarily 
+selected type \texttt{CHAR(40)}. 
+\end{itemize}
+
+
+
+\section{Standard Streams: StdIn, StdOut (in development)}
+The system devices \verb|StdIn| and \verb|StdOut| allows simple 
+access to a serial terminal
+
+\begin{tabular}{ll}
+Synopsis: & \verb|StdIn| \\
+          & \verb|StdOut| \\
+  
+\end{tabular}
+
+Sample usage:
+\begin{PEARLCode}
+...
+SYSTEM;
+  stdout: StdOut;
+
+PROBLEM;
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+   DCL con    DATION OUT ALPHIC DIM(*,80) CREATED(stdout);
+
+ttt: TASK;
+   PUT 'hallo' TO con BY A, SKIP;
+...
+END;
+...
+\end{PEARLCode}
+
+\paragraph{Note:}\ 
+\begin{itemize}
+\item Supported attributes: FORWARD, IN, OUT --- IN and OUT depend on the
+particular stream.
+\item Only one system device shall be defined per standard stream to avoid
+intermixing of input and output.
+\end{itemize}
+
+\section{Esp32DigitalOut, Esp32DigitalIn (in planing state)}
+
+The devices Esp32DigitalIn and  Esp32DigitalOut provides 
+an access to digital input and output bits
+on the GPIO-bits of the ESP32.
+
+\begin{tabular}{ll}
+Synopsis: & \verb|Esp32DigitalOut(start, width)| \\
+          & \verb|Esp32DigitalIn(start, width, pud)| \\
+\end{tabular}
+
+\begin{description}
+\item[start] specifies the number of leftmost bit of the group. Valid numbers
+     depend on the model of the raspberry pi. The starting number if
+     the leftmost gpio bit number (large value)
+\item [width] specifies the number of bits which are grouped together.
+     Valid numbers depend on the model of the raspberry pi.
+\item [pud] Pull-up / pull-down configuration.
+    Valid values are 'u' for pull up, 'd' for pull down and 
+    'n' for no pull-up/pull-down resistor. This option is only
+    available for digital inputs. The value of the pull up/down resistor is
+    approx. $50 k \Omega$
+\end{description}
+
+The access to the dation is done by writing a BIT(width)-value to the
+opened dation. 
+Writing other data than BIT-types  may cause a signal, if the size of the
+data does not match the width parameter. 
+
+
+Supported bits:
+\textit{not defined yet}
+
+Sample usage:
+\begin{PEARLCode}
+...
+SYSTEM;
+  led1 : RPiDigitalOut(8,1);
+
+  ! enable the pull-up resistor and connect the switch between 
+  ! GPIO bit 9 and GND
+  switch: Esp32DigitalIn(9,1,'u');
+
+PROBLEM;
+   SPC led1 DATION OUT SYSTEM BASIC BIT(1);
+   DCL uLed DATION OUT BASIC BIT(1) CREATED(led1);
+
+   SPC switch1 DATION IN SYSTEM BASIC BIT(1);
+   DCL uSwitch DATION IN BASIC BIT(1) CREATED(switch1);
+...
+ttt: TASK;
+   DCL b BIT(1);
+
+   OPEN uLed;
+   OPEN uSwitch;
+   TAKE b FROM uSwitch;
+   IF b THEN
+      PUT 'switch is open' TO console BY A, SKIP;
+   ELSE
+      PUT 'switch is set short' TO console BY A, SKIP;
+   FIN;
+   SEND b TO uLed;  ! echo switch status
+...
+END;
+...
+\end{PEARLCode}
+
+\paragraph{Note:}  
+\begin{itemize}
+\item It is checked that a i/o-bit is not used by different declarations within
+one application.
+\end{itemize}
+
+ 
+
+\section{I2CBus}
+The I2C bus support is subject of a thesis work.
+
+
+The system entry for the I2C bus may not be used in the problem part. This element
+provides the access to an I2C bus for the supported I2C devices like 
+PCF8574 or LM75.
+
+\begin{tabular}{ll}
+Synopsis: & \verb|I2CBus(?????)|\\ 
+\end{tabular}
+
+%\begin{description}
+%\item[deviceName] specifies the name to the device file (e.g. '/dev/i2c-0')
+%\end{description}
+
+Sample usage:
+\begin{PEARLCode}
+...
+SYSTEM;
+   led1: PCF8475Out('21'B4, 5,1) --- I2CBus('/dev/i2c-0');
+
+   i2cbus2: I2CBus('/dev/i2c-1');
+   in1: PCF8475In('21'B4,7,1) --- i2cbus2;
+   in2: PCF8475In('21'B4,6,1) --- i2cbus2;
+   in3: PCF8475In('21'B4,5,1) --- i2cbus2;
+   t1: LM75('48'B4) --- i2cbus2;
+   t2: LM75('49'B4) --- i2cbus2;
+...
+\end{PEARLCode}
+
+\paragraph{Note:}
+\begin{itemize}
+\item The I2C bus speed must be set at system level depending on the 
+i2c device module.
+\item if more than one i2c device is used on the same bus, a symbolic
+   links must be used in the system part
+%Some I2C-devices need the {\em repeated start} feature 
+%of the I2C specification.
+%This feature is not supported by all i2c bus drivers. The presence is
+%checked.
+\end{itemize}
+
+
+\section{TCP/IP Server Socket (in planing state)}
+The device provides a TCP/IP server socket.
+
+\begin{tabular}{ll}
+Synopsis: & \verb|TcpIpServerSocket(port)|\\ 
+\end{tabular}
+
+\begin{description}
+\item[port] specifies the port number to listen (e.g. 1234)
+\end{description}
+
+The corresponding user dation starts waiting for one (1) connection with {\em OPEN}.
+Subsequent PUT/GET statements transfer the data between client ansd server.
+The {\em CLOSE} statement terminates the connection.
+
+\paragraph{Note:} The system dation is still experimental. 
+There is no complete error treatment, especially with connection loss due 
+to network issues or remote termination.
+
+

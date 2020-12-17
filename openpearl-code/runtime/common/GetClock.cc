@@ -146,7 +146,7 @@ namespace pearlrt {
       }
 
       if (errorWithLog) {
-         Log::info(logText);
+         Log::error(logText);
       }
 
       throw theClockValueSignal;

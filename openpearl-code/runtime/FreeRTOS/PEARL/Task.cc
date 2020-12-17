@@ -477,5 +477,12 @@ Log::debug("%s: terminateIO called", name);
       mutexUnlock();
    }
 
+   bool Task::delayUs(uint64_t usecs) {
+      TickType_t delay;
+      delay = usecs / portTICK_PERIOD_MS / 1000;
+      vTaskDelay(delay);
+      return false;
+   }
+
 }
 

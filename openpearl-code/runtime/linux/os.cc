@@ -494,12 +494,10 @@ int main() {
 
 
    // setup default log file as defined in linux/Log.cc
+   // or use system part setting for Log
    bool logFromSystemPart = pearlrt::Log::getInstance()->
 		isDefinedInSystemPart();
 
-   //Disc * disc = new Disc("./", 1);
-   //LogFile * logfile = new LogFile(disc, "pearl_log.txt");
-   //new Log(logfile, (char*)"EWDI"); // all levels enabled
 
    scanPearlRc();
    if (pearlRcFileOk == false) {

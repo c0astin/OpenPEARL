@@ -2,7 +2,12 @@
 // PROLOGUE
 /////////////////////////////////////////////////////////////////////////////
 #include <PearlIncludes.h>
-#include <cmath>
+
+namespace pearlrt {
+    extern int createSystemElements();
+}
+
+static int dummy = pearlrt::createSystemElements();
 
 const char* filename = (char*) "RPiGpio.prl";
 
@@ -10,17 +15,31 @@ const char* filename = (char*) "RPiGpio.prl";
 /////////////////////////////////////////////////////////////////////////////
 // CONSTANT POOL
 /////////////////////////////////////////////////////////////////////////////
-static /*const*/ pearlrt::Fixed<1>         CONSTANT_FIXED_POS_0_1(0);
-static /*const*/ pearlrt::Fixed<1>         CONSTANT_FIXED_POS_1_1(1);
-static /*const*/ pearlrt::Fixed<1>         CONSTANT_FIXED_NEG_1_1(-1);
-static /*const*/ pearlrt::Fixed<5>         CONSTANT_FIXED_POS_25_5(25);
-static /*const*/ pearlrt::Fixed<3>         CONSTANT_FIXED_POS_4_3(4);
-static /*const*/ pearlrt::Fixed<5>         CONSTANT_FIXED_POS_27_5(27);
+static /*const*/ pearlrt::Fixed<5>         CONST_FIXED_P_25_5(25);
+static /*const*/ pearlrt::Fixed<3>         CONST_FIXED_P_4_3(4);
+static /*const*/ pearlrt::Fixed<5>         CONST_FIXED_P_27_5(27);
+static /*const*/ pearlrt::Fixed<1>         CONST_FIXED_P_1_1(1);
+static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_P_0_31(0);
+static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_P_1_31(1);
+static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_N_1_31(-1);
+static /*const*/ pearlrt::Fixed<0>         CONST_FIXED_P_0_0(0);
+static /*const*/ pearlrt::Character<1>         CONST_CHARACTER_aebdc9ac_9f68_4d80_83e8_a1524119e52b("u");
+static /*const*/ pearlrt::BitString<1>         CONST_BITSTRING_1(0x1);
+static /*const*/ pearlrt::BitString<1>         CONST_BITSTRING_2(0x0);
+static /*const*/ pearlrt::Duration          CONST_DURATION_P_0_0_1_0(1,0,1);
 
 /////////////////////////////////////////////////////////////////////////////
 // TASK SPECIFIERS
 /////////////////////////////////////////////////////////////////////////////
 SPCTASK(_T1);
+
+/////////////////////////////////////////////////////////////////////////////
+// STRUCTURE FORWARD DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+// STRUCTURE DECLARATIONS
+/////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -30,6 +49,7 @@ SPCTASK(_T1);
 /////////////////////////////////////////////////////////////////////////////
 // PROBLEM PART
 /////////////////////////////////////////////////////////////////////////////
+
 
 /////////////////////////////////////////////////////////////////////////////
 // DATION SPECIFICATIONS
@@ -47,30 +67,35 @@ static pearlrt::SystemDationB* _bito = static_cast<pearlrt::SystemDationB*>(d_bi
 /////////////////////////////////////////////////////////////////////////////
 pearlrt::DationTS _taste(_biti, pearlrt::Dation::IN );
 
+
 pearlrt::DationTS _led(_bito, pearlrt::Dation::OUT );
 
 
+
 /////////////////////////////////////////////////////////////////////////////
-// TEMPORARY SEMAPHORE ARRAYS
+// CONSTANT SEMAPHORE ARRAYS
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+// CONSTANT BOLT ARRAYS
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+// ARRAY DESCRIPTORS
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
 // TASK DECLARATIONS
 /////////////////////////////////////////////////////////////////////////////
 DCLTASK(_T1, (pearlrt::Prio( (pearlrt::Fixed<15>)255)), ((pearlrt::BitString<1>)1)) {
-        #warning __cpp__ inline inserted
-        pearlrt::BitString<1> _on(1);
+        pearlrt::BitString<1>  _on(CONST_BITSTRING_1); 
+
+        pearlrt::BitString<1>  _off(CONST_BITSTRING_2); 
+
+        pearlrt::BitString<4>  _work; 
 
 
-        #warning __cpp__ inline inserted
-        pearlrt::BitString<1> _off(0);
-
-
-        #warning __cpp__ inline inserted
-        pearlrt::BitString<5> _work(1);
-
-
-        me->setLocation(28, filename);
+        me->setLocation(26, filename);
         {
             _taste.dationOpen(
                 0
@@ -79,7 +104,8 @@ DCLTASK(_T1, (pearlrt::Prio( (pearlrt::Fixed<15>)255)), ((pearlrt::BitString<1>)
             );
         }
 
-        me->setLocation(29, filename);
+
+        me->setLocation(27, filename);
         {
             _led.dationOpen(
                 0
@@ -88,43 +114,55 @@ DCLTASK(_T1, (pearlrt::Prio( (pearlrt::Fixed<15>)255)), ((pearlrt::BitString<1>)
             );
         }
 
-        me->setLocation(30, filename);
+
+        me->setLocation(28, filename);
         {
                 while ( 1 )
                 {
 
-                    me->setLocation(32, filename);
-                    // SEND STATEMENT BEGIN
-                    try {
-                        _led.beginSequence(me);
-                        _led.dationWrite(&_work, sizeof(_work));
-                        _led.endSequence();
-                    }
-                    catch(pearlrt::Signal &s) {
-                        if ( ! _led.updateRst(&s) ) {
-                            _led.endSequence();
-                            throw;
-                        }
-                        _led.endSequence();
-                    }
-                    // SEND STATEMENT END
-
-                    me->setLocation(33, filename);
-                        me->resume( pearlrt::Task::AFTER,
-                                    /* at     */  pearlrt::Clock(),
-                                    /* after  */  pearlrt::Duration(1.0)
-                                  );
-
-                    #warning __cpp__ inline inserted
-                    _work = _work.bitCshift(1);
+                     
+                                   me->setLocation(30, filename);
+                                   // send statement 
+                                   {
 
 
-                    me->setLocation(34, filename);
+                                      pearlrt::IODataEntry dataEntries[]  = {
+                                        {
+                                           .dataType={pearlrt::IODataEntry::BIT,4},
+                                           .dataPtr={.outData=&_work},
+                                           .param1={.numberOfElements = 1}
+                                        }
+                                      };
+
+                                      pearlrt::IODataList dataList = {
+                                        .nbrOfEntries=sizeof(dataEntries)/sizeof(dataEntries[0]),
+                                        .entry=dataEntries};
+                                   pearlrt::IOFormatList formatList = {
+                                   .nbrOfEntries=0,
+                                        .entry=NULL};
+
+                                     _led.send(me, &dataList , &formatList);
+                                   }
+
+
+                                   me->setLocation(31, filename);
+                                       me->resume( pearlrt::Task::AFTER,
+                                             /* at     */  pearlrt::Clock(),
+                                             /* after  */  CONST_DURATION_P_0_0_1_0,
+                                   	  /* when   */  0
+                                              );
+
+
+
+                                   me->setLocation(32, filename);
+                                   _work = _work.bitCshift(CONST_FIXED_P_1_1);
 
 
                 }
 
         }
+
+
 }
 
 

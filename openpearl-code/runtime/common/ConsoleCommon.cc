@@ -274,7 +274,7 @@ namespace pearlrt {
                   putChar(BEL);
                }
             } else {
-               Log::info("ConsoleCommon::character %x found - not treated yet",
+               Log::warn("ConsoleCommon::character %x found - not treated yet",
                          ch & 0x0ff);
             }
 

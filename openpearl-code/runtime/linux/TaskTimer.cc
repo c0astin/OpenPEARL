@@ -216,7 +216,7 @@ namespace pearlrt {
 
    int TaskTimer::start() {
       counts = countsBackup;   // restore number for triggeredActivate
-      Log::info("%s: TaskTimer::start", task->getName());
+      Log::debug("%s: TaskTimer::start", task->getName());
 
       if (its.it_value.tv_sec != 0 || its.it_value.tv_nsec != 0) {
          if (timer_settime(timer, 0, &its, NULL) == -1) {
