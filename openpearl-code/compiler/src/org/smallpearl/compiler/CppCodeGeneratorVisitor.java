@@ -3471,6 +3471,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         if (ctx.startConditionWHEN() != null) {
           st.add("Condition", "WHEN");
           st.add("when", visitAndDereference(ctx.startConditionWHEN().name()));
+          // check for AFTER
+          if (ctx.startConditionWHEN().expression()!= null) {
+              st.add("Condition", "AFTER");
+              st.add("after", visitAndDereference(ctx.startConditionWHEN().expression()));
+            
+          }
         }
       }
     }
