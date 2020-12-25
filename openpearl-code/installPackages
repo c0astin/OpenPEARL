@@ -169,6 +169,7 @@ then
    AptPackageList+=" gcc g++ git make gawk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" zlib1g-dev"
    PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
@@ -198,7 +199,7 @@ then
    SystemKnown=1
 fi
 
-grep "PRETTY_NAME=\"Debian GNU/Linux 9 \(stretch\)\"" /etc/os-release >/dev/null
+grep "PRETTY_NAME=\"Debian GNU/Linux 9 (stretch)\"" /etc/os-release >/dev/null
 rc=$?
 if [ $rc -eq 0 ]
 then
@@ -207,6 +208,7 @@ then
    AptPackageList+=" gcc g++ git make gawk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" zlib1g-dev"
    PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
@@ -223,6 +225,7 @@ then
    AptPackageList+=" openjdk-7-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" zlib1g-dev"
    PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
