@@ -667,7 +667,7 @@ namespace pearlrt {
            char num[5]; // max cores in kernel are 1024 
            for (int i=0; i<numberOfCores; i++) {
               if (CPU_ISSET_S(i,CPU_ALLOC_SIZE(numberOfCores),set)) {
-                 sprintf(num,"%d,", i);
+                 snprintf(num,sizeof(num),"%d,", i);
                  if (strlen(setAsText)+strlen(num) < size) {
                    strcat(setAsText,num);
                  }
