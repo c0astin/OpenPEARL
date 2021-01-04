@@ -1,0 +1,23 @@
+MODULE(RPiTInt);
+
+SYSTEM;
+  so: StdOut;
+  int1: RPiGpioInterrupt(20);
+PROBLEM;
+
+   SPC so DATION OUT SYSTEM ALPHIC;
+   DCL stdout DATION OUT ALPHIC  DIM(*,80) FORWARD CREATED(so);
+   SPC int1 INTERRUPT;
+
+
+t1: TASK MAIN;
+   OPEN stdout;
+   ENABLE int1;
+   REPEAT 
+      PUT 'wait for interrupt' TO stdout BY A, SKIP;
+      WHEN int1 RESUME;
+      PUT 'received int1' TO stdout BY A, SKIP;
+   END;
+END;
+
+MODEND;

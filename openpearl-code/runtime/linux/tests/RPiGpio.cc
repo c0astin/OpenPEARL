@@ -15,18 +15,16 @@ const char* filename = (char*) "RPiGpio.prl";
 /////////////////////////////////////////////////////////////////////////////
 // CONSTANT POOL
 /////////////////////////////////////////////////////////////////////////////
-static /*const*/ pearlrt::Fixed<5>         CONST_FIXED_P_25_5(25);
-static /*const*/ pearlrt::Fixed<3>         CONST_FIXED_P_4_3(4);
-static /*const*/ pearlrt::Fixed<5>         CONST_FIXED_P_27_5(27);
+static /*const*/ pearlrt::Fixed<5>         CONST_FIXED_P_21_5(21);
 static /*const*/ pearlrt::Fixed<1>         CONST_FIXED_P_1_1(1);
+static /*const*/ pearlrt::Fixed<5>         CONST_FIXED_P_27_5(27);
 static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_P_0_31(0);
 static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_P_1_31(1);
 static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_N_1_31(-1);
 static /*const*/ pearlrt::Fixed<0>         CONST_FIXED_P_0_0(0);
-static /*const*/ pearlrt::Character<1>         CONST_CHARACTER_aebdc9ac_9f68_4d80_83e8_a1524119e52b("u");
+static /*const*/ pearlrt::Character<1>         CONST_CHARACTER_5af228e0_7ca3_418d_9bf8_4b3f99a59f10("u");
 static /*const*/ pearlrt::BitString<1>         CONST_BITSTRING_1(0x1);
 static /*const*/ pearlrt::BitString<1>         CONST_BITSTRING_2(0x0);
-static /*const*/ pearlrt::Duration          CONST_DURATION_P_0_0_1_0(1,0,1);
 
 /////////////////////////////////////////////////////////////////////////////
 // TASK SPECIFIERS
@@ -92,7 +90,7 @@ DCLTASK(_T1, (pearlrt::Prio( (pearlrt::Fixed<15>)255)), ((pearlrt::BitString<1>)
 
         pearlrt::BitString<1>  _off(CONST_BITSTRING_2); 
 
-        pearlrt::BitString<4>  _work; 
+        pearlrt::BitString<1>  _work; 
 
 
         me->setLocation(26, filename);
@@ -128,7 +126,7 @@ DCLTASK(_T1, (pearlrt::Prio( (pearlrt::Fixed<15>)255)), ((pearlrt::BitString<1>)
 
                                       pearlrt::IODataEntry dataEntries[]  = {
                                         {
-                                           .dataType={pearlrt::IODataEntry::BIT,4},
+                                           .dataType={pearlrt::IODataEntry::BIT,1},
                                            .dataPtr={.outData=&_work},
                                            .param1={.numberOfElements = 1}
                                         }
@@ -145,17 +143,8 @@ DCLTASK(_T1, (pearlrt::Prio( (pearlrt::Fixed<15>)255)), ((pearlrt::BitString<1>)
                                    }
 
 
-                                   me->setLocation(31, filename);
-                                       me->resume( pearlrt::Task::AFTER,
-                                             /* at     */  pearlrt::Clock(),
-                                             /* after  */  CONST_DURATION_P_0_0_1_0,
-                                   	  /* when   */  0
-                                              );
-
-
-
                                    me->setLocation(32, filename);
-                                   _work = _work.bitCshift(CONST_FIXED_P_1_1);
+                                   _work = _work.bitNot();
 
 
                 }
