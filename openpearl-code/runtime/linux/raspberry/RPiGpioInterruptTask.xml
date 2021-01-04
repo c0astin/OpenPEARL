@@ -1,0 +1,7 @@
+   <configuration name="RPiGpioInterruptTask">
+      <parameters>
+      </parameters>
+       <checks>
+        <check instances="oncePerSet" set="RPiGpioInterruptTask" />
+      </checks>
+   </configuration>

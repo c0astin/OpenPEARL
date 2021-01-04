@@ -166,8 +166,14 @@ ifeq ($(CONFIG_LINUX_Raspberry),y)
    SRCANDH += raspberry/RPiGpio.cc
    SRCANDH += raspberry/RPiDigitalOut.cc
    SRCANDH += raspberry/RPiDigitalIn.cc
+   SRCANDH += raspberry/RPiGpioInterrupt.cc
+   SRCANDH += raspberry/RPiGpioInterruptHandler.cc
+   SRCANDH += raspberry/RPiGpioInterruptTask.cc
    XML_FILES += raspberry/RPiDigitalOut_$(rpiVersion).xml
    XML_FILES += raspberry/RPiDigitalIn_$(rpiVersion).xml
+   XML_FILES += raspberry/RPiGpioInterrupt.xml
+   XML_FILES += raspberry/RPiGpioInterruptTask.xml
+   LDLIBS += -l gpiod
 
    # create pseudo device for reserved bits of devices or for other applications
    # this option is set by menueconfig; we just add a phony target ad do the 

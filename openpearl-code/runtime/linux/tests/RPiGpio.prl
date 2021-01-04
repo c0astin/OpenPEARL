@@ -1,7 +1,7 @@
 MODULE(RPiGpio);
 
 SYSTEM;
-bito: RPiDigitalOut(25,4);
+bito: RPiDigitalOut(21,1);
 biti: RPiDigitalIn(27,1,'u');
 
 /*
@@ -14,22 +14,22 @@ __cpp__(
 */
 PROBLEM;
    SPC biti DATION IN SYSTEM BASIC BIT(1);
-   SPC bito DATION OUT SYSTEM BASIC BIT(4);
+   SPC bito DATION OUT SYSTEM BASIC BIT(1);
 
    DCL taste DATION IN BASIC BIT(1) CREATED(biti);
-   DCL led DATION OUT BASIC BIT(4) CREATED(bito);
+   DCL led DATION OUT BASIC BIT(1) CREATED(bito);
 
 T1: TASK MAIN;
    DCL on BIT(1) INIT ('1'B1);
    DCL off BIT(1) INIT ('0'B1);
-   DCL work BIT(4);
+   DCL work BIT(1);
    OPEN taste;
    OPEN led;
    REPEAT
 !      TAKE  work FROM taste;
       SEND  work TO led;
-      AFTER 1 SEC RESUME;
-      work := work CSHIFT 1;
+!      AFTER 1 SEC RESUME;
+      work := NOT work ;
    END;
 END;
 

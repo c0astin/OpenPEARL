@@ -1,0 +1,10 @@
+   <interrupt name="RPiGpioInterrupt">
+      <parameters>
+         <FIXED length="31" name="gpiobit">
+             <FIXEDRANGE>2,27</FIXEDRANGE> 
+         </FIXED>
+      </parameters>
+       <checks>
+        <check pinDoesNotCollide="RPiGPIO" start="$gpiobit" width="1" />
+      </checks>
+   </interrupt>

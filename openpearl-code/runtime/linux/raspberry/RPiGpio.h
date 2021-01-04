@@ -46,6 +46,23 @@ namespace pearlrt {
       RPiGpio();
       volatile uint32_t *gpio_map;
 
+      /**
+      test if gpio bit is set as alternate function
+      this would conflict with usage as digila in, out or interrupt
+
+      \param gpioNum is the numbe of the gpio-pin; only 0..31 are supporteded
+      */
+      void checkAlternateFunction(int gpioNum);
+
+
+      /**
+       set pullup/down or none for the iven gpio bit
+       emmits error if pulldown is selected for i2c-lines
+       \param gpio gpio bit number (0..31)
+       \param pullUpDownFlag as #defined in RPiGpio.cc
+      */
+      void setupPullUpDown(int gpio, int pullUpDownFlag); 
+
    public:
       /**
          supported modes of the i/o-usage

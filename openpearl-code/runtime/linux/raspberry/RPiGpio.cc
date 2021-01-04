@@ -86,104 +86,90 @@ namespace pearlrt {
    RPiGpio::RPiGpio() {
       int mem_fd;
 
-      availableBits = 0;
 #if defined(CONFIG_LINUX_Raspberry_Version_V1B)
-      // version 1 model B
-      // available GPIO bits on RPi
-      // Rev 2 P1 : 2,3,4,7,8,9,10,11,14,15,17,18,21,22,23,24,25,27
-      //       bit31-+                                     +-bit0
-      //     mask:   0000 1011 1110 0110 1100 1111 1001 1100
-      // Rev 2 P5:  28,29,30,31
-      //     mask:   1111 0000 0000 0000 0000 0000 0000 0000
-      // used by: serial port: 14,15
-      //             0000 0000 0000 0000 1100 0000 0000 0000
-      availableBits = 0x0fBE60F9c;
 #elif defined(CONFIG_LINUX_Raspberry_Version_V2B)
-      // version 2 model b
-      // bit 2-27 are available
-      // used by: serial port: 14,15
-      //             0000 0000 0000 0000 1100 0000 0000 0000
-      availableBits = 0x0fff3ffc;
 #elif defined(CONFIG_LINUX_Raspberry_Version_V3B)
-      // version 3 model b
-      // bit 2-27 are available
-      // used by: serial port: 14,15
-      //             0000 0000 0000 0000 1100 0000 0000 0000
-      availableBits = 0x0fff3ffc;
 #else
 #error "Raspberry Pi version not set"
 #endif
 
       // try /dev/gpiomem  - this does not require root privs
+      // the current user should be in the group gpio
       if ((mem_fd = open("/dev/gpiomem", O_RDWR | O_SYNC)) > 0) {
          gpio_map = (uint32_t *)mmap(NULL, BLOCK_SIZE,
                                      PROT_READ | PROT_WRITE,
                                      MAP_SHARED, mem_fd, 0);
 
          if ((void*)gpio_map == MAP_FAILED) {
-            Log::error("could not map GPIO registers");
-            throw theInternalDationSignal;
+            Log::error("RPiGpio: could not map GPIO registers");
+            throw theInternalConfigurationSignal;
          }
       } else {
-         Log::error("could not open /dev/gpiomem");
-         throw theInternalDationSignal;
+         Log::error("RPiGpio: could not open /dev/gpiomem");
+         throw theInternalConfigurationSignal;
       }
 
       // after mmap, we do not need the devce file open
       close(mem_fd);
    }
 
+   void RPiGpio::checkAlternateFunction(int gpio) {
+      int offset = FSEL_OFFSET + (gpio / 10);
+      int shift = (gpio % 10) * 3;
+
+      int mode = gpio_map[offset]>>shift;
+      mode &= 0x07;
+      if (mode & 0x40 ) {
+         Log::error("RPiGpio: bit %d is set as alternate function",
+                       gpio);
+         throw theInternalConfigurationSignal;
+      }
+   }
+
+   void RPiGpio::setupPullUpDown(int gpio, int pullUpDownMode) {
+      #if defined(CONFIG_LINUX_Raspberry_Version_V1B)
+         if (pullUpDownMode == PUD_DOWN && (gpio == 0 || gpio == 1)) {
+            Log::error("RPiGio: pin %d has external pull-up;"
+                       " setting with pull down is riduculous", gpio);
+            throw theInternalDationSignal;
+         }
+      #else
+         if (pullUpDownMode == PUD_DOWN && (gpio == 2 || gpio == 3)) {
+            Log::error("RPiGpio: pin %d has external pull-up; setting with pull down is riduculous", gpio);
+            throw theInternalDationSignal;
+         }
+      #endif
+
+      gpio_map[PULLUPDN_OFFSET] &= ~ 3;
+      gpio_map[PULLUPDN_OFFSET] |= pullUpDownMode;
+      short_wait();
+      gpio_map[PULLUPDNCLK_OFFSET] = 1 << gpio;
+      short_wait();
+      gpio_map[PULLUPDN_OFFSET] &= ~ 3;
+      gpio_map[PULLUPDNCLK_OFFSET] = 0;
+   }
 
    void RPiGpio::useBits(int start, int width,
                          RPiGpioMode direction, RPiGpioPud pud) {
-      // simple implemention for gpio bits 2-27
+      // simple implemention for gpio bits 0-31
+      // pin conflicts are detected by the IMC
+
       int gpio;
 
       for (gpio = start; gpio > start - width; gpio--)  {
-         if ((availableBits & (1 << gpio)) == 0) {
-            Log::error("RPiGpio: bit %d is multiple used or not available",
-                       gpio);
-            throw theDationParamSignal;
-         }
 
-         availableBits &= ~(1 << gpio);
-      }
-
-      for (gpio = start; gpio > start - width; gpio--)  {
          int offset = FSEL_OFFSET + (gpio / 10);
          int shift = (gpio % 10) * 3;
 
-         int clk_offset = PULLUPDNCLK_OFFSET;
+         checkAlternateFunction(gpio); // will abort with exception, if is AF
 
-         switch (pud) {
-         case NONE:
-            *(gpio_map + PULLUPDN_OFFSET) &= ~3;
-            break;
-
-         case DOWN:
-            *(gpio_map + PULLUPDN_OFFSET) =
-               (*(gpio_map + PULLUPDN_OFFSET) & ~3) | PUD_DOWN;
-            break;
-
-         case UP:
-            *(gpio_map + PULLUPDN_OFFSET) =
-               (*(gpio_map + PULLUPDN_OFFSET) & ~3) | PUD_UP;
-
-            break;
-         }
-
-         short_wait();
-         *(gpio_map + clk_offset) = 1 << (gpio % 32);
-         short_wait();
-         *(gpio_map + PULLUPDN_OFFSET) &= ~3;
-         *(gpio_map + clk_offset) = 0;
-
+         // preset as input
+	 gpio_map[offset] &= ~(7<<shift);
          if (direction == DIGOUT) {
-            *(gpio_map + offset) =
-               (*(gpio_map + offset) & ~(7 << shift)) | (1 << shift);
+           gpio_map[offset] |= (1<<shift);  // set as output
+           setupPullUpDown(gpio, PUD_OFF); 
          } else {  // direction == INPUT
-            *(gpio_map + offset) =
-               (*(gpio_map + offset) & ~(7 << shift));
+           setupPullUpDown(gpio, pud);
          }
       }
    }
@@ -210,11 +196,11 @@ namespace pearlrt {
       }
 
       if (maskClr) {
-         *(gpio_map + CLR_OFFSET) = maskClr;
+         gpio_map[CLR_OFFSET] = maskClr;
       }
 
       if (maskSet) {
-         *(gpio_map + SET_OFFSET) = maskSet;
+         gpio_map[SET_OFFSET] = maskSet;
       }
    }
 
@@ -227,7 +213,7 @@ namespace pearlrt {
       mask >>= width;
       mask = ~mask;
 
-      value = *(gpio_map + PINLEVEL_OFFSET);
+      value = gpio_map[PINLEVEL_OFFSET];
       value <<= 31 - start;   // bits are numbered 31 .. 0
       value &= mask;
 

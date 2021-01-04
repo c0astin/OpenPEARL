@@ -120,6 +120,8 @@ Only this file mus be included.
 #ifdef CONFIG_LINUX_Raspberry
 #include "RPiDigitalOut.h"
 #include "RPiDigitalIn.h"
+#include "RPiGpioInterrupt.h"
+#include "RPiGpioInterruptTask.h"
 #endif
 
 #include "I2CBus.h"
