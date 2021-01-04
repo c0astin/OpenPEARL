@@ -62,6 +62,8 @@ int setup(void)
         } else {
             return SETUP_OK;
         }
+    } else {
+       perror("open gpiomem");
     }
 }
 
@@ -122,14 +124,15 @@ int input_gpio(int gpio)
 }
 
 main() {
+  int pin=21;
   setup();
 
-  setup_gpio(10, OUTPUT, PUD_OFF);
+  setup_gpio(pin, OUTPUT, PUD_OFF);
   while (1) {
 //sleep(1);
-     output_gpio(10,1);      
+     output_gpio(pin,1);      
 //sleep(1);
-     output_gpio(10,0);      
+     output_gpio(pin,0);      
   }
 }
 
