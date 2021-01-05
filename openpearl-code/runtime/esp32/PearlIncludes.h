@@ -84,6 +84,7 @@ Only this file mus be included.
 #include "DationDim1.h"
 #include "DationDim2.h"
 #include "DationDim3.h"
+#include "TFURecord.h"
 #include "Semaphore.h"
 #include "Bolt.h"
 
