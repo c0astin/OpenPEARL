@@ -333,8 +333,7 @@ namespace pearlrt {
       /**
         position to the given first poistion of the given row
  
-        \param element contains current position of element after
-               execution
+        \param r contains current position after execution
 
         \throws InternalDationSignal if the dimension of the dation is
                 smaller than three, or if the dation is not DIRECT
