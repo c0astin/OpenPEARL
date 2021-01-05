@@ -51,7 +51,9 @@ namespace pearlrt {
       char ch;
       ch = x / 10 + '0';
 
-      if (!suppressLeadingZero || ch != '0') {
+      if (suppressLeadingZero && ch == '0') {
+         sink.putChar(' ');
+      } else {
          sink.putChar(ch);
       }
 
@@ -80,7 +82,7 @@ namespace pearlrt {
          throw theClockFormatSignal;
       }
     
-      widthNeeded = 7 + (hours >= 10); 
+      widthNeeded = 8; 
       if (d == 0) {
          if (widthNeeded > w) {
             Log::error("T-format: width too small (%d need: %d)", w,widthNeeded);
