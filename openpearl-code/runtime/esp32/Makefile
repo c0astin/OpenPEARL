@@ -216,7 +216,6 @@ install: all cc_bin run_bin
 	#Find and copy all predefined linker files
 	@find $(ESP_IDF_PATH)/components/ -regex ".*\.ld" -exec cp {} $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32 \;
 	cp esp-idf-project/build/bootloader/bootloader.bin $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
-	cp esp-idf-project/build/partitions_singleapp.bin $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
 	@cp esp32.xml $(CONFIG_INSTALL_Target)/lib
 
 ####### TODO 
