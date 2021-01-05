@@ -752,28 +752,60 @@ namespace pearlrt {
 
    \param lhs the first parameter of the comparison
    \param rhs the second parameter of the comparison
-   \returns '1'B1, if both pointer are identical
+   \returns '1'B1, if both objects are identical
    */
    template <class C>
    BitString<1> operator== (const Ref<C> & lhs,
                             const Ref<C> & rhs) {
       return BitString<1>(lhs.x == rhs.x);
    }    
+
+   /**
+   compare equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are identical
+   */
    template <class C>
    BitString<1> operator== (const C & lhs,
                             const Ref<C> & rhs) {
       return BitString<1>(&lhs == rhs.x);
    }    
+
+   /**
+   compare equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are identical
+   */
    template <class C>
    BitString<1> operator== (const Ref<C> & lhs,
                             const C & rhs) {
       return BitString<1>(lhs.x == &rhs);
    }    
+
+   /**
+   compare equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are identical
+   */
    template <class C>
    BitString<1> operator== (const Ref<char> & lhs,
                             const Ref<C> & rhs) {
       return BitString<1>((C*)(lhs.x) == rhs.x);
    }    
+
+   /**
+   compare equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are identical
+   */
    template <class C>
    BitString<1> operator== (const Ref<C> & lhs,
                             const Ref<char> & rhs) {
@@ -785,28 +817,60 @@ namespace pearlrt {
 
    \param lhs the first parameter of the comparison
    \param rhs the second parameter of the comparison
-   \returns '1'B1, if both pointer are not identical
+   \returns '1'B1, if both objects are not identical
    */
    template <class C>
    BitString<1> operator!= (const Ref<C> & lhs,
                             const Ref<C> & rhs) {
       return BitString<1>(lhs.x != rhs.x);
    }    
+
+   /**
+   compare not equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are not identical
+   */
    template <class C>
    BitString<1> operator!= (const C & lhs,
                             const Ref<C> & rhs) {
       return BitString<1>(&lhs != rhs.x);
    }    
+
+   /**
+   compare not equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are not identical
+   */
    template <class C>
    BitString<1> operator!= (const Ref<C> & lhs,
                             const C & rhs) {
       return BitString<1>(lhs.x != &rhs);
    }    
+
+   /**
+   compare not equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are not identical
+   */
    template <class C>
    BitString<1> operator!= (const Ref<char> & lhs,
                             const Ref<C> & rhs) {
       return BitString<1>((C*)(lhs.x) != rhs.x);
    }    
+
+   /**
+   compare not equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are not identical
+   */
    template <class C>
    BitString<1> operator!= (const Ref<C> & lhs,
                             const Ref<char> & rhs) {
@@ -824,18 +888,34 @@ namespace pearlrt {
 
    \param lhs the first parameter of the comparison
    \param rhs the second parameter of the comparison
-   \returns '1'B1, if both pointer are identical
+   \returns '1'B1, if both objects are identical
    */
    template <class C>
    BitString<1> operator== (const RefArray<C> & lhs,
                             const RefArray<C> & rhs) {
       return BitString<1>(lhs.data == rhs.data && lhs.descriptor == rhs.descriptor);
-   }    
+   }
+
+   /**
+   compare equal operation
+
+   \param lhs the first parameter of the comparison is NIL
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are identical
+   */
    template <class C>
    BitString<1> operator== (const Ref<char> & lhs,
                             const RefArray<C> & rhs) {
       return BitString<1>(rhs.data == NULL && rhs.descriptor == NULL);
-   }    
+   }
+    
+   /**
+   compare equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison is NIL
+   \returns '1'B1, if both objects are identical
+   */
    template <class C>
    BitString<1> operator== (const RefArray<C> & lhs,
                             const Ref<char> & rhs) {
@@ -847,18 +927,34 @@ namespace pearlrt {
 
    \param lhs the first parameter of the comparison
    \param rhs the second parameter of the comparison
-   \returns '1'B1, if both pointer are not identical
+   \returns '1'B1, if both objects are not identical
    */
    template <class C>
    BitString<1> operator!= (const RefArray<C> & lhs,
                             const RefArray<C> & rhs) {
       return BitString<1>(lhs.data != rhs.data || lhs.descriptor != rhs.descriptor);
    }    
+
+   /**
+   compare not equal operation
+
+   \param lhs the first parameter of the comparison, is NIL
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are not identical
+   */
    template <class C>
    BitString<1> operator!= (const Ref<char> & lhs,
                             const RefArray<C> & rhs) {
       return BitString<1>(rhs.data != NULL || rhs.descriptor != NULL);
-   }    
+   } 
+
+   /**
+   compare not equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison, is NIL
+   \returns '1'B1, if both pointer are not identical
+   */
    template <class C>
    BitString<1> operator!= (const RefArray<C> & lhs,
                             const Ref<char> & rhs) {

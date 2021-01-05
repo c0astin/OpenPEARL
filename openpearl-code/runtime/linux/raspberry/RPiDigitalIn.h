@@ -43,6 +43,10 @@
 
 
 namespace pearlrt {
+   /**
+   \addtogroup io_linux_driver
+   @{
+   */
 
    /**
    \file
@@ -84,6 +88,7 @@ namespace pearlrt {
       \param idf pointer to IDF-value if given
       \throws DationParamSignal, if  open  parameters were specified
       \throws OpenFailedSignal, if  dation is not closed and rst is not given
+      \returns the pointer to the object
       */
       SystemDationB* dationOpen(const char * idf = 0, int openParam = 0);
 
@@ -132,6 +137,8 @@ namespace pearlrt {
 
    };
 
+   /** @} */
+   
 
 }
 #endif

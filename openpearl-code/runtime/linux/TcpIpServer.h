@@ -91,7 +91,11 @@ namespace pearlrt {
         bool translateNewLineFlag;
    public:
 
-      
+      /**
+       constructor for the TcpIpServer dation
+
+       \param port TCP/IP port number for the server
+      */      
       TcpIpServer(const int port);
 
      

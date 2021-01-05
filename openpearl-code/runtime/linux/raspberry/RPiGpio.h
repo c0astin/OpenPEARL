@@ -35,7 +35,14 @@
 namespace pearlrt {
 
    /**
-   helper class for access to the gpio bits ofthe raspberry pi
+   \addtogroup io_linux_driver
+   @{
+   */
+
+   /**
+   helper class for access to the gpio bits of the raspberry pi
+
+   this class provides access to pull-up/-down and edge detection registers
 
    note that the broadcom gpio supports write access to output only
    with set and clear bit - thus no mutex protection is needed at this level.
@@ -73,9 +80,17 @@ namespace pearlrt {
          </ul>
       */
       enum RPiGpioMode {DIGOUT, DIGIN};
+
+      /** selectors for pull-up or pull-down */
       enum RPiGpioPud {NONE, DOWN, UP};
 
+      /**
+      the RPiGpio class operates as singleton
+
+      \returns a pointer to the existing/created object
+      */
       static RPiGpio* instance();
+
       /**
       set gpio direction
 
@@ -117,5 +132,6 @@ namespace pearlrt {
 
    public:
    };
+   /** @} */
 }
 #endif

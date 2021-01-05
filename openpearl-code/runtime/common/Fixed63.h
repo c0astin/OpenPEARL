@@ -93,34 +93,179 @@ namespace pearlrt {
       static const Fixed63_t MinInt = 0x8000000000000000LL;
       static const Fixed63_t MaxInt = 0x7fffffffffffffffLL;
    public:
+
+      /**
+         construct to zero
+      */
       Fixed63();
+
+      /**
+         construct with given value
+         \param y the value of type long long (e.g. 27LL)
+      */
       Fixed63(Fixed63_t y);
- //     Fixed63(double y);
+
+     /**
+      return the internal value as Fixed64_t (long long)
+
+      \returns the value
+      */
       Fixed63_t get() const;
 
+      /**
+      increment the internal value with the given parameter
+
+      \param rhs the value to be added
+
+      \return reference to this object containing the result
+
+      \throws  ArithmeticUnderflowSignal ArithmeticOverflowSignal
+
+      */
       Fixed63 operator+=(const Fixed63& rhs);
+
+      /**
+      add two values as in a + b
+
+      \param rhs the value to be added to the current objects value
+
+      \returns a new object containing the result
+      \throws  ArithmeticUnderflowSignal ArithmeticOverflowSignal
+      */
       Fixed63 operator+(const Fixed63& rhs) const;
 
+      /**
+      reduce the internal value with the given parameter
+
+      \param rhs the value to be subtracted
+
+      \return reference to this object containing the result
+
+      \throws  ArithmeticUnderflowSignal ArithmeticOverflowSignal
+
+      */
       Fixed63 operator-=(const Fixed63& rhs);
+
+      /**
+      subtract two values as in a - b
+
+      \param rhs reference to the value to be subtracted from
+             the current objects value
+      \returns a new object containing the result
+      \throws  ArithmeticUnderflowSignal ArithmeticOverflowSignal
+      */
       Fixed63 operator-(const Fixed63& rhs) const;
+
+      /**
+      arithmetic invertion of the value     just like  -a
+
+      \return a new object containing the negative value of this objekt
+
+      \throws ArithmeticOverflowSignal
+      */
       Fixed63 operator-() const;
 
+      /**
+      divide the current value
+
+      \param rhs reference to the object beeing the denominator
+
+      \returns reference to the current obeject containing the result
+
+      \throws ArithmeticDivideByZeroSignal
+      */
       Fixed63 operator/=(const Fixed63& rhs);
+
+      /**
+      divide two value like a / b
+
+      \param rhs reference to the denominator
+      \returns new object containing the result
+      \throws ArithmeticDivideByZeroSignal
+      */
       Fixed63 operator/(const Fixed63& rhs) const;
 
+      /**
+      modulo operation
+
+      in PEARL it is called REM (reminder)
+
+       PEARL requires  a == (a // b) * b + a REM b;
+       where // denotes the integer division<br>
+         10 //  3 *  3 =  9 ==>  10 REM  3 =  1    <br>
+        -10 //  3 *  3 = -9 ==> -10 REM  3 = -1     <br>
+         10 // -1 * -3 =  9 ==>  10 REM -3 =  1    <br>
+        -10 // -3 * -3 = -9 ==> -10 REM -3 = -1    <br>
+       result has same sign as first operand               <br>
+       this behavior is the same as in C++         <br>
+
+      \param rhs reference to the denominator
+
+      \returns reference to the current object containing the result
+
+      \throws ArithmeticDivideByZeroSignal
+      */
       Fixed63 operator%=(const Fixed63& rhs);
+
+      /**
+      modulo operation
+
+      in PEARL it is called REM (reminder)
+
+       PEARL requires  a == (a // b) * b + a REM b;
+       where // denotes the integer division<br>
+         10 //  3 *  3 =  9 ==>  10 REM  3 =  1    <br>
+        -10 //  3 *  3 = -9 ==> -10 REM  3 = -1     <br>
+         10 // -1 * -3 =  9 ==>  10 REM -3 =  1    <br>
+        -10 // -3 * -3 = -9 ==> -10 REM -3 = -1    <br>
+       result has same sign as first operand               <br>
+       this behavior is the same as in C++         <br>
+
+      \param rhs reference to the denominator
+
+      \returns reference to the current object containing the result
+
+      \throws ArithmeticDivideByZeroSignal
+      */
       Fixed63 operator%(const Fixed63& rhs) const;
 
+     /**
+      multiplication operation
+
+
+      \param rhs reference to the second multiplicator
+
+      \returns reference to the current object containing the result
+
+      \throws ArithmeticOverflowSignal
+      */
       Fixed63 operator*=(const Fixed63& rhs);
+
+     /**
+      multiplication operation
+
+      \param rhs reference to the second multiplicator
+
+      \returns new object containing the result
+
+      \throws ArithmeticOverflowSignal
+      */
       Fixed63 operator*(const Fixed63& rhs) const;
+
+      /**
+      compare operation
+
+      in order to keep the class small, only one compare operation is available
+
+      \param rhs reference to the seconds parameter
+
+      \returns >0, if this objects value > rhs value <br>
+      =0, if both values are equal<br>
+      <0, if this objects value < rhs value
+      */
 
       int compare(const Fixed63& rhs) const;
 
-//        Fixed63& operator*=(const double& rhs);
-//        Fixed63& operator*(const double& rhs) const;
-
-// * --> 1844 + 2270
-// * und / mit double
    };
 }
 #endif

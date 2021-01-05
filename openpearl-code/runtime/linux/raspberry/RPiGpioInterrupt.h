@@ -43,11 +43,32 @@
 
 
 namespace pearlrt {
+   /**
+   \addtogroup io_linux_driver
+   @{
+   */
+
 
    /**
    \file
 
-   \brief Interrupt source from Raspberry Pi Digital Input
+   \brief Interrupt source from Raspberry Pi digital input
+
+   The treament of the interrupts via gpio lines is done with the helper 
+   classes RPiGpioInteruptHandler and RPiGpioInterruptTask
+
+   The base of the implementation is libgpiod. This library provides a 
+   function which invokes a callback-function on eg. falling edge of 
+   one or many gpio line(s).
+   This monitoring function must be called in a separate thread,
+   since the is function returns only on a specific return code of the callback,
+   or if the parameters are invalid.
+   All lines to monitor must be passed at once.
+
+   RPiGpioInterrupt adds the given line to a pool of lines in the 
+   RPiGpioInterruptHandler. The IMC enshures in the system part setup
+   that RPiGpioInterruptTask is invoked after the last RPiGpioInterrupt
+   definition. Thus the list of lines to monitor is complete at this point.
 
    */
 
@@ -65,12 +86,27 @@ namespace pearlrt {
       */
       RPiGpioInterrupt(int bit);
 
+      /**
+      enable the interrupt generation via falling edge detection
+      enable bit
+      */
       void devEnable();
+
+      /**
+      disable the interrupt generation via falling edge detection
+      enable bit
+      */
       void devDisable();
+
+      /**
+      get the gpio bit number of the interrupt
+
+      \returns gpio bit number
+      */
       int getGpio();
 
    };
 
-
+   /** @} */
 }
 #endif

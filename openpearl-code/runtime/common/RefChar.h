@@ -158,6 +158,13 @@ namespace pearlrt {
          data = &rhs.data[0];
       }
 
+      /**
+      set the CHAR-object to operate on.
+      The refChar needs the start address and the length of the CHAR-object
+
+      \param s pointer to start of the CHAR variable
+      \param len length of the CHAR variable
+      */
       void setWork(void * s, size_t len);
 
       /**

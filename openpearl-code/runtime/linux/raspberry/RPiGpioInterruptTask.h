@@ -39,6 +39,11 @@
 
 
 namespace pearlrt {
+   /**
+   \addtogroup io_linux_driver
+   @{
+   */
+
 
    /**
    \file
@@ -53,14 +58,15 @@ namespace pearlrt {
 
    public:
       /**
-      constructor for the task
-
+      constructor for the task. The ctor creates a separate thread. 
+      The main operation of the thread is the call of the start()-method
+      of the RPiInterruptHandler
       */
       RPiGpioInterruptTask();
 
 
    };
 
-
+   /** @} */
 }
 #endif

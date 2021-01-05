@@ -394,13 +394,15 @@ namespace pearlrt {
           /** the end value for loops */
           size_t * end;
           struct {
-             Fixed<15> lwb;
-             Fixed<15> upb;
-          } charSliceLimits; // type CHARSLICE
+             Fixed<15> lwb;  ///< lower bound of a char slice
+             Fixed<15> upb;  ///< upper bound of a char slice
+          } charSliceLimits; ///< type CHARSLICE
       } param2;  ///< end of array or slice  
 
      /**
      deliver the size of one element of the given IODataType
+
+     \returns the size in bytes
      */
      size_t getSize();
 

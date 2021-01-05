@@ -80,7 +80,7 @@ namespace pearlrt {
    template<class C> class RefArray {
    public:
       C * data;   ///< the pointer to the real object
-      Array * descriptor;
+      Array * descriptor;  ///< pointer to the real array descriptor
 
    public:
       /**
@@ -93,8 +93,9 @@ namespace pearlrt {
 
       /**
       ctor for REF variable declaration with preset
-      \param pValue the variable which should by adressed
-                     by this REF
+
+      \param descr the array descriptor of the real array
+      \param data pointer to the real data
       */
 
       RefArray(Array* descr, C* data) {

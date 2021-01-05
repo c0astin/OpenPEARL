@@ -68,11 +68,11 @@ namespace pearlrt {
 
    public:
       /**
-      constructor to create the bit group and set the
-      bits to output direction
+      constructor to create the base object of the LED driver
 
       \param provider reference to the i2cbus object
       \param addr the i2c bus adress
+      \param prescaler for the frequency generation
 
       \throws DationParamSignal in case of init failure
 

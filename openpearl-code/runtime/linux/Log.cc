@@ -62,6 +62,7 @@ namespace pearlrt {
          doFormat(type, rc, format, args);
 
          mutex.lock();
+//printf("Log: try to write %s\n",rc.getCstring());
          provider->dationWrite(rc.getCstring(), rc.getCurrent());
          mutex.unlock();
       } catch (CharacterTooLongSignal s) {

@@ -45,7 +45,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#if 0
 #define PORT 30000
+#endif
 
 namespace pearlrt {
    //char* TcpIpServer::devicePath = NULL;

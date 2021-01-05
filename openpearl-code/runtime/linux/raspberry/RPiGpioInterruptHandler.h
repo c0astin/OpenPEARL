@@ -39,6 +39,11 @@
 
 
 namespace pearlrt {
+   /**
+   \addtogroup io_linux_driver
+   @{
+   */
+
 
    /**
    \file
@@ -62,24 +67,38 @@ namespace pearlrt {
                     const struct timespec* tm, void * data); 
 
    public:
+      /**
+      RPiGpioInterruptHandler is realized as singleton
+
+      \returns a pointer to the exesting/created object
+      */
       static RPiGpioInterruptHandler * getInstance();
 
+      /**
+      add a RPiGpioInterrupt line to the list
+
+      \param irupt the new line to be monitored 
+      */
       void add(RPiGpioInterrupt * irupt);
 
+      /**
+      start monitoring
+      */
       void start();
-      void devEnable();
-      void devDisable();
-
-
-      RPiGpioInterrupt * lookupIrq(int line);
 
       /**
-      destructor should be created to remove interrupts from the system
+      retrieve the RPiInterrupt object vie the gpio line
+
+      \param line the line number of the serched RPiInterrupt object
+
+      \returns a pointer to the RPiInterrupt object, if found<br>
+               else, NULL 
       */
-//      ~RPiGpioInterruptHandler();
+      RPiGpioInterrupt * lookupIrq(int line);
 
    };
 
+   /* @} */
 
 }
 #endif

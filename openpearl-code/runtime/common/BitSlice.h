@@ -166,6 +166,14 @@ namespace pearlrt {
 	 data = &copyOfData;
       }
 
+
+      /**
+         create a BitSlice slice upon a pointer to BitString variable
+
+         \param source is a pointer to a BitString variable,
+               which holds the data of the BitSlice
+         \tparam S the length of the source BitString string
+      */
       template <int S>
       BitSlice(BitString<S>* source) {
          length = Fixed<15>(S);
@@ -173,6 +181,7 @@ namespace pearlrt {
          primaryDataLength = sizeof(*source);
          firstSelectedBit = Fixed<15>(1);
       }
+
       /**
          create a BitString variable upon the data of the
          BitSlice object.

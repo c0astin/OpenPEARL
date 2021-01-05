@@ -45,7 +45,6 @@ namespace pearlrt {
    int Log::logLevel = Log::WARN | Log::ERROR;
    SystemDationNB* Log::provider = NULL;
    Log* Log::instance = NULL;
-   bool definedInSystemPart;
 
    Log* Log::getInstance() {
       /* note:

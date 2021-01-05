@@ -151,10 +151,17 @@ message if an error message is too long
       /**
       check if the Log device is defined in the system part
 
-      returns true, if defined in system part <br>
+      \returns true, if defined in system part <br>
               false, else
       */
       bool isDefinedInSystemPart();
+
+      /**
+      mark that the configuration item Log was used in the system part.
+      Thus we do not setup the defaut log
+
+      \param fromSystemPart true, if Log is the system part
+      */
       void setDefinedInSystemPart(bool fromSystemPart);
 
 

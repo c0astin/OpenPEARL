@@ -325,7 +325,7 @@ namespace pearlrt {
       /**
       translate newline
 
-      this is emptyi since linux uses \n for newline
+      this is empty since linux uses \n for newline
 
       \param doNewLineTranslation enbale/disable the translation
              (has no effect)
