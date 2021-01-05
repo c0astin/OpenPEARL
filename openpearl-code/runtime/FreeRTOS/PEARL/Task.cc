@@ -83,7 +83,7 @@ namespace pearlrt {
     **********************************************************************/
 
    Task::Task(char* n, Prio prio, BitString<1> ismain) :
-      TaskCommon(n, prio, ismain) {
+      TaskCommon(n+1, prio, ismain) {
 
       schedActivateData.taskTimer = &activateTimer;
       schedContinueData.taskTimer = &continueTimer;
