@@ -241,14 +241,14 @@ namespace pearlrt {
             dationWrite(startAddress, nbrOfBytes);
          }
 
-         endSequence(me);
+         endSequence(me, Dation::OUT);
       } catch (Signal &s) {
          if (! updateRst(&s)) {
-            endSequence(me);
+            endSequence(me, Dation::OUT);
             throw;
          }
 
-         endSequence(me);
+         endSequence(me, Dation::OUT);
       }
    }
 
@@ -288,14 +288,14 @@ namespace pearlrt {
                        nbrOfBytes);
          }
 
-         endSequence(me);
+         endSequence(me, Dation::IN);
       } catch (Signal &s) {
          if (! updateRst(&s)) {
-            endSequence(me);
+            endSequence(me, Dation::IN);
             throw;
          }
 
-         endSequence(me);
+         endSequence(me, Dation::IN);
       }
    }
 }

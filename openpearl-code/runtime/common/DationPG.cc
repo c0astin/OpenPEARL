@@ -272,19 +272,19 @@ namespace pearlrt {
             }
          }
 
-         endSequence(me);
+         endSequence(me, Dation::OUT);
 
       } catch (Signal &s) {
          if (s.whichRST() == theTerminateRequestSignal.whichRST()) {
-           endSequence(me);
+           endSequence(me, Dation::OUT);
            me->terminate(me); 
          }
          if (! updateRst(&s)) {
-            endSequence(me);
+            endSequence(me, Dation::OUT);
             throw;
          }
 
-         endSequence(me);
+         endSequence(me, Dation::OUT);
       }
    }
 
@@ -374,18 +374,18 @@ namespace pearlrt {
             }
          }
 
-         endSequence(me);
+         endSequence(me, Dation::IN);
       } catch (Signal &s) {
          if (s.whichRST() == theTerminateRequestSignal.whichRST()) {
-           endSequence(me);
+           endSequence(me, Dation::IN);
            me->terminate(me); 
          }
          if (! updateRst(&s)) {
-            endSequence(me);
+            endSequence(me, Dation::IN);
             throw;
          }
 
-         endSequence(me);
+         endSequence(me, Dation::IN);
       }
    }
 }

@@ -173,7 +173,8 @@ namespace pearlrt {
       }
    }
 
-   void UserDation::endSequence(TaskCommon * me) {
+   void UserDation::endSequence(TaskCommon * me, 
+                                Dation::DationParams direction) {
       TaskCommon* pendingTask;
 
 
