@@ -3,6 +3,7 @@ MODULE(RPiTInt);
 SYSTEM;
   so: StdOut;
   int1: RPiGpioInterrupt(20);
+  int2: RPiGpioInterrupt(21);
 PROBLEM;
 
    SPC so DATION OUT SYSTEM ALPHIC;
@@ -12,12 +13,27 @@ PROBLEM;
 
 t1: TASK MAIN;
    OPEN stdout;
+   PUT 'start -wait 5sec' TO stdout BY A, SKIP;
    ENABLE int1;
+   ACTIVATE t2;
+
    REPEAT 
       PUT 'wait for interrupt' TO stdout BY A, SKIP;
       WHEN int1 RESUME;
-      PUT 'received int1' TO stdout BY A, SKIP;
+      PUT '**** received int1' TO stdout BY A, SKIP;
    END;
 END;
 
+t2: TASK;
+ REPEAT
+   AFTER 5 SEC RESUME;
+   PUT 'disable ...' TO stdout BY A, SKIP;
+   DISABLE int1;
+   PUT 'disabled' TO stdout BY A, SKIP;
+   AFTER 5 SEC RESUME;
+   PUT 'enable ...' TO stdout BY A, SKIP;
+   ENABLE int1;
+   PUT 'enabled' TO stdout BY A, SKIP;
+ END;
+END;
 MODEND;

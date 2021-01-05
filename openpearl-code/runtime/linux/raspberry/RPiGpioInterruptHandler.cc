@@ -41,26 +41,25 @@
 */
 namespace pearlrt {
 
-int RPiGpioInterruptHandler::eventCallback(int type, unsigned int line, const struct timespec* tm, void * data) {
-  const char * types[] = {"timeout","rising", "falling"};
-  printf("got type: %s  for line %d\n", types[type-1],line);
-  RPiGpioInterrupt * irupt = 
+   int RPiGpioInterruptHandler::eventCallback(int type, unsigned int line,
+	 const struct timespec* tm, void * data) {
+     //const char * types[] = {"timeout","rising", "falling"};
+     //printf("got type: %s  for line %d\n", types[type-1],line);
+     RPiGpioInterrupt * irupt = 
           RPiGpioInterruptHandler::getInstance()->lookupIrq(line);
-  if (irupt != NULL) {
+     if (irupt != NULL) {
+        Log::info("RPiGpioInterruptTask: call trigger ");
         irupt->trigger();
         return(GPIOD_CTXLESS_EVENT_CB_RET_OK);  // _STOP to finish
-  }
-  printf("RPiInterruptHandler: suprious interrupt\n");        
-  return(GPIOD_CTXLESS_EVENT_CB_RET_OK);  // _STOP to finish
+     }
+     Log::warn("RPiInterruptHandler: suprious interrupt");        
+     return(GPIOD_CTXLESS_EVENT_CB_RET_OK);  // _STOP to finish
 
-}
+   }
 
    RPiGpioInterruptHandler::RPiGpioInterruptHandler() {
       numberOfRequestedLines = 0;
    }
-
-   //RPiGpioInterruptHandler::~RPiGpioInterruptHandler() {
-   //}
 
    RPiGpioInterruptHandler* RPiGpioInterruptHandler::getInstance() {
      static RPiGpioInterruptHandler* _instance = NULL;
@@ -92,8 +91,10 @@ int RPiGpioInterruptHandler::eventCallback(int type, unsigned int line, const st
       int ret = gpiod_ctxless_event_monitor_multiple_ext(
        		 "gpiochip0",
         	 GPIOD_CTXLESS_EVENT_FALLING_EDGE,
-                 lines, numberOfRequestedLines, 0,
-                 "RPiGpioInterrupt", NULL,
+                 lines, numberOfRequestedLines,
+		  0,     // active low
+                 "RPiGpioInterrupt", 
+		 NULL,  // timeout
                  NULL, //callback,
                  eventCallback,
                  NULL, // parameter for callback

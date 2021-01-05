@@ -149,6 +149,15 @@ namespace pearlrt {
       gpio_map[PULLUPDNCLK_OFFSET] = 0;
    }
 
+   void RPiGpio::enableFallingEdgeDetection(int gpioNum, bool enable) {
+       if (enable) {
+          gpio_map[FALLING_ED_OFFSET] |= 1<< gpioNum;
+       } else {
+          gpio_map[FALLING_ED_OFFSET] &= ~(1<< gpioNum);
+       }
+   }
+
+
    void RPiGpio::useBits(int start, int width,
                          RPiGpioMode direction, RPiGpioPud pud) {
       // simple implemention for gpio bits 0-31

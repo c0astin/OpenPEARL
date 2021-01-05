@@ -64,18 +64,20 @@ namespace pearlrt {
 
    void Interrupt::trigger() {
       TaskWhenLinks * current;
-
-      Log::debug("%s: Interrupt: triggered (enable=%d)",
+      TaskCommon::mutexLock();
+      Log::info("%s: Interrupt: triggered (enable=%d)",
          TaskCommon::getCallingTaskName(),isEnabled);
 
       mutexOfInterrupt.lock();
 
       if (isEnabled) {
-
+if (!headContinueTaskQueue) {
+   Log::info("no task waits");
+}
          while (headContinueTaskQueue) {
             current = headContinueTaskQueue;
             headContinueTaskQueue = headContinueTaskQueue->getNextContinue();
-            Log::debug("%s: trigger: waiting task triggered",
+            Log::info("%s: trigger: waiting task triggered",
                   TaskCommon::getCallingTaskName());
             current -> triggeredContinue();
          }
@@ -87,10 +89,12 @@ namespace pearlrt {
          }
 
       }
-      Log::debug("Interrupt::trigger released taskCommon.lock");
+      Log::info("Interrupt::trigger released interrupt.lock");
       mutexOfInterrupt.unlock();
+      TaskCommon::mutexUnlock();
    }
 
+   // register is called with mutexTasks locked
    void Interrupt::registerActivate(TaskWhenLinks * t, TaskWhenLinks ** next) {
       mutexOfInterrupt.lock();
       *next = headActivateTaskQueue;
@@ -98,8 +102,10 @@ namespace pearlrt {
       mutexOfInterrupt.unlock();
    }
 
+   // register is called with mutexTasks locked
    void Interrupt::registerContinue(TaskWhenLinks * t, TaskWhenLinks ** next) {
       mutexOfInterrupt.lock();
+Log::info("registerContinue task");
       *next = headContinueTaskQueue;
       headContinueTaskQueue = t;
       mutexOfInterrupt.unlock();

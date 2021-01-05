@@ -106,6 +106,16 @@ namespace pearlrt {
       \returns the value to be written. The value is right adjusted
       */
       int32_t readBits(int start, int width);
+
+      /**
+       set or reset the falling edge detction flag
+       \param gpioNum gpio bit number (0..31)
+       \param enable true, enable edge detection; 
+		false, disable edge detection
+      */
+      void enableFallingEdgeDetection(int gpioNum, bool enable); 
+
+   public:
    };
 }
 #endif

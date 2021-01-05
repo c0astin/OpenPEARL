@@ -51,6 +51,11 @@ namespace pearlrt {
    int RPiGpioInterrupt::getGpio() {
       return gpioBit; 
    }
-   void RPiGpioInterrupt::devEnable() {}
-   void RPiGpioInterrupt::devDisable() {}
+
+   void RPiGpioInterrupt::devEnable() {
+       RPiGpio::instance()->enableFallingEdgeDetection(gpioBit, true);
+   }
+   void RPiGpioInterrupt::devDisable() {
+       RPiGpio::instance()->enableFallingEdgeDetection(gpioBit, false);
+   }
 }

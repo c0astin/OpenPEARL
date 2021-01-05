@@ -30,12 +30,13 @@
 #include <pthread.h>
 #include <errno.h>
 #include <bits/local_lim.h>  // PTHREAD_STACK_MIN
-
+#include <signal.h>
 
 #include "RPiGpioInterruptTask.h"
 #include "RPiGpioInterruptHandler.h"
 #include "Log.h"
 #include "Signals.h"
+#include "SignalMapper.h"
 
 
 /**
@@ -46,6 +47,19 @@
 namespace pearlrt {
 
    static void* threadCode(void* dummy) {
+      // block signals, which are treated by signalThread
+      sigset_t set;
+      sigemptyset(&set);
+      sigaddset(&set, SIG_ACTIVATE);  // activate
+      sigaddset(&set, SIG_RESUME);    // resume
+      sigaddset(&set, SIG_CONTINUE);  // continue
+      sigaddset(&set, SIG_SUSPEND);   // suspend
+
+      if (sigprocmask(SIG_BLOCK, &set, NULL) < 0) {
+         Log::error("RPiGpioInterruptTask: error blocking signals");
+         throw theInternalTaskSignal;
+      }
+
       RPiGpioInterruptHandler::getInstance()->start();
       return (NULL);
    }
@@ -91,6 +105,7 @@ namespace pearlrt {
             throw theInternalTaskSignal;
          }
       }
+
 
       //create the thread
       if (pthread_create(&threadPid, &threadAttrib,
