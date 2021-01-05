@@ -95,7 +95,7 @@ namespace pearlrt {
          \param w the width of the output field
          \param base the number of bits to be collected into
                 one output digit. This must be 1,2,3,4
-         \param sink the destination Sink object 
+         \param source the destination Sink object 
          */
          static void fromBit(Bits<2>::BitType& data, int len,
                            int w, int base, Source &source);
@@ -115,7 +115,7 @@ namespace pearlrt {
          \param w the width of the output field
          \param base the number of bits to be collected into
                 one output digit. This must be 1,2,3,4
-         \param sink the destination Sink object 
+         \param source the destination Sink object 
          */
          static void fromBit(Bits<4>::BitType& data, int len,
                            int w, int base, Source &source);
@@ -135,7 +135,7 @@ namespace pearlrt {
          \param w the width of the output field
          \param base the number of bits to be collected into
                 one output digit. This must be 1,2,3,4
-         \param sink the destination Sink object 
+         \param source the destination Sink object 
          */
          static void fromBit(Bits<8>::BitType& data, int len,
                            int w, int base, Source &source);
