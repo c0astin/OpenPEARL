@@ -288,8 +288,11 @@ namespace pearlrt {
       \param me pointer to the task which performs the i/o.
                     May be NULL for testing purpose. Then no suspend and
                     terminate is done during the i/o-operation
+      \param dir indicates the transer direction.
+                 Allowed values are: Dation::IN and Dation::OUT
       */
-      void endSequence(TaskCommon * me);
+      void endSequence(TaskCommon * me,
+                         Dation::DationParams dir);
 
       /**
       get access to the wait queue
