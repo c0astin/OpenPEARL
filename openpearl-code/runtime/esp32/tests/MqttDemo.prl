@@ -5,7 +5,7 @@ SYSTEM;
    con: Console;
 PROBLEM;
    SPC con DATION INOUT SYSTEM ALPHIC;
-   DCL console DATION INOUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(con);
+   DCL console DATION INOUT ALPHIC TFU DIM(*,80) FORWARD STREAM CREATED(con);
    DCL consoleMutex SEMA PRESET(1);
    
 mqttPublish: PROC(topic CHAR(40) , data CHAR(40) );
@@ -30,9 +30,9 @@ pub: TASK MAIN;
     REPEAT
        count := count + 1;
        CONVERT 'count=',count TO data BY A, F(4);
-       REQUEST consoleMutex;
+!       REQUEST consoleMutex;
        PUT 'publish: topic=',topic,' data=',data TO console BY A,A,SKIP;
-       RELEASE consoleMutex;
+!       RELEASE consoleMutex;
        mqttPublish(topic, data);
        AFTER 1 SEC RESUME;
     END;
@@ -49,9 +49,9 @@ receiver: TASK;
      __cpp__(
           "cl->readMessage(_topic, _data);"
      );
-       REQUEST consoleMutex;
+!       REQUEST consoleMutex;
      PUT 'received topic:',topic,'data: ',data TO console BY A,A,SKIP,A,A,SKIP;
-       RELEASE consoleMutex;
+!       RELEASE consoleMutex;
    END; 
 END;
 MODEND;
