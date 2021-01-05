@@ -46,10 +46,17 @@ namespace pearlrt {
    }
 
   void SystemDation::registerWaitingTask(void * task, int direction) {
-      Log::error("SystemDationNB: missing overload in concrete system dation");
+      //Log::error("SystemDationNB: missing overload in concrete system dation");
+      fprintf(stderr,"SystemDationNB: missing overload in concrete system dation\n");
       throw theInternalDationSignal;
    }
 
+  void SystemDation::triggerWaitingTask(void * task, int direction) {
+printf("SystemDation:: triggerWaitingTask called\n");
+//      Log::error("SystemDationNB: missing overload in concrete system dation");
+      fprintf(stderr,"SystemDationNB: missing overload in concrete system dation\n");
+      throw theInternalDationSignal;
+   }
    void SystemDation::suspend(TaskCommon * ioPerformingTask) {
       ioPerformingTask->doAsyncSuspend();
    }
