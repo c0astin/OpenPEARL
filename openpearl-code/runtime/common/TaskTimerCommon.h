@@ -67,12 +67,12 @@ namespace pearlrt {
       */
       typedef void (*TimerCallback)(TaskCommon*);
 
-      int counts;   //remaining number of timer periods to repeat the action
-      int countsBackup;  //number of timer periods to repeat the action
-      TaskCommon* task;
-      TimerCallback callback;
-      timer_t timer;     // the timer
-      struct itimerspec its;  // the timer data required in triggered when
+      int counts;   ///< remaining number of timer periods to repeat the action
+      int countsBackup;  ///<number of timer periods to repeat the action
+      TaskCommon* task;  ///< task to be treated by the callback
+      TimerCallback callback; ///< function to invoke if time is passed
+      timer_t timer;     ///< the timer object
+      struct itimerspec its;  ///< the timer data required in triggered when
 
    public:
 
