@@ -277,14 +277,14 @@ TEST(DationPG, signal_get) {
    try {
       logbuch.beginSequence(NULL, pearlrt::Dation::IN);
       logbuch.fromF(x, (pearlrt::Fixed<31>)3);
-      logbuch.endSequence(NULL);
+      logbuch.endSequence(NULL, pearlrt::Dation::IN);
    } catch (pearlrt::Signal & s) {
       if (!logbuch.updateRst(&s)) {
-         logbuch.endSequence(NULL);
+         logbuch.endSequence(NULL, pearlrt::Dation::IN);
          throw;
       }
 
-      logbuch.endSequence(NULL);
+      logbuch.endSequence(NULL, pearlrt::Dation::IN);
    },
    pearlrt::FixedValueSignal);
    ASSERT_NO_THROW(
@@ -293,14 +293,14 @@ TEST(DationPG, signal_get) {
       logbuch.beginSequence(NULL, pearlrt::Dation::OUT);
       logbuch.rst(rst);
       logbuch.fromF(x, (pearlrt::Fixed<31>)3);
-      logbuch.endSequence(NULL);
+      logbuch.endSequence(NULL, pearlrt::Dation::OUT);
    } catch (pearlrt::Signal & s) {
       if (!logbuch.updateRst(&s)) {
-         logbuch.endSequence(NULL);
+         logbuch.endSequence(NULL, pearlrt::Dation::OUT);
          throw;
       }
 
-      logbuch.endSequence(NULL);
+      logbuch.endSequence(NULL, pearlrt::Dation::OUT);
    }
    );
    ASSERT_EQ(rst.x , pearlrt::theFixedValueSignal.whichRST());
@@ -371,11 +371,11 @@ TEST(DationPG, lineOverflow) {
       logbuch.toA(text);
    } catch (pearlrt::Signal & s) {
       if (!logbuch.updateRst(&s)) {
-         logbuch.endSequence(NULL);
+         logbuch.endSequence(NULL, pearlrt::Dation::OUT);
          throw;
       }
 
-      logbuch.endSequence(NULL);
+      logbuch.endSequence(NULL, pearlrt::Dation::OUT);
    };
    ASSERT_EQ(pearlrt::theDationIndexBoundSignal.whichRST(),
              rstValue.x);
@@ -419,12 +419,12 @@ TEST(DationPG, eof) {
          logbuch.toSkip(1);
       } catch (pearlrt::Signal & s) {
          if (!logbuch.updateRst(&s)) {
-            logbuch.endSequence(NULL);
+            logbuch.endSequence(NULL, pearlrt::Dation::OUT);
             throw;
          }
 
       }
-      logbuch.endSequence(NULL);
+      logbuch.endSequence(NULL, pearlrt::Dation::OUT);
    }
       line = pearlrt::Fixed<15>(10);
       logbuch.beginSequence(NULL, pearlrt::Dation::OUT);
@@ -437,12 +437,12 @@ TEST(DationPG, eof) {
          logbuch.toSkip(1);
       } catch (pearlrt::Signal & s) {
          if (!logbuch.updateRst(&s)) {
-            logbuch.endSequence(NULL);
+            logbuch.endSequence(NULL, pearlrt::Dation::OUT);
             throw;
          }
 
       }
-      logbuch.endSequence(NULL);
+      logbuch.endSequence(NULL, pearlrt::Dation::OUT);
       ASSERT_EQ(rstValue.x, 0);
 
    logbuch.dationClose(pearlrt::Dation::PRM, (pearlrt::Fixed<15>*)0);

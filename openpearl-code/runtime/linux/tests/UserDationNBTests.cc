@@ -1110,12 +1110,12 @@ TEST(Userdation, RST) {
       ASSERT_THROW(
          logbuch.pos(0, 5, 10),
          pearlrt::DationIndexBoundSignal);
-      logbuch.endSequence(NULL);
+      logbuch.endSequence(NULL,pearlrt::Dation::OUT);
       logbuch.beginSequence(NULL, pearlrt::Dation::OUT);
       logbuch.rst(rst);
       ASSERT_THROW(logbuch.pos(0, 5, 10),
                    pearlrt::DationIndexBoundSignal);
-      logbuch.endSequence(NULL);
+      logbuch.endSequence(NULL,pearlrt::Dation::OUT);
 
       // simulate the compiler output with rst-specified
       // not throwing
@@ -1123,9 +1123,9 @@ TEST(Userdation, RST) {
          logbuch.beginSequence(NULL, pearlrt::Dation::OUT);
          logbuch.rst(rst);
          logbuch.pos(0, 5, 10),
-                     logbuch.endSequence(NULL);
+                     logbuch.endSequence(NULL, pearlrt::Dation::OUT);
       } catch (pearlrt::Signal & s) {
-         logbuch.endSequence(NULL);
+         logbuch.endSequence(NULL,pearlrt::Dation::OUT);
 
          if (!logbuch.updateRst(&s)) {
             // this should not occur.
@@ -1140,10 +1140,10 @@ TEST(Userdation, RST) {
       try {
          logbuch.beginSequence(NULL, pearlrt::Dation::OUT);
          logbuch.pos(0, 5, 10),
-                     logbuch.endSequence(NULL);
+                     logbuch.endSequence(NULL,pearlrt::Dation::OUT);
          logbuch.rst(rst);
       } catch (pearlrt::Signal & s) {
-         logbuch.endSequence(NULL);
+         logbuch.endSequence(NULL,pearlrt::Dation::OUT);
 
          if (!logbuch.updateRst(&s)) {
             // this should not occur.
