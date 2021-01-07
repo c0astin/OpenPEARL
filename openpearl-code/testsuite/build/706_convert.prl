@@ -962,11 +962,12 @@ convertToT: PROC;
   FIN;
   
   ! width small but ok
+  ! T-format prints always 2 characters for hrs
   testNbr = testNbr + 1;
   width = 4;
-  CONVERT 8:0:0 TO   buffer BY RST(error),T(12,width);
+  CONVERT 8:0:0 TO   buffer BY RST(error),T(13,width);
            !123456789012
-  expect = '8:00:00.0000';
+  expect = ' 8:00:00.0000';
   IF error NE 0 THEN
      failed = failed + 1;
      PUT errorText,testNbr, 'wrong RST value; expected 0 got ',error
