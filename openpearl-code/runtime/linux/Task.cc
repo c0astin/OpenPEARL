@@ -150,17 +150,20 @@ namespace pearlrt {
    void Task::continueSuspended() {
       DEBUG("%s: send continuation data to '%s'", getCallingTaskName(), name);
       char dummy = 'c';
+#ifdef CONTINUEWAITERS 
       continueWaiters++;
-
+#endif
       // be not disturbed by application threads
       switchToThreadPrioMax();
       {
          write(pipeResume[1], &dummy, 1);
+#ifdef CONTINUEWAITERS 
          mutexUnlock();
          continueDone.request();
          DEBUG("%s: continuation data transmitted to '%s' and acknowledged",
             getCallingTaskName(),name);
          mutexLock();
+#endif
       }
 
       // perhaps the just continued task has terminated in the interval
@@ -265,11 +268,12 @@ namespace pearlrt {
             mutexUnlock();
             throw theInternalTaskSignal;
          }
+#ifdef CONTINUEWAITERS 
          while (continueWaiters > 0) {
             continueWaiters --;
             continueDone.release();
          }
-
+#endif
          DEBUG("%s:  continue from suspend done - new state %d", getCallingTaskName(), taskState);
          switchToThreadPrioCurrent();
          break;
@@ -277,6 +281,7 @@ namespace pearlrt {
       default:
          Log::error("%s:   resume: received unknown continue (%c)",
                     getCallingTaskName(), dummy);
+         throw theInternalTaskSignal;
          break;
       }
    }
@@ -361,7 +366,9 @@ namespace pearlrt {
       asyncTerminateRequested = false;
       asyncSuspendRequested = false;
       suspendWaiters = 0;
+#ifdef CONTINUEWAITERS 
       continueWaiters = 0;
+#endif
       terminateWaiters = 0;
       // store own pid
       threadPid = pthread_self();
@@ -485,6 +492,7 @@ namespace pearlrt {
       dummy = 't';
       mutexUnlock();
       write(pipeResume[1], &dummy, 1);
+      terminateDone.request();
    }
 
 
