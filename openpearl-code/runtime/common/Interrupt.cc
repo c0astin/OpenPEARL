@@ -53,13 +53,17 @@ namespace pearlrt {
    }
 
    void Interrupt::enable() {
+      TaskCommon::mutexLock();
       isEnabled = true;
       devEnable();
+      TaskCommon::mutexUnlock();
    }
 
    void Interrupt::disable() {
+      TaskCommon::mutexLock();
       isEnabled = false;
       devDisable();
+      TaskCommon::mutexUnlock();
    }
 
    void Interrupt::trigger() {
@@ -72,7 +76,7 @@ namespace pearlrt {
 
       if (isEnabled) {
 if (!headContinueTaskQueue) {
-   Log::info("no task waits");
+   Log::info("trigger: no task waits for continue");
 }
          while (headContinueTaskQueue) {
             current = headContinueTaskQueue;
@@ -138,6 +142,7 @@ Log::info("registerContinue task");
       TaskWhenLinks * last = 0;
 
       mutexOfInterrupt.lock();
+
       for (TaskWhenLinks * h = headContinueTaskQueue;
             h != 0;
             h = h->getNextContinue()) {

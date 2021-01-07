@@ -160,7 +160,7 @@ namespace pearlrt {
 
          if (taskState == BLOCKED && blockParams.why.reason == IO) {
             // if the task is in an I/O operation we must
-            //  enshure that the dations semaphres becomes unlocked
+            //  enshure that the dations semaphores become unlocked
             // thus we throw a special exception which is treated
             // in every level of the io-operation stack
             DEBUG("schedCB: throw terminateRequestSignal");
@@ -271,7 +271,7 @@ namespace pearlrt {
       } else if (taskState == SUSPENDED_BLOCKED) {
          taskState = Task::SUSPENDED;
       } else {
-         Log::error("%s: suspendMySelf: unexpected taskState = %d",
+         Log::error("%s: unblock: unexpected taskState = %d",
                     name, taskState);
          mutexUnlock();
          throw theInternalTaskSignal;
@@ -585,6 +585,7 @@ namespace pearlrt {
             if (isMySelf(me)) {
                DEBUG("   suspendMySelf()");
                suspendMySelf();
+               doReleaseMutex = false;
                DEBUG("   suspendMySelf done");
             } else {
                DEBUG("   suspendFrom Other()");
@@ -973,7 +974,7 @@ namespace pearlrt {
       // do the plattform specific part ... and release the mutexTasks lock
       DEBUG("%s: call suspendMySelf", getCallingTaskName());
       suspendMySelf();
-      mutexUnlock();
+      //mutexUnlock();
    }
 
 

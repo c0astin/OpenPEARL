@@ -150,20 +150,17 @@ namespace pearlrt {
    void Task::continueSuspended() {
       DEBUG("%s: send continuation data to '%s'", getCallingTaskName(), name);
       char dummy = 'c';
-#ifdef CONTINUEWAITERS 
       continueWaiters++;
-#endif
       // be not disturbed by application threads
       switchToThreadPrioMax();
       {
          write(pipeResume[1], &dummy, 1);
-#ifdef CONTINUEWAITERS 
          mutexUnlock();
          continueDone.request();
          DEBUG("%s: continuation data transmitted to '%s' and acknowledged",
             getCallingTaskName(),name);
-         mutexLock();
-#endif
+         // the continued task leave the global lock in state locked
+         //mutexLock();
       }
 
       // perhaps the just continued task has terminated in the interval
@@ -245,9 +242,9 @@ namespace pearlrt {
          } else {
             DEBUG("%s: suspendMySelf got %c", getCallingTaskName(), dummy);
          }
-         mutexLock();
+         // get mutexLock - the unlocking is done by the continueing object
+         mutexLock();  
       }
-      switchToThreadPrioCurrent();
       DEBUG("%s:   suspendMySelf: got data %c", getCallingTaskName(), dummy);
 
       switch (dummy) {
@@ -268,12 +265,10 @@ namespace pearlrt {
             mutexUnlock();
             throw theInternalTaskSignal;
          }
-#ifdef CONTINUEWAITERS 
          while (continueWaiters > 0) {
             continueWaiters --;
             continueDone.release();
          }
-#endif
          DEBUG("%s:  continue from suspend done - new state %d", getCallingTaskName(), taskState);
          switchToThreadPrioCurrent();
          break;
@@ -355,9 +350,11 @@ namespace pearlrt {
 
          asyncSuspendRequested = false;
          suspendMySelf();
+      } else {
+         // the unlocking in case of suspedMySelf is done 
+         // by the continuing task
+         mutexUnlock();
       }
-
-      mutexUnlock();
    }
 
    void Task::entry() {
@@ -366,9 +363,7 @@ namespace pearlrt {
       asyncTerminateRequested = false;
       asyncSuspendRequested = false;
       suspendWaiters = 0;
-#ifdef CONTINUEWAITERS 
       continueWaiters = 0;
-#endif
       terminateWaiters = 0;
       // store own pid
       threadPid = pthread_self();
@@ -632,7 +627,7 @@ namespace pearlrt {
          suspendMySelf();
          DEBUG("%s: Task::treatIOCancelIO: continued: termReq=%d suspeReq=%d",
               name , asyncTerminateRequested, asyncSuspendRequested);
-
+#if 0
          if (! asyncTerminateRequested) {
             // we must unlock the mutex at this point, due to the asymmetry 
             // at suspendIO(). 
@@ -640,6 +635,7 @@ namespace pearlrt {
             // in the next if statement
             mutexUnlock(); 
          }
+#endif
       }
 
       if (asyncTerminateRequested) {
