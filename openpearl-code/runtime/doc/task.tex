@@ -19,9 +19,35 @@ RTOS-UH used a different model, where termination while an active i/o statement
 is delayed until the next end-of-record. 
  
 
-OpenPEARL uses an implementation which is more close to the language report.
+OpenPEARL uses an implementation, which is more close to the language report.
 All tasking statements which are executed by the task itself are executed 
-obviously synchronously.
+obviously synchronously. To guarantee atomistic behavior during a 
+tasking operation a mutex is locked at the start of each tasking opoeration and 
+unlocked at the end of the operation.
+Many operations like error checking are common to all platforms of OpenPEARL.
+These operations are treated in the class \texttt{TaskCommon}. The platform specific 
+stuff is treated for linux systems and for FreeRTOS based systems.
+
+The suspend and continue operations are difficult to implement with this approach,
+since the continue operation must modify the continued task state.
+More details are described in chapter \ref{linux_suspend}, \ref{linux_terminate}.
+
+The linux platform uses pthreads for the task realization. The pthreads on linux systems
+do not allow to suspend a thread. To realize suspending a task the linux 
+implementation of the tasks use a pipe to suspend a thread. 
+
+The linux implementation of \texttt{CONTINUE} must enshure, that the continued task 
+updates its task state before other tasks may execute other tasking operation for this task.
+Thus in the platform independent part there is a asymetry that the following operations
+does not release the lock on the mutex 
+\begin{description}
+\item [suspend] in case of self suspension
+\item [scheduleCallback] in case of self suspension
+\item [treatCancelIO] is case of self suspension
+\end{itemize}
+It must be regarded by FreeRTOS based implementaion of the tasking operations.
+
+
 Tasking statements concerning other tasks are a little 
 bit more difficult, because the runtime system uses internally semaphore
  and mutex
@@ -58,10 +84,7 @@ function.
 
 For the list of specialized tasking methods please refer the
 {\em pure virtual} methods of \verb|TaskCommon| in the Doxygen
-part of the documentation. The implementation on linux systems is described 
-in sections \ref{linux_suspend}, \ref{linux_terminate} and for FreeRTOS based systems 
-in section \ref{freertos_tasking}.
-
+part of the documentation.
 
 The new state diagram is shown in 
 fig. \ref{taskStatesOpenPEARL}.
