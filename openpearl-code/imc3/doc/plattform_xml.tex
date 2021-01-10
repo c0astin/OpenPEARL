@@ -21,7 +21,11 @@ provided:
 
 These elements may have attributes 
 \begin{description}
-\item [name] is the system name
+\item [name] is mandatory the system name
+\item [priority] in optional the priority of instanciation. 
+   The values are according the PEARL priorities. The default value is 255.
+\item [private] which indicates, that this element may not be 
+  refered in the system part
 \end{description}
 
 These elements may have other elements as subtree to define parameters, associations and checks.
@@ -46,25 +50,33 @@ Possible parameters are listed as subtree \verb|<parameters>|.
 Possible attributes are listed as subtree \verb|<attributes>|.
 Possible associations to this element are
  listed as subtree \verb|<associationProvider>|.
+If a system dation requires TFU in the user dation, that tag
+\verb|<TFU size="80"/>| specifies the minimum record size of the 
+userdation.
 
 
 \subsection{Configuration-Tag}
 The configuration element has the same structure as the dation tag
 except the attribute \verb|name|, which has not to be present.
 
-\paragraph{Note:} A special configuration tag is reserved for
+\subsection{autoInstanciation Attribute}
+A special attribute tag is reserved for
 blocking of gpio bits, which are used by system devices like i2c or 
-other applications.
+other applications. It may be used for dation, interrupt or signal and 
+needs a name-attribute for assistance.
 \begin{XMLCode}
-<configuation name="reservedGpios" autoInstanciate="1">
+<dation name="reservedGpios" autoInstanciate="1">
   <checks>
     <check pinDoesNotCollide="RPiGPIO" bitList="0,1,2,4,6,26"/>
   </checks>
-</configuration>
+</dation>
 \end{XMLCode}
+
 Regard:
 \begin{itemize}
-\item autoInstanciate forces one instance to be created automatically.
+\item autoInstanciate
+  One instance of this item is instanciated automatically -- used e.g. 
+  for reserved  GPIO bits
   This attribute prohibits the usage by the PEARL application in the system part
 \item pinDoesNotCollide must have  the same name as used in the gpio rules in 
    e.g. RPiDigitalIn.xml
@@ -192,8 +204,9 @@ Instance parameters are accessed via \$ and their name.
 
 \subsubsection{Number of Instances}
 \begin{description}
-\item[instances="1"] only one instance of the platform system element
-   is allowed (like  Log, Console or StdIn)
+% obsolete: may be realized via oncePerSet set="StdOut"
+%\item[instances="1"] only one instance of the platform system element
+%   is allowed (like  Log, Console or StdIn)
 \item[instances="oncePerSet" set="..."] defines that only one instance with a 
   specified set of parameters are allowed. To define a set we have access to 
   all parameter names and in case of associations the complete association list.
@@ -369,6 +382,15 @@ error messages if the check is applied on e.g. adc multiplexer channels:
 
 If more checks are required, they can be added in \texttt{imc/checks}. 
 
+\subsection{needItem}
+
+A needItem tag forces to instanciate one instance of the given system element.
+This is needed by interrupts at the raspberry pi gpio lines. The interrupts are
+specified in separate syystem part definitions. 
+The treatment of these interrupts requires a single thread to receive the 
+interrupt events.
+
+ 
 \section{Platform File}
 Each system part elements is represented by a driver in the OpenPEARL 
 source tree and an XML-snipplet. These snipplets are
