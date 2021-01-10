@@ -360,8 +360,8 @@ public class CodeGenerator {
 			}
 			
 			sb.append(")");
-		} else if (se.getAssociation() == null) {
-			sb.append("()");
+//		} else if (se.getAssociation() == null) {
+//			sb.append("()");
 		}
 		return sb.toString();
 	}

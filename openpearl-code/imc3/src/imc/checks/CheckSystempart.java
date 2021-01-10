@@ -68,7 +68,9 @@ public class CheckSystempart {
 					Node seSystem = NodeUtils.getChildByName(se.getNode(), "sysname");
 
 					Log.info("   check illegal autoInstanciate usage");
-					checkAutoInstanciate(se,seSystem,systemNode);
+                    checkAutoInstanciate(se,seSystem,systemNode);
+
+					treatNeedItem(se,seSystem,systemNode);
 					Log.info("   check ParameterTypes ..");
 					compareParameterTypes(se, seSystem, systemNode);
 					Log.info("   check Associations ..");
@@ -86,9 +88,40 @@ public class CheckSystempart {
 
 	private static void checkAutoInstanciate(ModuleEntrySystemPart se,
 		Node seSystem, Node systemNode) {
-		if (systemNode.getAttributes().getNamedItem("autoInstanciate") != null) {
-			
-		   Log.error("illegal instantiation of '"+seSystem.getAttributes().getNamedItem("name").getTextContent()+"'");
+		Node x = systemNode.getAttributes().getNamedItem("autoInstanciate") ;
+        if (systemNode.getAttributes().getNamedItem("autoInstanciate") != null) {
+            Log.error("illegal instantiation of '"+seSystem.getAttributes().getNamedItem("name").getTextContent()+"'");
+        }
+        // no further opration required here
+        // all items with autoInstanciate-tag will be scanned in pinDoesNotCollide test
+	}
+	
+
+	private static void treatNeedItem(ModuleEntrySystemPart se,
+		Node seSystem, Node systemNode) {
+		Node needItem = NodeUtils.getChildByName(systemNode,"needItem");
+		if (needItem!= null) {
+		
+			String neededName=NodeUtils.getAttributeByName(needItem, "name");
+			Platform pl = Platform.getInstance();
+			Node s = pl.getNodeOfSystemname(neededName);
+			if (s == null) {
+				Log.error("system name '" + neededName+ "' does not exist in this platform");
+			} else {
+		       String autoName = "needItem"+autoNumber;
+		       autoNumber ++;
+			   ModuleEntrySystemPart me = new ModuleEntrySystemPart(autoName, se.getLine(), s);
+			   me.setIsUsed();
+			   boolean found = false;
+			   for (int i=0; i<newItems.size(); i++) {
+				   if (newItems.get(i).getNode().equals(s)) {
+					   found=true;
+				   }
+			   }
+			   if (!found) {
+				   newItems.add(me);
+			   }
+			}
 		}
 	    return;
 	}
@@ -140,27 +173,27 @@ public class CheckSystempart {
 		List<ModuleEntrySystemPart> systemElements = module.getSystemElements();
 		for (ModuleEntrySystemPart m: systemElements) {
 			if (m.getUserName() == null) continue;
-	        if (!m.getUserName().equals(providedAssociationName)) continue;
-	        
-	        isUserName = true;
-							
-					se.setAssociation(new Association(m));
-					
-					// mark the association provider to be used
-					// this make the check for unused elements easier 
-					m.setIsUsed();  
-					
+			if (!m.getUserName().equals(providedAssociationName)) continue;
 
-					// is a user name --- MUST not have parameters!
-					Node hasParameters = NodeUtils.getChildByName(needAssociation, "parameters");
-					if (hasParameters != null) {
-						Log.error("association as user name forbids parameters");
-						return;  // abort further checks
-					}
+			isUserName = true;
 
-					break; // search finished
-				}
-			
+			se.setAssociation(new Association(m));
+
+			// mark the association provider to be used
+			// this make the check for unused elements easier 
+			m.setIsUsed();  
+
+
+			// is a user name --- MUST not have parameters!
+			Node hasParameters = NodeUtils.getChildByName(needAssociation, "parameters");
+			if (hasParameters != null) {
+				Log.error("association as user name forbids parameters");
+				return;  // abort further checks
+			}
+
+			break; // search finished
+		}
+
 
 		// check for system name
 		PlatformSystemElement pse = Platform.getInstance().getSystemElement(providedAssociationName);
@@ -190,9 +223,9 @@ public class CheckSystempart {
 			} else {
 				nodeInModule = imc.utilities.NodeUtils.getChildByName(nodeInModule, "association");
 			}
-			
+
 			String autoName = "autoNameForAssociation_"+autoNumber++;
-			
+
 			ModuleEntrySystemPart anonymousModuleEntrySystemPart = new ModuleEntrySystemPart(autoName, se.getLine(), nodeInModule);
 			anonymousModuleEntrySystemPart.setPrefix("");
 			
@@ -223,6 +256,10 @@ public class CheckSystempart {
 		Node s = pl.getNodeOfSystemname(systemName);
 		if (s == null) {
 			Log.error("system name '" + systemName+ "' does not exist in this platform");
+		}
+
+		if (NodeUtils.getAttributeByName(s, "private")!= null) {
+			Log.error("system name '" + systemName+ "' may not used by PEARL application directly");
 		}
 		return s;
 	}
@@ -258,13 +295,13 @@ public class CheckSystempart {
 
 		for (int i = 0; i < moduleParameterNodes.getLength(); i++) {
 			if (moduleParameterNodes.item(i).getNodeType() == Node.ELEMENT_NODE) {
-				// System.out.println("ElementNode "
-				// + moduleParameterNodes.item(i).getNodeName());
+			//	System.out.println("ElementNode "
+		//		+ moduleParameterNodes.item(i).getNodeName());
 
 				Parameter p1 = new Parameter(moduleParameterNodes.item(i));
-				// System.out.println("P1: " + p1.getValue() + " " +
-				// p1.getType()
-				// + " " + p1.length());
+		//		 System.out.println("P1: " + p1.getValue() + " " +
+		//		 p1.getType()
+		//		 + " " + p1.length());
 
 				// find next target parameter
 				while (targetParameterIndex < targetParameterNodes.getLength()
@@ -327,7 +364,7 @@ public class CheckSystempart {
 		if (name!= null) {
 			p.setName(name.getTextContent());
 		} else {
-			Log.internalError("parameter "+parameterNumber+1+" in '"+ se.getNameOfSystemelement()+"' has no name");
+			Log.internalError("parameter "+ (parameterNumber+1)+" in '"+ se.getNameOfSystemelement()+"' has no name");
 			return false;
 		}
 
@@ -428,7 +465,7 @@ public class CheckSystempart {
 	public static void checkAssociationType(List<Module> modules) {
 		Log.setLocation("-",-1);
 
-		Log.info("start checking checkAssociationType...");
+		Log.info("start checking checkAssociationTypes...");
 		for ( Module m: modules) {
 			module = m;
 			for (ModuleEntrySystemPart se: module.getSystemElements()) {
