@@ -3,6 +3,7 @@
       <attributes>FORWARD, IN, OUT, INOUT, SYSTEM</attributes>
       <data>ALPHIC</data>
       <checks>
-         <check instances="1"/>
+         <check instances="oncePerSet" set="StdIn"/>
+         <check instances="oncePerSet" set="StdOut"/>
       </checks>
    </dation>

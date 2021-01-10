@@ -9,6 +9,6 @@
       </associationProvider>
       <needAssociation name="NamedAlphicOutProvider"/>
       <checks>
-         <check instances="1"/>
+         <check instances="oncePerSet" set="LogFile"/>
       </checks>
    </connection>

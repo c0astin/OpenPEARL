@@ -3,6 +3,6 @@
       <attributes>FORWARD, IN, SYSTEM</attributes>
       <data>ALPHIC</data>
       <checks>
-          <check instances="1" />
+          <check instances="oncePerSet" set="StdIn"/>
       </checks>
    </dation>

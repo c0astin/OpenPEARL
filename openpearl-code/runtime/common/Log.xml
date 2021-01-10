@@ -1,4 +1,4 @@
-   <configuration name="Log" instances="1" >
+   <configuration name="Log">
       <parameters>
          <CHAR length="4" name="logLevel">
            <NotEmpty/>
@@ -6,6 +6,6 @@
       </parameters>
       <needAssociation name="AlphicOutProvider"/>
       <checks>
- 	<check instances="1"/>
+ 	<check instances="oncePerSet" set="Log"/>
       </checks>
    </configuration>
