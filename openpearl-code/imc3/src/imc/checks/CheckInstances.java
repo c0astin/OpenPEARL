@@ -51,19 +51,7 @@ public class CheckInstances {
 				if (nl.item(i).getNodeName().equals("check")) {
 					Node nodeOfCheck=nl.item(i).getAttributes().getNamedItem("instances");
 					if (nodeOfCheck != null) {
-						if (nodeOfCheck.getTextContent().equals("1")) {
-							// 
-							if (pse.getUsedBy().size()> 1) {
-								Log.setLocation(
-										getModuleOf(pse.getUsedBy().get(0)).getSourceFileName(),
-										pse.getUsedBy().get(0).getLine());
-								Log.error("system element '"+ pse.getSystemName()+"' may only defined once");
-								for (int j=1; j< pse.getUsedBy().size(); j++) {
-								   Log.note(getModuleOf(pse.getUsedBy().get(j)).getSourceFileName(), pse.getUsedBy().get(j).getLine(),
-										"already used by '"+pse.getUsedBy().get(j).getUserName());
-								}
-							}
-						} else if (nodeOfCheck.getTextContent().equals("oncePerSet")) {
+						if (nodeOfCheck.getTextContent().equals("oncePerSet")) {
 							Log.info("check oncePerSet "+pse.getSystemName());
 							Node nodeOfSet = nl.item(i).getAttributes().getNamedItem("set");
 							if (nodeOfSet == null) {
@@ -82,7 +70,7 @@ public class CheckInstances {
 										String sk = expr2.evaluateExpression(set);
 										if (sj.equals(sk)) {
 											Log.setLocation(getModuleOf(pse.getUsedBy().get(k)).getSourceFileName(),
-																		pse.getUsedBy().get(k).getLine());
+													pse.getUsedBy().get(k).getLine());
 											Log.error("multiple definition of: '"+sk+"'");
 											errorPrinted=true;
 										}
@@ -91,7 +79,7 @@ public class CheckInstances {
 										Log.note(getModuleOf(pse.getUsedBy().get(j)).getSourceFileName(),
 												pse.getUsedBy().get(j).getLine(),
 												"previous definition was here");
-										
+
 									}
 								}
 							}

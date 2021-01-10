@@ -91,6 +91,7 @@ public class Platform {
 	 * @param installationPath path to the folder of the OpenPEARL system files (e.g /usr/local) 
 	 */
 	private Platform(String fileName, boolean verbose, String installationPath) {
+		Log.setLocation(fileName, -1);
 		Log.info("Platform: parse "+fileName);
 		
 		ReadXml tgt = new ReadXml(fileName, verbose,  installationPath + "/lib/");
@@ -117,7 +118,11 @@ public class Platform {
 			for (int i = 0; i < nl.getLength(); i++) {
 				Node n = nl.item(i);
 				String sName;
+				boolean priv=false;
+				int prio = 255;
 				sName = null;
+				String sPriv = null;
+				
 				if (n.getNodeType() == Node.ELEMENT_NODE
 						&& n.getAttributes() != null) {
 					if (n.getAttributes() != null) {
@@ -125,10 +130,31 @@ public class Platform {
 							sName = n.getAttributes().getNamedItem("name")
 									.getTextContent();
 						}
+						if (n.getAttributes().getNamedItem("private") != null) {
+							sPriv = n.getAttributes().getNamedItem("private")
+									.getTextContent();
+							if (!sPriv.contentEquals("true")) {
+							   Log.error("private accepts only the value true");	
+							}
+							priv = true;
+						}
+						if (n.getAttributes().getNamedItem("priority") != null) {
+							try {
+							prio = Integer.parseInt( n.getAttributes().getNamedItem("priority")
+									.getTextContent());
+							} catch (NumberFormatException e) {
+								Log.error("priority must be a decimal value");
+							}
+							if (prio < 0 || prio > 255) {
+								Log.error("priority must be in region [1,255]");
+							}
+						}
 					}
 
 					if (sName != null) {
-						PlatformSystemElement se = new PlatformSystemElement(sName, n.getNodeName().toUpperCase(), n);
+						PlatformSystemElement se = new PlatformSystemElement(sName,
+																			n.getNodeName().toUpperCase(),
+																			n, prio, priv);
 						systemNames.add(se);
 						Log.setLocation(fileName, -1);
 						Log.debug(sName + " is available and has type "

@@ -43,6 +43,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import org.w3c.dom.Node;
+
 
 /**
  * create C++ code for the detected elements
@@ -109,9 +111,12 @@ public class CodeGenerator {
 		file.println("// use of namespace is: "+useNamespace+"\n");
 		file.println("#include \"PearlIncludes.h\" \n");
 
+		for (int i=1; i<256; i++) {
+			instantiate(modules, i);
+		}
 
-		instantiateLogFirst(modules);
-		instantiateRemainingSystemElements(modules);
+		//instantiateLogFirst(modules);
+		//instantiateRemainingSystemElements(modules);
 
 		/*		// instantiate Log first
 		for (int i = 0; i < SystemEntries.size(); i++) {
@@ -158,10 +163,10 @@ public class CodeGenerator {
 
 		}
 		 */
-		file.println("\n\nnamespace pearlrt {\n   int createSystemElements();");
-		file.println("}\n");
-		file.println("// enshure that the static (parametrized) objects are instantiated first");
-		file.println("static int dummy = pearlrt::createSystemElements();");
+//		file.println("\n\nnamespace pearlrt {\n   int createSystemElements();");
+//		file.println("}\n");
+//		file.println("// enshure that the static (parametrized) objects are instantiated first");
+//		file.println("static int dummy = pearlrt::createSystemElements();");
 		file.println();
 		file.println(prototypes);
 		file.println("\n\nnamespace pearlrt {\n   int createSystemElements() {");
@@ -220,6 +225,27 @@ public class CodeGenerator {
 						prototypes.append("namespace "+module.getModuleName()+ " {\n");
 					}
 					logFound = true;
+					doAllPrerequisites(se, 10);  // max depth of recursion is 10
+					//addToCodeParts(se);
+					if (useNamespace) {
+						prototypes.append("}\n\n");
+					}
+				}
+			}
+
+		}
+	}
+	private static void instantiate(List<Module> modules, int priority) {
+		for (Module m: modules) {
+			module = m;
+
+			for (ModuleEntrySystemPart se: m.getSystemElements()) {
+				String sysname = se.getNameOfSystemelement();
+				PlatformSystemElement n = Platform.getInstance().getSystemElement(sysname);
+				if (n.getPriority() == priority) {
+					if (useNamespace) {
+						prototypes.append("namespace "+module.getModuleName()+ " {\n");
+					}
 					doAllPrerequisites(se, 10);  // max depth of recursion is 10
 					//addToCodeParts(se);
 					if (useNamespace) {
@@ -321,6 +347,7 @@ public class CodeGenerator {
 		boolean firstParameter = true;
 		if (se.getParameters().size() > 0 || se.getAssociation() != null) {
 			sb.append("(");
+			
 			if (a != null) {
 				ModuleEntrySystemPart mse = a.getUsername();
 				sb.append("& s"+mse.getPrefix()+mse.getUserName());
@@ -331,7 +358,10 @@ public class CodeGenerator {
 				sb.append(se.getParameters().get(i).getCppCode());
 				firstParameter = false;
 			}
+			
 			sb.append(")");
+		} else if (se.getAssociation() == null) {
+			sb.append("()");
 		}
 		return sb.toString();
 	}

@@ -116,6 +116,7 @@ public class InterModuleChecker {
 
 		Log.exitIfErrors();
 		
+		
 		// start checks ...
 		CheckSystempart.checkSystemelementsForSystemParts(modules);
 		CheckSystempart.checkAssociationType(modules);

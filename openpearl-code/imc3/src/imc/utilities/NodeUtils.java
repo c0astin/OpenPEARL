@@ -1,5 +1,6 @@
 package imc.utilities;
 
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -55,5 +56,20 @@ public class NodeUtils {
 			}
 		}
 		return result;
+	}
+	
+	/**
+	 * get an attribut value
+	 * \return null, if the attribute is not set
+	 * 
+	 */
+	public static String getAttributeByName(Node node, String name) {
+		NamedNodeMap nl = node.getAttributes();
+		Node n = nl.getNamedItem(name);
+		if (n==null) {
+			return null;
+		}
+		return n.getTextContent();
+	
 	}
 }

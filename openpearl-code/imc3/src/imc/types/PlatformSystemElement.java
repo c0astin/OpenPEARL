@@ -38,6 +38,19 @@ public class PlatformSystemElement {
 	private Node   node;
 	
 	/**
+	 * instanciation priority
+	 * 1 is best; 255 is default
+	 */
+	int priority;
+	
+	/**
+	 * is private -- may never be used in the system part
+	 * may be invoked via <needItem>-tag in another platform 
+	 * element
+	 */
+	boolean isPrivate;
+	
+	/**
 	 * list of {@link ModuleEntrySystemPart}s which use this element
 	 */
 	private List<ModuleEntrySystemPart> usedBy = new ArrayList<ModuleEntrySystemPart>();
@@ -50,10 +63,12 @@ public class PlatformSystemElement {
 	 * @param t the type
 	 * @param location the node in the DOM tree of this element
 	 */
-	PlatformSystemElement(String sn, String t, Node location) {
+	PlatformSystemElement(String sn, String t, Node location, int prio, boolean priv) {
 		systemName = sn;
 		type = t;
 		node = location;
+		priority=prio;
+		isPrivate = priv;
 	
 	}
 
@@ -76,4 +91,9 @@ public class PlatformSystemElement {
 	public List<ModuleEntrySystemPart> getUsedBy() {
 		return usedBy;
 	}
+
+	public int getPriority() {
+		return priority;
+	}
+	
 }
