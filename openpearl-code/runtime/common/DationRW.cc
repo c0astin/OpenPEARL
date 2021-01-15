@@ -58,8 +58,8 @@ namespace pearlrt {
 
       stepSize = stepsize;
 
-      if (tfuRecord && params & Dation::STREAM) {
-         Log::error("DationRW: TFU and STREAM conflicts");
+      if ((params & STREAM) && (tfuRecord)) {
+         Log::error("DationRW: TFU must not be used on STREAM dations");
          throw theInternalDationSignal;
       }
 

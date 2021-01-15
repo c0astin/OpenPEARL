@@ -223,13 +223,13 @@ namespace pearlrt {
      is required for non basic dations
      \param me pointer to the calling task
      */
-     void beginSequenceHook(TaskCommon * me);
+     void beginSequenceHook(TaskCommon * me, Dation::DationParams dir);
  
      /**
      provide an empty implementation of the hook function which 
      is required for non basic dations
      */
-     void endSequenceHook(void);
+     void endSequenceHook(Dation::DationParams dir);
 
     /**
       check, if the dation supports multiple io requests with it own

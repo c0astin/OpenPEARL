@@ -252,9 +252,9 @@ namespace pearlrt {
    }
 
    void UserDationNB::doTfuAndSeekStuff()  {
-//printf("doTfuAndSeekStuff\n");
-//printf("tfuBuffer used/notEmpty/dir  %d / %d / %d \n", tfuBuffer.isUsed(),
-//       tfuBuffer.isNotEmpty(),currentDirection);
+printf("doTfuAndSeekStuff\n");
+printf("tfuBuffer used/notEmpty/dir  %d / %d / %d \n", tfuBuffer.isUsed(),
+       tfuBuffer.isNotEmpty(),currentDirection);
       /* logical position is set -- now set the file position */
       // we have one dimensional system devices
       if (tfuBuffer.isUsed()) {
@@ -518,10 +518,11 @@ namespace pearlrt {
             tfuBuffer.flushRecord();
 	    row = row - one;  // one line printed
             tfuBuffer.prepare();
-
+#if 0
             if (dationParams & Dation::FORWARD && dationType == ALPHIC) {
                fill(1, '\n');
             }
+#endif
          }
 
          if ((dationParams & Dation::DIRECT) &&
@@ -546,16 +547,18 @@ namespace pearlrt {
 
 //printf("  --> rows %d\n", row.x);
             while ((row >= one).getBoolean()) {
-               if (currentDirection == Dation::OUT) {
                   tfuBuffer.flushRecord();
 
+#if 0
                   if (dationParams & Dation::FORWARD && dationType == ALPHIC) {
-//                     fill(1, '\n');
+                     fill(1, '\n');
                   }
                } else {
-                  tfuBuffer.readRecord(dationType == ALPHIC);
+                  //tfuBuffer.readRecord(dationType == ALPHIC);
+                  tfuBuffer.readRecord();
                }
 
+#endif
                row = row - one;
             }
 
@@ -627,25 +630,25 @@ namespace pearlrt {
                               Fixed<31> row,
                               Fixed<31> element) {
       Fixed<31> oldPage, oldRow, oldCol;
+      Fixed<31> newPage, newRow, newCol;
 
       // number of byte to skip for forward non ALPHIC dations
       Fixed<31> diff;
 
       assertOpen();
 
-//printf("\n\nfromAdv: p=%d, r=%d c=%d\n", page.x, row.x, element.x);
+      //Log::debug("fromAdv: p=%d, r=%d c=%d", page.x, row.x, element.x);
       // do virtual positioning first
       internalSop(&oldPage, &oldRow, &oldCol);
-//printf("  old: p=%d, r=%d c=%d\n", oldPage.x, oldRow.x, oldCol.x);
+      //Log::debug("  old: p=%d, r=%d c=%d", oldPage.x, oldRow.x, oldCol.x);
       diff = internalAdv(page, row, element);
       // add 1, since dim-> counts with starting 0,
       //         and UserDationNB starts with 1
-      page = dim->getPage() - oldPage + one;
-      row = dim->getRow() - oldRow + one;
-      element  = dim->getColumn() - oldCol + one;
-//printf("  new: p=%d, r=%d c=%d\n",
-//      dim->getPage().x+1, dim->getRow().x+1, dim->getColumn().x+1);
+      newPage = dim->getPage()+one;
+      newRow = dim->getRow() + one;
+      newCol = dim->getColumn() + one;
 
+      //Log::debug("  new: page=%d, row=%d col=%d", newPage.x, newRow.x, newCol.x);
       if (tfuBuffer.isUsed()) {
          if (dationParams & Dation::DIRECT) {
             ((SystemDationNB*)systemDation)->dationSeek(dim->getIndex() * stepSize, dationParams);
@@ -660,25 +663,43 @@ namespace pearlrt {
 
          // now treat the lines and pages for forward dation
          if (dationParams & Dation::FORWARD) {
-            // calculate number of complete rows to be read
-//printf("fromAdv: p/r/c: %d/%d/%d", page.x, row.x, element.x);
-            row = row + dim->getRows() * page;
-
+            int nbrOfRecordsToRead = 0;
+  
+            // calculate number of complete rows to become read
+            // we were at position (oldPage,oldRow,oldCol)
+            // and updated to      (newPage,newRow,newCol)
+            // if we are still in the same row -> just set the 
+            //   column-position
+            // if we are in more than one record away, read records until 
+            //    destination is reached
+            // if we are in the next row at first column 
+            //    mark the tfuBuffer as empty; and read one
+            //    record less
+            // if no record ist already in memory -> read one more
+            // set the column-position
+              
+           nbrOfRecordsToRead += (newRow-oldRow).x;
+           nbrOfRecordsToRead += ((newPage-oldPage)*dim->getRows()).x; 
+           if (newCol.x == 1) {
+              // we are at beginning of the new record --> read record later
+              nbrOfRecordsToRead --;
+           }
+            
             if (! tfuBuffer.isNotEmpty()) {
-               // if the current positions record ist not read
-               // we must consider to read one record more
-               row = row + one;
-
+               // if we had no record read in the past, we must read one record 
+               nbrOfRecordsToRead ++;
+            }
+            //Log::debug("   nbrOfRecordsToRead = %d", nbrOfRecordsToRead);
+ 
+            while (nbrOfRecordsToRead > 0) {
+               tfuBuffer.readRecord();
+               nbrOfRecordsToRead --;
             }
 
-//printf("  --> rows %d\n", row.x);
-            while ((row > zero).getBoolean()) {
-               tfuBuffer.readRecord(dationType == ALPHIC);
-               row = row - one;
-            }
-
-//printf("  --> col %d\n", dim->getColumn().x);
             tfuBuffer.setPosition((dim->getColumn()*stepSize).x);
+            if (newCol.x == 1) {
+               tfuBuffer.markEmpty();
+            }
          }
       } else {
          // no TFU buffer active
@@ -964,26 +985,23 @@ namespace pearlrt {
    }
 
 
-   void UserDationNB::beginSequenceHook(TaskCommon * me) {
+   void UserDationNB::beginSequenceHook(TaskCommon * me,
+                                        Dation::DationParams dir) {
       if (tfuBuffer.isUsed()) {
          tfuBuffer.markEmpty();
 
-         if (currentDirection == Dation::OUT) {
+         if (dir == Dation::OUT) {
             tfuBuffer.prepare();
          }
       }
    }
 
-   void UserDationNB::endSequenceHook() {
-      if (currentDirection == Dation::OUT) {
+   void UserDationNB::endSequenceHook( Dation::DationParams dir) {
+      if (dir == Dation::OUT) {
          if (tfuBuffer.isUsed() && tfuBuffer.isNotEmpty()) {
             if (dationParams & Dation::FORWARD) {
                // write TFU buffer to system dation
                tfuBuffer.flushRecord();
-
-               if (dationType == ALPHIC) {
-                  fill(1, '\n');
-               }
 
                // adjust dation position
 //printf("internal ADV FORWARD by %d elements\n",
@@ -1012,13 +1030,11 @@ namespace pearlrt {
          }
       }
 
-      if (currentDirection == Dation::IN) {
+      if (dir == Dation::IN) {
          if (tfuBuffer.isUsed()) {
             // forget unread input data
             // adjust dation position to beginning of next record
             if ((dim->getColumn() > zero).getBoolean()) {
-//printf("endSequence-FORWARD-TFU: internal ADV by %d elements\n",
-//    (dim->getColumn()).x);
                internalAdv(zero, zero, dim->getColumns() - dim->getColumn());
             }
 
@@ -1029,7 +1045,7 @@ namespace pearlrt {
             }
          }
       }
-
+      ((SystemDationNB*)systemDation)-> informIOOperationCompleted(dir);
 #if 0
       // if multiple IO-requests are allowed
       // the task unblocking is done by the system dation

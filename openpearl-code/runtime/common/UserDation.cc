@@ -141,15 +141,15 @@ namespace pearlrt {
             bd.u.io.direction = direction;
             blockThread = true;
          } else if (isBusy) {
-              // user dation is busy --> add current task to wait queue
-               // and wait for end of the i/o operation
-               waitQueue.insert(me);
-               bd.reason = IOWAITQUEUE;
-               bd.u.io.dation = this;
-               bd.u.io.direction = direction;
+            // user dation is busy --> add current task to wait queue
+            // and wait for end of the i/o operation
+            waitQueue.insert(me);
+            bd.reason = IOWAITQUEUE;
+            bd.u.io.dation = this;
+            bd.u.io.direction = direction;
           
-               Log::debug("%s: added to wait queue and waits...", me->getName());
-               blockThread = true;
+            Log::debug("%s: added to wait queue and waits...", me->getName());
+            blockThread = true;
          } else {
             isBusy = true;
             blockThread = false;
@@ -160,15 +160,20 @@ namespace pearlrt {
             // aquired task block sema, since unblock expects this
             mutexUserDation.unlock();
             me->block(&bd);    // block releases the global task lock
+//printf("try to obtain locks for userdation als tasks\n");
             mutexUserDation.lock();
             TaskCommon::mutexLock(); // we need access to the global task lock
+//printf("  ... success: got locks for userdation als tasks\n");
          }
 
 
-         beginSequenceHook(me);       // deal with TFU stuff
+         beginSequenceHook(me, direction);       // deal with TFU stuff
 
          TaskCommon::mutexUnlock(); // we need no longer access to task data
          mutexUserDation.unlock();
+
+         // maybe we must suspend/terminate on return from a
+         // non interruptable system device
          me->scheduleCallback();
       }
    }
@@ -183,7 +188,7 @@ namespace pearlrt {
       if (me) {
          mutexUserDation.lock();
 
-         endSequenceHook();   // deal with TFU stuff
+         endSequenceHook(direction);   // deal with TFU stuff
 
          // gain global task lock, since the task state of at least one
          // task changes
@@ -201,12 +206,15 @@ namespace pearlrt {
          } else {
             Log::debug("%s waits --> goon", pendingTask->getName());
             waitQueue.remove(pendingTask);
-            //currentTask = pendingTask;
             pendingTask->unblock();
          }
  
          TaskCommon::mutexUnlock();
          mutexUserDation.unlock();
+
+//         if (systemDation->allowMultipleIORequests()) {
+//            printf("UserDation::endSequence: finish io_multiple_requst\n");
+//         }
          me->scheduleCallback();
       }
 
@@ -231,6 +239,7 @@ namespace pearlrt {
    void UserDation::terminate(TaskCommon * ioPerformingTask) {
       systemDation->terminate(ioPerformingTask);
    }
+
 
    Dation::DationParams UserDation::getCurrentDirection() {
       return currentDirection;

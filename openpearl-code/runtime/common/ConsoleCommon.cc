@@ -60,6 +60,7 @@ namespace pearlrt {
       inputStarted = false;
       lastAdressedTask = NULL;
       waitingForInput = NULL;
+      writerInProgress = false;
       mutex.name("ConsoleCommon");
 
       // setup command list
@@ -422,6 +423,7 @@ namespace pearlrt {
          return NULL;
       }
 
+      // remove the receiving task from the list of waiting tasks
       for (t = waitingForInput; t != NULL; t = t->getNext()) {
          if (lastTaskEntered == t) {
             taskIsInList = true;
@@ -440,7 +442,7 @@ namespace pearlrt {
       }
 
       mutex.unlock();
-      startNextWriter();
+//      startNextWriter();
 
       if (taskIsInList) {
          return lastTaskEntered;
@@ -459,12 +461,26 @@ namespace pearlrt {
          TaskCommon * nextWriter = waitingForOutput.getHead();
 
          if (nextWriter) {
+//printf("startNextWriter: %s\n", nextWriter->getName());
+           writerInProgress = true;
             waitingForOutput.remove(nextWriter);
             nextWriter->unblock();
+         } else {
+           writerInProgress = false;
          }
       }
 
       mutex.unlock();
+   }
+
+   void ConsoleCommon::triggerWaitingTask(void * task, int direction) {
+      //TaskCommon * t = (TaskCommon*) task;
+//printf("cc:triggered(%s,%d)\n", t->getName(), direction);
+      if (direction == Dation::OUT) {
+         startNextWriter();
+      } else {
+            startNextWriter();
+      }
    }
 
    void ConsoleCommon::registerWaitingTask(void * task, int direction) {
@@ -477,11 +493,14 @@ namespace pearlrt {
          waitingForInput = t;
       } else if (direction == Dation::OUT) {
 
-         if (inputStarted || waitingForOutput.getHead()) {
+         if (inputStarted || waitingForOutput.getHead() || writerInProgress) {
             // queue not empty --> add task as waiter
+//printf("regWaiting: wq.insert(%s,%d)\n", t->getName(),direction);
             waitingForOutput.insert(t);
          } else {
             // let the task do its output
+//printf("regWaiting: t->unblock(%s,%d)\n", t->getName(),direction);
+            writerInProgress = true;
             t->unblock();
          }
       } else {

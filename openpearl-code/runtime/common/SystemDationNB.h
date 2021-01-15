@@ -131,6 +131,15 @@ namespace pearlrt {
       */      
       virtual Fixed<31> dationEof();
 
+      /**
+      inform system dation that an i/o opreation is completly
+      treated by the UserDation. This is needed e.g. in the Console-device
+      to start the next pendig output operation
+
+      \param dir current direction of the i/o operation
+      */
+      virtual void informIOOperationCompleted(Dation::DationParams dir);
+
    };
 }
 #endif

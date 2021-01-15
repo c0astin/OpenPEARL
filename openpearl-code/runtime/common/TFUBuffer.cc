@@ -40,13 +40,36 @@
 namespace pearlrt {
 
    void TFUBuffer::flushRecord() {
-      system->dationWrite(record, sizeOfRecord);
+      int trailingPaddingCharacters = 0;
+      int resultingSize=0;
+      static /* const */ char nl = '\n';
+      if (isAlphicForward) {
+         for (int i=sizeOfRecord-1; i>=0; i--) {
+             if (record[i] == ' ') {
+                trailingPaddingCharacters ++;
+             } else {
+                break;
+             }
+         }
+         if (trailingPaddingCharacters) {
+            record[sizeOfRecord-trailingPaddingCharacters] = '\n';
+            resultingSize = sizeOfRecord - trailingPaddingCharacters +1;
+         }
+         system->dationWrite(record, resultingSize);
+         if (trailingPaddingCharacters==0) {
+           system->dationWrite(&nl, 1);
+         }
+      } else {
+         system->dationWrite(record, sizeOfRecord);
+      }
       readWritePointer = 0;
       prepare();
    }
 
-   void TFUBuffer::readRecord(bool untilNL) {
-      int i;
+   //void TFUBuffer::readRecord(bool untilNL) {
+   void TFUBuffer::readRecord() {
+      size_t i;
+      bool untilNL = isAlphicForward;
       char ch = 0;
       bool nlFound = false;
       bool nonPaddingCharacterFound = false;
@@ -86,6 +109,7 @@ namespace pearlrt {
          }
 
          containsData = true;
+//printf("readRecord: %02x %02x %02x ...\n", record[0], record[1], record[2]);
       } else {
          system->dationRead(record, sizeOfRecord);
          containsData = true;
@@ -93,18 +117,22 @@ namespace pearlrt {
 
 //      readWritePointer = 0;
    }
+   void TFUBuffer::setAlphicForward(bool isAlphicForward) {
+      this->isAlphicForward = isAlphicForward;
+   }
 
    TFUBuffer::TFUBuffer() {
+      this->isAlphicForward = false;
       sizeOfRecord = 0;
       record = NULL;
       system = NULL;
       readWritePointer = 0;
-      oldRecordNumber = 0;
       containsData = false;
    }
+
    void TFUBuffer::markEmpty() {
+      forgetUnGetChar();
       readWritePointer = 0;
-      oldRecordNumber = 0;
       containsData = false;
    }
 
@@ -120,7 +148,8 @@ namespace pearlrt {
    }
 
    void TFUBuffer::prepare() {
-      int i;
+      size_t i;
+//printf("TFUBuffer::prepare\n");
 
       for (i = 0; i < sizeOfRecord; i++) {
          record[i] = paddingElement;
@@ -139,18 +168,20 @@ namespace pearlrt {
    }
 
    void TFUBuffer::read(void * data, size_t n) {
+//printf("TFU::read: isUsed()  %d -- isEmpty: %d\n", isUsed(), !isNotEmpty());
       if (isUsed()) {
          if (!isNotEmpty()) {
-            readRecord(paddingElement); // if padding element is 0 --> DationRW
+//            readRecord(paddingElement); // if padding element is 0 --> DationRW
+            readRecord(); // if padding element is 0 --> DationRW
          }
 
-         if (sizeOfRecord - readWritePointer >= (int)n) {
+         if (sizeOfRecord - readWritePointer >= n) {
             memcpy(data, &record[readWritePointer], n);
             readWritePointer += n;
          } else {
+            containsData = false;
             Log::error("read over end of TFU buffer");
             throw theInternalDationSignal;
-            containsData = false;
          }
       } else {
          system->dationRead(data, n);
@@ -161,6 +192,11 @@ namespace pearlrt {
       if (isUsed()) {
          if (!isNotEmpty()) {
             prepare(); // if padding element is 0 --> DationRW
+         }
+
+         if (readWritePointer + n > sizeOfRecord ) {
+            Log::error("TFUBuffer: record overflow");
+            throw theInternalDationSignal; 
          }
 
          memcpy(&record[readWritePointer], data, n);
@@ -176,7 +212,12 @@ namespace pearlrt {
    }
 
    void TFUBuffer::putChar(char c) {
+
       if (isUsed()) {
+         if (readWritePointer + 1 > sizeOfRecord ) {
+            Log::error("TFUBuffer: record overflow");
+            throw theInternalDationSignal; 
+         }
          record[readWritePointer++] = c;
          containsData = true;
       } else {
@@ -190,7 +231,7 @@ namespace pearlrt {
       if (isUsed()) {
          if (!containsData) {
             // until NL since this method is used only in DationPG
-            readRecord(true);
+            readRecord();
          }
 
          if (readWritePointer < sizeOfRecord) {

@@ -24,7 +24,7 @@ DONOTRUN=000_empty \
 	450_struct_dcl \
         703_userdation_dcl \
 	704_dation_open \
-	705_dation_close
+	705_dation_close 
 
 ####################################################
 ##### do not change beyond this line  ##############

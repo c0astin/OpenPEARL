@@ -89,11 +89,6 @@ namespace pearlrt {
       */
       Mutex mutexUserDation;
 
-      /** pointer to the task, which performs an i/o-operation on this
-          dation
-      */
-//      TaskCommon* currentTask;
-
       /** current transfer direction.
           This is either Dation::IN or Dation::OUT
       */
@@ -251,7 +246,7 @@ namespace pearlrt {
 
    public:
       /**
-      restart the i/o operation after suspenion from wait queue
+      restart the i/o operation after suspension from wait queue
 
       \param me pointer to the task which performs the i/o.
                     May be NULL for testing purpose. Then no suspend and
@@ -311,7 +306,8 @@ namespace pearlrt {
 
       \param me pointer to th current executing task
       */
-      virtual void beginSequenceHook(TaskCommon* me) = 0;
+      virtual void beginSequenceHook(TaskCommon* me, 
+                                     Dation::DationParams dir) = 0;
 
       /**
       hook method to be called at each endSequence call
@@ -319,7 +315,7 @@ namespace pearlrt {
       This is needed by DationRW and DationPG for their TFU support
       and not for DationTS.
       */
-      virtual void endSequenceHook(void) = 0;
+      virtual void endSequenceHook(Dation::DationParams dir) = 0;
 
    public:
       /**

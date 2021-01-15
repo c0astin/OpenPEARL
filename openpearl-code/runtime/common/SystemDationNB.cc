@@ -52,6 +52,11 @@ namespace pearlrt {
       throw theNoEOFDationSignal;
    }
 
+   void SystemDationNB::informIOOperationCompleted(Dation::DationParams dir){
+       // half duplex devices do not need this
+       // currently (2021-01-13) only the Console device needs this
+   }
+
 #if 0 // moved to SystemDation
    void SystemDationNB::registerWaitingTask(void * task, int direction) {
       Log::error("SystemDationNB: missing overload in concrete system dation");

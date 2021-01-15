@@ -157,7 +157,6 @@ namespace pearlrt {
    void Console::dationRead(void * destination, size_t size) {
       // int ret;
       char * dest = (char*) destination;
-
 //      consoleMutexIn.lock();
 
       for (size_t i = 0;
@@ -173,7 +172,6 @@ namespace pearlrt {
 
    void Console::dationWrite(void * source, size_t size) {
       stdOut.dationWrite(source, size);
-      consoleCommon.startNextWriter();
    }
 
    void Console::dationUnGetChar(const char x) {
@@ -204,4 +202,11 @@ namespace pearlrt {
       consoleCommon.terminate(ioPerformingTask);
    }
 
+   void Console::triggerWaitingTask(void * ioPerformingTask,
+                                    int direction) {
+      consoleCommon.triggerWaitingTask(ioPerformingTask, direction);
+   }
+   void Console::informIOOperationCompleted(Dation::DationParams dir) {
+      consoleCommon.startNextWriter();
+   }
 }

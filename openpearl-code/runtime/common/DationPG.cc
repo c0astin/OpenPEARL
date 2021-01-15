@@ -61,8 +61,13 @@ namespace pearlrt {
                      UserDationNB::ALPHIC) {
       dationStatus = CLOSED;
 
-#warning "wieso hat DationPG kein CYCLIC support?"
 
+      if ((params & STREAM) && (tfuRecord)) {
+         Log::error("DationPG: TFU must not be used on STREAM dations");
+         throw theInternalDationSignal;
+      }
+
+#warning "wieso hat DationPG kein CYCLIC support?"
       if (params & CYCLIC) {
          Log::error("DationPG: does not support CYCLIC");
          throw theDationParamSignal;
@@ -70,6 +75,10 @@ namespace pearlrt {
 
       stepSize = Fixed<31>(1);
       tfuBuffer.setupRecord(dim->getColumns().x, (char*)tfuRecord, ' ');
+      if ((params & FORWARD) && tfuBuffer.isUsed()) {
+         tfuBuffer.setAlphicForward(true);
+      }
+
    }
 
    void DationPG::dationRead(void * destination, size_t size) {
@@ -293,6 +302,8 @@ namespace pearlrt {
                       IODataList * dataList, IOFormatList * formatList) {
 
       int dataElement;
+
+
       try {
          beginSequence(me, Dation::IN);
          this->formatList = formatList;
@@ -326,9 +337,8 @@ namespace pearlrt {
 
             // treat arrays of simple types
             for (int32_t dataIndex = 0;
-                  dataIndex < (dataList->entry[dataElement].param1.numberOfElements);
-                  dataIndex++) {
-
+                 dataIndex < (dataList->entry[dataElement].param1.numberOfElements);
+                 dataIndex++) {
 
                getDataFormat(me, &dataList->entry[dataElement],
                              dataIndex,

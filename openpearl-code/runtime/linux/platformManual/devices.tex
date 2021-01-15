@@ -17,7 +17,7 @@ SYSTEM;
 
 PROBLEM;
    SPC console DATION INOUT SYSTEM ALPHIC;
-   DCL con     DATION INOUT ALPHIC DIM(*,80) CREATED(console);
+   DCL con     DATION INOUT ALPHIC DIM(*,80) TFU NOSTREAM CREATED(console);
 
 ttt: TASK;
    PUT 'hallo' TO con BY A, SKIP;
@@ -42,8 +42,8 @@ END
 
 \paragraph{Note:}\ 
 \begin{itemize}
-\item until TFU is supported we must end the format list with SKIP, 
-   which is not allowed in PEARL90
+\item  TFU we must specified in the userdation declaration
+and the record length must not exceed 80 characters
 \item Supported attributes: FORWARD, INOUT
 \item The first input at all must be prefixed with the task name
  quoted with colons. Eg. \verb|:input1:13|. Otherwise the error message
@@ -55,7 +55,7 @@ END
 \item outputs are blocked and queued as long as an input is in progress
 \item system control is possible via input lines startinmg with slash (/).
   The available commands may be obtained with the command \verb|/HELP|
-\item if adata with leading slash should  be entered to an appilication
+\item if a data with leading slash should  be entered to an appilication
    the taskname must be prefixed quoted with colons (e.g. \verb|:input2:/foo|)
 \item line edit features are supported with 
    insert on/off, cursor movement left and right, delete, backspace keys
@@ -65,7 +65,17 @@ END
    scope of OpenPEARL.
 \item try \verb|consoleDemo.prl|  in the OpenPEARL demo folder of your installation
 \end{itemize}
-
+The input \texttt{/PRLI} will procude an out about the current 
+tasks state like:
+\begin{verbatim}
+Number of pending tasks: 3
+t2            1   0  BLOCKED              (712_tfuAlphicConsole.prl:30)
+	IO-multiple
+t3            1   0  TERMINATED           (source file name not set:-1)
+	ACT next 2.0 sec : all 0.0 sec : 1 times remaining
+t1          255   1  BLOCKED              (712_tfuAlphicConsole.prl:19)
+	IO-multiple
+\end{verbatim}
 \section{Disc}
 The system device \verb|Disc| allows the access of files in the system.
 

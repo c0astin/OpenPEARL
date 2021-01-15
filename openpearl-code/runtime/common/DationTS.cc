@@ -120,10 +120,10 @@ namespace pearlrt {
        return false;
    }
 
-   void DationTS::beginSequenceHook(TaskCommon * me) {
+   void DationTS::beginSequenceHook(TaskCommon * me, Dation::DationParams dir) {
    }
 
-   void DationTS::endSequenceHook(void) {
+   void DationTS::endSequenceHook(Dation::DationParams dir) {
    }
 
    void DationTS::send(TaskCommon*me,

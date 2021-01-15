@@ -123,7 +123,7 @@ namespace pearlrt {
       </ul>
       \param me the pointre to the calling task
       */
-      void beginSequenceHook(TaskCommon * me);
+      void beginSequenceHook(TaskCommon * me, Dation::DationParams dir);
 
       /**
       hook method to be called at each endSequence call
@@ -133,7 +133,7 @@ namespace pearlrt {
 
       Here it marks the TFU buffer to be empty
       */
-      void endSequenceHook(void);
+      void endSequenceHook(Dation::DationParams dir);
 
 
       /**
@@ -195,6 +195,11 @@ namespace pearlrt {
       SystemDationNB* parent;
 
 #if 0
+      /** current transfer direction.
+          This is either Dation::IN or Dation::OUT
+      */
+      DationParams currentDirection;
+
       /**
       Current system dation object during operation - this may be different
       to system if the system dation supports multiple i/o-channels

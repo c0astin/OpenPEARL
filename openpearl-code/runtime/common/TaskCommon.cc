@@ -95,11 +95,11 @@ namespace pearlrt {
        name = (char*)"*anon*";
     }
  */
-    Log::debug("%s: MUTEX TASK: LOCKING...cccc= %d", getCallingTaskName(),cccc);
+  //Log::debug("%s: MUTEX TASK: LOCKING...cccc= %d", getCallingTaskName(),cccc);
 //    printf("MUTEX TASK: LOCKING...cccc= %d\n", cccc);
 
       mutexTasks.request();
-    Log::debug("%s: MUTEX TASK: LOCKED", getCallingTaskName());
+//    Log::debug("%s: MUTEX TASK: LOCKED", getCallingTaskName());
 
       // decrement monitoring variable
       cccc --;
@@ -120,7 +120,7 @@ namespace pearlrt {
        name = (char*)"*anon*";
     }
 */
-     Log::debug("%s: MUTEX TASK: UNLOCKING...cccc= %d", getCallingTaskName(),cccc);
+//     Log::debug("%s: MUTEX TASK: UNLOCKING...cccc= %d", getCallingTaskName(),cccc);
 
       // increment monitoring variable
       cccc ++;

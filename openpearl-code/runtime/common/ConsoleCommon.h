@@ -68,6 +68,7 @@ namespace pearlrt {
 
       PriorityQueue waitingForOutput;
       TaskCommon* waitingForInput;
+      bool writerInProgress;
       SystemDationNB * systemIn;
       SystemDationNB * systemOut;
       TaskCommon*  lastAdressedTask;
@@ -153,6 +154,17 @@ namespace pearlrt {
        \param direction is ether Dation::IN or Dation::OUT
        */
       void registerWaitingTask(void * task, int direction);
+
+      /**
+       trigger a registerd waiting task for an IO-operation
+
+       The method is only called if allowMultipleIORequests is set by the
+       system dation
+
+       \param task the pointer to the calling task
+       \param direction is ether Dation::IN or Dation::OUT
+       */
+      void triggerWaitingTask(void * task, int direction);
 
       /**
       terminate a task which is registered for console i/o

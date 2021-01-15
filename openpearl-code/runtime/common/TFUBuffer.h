@@ -55,17 +55,37 @@ namespace pearlrt {
    If no TFU buffer is defined, the sink and source implementations
    work directly on the system dation object.
 
+   Behavior of TFU on
+   - OUT ALPHIC FORWARD
+     The buffer becomes trimmed removeing all padding characters
+     and add a newline (\n) 
+   - IN ALPHIC FORWARD
+     Fill the buffer until a newline id reached. Remove the newline and
+     add padding character to the end of the buffer 
+   - OUT ALPHIC DIRECT
+     transfer the buffer to the device
+   - IN ALPHIC DIRECT
+     read n bytes of data from the device.
+     Fill with padding characters is less byte are available.
+   - IN/OUT DIRECT/FORWARD ALL/type
+     same as IN/OUT ALPHIC DIRECT
+   . 
    */
    class TFUBuffer : public Sink, public Source {
    private:
       SystemDationNB* system;
-      int sizeOfRecord;
+      size_t sizeOfRecord;
       char * record;
-      int readWritePointer;
+      size_t readWritePointer;
       bool containsData;
-      int oldRecordNumber;
       int paddingElement;
+      bool isAlphicForward;
    public:
+      /**
+      initialize the buffer management
+      */
+      TFUBuffer();
+
       /**
       send the TFU buffer to the output device, if the buffer is not empty
       */
@@ -73,15 +93,18 @@ namespace pearlrt {
 
       /** fill the TFU buffer with a complete record from the input device
 
-      \param untilNL if true, read until a \n is detected<br>
-                        false, read plain data
+//      \param untilNL if true, read until a \n is detected<br>
+//                        false, read plain data
       */
-      void readRecord(bool untilNL);
+ //     void readRecord(bool untilNL);
+      void readRecord();
 
       /**
-      initialize the buffer management
+      setup general behavior
+
+      \param isAlphicForward decides if \n is iserted/removed
       */
-      TFUBuffer();
+      void setAlphicForward(bool isAlphicForward);
 
       /**
       set the concrete system dation to operate on

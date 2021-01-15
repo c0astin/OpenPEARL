@@ -305,6 +305,19 @@ WRITE d TO .. BY SKIP;
      \end{itemize}
 \end{description}
 
+\subsection{TFU}
+TFU requires an input/output buffer for the data.
+The size of this buffer is definied by the record size from the DIM-attribute
+and the data size.
+
+The general behavior of a dation in context of usage from different tasks 
+is not affected. 
+The only problem occurs with the console device, which allows more than one 
+operation to be pending from different tasks. In order to avoid race conditions
+the SystemDationNB interface contains the method 
+\texttt{informIOOperationComplete} , which triggers the next pending output 
+operation in the system dation \texttt{Console}.
+
 \section{Concurrency during I/O}
 \label{ioconcurrency}
 
