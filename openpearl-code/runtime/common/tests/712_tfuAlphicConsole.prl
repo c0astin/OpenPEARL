@@ -1,0 +1,43 @@
+MODULE(tfu);
+SYSTEM;
+  con: Console;
+PROBLEM;
+  SPC con DATION INOUT SYSTEM ALPHIC;
+  DCL console DATION INOUT ALPHIC DIM(*,40) TFU FORWARD NOSTREAM CREATED(con);
+
+t1: TASK MAIN;
+  DCL (x,y) FIXED INIT(0,0);
+  DCL (a,b) CHAR(4);
+ 
+  OPEN console;
+  ACTIVATE t2;
+  AFTER 5 SEC ACTIVATE t3;
+  PUT 'hallo',x TO console BY LIST;
+  PUT 'hallo',x TO console BY A, F(6);
+  PUT 'hallo',x TO console BY A, F(6),SKIP;
+  REPEAT
+     GET a,x FROM console BY A, F(6), SKIP;
+     PUT '*** ',a,x TO console BY A,A,F(6),SKIP(2);
+  END;
+END;
+
+t2: TASK PRIO 1;
+  DCL count FIXED INIT(0);
+
+  REPEAT
+    AFTER 0.5 SEC RESUME;
+    count := count + 1;
+    PUT 'from t2: count=',count TO console BY A,F(6),SKIP;
+  END;
+END;
+t3: TASK PRIO 1;
+  DCL count FIXED INIT(0);
+
+  REPEAT
+    AFTER 0.5 SEC RESUME;
+    count := count + 1;
+    PUT 'from t3: count=',count TO console BY A,F(6),SKIP;
+  END;
+END;
+MODEND;
+

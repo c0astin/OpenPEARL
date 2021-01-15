@@ -1,0 +1,38 @@
+MODULE(tfu);
+SYSTEM;
+  so: StdOut;
+  si: StdIn;
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC;
+  SPC si DATION IN SYSTEM ALPHIC;
+  DCL stdout DATION OUT ALPHIC DIM(*,50) TFU FORWARD NOSTREAM CREATED(so);
+  DCL stdin DATION IN ALPHIC DIM(*,40) TFU FORWARD NOSTREAM CREATED(si);
+
+t1: TASK MAIN;
+  DCL (x,y) FIXED INIT(0,0);
+  DCL (a,b) CHAR(4);
+  OPEN stdout;
+  OPEN stdin; 
+  PUT 'hallo',x TO stdout BY LIST;
+  PUT 'hallo',x TO stdout BY A, F(6), SKIP;
+  PUT 'hallo',x TO stdout BY A, F(6),SKIP;
+    !  1234567890123456789012345678901234567890123 
+  PUT 'input tests; ready always CHAR(4),FIXED' TO stdout BY A,SKIP;
+  PUT 'enter X(3),SKIP(2),CHAR(4),X(2),F(6),SKIP' TO stdout BY A,SKIP; 
+  GET a,x FROM stdin BY X(3),SKIP(2),A,X(2),F(6),SKIP;
+  PUT '*** ',a,x TO stdout BY A,A,F(6),SKIP(2);
+  PUT 'enter: (2)(A,F(6),SKIP(2))' TO stdout;
+  GET a,x,b,y FROM stdin BY (2)(A,F(6),SKIP(2));
+  PUT '*** ',a,x,b,y TO stdout BY A,(2)(A,F(6),SKIP);
+  PUT 'enter: A,F(6),SKIP' TO stdout;
+  GET a,x FROM stdin BY A,F(6),SKIP;
+  PUT '*** ',a,x TO stdout BY A,A,F(6),SKIP(2);
+  PUT 'enter: by LIST' TO stdout;
+  GET a,x FROM stdin BY LIST;
+  PUT '*** ',a,x TO stdout BY A,A,F(6),SKIP(2);
+  PUT 'enter: A,F(6)' TO stdout;
+  GET a,x FROM stdin BY A,F(6);
+  PUT '*** ',a,x TO stdout BY A,A,F(6);
+END;
+
+MODEND;
