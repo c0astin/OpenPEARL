@@ -100,7 +100,9 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
       lhsAttr = m_ast.lookup(ctx.name()); 
       ctxName = ctx.name();
 //    }
-    lhsType = lhsAttr.getType();
+
+  //  lhsType = lhsAttr.getType();
+    lhsType = CommonUtils.getBaseTypeForName(ctxName,m_currentSymbolTable);
     id = ctxName.ID().getText();
     SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
     VariableEntry lhsVariable = null;
@@ -118,8 +120,6 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
         isSimpleType(lhsType))) {
       ErrorStack.add(lhsAttr.getType().toString() +" not allowed on lhs"); 
     } else { 
-
-
       TypeDefinition rhsType = m_ast.lookupType(ctx.expression());
       ASTAttribute rhsAttr = m_ast.lookup(ctx.expression());
       VariableEntry rhsVariable = rhsAttr.getVariable();
@@ -253,8 +253,6 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
     
     boolean typeMismatch = false;
 
-
-    
     if (matchExact) {
       if (lhsType instanceof TypeArraySpecification && rhsType instanceof TypeArray) {
         int lhsDim = ((TypeArraySpecification)lhsType).getNoOfDimensions();
@@ -265,6 +263,7 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
           typeMismatch = true;
         } 
       }
+
       if (!lhsType.equals(rhsType)) {
         typeMismatch = true; 
       }
@@ -294,8 +293,8 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
       } else if (lhsType.getPrecision() < rhsType.getPrecision()) {
         typeMismatch = true; 
       }
-    
     }
+
     if (typeMismatch) {
       ErrorStack.add("type mismatch: " +lhsAttr.getType().toString() +" := " + rhsAttr.getType().toString());
     }
