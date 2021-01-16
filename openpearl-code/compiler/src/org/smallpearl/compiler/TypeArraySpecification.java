@@ -72,9 +72,6 @@ public class TypeArraySpecification extends TypeDefinition {
         return m_dimensions;
     }
 
-
-
-
     public String toString() {
       String s = this.getName()+"(";
       for (int i=0; i<m_dimensions-1; i++) {

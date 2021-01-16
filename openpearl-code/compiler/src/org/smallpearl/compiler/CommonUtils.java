@@ -1171,4 +1171,51 @@ public class CommonUtils {
 
       return type;
     }
+
+    /**
+     * Determine the type of name
+     *
+     * @param ctx NameContext
+     * @param symbolTable Symboltable of the current scope
+     * @return TypeDefinition of a given name
+     */
+    public static TypeDefinition getBaseTypeForName( SmallPearlParser.NameContext ctx, SymbolTable symbolTable) {
+        TypeDefinition type = null;
+        TypeStructure struct = null;
+
+        SymbolTableEntry symbolTableEntry = symbolTable.lookup(ctx.ID().toString());
+
+        if (symbolTableEntry instanceof VariableEntry) {
+            SmallPearlParser.NameContext lctx = ctx.name();
+            VariableEntry var = (VariableEntry) symbolTableEntry;
+            type = var.getType();
+
+            if (type instanceof TypeArray) {
+                type = ((TypeArray) type).getBaseType();
+            } else if (type instanceof TypeReference) {
+                type = ((TypeReference) type).getBaseType();
+            }
+
+            if (type instanceof TypeStructure) {
+                struct = (TypeStructure) type;
+            }
+
+            while (lctx != null) {
+                StructureComponent structureComponent = struct.lookup(lctx.ID().toString());
+                type = structureComponent.m_type;
+
+                if ( type instanceof TypeArray) {
+                    type = ((TypeArray) type).getBaseType();
+                } else if (type instanceof TypeReference) {
+                    type = ((TypeReference) type).getBaseType();
+                } else if (type instanceof TypeStructure) {
+                    struct = (TypeStructure) type;
+                }
+
+                lctx = lctx.name();
+            }
+        }
+
+        return type;
+    }
 }
