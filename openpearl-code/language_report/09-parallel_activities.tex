@@ -1676,6 +1676,9 @@ Possible problem situations:
 \begin{description}
 \item[\kw{SemaOverFlowSignal}] is induced, if too many release operations
    are executed and the range of a \code{FIXED(32)} would exceed.
+\item[\kw{REQUEST} \code{s1,s1}] is successful, if the internal value of the 
+   semaphore is larger than 1.
+
 \end{description}
 
 %%%\end{added}
@@ -1732,12 +1735,13 @@ If \code{b} has state ``lock possible'', \code{b} assumes state ``locked''; othe
 the executing task is suspended and placed in a queue associated with \code{b}.
 \item[Effect of \kw{FREE}\code{ b;}]
 \index{FREE@\textbf{FREE}|textbf}
-\code{b} assumes state ``lock possible''. Furthermore, all tasks waiting in the
+If \code{b} is in state ''locked'' \code{b} assumes state ``lock possible''. Furthermore, all tasks waiting in the
 queue of \code{b} due to a \code{RESERVE} statement are released; the tasks repeat
 their locking statements in the order of their priorities. If no task
 is waiting due to a \code{RESEREVE} statement, all other waiting tasks, due to 
 their \code{ENTER}-instruction, are released, in turn repeating the \code{ENTER} 
 statement in the order of their priorities.
+
 \item[Effect of \kw{ENTER}\code{ b};]
 \index{ENTER@\textbf{ENTER}|textbf}
 If \code{b} has state ``locked'', or if a task is in the queue of \code{b} due to a
@@ -1749,11 +1753,12 @@ exclusive access; furthermore, the (internally noted) number Z of
 requiring exclusive access to the resource.)
 \item[Effect of \kw{LEAVE}\code{ b};]
 \index{LEAVE@\textbf{LEAVE}|textbf}
-If Z = 1, this statement has the same effect as ``\code{FREE b;}''.
+If Z = 1, this statement causes the \code{b} assumes the state ''lock possible''.
 Otherwise, Z is decremented by 1, and \code{b} keeps the state ``lock not
 possible''.
 \end{description}
 
+ 
 Example:
 
 A task \code{measurement} continuously acquires values of comparison
@@ -1828,6 +1833,8 @@ Possible problem situations:
    was executed before.
 \item [\kw{BoltEnterOverflowSignal}] if more than the range of \code{FIXED(32)} enter
    operations were executed in sequence.
+\item[\kw{RESERVE} \code{b,b}] will never succeed, since a
+    critical section cannot be locked twice.
 \end{description}
 
 %%%%%\end{added}
