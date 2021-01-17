@@ -1,0 +1,477 @@
+/*
+test for proper access to objects via REFs
+done: FIXED, array of REFs upon FIXED
+    INTERRUPT
+    TASK (only REF assignment ,REF compare , ACTIVATE via REF)
+
+missing:
+    TASK-function 
+    REF PROC
+    DATION 
+    SEMA,BOLT (array of .. and array of REF ...)
+
+*/
+MODULE(ref_deref);
+SYSTEM;
+stdout: Console; !StdOut;
+irupt1 : SoftInt(1);
+irupt2 : SoftInt(2);
+
+PROBLEM;
+SPC stdout DATION OUT SYSTEM ALPHIC ;
+! SPC (irupt1, irupt2) INTERRUPT;
+SPC irupt1 INTERRUPT;
+SPC irupt2 INTERRUPT;
+
+DCL so                 DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+DCL dationArray(4) REF DATION OUT ALPHIC DIM(*,80) FORWARD;
+DCL refArray(10) REF FIXED;
+
+DCL t1runs FIXED INIT(0);
+DCL t2runs FIXED INIT(0);
+
+DCL (testNbr,fails) FIXED INIT(0,0);
+DCL allTestsOk BIT(1) INIT('1'B);
+
+maintask: TASK  PRIO 10 MAIN;
+    OPEN so;
+
+    CALL fixed;
+    CALL printTestResult('fixed');
+
+    CALL fixedArrayRef;
+    CALL printTestResult('fixedArrayRef');
+    CALL task;
+    CALL printTestResult('task');
+
+    CALL irupt;
+    CALL printTestResult('irupt');
+
+    IF NOT allTestsOk THEN
+      __cpp__("   pearlrt::Control::setExitCode(1);       ");
+    FIN;
+    CLOSE so;
+END;
+
+printTestResult: PROC(test CHAR(20));
+   PUT '------------' TO so BY A, SKIP;
+   IF fails EQ 0 THEN
+      PUT test,'tests:', testNbr, ' tests done  ', fails,' failed *** success ***' TO so
+      BY  A,    A,       F(3),      A,        F(3),   A, SKIP;
+   ELSE
+      PUT test,'tests:', testNbr, ' tests done  ', fails,' failed *** failure ***' TO so
+      BY  A,    A,       F(3),      A,        F(3),   A, SKIP;
+      allTestsOk = '0'B1;
+   FIN;
+   fails = 0;
+   testNbr = 0; 
+END;
+
+t1: TASK;
+  t1runs = t1runs + 1;
+END;
+t2: TASK;
+  t2runs = t2runs + 1;
+END;
+
+/*==========================================================================*/
+task: PROC;
+   DCL (rt1,rt2) REF TASK;    
+   DCL art(2) REF TASK;
+   DCL delay DURATION INIT(0.2SEC);
+   DCL refDelay REF DURATION;
+   refDelay = delay;
+
+   PUT 'PROC task' TO so BY A,SKIP;
+
+   testNbr := testNbr + 1;
+   IF rt1 IS NIL THEN
+     PUT 'fine: rt1 is NIL' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rt1 should be NIL' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   rt1 := t1;
+   IF rt1 IS t1 THEN
+     PUT 'fine: rt1 is t1' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rt1 should be t1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   rt1 := t1;
+   IF t1 IS rt1 THEN
+     PUT 'fine: rt1 is t1' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rt1 should be t1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+
+   rt2 = rt1;
+   IF rt1 IS rt2 THEN
+      PUT 'fine: rt1 should be rt2' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rt2 should be rt1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   IF rt1 ISNT NIL THEN
+     PUT 'fine: rt1 should not be NIL' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rt1 should not be NIL' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   rt1 = NIL;
+   IF rt1 IS NIL THEN
+     PUT 'fine: rt1 should be NIL' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rt1 should  be NIL' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   rt1 = t1;
+   rt2 = t2;
+   IF rt1 ISNT rt2 THEN
+     PUT 'fine: rt1 differs from rt2' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rt1 should differ from rt2' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+
+   testNbr := testNbr + 1;
+   rt1 = t1;
+   ACTIVATE rt1;
+   AFTER refDelay RESUME;
+   IF t1runs EQ 1 THEN
+     PUT 'fine: t1 did run' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: t1 should run' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   IF art(1) IS NIL THEN
+     PUT 'fine: art(1) IS NIL' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: art(1) should be NIL' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   art(1) = t1;
+   IF art(1) IS t1 THEN
+     PUT 'fine: art(1) IS t1' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: art(1) should be t1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   art(2) = t2;
+   IF art(2) IS t2 THEN
+     PUT 'fine: art(2) IS t2' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: art(1) should be t1' TO so BY A,F(3),A, SKIP;
+   FIN;
+
+   testNbr := testNbr + 1;
+   IF art(1) ISNT art(2) THEN
+     PUT 'fine: art(1) ISNT art(2)' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: art(1) differ from art(2)' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   t1runs = 0;
+ 
+   ACTIVATE art(1);
+   AFTER refDelay RESUME;
+   IF t1runs EQ 1 THEN
+     PUT 'fine: art(1) did run' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: art(1) should run' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   /* this is not working yet (2020-10-29) rm
+   testNbr := testNbr + 1;
+   rt1 = TASK;
+   rt2 := TASK(maintask);
+   IF rt1 /= rt2 THEN
+     PUT 'fine: rt1 points to maintask' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rt1 should point to maintask' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+   */
+
+END;
+
+/*=========================================================================*/
+fixedArrayRef: PROC;
+   DCL f(10) FIXED;
+   DCL rf(10) REF FIXED;
+   DCL help REF FIXED;
+   DCL ok BIT(1) INIT('1'B1);
+
+   PUT 'PROC fixedArrayRef' TO so BY A,SKIP;
+
+   testNbr := testNbr + 1;
+   FOR i TO 10 REPEAT
+      f(i) = 10 - i;
+      rf(i) = f(i);
+   END;
+  
+   PUT 'idx f(i)  rf(i)' TO so BY A, SKIP;
+   FOR i TO 10 REPEAT
+      PUT i, f(i), rf(i) TO so BY 3F(6),SKIP;
+   END;
+
+   ! sort the references occording the references values
+   FOR i TO 9 REPEAT 
+      FOR j FROM i+1 TO 10 REPEAT
+          IF rf(i) > rf(j) THEN
+             help = rf(j);
+             rf(j) = rf(i);
+             rf(i) = help;
+          FIN;
+      END;
+   END;
+   FOR i TO 9 REPEAT 
+      IF rf(i) > rf(i+1) THEN
+          ok = '0'B1;
+      FIN;
+   END;
+
+   PUT 'sorted via rf()-array ', 'idx f(i)  rf(i)' TO so BY A, SKIP;
+   FOR i TO 10 REPEAT
+      PUT i, f(i), rf(i) TO so BY 3F(4),SKIP;
+   END;
+   
+   IF ok THEN
+      PUT ' success' TO so BY A, SKIP;
+   ELSE
+      PUT ' failure' TO so BY A, SKIP;
+      fails = fails + 1;
+   FIN;
+END;
+
+/*==========================================================================*/
+fixed: PROC;
+   DCL testNbr FIXED INIT(0);
+   DCL (k1,k2)         FIXED,
+       (rk1,rk2) REF FIXED;     /* fixed reference variable */
+
+   PUT 'PROC fixed' TO so BY A,SKIP;
+
+   testNbr := testNbr + 1;
+   IF rk1 IS NIL THEN
+     PUT 'fine: rk1 is NIL' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rk1 should be NIL' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   rk1 := k1;
+   IF rk1 IS k1 THEN
+     PUT 'fine: rk1 is k1' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rk1 should be k1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   rk1 := k1;
+   IF k1 IS rk1 THEN
+     PUT 'fine: rk1 is k1' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rk1 should be k1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   k1 = 42;
+   IF rk1 EQ 42 THEN
+     PUT 'fine: rk1 derefered is 42' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rk1 should be 42' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   k1 = 42;
+   IF 42 EQ rk1 THEN
+     PUT 'fine: rk1 derefered is 42' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rk1 should be 42' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   k2 := CONT rk1;
+   IF k2 EQ 42 THEN
+     PUT 'fine: k2 is 42' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: k2 should be 42' TO so BY A,F(3),A, SKIP;
+   FIN;
+
+   testNbr := testNbr + 1;
+   k2 = 0;
+   k2 := rk1;
+   IF k2 EQ 42 THEN
+     PUT 'fine: k2 is 42' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: k2 should be 42' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   rk2 = rk1;
+   IF rk1 IS rk2 THEN
+      PUT 'fine: rk1 should be rk2' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rk2 should be rk1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   IF rk1 ISNT NIL THEN
+     PUT 'fine: rk1 should not be NIL' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rk1 should not be NIL' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   rk1 = NIL;
+   IF rk1 IS NIL THEN
+     PUT 'fine: rk1 should be NIL' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rk1 should  be NIL' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   testNbr := testNbr + 1;
+   rk1 = k1;
+   rk2 = k2;
+   IF rk1 ISNT rk2 THEN
+     PUT 'fine: rk1 differs from rk2' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rk1 should differ from rk2' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+END;
+
+DCL iruptTaskDidRun FIXED INIT(0);
+DCL shutdown BIT(1) INIT('0'B);
+
+irupt: PROC;
+   DCL rirupt REF INTERRUPT;
+
+   PUT 'irupt tests' TO so BY A, SKIP;
+   ACTIVATE iruptTask;
+   AFTER 0.5 SEC RESUME;
+
+   testNbr := testNbr + 1;
+   IF rirupt IS NIL THEN
+      PUT 'fine: rirupt is NIL' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: REF irupt is not NIL' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+   
+   testNbr := testNbr + 1;
+   rirupt = irupt1;
+   IF rirupt IS irupt1 THEN
+      PUT 'fine: rirupt is irupt1' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: REF irupt is not irupt1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+   
+   testNbr := testNbr + 1;
+   iruptTaskDidRun := 0;
+   ENABLE irupt1;
+   TRIGGER irupt1;
+   AFTER 0.5 SEC RESUME;  ! give iruptTask a chance to run
+   IF iruptTaskDidRun EQ 1 THEN
+      PUT 'fine: irupt task did run once (', iruptTaskDidRun,')' TO so 
+      BY A, F(3), A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: irupt task did not run once: run ',iruptTaskDidRun 
+     TO so BY A,F(3),A,F(3), SKIP;
+     fails := fails + 1;
+   FIN; 
+   
+   testNbr := testNbr + 1;
+   iruptTaskDidRun := 0;
+   DISABLE rirupt; 
+   TRIGGER irupt1;
+   ! iruptTask runs with PRIO 1 -> no need to wait on a single core system
+   ! with multicore we may not become preempted --> let's wait a little bit
+   AFTER 0.5 SEC RESUME;  ! give iruptTask a chance to run
+   IF iruptTaskDidRun EQ 0 THEN
+      PUT 'fine: irupt task did not run' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: irupt task did run ',iruptTaskDidRun,' times' 
+     TO so BY A,F(3),A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+
+   testNbr := testNbr + 1;
+   iruptTaskDidRun := 0;
+   ENABLE rirupt;
+   TRIGGER irupt1;
+   ! iruptTask runs with PRIO 1 -> no need to wait on a single core system
+   ! with multicore we may not become preempted --> let's wait a little bit
+   AFTER 0.1 SEC RESUME;  ! give iruptTask a chance to run
+   IF iruptTaskDidRun EQ 1 THEN
+      PUT 'fine: irupt task did run once' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: irupt task did not run once; run ',
+        iruptTaskDidRun,' times' TO so BY A,F(3),A,F(3), A, SKIP;
+     fails := fails + 1;
+   FIN; 
+   
+   testNbr := testNbr + 1;
+   iruptTaskDidRun := 0;
+   DISABLE rirupt; 
+   TRIGGER rirupt;
+   AFTER 0.5 SEC RESUME;  ! give iruptTask a chance to run
+   IF iruptTaskDidRun EQ 0 THEN
+      PUT 'fine: irupt task did not run' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: irupt task did run' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   shutdown := '1'B;
+   PREVENT iruptTask;
+   CONTINUE iruptTask;
+   AFTER 0.5 SEC RESUME; ! wait for iruptTask to print termination message  
+END;
+
+iruptTask: TASK PRIO 1;
+   PUT 'iruptTask started' TO so BY A, SKIP;
+   WHILE NOT shutdown REPEAT
+    !  PUT 'iruptTask wait for irupt1' TO so BY A, SKIP;
+      WHEN irupt1 RESUME;
+      iruptTaskDidRun = iruptTaskDidRun + 1;
+   END;
+   PUT 'iruptTask end' TO so BY A, SKIP;
+END;
+
+MODEND;
+
