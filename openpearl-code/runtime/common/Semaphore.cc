@@ -72,17 +72,27 @@ namespace pearlrt {
       value ++;
    }
 
-   int Semaphore::check(BlockData::BlockReasons::BlockSema *bd) {
+   int Semaphore::internalDoTry(BlockData::BlockReasons::BlockSema *bd) {
       int wouldBlock = 0;
       int i;
 
       for (i = 0; i < bd->nsemas; i++) {
+         Log::debug("   Semaphore %s is %d",
+                    bd->semas[i]->getName(), (int)bd->semas[i]->getValue());
+      }
+
+      for (i = 0; i < bd->nsemas; i++) {
          if (bd->semas[i]->getValue() == 0) {
             wouldBlock = 1;
+            // revert all previos decrements of this operation
+            for (int j=0; j<i; j++) {
+               bd->semas[j]->increment(); 
+            }
+            return wouldBlock;
+         } else {
+            bd->semas[i]->decrement(); 
          }
 
-         Log::debug("   check::sema: %s is %d",
-                    bd->semas[i]->getName(), (int)bd->semas[i]->getValue());
       }
 
       return wouldBlock;
@@ -103,14 +113,14 @@ namespace pearlrt {
       Log::debug("request from task %s for %d semaphores", me->getName(),
                 nbrOfSemas);
 
-      wouldBlock = check(&(bd.u.sema));
+      wouldBlock = internalDoTry(&(bd.u.sema));
 
       if (! wouldBlock) {
-         for (i = 0; i < nbrOfSemas; i++) {
-            semas[i]->decrement();
-         }
+         //for (i = 0; i < nbrOfSemas; i++) {
+         //   semas[i]->decrement();
+         //}
 
-         // critival region end
+         // critical region end
          TaskCommon::mutexUnlock();
       } else {
          Log::debug("   task: %s going to blocked", me->getName());
@@ -128,7 +138,7 @@ namespace pearlrt {
       int i;
       int wouldBlock;
 
-      // start critical region - end after doinf all possible releases
+      // start critical region - end after doing all possible releases
       TaskCommon::mutexLock();
       Log::debug("release from task %s for %d semaphores", me->getName(),
                  nbrOfSemas);
@@ -136,8 +146,6 @@ namespace pearlrt {
       try {
          for (i = 0; i < nbrOfSemas; i++) {
             semas[i]->increment();
-            Log::debug("   sema: %s is now %u",
-                       semas[i]->getName(), (int)semas[i]->getValue());
          }
       } catch (SemaOverflowSignal x) {
          Log::error("SemaOverflowSignal for %s",
@@ -145,17 +153,21 @@ namespace pearlrt {
          TaskCommon::mutexUnlock();
          throw;
       }
+      for (i = 0; i < nbrOfSemas; i++) {
+         Log::debug("   Semaphore %s is now %u",
+                       semas[i]->getName(), (int)semas[i]->getValue());
+      }
 
       TaskCommon * t = waiters.getHead();;
 
       while (t != 0) {
          t->getBlockingRequest(&bd);
-         wouldBlock = check(&(bd.u.sema));
+         wouldBlock = internalDoTry(&(bd.u.sema));
 
          if (!wouldBlock)  {
-            for (i = 0; i < bd.u.sema.nsemas; i++) {
-               bd.u.sema.semas[i]->decrement();
-            }
+            //for (i = 0; i < bd.u.sema.nsemas; i++) {
+            //   bd.u.sema.semas[i]->decrement();
+            //}
 
             waiters.remove(t);
             t->unblock();
@@ -184,13 +196,13 @@ namespace pearlrt {
       TaskCommon::mutexLock();
       Log::debug("try from task %s for %d semaphores", me->getName(),
                  nbrOfSemas);
-      wouldBlock = check(&(bd.u.sema));
+      wouldBlock = internalDoTry(&(bd.u.sema));
 
-      if (! wouldBlock) {
-         for (i = 0; i < nbrOfSemas; i++) {
-            semas[i]->decrement();
-         }
-      }
+      //if (! wouldBlock) {
+      //   for (i = 0; i < nbrOfSemas; i++) {
+      //      semas[i]->decrement();
+      //   }
+      //}
 
       TaskCommon::mutexUnlock();
 
@@ -198,7 +210,6 @@ namespace pearlrt {
          result.x = 0;   // false
       }
 
-      //return !wouldBlock;
       return result;
    }
 
@@ -211,12 +222,12 @@ namespace pearlrt {
       int wouldBlock;
 
       t->getBlockingRequest(&bd);
-      wouldBlock = check(&(bd.u.sema));
+      wouldBlock = internalDoTry(&(bd.u.sema));
 
       if (!wouldBlock)  {
-         for (int i = 0; i < bd.u.sema.nsemas; i++) {
-            bd.u.sema.semas[i]->decrement();
-         }
+      //   for (int i = 0; i < bd.u.sema.nsemas; i++) {
+      //      bd.u.sema.semas[i]->decrement();
+      //   }
 
          waiters.remove(t);
          t->unblock();

@@ -68,13 +68,13 @@ namespace pearlrt {
          return ((char*)"???");
 
       case FREE:
-         return ((char*)"free");
+         return ((char*)"'lock possible'");
 
       case ENTERED:
-         return ((char*)"entered");
+         return ((char*)"'lock not possible'");
 
       case RESERVED:
-         return ((char*)"reserved");
+         return ((char*)"'locked'");
       }
    }
 
@@ -86,6 +86,19 @@ namespace pearlrt {
    int Bolt::check(BlockReason r, BlockData::BlockReasons::BlockBolt *bd) {
       int wouldBlock = 0;
       int i;
+     
+      // check for duplicate bolts in list at reservea
+      if (r == RESERVE) {
+         for (int i = 0; i < bd->nbolts-1; i++) {
+            for (int j = i+1; j < bd->nbolts; j++) {
+               if (bd->bolts[i] == bd->bolts[j]) {
+                  Log::error("RESERVE: multiple bolt '%s' would cause eternal lock", bd->bolts[i]->getName());
+                  TaskCommon::mutexUnlock();
+                  throw theBoltReserveDuplicateSignal;
+               }
+            }
+         }
+      }
 
       for (i = 0; i < bd->nbolts; i++) {
          if (bd->bolts[i]->getState() == RESERVED ||
@@ -93,9 +106,14 @@ namespace pearlrt {
             wouldBlock = 1;
          }
 
-         Log::debug("%s:   check bolt: state is %d; nbrOfEnterOperations=%d",
-                    bd->bolts[i]->getName(), (int)bd->bolts[i]->getState(),
+         if (bd->bolts[i]->getState() == ENTERED) {
+            Log::debug("  Bolt %s is %s (%d times)",
+                    bd->bolts[i]->getName(), bd->bolts[i]->getStateName(),
                     (int)bd->bolts[i]->getNbrOfEnterOperations());
+         } else {
+            Log::debug("  Bolt %s is %s",
+                    bd->bolts[i]->getName(), bd->bolts[i]->getStateName());
+	 }
       }
 
       return wouldBlock;
@@ -225,14 +243,18 @@ namespace pearlrt {
 
             if (bolts[i]->getNbrOfEnterOperations() == 0) {
                bolts[i]->setState(FREE);
-               Log::debug("   bolt: %s is now free",
-                          bolts[i]->getName());
+               Log::debug("   bolt: %s is now %s",
+                          bolts[i]->getName(), bolts[i]->getStateName());
+            } else {
+               Log::debug("   bolt: %s is now %s (%d times)",
+                          bolts[i]->getName(), bolts[i]->getStateName(),
+                          bolts[i]->getNbrOfEnterOperations());
             }
          } else {
             // RESERVED
             bolts[i]->setState(FREE);
-            Log::debug("%s: BOLT is now free",
-                       bolts[i]->getName());
+            Log::debug("%s: BOLT is now %s",
+                       bolts[i]->getName(), bolts[i]->getStateName());
          }
       }
 
