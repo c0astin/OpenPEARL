@@ -1,0 +1,10 @@
+Code Style for the Compiler
+---------------------------
+* variables/comments/messages in english
+* Java coding conventions
+* Javadoc for Classes
+   * task of a  class
+   * principle of operations
+   * important information for the usage
+* errors must be reported via the ErrorStack-class 
+
