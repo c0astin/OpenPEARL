@@ -70,8 +70,8 @@ public class BlockEntry extends SymbolTableEntry {
      * Called by toString to recursively stringify the scope, if non-null.
      */
     protected String scopeString(int m_level) {
-        return scope == null ? "" : "\n " + indentString(m_level) +
-                scope.toString(m_level);
+
+      return scope == null ? "" : "\n" + scope.toString(m_level);
     }
 
     public int getSourceLineNo() {

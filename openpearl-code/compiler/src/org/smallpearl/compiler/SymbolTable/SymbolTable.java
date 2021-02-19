@@ -209,12 +209,8 @@ public class SymbolTable {
 
     public String toString(int level) {
         SymbolTableEntry e;
-        String indent = "", output = "";
+        String output = "";
         int nextLevel = level + 1;
-
-        for (int i = 0; i < level; i++) {
-            indent += "  ";
-        }
 
         for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
             output += ((SymbolTableEntry)it.next()).toString(nextLevel) +
@@ -500,4 +496,5 @@ public class SymbolTable {
     protected HashMap m_entries;
     public int m_level;
     private boolean m_usesSystemElements;
+    
 }
