@@ -173,6 +173,29 @@ public class ErrorStack {
         leave();
         return null;
     }
+    /**
+     * add a new error in a temporary new error context
+     * 
+     * emits an info message to System.err with
+     * 
+     * <ul>
+     * <li>the corresponding source code
+     * <li>colored region for the error
+     * <li>complete hierarchy of the error stack and the error message<br>
+     * like PUT:E-format:fieldWidth: must be positive
+     * </ul>
+     * 
+     * The error counters are incremented
+     * @param ctx the current ParserRuleContext
+     * @param prefix the error prefix
+     * @param msg the concrete error message
+     */
+    public static Void info(ParserRuleContext ctx, String prefix, String msg) {
+        enter(ctx,prefix);
+        printMessage(msg,"info");
+        leave();
+        return null;
+    }
     
 	/**
      * add a new internal compiler error
