@@ -63,11 +63,12 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
     protected String indentString(int level) {
         String indent = "";
 
-        for (int i = 0; i < level; i++) {
+        for (int i = 1; i < level; i++) {
             indent += "  ";
         }
 
-        return "";
+        //return "";
+        return indent;
     }
 
     @Override
