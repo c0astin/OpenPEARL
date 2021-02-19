@@ -1229,6 +1229,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             System.out.println("SymbolTableVisitor: visitLoopStatement");
         }
 
+        if (ctx.loopStatement_end().ID() != null) {
+            blockLabel = ctx.loopStatement_end().ID().getText();
+        }
+
         LoopEntry loopEntry = new LoopEntry(blockLabel, ctx, m_currentSymbolTable);
 
         m_currentSymbolTable = m_currentSymbolTable.newLevel(loopEntry);
@@ -1264,10 +1268,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             } else if (stmt.unlabeled_statement() != null) {
                 visitUnlabeled_statement(stmt.unlabeled_statement());
             }
-        }
-
-        if (ctx.loopStatement_end().ID() != null) {
-            blockLabel = ctx.loopStatement_end().ID().getText();
         }
 
         m_currentSymbolTable = m_currentSymbolTable.ascend();
