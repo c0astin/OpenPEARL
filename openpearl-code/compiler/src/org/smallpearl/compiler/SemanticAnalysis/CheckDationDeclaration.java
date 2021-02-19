@@ -39,11 +39,14 @@ import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
 
 /**
- * @author mueller
  *
- * check if all referenced system dations are specified 
- * verify compatibility of system dation attributes with user dation attributes
- * create entry in symbol table with the dations attributes
+ * checks
+ * <ul>
+ * <li> if all referenced system dations are specified
+ * <li>verify compatibility of system dation attributes with user dation attributes
+ * </ul> 
+ * 
+ * creates entry in symbol table with the dation attributes
  * 
  */
 public class CheckDationDeclaration extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
@@ -171,7 +174,7 @@ public class CheckDationDeclaration extends SmallPearlBaseVisitor<Void> implemen
         	// this is all enforced by the grammar
         	
         	if (d.isSystemDation()) {
-        		ErrorStack.add("SYSTEM dations may not be declared");
+        		ErrorStack.add("SYSTEM dations may not become declared");
         	}
         	// dimension settings must be >0 or '*' if given
         	// only the last dimension may be '*' - the not 0 check is not in the grammar
@@ -208,7 +211,7 @@ public class CheckDationDeclaration extends SmallPearlBaseVisitor<Void> implemen
                TypeDation sd = (TypeDation)(((VariableEntry)sys).getType());
                
                // check compatibility
-               // (1) ALPHIC need !BASIS of the system dation
+               // (1) ALPHIC need !BASIC of the system dation
                if (d.isAlphic() && sd.isBasic()) {
             	   ErrorStack.add("attempt to create PUT/GET dation upon BASIC system dation");
                }

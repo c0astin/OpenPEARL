@@ -52,13 +52,25 @@ import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
 
 /**
- * @author mueller
  *
- * check if the formal parameters are passed correctly
- *   - arrays, dations and realtime elements by IDENT,
- *    
- * check if the result type is supported (currently no TYPE and no REF)
+ * checks whether:
+ * <ul>
+ * <li>the formal parameters are passed correctly ---
+ *    arrays, dations and realtime elements by IDENT,
+ * <li> the result type is supported (currently no TYPE and no REF)
+ * <li>the RETURN statement uses a proper type of expression, 
+ *    but an implicit RETURN at the end of a PROc with RETURNS is not 
+ *    part of this check 
+ * <li>the procedure call uses compatible parameters
+ * </ul>
  * 
+ * <p>
+ * Missing stuff:
+ * <ul>
+ *   <li>parameters of function calls are not treated, yet
+ *   <li>REF is not treated 
+ *   <li>TYPE is not treated
+ * </ul>
  * 
  */
 public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
@@ -200,7 +212,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
 		if (m_typeOfReturns != null) {
 			// check last statement of function to be RETURN
 			// this is easier to implement as to enshure that all paths of control
-			// meet a RETURN(..) statemen
+			// meet a RETURN(..) statement
 			ProcedureBodyContext b = ctx.procedureBody();
 			int last = b.statement().size();
 			if (last == 0) {
