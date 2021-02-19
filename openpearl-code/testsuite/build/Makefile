@@ -15,10 +15,9 @@
 # the result of make build is ok, if all test cases work
 # the result of make doesnotbuild is ok, if no test cases work
 
+#	800_struct_decl  \
  
 DONOTBUILD= 030_signals 031_signalsInduce  \
-	043_switch \
-	800_struct_decl  \
 	851_ref_deref
 
 DONOTRUN=000_empty \
