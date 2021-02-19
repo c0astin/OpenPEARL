@@ -1084,6 +1084,11 @@ case_list
 
 index_section
     : constantFixedExpression ( ':' constantFixedExpression )?
+    | constantCharacterString ( ':' constantCharacterString )?
+    ;
+
+constantCharacterString
+    : StringLiteral
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
