@@ -65,7 +65,7 @@ public class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<Vo
     m_constantPoolVisitor = constantPoolVisitor;
     m_properties = new ParseTreeProperty<ConstantValue>();
     m_enterResultinConstantPool = true;
-    m_debug = true;
+    m_debug = debug;
   }
 
   public ConstantValue lookup(ParserRuleContext ctx) {
