@@ -1679,8 +1679,8 @@ switch ((<expression>).get()) {
 }
 >>
 
-CaseStatement2(expression,alternatives,out) ::= <<
-switch ((<expression>).get()) {
+CaseStatement2(expression,isChar,alternatives,out) ::= <<
+switch (<if (isChar)>*<endif>(<expression>).get()) {
     <alternatives>
     <out>
 }
