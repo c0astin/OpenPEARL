@@ -41,6 +41,7 @@ PROBLEM;
 
 DCL (s1,s2) BOLT;
 DCL n FIXED(15);
+DCL testOk BIT(1) INIT('1'B);
 
 __cpp__("char buffer[100];");
 
@@ -56,6 +57,20 @@ T1: TASK PRIO 10 MAIN;
    RESERVE s1;
    FREE s1;
 
+   PUT 'Task T1: RESERVE-duplicate' TO console BY A, SKIP;
+   __cpp__("try {");
+      ok = '0'B1;
+      RESERVE s1,s1;
+   __cpp__( "} catch (BoltReserveDuplicateSignal s) {");
+      ok = '1'B1;
+         PUT '*** success got BoltReserveDuplicateSignal' TO console BY A, SKIP;
+   __cpp__("}");
+
+   IF NOT ok THEN
+      PUT '*** fail got NO BoltReserveDuplicateSignal' TO console BY A, SKIP;
+      testOk = '0'B1;
+   FIN;
+
    PUT 'Task T1: just LEAVE' TO console BY A, SKIP;
    __cpp__("try {");
    ok = '0'B1;
@@ -67,6 +82,7 @@ T1: TASK PRIO 10 MAIN;
 
       IF NOT ok THEN
          PUT '*** fail got NO BoltStateSignal' TO console BY A, SKIP;
+      testOk = '0'B1;
       FIN;
 
    ! test multiple enter
@@ -86,6 +102,7 @@ T1: TASK PRIO 10 MAIN;
       PUT '*** multiple LEAVE is ok' TO console BY A, SKIP;
    ELSE
       PUT '*** multiple LEAVE failed' TO console BY A, SKIP;
+      testOk = '0'B1;
    FIN;
    __cpp__("printf(\"sequence: %s\\n\", buffer);");
 
@@ -99,12 +116,14 @@ T1: TASK PRIO 10 MAIN;
       PUT '*** multiple RESERVE is ok' TO console BY A, SKIP;
    ELSE
       PUT '*** multiple RESERVE failed' TO console BY A, SKIP;
+      testOk = '0'B1;
    FIN;
    AFTER 3SEC RESUME;
    IF n EQ 0 THEN
       PUT '*** multiple FREE is ok' TO console BY A, SKIP;
    ELSE
       PUT '*** multiple FREE failed' TO console BY A, SKIP;
+      testOk = '0'B1;
    FIN;
    __cpp__("printf(\"sequence: %s\\n\", buffer);");
 
@@ -120,9 +139,13 @@ T1: TASK PRIO 10 MAIN;
       PUT '*** reserve has priority is ok' TO console BY A, SKIP;
    __cpp__("} else {");
       PUT '*** reserve has priority failed' TO console BY A, SKIP;
+      testOk = '0'B1;
    __cpp__("}");
    __cpp__("printf(\"sequence: %s\\n\", buffer);");
 
+   IF NOT testOk THEN
+   __cpp__("pearlrt::Control::setExitCode(1);");
+   FIN;
 END;
 
 T2: TASK PRIO 20;
@@ -143,7 +166,7 @@ T3: TASK PRIO 20;
   n := n - 1;
 END;
 
-R1: TASK PRIO 20;
+R1: TASK PRIO 19;
   RESERVE s1, s2;
   n := n + 1;
   __cpp__("strcat(buffer,\"R1 \");");
@@ -152,7 +175,7 @@ R1: TASK PRIO 20;
   n := n - 1;
 END;
 
-R2: TASK PRIO 20;
+R2: TASK PRIO 21;
   RESERVE s1, s2;
   n := n + 1;
   __cpp__("strcat(buffer,\"R2 \");");

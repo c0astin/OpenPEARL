@@ -80,7 +80,7 @@ namespace pearlrt {
       uint32_t value;           // the internal semaphore value
       const char * name;
       static PriorityQueue waiters;
-      static int check(BlockData::BlockReasons::BlockSema *bd);
+      static int internalDoTry(BlockData::BlockReasons::BlockSema *bd);
 
    public:
       /**

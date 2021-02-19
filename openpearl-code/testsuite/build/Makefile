@@ -18,7 +18,8 @@
  
 DONOTBUILD= 030_signals 031_signalsInduce  \
 	043_switch \
-	800_struct_decl 
+	800_struct_decl  \
+	851_ref_deref
 
 DONOTRUN=000_empty \
 	450_struct_dcl \
