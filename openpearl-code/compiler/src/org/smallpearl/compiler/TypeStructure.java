@@ -193,6 +193,16 @@ public class TypeStructure extends TypeDefinition {
         return null;
     }
 
+    /**
+     * Get a structure component by its index-.
+     *
+     * @param index of the component starting from 0
+     * @return StructureComponent of the identifier
+     */
+    public StructureComponent getStructureComponentByIndex(int index) {
+        return m_listOfComponents.get(index);
+    }
+
     public ST toST(STGroup group) {
         ST st = group.getInstanceOf("StructureType");
         st.add("type", getStructureName());

@@ -942,6 +942,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             visitTypeReference(ctx.typeReference());
             ((TypeArray) tempType).setBaseType(m_type);
             m_type = tempType;
+        } else if (ctx.typeStructure() != null) {
+            TypeDefinition tempType = m_type;
+            visitTypeStructure(ctx.typeStructure());
+            ((TypeArray) tempType).setBaseType(m_type);
+            m_type = tempType;
         }
 
         return null;
@@ -1555,7 +1560,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         return null;
     }
 
-
     private ArrayList<Initializer> getInitialisationAttribute(SmallPearlParser.InitialisationAttributeContext ctx) {
         Log.debug("SymbolTableVisitor:getInitialisationAttribute:ctx" + CommonUtils.printContext(ctx));
 
@@ -1563,7 +1567,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
         if (ctx != null) {
             for (int i = 0; i < ctx.initElement().size(); i++) {
-                ConstantValue constant = getInitElement(ctx.initElement(i));
+                ConstantValue constant = getInitElement(i,ctx.initElement(i));
                 
                 SimpleInitializer initializer = new SimpleInitializer(ctx.initElement(i), constant);
                 initElementList.add(initializer);
@@ -1579,7 +1583,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         }
     }
 
-    private ConstantValue getInitElement(SmallPearlParser.InitElementContext ctx) {
+    private ConstantValue getInitElement(int index, SmallPearlParser.InitElementContext ctx) {
         ConstantValue constant = null;
 
         Log.debug("SymbolTableVisitor:getInitElement:ctx" + CommonUtils.printContext(ctx));
@@ -1587,7 +1591,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         if (ctx.constantExpression() != null) {
             constant = getConstantExpression(ctx.constantExpression());
         } else if (ctx.constant() != null) {
-            constant = getConstant(ctx.constant());
+            constant = getConstant(index, ctx.constant());
         } else if (ctx.ID() != null) {
             SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().toString());
 
@@ -1619,7 +1623,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         return constant;
     }
 
-    private int getPrecisionByType(TypeDefinition type) {
+    private int getPrecisionByType(int index, TypeDefinition type) {
         int precision =  0;
 
         if ( type instanceof TypeFixed) {
@@ -1630,7 +1634,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             precision = ((TypeBit)type).getPrecision();
         } else if ( type instanceof TypeArray) {
             TypeArray arrType = (TypeArray)type;
-            precision = getPrecisionByType(arrType.getBaseType());
+            precision = getPrecisionByType(index, arrType.getBaseType());
+        } else if ( type instanceof TypeStructure) {
+            TypeStructure structType = (TypeStructure)type;
+            precision = getPrecisionByType(index, structType.getStructureComponentByIndex(index).m_type);
         } else {
             throw new InternalCompilerErrorException("Cannot determine lenght of type");
         }
@@ -1638,7 +1645,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         return precision;
     }
 
-    private ConstantValue getConstant(SmallPearlParser.ConstantContext ctx) {
+    private ConstantValue getConstant(int index, SmallPearlParser.ConstantContext ctx) {
         ConstantValue constant = null;
         int sign = 1;
 
@@ -1659,7 +1666,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             if ( ctx.fixedConstant().fixedNumberPrecision() != null ) {
                 curlen = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
             } else {
-                curlen = getPrecisionByType(m_type);
+                curlen = getPrecisionByType(index, m_type);
             }
 
             constant = new ConstantFixedValue(curval,curlen);
@@ -1864,9 +1871,12 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         visitTypeStructure(ctx.typeStructure());
 
         if ( ctx.dimensionAttribute() != null ) {
+            Log.debug("SymbolTableVisitor:visitStructureDenotation: ARRAY");
+            TypeDefinition typ = m_type;
             m_type = new TypeArray();
             visitDimensionAttribute(ctx.dimensionAttribute());
-            ((TypeArray) m_type).setBaseType(m_typeStructure);
+            ((TypeArray)m_type).setBaseType(m_typeStructure);
+            addArrayDescriptor(new ArrayDescriptor(((TypeArray)m_type).getNoOfDimensions(), ((TypeArray)m_type).getDimensions()));
         } else if ( ctx.typeStructure() != null ) {
             m_type = m_typeStructure;
         } else {

@@ -1405,6 +1405,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     problem_part
                             .add("DationDeclarations",
                                     visitDationDeclaration((SmallPearlParser.DationDeclarationContext) c));
+                } else if (c instanceof SmallPearlParser.Cpp_inlineContext) {
+                    problem_part
+                            .add("cpp",
+                                    visitCpp_inline((SmallPearlParser.Cpp_inlineContext) c));
+                } else if (c instanceof SmallPearlParser.DationDeclarationContext) {
+                    problem_part
+                            .add("DationDeclarations",
+                                    visitDationDeclaration((SmallPearlParser.DationDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.ProcedureDeclarationContext) {
                     ST procedureDeclaration = visitProcedureDeclaration((SmallPearlParser.ProcedureDeclarationContext) c);
 
@@ -1434,15 +1442,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             }
         }
 
-
         ST semaphoreArrays = m_group.getInstanceOf("SemaphoreArrays");
         ST boltArrays = m_group.getInstanceOf("BoltArrays");
-        
-  
+
         //problem_part.add("semaphoreArrays", semaphoreArrays);
         problem_part.add("semaphoreArrays", constantSemaphoreArrays);
         problem_part.add("boltArrays", constantBoltArrays);        
-
 
         ST arrayDescriptors = m_group.getInstanceOf("ArrayDescriptors");
         LinkedList<ArrayDescriptor> listOfArrayDescriptors = m_symbolTableVisitor

@@ -47,7 +47,6 @@ tokens {
      Digit
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Excerpt from PEARL 90 LANGUAGE REPORT, Version 2.2 September 1998, page 135
 //
@@ -167,9 +166,9 @@ problem_part:
     (
           lengthDefinition
         | typeDefinition
+        | arrayVariableDeclaration
         | scalarVariableDeclaration
         | structVariableDeclaration
-        | arrayVariableDeclaration
         | semaDeclaration
         | boltDeclaration
         | interruptSpecification
@@ -449,6 +448,7 @@ structVariableDeclaration :
 ////////////////////////////////////////////////////////////////////////////////
 
 structureDenotation :
+//    ID dimensionAttribute? assignmentProtection? typeStructure globalAttribute? initialisationAttribute?
     ID dimensionAttribute? assignmentProtection? typeStructure globalAttribute? initialisationAttribute?
     ;
 
@@ -513,7 +513,6 @@ structureDenotationS :
 
 arrayVariableDeclaration :
     ( 'DECLARE' | 'DCL' ) arrayDenotation ( ',' arrayDenotation )* ';'
-    | cpp_inline
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -546,6 +545,7 @@ typeAttributeForArray :
     | type_bit
     | type_char
     | typeReference
+    | typeStructure
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2267,10 +2267,6 @@ name:
 listOfExpression:
     expression ( ',' expression )*
     ;
-
-//name
-//    : ID ( '(' index ( ',' index )? ')' )? ( '.' name )?
-//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Index ::=

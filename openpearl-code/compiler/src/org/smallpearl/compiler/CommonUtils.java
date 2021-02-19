@@ -1201,6 +1201,7 @@ public class CommonUtils {
             }
 
             while (lctx != null) {
+                String s= lctx.ID().toString();
                 StructureComponent structureComponent = struct.lookup(lctx.ID().toString());
                 type = structureComponent.m_type;
 
