@@ -2094,7 +2094,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST st = m_group.getInstanceOf("CaseStatement2");
         ST st_alt = m_group.getInstanceOf("CaseAlternatives");
 
+        ASTAttribute attr = m_ast.lookup(ctx.expression());
         st.add("expression", visitAndDereference(ctx.expression()));
+        if (attr.m_type instanceof TypeChar) {
+          st.add("isChar", 1);
+        }
 
         for (int i = 0; i < ctx.case_statement_selection2_alt().size(); i++) {
             SmallPearlParser.Case_statement_selection2_altContext alt = ctx
@@ -2183,6 +2187,27 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 m_map_to_const = old_map_to_const;
 
                 st.add("indices", st_range);
+            }
+            if ( index.constantCharacterString().size() == 1) {
+              ST st_index = m_group.getInstanceOf("CaseIndex");
+              
+              String s = index.constantCharacterString(0).getText();
+              s = CommonUtils.removeQuotes(s);
+
+              st_index.add("index", (int)s.charAt(0));
+              st.add("indices", st_index);
+
+            } else if (index.constantCharacterString().size() == 2){
+              ST st_range = m_group.getInstanceOf("CaseRange");
+            
+              String sLow = index.constantCharacterString(0).getText();
+              sLow = CommonUtils.removeQuotes(sLow);
+              st_range.add("from", (int)sLow.charAt(0));
+              
+              String sUp = index.constantCharacterString(1).getText();
+              sUp = CommonUtils.removeQuotes(sUp);
+              st_range.add("to", (int)sUp.charAt(0));
+              st.add("indices", st_range);
             }
         }
 
