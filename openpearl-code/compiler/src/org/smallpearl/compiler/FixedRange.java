@@ -29,19 +29,41 @@
 
 package org.smallpearl.compiler;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 
+/**
+ * 
+ * Class to store a range of values for a CASE-Statement
+ * 
+ * If the range is of type CHAR, the ASCII-values are stored.
+ * 
+ * The class contains 
+ * <ul>
+ * <li>the context of the range definition to allow 
+ * error messages with the location of previous definition if a selector
+ * if listed duplicate
+ * <li>the fist value of the range of selectors
+ * <li>the last value of the range of selectors, which is identical to the
+ * first value, if a single value is specified
+ * </ul>
+ *
+ */
 public class FixedRange {
     private long m_lowerBoundary;
     private long m_upperBoundary;
+    private ParserRuleContext ctx;
 
     public FixedRange() {
         this.m_lowerBoundary = 0;
         this.m_upperBoundary = 0;
+        ctx = null;
     }
 
-    public FixedRange(long lowerBoundary, long upperBoundary) {
+    public FixedRange(ParserRuleContext ctx, long lowerBoundary, long upperBoundary) {
+        this.ctx = ctx;
         this.m_lowerBoundary = lowerBoundary;
         this.m_upperBoundary = upperBoundary;
+        this.ctx = ctx;
     }
 
     public String toString() {
@@ -71,8 +93,16 @@ public class FixedRange {
         return this.m_lowerBoundary <= value && value <= this.m_upperBoundary;
     }
 
+    /* no longer used 
     public boolean isContained(long lwb, long upb) {
         return this.m_lowerBoundary <= lwb && lwb <= this.m_upperBoundary || this.m_lowerBoundary <= upb && upb <= this.m_upperBoundary;
     }
+    */
+    
+    public ParserRuleContext getCtx() {
+      return ctx;
+    }
+    
+  
 
 }
