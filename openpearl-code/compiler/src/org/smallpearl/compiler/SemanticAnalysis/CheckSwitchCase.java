@@ -260,13 +260,15 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
           isOk=false;
         } else if ( index.constantFixedExpression().size() == 1) {
 
-          ConstantValue alt = evaluator.visit(index.constantFixedExpression(0));
+          ConstantFixedValue alternativ = evaluator.visit(index.constantFixedExpression(0));
 
-          lowerBoundary = ((ConstantFixedValue) alt).getValue();
+          lowerBoundary = alternativ.getValue();
           upperBoundary = lowerBoundary;
 
-          if (lowerBoundary > max || lowerBoundary< min) {
-            ErrorStack.add(index,"CASE", "alternative out of range of selector");
+          if (alternativ.getPrecision()>m_currentCaseDataSet.m_typeOfExpression.getPrecision()){
+            ErrorStack.add(index.constantFixedExpression(0),"CASE", 
+                "alternative is of type FIXED("+alternativ.getPrecision()+
+                ") -- expression is of type FIXED("+m_currentCaseDataSet.m_typeOfExpression.getPrecision()+")");
             isOk = false;
           }
 
@@ -282,17 +284,25 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
           }
         }
         else if (index.constantFixedExpression().size() == 2){
-          ConstantValue lower = evaluator.visit(index.constantFixedExpression(0));
-          ConstantValue upper = evaluator.visit(index.constantFixedExpression(1));
+          ConstantFixedValue alternativ = evaluator.visit(index.constantFixedExpression(0));
 
-
-          lowerBoundary = ((ConstantFixedValue) lower).getValue();
-          upperBoundary = ((ConstantFixedValue) upper).getValue();
-          if (lowerBoundary > max || lowerBoundary< min ||
-              upperBoundary> max || upperBoundary<min) {
-            ErrorStack.add(index,"CASE", "alternative out of range of selector");
+          lowerBoundary = alternativ.getValue();
+          if (alternativ.getPrecision()>m_currentCaseDataSet.m_typeOfExpression.getPrecision()){
+            ErrorStack.add(index.constantFixedExpression(0),"CASE", 
+                "alternative is of type FIXED("+alternativ.getPrecision()+
+                ") -- expression is of type FIXED("+m_currentCaseDataSet.m_typeOfExpression.getPrecision()+")");
             isOk = false;
           }
+
+          alternativ = evaluator.visit(index.constantFixedExpression(1));
+          upperBoundary = alternativ.getValue();
+          if (alternativ.getPrecision()>m_currentCaseDataSet.m_typeOfExpression.getPrecision()){
+            ErrorStack.add(index.constantFixedExpression(1),"CASE", 
+                "alternative is of type FIXED("+alternativ.getPrecision()+
+                ") -- expression is of type FIXED("+m_currentCaseDataSet.m_typeOfExpression.getPrecision()+")");
+            isOk = false;
+          }
+          
           if (lowerBoundary>upperBoundary) {
             isOk = false;
             ErrorStack.add(index, "CASE", "illegal range");
