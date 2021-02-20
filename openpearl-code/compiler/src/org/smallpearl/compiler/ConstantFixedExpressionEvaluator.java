@@ -104,7 +104,17 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
                 value = v;
             }
         }
+        
+        // adjust m_precision according the result
+        int bc ;//= Long.numberOfLeadingZeros(value.getValue());
+        long val= value.getValue();
 
+        // this solution is not nice for the cpu, but it works
+        bc = Long.toBinaryString(Math.abs(val)).length();
+        if (val < 0) {
+          bc--;
+        }
+        value.setPrecision(bc);
         return value;
     }
 
@@ -174,7 +184,13 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
         }
 
         if ( ctx.fixedConstant() != null) {
-            int curval = sign * Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
+          long curval = 0;
+          try {
+             curval = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
+          } catch (NumberFormatException e) {
+            ErrorStack.add(ctx,"FIXED","too large");
+          }
+//            int curval = sign * Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
             int curlen =   m_currentSymbolTable.lookupDefaultFixedLength();
 
             if ( ctx.fixedConstant().fixedNumberPrecision() != null ) {
