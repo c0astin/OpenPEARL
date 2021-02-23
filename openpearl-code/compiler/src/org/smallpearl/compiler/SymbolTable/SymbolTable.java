@@ -30,14 +30,34 @@
 
 package org.smallpearl.compiler.SymbolTable;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.smallpearl.compiler.*;
 import org.smallpearl.compiler.Exception.NotYetImplementedException;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Vector;
 
-
+/**
+ * Organize a hierarchically SymbolTable with individual tables for each 
+ * scope.
+ * 
+ * Special treatment of block and loops
+ * <ul>
+ * <li>blocks and loops may have a name. 
+ * <li> the name may not be redefined in an inner block or loop level
+ * <li>blocks and loops may be defined also without a name
+ * <li>the HashMap of the SymbolTable stores only the last added 
+ *    element of a given key. Thus loops and blocks without a name 
+ *    are not reliable in the Hashmap  
+ * <li>to get the context for the continuation point for EXIT we need access
+ *    to the Loop/Block entry with the identical context
+ * <li>since the context is unique, we may store loop- and block-entries
+ *     in a list (Vector) for the complete module
+ * </ul>
+ */
 public class SymbolTable {
 
     /**
@@ -46,11 +66,13 @@ public class SymbolTable {
      * parent is initialized to null, and m_level to 0.  Parent and m_level are
      * only set to non-null/non-zero values when a SymbolTable is constructed
      * with the newLevel method.
+     * 
      */
     public SymbolTable() {
-        m_entries = new HashMap();
+        m_entries = new HashMap<String, SymbolTableEntry>();
         m_level = 0;
         m_usesSystemElements = false;
+        
     }
 
     /**
@@ -86,6 +108,7 @@ public class SymbolTable {
 
     public SymbolTable newLevel(BlockEntry blockEntry) {
         SymbolTable newst;
+        m_loopsAndBlocks.add(blockEntry);
 
         enter(blockEntry);
         newst = blockEntry.scope = new SymbolTable();
@@ -110,6 +133,8 @@ public class SymbolTable {
 
     public SymbolTable newLevel(LoopEntry loopEntry) {
         SymbolTable newst;
+        m_loopsAndBlocks.add(loopEntry);
+        
         enter(loopEntry);
         newst = loopEntry.scope = new SymbolTable();
         newst.parent = this;
@@ -131,10 +156,22 @@ public class SymbolTable {
 
         return null;
     }
+   
+    public SymbolTableEntry lookupLoopBlock(ParserRuleContext ctx) {
+      SymbolTable st;
+      SymbolTableEntry se;
+     
+      for (int i=0; i<m_loopsAndBlocks.size(); i++) {
+        if (m_loopsAndBlocks.get(i).getCtx().equals(ctx)) {
+          return m_loopsAndBlocks.get(i);
+        }
+      }
+      return null;
+  }
 
     public SymbolTableEntry lookupLocal(String name) {
         Log.debug("SymbolTable:lookupLocal: name=" + name);
-        return (SymbolTableEntry) m_entries.get(name);
+        return m_entries.get(name);
     }
 
     /**
@@ -144,9 +181,12 @@ public class SymbolTable {
      * <br> true, if the symbol was added
      */
     public boolean enter(SymbolTableEntry se) {
+
+ 
         if (lookupLocal(se.getName()) != null) {
             return false;
         }
+   
         se.setLevel(m_level);
         m_entries.put(se.getName(), se);
         return true;
@@ -212,8 +252,8 @@ public class SymbolTable {
         String output = "";
         int nextLevel = level + 1;
 
-        for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
-            output += ((SymbolTableEntry)it.next()).toString(nextLevel) +
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+            output += it.next().toString(nextLevel) +
                     (it.hasNext() ? "\n" : "");
         }
 
@@ -224,8 +264,8 @@ public class SymbolTable {
         LinkedList<TaskEntry>  listOfTaskEntries = new  LinkedList<TaskEntry>();
         SymbolTableEntry e;
 
-        for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
-            SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry symbolTableEntry = it.next();
             if ( symbolTableEntry instanceof TaskEntry ) {
                 TaskEntry taskEntry = (TaskEntry)symbolTableEntry;
                 listOfTaskEntries.add(taskEntry);
@@ -239,8 +279,8 @@ public class SymbolTable {
         LinkedList<VariableEntry>  listOfVariableDeclarationsEntries = new  LinkedList<VariableEntry>();
         SymbolTableEntry e;
 
-        for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
-            SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry symbolTableEntry = it.next();
             if ( symbolTableEntry instanceof VariableEntry ) {
                 VariableEntry variableEntry = (VariableEntry)symbolTableEntry;
                 listOfVariableDeclarationsEntries.add(variableEntry);
@@ -254,8 +294,8 @@ public class SymbolTable {
     public LinkedList<VariableEntry> getAllArrayDeclarations(SymbolTable symbolTable) {
         LinkedList<VariableEntry> listOfArrayDeclarations = new LinkedList<VariableEntry>();
 
-        for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
-            SymbolTableEntry entry = (SymbolTableEntry)it.next();
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry entry = it.next();
        }
 
         return listOfArrayDeclarations;
@@ -265,8 +305,8 @@ public class SymbolTable {
         LinkedList<SemaphoreEntry>  listOfSemaEntries = new  LinkedList<SemaphoreEntry>();
         SymbolTableEntry e;
 
-        for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
-            SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof SemaphoreEntry) {
                 SemaphoreEntry semaEntry = (SemaphoreEntry) symbolTableEntry;
                 listOfSemaEntries.add(semaEntry);
@@ -280,8 +320,8 @@ public class SymbolTable {
         LinkedList<BoltEntry>  listOfBoltEntries = new  LinkedList<BoltEntry>();
         SymbolTableEntry e;
 
-        for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
-            SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof BoltEntry) {
                 BoltEntry boltEntry = (BoltEntry) symbolTableEntry;
                 listOfBoltEntries.add(boltEntry);
@@ -294,8 +334,8 @@ public class SymbolTable {
     public LinkedList<ModuleEntry> getModules() {
         LinkedList<ModuleEntry>  listOfModules = new  LinkedList<ModuleEntry>();
 
-        for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
-            SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof ModuleEntry) {
                 ModuleEntry moduleEntry = (ModuleEntry) symbolTableEntry;
                 listOfModules.add(moduleEntry);
@@ -309,8 +349,8 @@ public class SymbolTable {
         HashMap<String,TypeStructure>  structures = new  HashMap<>();
         SymbolTableEntry e;
 
-        for (Iterator it = m_entries.values().iterator(); it.hasNext(); ) {
-            SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+            SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof ModuleEntry) {
                 getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope, structures);
             }
@@ -493,8 +533,9 @@ public class SymbolTable {
     public boolean usesSystemElements() { return m_usesSystemElements;}
 
     public SymbolTable parent;
-    protected HashMap m_entries;
+    protected HashMap<String, SymbolTableEntry> m_entries;
     public int m_level;
     private boolean m_usesSystemElements;
+    private static  Vector<SymbolTableEntry>  m_loopsAndBlocks = new Vector<SymbolTableEntry>(); 
     
 }

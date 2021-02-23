@@ -4,22 +4,20 @@ import org.smallpearl.compiler.SmallPearlParser;
 
 /****
  *
- * VariableEntry extends SymbolTableEntry by adding data fields to support
- * variables and parameters.  It has a boolean field indicating if this is a
- * reference-type symbol.  Reference-type symbols are definable in programming
- * languages with explicitly declared pointer types and/or call-by-reference
- * parameters.
- *									    <p>
- * VariableEntry also has an integer memory location field.  This can be either
- * an absolute address, or a relative offset, e.g., in a stack frame.
+ * LabelEntry extends SymbolTableEntry by adding a useCount attribute
+ * 
+ * the useCount is used to detect unused labels
  *
  */
 public class LabelEntry extends SymbolTableEntry {
 
+    private int m_useCount;
+    
     /**
      * Construct this with null data fields.
      */
     public LabelEntry() {
+      super();
     }
 
     /**
@@ -27,7 +25,8 @@ public class LabelEntry extends SymbolTableEntry {
      */
     public LabelEntry(String name, SmallPearlParser.Label_statementContext ctx) {
         super(name);
-        this.m_ctx = ctx;
+        super.m_ctx = ctx;
+        m_useCount=0;
     }
 
     /**
@@ -37,13 +36,6 @@ public class LabelEntry extends SymbolTableEntry {
     public String toString(int level) {
         return indentString(level) + super.toString(level) + "label ";
     }
-    public int getSourceLineNo() {
-        return m_ctx.getStart().getLine();
-    }
+    
 
-    public int getCharPositionInLine() {
-        return m_ctx.getStart().getCharPositionInLine();
-    }
-
-    private SmallPearlParser.Label_statementContext m_ctx;
 }

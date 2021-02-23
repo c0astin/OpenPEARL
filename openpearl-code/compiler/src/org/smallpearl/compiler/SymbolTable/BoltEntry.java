@@ -15,11 +15,12 @@ public class BoltEntry extends SymbolTableEntry {
     public String toString(int level) {
         return indentString(level) + super.toString(level) + "var " + "BOLT";
     }
-    public int getSourceLineNo() {
-        return m_ctx.getStart().getLine();
-    }
-    public int getCharPositionInLine() {
-        return m_ctx.getStart().getCharPositionInLine();
-    }
-    private SmallPearlParser.BoltDeclarationContext m_ctx;
+ // deprecated. is now in SymboleTableEntry       
+//    public int getSourceLineNo() {
+//        return m_ctx.getStart().getLine();
+//    }
+//    public int getCharPositionInLine() {
+//        return m_ctx.getStart().getCharPositionInLine();
+//    }
+//    private SmallPearlParser.BoltDeclarationContext m_ctx;
 }

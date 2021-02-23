@@ -38,13 +38,14 @@ public class LengthEntry extends SymbolTableEntry {
         return s;
     }
 
-    public int getSourceLineNo() {
-        return m_ctx.getStart().getLine();
-    }
-
-    public int getCharPositionInLine() {
-        return m_ctx.getStart().getCharPositionInLine();
-    }
+ // deprecated. is now in SymboleTableEntry       
+//    public int getSourceLineNo() {
+//        return m_ctx.getStart().getLine();
+//    }
+//
+//    public int getCharPositionInLine() {
+//        return m_ctx.getStart().getCharPositionInLine();
+//    }
 
     public TypeDefinition getType() { return this.m_type; }
 }

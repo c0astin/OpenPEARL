@@ -88,17 +88,22 @@ public class ProcedureEntry extends SymbolTableEntry {
     protected String scopeString(int m_level) {
         return scope == null ? "\n" : "\n" + scope.toString(m_level);
     }
-    public int getSourceLineNo() {
-        return m_ctx.getStart().getLine();
-    }
-    public int getCharPositionInLine() {
-        return m_ctx.getStart().getCharPositionInLine();
-    }
+
+// deprecated. is now in SymboleTableEntry     
+//    public int getSourceLineNo() {
+//        return m_ctx.getStart().getLine();
+//    }
+//    public int getCharPositionInLine() {
+//        return m_ctx.getStart().getCharPositionInLine();
+//    }
+//
+//    private  SmallPearlParser.ProcedureDeclarationContext m_ctx;
+
+    
     public TypeDefinition getResultType() { return m_resultType != null ? m_resultType.getType() : null; }
 
     public SymbolTable scope;
-    private  SmallPearlParser.ProcedureDeclarationContext m_ctx;
-
+   
 	public LinkedList<FormalParameter> getFormalParameters() {
 		return m_formalParameters;
 	}

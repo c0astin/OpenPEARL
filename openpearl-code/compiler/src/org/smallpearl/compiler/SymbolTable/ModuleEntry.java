@@ -52,18 +52,20 @@ public class ModuleEntry extends SymbolTableEntry {
         return scope == null ? "" : "\n" + scope.toString(m_level);
     }
 
-    public int getSourceLineNo() {
-        return m_ctx.getStart().getLine();
-    }
-
-    public int getCharPositionInLine() {
-        return m_ctx.getStart().getCharPositionInLine();
-    }
-
+// deprecated. is now in SymboleTableEntry   
+//    public int getSourceLineNo() {
+//        return m_ctx.getStart().getLine();
+//    }
+//
+//    public int getCharPositionInLine() {
+//        return m_ctx.getStart().getCharPositionInLine();
+//    }
+//    
+//  private SmallPearlParser.ModuleContext m_ctx;
     /**
      * Local scope for this function.
      */
     public SymbolTable scope;
 
-    private SmallPearlParser.ModuleContext m_ctx;
+
 }

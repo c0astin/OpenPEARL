@@ -50,15 +50,15 @@ public class LoopEntry extends SymbolTableEntry {
         return scope == null ? "" : "\n"  + scope.toString(m_level);
     }
 
-    public int getSourceLineNo() {
-        return m_ctx.getStart().getLine();
-    }
-
-    public int getCharPositionInLine() {
-        return m_ctx.getStart().getCharPositionInLine();
-    }
+// deprecated. is now in SymboleTableEntry       
+//    public int getSourceLineNo() {
+//        return m_ctx.getStart().getLine();
+//    }
+//
+//    public int getCharPositionInLine() {
+//        return m_ctx.getStart().getCharPositionInLine();
+//    }
 
     /** Local scope for this function. */
     public SymbolTable scope;
-    private SmallPearlParser.LoopStatementContext m_ctx;
-}
+    }

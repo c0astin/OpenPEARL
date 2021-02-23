@@ -17,7 +17,7 @@ public class VariableEntry extends SymbolTableEntry {
     public VariableEntry()
     {
         super("");
-        this.m_ctx = null;
+        //this.m_ctx = null;
         this.m_type = null;
         this.m_hasAssigmentProtection = false;
         this.m_loopControlVariable = false;
@@ -27,7 +27,7 @@ public class VariableEntry extends SymbolTableEntry {
     public VariableEntry(String name)
     {
         super(name);
-        this.m_ctx = null;
+        //this.m_ctx = null;
         this.m_type = null;
         this.m_hasAssigmentProtection = false;
         this.m_loopControlVariable = false;
@@ -112,16 +112,13 @@ public class VariableEntry extends SymbolTableEntry {
                 (this.m_initializer != null ? "  INIT(" + m_initializer + ")" : "");
     }
 
-    public int getSourceLineNo() {
-        return m_ctx.getStart().getLine();
-    }
-    public int getCharPositionInLine() {
-        return m_ctx.getStart().getCharPositionInLine();
-    }
-    private org.antlr.v4.runtime.ParserRuleContext m_ctx;
-    public org.antlr.v4.runtime.ParserRuleContext getCtx() {
-		return m_ctx;
-	}
+ // deprecated. is now in SymboleTableEntry      
+//    public int getSourceLineNo() {
+//        return m_ctx.getStart().getLine();
+//    }
+//    public int getCharPositionInLine() {
+//        return m_ctx.getStart().getCharPositionInLine();
+//    }
 
 	public TypeDefinition getType() { return m_type; }
  //   public ParserRuleContext getConstantCtx() { return m_constantCtx; }

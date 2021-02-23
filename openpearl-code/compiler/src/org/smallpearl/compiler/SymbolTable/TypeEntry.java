@@ -28,13 +28,14 @@ public class TypeEntry extends SymbolTableEntry {
                 "type " + m_structure;
     }
 
-    public int getSourceLineNo() {
-        return m_ctx.getStart().getLine();
-    }
-    public int getCharPositionInLine() {
-        return m_ctx.getStart().getCharPositionInLine();
-    }
-    private ParserRuleContext m_ctx;
+ // deprecated. is now in SymboleTableEntry  
+//    public int getSourceLineNo() {
+//        return m_ctx.getStart().getLine();
+//    }
+//    public int getCharPositionInLine() {
+//        return m_ctx.getStart().getCharPositionInLine();
+//    }
+//    private ParserRuleContext m_ctx;
 
     public TypeDefinition getType() { return m_structure; }
 }

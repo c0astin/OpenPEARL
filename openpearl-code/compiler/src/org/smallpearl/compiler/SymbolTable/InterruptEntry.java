@@ -67,14 +67,14 @@ public class InterruptEntry extends SymbolTableEntry {
                 
     }
 
-
-    public int getSourceLineNo() {
-        return m_ctx.getStart().getLine();
-    }
-
-    public int getCharPositionInLine() {
-        return m_ctx.getStart().getCharPositionInLine();
-    }
-
-    private SmallPearlParser.InterruptSpecificationContext m_ctx;
+// deprecated. is now in SymboleTableEntry   
+//   public int getSourceLineNo() {
+//       return m_ctx.getStart().getLine();
+//   }
+//
+//   public int getCharPositionInLine() {
+//       return m_ctx.getStart().getCharPositionInLine();
+//   }
+//
+//   private SmallPearlParser.InterruptSpecificationContext m_ctx;
 }

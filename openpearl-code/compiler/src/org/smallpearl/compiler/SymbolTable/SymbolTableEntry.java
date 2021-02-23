@@ -29,13 +29,39 @@
 
 package org.smallpearl.compiler.SymbolTable;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.smallpearl.compiler.SmallPearlParser;
+
+/**
+ * base class for all symbol table entries
+ * 
+ * stores the 
+ * <ul>
+ * <li> name of the symbol
+ * <li> visibility scope level 
+ * <li> context of the definition
+ * <li> some flags
+ * <ul>
+ * 
+ * List of flags:
+ * <ul>
+ * <li>isUsed is set of the symbol is used - 
+ *     currently (feb 2021) used for labels in the context of GOTO and EXIT
+ * </ul>
+ */
 public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> {
 
     private String m_name;
     private int m_level;
-
+    private int m_flags;
+    protected ParserRuleContext m_ctx;
+    private static final int const_isUsed = 0x01;
+    
     SymbolTableEntry() {
         m_name = null;
+        m_ctx=null;
+        m_level=0;
+        m_flags=0;
     }
 
     SymbolTableEntry(String name) {
@@ -59,6 +85,13 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
             return indentString(level) + Integer.toString(level) + ": ";
         }
     }
+    public int getSourceLineNo() {
+      return m_ctx.getStart().getLine();
+  }
+
+  public int getCharPositionInLine() {
+      return m_ctx.getStart().getCharPositionInLine();
+  }
 
     protected String indentString(int level) {
         String indent = "";
@@ -82,5 +115,21 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
 
     public void setLevel(int level) {
       this.m_level = level;
+    }
+
+    public ParserRuleContext getCtx() {
+      return m_ctx;
+    }
+    
+    public void setIsUsed(boolean used) {
+      if (used) {
+        m_flags |= const_isUsed;
+      } else {
+        m_flags &= ~ const_isUsed;
+      }
+    }
+    
+    public boolean isUsed() {
+      return ((m_flags & const_isUsed) != 0);
     }
 }
