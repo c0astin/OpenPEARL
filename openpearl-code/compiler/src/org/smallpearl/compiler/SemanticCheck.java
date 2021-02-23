@@ -80,5 +80,9 @@ public class SemanticCheck {
         new CheckDeclarationScope(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckArrayDeclarationAccess(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckIOStatements(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        
+        // CheckUnusedElements must run after CheckGotoExit, maybe later other
+        // dependencies may be added
+        new CheckUnusedElements(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
     }
 }
