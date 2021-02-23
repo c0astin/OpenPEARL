@@ -32,6 +32,7 @@ package org.smallpearl.compiler;
 import java.io.*;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.smallpearl.compiler.SmallPearlParser.Label_statementContext;
 import org.smallpearl.compiler.Exception.*;
 
 /**
@@ -197,6 +198,12 @@ public class ErrorStack {
         return null;
     }
     
+    public static Void warn(ParserRuleContext ctx, String prefix, String msg) {
+      enter(ctx,prefix);
+      printMessage(msg,"warning");
+      leave();
+      return null;      
+    }
 	/**
      * add a new internal compiler error
      * 
@@ -276,13 +283,21 @@ public class ErrorStack {
 		int stopLineNumber = m_stack[m_sp].getCtx().stop.getLine();
 		int stopColNumber = m_stack[m_sp].getCtx().stop.getCharPositionInLine();
 
-//		System.err.println("start: " + startLineNumber + ":" + startColNumber
-//				+ "  stop: " + stopLineNumber + " : " + stopColNumber);
-
 		sourceLine = getLineFromSourceFile(Compiler.getSourceFilename(),
 				startLineNumber);
 
-		String errorLine = sourceLine.substring(0, startColNumber) + errorOn;
+        String prefix = "";
+        for (int i = 0; i <= m_sp; i++) {
+            if (m_stack[i].getErrorPrefix() != null) {
+               prefix += m_stack[i].getErrorPrefix() + ":";
+            }
+        }
+        System.err.println(
+            Compiler.getSourceFilename() + ":" + startLineNumber + ":"
+                    + startColNumber + ": " + typeOfMessage + ": "+prefix + " " + msg);
+		String errorLine="";
+		
+		errorLine += sourceLine.substring(0, startColNumber) + errorOn;
 		if (startLineNumber == stopLineNumber) {
 			errorLine += sourceLine
 					.substring(startColNumber, stopColNumber + 1);
@@ -316,15 +331,6 @@ public class ErrorStack {
 		sb.append(errorOn + "^" + errorOff);
 
 		System.err.println(sb.toString());
-		String prefix = "";
-		for (int i = 0; i <= m_sp; i++) {
-			if (m_stack[i].getErrorPrefix() != null) {
-			   prefix += m_stack[i].getErrorPrefix() + ":";
-			}
-		}
-		System.err.println(
-				Compiler.getSourceFilename() + ":" + startLineNumber + ":"
-						+ startColNumber + ": " + typeOfMessage + ": "+prefix + " " + msg);
 		return null;
 	}
 
@@ -367,5 +373,7 @@ public class ErrorStack {
 		}
 		return null;
 	}
+
+
 
 }
