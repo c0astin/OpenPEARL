@@ -42,9 +42,17 @@ import java.util.Stack;
 
 /**
  * run through the complete AST and create symbols for all elements which are need by
- * - semantic checks
- * - code generation
- * - additional ASTAttributes may become generated for suitable information
+ * <ul>
+ * <li> semantic checks
+ * <li> code generation
+ * <li> additional ASTAttributes may become generated for suitable information
+ * </ul>
+ * 
+ * checks for
+ * <ul>
+ * <li>duplicate definitions in the same level
+ * <li>duplicate block or loop names in the hierarchy
+ * </ul>
  */
 
 public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
@@ -319,16 +327,25 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
     @Override
     public Void visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
-        String blockLabel;
+        String blockLabel = null;
 
         Log.debug("SymbolTableVisitor:visitBlock_statement:ctx" + CommonUtils.printContext(ctx));
 
-        if (ctx.ID() != null) {
-            blockLabel = ctx.ID().toString();
-        } else {
-            blockLabel = "?anonymous?";
-        }
+        if (ctx.blockId() != null) {
+            blockLabel = ctx.blockId().ID().toString();
 
+            SymbolTableEntry se = m_currentSymbolTable.lookup(blockLabel);
+            if (se != null) {
+              ErrorStack.add(ctx.blockId(),"BLOCK","duplicate name '"
+                  + blockLabel+"' in scope");
+              if (se instanceof LoopEntry) {
+                ErrorStack.info(((LoopStatementContext)(se.getCtx())).loopStatement_end(), "previous definion", "");
+              }
+              if (se instanceof BlockEntry) {
+                ErrorStack.info( ((Block_statementContext)(se.getCtx()) ) , "superior definition", "");
+              }
+            }
+        }
         BlockEntry blockEntry = new BlockEntry(blockLabel, ctx, m_currentSymbolTable);
 
         m_currentSymbolTable = m_currentSymbolTable.newLevel(blockEntry);
@@ -1223,17 +1240,29 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
     public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
         Log.debug("SymbolTableVisitor:visitLoopStatement:ctx" + CommonUtils.printContext(ctx));
 
-        String blockLabel = null;
+        String label = null;
 
         if (m_verbose > 0) {
-            System.out.println("SymbolTableVisitor: visitLoopStatement");
+          System.out.println("SymbolTableVisitor: visitLoopStatement");
         }
 
         if (ctx.loopStatement_end().ID() != null) {
-            blockLabel = ctx.loopStatement_end().ID().getText();
-        }
+          label = ctx.loopStatement_end().ID().getText();
 
-        LoopEntry loopEntry = new LoopEntry(blockLabel, ctx, m_currentSymbolTable);
+          SymbolTableEntry se = m_currentSymbolTable.lookup(label);
+          if (se != null) {
+            ErrorStack.add(ctx.loopStatement_end(),"LOOP","duplicate name '"
+                + label+"' in scope");   
+              
+            if (se instanceof LoopEntry) {
+              ErrorStack.info(((LoopStatementContext)(se.getCtx())).loopStatement_end(), "previous definion", "");
+            }
+            if (se instanceof BlockEntry) {
+              ErrorStack.info( ((Block_statementContext)(se.getCtx()) ) , "previous definion", "");
+            }
+          }
+        }
+        LoopEntry loopEntry = new LoopEntry(label, ctx, m_currentSymbolTable);
 
         m_currentSymbolTable = m_currentSymbolTable.newLevel(loopEntry);
         this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
@@ -1262,12 +1291,12 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
         for (int i = 0; i < ctx.loopBody().statement().size(); i++) {
             SmallPearlParser.StatementContext stmt = ctx.loopBody().statement(i);
-
-            if (stmt.block_statement() != null) {
-                visitBlock_statement(stmt.block_statement());
-            } else if (stmt.unlabeled_statement() != null) {
-                visitUnlabeled_statement(stmt.unlabeled_statement());
-            }
+            visit(ctx.loopBody().statement(i));
+//            if (stmt.block_statement() != null) {
+//                visitBlock_statement(stmt.block_statement());
+//            } else if (stmt.unlabeled_statement() != null) {
+//                visitUnlabeled_statement(stmt.unlabeled_statement());
+//            }
         }
 
         m_currentSymbolTable = m_currentSymbolTable.ascend();
