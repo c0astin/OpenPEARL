@@ -161,7 +161,7 @@ public class CheckDeclarationScope extends SmallPearlBaseVisitor<Void> implement
 
         if (    m_currentScope  != Scope.PROCEDURE &&
                 m_currentScope != Scope.TASK  &&
-                m_currentScope != Scope.PROCEDURE &&
+                m_currentScope != Scope.LOOP &&
                 m_currentScope != Scope.BLOCK) {
             throw new DeclarationScopeException(
                     ctx.getText(),
@@ -226,7 +226,7 @@ public class CheckDeclarationScope extends SmallPearlBaseVisitor<Void> implement
 
         if (    m_currentScope  != Scope.PROCEDURE &&
                 m_currentScope != Scope.TASK  &&
-                m_currentScope != Scope.PROCEDURE &&
+                m_currentScope != Scope.LOOP &&
                 m_currentScope != Scope.BLOCK) {
             throw new DeclarationScopeException(
                     ctx.getText(),
