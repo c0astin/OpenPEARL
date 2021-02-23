@@ -101,7 +101,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         m_tempVariableList = new Vector<ST>();
         m_tempVariableNbr = new Vector<Integer>();
 
-
         LinkedList<ModuleEntry> listOfModules = this.m_currentSymbolTable
                 .getModules();
 
@@ -5355,7 +5354,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
         ST st = m_group.getInstanceOf("block_statement");
-
+        BlockEntry be = (BlockEntry)(m_currentSymbolTable.lookupLoopBlock(ctx));
+        ASTAttribute attr = m_ast.lookup(ctx);
         this.m_currentSymbolTable = m_symbolTableVisitor
                 .getSymbolTablePerContext(ctx);
 
@@ -5374,6 +5374,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitStatement((SmallPearlParser.StatementContext) c));
             }
         }
+        
+        if (be.isUsed()) {
+           st.add("id", be.getName());
+           if (attr == null || !attr.isInternal()){
+             // no ASTAttribut found -> we have a user supplied name
+             st.add("isUserLabel", 1);
+           }
+        }
 
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
 
@@ -5388,7 +5396,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         TypeDefinition byType = null;
         Integer rangePrecision = 0;
         Boolean loopCounterNeeded = false;
-
+        LoopEntry le = (LoopEntry)(m_currentSymbolTable.lookupLoopBlock(ctx));
+        ASTAttribute attr = m_ast.lookup(ctx);
         this.m_currentSymbolTable = m_symbolTableVisitor
                 .getSymbolTablePerContext(ctx);
 
@@ -5500,9 +5509,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             st.add("body", visitStatement(ctx.loopBody().statement(i)));
         }
 
-        if (ctx.loopStatement_end().ID() != null) {
-            st.add("label_end", ctx.loopStatement_end().ID().toString());
-        }
 
         if ((ctx.loopStatement_to() != null)
                 || (ctx.loopStatement_for() != null)
@@ -5514,6 +5520,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             st.add("GenerateLoopCounter", 1);
         }
 
+        if (le.isUsed()) {
+           st.add("label_end", le.getName());
+           if (attr == null || !attr.isInternal()){
+             // no ASTAttribut found -> we have a user supplied name
+             st.add("isUserLabel", 1);
+           }
+        }
+
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
 
         return st;
@@ -5522,11 +5536,15 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitExitStatement(SmallPearlParser.ExitStatementContext ctx) {
         ST st = m_group.getInstanceOf("ExitStatement");
-
-        if (ctx.ID() != null) {
-            st.add("label", ctx.ID().toString());
+        ASTAttribute attr = m_ast.lookup(ctx);
+        
+        SymbolTableEntry se = attr.getSymbolTableEntry();
+        st.add("label",se.getName());
+        attr = m_ast.lookup(se.getCtx());
+        if (attr == null || !(attr.isInternal())) {
+          st.add("isUserLabel", 1);
         }
-
+        
         return st;
     }
 
