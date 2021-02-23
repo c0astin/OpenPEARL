@@ -1102,8 +1102,13 @@ block_statement:
     'BEGIN'
     ( scalarVariableDeclaration | structVariableDeclaration | arrayVariableDeclaration | dationDeclaration | lengthDefinition )*
     statement*
-    'END' ID? ';'
+    'END' blockId? ';'
     ;
+    
+blockId:
+	ID
+	;    
+    
 ////////////////////////////////////////////////////////////////////////////////
 
 //  LoopStatement ::=
