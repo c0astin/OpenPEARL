@@ -52,6 +52,11 @@ public class ASTAttribute {
     private static final int bitReadOnly = 0x01;
     private static final int bitIsFunctionCall = 0x02;
     
+    /** flag is set if the corresponding symbol table entry 
+     * is generated automatically (like unnamed blocks or loops)
+     */
+    private static final int bitIsInternal = 0x04;  
+    
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
       //  m_readonly = false;
@@ -97,7 +102,7 @@ public class ASTAttribute {
           setReadOnly(constant);
         }
     }
-    ASTAttribute(TypeDefinition type, SymbolTableEntry entry ) {
+    public ASTAttribute(TypeDefinition type, SymbolTableEntry entry ) {
       m_type = type;
       //m_variable = variable;
       m_entry=entry;
@@ -226,6 +231,15 @@ public class ASTAttribute {
       return getFlag(bitIsFunctionCall);
     }
 
+    public void setIsInternal(boolean newValue) {
+      setFlag(bitIsInternal, newValue);
+    }
+    
+    public boolean isInternal() {
+      return getFlag(bitIsInternal);
+    }
+
+    
     private boolean getFlag(int whichFlag) {
       return ((m_flags & whichFlag) == whichFlag);
 
@@ -238,5 +252,6 @@ public class ASTAttribute {
         m_flags = m_flags & ~whichFlag;
       }
     }
+    
 
 }
