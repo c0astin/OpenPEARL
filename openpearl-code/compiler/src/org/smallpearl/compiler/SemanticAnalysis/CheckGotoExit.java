@@ -73,11 +73,23 @@ import java.util.Stack;
  * 
  * Principle of operation for EXIT
  * <ol>
- * <li> ascend the symbol table until we reach PROC or TASK
+ * <li>
+ *  <ul>
+ *  <li>each block and loop statement is represented by an symbol table entry
+ *  <li>the symbol table entry is checked for the presence of an 'name'
+ *  <li>if no 'name' is specified, we creat a new 'autoLabelXX' and set an
+ *      ASTAttribute for the context of the block or loop with the 
+ *      flag isInternal
+ *  <li>the CppCodeGenerator may access the symboltable entry for the name
+ *      and the ASTAttribute to enable/disable the 'user_label'-decoration       
+ *  </ul>
+ * </li>
+ * <li> ascend the AST until we reach PROC or TASK
  *   <ul>
  *   <li>if we found nether loop nor block, the EXIT is misplaced
  *   <li>if an ID is specified, we must find a loop or block with the same name
- *   <li>??? maybe it would be fine to store the adressed ctx as symbol table Entry in an ASTAttribute
+ *   <li>when we found a fitting block or loop we obtain the corresponding
+ *       symbol table entry via a lookup function with the loop or block context
  *   </ul>
  *  </ol>
  *
@@ -92,8 +104,8 @@ public class CheckGotoExit extends SmallPearlBaseVisitor<Void> implements SmallP
   private SymbolTable m_symboltable;
   private SymbolTable m_currentSymbolTable;
   private ModuleEntry m_module;
-
   private AST m_ast = null;
+  private int m_autoLabelNumber;
 
   public CheckGotoExit(String sourceFileName,
       int verbose,
@@ -110,6 +122,7 @@ public class CheckGotoExit extends SmallPearlBaseVisitor<Void> implements SmallP
     m_symboltable = symbolTableVisitor.symbolTable;
     m_currentSymbolTable = m_symboltable;
     m_ast = ast;
+    m_autoLabelNumber = 0;
 
     Log.debug( "    Check GOTO and EXIT");
   }
@@ -156,11 +169,26 @@ public class CheckGotoExit extends SmallPearlBaseVisitor<Void> implements SmallP
     if (m_debug) {
       System.out.println( "Semantic: Check Case: visitBlock_statement");
     }
-
+    BlockEntry be = (BlockEntry)(m_currentSymbolTable.lookupLoopBlock(ctx));
+    ASTAttribute attr = m_ast.lookup(ctx);
+    if (be.getName() == null) {
+      be.setName(nextAutoBlockOrLoopName());
+      if (attr==null) {
+        attr = new ASTAttribute(null);
+        m_ast.put(ctx, attr);
+      } 
+      attr.setIsInternal(true);
+    }
     this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
     visitChildren(ctx);
     this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
     return null;
+  }
+
+  private String nextAutoBlockOrLoopName() {
+    String autoName = "automaticLabel"+m_autoLabelNumber;
+    m_autoLabelNumber++;
+    return autoName;
   }
 
   @Override
@@ -168,12 +196,23 @@ public class CheckGotoExit extends SmallPearlBaseVisitor<Void> implements SmallP
     if (m_debug) {
       System.out.println( "Semantic: Check Case: visitLoopStatement");
     }
+    LoopEntry le = (LoopEntry)(m_currentSymbolTable.lookupLoopBlock(ctx));
+    ASTAttribute attr = m_ast.lookup(ctx);
+    if (le.getName() == null) {
+      le.setName(nextAutoBlockOrLoopName());
+      if (attr==null) {
+        attr = new ASTAttribute(null);
+        m_ast.put(ctx, attr);
+      } 
+      attr.setIsInternal(true);
+    }
 
     this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
     visitChildren(ctx);
     this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
     return null;
   }
+  
 
   @Override
   public Void visitExitStatement(SmallPearlParser.ExitStatementContext ctx) {
@@ -187,30 +226,31 @@ public class CheckGotoExit extends SmallPearlBaseVisitor<Void> implements SmallP
  //      System.out.println("EXIT *anon*");
     }
     
-    if (name == null) {
+    if (!(name != null)) {
       // exit after first loop or block
       RuleContext c = ctx;
-      while (c!= null && se == null) {        String id="";
+      while (c!= null && se == null) {
+        String id="";
         c = c.parent;
         if (c instanceof LoopStatementContext) {
           LoopStatementContext lctx = (LoopStatementContext)c;
-          if (lctx.loopStatement_end().ID() != null) {
-            id = lctx.loopStatement_end().ID().getText();
-          }
-          //se=m_currentSymbolTable.lookup(lctx);
+//          if (lctx.loopStatement_end().ID() != null) {
+//            id = lctx.loopStatement_end().ID().getText();
+//          }
+          se = m_currentSymbolTable.lookupLoopBlock(lctx);
         }        
         if (c instanceof Block_statementContext) {
           Block_statementContext bctx = (Block_statementContext)c;
-          id = "* anon *";
-          if (bctx.ID() != null) {
-            id = bctx.ID().getText();
-          }
-   //       System.out.println("block "+id);
-          //se=m_currentSymbolTable.lookup(bctx);
+//          if (bctx.ID() != null) {
+//            id = bctx.ID().getText();
+//          }
+          se=m_currentSymbolTable.lookupLoopBlock(bctx);
         }
       }
     } else {
       // we must verify the correct loop/block via the ID
+      // let's walk the ctx up until we find the block or loop
+      // with the requested name or we reead the end of the AST
       RuleContext c = ctx;
 
       while (c!= null && se == null) {
@@ -222,24 +262,18 @@ public class CheckGotoExit extends SmallPearlBaseVisitor<Void> implements SmallP
             id = lctx.loopStatement_end().ID().getText();
           }
           if (id.equals(name)) {
-             se = new LoopEntry();
-            // System.out.println("loop found: "+id);
-             //se=m_currentSymbolTable.lookup(lctx);
+             se=m_currentSymbolTable.lookupLoopBlock(lctx);
           }
         }
         if (c instanceof Block_statementContext) {
           Block_statementContext bctx = (Block_statementContext)c;
-          id = "* anon *";
-          if (bctx.ID() != null) {
-            id = bctx.ID().getText();
+          if (bctx.blockId() != null) {
+            id = bctx.blockId().ID().getText();
           }
           
           if (id.equals(name)) {
-            se = new BlockEntry();
-           // System.out.println("block found: "+id);
-            //se=m_currentSymbolTable.lookup(lctx);
+            se=m_currentSymbolTable.lookupLoopBlock(bctx);
          }
-         
         }
       }
 
@@ -247,6 +281,12 @@ public class CheckGotoExit extends SmallPearlBaseVisitor<Void> implements SmallP
 
     if (se == null) {
       ErrorStack.add(ctx,"EXIT","no block or loop with name '"+name+"' found");
+    } else {
+      // we have a surrounding loop/block found 
+      // set an ASTAttribute for the CppCodeGeneratorVisitor
+      ASTAttribute attr = new ASTAttribute(null,se);
+      m_ast.put(ctx, attr);
+      se.setIsUsed(true);
     }
     return null;
   }
@@ -260,6 +300,8 @@ public class CheckGotoExit extends SmallPearlBaseVisitor<Void> implements SmallP
     } else {
       if (!(se instanceof LabelEntry)) {
         ErrorStack.add(ctx,"GOTO","'"+name+"' is not a label --- "+se.getClass().getName());
+      } else {
+        se.setIsUsed(true);
       }
     }
     return null;

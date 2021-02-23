@@ -266,8 +266,8 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
           upperBoundary = lowerBoundary;
 
           if (alternativ.getPrecision()>m_currentCaseDataSet.m_typeOfExpression.getPrecision()){
-            ErrorStack.add(index.constantFixedExpression(0),"CASE", 
-                "alternative is of type FIXED("+alternativ.getPrecision()+
+            ErrorStack.warn(index.constantFixedExpression(0),"CASE", 
+                "alternative too large: is of type FIXED("+alternativ.getPrecision()+
                 ") -- expression is of type FIXED("+m_currentCaseDataSet.m_typeOfExpression.getPrecision()+")");
             isOk = false;
           }
@@ -288,8 +288,8 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
 
           lowerBoundary = alternativ.getValue();
           if (alternativ.getPrecision()>m_currentCaseDataSet.m_typeOfExpression.getPrecision()){
-            ErrorStack.add(index.constantFixedExpression(0),"CASE", 
-                "alternative is of type FIXED("+alternativ.getPrecision()+
+            ErrorStack.warn(index.constantFixedExpression(0),"CASE", 
+                "alternative too large: is of type FIXED("+alternativ.getPrecision()+
                 ") -- expression is of type FIXED("+m_currentCaseDataSet.m_typeOfExpression.getPrecision()+")");
             isOk = false;
           }
@@ -297,8 +297,8 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
           alternativ = evaluator.visit(index.constantFixedExpression(1));
           upperBoundary = alternativ.getValue();
           if (alternativ.getPrecision()>m_currentCaseDataSet.m_typeOfExpression.getPrecision()){
-            ErrorStack.add(index.constantFixedExpression(1),"CASE", 
-                "alternative is of type FIXED("+alternativ.getPrecision()+
+            ErrorStack.warn(index.constantFixedExpression(1),"CASE", 
+                "alternative too large: is of type FIXED("+alternativ.getPrecision()+
                 ") -- expression is of type FIXED("+m_currentCaseDataSet.m_typeOfExpression.getPrecision()+")");
             isOk = false;
           }
