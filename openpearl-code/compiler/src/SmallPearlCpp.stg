@@ -41,6 +41,7 @@ Prologue( src,
           StructureDeclarationList) ::= <<
 #include \<PearlIncludes.h>
 
+
 <if(useSystemElements)>
 namespace pearlrt {
     extern int createSystemElements();
@@ -447,9 +448,13 @@ goto_statement(label) ::= <<
 	goto <user_label(label)>;
 >>
 
-ExitStatement(label) ::= <<
+ExitStatement(label,isUserLabel) ::= <<
 	<if(label)>
+	   <if(isUserLabel)>
 	    goto <user_label(label)>;
+	   <else>
+	    goto <label>;
+	   <endif>
 	<else>
 	    break;
 	<endif>
@@ -1483,12 +1488,19 @@ TypeOfTransmissionData(all,type,size) ::= <%
 <if(type)>sizeof(<type>)<endif>
 %>
 
-block_statement(code,id) ::= <<
-// BLOCK BEGIN
+block_statement(code,id,isUserLabel) ::= <<
+// BLOCK BEGIN <id>
 {
 <code>
 }
-// BLOCK END <if(id)>Block-ID:<id><endif>
+// BLOCK END <id>
+<if(id)>
+  <if(isUserLabel)>
+<user_label(id)>:
+  <else>
+<id>:
+  <endif>
+<endif>
 >>
 
 
@@ -1514,8 +1526,8 @@ user_argument(name) ::= <%
 
 /* --------------------- LOOPS -------------------------- */
 // all control elements have the same precision to avoid type conversions during loop execution  
-LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoopPass,while_cond,body,label_end) ::= <<
-{
+LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoopPass,while_cond,body,label_end,isUserLabel) ::= <<
+{   // REPEAT <label_end>
     <if(from)>
     pearlrt::Fixed\<<precision>\> a_value;
     a_value = <from>;
@@ -1603,13 +1615,14 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoo
                 break;
             }
             <endif>
-        }
+        } 
     <endif>
-
-    <if(label_end)>
-        <user_label(label_end)>: ;
-    <endif>
-}
+} // REPEAT <label_end>
+<if(label_end)>
+ <if(isUserLabel)><user_label(label_end)>: ;
+ <else><label_end>: ;
+ <endif>
+<endif>
 >>
 
 /* --------------------- PROCEDURES -------------------------- */
