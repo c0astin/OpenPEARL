@@ -362,7 +362,7 @@ public class SymbolTable {
     private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable, HashMap<String,TypeStructure>  structures) {
         SymbolTableEntry e;
 
-        for (Iterator it = symbolTable.m_entries.values().iterator(); it.hasNext(); ) {
+        for (Iterator<SymbolTableEntry> it = symbolTable.m_entries.values().iterator(); it.hasNext(); ) {
             SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
 
             if (symbolTableEntry instanceof VariableEntry) {
@@ -407,7 +407,7 @@ public class SymbolTable {
 
         structures.put(name, structure);
 
-        for (Iterator it = structure.m_listOfComponents.iterator(); it.hasNext(); ) {
+        for (Iterator<StructureComponent> it = structure.m_listOfComponents.iterator(); it.hasNext(); ) {
             StructureComponent structureComponent = (StructureComponent) it.next();
 
             if ( structureComponent.m_type instanceof TypeStructure) {
