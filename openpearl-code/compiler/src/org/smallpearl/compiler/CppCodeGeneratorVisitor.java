@@ -3927,6 +3927,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         stmt.add("command", "put");
         stmt.add("dation", visitAndDereference(ctx.dationName().name()));
+        
         addDataAndFormatListToST(stmt, ctx.listOfFormatPositions(), ctx.ioDataList());
 
         ErrorStack.leave();
@@ -4156,7 +4157,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         } else if (type instanceof TypeDuration) {
             data.add("type", "DURATION");
         } else {
-            ErrorStack.addInternal("getIoJobDataItem: untreated type " + type);
+            ErrorStack.addInternal("getIoJobDataItem: untreated type " + type.getName());
         }
         return data;
     }
@@ -5977,7 +5978,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             System.out
                     .println("CppCodeGeneratorVisitor: visitConvertToStatement");
         }
-
+        
+        ErrorStack.enter(ctx, "CONVERT .. TO");
         //String s = ctx.name().getText();
 
         ST stmt = m_group.getInstanceOf("iojob_convertTo_statement");
@@ -6009,7 +6011,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST dataList = getIojobDataList(ctx.ioDataList());
 
         stmt.add("datalist", dataList);
-
+        ErrorStack.leave();
 
         return stmt;
     }
@@ -6022,6 +6024,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST stmt = m_group.getInstanceOf("iojob_convertFrom_statement");
         stmt.add("char_string", visitAndDereference(ctx.expression()));
 
+        ErrorStack.enter(ctx, "CONVERT .. FROM");
+        
         // this flag is set to true if at least one non static format parameter is detected
         m_isNonStatic = false;
 
@@ -6047,7 +6051,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST dataList = getIojobDataList(ctx.ioDataList());
 
         stmt.add("datalist", dataList);
-
+        ErrorStack.leave();
 
         return stmt;
     }
