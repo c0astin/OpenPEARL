@@ -61,246 +61,6 @@ Errors are forwarded to the ErrorStack class
 public class CheckIOStatements extends SmallPearlBaseVisitor<Void> implements
 SmallPearlVisitor<Void> {
 
-	/**
-	 * @author mueller
-	 *
-	 * check if all referenced system dations are specified 
-	 * verify compatibility of system dation attributes with user dation attributes
-	 * create entry in symbol table with the dations attributes
-	 * 
-	 */
-	public class CheckDationDeclaration extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
-	
-	    private int m_verbose;
-	    private boolean m_debug;
-	    private String m_sourceFileName;
-	    private ExpressionTypeVisitor m_expressionTypeVisitor;
-	    private SymbolTableVisitor m_symbolTableVisitor;
-	    private SymbolTable m_symboltable;
-	    private SymbolTable m_currentSymbolTable;
-	    private ModuleEntry m_module;
-	    private AST m_ast = null;
-
-
-	    
-	
-	    public CheckDationDeclaration(String sourceFileName,
-	                    int verbose,
-	                    boolean debug,
-	                    SymbolTableVisitor symbolTableVisitor,
-	                    ExpressionTypeVisitor expressionTypeVisitor,
-	                    AST ast) {
-	
-	        m_debug = debug;
-	        m_verbose = verbose;
-	        m_sourceFileName = sourceFileName;
-	        m_symbolTableVisitor = symbolTableVisitor;
-	        m_expressionTypeVisitor = expressionTypeVisitor;
-	        m_symboltable = symbolTableVisitor.symbolTable;
-	        m_currentSymbolTable = m_symboltable;
-	        m_ast = ast;
-	
-	        Log.debug( "    Check DationDeclaration");
-	    }
-	
-	    @Override
-	    public Void visitModule(SmallPearlParser.ModuleContext ctx) {
-	        if (m_debug) {
-	            System.out.println( "Semantic: Check RST: visitModule");
-	        }
-	
-	        org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable.lookupLocal(ctx.ID().getText());
-	        m_currentSymbolTable = ((ModuleEntry)symbolTableEntry).scope;
-	        visitChildren(ctx);
-	        m_currentSymbolTable = m_currentSymbolTable.ascend();
-	        return null;
-	    }
-	
-	    @Override
-	    public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
-	        if (m_debug) {
-	            System.out.println( "Semantic: Check RST: visitProcedureDeclaration");
-	        }
-	
-	        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-	        visitChildren(ctx);
-	        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-	        return null;
-	    }
-	
-	    @Override
-	    public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
-	        if (m_debug) {
-	            System.out.println( "Semantic: Check RST: visitTaskDeclaration");
-	        }
-	
-	        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-	        visitChildren(ctx);
-	        m_currentSymbolTable = m_currentSymbolTable.ascend();
-	        return null;
-	    }
-	
-	    @Override
-	    public Void visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
-	        if (m_debug) {
-	            System.out.println( "Semantic: Check RST: visitBlock_statement");
-	        }
-	
-	        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-	        visitChildren(ctx);
-	        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-	        return null;
-	    }
-	
-	    @Override
-	    public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
-	        if (m_debug) {
-	            System.out.println( "Semantic: Check RST: visitLoopStatement");
-	        }
-	
-	        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-	        visitChildren(ctx);
-	        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-	        return null;
-	    }
-	
-	    @Override
-	    public Void visitDationDeclaration(SmallPearlParser.DationDeclarationContext ctx) {
-	        if (m_debug) {
-	            System.out.println( "Semantic: visitDationDeclaration");
-	        }
-	        for (int i = 0; i<ctx.identifierDenotation().ID().size(); i++) {
-	        	String dationName = ctx.identifierDenotation().ID(i).toString();
-	            //System.out.println("DationName: "+ dationName);
-	        
-	            ErrorStack.enter(ctx, "DationDCL");
-	            
-	
-	    	    SymbolTableEntry entry1 = this.m_currentSymbolTable.lookup(dationName);
-	
-	            if (entry1 == null) {
-	        	   throw new InternalCompilerErrorException("Symbol table does not contain:"+dationName);
-	            }
-	            SymbolTableEntry se = this.m_currentSymbolTable.lookup(dationName);
-	            if (se != null &&
-	            	! (se instanceof VariableEntry)	&&
-	            	!(((VariableEntry)se).getType() instanceof TypeDation)
-	            		) {
-	            	throw new InternalCompilerErrorException("symbol "+dationName+" not found/or no dation");
-	            }
-	        	TypeDation d = (TypeDation)(((VariableEntry)se).getType());
-	        	
-	        	// userdation must be 
-	        	// of type ALPHIC					   -> DationPG
-	        	// or type BASIC + typeOfTransmission  -> DationTS
-	        	// or type of       typeOfTransmission -> DationRW
-	        	// this is all enforced by the grammar
-	        	
-	        	if (d.isSystemDation()) {
-	        		ErrorStack.add("SYSTEM dations may not be declared");
-	        	}
-	        	// dimension settings must be >0 or '*' if given
-	        	// only the last dimension may be '*' - the not 0 check is not in the grammar
-	        	switch (d.getNumberOfDimensions()) {
-	        	case  3:
-	         		if (d.getDimension3()<=0 || d.getDimension2()<=0) {
-	        			// '*' not allowed
-	        			ErrorStack.add("only first dimension may be '*'");
-	        		}
-	         		break;
-	        	case  2:
-	        		if (d.getDimension2()==0) {
-	        			// '*' not allowed
-	        			ErrorStack.add("only first dimension may be '*'");
-	        		}
-	        		break;
-	        	case  1:
-	          		break;
-	          	}
-	
-	        	if (d.hasTfu() && d.getNumberOfDimensions() == 1 && d.getDimension1() == 0) {
-	     	       ErrorStack.add("TFU requires limited record length");
-	        	}
-	
-	        	
-	            SymbolTableEntry sys = this.m_currentSymbolTable.lookup(d.getCreatedOn());;
-	            if (sys == null) {
-	            	ErrorStack.add(d.getCreatedOn()+" is not defined");
-	            	// TFU does not agree with last dimension unlimited  !
-	            } else if ( (! (sys instanceof VariableEntry))  ||
-	                 (! (((VariableEntry)sys).getType() instanceof TypeDation))) {
-	            	ErrorStack.add(d.getCreatedOn()+" is not of type DATION");
-	            } else {	
-	               TypeDation sd = (TypeDation)(((VariableEntry)sys).getType());
-	               
-	               // check compatibility
-	               // (1) ALPHIC need !BASIS of the system dation
-	               if (d.isAlphic() && sd.isBasic()) {
-	            	   ErrorStack.add("attempt to create PUT/GET dation upon BASIC system dation");
-	               }
-	               if (!d.isBasic() && sd.isBasic()) {
-	            	   ErrorStack.add("attempt to create a READ/WRITE dation upon a BASIC sytem dation");
-	               }
-	               if (d.isBasic() && !sd.isBasic()) {
-	            	   ErrorStack.add("attempt to create a BASIC dation upon an non BASIC system dation");
-	               }
-	
-	               // (2) direction must fit (sourceSinkAttribute
-	               if (d.isIn() && ! sd.isIn()) {
-	            	   ErrorStack.add("system dation does not provide direction IN");
-	               }
-	               if (d.isOut() && ! sd.isOut()) {
-	            	   ErrorStack.add("system dation does not provide direction OUT");
-	               }
-	               
-	               // (3) TFU must be on userdation if this is set on system dation
-	               if (!d.hasTfu() && sd.hasTfu()) {
-	            	   ErrorStack.add("system dation requires TFU for user dation");
-	               	   if (d.getNumberOfDimensions() == 1 && d.getDimension1() == 0) {
-	            		   ErrorStack.warn("TFU would require limited record length for user dation");
-	               	   }
-	               }
-	               
-	               // (4) type of transmission must fit, if not set to ALL in system dation
-	               if (sd.getTypeOfTransmission() == null) {
-	            	   if (!sd.isAlphic()) {
-	            	      // the system dation misses some data -- this should be detected by the
-	            	      // imc in all compilations
-	            	     ErrorStack.addInternal(sd+" has no typeOfTransmission");
-	            	     ErrorStack.leave();
-	            	     return null;
-	            	   }
-	               } else if (!sd.getTypeOfTransmission().equals("ALL")) {
-	            	   if (!sd.getTypeOfTransmission().equals(d.getTypeOfTransmission())) {
-	            		   ErrorStack.add("type of transmission mismatch (system:"+sd.getTypeOfTransmission()+
-	            				   " user: "+d.getTypeOfTransmission()+")");
-	            	   }
-	               }
-	               
-	               // (5) if the system dation specifies a TFU-size; the record length
-	               //     of the user must not exceed. This is checked during runtime,
-	               //     since we have no access to the system dations description files
-	               //     at compile time
-	
-	            }
-	            
-	        	// TFU does not agree with last dimension unlimited  !
-	        	if (d.hasTfu() && d.getNumberOfDimensions() == 1 && d.getDimension1() == 0) {
-	        		if (sys == null) {
-	        	       ErrorStack.add("TFU requires limited record length");
-	        		}
-	        	}
-	        
-	        	
-	            ErrorStack.leave();
-	        }
-	                
-	        return null;
-	    }
-	
-	    
-	
-	}  // end of class CheckDationDeclaration
 
 	private int m_verbose;
 	private boolean m_debug;
@@ -407,6 +167,139 @@ SmallPearlVisitor<Void> {
 	/* ------------------------------------------------ */
 	/* start of check specific code */
 	/* ------------------------------------------------ */
+    @Override
+    public Void visitDationDeclaration(SmallPearlParser.DationDeclarationContext ctx) {
+        if (m_debug) {
+            System.out.println( "Semantic: visitDationDeclaration");
+        }
+        for (int i = 0; i<ctx.identifierDenotation().ID().size(); i++) {
+            String dationName = ctx.identifierDenotation().ID(i).toString();
+            //System.out.println("DationName: "+ dationName);
+        
+            ErrorStack.enter(ctx, "DationDCL");
+            
+
+            SymbolTableEntry entry1 = this.m_currentSymbolTable.lookup(dationName);
+
+            if (entry1 == null) {
+               throw new InternalCompilerErrorException("Symbol table does not contain:"+dationName);
+            }
+            SymbolTableEntry se = this.m_currentSymbolTable.lookup(dationName);
+            if (se != null &&
+                ! (se instanceof VariableEntry) &&
+                !(((VariableEntry)se).getType() instanceof TypeDation)
+                    ) {
+                throw new InternalCompilerErrorException("symbol "+dationName+" not found/or no dation");
+            }
+            TypeDation d = (TypeDation)(((VariableEntry)se).getType());
+            
+            // userdation must be 
+            // of type ALPHIC                      -> DationPG
+            // or type BASIC + typeOfTransmission  -> DationTS
+            // or type of       typeOfTransmission -> DationRW
+            // this is all enforced by the grammar
+            
+            if (d.isSystemDation()) {
+                ErrorStack.add("SYSTEM dations may not be declared");
+            }
+            // dimension settings must be >0 or '*' if given
+            // only the last dimension may be '*' - the not 0 check is not in the grammar
+            switch (d.getNumberOfDimensions()) {
+            case  3:
+                if (d.getDimension3()<=0 || d.getDimension2()<=0) {
+                    // '*' not allowed
+                    ErrorStack.add("only first dimension may be '*'");
+                }
+                break;
+            case  2:
+                if (d.getDimension2()==0) {
+                    // '*' not allowed
+                    ErrorStack.add("only first dimension may be '*'");
+                }
+                break;
+            case  1:
+                break;
+            }
+
+            if (d.hasTfu() && d.getNumberOfDimensions() == 1 && d.getDimension1() == 0) {
+               ErrorStack.add("TFU requires limited record length");
+            }
+
+            
+            SymbolTableEntry sys = this.m_currentSymbolTable.lookup(d.getCreatedOn());;
+            ASTAttribute attr = m_ast.lookup(sys.getCtx());
+            if (sys == null) {
+                ErrorStack.add(d.getCreatedOn()+" is not defined");
+                // TFU does not agree with last dimension unlimited  !
+            } else if ( (! (sys instanceof VariableEntry))  ||
+                 (! (((VariableEntry)sys).getType() instanceof TypeDation))) {
+                ErrorStack.add(d.getCreatedOn()+" is not of type DATION");
+            } else {    
+               TypeDation sd = (TypeDation)(((VariableEntry)sys).getType());
+               
+               // check compatibility
+               // (1) ALPHIC need !BASIS of the system dation
+               if (d.isAlphic() && sd.isBasic()) {
+                   ErrorStack.add("attempt to create PUT/GET dation upon BASIC system dation");
+               }
+               if (!d.isBasic() && sd.isBasic()) {
+                   ErrorStack.add("attempt to create a READ/WRITE dation upon a BASIC sytem dation");
+               }
+               if (d.isBasic() && !sd.isBasic()) {
+                   ErrorStack.add("attempt to create a BASIC dation upon an non BASIC system dation");
+               }
+
+               // (2) direction must fit (sourceSinkAttribute
+               if (d.isIn() && ! sd.isIn()) {
+                   ErrorStack.add("system dation does not provide direction IN");
+               }
+               if (d.isOut() && ! sd.isOut()) {
+                   ErrorStack.add("system dation does not provide direction OUT");
+               }
+               
+               // (3) TFU must be on userdation if this is set on system dation
+               if (!d.hasTfu() && sd.hasTfu()) {
+                   ErrorStack.add("system dation requires TFU for user dation");
+                   if (d.getNumberOfDimensions() == 1 && d.getDimension1() == 0) {
+                       ErrorStack.warn("TFU would require limited record length for user dation");
+                   }
+               }
+               
+               // (4) type of transmission must fit, if not set to ALL in system dation
+               if (sd.getTypeOfTransmission() == null) {
+                   if (!sd.isAlphic()) {
+                      // the system dation misses some data -- this should be detected by the
+                      // imc in all compilations
+                     ErrorStack.addInternal(sd+" has no typeOfTransmission");
+                     ErrorStack.leave();
+                     return null;
+                   }
+               } else if (!sd.getTypeOfTransmission().equals("ALL")) {
+                   if (!sd.getTypeOfTransmission().equals(d.getTypeOfTransmission())) {
+                       ErrorStack.add("type of transmission mismatch (system:"+sd.getTypeOfTransmission()+
+                               " user: "+d.getTypeOfTransmission()+")");
+                   }
+               }
+               
+               // (5) if the system dation specifies a TFU-size; the record length
+               //     of the user must not exceed. This is checked during runtime,
+               //     since we have no access to the system dations description files
+               //     at compile time
+
+            }
+            
+            // TFU does not agree with STREAM
+            if (d.hasTfu() && d.isStream()) {
+                ErrorStack.add("TFU requires NOSTREAM");
+            }
+        
+            
+            ErrorStack.leave();
+        }
+                
+        return null;
+    }
+
 
 	@Override public Void visitOpen_statement(SmallPearlParser.Open_statementContext ctx) {
 		ErrorStack.enter(ctx, "OPEN");
@@ -572,8 +465,11 @@ SmallPearlVisitor<Void> {
       }
       if (t instanceof TypeDation) {
         td = (TypeDation)t;
+        if (td.isSystemDation()) {
+          ErrorStack.add("not allowed on SYSTEM dation");
+        }
       } else {
-        ErrorStack.addInternal(ctx,null,"CheckIOStatements::visitDationName: type mismatch ("
+        ErrorStack.add(ctx,null,"userdation required -- got ("
             +attr.getType()+")");
       }
       m_typeDation = td;
@@ -595,16 +491,16 @@ SmallPearlVisitor<Void> {
 	  m_directionInput = false;
 	  
 	  visit(ctx.dationName());
-	   
-      // enshure that the dation is of type ALPHIC
-	  if (!m_typeDation.isAlphic()) {
-	    ErrorStack.enter(ctx.dationName());
-	    ErrorStack.add("need ALPHIC dation");
-	    ErrorStack.leave();
+	  if (m_typeDation!= null) {
+	    // enshure that the dation is of type ALPHIC
+	    if (!m_typeDation.isAlphic()) {
+	      ErrorStack.enter(ctx.dationName());
+	      ErrorStack.add("need ALPHIC dation");
+	      ErrorStack.leave();
+	    }
+
+	    checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
 	  }
-
-	  checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
-
 	  ErrorStack.leave();
 	  return null;
 	}
@@ -624,19 +520,20 @@ SmallPearlVisitor<Void> {
         m_directionInput = true;
 
         visit(ctx.dationName());
-
-        // enshure that the dation is of type ALPHIC
-        if (!m_typeDation.isAlphic()) {
+        if (m_typeDation != null) {
+          // enshure that the dation is of type ALPHIC
+          if (!m_typeDation.isAlphic()) {
             ErrorStack.enter(ctx.dationName());
             ErrorStack.add("need ALPHIC dation");
             ErrorStack.leave();
-        }
-        
-        enshureDataForInput(ctx.ioDataList());
+          }
 
-        checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
-        
-        visitChildren(ctx);
+          enshureDataForInput(ctx.ioDataList());
+
+          checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
+
+          visitChildren(ctx);
+        }
         ErrorStack.leave();
         return null;
     }
@@ -731,19 +628,20 @@ SmallPearlVisitor<Void> {
         m_directionInput = true;
 
         visit(ctx.dationName());
-
-        if (m_typeDation.isAlphic() || m_typeDation.isBasic()) {
+        if (m_typeDation != null) {
+          if (m_typeDation.isAlphic() || m_typeDation.isBasic()) {
             ErrorStack.enter(ctx.dationName());
             ErrorStack.add("need 'type' dation");
             ErrorStack.leave();
+          }
+
+          enshureDataForInput(ctx.ioDataList());
+
+          checkWriteReadFormat(ctx.listOfFormatPositions());
+          checkReadWriteTakeSendDataTypes(ctx.ioDataList());
+
+          visitChildren(ctx);
         }
-        
-        enshureDataForInput(ctx.ioDataList());
-        
-        checkWriteReadFormat(ctx.listOfFormatPositions());
-        checkReadWriteTakeSendDataTypes(ctx.ioDataList());
- 
-        visitChildren(ctx);
         ErrorStack.leave();
         return null;
     }
@@ -762,19 +660,21 @@ SmallPearlVisitor<Void> {
 
         visit(ctx.dationName());
 
-        if (m_typeDation.isAlphic() || m_typeDation.isBasic()) {
+        if (m_typeDation != null) {
+          if (m_typeDation.isAlphic() || m_typeDation.isBasic()) {
             ErrorStack.enter(ctx.dationName());
             ErrorStack.add("need 'type' dation");
             ErrorStack.leave();
+          }
+
+          // check if absolute positions follow relative positions
+          checkWriteReadFormat(ctx.listOfFormatPositions());
+          checkReadWriteTakeSendDataTypes(ctx.ioDataList());
+
+          // TODO: (rm) check type of transfer data is missing!!
+
+          visitChildren(ctx);
         }
-
-        // check if absolute positions follow relative positions
-        checkWriteReadFormat(ctx.listOfFormatPositions());
-        checkReadWriteTakeSendDataTypes(ctx.ioDataList());
-
-        // TODO: (rm) check type of transfer data is missing!!
-
-        visitChildren(ctx);
         ErrorStack.leave();
         return null;
     }
@@ -811,6 +711,8 @@ SmallPearlVisitor<Void> {
     private void checkWriteReadFormat(ListOfFormatPositionsContext listOfFormatPositions) {
       int  nbrOfPositionsAlreadyFound = 0;
 
+      visitChildren(listOfFormatPositions);
+      
       if (listOfFormatPositions != null) {
         for (int i=0; i<listOfFormatPositions.formatPosition().size(); i++) {
           if (listOfFormatPositions.formatPosition(i) instanceof FactorFormatPositionContext ||
@@ -848,32 +750,32 @@ SmallPearlVisitor<Void> {
             System.out.println( "Semantic: Check IOStatements: visitPositionTAKE");
         }
 
-        // enshure that the dation id of type BASIC
         ErrorStack.enter(ctx, "TAKE");
         m_directionInput = true;
         
         visit(ctx.dationName());
-        
-        if (!m_typeDation.isBasic()) {
+        if (m_typeDation != null) {
+          if (!m_typeDation.isBasic()) {
             ErrorStack.enter(ctx.dationName());
             ErrorStack.add("need BASIC dation");
             ErrorStack.leave();
-        }
+          }
 
-        // check that only 1 time RST is allowed
-        checkTakeSendFormat(ctx.listOfFormatPositions());
-        
-        if (ctx.ioDataList() == null ||
-            ctx.ioDataList().ioListElement().size()> 1) {
-          ErrorStack.add("need one name");
-        }
-        
-        enshureDataForInput(ctx.ioDataList());
-        checkReadWriteTakeSendDataTypes(ctx.ioDataList());        
- 
-        
-        visitChildren(ctx);
+          // check that only 1 time RST is allowed
+          checkTakeSendFormat(ctx.listOfFormatPositions());
 
+          if (ctx.ioDataList() == null) {
+            ErrorStack.warn("nothing to transfer: statement ignored");
+          } else if (ctx.ioDataList().ioListElement().size()> 1) {
+            ErrorStack.add("only one expression allowed");
+          }
+
+          enshureDataForInput(ctx.ioDataList());
+          checkReadWriteTakeSendDataTypes(ctx.ioDataList());        
+
+
+          visitChildren(ctx);
+        }
         ErrorStack.leave();
         return null;
     }
@@ -891,21 +793,23 @@ SmallPearlVisitor<Void> {
         m_directionInput = false;
 
         visit(ctx.dationName());
-
-        if (!m_typeDation.isBasic()) {
+        if (m_typeDation != null) {
+          if (!m_typeDation.isBasic()) {
             ErrorStack.add("need BASIC dation");
-        }      
-        // check that only 1 time RST is allowed
-        checkTakeSendFormat(ctx.listOfFormatPositions());
-        
-        if (ctx.ioDataList() == null ||
-            ctx.ioDataList().ioListElement().size()> 1) {
-          ErrorStack.add("need one expression");
-        }
+          }      
+          // check that only 1 time RST is allowed
+          checkTakeSendFormat(ctx.listOfFormatPositions());
 
-        checkReadWriteTakeSendDataTypes(ctx.ioDataList());        
-        
-        visitChildren(ctx);
+          if (ctx.ioDataList() == null) {
+            ErrorStack.warn("nothing to transfer: statement ignored");
+          } else if (ctx.ioDataList().ioListElement().size()> 1) {
+            ErrorStack.add("only one expression allowed");
+          }
+
+          checkReadWriteTakeSendDataTypes(ctx.ioDataList());        
+
+          visitChildren(ctx);
+        }
         ErrorStack.leave();
         return null;
     }
@@ -941,6 +845,7 @@ SmallPearlVisitor<Void> {
 	      }
 	    }
 	    
+	    visitChildren(fmtCtx);
 	    m_formatListAborted = false;
 	    List<ParserRuleContext> fmtPos = null;
 	    if (fmtCtx != null) {
@@ -1170,6 +1075,9 @@ SmallPearlVisitor<Void> {
 		ErrorStack.enter(ctx, "fieldwidth");
 
 		ASTAttribute attr = m_ast.lookup(ctx.expression());
+		if (!(attr.m_type instanceof TypeFixed)) {
+          ErrorStack.add("must by of type FIXED --- got "+attr.m_type);
+		}
 		// width is mandatory, which is definied in the grammar
 		ConstantFixedValue cfv = getConstantValue(attr);	
 		if (cfv != null) {
