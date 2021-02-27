@@ -272,8 +272,7 @@ public class ErrorStack {
 
 	
 	
-	private static Void printMessage(String msg, String typeOfMessage) {
-
+	private static Void printMessage(String msg, String typeOfMessage) {	    
 		int startLineNumber;
 		int startColNumber;
 		String sourceLine;
@@ -283,10 +282,8 @@ public class ErrorStack {
 		int stopLineNumber = m_stack[m_sp].getCtx().stop.getLine();
 		int stopColNumber = m_stack[m_sp].getCtx().stop.getCharPositionInLine();
 
-		sourceLine = getLineFromSourceFile(Compiler.getSourceFilename(),
-				startLineNumber);
-
-        String prefix = "";
+		/* print error message */
+		String prefix = "";
         for (int i = 0; i <= m_sp; i++) {
             if (m_stack[i].getErrorPrefix() != null) {
                prefix += m_stack[i].getErrorPrefix() + ":";
@@ -295,7 +292,11 @@ public class ErrorStack {
         System.err.println(
             Compiler.getSourceFilename() + ":" + startLineNumber + ":"
                     + startColNumber + ": " + typeOfMessage + ": "+prefix + " " + msg);
-		String errorLine="";
+		
+        /* print source line */
+        sourceLine = getLineFromSourceFile(Compiler.getSourceFilename(),
+            startLineNumber);
+        String errorLine="";
 		
 		errorLine += sourceLine.substring(0, startColNumber) + errorOn;
 		if (startLineNumber == stopLineNumber) {
@@ -324,6 +325,7 @@ public class ErrorStack {
 			System.err.println(errorLine);
 		}
 
+		/* print circumflex */
 		StringBuilder sb = new StringBuilder(startColNumber + 10);
 		for (int i = 0; i < startColNumber; i++) {
 			sb.append(" ");
@@ -331,6 +333,20 @@ public class ErrorStack {
 		sb.append(errorOn + "^" + errorOff);
 
 		System.err.println(sb.toString());
+		
+		/*
+        String prefix = "";
+        for (int i = 0; i <= m_sp; i++) {
+            if (m_stack[i].getErrorPrefix() != null) {
+               prefix += m_stack[i].getErrorPrefix() + ":";
+            }
+        }
+        System.err.println(
+            Compiler.getSourceFilename() + ":" + startLineNumber + ":"
+                    + startColNumber + ": " + typeOfMessage + ": "+prefix + " " + msg);
+                    
+        */
+
 		return null;
 	}
 
