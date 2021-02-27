@@ -711,7 +711,9 @@ SmallPearlVisitor<Void> {
     private void checkWriteReadFormat(ListOfFormatPositionsContext listOfFormatPositions) {
       int  nbrOfPositionsAlreadyFound = 0;
 
-      visitChildren(listOfFormatPositions);
+      if (listOfFormatPositions != null) {
+        visitChildren(listOfFormatPositions);
+      }
       
       if (listOfFormatPositions != null) {
         for (int i=0; i<listOfFormatPositions.formatPosition().size(); i++) {
@@ -845,7 +847,10 @@ SmallPearlVisitor<Void> {
 	      }
 	    }
 	    
-	    visitChildren(fmtCtx);
+	    if (fmtCtx != null) {
+	      visitChildren(fmtCtx);
+	    }
+	    
 	    m_formatListAborted = false;
 	    List<ParserRuleContext> fmtPos = null;
 	    if (fmtCtx != null) {
