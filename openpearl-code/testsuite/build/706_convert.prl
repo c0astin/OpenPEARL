@@ -2932,6 +2932,25 @@ convertFromB: PROC;
      TO stdout BY A,F(3),X,A,B(1),A,B(1),A,SKIP;
   FIN;
 
+  ! happy day
+  !         12345678901234567890123456
+  testNbr = testNbr + 1;
+  buffer = ' 11';
+  b4 = '1'B1;
+  CONVERT b4 FROM buffer BY RST(error),B(4);
+  expect = '1100'B1;
+
+  IF error NE 0 THEN
+     failed = failed + 1;
+     PUT errorText,testNbr,' expected RST 0 -- got', error 
+     TO stdout BY A,F(3),A,F(6),SKIP;
+  FIN;
+  IF b4 NE expect THEN
+     failed = failed + 1;
+     PUT errorText,testNbr, 'expected value ''',expect,''' -- got ''',b4,''''
+     TO stdout BY A,F(3),X,A,B(4),A,B(4),A,SKIP;
+  FIN;
+
   ! error bit string too large 
   !         12345678901234567890123456
   testNbr = testNbr + 1;

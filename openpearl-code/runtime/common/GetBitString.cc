@@ -82,6 +82,7 @@ namespace pearlrt {
 	uint64_t value;
 	Fixed<31> w(width);
 	GetHelper helper(w,&source);
+        helper.setDelimiters(GetHelper::EndOfLine);
         if (base < 4) {
 	   helper.readB123(&value,len,base);
         } else {

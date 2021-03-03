@@ -102,6 +102,15 @@ TEST(GetBitString, B1_format) {
       pearlrt::GetBitString<1>::fromB123(x, (pearlrt::Fixed<31>)1, 1, source);
       ASSERT_TRUE((x == x2).getBoolean());
    }
+   // test reading of 1 larger value which should be exteded with 0's
+   // on the right side
+   {
+      source.rewind();
+      pearlrt::BitString<8> x;
+      pearlrt::GetBitString<8>::fromB123(x, (pearlrt::Fixed<31>)8, 1, source);
+      pearlrt::BitString<8> x1(0x0b0);
+      ASSERT_TRUE((x == x1).getBoolean());
+   }
    // test illegal values
    {
       pearlrt::Character<20> d(".               ");
