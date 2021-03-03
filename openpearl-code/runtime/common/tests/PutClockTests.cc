@@ -65,8 +65,8 @@ TEST(PutClock, Operations) {
       pearlrt::ClockFormatSignal);
    rc.clear();
    ASSERT_NO_THROW(
-      pearlrt::PutClock::toT(c, 7, 0, sink) );
-   ASSERT_STREQ(rc.getCstring(), "1:02:03") ;
+      pearlrt::PutClock::toT(c, 8, 0, sink) );
+   ASSERT_STREQ(rc.getCstring(), " 1:02:03") ;
       
    rc.clear();
    ASSERT_THROW(
@@ -78,8 +78,8 @@ TEST(PutClock, Operations) {
       pearlrt::ClockFormatSignal);
    rc.clear();
    ASSERT_NO_THROW(
-      pearlrt::PutClock::toT(c, 15, 7, sink));
-   ASSERT_STREQ(rc.getCstring(), "1:02:03.0000000") ;
+      pearlrt::PutClock::toT(c, 16, 7, sink));
+   ASSERT_STREQ(rc.getCstring(), " 1:02:03.0000000") ;
    rc.clear();
    ASSERT_NO_THROW(pearlrt::PutClock::toT(c, 15, 6, sink));
    rc.clear();
