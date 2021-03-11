@@ -82,6 +82,7 @@ public class Compiler {
 
     public static void main(String[] args) {
         int i, j;
+        
         if (args.length < 1) {
             printHelp();
             return;
@@ -167,6 +168,11 @@ public class Compiler {
                     if (dumpSymbolTable) {
                         symbolTableVisitor.symbolTable.dump();
                     }
+                } else {
+                  // hot fix - if the parser exited with an error - no further steps are 
+                  // useful - we need an non-ok result value for the scripts
+                  System.out.println("compilation aborted with errors");
+                  System.exit(1);
                 }
 
                 ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose, debug, symbolTableVisitor, constantPool, ast);
@@ -243,7 +249,7 @@ public class Compiler {
                 System.exit(-1);
             }
 
-            if (ErrorStack.getTotalErrorCount()>0) {
+            if (ErrorStack.getTotalErrorCount()>0 ) {
             	System.out.println("compilation aborted with errors");
                 
                 if ( verbose > 0 ) {
