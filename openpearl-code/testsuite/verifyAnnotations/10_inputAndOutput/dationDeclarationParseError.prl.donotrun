@@ -1,0 +1,16 @@
+/*
+parser error
+*/
+MODULE(dationDcl);
+PROBLEM;
+! tests for stdout declaractions
+!! CREATED must exist
+   DCL stdout00 DATION  OUT   ALPHIC FORWARD;
+/* this test fails, since parser errors have a column position off by 1 in
+respect of the circumflex position
+/*$                                        ^ 
+ERROR : Syntax error :mismatched input ';' expecting {'GLOBAL', 'CREATED'}
+*/
+
+MODEND;
+

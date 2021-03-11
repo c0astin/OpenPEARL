@@ -1,0 +1,25 @@
+MODULE(ttt);
+
+PROBLEM;
+  SPC con DATION INOUT SYSTEM ALPHIC DIM(*,80) TFU;
+
+  DCL consolOk DATION INOUT ALPHIC DIM(*,81) TFU FORWARD NOSTREAM CREATED(con);
+/*$
+  ^
+error: DationDCL: TFU record of user dation too large (81) -- limit from system dation (80)
+*/
+
+
+  DCL console DATION INOUT ALPHIC DIM(*,80) FORWARD NOSTREAM CREATED(con);
+/*$
+  ^
+error: DationDCL: system dation requires TFU in user dation
+*/
+
+t1: TASK MAIN;
+  
+  OPEN console;
+
+END;
+
+MODEND;

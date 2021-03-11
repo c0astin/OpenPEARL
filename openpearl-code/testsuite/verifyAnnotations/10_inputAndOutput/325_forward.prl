@@ -1,0 +1,63 @@
+MODULE(ttt);
+
+SYSTEM;
+  so: StdOut;
+  si: StdIn;
+  con: Console;
+PROBLEM;
+  SPC si DATION IN SYSTEM ALPHIC;
+  SPC so DATION OUT SYSTEM ALPHIC;
+  SPC con DATION INOUT SYSTEM ALPHIC;
+
+  DCL consol1 DATION INOUT ALPHIC DIM(*,80) FORWARD CREATED(si);
+/*$
+  ^
+error: DationDCL: system dation does not provide direction OUT
+*/
+
+  DCL consol2 DATION INOUT ALPHIC DIM(*,80) TFU  FORWARD CREATED(con);
+/*$
+  ^
+error: DationDCL: TFU requires NOSTREAM
+*/
+  DCL console DATION INOUT ALPHIC DIM(*,80) TFU  FORWARD NOSTREAM CREATED(con);
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+  DCL stdin DATION IN ALPHIC DIM(*,80) FORWARD CREATED(si);
+  DCL stdinTfu DATION IN ALPHIC DIM(*,80) TFU FORWARD CREATED(si);
+/*$ 
+  ^
+error: DationDCL: TFU requires NOSTREAM
+*/
+
+t1: TASK MAIN;
+  
+  OPEN stdout;
+  OPEN console;
+  OPEN stdin;
+
+  PUT 'hallo' TO stdout BY A,F(3),SKIP(-1);
+/*$                               ^
+error: PUT:SKIP-format: no backward positioning allowed
+*/
+  PUT 'hallo' TO stdout BY X(-1),SKIP, F(3),SKIP(-1);
+/*$   ^
+error: PUT:expression type match format: CHAR(5) does not apply to format
+*/
+/*$                        ^
+error: PUT:X-format: no backward positioning allowed
+*/
+/*$                                         ^
+error: PUT:SKIP-format: no backward positioning allowed
+*/
+/*$                                    ^
+note: PUT:expression type match format: F(3)
+*/ 
+  PUT 'hallo' TO so;
+/*$
+  ^
+error: PUT: not allowed on SYSTEM dation
+*/
+  CLOSE stdout;
+END;
+
+MODEND;
