@@ -31,13 +31,16 @@ help:
 all:	build install
 
 build: configuration/include/autoconf.h  configuration/include/auto.conf \
-	 runtime compiler
+	 runtime compiler errorChecker
 
 runtime:
 	(cd runtime; make all; )
 
 compiler:
 	(cd compiler/src; make all; )
+
+errorChecker:
+	(cd errorChecker/src; make ; )
 
 prepare: configuration/include/autoconf.h
 ifeq ($(USERID),0)
@@ -50,7 +53,8 @@ else
 	   $(error You must be root to execute this command)
 endif
 
-install: configuration/include/autoconf.h  flashinterface.inc
+install: configuration/include/autoconf.h  flashinterface.inc 
+	(cd errorChecker; make ; )
 	(cd runtime; make clean; )
 	(cd compiler/src; make clean; )
 	(cd imc3; make clean; )
