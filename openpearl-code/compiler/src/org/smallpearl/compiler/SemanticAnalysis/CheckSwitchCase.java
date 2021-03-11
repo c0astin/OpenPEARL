@@ -275,7 +275,7 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
           for ( int j = 0; j <  m_currentCaseDataSet.m_listOfAlternatives.size(); j++) {
             if ( m_currentCaseDataSet.m_listOfAlternatives.get(j).isContained(lowerBoundary)) {
               ErrorStack.add(index, "CASE", "duplicate alternative "+ lowerBoundary);
-              ErrorStack.info( m_currentCaseDataSet.m_listOfAlternatives.get(j).getCtx(), "previous definition", "");
+              ErrorStack.note( m_currentCaseDataSet.m_listOfAlternatives.get(j).getCtx(), "previous definition", "");
               isOk = false;
             }
           }
@@ -314,7 +314,7 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
                 if (  m_currentCaseDataSet.m_listOfAlternatives.get(j).isContained(alt)) {
                   isOk = false;
                   ErrorStack.add(index, "CASE", "duplicate alternative "+alt );
-                  ErrorStack.info( m_currentCaseDataSet.m_listOfAlternatives.get(j).getCtx(), "previous definition", "");
+                  ErrorStack.note( m_currentCaseDataSet.m_listOfAlternatives.get(j).getCtx(), "previous definition", "");
                   //throw new DuplicateAltValueException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
               }
@@ -358,7 +358,7 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
           for ( int j = 0; j <  m_currentCaseDataSet.m_listOfAlternatives.size(); j++) {
             if ( m_currentCaseDataSet.m_listOfAlternatives.get(j).isContained(lowerBoundary)) {
               ErrorStack.add(index, "CASE", "duplicate alternative "+ s);
-              ErrorStack.info( m_currentCaseDataSet.m_listOfAlternatives.get(j).getCtx(), "previous definition", "");
+              ErrorStack.note( m_currentCaseDataSet.m_listOfAlternatives.get(j).getCtx(), "previous definition", "");
               isOk = false;
             }
           }
@@ -403,7 +403,7 @@ public class CheckSwitchCase extends SmallPearlBaseVisitor<Void> implements Smal
                   isOk = false;
                   String sAlt = Character.toString((char)alt);
                   ErrorStack.add(index, "CASE", "duplicate alternative "+sAlt );
-                  ErrorStack.info( m_currentCaseDataSet.m_listOfAlternatives.get(j).getCtx(), "previous definition", "");
+                  ErrorStack.note( m_currentCaseDataSet.m_listOfAlternatives.get(j).getCtx(), "previous definition", "");
                   //throw new DuplicateAltValueException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
               }

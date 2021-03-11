@@ -175,9 +175,9 @@ public class ErrorStack {
         return null;
     }
     /**
-     * add a new error in a temporary new error context
+     * add a new NOTE in a temporary new error context
      * 
-     * emits an info message to System.err with
+     * emits an 'note' message to System.err with
      * 
      * <ul>
      * <li>the corresponding source code
@@ -186,18 +186,23 @@ public class ErrorStack {
      * like PUT:E-format:fieldWidth: must be positive
      * </ul>
      * 
-     * The error counters are incremented
+     * The error counters are NOT incremented
      * @param ctx the current ParserRuleContext
      * @param prefix the error prefix
      * @param msg the concrete error message
      */
-    public static Void info(ParserRuleContext ctx, String prefix, String msg) {
+    public static Void note(ParserRuleContext ctx, String prefix, String msg) {
         enter(ctx,prefix);
-        printMessage(msg,"info");
+        printMessage(msg,"note");
         leave();
         return null;
     }
     
+    public static Void note(String msg) {
+      printMessage(msg,"note");
+      return null;
+  }
+  
     public static Void warn(ParserRuleContext ctx, String prefix, String msg) {
       enter(ctx,prefix);
       printMessage(msg,"warning");
@@ -291,7 +296,7 @@ public class ErrorStack {
         }
         System.err.println(
             Compiler.getSourceFilename() + ":" + startLineNumber + ":"
-                    + startColNumber + ": " + typeOfMessage + ": "+prefix + " " + msg);
+                    + (startColNumber + 1) +": " + typeOfMessage + ": "+prefix + " " + msg);
 		
         /* print source line */
         sourceLine = getLineFromSourceFile(Compiler.getSourceFilename(),

@@ -339,10 +339,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
               ErrorStack.add(ctx.blockId(),"BLOCK","duplicate name '"
                   + blockLabel+"' in scope");
               if (se instanceof LoopEntry) {
-                ErrorStack.info(((LoopStatementContext)(se.getCtx())).loopStatement_end(), "previous definion", "");
+                ErrorStack.note(((LoopStatementContext)(se.getCtx())).loopStatement_end(), "previous definion", "");
               }
               if (se instanceof BlockEntry) {
-                ErrorStack.info( ((Block_statementContext)(se.getCtx()) ) , "superior definition", "");
+                ErrorStack.note( ((Block_statementContext)(se.getCtx()) ) , "superior definition", "");
               }
             }
         }
@@ -638,7 +638,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
               ErrorStack.enter(ctx.accessAttribute(), "accessAttributes");
               for (ParseTree c1 : ctx.accessAttribute().children) {
                   if (c1.getText().equals("DIRECT")) d.setDirect(true);
-                  else if (c1.getText().equals("FORWARD")) d.setDirect(false);
+                  else if (c1.getText().equals("FORWARD")) d.setForward(true);
                   else if (c1.getText().equals("FORBACK")) {
                       ErrorStack.add("FORBACK is not supported");
                   } else if (c1.getText().equals("CYCLIC")) d.setCyclic(true);
@@ -1255,10 +1255,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 + label+"' in scope");   
               
             if (se instanceof LoopEntry) {
-              ErrorStack.info(((LoopStatementContext)(se.getCtx())).loopStatement_end(), "previous definion", "");
+              ErrorStack.note(((LoopStatementContext)(se.getCtx())).loopStatement_end(), "previous definion", "");
             }
             if (se instanceof BlockEntry) {
-              ErrorStack.info( ((Block_statementContext)(se.getCtx()) ) , "previous definion", "");
+              ErrorStack.note( ((Block_statementContext)(se.getCtx()) ) , "previous definion", "");
             }
           }
         }
