@@ -87,4 +87,9 @@ public abstract class TypeDefinition {
     public Integer getPrecision() { return 0;}
 
     public int getNoOfBytes() { return 0;}
+    
+    public Integer getSize() { 
+      System.err.println("TypeDefinition getSize should never be reached");
+      return -1;
+      }
 }
