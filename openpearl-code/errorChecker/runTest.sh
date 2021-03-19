@@ -12,6 +12,7 @@ do
    basename=${filename%.*}
    $path/genExpectations $filename #1>/dev/null
    rc=$?
+   sleep 1
    if [ $rc -ne 0 ] ; then
       printf "%-40s :  problems in annotation definition\n" $1
       rm -f $basename.exp 
