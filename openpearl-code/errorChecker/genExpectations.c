@@ -99,6 +99,10 @@ int main(int narg, char * argv[]) {
    }
    strncpy(outputFileName, inputFileName, strlen(inputFileName)-4);
    strcat(outputFileName,".exp");
+for (int i=0; i<strlen(outputFileName); i++) {
+   printf("%02X (%c) ", outputFileName[i],outputFileName[i]);
+}
+printf("\n");
    output = fopen(outputFileName,"w");
    if (output == NULL) {
       fprintf(stderr,"%s: could not create outfile file (%s)\n",inputFileName,strerror(errno));
