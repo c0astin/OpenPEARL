@@ -10,7 +10,7 @@ do
 #   echo "****" treat $1
    filename=$1
    basename=${filename%.*}
-   $path/genExpectations $filename 1>/dev/null
+   $path/genExpectations $filename #1>/dev/null
    rc=$?
    if [ $rc -ne 0 ] ; then
       printf "%-40s :  problems in annotation definition\n" $1
@@ -20,8 +20,8 @@ do
       # if more sources are possible, we must think about a new
       # calling mechanism withh all required input files
       # precompiled -  or not
-      prl $1 2> $basename.err 1>/dev/null
-      $path/errorParser $basename.prl <$basename.err 1>/dev/null
+      prl $1 2> $basename.err #1>/dev/null
+      $path/errorParser $basename.prl <$basename.err #1>/dev/null
       rc=$?
       if [ $rc -ne 0 ] ; then
          printf "%-40s :  annotatations failed\n" $1
@@ -30,7 +30,7 @@ do
          printf "%-40s :  all expected errors detected\n" $1 
          passed=$(($passed +1))
       fi
-      rm -f $basename $basename.cc $basename.exp  $basename.err $basename.xml $basename.log system.cc
+     # rm -f $basename $basename.cc $basename.exp  $basename.err $basename.xml $basename.log system.cc
    fi
 
    shift
