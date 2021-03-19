@@ -11,6 +11,11 @@ aa.prl:24:34: error: PUT:SKIP-format: no backward positioning allowed
 aa.prl:28:27: error: PUT:X-format: no backward positioning allowed
   PUT 'hallo' TO stdout BY X(-1),SKIP, F(3),SKIP(-1);
                            ^
+
+Error messages from the IMC have no circumflex and no error line:
+
+aa.prl:24:34: error: PUT:SKIP-format: no backward positioning allowed
+aa.prl:26:34: error: PUT:SKIP-format: no backward positioning allowed
 <ul>
 <li>The expectations of the source aa.prl must be present in aa.exp
 <li>each error message must fit to one expectation
@@ -83,19 +88,50 @@ void trimTrailingWhiteSpace(char * line) {
    } while(strlen(line)>0);
 }
 
-void parseError(char * line) {
+int looksLikeErrorMessage(char* line) {
+   char * pos, *pos1;
+   int n,l,c;
+
+   pos = strstr(line,":");
+   if (pos == NULL) {
+       return 0;
+   }
+   n = sscanf(pos,":%d:%d",&l,&c);
+   //printf("n=%d l=%d c=%d\n",n,l,c);
+   if (n !=2) {
+     return 0;
+   }
+   return 1;
+}
+
+/*
+ return 0, if a complete erro message from the compiler was detected
+        1, if the next error message (file:line:col:...) was detected
+           instead of ^ or error-line
+*/
+int parseError(char * line) {
    char * pos, *pos1;
    pos = strstr(line,":");
+   if (pos == NULL) {
+       // discard line if no ':' was detected
+       fprintf(stderr,"unexpected line >%s<\n", line);
+       return 0;
+   }
    *pos = '\0';
    strcpy(currentMessage.source, line);
    pos1 = strstr(pos+1,":");
+   if (pos1 == NULL) {
+       // discard line if no ':' was detected
+       fprintf(stderr,"unexpected line >%s<\n", line);
+       return 0;
+   }
    *pos1 = '\0';
    currentMessage.line = atoi(pos+1);
    pos = strstr(pos1+1,":");
    *pos = '\0';
    currentMessage.col = atoi(pos1+1);
-   strncpy(currentMessage.message,pos+2,strlen(pos+1)-1);
-   currentMessage.message[strlen(pos+1)-2] = '\0';
+   strncpy(currentMessage.message,pos+2,strlen(pos+1));
+//   currentMessage.message[strlen(pos+1)-2] = '\0';
    trimTrailingWhiteSpace(currentMessage.message);
 
 #if DEBUG == 1
@@ -106,9 +142,16 @@ void parseError(char * line) {
 #endif
 
    pos = fgets(line,LINELENGTH,stdin);
+//printf("next line: >%s<\n pos=%d\n",line,pos);
+
    if (pos) {
+      if (looksLikeErrorMessage(line)) {
+//printf("next error instead of sourceline found\n");
+        return 1;
+      }
       strncpy(currentMessage.sourceLine, line, strlen(line)-1);
    } else {
+       return 0;
        fprintf(stderr,"malformed message\n");
        exit(-1);
    }
@@ -119,7 +162,7 @@ void parseError(char * line) {
 
    pos = fgets(line,LINELENGTH,stdin);
    if (pos) {
-printf(line);
+//printf(line);
       currentMessage.circumflexPos = strstr(line,"^") - line + 1;
    } else {
        fprintf(stderr,"malformed message\n");
@@ -134,6 +177,7 @@ printf(line);
                 currentMessage.col, currentMessage.circumflexPos);
       errorCount ++;
    }
+   return 0;
 }
 
 static struct ExpectationFile* readExpectationIfNotLoadedYet() {
@@ -246,6 +290,7 @@ static void searchExpectationAndMarkUsed( struct ExpectationFile * expFile) {
             fprintf(stderr,"%s:%d:%d: message differs\n\t>%s<\n\t>%s<\n",
                  currentMessage.source,currentMessage.line,
                  currentMessage.col, currentMessage.message, exp->message);
+            exp->useCount ++;
             errorCount ++;
             found = 1;
        } 
@@ -286,6 +331,7 @@ int main(int narg, char*argv[]) {
    char line[LINELENGTH];
    char * result;
    struct ExpectationFile * expFile;
+   int nextLinePresent = 0;
 
    if (narg <2) {
       fprintf(stderr,"need at least 1 source-file(s)\n");
@@ -301,17 +347,23 @@ int main(int narg, char*argv[]) {
    errorCount = 0;
 
    do {
+     if (!nextLinePresent) {
+//printf("read line\n");
       result = fgets(line,LINELENGTH,stdin);
+     }
+//printf("result=%d\n line=>%s<\n",result,line);
+
       if (result) {
          if (line[strlen(line)-1] != '\n') {
             fprintf(stderr,"input buffer too small\n");
             exit(-1);
          }
-         parseError(line);
+         line[strlen(line)-1] = '\0';
+         nextLinePresent = parseError(line);
          expFile = readExpectationIfNotLoadedYet();
          searchExpectationAndMarkUsed(expFile);
        }
-    } while (!feof(stdin));
+    } while (nextLinePresent == 1 || !feof(stdin));
 
     scanExpectations();
 

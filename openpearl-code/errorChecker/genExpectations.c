@@ -9,6 +9,8 @@ The location of the error line is derived from the read lines in the
 input file.
 The column position is derived from a circumflex character ether in the  
 start of the annotation - or in the next line.
+If no circumflex is used, the column position may be defined with
+'col=xxx' in the start of the annotation line.
 After the circumflex character is detected the next line denotes the message
 text.
 
@@ -143,6 +145,11 @@ int main(int narg, char * argv[]) {
                     if (strchr(inputLine,'^')) {
                         annotation.col = strchr(inputLine,'^') - inputLine+1;
                         annotationStatus = 2;
+                    } else if (strstr(inputLine,"col=")) {
+                        annotation.col = atoi(strstr(inputLine,"col=")+4);
+                        annotationStatus = 2;
+printf("col=%d\n", annotation.col);
+
                     }
                  } else {
 //printf("update lastRealLineNumber from %d to %d\n", lastRealInputLineNumber, lineNumber);
