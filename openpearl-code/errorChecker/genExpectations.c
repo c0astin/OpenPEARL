@@ -97,15 +97,17 @@ int main(int narg, char * argv[]) {
                inputFileName,strerror(errno));
        exit(-1);
    }
-   strncpy(outputFileName, inputFileName, strlen(inputFileName)-4);
+   strcpy(outputFileName, inputFileName);
+   outputFileName[strlen(inputFileName)-4] = '\0';
    strcat(outputFileName,".exp");
-for (int i=0; i<strlen(outputFileName); i++) {
-   printf("%02X (%c) ", outputFileName[i],outputFileName[i]);
-}
-printf("\n");
+//for (int i=0; i<strlen(outputFileName); i++) {
+//   printf("%02X (%c) ", outputFileName[i],outputFileName[i]);
+//}
+//printf("\n");
    output = fopen(outputFileName,"w");
    if (output == NULL) {
-      fprintf(stderr,"%s: could not create outfile file (%s)\n",inputFileName,strerror(errno));
+      fprintf(stderr,"%s: could not create outfile file (%s)\n",
+	   inputFileName,strerror(errno));
       exit(-1);
    }
 
@@ -120,7 +122,8 @@ printf("\n");
       result = fgets(inputLine, sizeof(inputLine), input); 
       if (result) {
          if (result[strlen(result)-1] != '\n' && ! feof(input)) {
-            fprintf(stderr,"%s:%d: line exceeds length limit\n",inputFileName,lineNumber);
+            fprintf(stderr,"%s:%d: line exceeds length limit\n",
+		inputFileName,lineNumber);
             exit(-1);
          } 
          if (result[strlen(result)-1] != '\n' && feof(input)) {
