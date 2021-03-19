@@ -1,4 +1,4 @@
-MODULE(ttt);
+MODULE(m_325_forward);
 
 SYSTEM;
   so: StdOut;
@@ -9,11 +9,6 @@ PROBLEM;
   SPC so DATION OUT SYSTEM ALPHIC;
   SPC con DATION INOUT SYSTEM ALPHIC;
 
-  DCL consol1 DATION INOUT ALPHIC DIM(*,80) FORWARD CREATED(si);
-/*$
-  ^
-error: DationDCL: system dation does not provide direction OUT
-*/
 
   DCL consol2 DATION INOUT ALPHIC DIM(*,80) TFU  FORWARD CREATED(con);
 /*$
