@@ -108,6 +108,7 @@ Only this file mus be included.
 //#include "TcpIpServer.h"
 
 #include "Console.h"
+#include "StdOut.h"
 #include "Esp32Uart.h"
 #include "Esp32WifiConfig.h"
 #include "Esp32MqttTcpClient.h"

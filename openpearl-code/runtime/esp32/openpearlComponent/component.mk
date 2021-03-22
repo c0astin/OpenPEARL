@@ -24,6 +24,7 @@ COMPONENT_OBJS += main.o  Log.o Esp32Clock.o
 COMPONENT_OBJS +=  Esp32Uart.o 
 #COMPONENT_OBJS += Esp32UartInternal.o Esp32Uart.o 
 COMPONENT_OBJS += Console.o
+COMPONENT_OBJS += StdOut.o
 
 $(warning $(COMPONENT_OBJS))
 
