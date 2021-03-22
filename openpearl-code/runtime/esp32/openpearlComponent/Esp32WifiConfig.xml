@@ -4,7 +4,7 @@
          <CHAR length="32" name="password"></CHAR>
       </parameters>
       <checks>
-         <check instances="1"/>
+         <check instances="oncePerSet" set="Esp32WifiConfig"/>
       </checks>
 
    </configuration>
