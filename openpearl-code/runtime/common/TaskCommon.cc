@@ -55,6 +55,8 @@
 //          remove this vv comment to enable debug messages
 #define DEBUG(fmt, ...)  Log::debug(fmt, ##__VA_ARGS__)
 
+//#define SHOW_MUTEX_LOCKS
+
 namespace pearlrt {
 
    TaskCommon::TaskCommon(char * n, Prio prio, BitString<1> isMain) {
@@ -85,54 +87,39 @@ namespace pearlrt {
 
    void TaskCommon::mutexLock() {
       mutexTasks.name("MutexTasks");
-/*
-    Task* current = Task::currentTask();
-    char * name;
 
-    if (current) {
-       name = current->getName();
-    } else {
-       name = (char*)"*anon*";
-    }
- */
-  //Log::debug("%s: MUTEX TASK: LOCKING...cccc= %d", getCallingTaskName(),cccc);
-//    printf("MUTEX TASK: LOCKING...cccc= %d\n", cccc);
+#ifdef SHOW_MUTEX_LOCKS
+   char * name = getCallingTaskName();
+   Log::debug("%s: MUTEX TASK: LOCKING...cccc= %d", name,cccc);
+//    printf("%s: MUTEX TASK: LOCKING...cccc= %d\n", name, cccc);
+#endif 
 
       mutexTasks.request();
-//    Log::debug("%s: MUTEX TASK: LOCKED", getCallingTaskName());
-
       // decrement monitoring variable
       cccc --;
+#ifdef SHOW_MUTEX_LOCKS
+    Log::debug("%s: MUTEX TASK: LOCKED ... cccc=%d", name, cccc);
+#endif 
 
-//    Log::debug("MUTEX TASK: LOCKED   cccc= %d", cccc);
-//    printf("MUTEX TASK: LOCKED   cccc= %d\n", cccc);
+
    }
 
    void TaskCommon::mutexUnlock() {
-//    printf("MUTEX TASK: UNLOCKING...cccc= %d\n", cccc);
-/*
-    Task* current = Task::currentTask();
-    char * name;
-
-    if (current) {
-       name = current->getName();
-    } else {
-       name = (char*)"*anon*";
-    }
-*/
-//     Log::debug("%s: MUTEX TASK: UNLOCKING...cccc= %d", getCallingTaskName(),cccc);
-
+#ifdef SHOW_MUTEX_LOCKS
+     Log::debug("%s: MUTEX TASK: UNLOCKING...cccc= %d", getCallingTaskName(),cccc);
+#endif
       // increment monitoring variable
       cccc ++;
 
       if (cccc > 1) {
          Log::error("MUTEX TASK: ....UNLOCKED --> %d\n", cccc);
-      } else {
-//         Log::debug("MUTEX TASK: ....UNLOCKED --> %d\n", cccc);
       }
 
       mutexTasks.release();
-//    printf("MUTEX TASK: UNLOCKED...cccc= %d\n", cccc);
+#ifdef SHOW_MUTEX_LOCKS
+      Log::debug("MUTEX TASK: ....UNLOCKED --> %d\n", cccc);
+#endif
+
    }
 
    char* TaskCommon::getName() {
@@ -971,10 +958,10 @@ namespace pearlrt {
          }
       }
 
-      // do the plattform specific part ... and release the mutexTasks lock
+      // do the plattform specific part ... the release the mutexTasks lock
+      // is donew in the platform specific code
       DEBUG("%s: call suspendMySelf", getCallingTaskName());
       suspendMySelf();
-      //mutexUnlock();
    }
 
 
