@@ -88,7 +88,7 @@ namespace pearlrt {
       for (int i=0;i<numberOfRequestedLines; i++) {
         lines[i] = requestedLines[i]->getGpio();
       }
-      int ret = gpiod_ctxless_event_monitor_multiple_ext(
+      /*int ret = gpiod_ctxless_event_monitor_multiple_ext(
        		 "gpiochip0",
         	 GPIOD_CTXLESS_EVENT_FALLING_EDGE,
                  lines, numberOfRequestedLines,
@@ -99,6 +99,17 @@ namespace pearlrt {
                  eventCallback,
                  NULL, // parameter for callback
         	 0  // flags: setup of the lines is already done
+        );*/
+      int ret = gpiod_ctxless_event_monitor_multiple(
+       		 "gpiochip0",
+        	 GPIOD_CTXLESS_EVENT_FALLING_EDGE,
+                 lines, numberOfRequestedLines,
+		  0,     // active low
+                 "RPiGpioInterrupt", 
+		 NULL,  // timeout
+                 NULL, //callback,
+                 eventCallback,
+                 NULL  // parameter for callback
         );
       if (ret < 0) {
          Log::error("RPiGpioInterruptHandler: failed to monitor via libgpiod");
