@@ -134,7 +134,7 @@ namespace pearlrt {
       The result is remapped to the same day.
 
       \param d the right hand side parameter
-      \returns reference to the updated clock duration
+      \returns new clock value 
       */
       Clock operator+(const Duration& d);
 
@@ -144,7 +144,7 @@ namespace pearlrt {
       The result is remapped to the same day.
 
       \param d the right hand side parameter
-      \returns reference to the updated clock duration
+      \returns new clock value 
       */
       Clock operator-(const Duration& d);
 

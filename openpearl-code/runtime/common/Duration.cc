@@ -115,6 +115,11 @@ namespace pearlrt {
       return Duration(Duration(0,0) - (*this));
    }
 
+   Clock Duration::operator+(const Clock& rhs) const {
+      Clock result(rhs);
+      result = result + (*this);
+      return result;
+   }
 
    Float<23> Duration::operator/=(const Duration& rhs) {
 
