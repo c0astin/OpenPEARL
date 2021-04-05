@@ -412,7 +412,6 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     	ASTAttribute attr = m_ast.lookup(expression);
 
     	if (attr != null) {
-    		actualType = attr.getType();
     		actualIsInv = attr.isReadOnly();
 
     		actualVariableEntry = attr.getVariable();
@@ -420,7 +419,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     		if (actualType instanceof TypeArray) {
     		    actualArrayDimensions = ((TypeArray) actualType).getNoOfDimensions();
     		    actualBaseType = ((TypeArray) actualType).getBaseType();
-    		    actualIsArray = true;	
+    		    actualIsArray = true;
     		}
     	}
 
@@ -456,8 +455,15 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     						" -- got ARRAY of "+actualType.toString());
     			}
     		} else {
-    			ErrorStack.add("expected scalar type");
-    		}
+				if (attr.isScalarType()) {
+					if (!actualBaseType.equals(formalBaseType)) {
+						String s = actualType.getName();
+						s = actualType.toString();
+						ErrorStack.add("type mismatch: expect ARRAY of " + ((TypeArray) formalParameter.getType()).getBaseType() +
+								" -- got ARRAY of " + actualType.toString());
+					}
+				}
+			}
     	} else {
     		if (formalParameter.getType() instanceof TypeArray) {
     			ErrorStack.add("expected array type");
@@ -522,8 +528,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     				}
     			}
     		}
-    	}	
-
+    	}
     }
     
     

@@ -42,7 +42,6 @@ import java.io.UnsupportedEncodingException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
-
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1173,7 +1172,7 @@ public class CommonUtils {
     }
 
     /**
-     * Determine the type of name
+     * Determine the base type of name
      *
      * @param ctx NameContext
      * @param symbolTable Symboltable of the current scope
@@ -1203,10 +1202,19 @@ public class CommonUtils {
             while (lctx != null) {
                 String s= lctx.ID().toString();
                 StructureComponent structureComponent = struct.lookup(lctx.ID().toString());
+
+                // Note: This should be handled by the new error reporting mechanism.
+                if ( structureComponent == null ) {
+                    return null;
+                }
+
                 type = structureComponent.m_type;
 
                 if ( type instanceof TypeArray) {
                     type = ((TypeArray) type).getBaseType();
+                    if ( type instanceof TypeStructure) {
+                        struct = (TypeStructure) type;
+                    }
                 } else if (type instanceof TypeReference) {
                     type = ((TypeReference) type).getBaseType();
                 } else if (type instanceof TypeStructure) {

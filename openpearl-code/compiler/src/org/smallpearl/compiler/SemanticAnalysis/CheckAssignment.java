@@ -91,21 +91,20 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
     TypeDefinition lhsType = null;
 
     SmallPearlParser.NameContext ctxName = ctx.name();
-//    if ( ctx.charSelectionSlice() != null ) {
-//      lhsAttr = m_ast.lookup(ctx.charSelectionSlice())); 
-//    else  if (ctx.bitSelectionSlice() != null) {
-//      lhsAttr = m_ast.lookup(ctx.bitSelectionSlice()); 
-//    } else {
-//      // no selection; is  ('CONT')? name  
-      lhsAttr = m_ast.lookup(ctx.name()); 
-      ctxName = ctx.name();
-//    }
+    lhsAttr = m_ast.lookup(ctx.name());
+    ctxName = ctx.name();
 
-  //  lhsType = lhsAttr.getType();
     lhsType = CommonUtils.getBaseTypeForName(ctxName,m_currentSymbolTable);
+
     id = ctxName.ID().getText();
+
+    if (lhsType == null ) {
+      ErrorStack.addInternal(id+" not in symbol table or is no variable");
+    }
+
     SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
     VariableEntry lhsVariable = null;
+
     if (lhs != null && lhs instanceof VariableEntry) {
       lhsVariable = (VariableEntry)lhs;
     } else {
@@ -169,7 +168,6 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
 //          rhsAttr.setIsFunctionCall(true);
 //        }
 //      }
-      
 
       if (lhsType instanceof TypeReference && ctx.dereference() == null &&
           rhsType instanceof TypeReference) {
@@ -227,15 +225,12 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
       } else {
         ErrorStack.add("type mismatch: "+lhsAttr.getType().toString()+":="+rhsAttr.getType().toString());
       }
-
-
     }
 
     ErrorStack.leave();
     return null;
   }
 
-  
   private void checkLifeCycle(VariableEntry lhsVariable, VariableEntry rhsVariable) {
     if (rhsVariable != null) {
       if (lhsVariable.getLevel() < rhsVariable.getLevel()) {
@@ -244,7 +239,6 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void> implements Smal
     } else {
       // rhs is NIL, TASK or PROC
     }
-    
   }
 
   private void checkTypes(TypeDefinition lhsType, ASTAttribute lhsAttr,

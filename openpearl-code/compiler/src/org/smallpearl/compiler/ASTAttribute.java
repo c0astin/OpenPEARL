@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- *  Copyright (c) 2012-2016 Marcel Schaible
+ *  Copyright (c) 2012-2021 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 
 package org.smallpearl.compiler;
 
+import jdk.nashorn.internal.runtime.arrays.TypedArrayData;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
@@ -252,6 +253,20 @@ public class ASTAttribute {
         m_flags = m_flags & ~whichFlag;
       }
     }
-    
 
+    /**
+     * indicate whether the attribute is scalar or not.
+     *
+     * @return true if scalar, otherwise fales
+     */
+    public boolean isScalarType() {
+        return this.m_type instanceof TypeBit ||
+               this.m_type instanceof TypeChar ||
+                this.m_type instanceof TypeDuration ||
+                this.m_type instanceof TypeClock ||
+                this.m_type instanceof TypeFixed ||
+                this.m_type instanceof TypeFloat ||
+                this.m_type instanceof TypeTime ||
+                this.m_type instanceof TypeVariableChar;
+    }
 }

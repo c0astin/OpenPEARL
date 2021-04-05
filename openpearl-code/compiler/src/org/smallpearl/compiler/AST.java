@@ -12,7 +12,7 @@ public class AST {
     }
 
     public Void put(ParserRuleContext ctx, ASTAttribute astAttribute) {
-        Log.debug("AST:put:ctx " + CommonUtils.printContext(ctx));
+        Log.debug("AST:put:ctx=" + CommonUtils.printContext(ctx));
         Log.debug("AST:put:astAttribute)= " + astAttribute);
 
         if ( ctx == null ) {
