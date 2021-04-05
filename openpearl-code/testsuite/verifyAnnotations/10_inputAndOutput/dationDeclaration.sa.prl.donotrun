@@ -1,0 +1,129 @@
+/*
+only test for the semantic analysis in the compiler
+IMC-stuff will not reached
+
+Tests:
+* CREATED() 
+* 
+*/
+MODULE(dationDcl);
+SYSTEM;
+   so: StdOut;
+   si: StdIn;
+   con: Console; ! needs TFU with record <= 80
+   sbd: SampleBasicDation; ! BASIC FIXED(15) INOUT 
+   disc: Disc('/tmp',10);
+
+PROBLEM;
+   SPC disc DATION INOUT SYSTEM ALL DIRECT;
+   SPC so  DATION OUT    SYSTEM ALPHIC FORWARD;
+   SPC si  DATION IN     SYSTEM ALPHIC;
+   SPC con DATION INOUT  SYSTEM ALPHIC;
+   SPC sbd DATION INOUT  SYSTEM BASIC FIXED(15);
+   DCL f FIXED;
+
+   DCL stdin DATION  IN   ALPHIC DIM(*) FORWARD CREATED(si);
+! ************** CREATED(...)
+!! created_on must exist and must be of type dation
+   DCL stdout0 DATION  OUT   ALPHIC FORWARD CREATED(f);
+/*$^
+error: DationDCL: f is not of type DATION
+*/
+
+   DCL stdout1 DATION  IN    CHAR   FORWARD CREATED(s0);
+/*$^
+error: DationDCL: system dation s0 is not defined
+*/
+
+
+! ************* typology must existe in ALPHIC or type dations
+!                must not exist in BASIC dation
+   DCL stdout DATION  OUT   ALPHIC FORWARD CREATED(so);
+/*$^
+error: DationDCL: non BASIC user dation needs typology (DIM)
+*/
+
+   DCL stdout2 DATION  IN    CHAR   FORWARD CREATED(so);
+/*$^
+error: DationDCL: attempt to create a 'CHAR' dation upon an ALPHIC system dation
+*/
+
+   DCL stdout3 DATION  OUT  ALPHIC   DIRECT CREATED(so);
+/*$^
+error: DationDCL: non BASIC user dation needs typology (DIM)
+*/
+
+! ************* check type of user dation versus type of SPC of system dation
+
+   DCL typeOk1 DATION OUT BASIC FIXED(15) CREATED(sbd);
+   DCL typeOk2 DATION OUT ALPHIC DIM(*) FORWARD CREATED(stdout);
+   DCL typeOk3 DATION OUT ALPHIC DIM(*) FORWARD CREATED(disc);
+   DCL typeOk4 DATION OUT FIXED(15) DIM(*) FORWARD CREATED(disc);
+   DCL typeOk5 DATION OUT FIXED(15) DIM(*) DIRECT CREATED(disc);
+
+   DCL typeFail1 DATION OUT FIXED(15) CREATED(sbd);
+/*$^
+error: DationDCL: attempt to create a 'FIXED(15)' dation upon a BASIC system dation
+*/
+
+   DCL typeFail2 DATION OUT ALL CREATED(sbd);
+/*$^
+error: DationDCL: attempt to create a 'ALL' dation upon a BASIC system dation
+*/
+
+   DCL typeFail3 DATION OUT ALPHIC CREATED(sbd);
+/*$^
+error: DationDCL: attempt to create ALPHIC dation upon BASIC system dation
+*/
+
+   DCL typeFail4 DATION OUT ALL DIM(*) FORWARD CREATED(stdout);
+/*$^
+error: DationDCL: attempt to create a 'ALL' dation upon an ALPHIC system dation
+*/
+
+   DCL typeFail5 DATION OUT BASIC FIXED(15)  CREATED(disc);
+/*$^
+error: DationDCL: attempt to create a BASIC dation upon non BASIC system dation
+*/
+
+! ************** check direction
+   DCL dirOk1 DATION OUT ALPHIC DIM(*) FORWARD CREATED(stdout);
+   DCL dirFail1 DATION IN ALPHIC DIM(*) FORWARD CREATED(stdout);
+/*$^
+error: DationDCL: system dation does not provide direction IN
+*/
+
+   DCL dirFail2 DATION INOUT ALPHIC DIM(*) FORWARD CREATED(stdout);
+/*$^
+error: DationDCL: system dation does not provide direction IN
+*/
+
+   DCL dirFail3 DATION OUT ALPHIC DIM(*) FORWARD CREATED(stdin);
+/*$^
+error: DationDCL: system dation does not provide direction OUT
+*/
+
+   DCL dirFail4 DATION INOUT ALPHIC DIM(*) FORWARD CREATED(stdin);
+/*$^
+error: DationDCL: system dation does not provide direction OUT
+*/
+
+! ************** typology
+
+   DCL consolOk1 DATION IN ALPHIC DIM(*,80) TFU FORWARD NOSTREAM CREATED(con);
+   DCL consolOk2 DATION OUT ALPHIC DIM(*,80) TFU FORWARD NOSTREAM CREATED(con);
+   DCL consolOk3 DATION INOUT ALPHIC DIM(*,80) TFU FORWARD NOSTREAM CREATED(con);
+   ! next test would fail in IMC!
+   DCL consolOk4 DATION INOUT ALPHIC DIM(*,80) FORWARD NOSTREAM CREATED(con);
+
+   DCL typologyFail1 DATION INOUT ALPHIC FORWARD CREATED(con);
+/*$^
+error: DationDCL: non BASIC user dation needs typology (DIM)
+*/
+
+   DCL typologyFail2 DATION INOUT ALPHIC DIM(*,80) TFU FORWARD CREATED(con);
+/*$^
+error: DationDCL: TFU requires NOSTREAM
+*/
+MODEND;
+

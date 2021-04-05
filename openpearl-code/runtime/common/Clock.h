@@ -134,9 +134,9 @@ namespace pearlrt {
       The result is remapped to the same day.
 
       \param d the right hand side parameter
-      \returns reference to the updated clock duration
+      \returns new clock value 
       */
-      Clock& operator+(const Duration& d);
+      Clock operator+(const Duration& d);
 
       /**
       decrement the current clock by the given duration value
@@ -144,9 +144,9 @@ namespace pearlrt {
       The result is remapped to the same day.
 
       \param d the right hand side parameter
-      \returns reference to the updated clock duration
+      \returns new clock value 
       */
-      Clock& operator-(const Duration& d);
+      Clock operator-(const Duration& d);
 
       /**
       Calculate the difference time between the internal and the given

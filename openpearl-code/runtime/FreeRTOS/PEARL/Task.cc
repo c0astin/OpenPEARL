@@ -61,7 +61,7 @@
 namespace pearlrt {
 
 //          remove this vv comment to enable debug messages
-#define DEBUG(fmt, ...) // Log::debug(fmt, ##__VA_ARGS__)
+#define DEBUG(fmt, ...)  // Log::debug(fmt, ##__VA_ARGS__)
 
    Task* Task::currentTask(void) {
       Task* mySelf;
@@ -76,10 +76,6 @@ namespace pearlrt {
     * @param[in]	n task name
     * @param[in]	prio PEARL90 priority
     * @param[in]	ismain PEARL90 isMain flag
-    *
-    * <b>Note:</b> When using UART in BLOCKING mode,
-    *               a time-out condition is used
-    * via defined symbol UART_BLOCKING_TIMEOUT.
     **********************************************************************/
 
    Task::Task(char* n, Prio prio, BitString<1> ismain) :
@@ -353,11 +349,11 @@ Log::debug("%s: terminateIO called", name);
          suspendDone.release();
       }
 
-      mutexUnlock();
       DEBUG("%s: suspendMySelf: go into suspend state", name);
+      mutexUnlock();
       vTaskSuspend((TaskHandle_t)xth);
       DEBUG("%s: suspended - got continue", name);
-      mutexLock();
+      //mutexLock();
 
       taskState = previousTaskState;
       switchToThreadPrioCurrent(cp);
@@ -372,9 +368,11 @@ Log::debug("%s: terminateIO called", name);
       suspendWaiters ++;
       cp = switchToThreadPrioMax();
       taskState = SUSPENDED;
+      mutexUnlock();
       vTaskSuspend((TaskHandle_t)(this->xth));
-      switchToThreadPrioCurrent(cp);
       suspendDone.request();
+      mutexLock();
+      switchToThreadPrioCurrent(cp);
    }
 
 
@@ -399,6 +397,7 @@ Log::debug("%s: terminateIO called", name);
    void Task::continueSuspended() {
       DEBUG("%s: continue suspended state=%d", name, taskState);
       vTaskResume((TaskHandle_t)xth);
+      //mutexUnlock();
       DEBUG("%s: continue suspended ... done. state=%d",name, taskState);
       // update of taskState and release of mutexTask is done in
       // continued task
@@ -466,6 +465,7 @@ Log::debug("%s: terminateIO called", name);
       return NULL;
    }
 #endif
+
    void Task::restartTaskStatic(Task * t) {
       t->restartTask();
    }

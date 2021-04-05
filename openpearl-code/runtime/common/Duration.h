@@ -169,6 +169,15 @@ namespace pearlrt {
       */
       Duration operator-(const Duration& rhs) const;
 
+      /**
+      increment the given clock value by the current duration
+
+      The result is remapped to the same day.
+
+      \param d the right hand side parameter
+      \returns new clock value 
+      */
+      Clock operator+(const Clock& d) const;
 
       /**
       monadic minus

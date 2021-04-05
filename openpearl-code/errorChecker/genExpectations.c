@@ -9,6 +9,8 @@ The location of the error line is derived from the read lines in the
 input file.
 The column position is derived from a circumflex character ether in the  
 start of the annotation - or in the next line.
+If no circumflex is used, the column position may be defined with
+'col=xxx' in the start of the annotation line.
 After the circumflex character is detected the next line denotes the message
 text.
 
@@ -95,11 +97,17 @@ int main(int narg, char * argv[]) {
                inputFileName,strerror(errno));
        exit(-1);
    }
-   strncpy(outputFileName, inputFileName, strlen(inputFileName)-4);
+   strcpy(outputFileName, inputFileName);
+   outputFileName[strlen(inputFileName)-4] = '\0';
    strcat(outputFileName,".exp");
+//for (int i=0; i<strlen(outputFileName); i++) {
+//   printf("%02X (%c) ", outputFileName[i],outputFileName[i]);
+//}
+//printf("\n");
    output = fopen(outputFileName,"w");
    if (output == NULL) {
-      fprintf(stderr,"%s: could not create outfile file (%s)\n",inputFileName,strerror(errno));
+      fprintf(stderr,"%s: could not create outfile file (%s)\n",
+	   inputFileName,strerror(errno));
       exit(-1);
    }
 
@@ -114,7 +122,8 @@ int main(int narg, char * argv[]) {
       result = fgets(inputLine, sizeof(inputLine), input); 
       if (result) {
          if (result[strlen(result)-1] != '\n' && ! feof(input)) {
-            fprintf(stderr,"%s:%d: line exceeds length limit\n",inputFileName,lineNumber);
+            fprintf(stderr,"%s:%d: line exceeds length limit\n",
+		inputFileName,lineNumber);
             exit(-1);
          } 
          if (result[strlen(result)-1] != '\n' && feof(input)) {
@@ -143,6 +152,11 @@ int main(int narg, char * argv[]) {
                     if (strchr(inputLine,'^')) {
                         annotation.col = strchr(inputLine,'^') - inputLine+1;
                         annotationStatus = 2;
+                    } else if (strstr(inputLine,"col=")) {
+                        annotation.col = atoi(strstr(inputLine,"col=")+4);
+                        annotationStatus = 2;
+printf("col=%d\n", annotation.col);
+
                     }
                  } else {
 //printf("update lastRealLineNumber from %d to %d\n", lastRealInputLineNumber, lineNumber);

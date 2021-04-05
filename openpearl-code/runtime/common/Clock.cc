@@ -109,16 +109,18 @@ namespace pearlrt {
    }
 
 
-   Clock& Clock::operator+(const Duration & d) {
-      intval += d.get();
-      adjust();
-      return *this;
+   Clock Clock::operator+(const Duration & d) {
+      Clock result;
+      result.intval = intval+d.get();
+      result.adjust();
+      return result;
    }
 
-   Clock& Clock::operator-(const Duration & d) {
-      intval -= d.get();
-      adjust();
-      return *this;
+   Clock Clock::operator-(const Duration & d) {
+      Clock result;
+      result.intval = intval-d.get();
+      result.adjust();
+      return result;
    }
 
    void Clock::adjust() {

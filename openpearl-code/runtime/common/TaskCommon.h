@@ -850,57 +850,57 @@ namespace pearlrt {
       /**
       suspend the task
 
-         this method must deal with the taskState RUNNING
+      this method must deal with the taskState RUNNING
 
-         Only the error checking for not allowed suspend
-         calls according to the current task state is
-         treated in superior levels
+      Only the error checking for not allowed suspend
+      calls according to the current task state is
+      treated in superior levels
 
-         The method is call with locked mutexTasks and
-         must NOT release the mutexTasks lock.
-         It may temporarily release the lock and gather it again.
+      The method is call with locked mutexTasks and
+      must NOT release the mutexTasks lock.
+      It may temporarily release the lock and gather it again.
       */
       virtual void suspendMySelf() = 0;
 
       /**
-         suspend a running task (from other task)
+      suspend a running task (from other task)
 
-         The error checking for not allowed suspend
-         calls according to the current task state is
-         treated in TaskCommon.
+      The error checking for not allowed suspend
+      calls according to the current task state is
+      treated in TaskCommon.
 
-         The method is call with locked mutexTasks and
-         must NOT release the mutexTasks lock.
-         It may temporarily release the lock and gather it again.
+      The method is call with locked mutexTasks and
+      must NOT release the mutexTasks lock.
+      It may temporarily release the lock and gather it again.
       */
       virtual void suspendRunning() = 0;
 
       /**
-         suspend a task just doing IO on a system device (from other task)
+      suspend a task just doing IO on a system device (from other task)
 
-         The error checking for not allowed suspend
-         calls according to the current task state is
-         treated in TaskCommon.
+      The error checking for not allowed suspend
+      calls according to the current task state is
+      treated in TaskCommon.
 
-         The method is call with locked mutexTasks and
-         must NOT release the mutexTasks lock.
-         It may temporarily release the lock and gather it again.
+      The method is call with locked mutexTasks and
+      must NOT release the mutexTasks lock.
+      It may temporarily release the lock and gather it again.
       */
       virtual void suspendIO() = 0;
 
       /**
-         continue a suspended task (from other task)
+      continue a suspended task (from other task)
 
-         The error checking for not allowed suspend
-         calls according to the current task state is
-         treated in TaskCommon.
+      The error checking for not allowed suspend
+      calls according to the current task state is
+      treated in TaskCommon.
 
-         The task was suspended ether be suspendRunning or
-         suspendIO.
+      The task was suspended ether be suspendRunning or
+      suspendIO.
 
-         The method is call with locked mutexTasks and
-         must NOT release the mutexTasks lock.
-         It may temporarily release the lock and gather it again.
+      The method is call with locked mutexTasks and
+      must NOT release the mutexTasks lock.
+      It may temporarily release the lock and gather it again.
       */
       virtual void continueSuspended() = 0;
 

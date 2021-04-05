@@ -63,16 +63,13 @@ In case that all tests pass the return value is 0.
 using namespace std;
 
 TEST(Duration, Operations) {
-/*
-  removed -- no double ctor available
-   ASSERT_NO_THROW(
-//       pearlrt::Duration c(9223372036854.775807));
-      pearlrt::Duration c(922337203685.775));
-   ASSERT_THROW(
-      // threshold shuold should be +0.000001
-      pearlrt::Duration c(9223372036854.775807 + 0.001),
-      pearlrt::DurationRangeSignal);
-*/
+   { // duration + clock
+      pearlrt::Clock clk(3600*10.0); // 10:00:00
+      pearlrt::Duration d(3600.0,0); // 1 hour
+      pearlrt::Clock result(3600.0*11.0); // 11:00:00
+      clk = d + clk;
+      ASSERT_TRUE((clk == result).getBoolean());
+   }
    {
       pearlrt::Duration d(24 * 3600.0,0); // 1 day
       pearlrt::Duration d2;
