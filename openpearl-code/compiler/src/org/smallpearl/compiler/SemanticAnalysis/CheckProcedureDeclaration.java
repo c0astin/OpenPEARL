@@ -390,7 +390,6 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
       return null;
     }
 
-
     private void checkParameter(ProcedureEntry proc,
     		ExpressionContext expression, FormalParameter formalParameter) {
     	// check types - must be equal if IDENT is set
@@ -412,6 +411,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     	ASTAttribute attr = m_ast.lookup(expression);
 
     	if (attr != null) {
+    		actualType = attr.getType();
     		actualIsInv = attr.isReadOnly();
 
     		actualVariableEntry = attr.getVariable();
@@ -434,6 +434,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     			}
     		}
     	}
+
     	if (formalParameter.getType() instanceof TypeArray) {
     		formalBaseType = ((TypeArray)formalParameter.getType()).getBaseType();
     	} else {
@@ -455,15 +456,8 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     						" -- got ARRAY of "+actualType.toString());
     			}
     		} else {
-				if (attr.isScalarType()) {
-					if (!actualBaseType.equals(formalBaseType)) {
-						String s = actualType.getName();
-						s = actualType.toString();
-						ErrorStack.add("type mismatch: expect ARRAY of " + ((TypeArray) formalParameter.getType()).getBaseType() +
-								" -- got ARRAY of " + actualType.toString());
-					}
-				}
-			}
+    			ErrorStack.add("expected scalar type");
+    		}
     	} else {
     		if (formalParameter.getType() instanceof TypeArray) {
     			ErrorStack.add("expected array type");
