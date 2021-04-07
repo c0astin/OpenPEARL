@@ -366,7 +366,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                                     typeST.add("size", type.getPrecision());
                                 } else if (type instanceof  TypeChar) {
                                     typeST = m_group.getInstanceOf("char_type");
-                                    typeST.add("size", type.getPrecision());
+                                    typeST.add("size", type.getSize());
                                 }
 
                                 declaration.add("name", component.m_alias);
