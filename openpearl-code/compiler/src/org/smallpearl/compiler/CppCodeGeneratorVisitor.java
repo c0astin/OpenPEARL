@@ -357,11 +357,15 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                                 ST declaration = m_group.getInstanceOf("StructureArrayComponentDeclaration");
                                 ST typeST = null;
 
+                                // TODO: (MS) Are here the other types like e.g. CLOCK are missing???
                                 if (type instanceof  TypeFixed) {
                                     typeST = m_group.getInstanceOf("fixed_type");
                                     typeST.add("size", type.getPrecision());
                                 } else if (type instanceof  TypeFloat) {
                                     typeST = m_group.getInstanceOf("float_type");
+                                    typeST.add("size", type.getPrecision());
+                                } else if (type instanceof  TypeChar) {
+                                    typeST = m_group.getInstanceOf("char_type");
                                     typeST.add("size", type.getPrecision());
                                 }
 
