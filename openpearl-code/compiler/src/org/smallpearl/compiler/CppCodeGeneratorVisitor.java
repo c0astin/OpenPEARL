@@ -2481,6 +2481,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 ST array = m_group.getInstanceOf("ArrayLHS");
 
                 ParserRuleContext c = variable.getCtx();
+
                 if (c instanceof FormalParameterContext) {
                     array.add("descriptor", "ad_" + variable.getName());
                 }
@@ -4237,7 +4238,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return length;
     }
 
-
     private void addFactorToFormatList(ST formatList, FactorContext ctx) {
         ST loopStart = m_group.getInstanceOf("iojob_format_loopstart");
 
@@ -4253,13 +4253,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         formatList.add("formats", loopStart);
     }
 
-
     private ST getUserVariable(String user_variable) {
         ST st = m_group.getInstanceOf("user_variable");
         st.add("name", user_variable);
         return st;
     }
-
 
     @Override
     public ST visitSendStatement(SmallPearlParser.SendStatementContext ctx) {
@@ -4275,7 +4273,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return st;
     }
 
-
     @Override
     public ST visitTakeStatement(SmallPearlParser.TakeStatementContext ctx) {
         ST st = m_group.getInstanceOf("iojob_io_statement");
@@ -4289,7 +4286,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         return st;
     }
-
 
     @Override
     public ST visitReadStatement(SmallPearlParser.ReadStatementContext ctx) {
@@ -4306,7 +4302,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         return st;
     }
-
 
     @Override
     public ST visitWriteStatement(SmallPearlParser.WriteStatementContext ctx) {
@@ -5480,7 +5475,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 if (c instanceof SmallPearlParser.ScalarVariableDeclarationContext) {
                     st.add("declarations",
                             visitScalarVariableDeclaration((SmallPearlParser.ScalarVariableDeclarationContext) c));
-//                  (SmallPearlParser.ScalarVariableDeclarationContext) c));
                 } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                     st.add("declarations",
                             visitArrayVariableDeclaration((SmallPearlParser.ArrayVariableDeclarationContext) c));
@@ -6087,11 +6081,17 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             if (type instanceof TypeArray) {
                 ST arrayLHS = m_group.getInstanceOf("ArrayLHS");
                 TypeArray arrayType = (TypeArray)type;
-                ArrayDescriptor array_descriptor = new ArrayDescriptor(
-                        arrayType.getNoOfDimensions(), arrayType.getDimensions());
 
-                arrayLHS.add("descriptor", array_descriptor.getName());
-                arrayLHS.add("name", var.getName());
+                if ( arrayType.hasDimensions()) {
+                    ArrayDescriptor array_descriptor = new ArrayDescriptor(
+                            arrayType.getNoOfDimensions(), arrayType.getDimensions());
+
+                    arrayLHS.add("descriptor", array_descriptor.getName());
+                    arrayLHS.add("name", var.getName());
+                } else {
+                    arrayLHS.add("descriptor", "ad_" + var.getName());
+                    arrayLHS.add("name", var.getName());
+                }
 
                 // if no indices are given, the complete array is accessed
                 if (ctx.listOfExpression() != null) {

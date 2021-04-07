@@ -1788,6 +1788,10 @@ ArrayLHS(name,descriptor,indices,element) ::= <%
 (*(data_<name> + <descriptor>->offset(<indices>)))
 %>
 
+ArrayRHS(name,descriptor,indices,element) ::= <%
+(*(data_<name> + <descriptor>->offset(<indices>)))
+%>
+
 ArrayLHSInStructure(name,descriptor,indices,element) ::= <%
 (*(<name> + <descriptor>->offset(<indices>)))
 %>
