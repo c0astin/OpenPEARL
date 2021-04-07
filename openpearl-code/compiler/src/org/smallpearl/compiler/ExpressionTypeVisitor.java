@@ -3275,10 +3275,10 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implement
                     // or a listOfExpression (-->array or procedure call)
                     Log.debug("ExpressionTypeVisitor:visitName:ctx=" + CommonUtils.printContext(ctx.listOfExpression()));
                     visitChildren(ctx.listOfExpression());
-                }
 
-                if ( m_type instanceof TypeArray) {
-                    m_type = ((TypeArray) m_type).getBaseType();
+                    if (var.getType() instanceof TypeArray) {
+                        m_type = ((TypeArray)(var.getBaseType())).getBaseType();
+                    }
                 }
 
                 if (ctx.name() != null ) {
