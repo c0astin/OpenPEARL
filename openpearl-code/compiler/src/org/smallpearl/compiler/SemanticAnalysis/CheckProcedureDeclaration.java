@@ -390,7 +390,6 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
       return null;
     }
 
-
     private void checkParameter(ProcedureEntry proc,
     		ExpressionContext expression, FormalParameter formalParameter) {
     	// check types - must be equal if IDENT is set
@@ -420,7 +419,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     		if (actualType instanceof TypeArray) {
     		    actualArrayDimensions = ((TypeArray) actualType).getNoOfDimensions();
     		    actualBaseType = ((TypeArray) actualType).getBaseType();
-    		    actualIsArray = true;	
+    		    actualIsArray = true;
     		}
     	}
 
@@ -435,6 +434,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     			}
     		}
     	}
+
     	if (formalParameter.getType() instanceof TypeArray) {
     		formalBaseType = ((TypeArray)formalParameter.getType()).getBaseType();
     	} else {
@@ -522,8 +522,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void> imple
     				}
     			}
     		}
-    	}	
-
+    	}
     }
     
     

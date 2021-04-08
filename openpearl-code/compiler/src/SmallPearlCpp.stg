@@ -416,14 +416,10 @@ if_statement(rhs, then_block, else_block) ::= <<
 	}<endif>
 >>
 
-
-
 task_body(decls,statements) ::= <<
     <decls>
     <statements>
 >>
-
-
 
 statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList) ::= <<
 <if(srcFilename)>
@@ -437,8 +433,6 @@ me->setLocation(<srcLine>, filename);
 <if(code)><code><endif>
 <if(tempVariableList)>}<endif>
 >>
-
-
 
 label_statement(label) ::= <%
 	<user_label(label)>:<\n>
@@ -1790,8 +1784,16 @@ ArrayLimit(lowerBoundary,upperBoundary,noOfElemenstOnNextSubArray) ::= <%
 {<lowerBoundary>,<upperBoundary>,<noOfElemenstOnNextSubArray>}
 %>
 
-ArrayLHS(name,descriptor,indices) ::= <%
+ArrayLHS(name,descriptor,indices,element) ::= <%
 (*(data_<name> + <descriptor>->offset(<indices>)))
+%>
+
+ArrayRHS(name,descriptor,indices,element) ::= <%
+(*(data_<name> + <descriptor>->offset(<indices>)))
+%>
+
+ArrayLHSInStructure(name,descriptor,indices,element) ::= <%
+(*(<name> + <descriptor>->offset(<indices>)))
 %>
 
 ArrayIndices(indices) ::= <<
@@ -1812,6 +1814,10 @@ ArrayLWB(descriptor,index) ::= <%
 
 ArrayUPB(descriptor,index) ::= <%
 <descriptor>->upb(<index>)
+%>
+
+LHS(expr) ::= <%
+<expr: {e|<e>} ; separator=".">
 %>
 
 /* --------------------------- CONVERT STATEMENT -------------------------------------------*/
@@ -1967,7 +1973,7 @@ struct <name>;
 >>
 
 StructureArrayComponentDeclaration(name,type,assignmentProtection,totalNoOfElements) ::= <%
-<type> data_<name>[<totalNoOfElements>]
+<type> <name>[<totalNoOfElements>]
 %>
 
 
@@ -1988,9 +1994,12 @@ StructureType(type) ::= <%
 <type>
 %>
 
-
 StructureComponent(component) ::= <%
-.<component>
+<component>
+%>
+
+StructureLHS(name,components) ::= <%
+<user_variable(name)><components>
 %>
 
 /* explode a name definition: */

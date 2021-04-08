@@ -286,6 +286,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void> implements 
 
                 ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
                 m_constantPool.add(cfv);
+
                 attr.setConstant(cfv);
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());

@@ -77,6 +77,15 @@ public class TypeArray extends TypeDefinition {
         }
     }
 
+    public boolean hasDimensions() {
+        if ( m_dimensions != null ) {
+            return !(m_dimensions.get(0).getLowerBoundary() == 0 && m_dimensions.get(0).getUpperBoundary() == 0);
+        }
+        else {
+            return false;
+        }
+    }
+
     public int getTotalNoOfElements() {
         int totalNoOfElements = 1;
         for (int i = 0; i < m_dimensions.size(); i++) {

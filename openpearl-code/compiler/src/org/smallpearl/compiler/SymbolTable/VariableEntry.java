@@ -121,7 +121,12 @@ public class VariableEntry extends SymbolTableEntry {
 //    }
 
 	public TypeDefinition getType() { return m_type; }
- //   public ParserRuleContext getConstantCtx() { return m_constantCtx; }
+
+	// TODO: add array, struct, ref
+	public TypeDefinition getBaseType() {
+        return m_type;
+    }
+
     public Boolean getAssigmentProtection() { return m_hasAssigmentProtection; }
 
     public Void setLoopControlVariable() {

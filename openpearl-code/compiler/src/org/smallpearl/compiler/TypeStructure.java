@@ -46,6 +46,10 @@ public class TypeStructure extends TypeDefinition {
         m_listOfComponents = new LinkedList<StructureComponent>();
     }
 
+    public String getName() {
+        return this.getStructureName();
+    }
+
     public String toString() {
         String line = this.getName() + " [ ";
 
