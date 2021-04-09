@@ -130,7 +130,7 @@ namespace pearlrt {
                   Task::currentTask()->treatCancelIO();
                   Log::debug("StdOut: treatCancelIO finished");
                } else {
-printf("err=%d ret=%d size=%d\n", errnoCopy, ret, size);
+//printf("err=%d ret=%d size=%d\n", errnoCopy, ret, size);
                   // other read errors
                   Log::error("StdOut: error at write (%s)",
                             strerror(errnoCopy));
