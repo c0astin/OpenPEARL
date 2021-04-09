@@ -6,4 +6,5 @@
          <check instances="oncePerSet" set="StdIn"/>
          <check instances="oncePerSet" set="StdOut"/>
       </checks>
+      <requireTFU maxsize="80"/>
    </dation>
