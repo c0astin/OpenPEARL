@@ -217,7 +217,7 @@ public class Compiler {
                         SemanticCheck semanticCheck = new SemanticCheck(lexer.getSourceName(), verbose, debug, tree, symbolTableVisitor, expressionTypeVisitor, ast);
                 }
                 if (ErrorStack.getTotalErrorCount() <= 0 && imc) {
-                    	SystemPartExport(lexer.getSourceName(), tree);
+                    	SystemPartExport(lexer.getSourceName(), tree,symbolTableVisitor,ast);
                 }
                 if (ErrorStack.getTotalErrorCount() <= 0) {
                        CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor, expressionTypeVisitor, constantExpressionVisitor, ast);
@@ -477,10 +477,12 @@ public class Compiler {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private static Void SystemPartExport(String sourceFileName, ParserRuleContext tree) {
+    private static Void SystemPartExport(String sourceFileName, ParserRuleContext tree,
+        SymbolTableVisitor symbolTableVisitor, AST ast) {
         String outputFileName = sourceFileName;
 
-        SystemPartExporter  systemPartExporter = new SystemPartExporter(sourceFileName,verbose, debug);
+        SystemPartExporter  systemPartExporter = new SystemPartExporter(sourceFileName,verbose, debug,
+            symbolTableVisitor,ast);
         ST systemPart = systemPartExporter.visit(tree);
 
         if ( debugSTG ) {
