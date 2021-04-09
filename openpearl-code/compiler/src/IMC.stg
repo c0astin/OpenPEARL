@@ -45,28 +45,29 @@ SystemPart(decls) ::= <<
 
 ProblemPart(decls) ::= <<
 \<problem>
- <decls: {decl|<decl>}>
+  <decls: {decl|<decl>}>
 \</problem>
 >>
 
-Username_Declaration(lineno,username,decl) ::= <<
-\<username name="<username>"  line="<lineno>">
-<decl>
+
+Username_Declaration(lineno,col,username,decl) ::= <<
+\<username name="<username>"  line="<lineno>" col="<col>" >
+  <decl>
 \</username>
 
 
 >>
 
-Username_Declaration_Without_Dataflow_Direction(lineno,sysname,parameters) ::= <<
+Username_Declaration_Without_Dataflow_Direction(lineno,col,sysname,parameters) ::= <<
 \<sysname name="<sysname>">
-    <if(parameters)><parameters><endif>
+  <if(parameters)><parameters><endif>
 \</sysname>
 >>
 
 Username_Declaration_With_Dataflow_Direction(sysname,parameters,association) ::= <<
 \<sysname name="<sysname>">
-    <if(parameters)><parameters><endif>
-    <if(association)><association><endif>
+  <if(parameters)><parameters><endif>
+  <if(association)><association><endif>
 \</sysname>
 >>
 
@@ -76,19 +77,19 @@ Username_Parameters(params) ::= <<
   \</parameters>
 >>
 
-User_Configuration(lineno,sysname,parameters,association) ::= <<
-\<configuration line="<lineno>">
-    \<sysname name="<sysname>" >
-        <if(parameters)><parameters><endif>
-        <association>
-    \</sysname>
+User_Configuration(lineno,col,sysname,parameters,association) ::= <<
+\<configuration line="<lineno>" col="<col>" >
+  \<sysname name="<sysname>" >
+    <if(parameters)><parameters><endif>
+    <association>
+  \</sysname>
 \</configuration>
 
 >>
 
 Association(name,parameters) ::= <<
 \<association name="<name>">
-<if(parameters)><parameters><endif>
+  <if(parameters)><parameters><endif>
 \</association>
 >>
 
@@ -101,11 +102,11 @@ Type(name) ::= <<
 >>
 
 Type_Char(name) ::= <<
-    \<CHAR><name>\</CHAR>
+  \<CHAR><name>\</CHAR>
 >>
 
 Type_Bit(name) ::= <<
-    \<BIT><name>\</BIT>
+  \<BIT><name>\</BIT>
 >>
 
 Type_Fixed(name) ::= <<
@@ -113,15 +114,15 @@ Type_Fixed(name) ::= <<
 >>
 
 
-Specification(lineno,name,type) ::= <<
-\<spc type="<type>" name="<name>" line="<lineno>" />
+Specification(lineno,col,name,type) ::= <<
+\<spc type="<type>" name="<name>" line="<lineno>" col="<col>" />
 
 >>
 
-DationSpecification(lineno,name,attributes,datalist) ::= <<
-\<spc type="dation" name="<name>" line="<lineno>">
-<if(attributes)><attributes><endif>
-<if(datalist)><datalist><endif>
+DationSpecification(lineno,col,name,attributes,datalist) ::= <<
+\<spc type="dation" name="<name>" line="<lineno>" col="<col>" >
+  <if(attributes)><attributes><endif>
+  <if(datalist)><datalist><endif>
 \</spc>
 
 >>
@@ -140,4 +141,18 @@ DataList(data) ::= <<
 
 Data(name) ::= <<
 <name>
+>>
+
+TfuUsage(decls) ::= <<
+\<tfuusage>
+  <decls: {decl|<decl>}>
+\</tfuusage>
+>>
+
+TfuInUserDation(lineno, col, userdation, systemdation, tfusize) ::= <<
+\<userdation name="<userdation>" line="<lineno>" col="<col>" >
+  \<systemdation name="<systemdation>" />
+  <if(tfusize)>\<usedTFU size="<tfusize>" /><endif>
+\</userdation>
+
 >>
