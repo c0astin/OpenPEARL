@@ -41,14 +41,18 @@ namespace pearlrt {
 
    Log::Log() {
       // create default log as ./pearl_log.txt
-      Disc * disc = new Disc("./", 1);
-      LogFile * logfile = new LogFile(disc, "pearl_log.txt");
-      Log(logfile, (char*)"EWI"); // no debug and line trace
+      //Disc * disc = new Disc("./", 1);
+      //LogFile * logfile = new LogFile(disc, "pearl_log.txt");
+      //Log(logfile, (char*)"EWI"); // no debug and line trace
+     if (ctorIsActive) {
+         printf("RECURSION of Log::Log(..)!\n");
+      }
+      ctorIsActive = true;
 
-      //static StdError stdError;
-      //provider = &stdError;
-      //provider->dationOpen(NULL, 0);
-      //ctorIsActive = false;
+      static StdError stdError;
+      provider = &stdError;
+      provider->dationOpen(NULL, 0);
+      ctorIsActive = false;
       mutex.name("Log");
    }
 

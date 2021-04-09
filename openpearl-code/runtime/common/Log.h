@@ -76,7 +76,6 @@ message if an error message is too long
    */
    class Log {
    private:
-      Log();
       static int logFileHandle;
       static bool initialized;
       static Log* instance;
@@ -126,6 +125,11 @@ message if an error message is too long
       */
 
       static void setLevel(int level);
+
+      /**
+      setup emergency error logger e.g. on stderr
+      */
+      Log();
 
       /**
       configuration constructor
