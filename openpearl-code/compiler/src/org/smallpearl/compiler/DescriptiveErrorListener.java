@@ -44,7 +44,7 @@ public class DescriptiveErrorListener extends BaseErrorListener {
                             RecognitionException e) {
         String sourceName = recognizer.getInputStream().getSourceName();
 
-        System.err.println(sourceName + ":" + line + ":" + charPositionInLine + ": ERROR : Syntax error :" + msg);
+        System.err.println(sourceName + ":" + line + ":" + (charPositionInLine +1 )+ ": ERROR : Syntax error :" + msg);
         underlineError(recognizer,(Token)offendingSymbol, line, charPositionInLine);
     }
 
@@ -60,10 +60,11 @@ public class DescriptiveErrorListener extends BaseErrorListener {
         for (int i=0; i<charPositionInLine; i++) System.err.print(" ");
         int start = offendingToken.getStartIndex();
         int stop = offendingToken.getStopIndex();
+        System.err.print("^");
         if ( start>=0 && stop>=0 ) {
-            for (int i=start; i<stop; i++) System.err.print(" ");
+            for (int i=start; i<stop; i++) System.err.print("~");
         }
-        System.err.println("^");
+        System.err.println();
     }
 
 }
