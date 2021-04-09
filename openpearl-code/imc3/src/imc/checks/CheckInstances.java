@@ -70,7 +70,8 @@ public class CheckInstances {
 										String sk = expr2.evaluateExpression(set);
 										if (sj.equals(sk)) {
 											Log.setLocation(getModuleOf(pse.getUsedBy().get(k)).getSourceFileName(),
-													pse.getUsedBy().get(k).getLine());
+													pse.getUsedBy().get(k).getLine(),
+													pse.getUsedBy().get(k).getCol());
 											Log.error("multiple definition of: '"+sk+"'");
 											errorPrinted=true;
 										}
@@ -78,6 +79,7 @@ public class CheckInstances {
 									if (errorPrinted) {
 										Log.note(getModuleOf(pse.getUsedBy().get(j)).getSourceFileName(),
 												pse.getUsedBy().get(j).getLine(),
+												pse.getUsedBy().get(j).getCol(),
 												"previous definition was here");
 
 									}

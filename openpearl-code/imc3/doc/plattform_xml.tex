@@ -51,8 +51,22 @@ Possible attributes are listed as subtree \verb|<attributes>|.
 Possible associations to this element are
  listed as subtree \verb|<associationProvider>|.
 If a system dation requires TFU in the user dation, that tag
-\verb|<TFU size="80"/>| specifies the minimum record size of the 
+\verb|<tfu size="80"/>| specifies the minimum record size of the 
 userdation.
+
+Example:
+\begin{XMLCode}
+<dation name="Console">
+...
+<tfu size="80"/>
+</dation>
+\end{XMLCode}
+
+The user dation needs a TFU attribute with a length not larger than the 
+size of the system dation. This may be calculated by the compiler for \texttt{ALPHIC} 
+type \texttt{ALL} or array of simple types dations.
+It is not possible to caluclate the sie for \texttt{STRUCT}
+ due to alignment restrictions of the c++ code generator.
 
 
 \subsection{Configuration-Tag}
@@ -394,7 +408,7 @@ interrupt events.
 \section{Platform File}
 Each system part elements is represented by a driver in the OpenPEARL 
 source tree and an XML-snipplet. These snipplets are
-concatenated to the Platform Definition File during the build  process.
+concatenated to the platform definition file during the build  process.
 
 Example:
 \begin{XMLCode}

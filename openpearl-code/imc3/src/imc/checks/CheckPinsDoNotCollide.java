@@ -229,11 +229,11 @@ public class CheckPinsDoNotCollide {
 							ModuleEntrySystemPart mse1 = pp.usedBits.get(i).usedBy;
 							ModuleEntrySystemPart mse2 = pp.usedBits.get(j).usedBy;
 							
-							imc.utilities.Log.setLocation(m.getSourceFileName(), mse2.getLine());
+							imc.utilities.Log.setLocation(m.getSourceFileName(), mse2.getLine(),mse2.getCol());
 							Log.error("'"+ definitionFromUsername(mse2) + " "+ errorMsg+ " " + pp.usedBits.get(j).pin
 									+ " already in use");
 							if (mse1 != null) {
-							   Log.note(m.getSourceFileName(), mse1.getLine(),
+							   Log.note(m.getSourceFileName(), mse1.getLine(),mse1.getCol(),
 									"previous usage in '" + definitionFromUsername(mse1)+"'");
 							} else {
 							   Log.note("is reserved for system driver or other application");								

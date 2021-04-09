@@ -43,7 +43,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import org.w3c.dom.Node;
+
 
 
 /**
@@ -115,63 +115,17 @@ public class CodeGenerator {
 			instantiate(modules, i);
 		}
 
-		//instantiateLogFirst(modules);
-		//instantiateRemainingSystemElements(modules);
 
-		/*		// instantiate Log first
-		for (int i = 0; i < SystemEntries.size(); i++) {
-			SystemEntry un = SystemEntries.get(i);
-			if (un.getSystemName().equals("Log")) {
-				Error.setLocation(un.getFileName(), un.getLine());
-				doAllPrerequistes(un,10);
-			}	
-		}
 
-		boolean otherNamesNeeded;
-		boolean newCodeCreated;
-		do {
-			otherNamesNeeded = false;
-			newCodeCreated = false;
-			for (int i = 0; i < SystemEntries.size(); i++) {
-				SystemEntry un = SystemEntries.get(i);
-				if (!un.codeIsCompleted()) {
-					SystemEntry req = un.requiresOtherSystemEntry();
-					if (req == null) {
-						un.getCompleteCode(simpleElements, functionBody);
-						newCodeCreated = true;
-					} else {
-						// System.out.println("need "+req.getName()+" first");
-						otherNamesNeeded = true;
-					}
-				}
-				// }
-			}
-		} while (otherNamesNeeded == true && newCodeCreated == true);
-		if (otherNamesNeeded == true && newCodeCreated == false) {
-			for (int i = 0; i < SystemEntries.size(); i++) {
-				SystemEntry un = SystemEntries.get(i);
-				if (un.getType() != null) {
-					if (!un.codeIsCompleted()) {
-						Error.setLocation(un.getFileName(), un.getLine());
-						Error.error("circular dependency detected at the definition of "
-								+ un.getName());
-						Error.append("needs "
-								+ un.requiresOtherSystemEntry().getName());
-					}
-				}
-			}
-
-		}
-		 */
-//		file.println("\n\nnamespace pearlrt {\n   int createSystemElements();");
-//		file.println("}\n");
-//		file.println("// enshure that the static (parametrized) objects are instantiated first");
-//		file.println("static int dummy = pearlrt::createSystemElements();");
 		file.println();
 		file.println(prototypes);
 		file.println("\n\nnamespace pearlrt {\n   int createSystemElements() {");
+		file.println("\tint nbrOfFails = 0;\n");
+		file.println("\ttry {");
 		file.println(functionBody);
-		file.println("\treturn 0;");
+		file.println("\t} catch (pearlrt::Signal &s) {");
+		file.println("\t  nbrOfFails ++;\n\t}\n"); 
+		file.println("\treturn nbrOfFails;");
 		file.println("   }\n}");
 		file.close();
 
@@ -218,7 +172,7 @@ public class CodeGenerator {
 			for (ModuleEntrySystemPart se: m.getSystemElements()) {
 				if (se.getNameOfSystemelement().equals("Log")) {
 					if (logFound) {
-						Log.setLocation(m.getSourceFileName(), se.getLine());
+						Log.setLocation(m.getSourceFileName(), se.getLine(),se.getCol());
 						Log.error("multiple definition of Log");
 					}
 					if (useNamespace) {
@@ -258,7 +212,7 @@ public class CodeGenerator {
 	}
 
 	private static void doAllPrerequisites(ModuleEntrySystemPart se, int remainingDepth) {
-		Log.setLocation(module.getSourceFileName(),se.getLine());
+		Log.setLocation(module.getSourceFileName(),se.getLine(),se.getCol());
 		Log.info("treat "+se.getNameOfSystemelement());
 		if (remainingDepth >= 0) {
 			Association a = se.getAssociation();
@@ -304,26 +258,27 @@ public class CodeGenerator {
 		if (pse.getType().equals(Platform.DATION)) {
 			prototypes.append("\tpearlrt::Device *  d"+userName+";" + locationComment(se));
 
-			functionBody.append("\t// " + module.getSourceFileName()+":"+se.getLine()+"\n");
-			functionBody.append("\tstatic pearlrt::"+se.getNameOfSystemelement()+" "+nameSpacePrefix+"s"+userName
+			functionBody.append("\t  // " + module.getSourceFileName()+":"+se.getLine()+"\n");
+			functionBody.append("\t  static pearlrt::"+se.getNameOfSystemelement()+" "+nameSpacePrefix+"s"+userName
 					+ parameterList(se)+";\n");
-			functionBody.append("\t"+nameSpacePrefix+"d"+userName + "= &"+nameSpacePrefix + "s"+userName+";\n\n");
+			functionBody.append("\t  "+nameSpacePrefix+"d"+userName + "= &"+nameSpacePrefix + "s"+userName+";\n\n");
+			
 		} else if (pse.getType().equals(Platform.CONNECTION)) {
 			
-			functionBody.append("\t// " + module.getSourceFileName()+":"+se.getLine()+"\n");
-			functionBody.append("\tstatic pearlrt::"+se.getNameOfSystemelement()+" "+nameSpacePrefix+"s"+userName
+			functionBody.append("\t  // " + module.getSourceFileName()+":"+se.getLine()+"\n");
+			functionBody.append("\t  static pearlrt::"+se.getNameOfSystemelement()+" "+nameSpacePrefix+"s"+userName
 					+ parameterList(se)+";\n");
 		} else  if (pse.getType().equals(Platform.CONFIGURATION)) {
-			functionBody.append("\t// " + module.getSourceFileName()+":"+se.getLine()+"\n");
-			functionBody.append("\tstatic pearlrt::"+se.getNameOfSystemelement()+" "+
+			functionBody.append("\t  // " + module.getSourceFileName()+":"+se.getLine()+"\n");
+			functionBody.append("\t  static pearlrt::"+se.getNameOfSystemelement()+" "+
 					nameSpacePrefix+userName+parameterList(se)+";\n");
 		} else if (pse.getType().equals(Platform.INTERRUPT)) {
 			prototypes.append("\tpearlrt::Interrupt *"+ userName + ";" + locationComment(se));
-			functionBody.append("\t// " + module.getSourceFileName()+":"+se.getLine()+"\n");
-			functionBody.append("\tstatic pearlrt::"+se.getNameOfSystemelement()+" "+nameSpacePrefix + "sys"+userName
-					+ parameterList(se)+";\n");
-			functionBody.append("\t"+nameSpacePrefix + userName + "= (pearlrt::Interrupt*) &"+nameSpacePrefix +"sys"+userName+";\n\n");
 
+			functionBody.append("\t  // " + module.getSourceFileName()+":"+se.getLine()+"\n");
+			functionBody.append("\t  static pearlrt::"+se.getNameOfSystemelement()+" "+nameSpacePrefix + "sys"+userName
+					+ parameterList(se)+";\n");
+			functionBody.append("\t  "+nameSpacePrefix + userName + "= (pearlrt::Interrupt*) &"+nameSpacePrefix +"sys"+userName+";\n");
 		} else if (pse.getType().equals(Platform.SIGNAL)) {
 			prototypes.append("\tstatic pearlrt::"+se.getNameOfSystemelement()+ " "+nameSpacePrefix +userName+";"+locationComment(se));
 			prototypes.append("\tpearlrt::Signal "+ nameSpacePrefix+"generalized"+userName+"= & "+nameSpacePrefix+userName+";\n\n");

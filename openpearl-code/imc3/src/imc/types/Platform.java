@@ -91,7 +91,7 @@ public class Platform {
 	 * @param installationPath path to the folder of the OpenPEARL system files (e.g /usr/local) 
 	 */
 	private Platform(String fileName, boolean verbose, String installationPath) {
-		Log.setLocation(fileName, -1);
+		Log.setLocation(fileName, -1,-1);
 		Log.info("Platform: parse "+fileName);
 		
 		ReadXml tgt = new ReadXml(fileName, verbose,  installationPath + "/lib/");
@@ -156,7 +156,7 @@ public class Platform {
 																			n.getNodeName().toUpperCase(),
 																			n, prio, priv);
 						systemNames.add(se);
-						Log.setLocation(fileName, -1);
+						Log.setLocation(fileName, -1,-1);
 						Log.debug(sName + " is available and has type "
 								+ n.getNodeName().toUpperCase());
 					}

@@ -7,7 +7,6 @@ import org.w3c.dom.NodeList;
 /**
  * some helper function for treatment of a DOM tree
  * 
- * @author mueller
  */
 
 public class NodeUtils {

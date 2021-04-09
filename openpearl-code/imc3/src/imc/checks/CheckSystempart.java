@@ -53,7 +53,7 @@ public class CheckSystempart {
 	 * @param modules the current module to be treated
 	 */
 	public static void checkSystemelementsForSystemParts(List<Module> modules) {
-		Log.setLocation("-",-1);
+		Log.setLocation("-",-1,-1);
 
 		Log.info("start checking checkSystemelementsForSystemParts...");
 		for ( Module m: modules) {
@@ -88,7 +88,7 @@ public class CheckSystempart {
 
 	private static void checkAutoInstanciate(ModuleEntrySystemPart se,
 		Node seSystem, Node systemNode) {
-		Node x = systemNode.getAttributes().getNamedItem("autoInstanciate") ;
+
         if (systemNode.getAttributes().getNamedItem("autoInstanciate") != null) {
             Log.error("illegal instantiation of '"+seSystem.getAttributes().getNamedItem("name").getTextContent()+"'");
         }
@@ -110,7 +110,7 @@ public class CheckSystempart {
 			} else {
 		       String autoName = "needItem"+autoNumber;
 		       autoNumber ++;
-			   ModuleEntrySystemPart me = new ModuleEntrySystemPart(autoName, se.getLine(), s);
+			   ModuleEntrySystemPart me = new ModuleEntrySystemPart(autoName, se.getLine(), se.getCol(), s);
 			   me.setIsUsed();
 			   boolean found = false;
 			   for (int i=0; i<newItems.size(); i++) {
@@ -226,7 +226,8 @@ public class CheckSystempart {
 
 			String autoName = "autoNameForAssociation_"+autoNumber++;
 
-			ModuleEntrySystemPart anonymousModuleEntrySystemPart = new ModuleEntrySystemPart(autoName, se.getLine(), nodeInModule);
+			ModuleEntrySystemPart anonymousModuleEntrySystemPart = 
+						new ModuleEntrySystemPart(autoName, se.getLine(), se.getCol(), nodeInModule);
 			anonymousModuleEntrySystemPart.setPrefix("");
 			
 			// mark the new element as used
@@ -245,7 +246,7 @@ public class CheckSystempart {
 
 
 	private static Node checkSystemNameExists(ModuleEntrySystemPart se, String fn) {
-		Log.setLocation(fn, se.getLine());
+		Log.setLocation(fn, se.getLine(),se.getCol());
 
 		// get system name of se
 		String systemName = se.getNameOfSystemelement();
@@ -463,7 +464,7 @@ public class CheckSystempart {
 	 */
 
 	public static void checkAssociationType(List<Module> modules) {
-		Log.setLocation("-",-1);
+		Log.setLocation("-",-1,-1);
 
 		Log.info("start checking checkAssociationTypes...");
 		for ( Module m: modules) {
@@ -501,7 +502,7 @@ public class CheckSystempart {
 					}
 				}
 				if (! found) {
-					Log.setLocation(module.getSourceFileName(), se.getLine());
+					Log.setLocation(module.getSourceFileName(), se.getLine(),se.getCol());
 					Log.error("type of requested association not supported\n\trequested: "+requiredAssociation+
 							"\n\tsupported: "+providedAssociations);
 				}

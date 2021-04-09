@@ -14,6 +14,7 @@ public class SpcDclProblemPart {
 		private String 	type;
 		private Node   	locationInDomTree;
 		private int		line;
+		private int		col;
 		
 		private String dationAttributes;
 		private String dationType;
@@ -28,8 +29,9 @@ public class SpcDclProblemPart {
 		private Module module;
 		private String global;
 				
-		SpcDclProblemPart(String sn, int line, String t, Node location, Module module, String global) {
+		SpcDclProblemPart(String sn, int line, int col, String t, Node location, Module module, String global) {
 			this.line=line;
+			this.col=col;
 			userName = sn;
 			type = t;
 			locationInDomTree = location;
@@ -61,6 +63,10 @@ public class SpcDclProblemPart {
 			return line;
 		}
 
+		public int getCol() {
+			return col;
+		}
+		
 		public String getDationAttributes() {
 			return dationAttributes;
 		}

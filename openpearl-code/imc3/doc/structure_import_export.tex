@@ -78,6 +78,7 @@ SYSTEM;
   Log('EW') --- LogFile('pearl_log.txt') --- DISC('./',1);
 \end{PEARLCode}
 
+
 \subsection{Configuration Item}
 Configuration elements in the system part are located in the
 \verb|<configuration>|-element. 
@@ -230,7 +231,7 @@ one space character.
 REF of any kind are denoted with  \texttt{REF} pnd space prepended the the
 type.
 
-Stucts are denoted by their encoding rules of
+Structs are denoted by their encoding rules of
 structures and structure elements  as described in \cite{runtime}.
 
 Dations contains an attribute- and data-tag like in the system part notation.
@@ -279,6 +280,77 @@ Special values are ALL and ALPHIC.
 
 This mapping is also used for problem part global elements, except for dations,
 which need more information to be checked.
+
+\subsection{TFU}
+The treatment of \texttt{TFU} differs, whether the system dation
+requires \texttt{TFU} or not.
+
+If the system dation requires \texttt{TFU}  the user dations created
+ upon this system dation must use TFU.
+The specification of a dation does not contain any information about TFU.
+
+Example:
+
+\begin{PEARLCode}
+SYSTEM;
+  con: Console;
+PROBLEM;
+  SPC con     DATION INOUT ALPHIC SYSTEM;
+  DCL console DATION INOUT ALPHIC DIM(*,80) TFU FORWARD CREATED(con);
+  DCL consol2 DATION INOUT ALPHIC DIM(*,90) TFU FORWARD CREATED(con);
+  DCL noTFU   DATION INOUT ALPHIC DIM(*,80)     FORWARD CREATED(con);
+\end{PEARLCode}
+
+The name \texttt{noTFU} should cause an error message,
+since the system dation \texttt{Console} requires \texttt{TFU}.
+
+The compiler  has no information about the capabilities and details
+of thesystem part elements.
+
+To check the necessity of \texttt{TFU} and requested sizes the compiler 
+exports all relevant information for the checks about \texttt{TFU}
+In addition to the declaracti0on and specification of the element \texttt{con}
+a separate section is exported like:
+
+\begin{XMLCode}
+ <problem>
+  ...
+  <tfuusage>
+    <userdation name="console" lineno="23", col="7">
+       <systemdation name="con"/>
+       <usedTFU size="80"/>
+    </userdation>
+    <userdation name="console2" lineno="24", col="7">
+       <systemdation name="con"/>
+       <usedTFU size="90"/>
+    </userdation>
+    <userdation name="noTFU" lineno="25", col="7">
+       <systemdation name="con"/>
+    </userdation>
+  </tfuusage>
+\end{XMLCode}
+
+The compiler can calculate the record size for typeOfTransmission ALL,ALPHIC or simpleType. For typeStructure - the compiler does not known the allignment
+restrictions from the target depending g++-compilation.
+If the type of transmission is a STRUCT - the size will be set to 0
+and the check must be done at system start,
+when the userdation becomes instanciated.
+
+With this information the imc may check
+\begin{itemize}
+\item if the record size  of \texttt{console} fits with the requirements of 
+    \texttt{con}
+\item if the userdation uses \texttt{TFU} at all
+\end{itemize} 
+
+Application specific error messages can becom procuded, like:
+
+\lstset{breaklines=true}
+\begin{lstlisting}
+demo.prl:24:7: error: TFU record of dation 'console2' exeeeds limit of 'Console'
+demo.prl:25:7: error: dation 'noTFU' must use TFU, which is required by 'Console'
+\end{lstlisting}
+
 
 \section{Multi-Module Support}
 The imc supports basic operation for multiple modules.

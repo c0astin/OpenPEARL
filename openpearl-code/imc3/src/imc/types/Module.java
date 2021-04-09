@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -55,7 +54,6 @@ import org.w3c.dom.NodeList;
  *  from the <bf>PROBLEM</bf> part of the PEARL code
  *  </ul>
  * 
- * @author mueller
  * 
  */
 
@@ -66,11 +64,14 @@ public class Module {
 	private String sourceFileName;
 	ReadXml wrappedDomTree;
 	int line;
+	int col;
 	String moduleName;
 	
 	List<ModuleEntrySystemPart> systemElements;
 	List<SpcProblemPart> spcProblemPart;
 	List<DclProblemPart> dclProblemPart;
+	List<UserDationTfuInformation> userDationTfuInformations;
+
 	
 
 	/**
@@ -89,7 +90,7 @@ public class Module {
 		Log.info("Module: parse "+fileName);
 
 		this.verbose = verbose;
-		Log.setLocation(fileName, -1);
+		Log.setLocation(fileName, -1,-1);
 		
 		wrappedDomTree = new ReadXml(fileName, verbose, null);
 
@@ -115,6 +116,7 @@ public class Module {
 		
 		spcProblemPart = new ArrayList<SpcProblemPart>();
 		dclProblemPart = new ArrayList<DclProblemPart>();
+		userDationTfuInformations = new ArrayList<UserDationTfuInformation>();
 		readProblemPart();
 	}
 
@@ -152,18 +154,22 @@ public class Module {
 					if (n.getNodeName().equals("username")) {
 						line = Integer.parseInt(n.getAttributes()
 								.getNamedItem("line").getTextContent());
+						col =  Integer.parseInt(n.getAttributes()
+								.getNamedItem("col").getTextContent());
 						String userName = n.getAttributes().getNamedItem("name")
 								.getTextContent();
-						ModuleEntrySystemPart un = new ModuleEntrySystemPart(userName, line, n);
+						ModuleEntrySystemPart un = new ModuleEntrySystemPart(userName, line, col, n);
 						systemElements.add(un);
-						Log.setLocation(sourceFileName, line);
+						Log.setLocation(sourceFileName, line, col);
 						Log.info("module "+moduleName+" defines system element: "+userName);
 					} else if (n.getNodeName().equals(Platform.CONFIGURATION.toLowerCase() )) {
 						line = Integer.parseInt(n.getAttributes()
 								.getNamedItem("line").getTextContent());
-						ConfigurationSystemPart cnf = new ConfigurationSystemPart(line, n);
+						col =  Integer.parseInt(n.getAttributes()
+								.getNamedItem("col").getTextContent());
+						ConfigurationSystemPart cnf = new ConfigurationSystemPart(line, col, n);
 						systemElements.add(cnf);
-						Log.setLocation(sourceFileName, line);
+						Log.setLocation(sourceFileName, line, col);
 						Log.info("module "+moduleName+" defines a configuration");
 					} else {
 						continue;
@@ -205,13 +211,19 @@ public class Module {
 						isDcl = false;
 					} else if (n.getNodeName().equals("dcl")) {
 						isDcl = true;
+					} else if (n.getNodeName().equals("tfuusage")) {
+						treatTfuUsage(n);
+						continue;
 					}  else {
+						System.out.println("node name >"+n.getNodeName()+"< unexpected and discarded");
 						continue; // ignore entry
 					}
 					String userName = n.getAttributes().getNamedItem("name")
 							.getTextContent();
 					line = Integer.parseInt(n.getAttributes()
 							.getNamedItem("line").getTextContent());
+					col =  Integer.parseInt(n.getAttributes()
+							.getNamedItem("col").getTextContent());
 					String type = n.getAttributes().getNamedItem("type")
 							.getTextContent().toUpperCase();
 					
@@ -223,7 +235,7 @@ public class Module {
 					   global = n.getAttributes().getNamedItem("global").getTextContent();	
 					}
 					
-					Log.setLocation(sourceFileName, line);
+					Log.setLocation(sourceFileName, line, col);
 
 					String 	dationData=null, 
 							dationAttributes=null,
@@ -260,7 +272,7 @@ public class Module {
 					} 						
 					
 					if (isDcl) {
-						DclProblemPart dcl = new DclProblemPart(userName, line, type, n, this, global);
+						DclProblemPart dcl = new DclProblemPart(userName, line, col, type, n, this, global);
 						dclProblemPart.add(dcl);
 						dcl.setDationAttributes(dationAttributes);
 						dcl.setDationType(dationData);
@@ -269,7 +281,7 @@ public class Module {
 						Log.info("DCL found in module '"+moduleName+"' type= '" + type + "' '" + userName
 							+ "' GLOBAL('"+global+"')");
 					} else {
-						SpcProblemPart spc = new SpcProblemPart(userName, line, type, n, this, global);
+						SpcProblemPart spc = new SpcProblemPart(userName, line, col, type, n, this, global);
 						spcProblemPart.add(spc);
 						spc.setDationAttributes(dationAttributes);
 						spc.setDationType(dationData);
@@ -287,6 +299,36 @@ public class Module {
 
 	}
 
+	private void treatTfuUsage(Node n) {
+		for (int i=0; i<n.getChildNodes().getLength(); i++) {
+			Node m = n.getChildNodes().item(i);
+			if (m.getNodeType() == Node.ELEMENT_NODE) {
+				if (m.getNodeName().equals("userdation")) {
+					String username = NodeUtils.getAttributeByName(m,"name");
+					Node t = NodeUtils.getChildByName(m, "usedTFU");
+					int tfuSize = -1;
+					if (t!= null) {
+					   String tfu = NodeUtils.getAttributeByName(t,"size");
+					   if (tfu!=null) {
+						   tfuSize = Integer.parseInt(tfu);
+					   }
+					}
+										
+					int line = Integer.parseInt(m.getAttributes()
+							.getNamedItem("line").getTextContent());
+					int col = Integer.parseInt(m.getAttributes()
+							.getNamedItem("col").getTextContent());
+					
+					userDationTfuInformations.add(new UserDationTfuInformation(username, line, col, m, this, "", tfuSize));
+					Log.setLocation(sourceFileName, line, col);
+					Log.info("module "+moduleName+" defines a user dation '"+username+"' with tfuSize " + tfuSize);
+				}
+			}
+		}
+		// TODO Auto-generated method stub
+		
+	}
+
 	public List<ModuleEntrySystemPart> getSystemElements() {
 		return systemElements;
 	}
@@ -299,6 +341,10 @@ public class Module {
 		return dclProblemPart;
 	}
 
+	public List<UserDationTfuInformation> getUserDationTfuInformations() {
+		return userDationTfuInformations;
+	}
+	
 	public String getModuleName() {
 		return moduleName;
 	}

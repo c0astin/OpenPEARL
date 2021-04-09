@@ -66,7 +66,7 @@ public class CheckSpcDcl {
 			for (SpcProblemPart spc : m.getSpcProblemPart()) {
 				String userName = spc.getUserName();
 				boolean dclFound=false;
-
+				Log.setLocation(m.getSourceFileName(),spc.getLine(),spc.getCol());
 				if (useNameSpace) {
 				   Log.info("check SPC "+spc.getGlobal()+":"+userName);
 				} else {
@@ -105,7 +105,9 @@ public class CheckSpcDcl {
 							} else {
 								   Log.error("multiple declaration of '"+userName+";"); 
 							}
-							Log.note(m1.getSourceFileName(),m1.getDclProblemPart().get(indexInProblemPart).getLine(),
+							Log.note(m1.getSourceFileName(),
+									m1.getDclProblemPart().get(indexInProblemPart).getLine(),
+									m1.getDclProblemPart().get(indexInProblemPart).getCol(),
 									"previous definition: ");
 						}
 						m1.getDclProblemPart().get(indexInProblemPart).setUsedBySpc();
@@ -134,7 +136,7 @@ public class CheckSpcDcl {
 		for (Module m: modules) {
 			for (DclProblemPart dcl : m.getDclProblemPart()) {
 				if (dcl.isUsedBySpc()) continue;
-				Log.setLocation(m.getSourceFileName(), dcl.getLine());
+				Log.setLocation(m.getSourceFileName(), dcl.getLine(), dcl.getCol());
 				Log.warn(dcl.getType()+" '"+ dcl.getUserName()+"' is never used by SPC");
 			}
 		}
@@ -148,7 +150,7 @@ public class CheckSpcDcl {
 			for (ModuleEntrySystemPart mse: m.getSystemElements()) {
 				if (mse.getUserName() == null) continue; // is configuration
 				if (mse.isUsed()) continue;
-				Log.setLocation(m.getSourceFileName(), mse.getLine());
+				Log.setLocation(m.getSourceFileName(), mse.getLine(),mse.getCol());
 				if (useNameSpace) {
 				   Log.warn("'"+mse.getUserName()+"' in module '" +m.getModuleName()+"' is never used");
 				} else {
@@ -159,7 +161,7 @@ public class CheckSpcDcl {
 
 			for (DclProblemPart dcl : m.getDclProblemPart()) {
 				if (dcl.isUsedBySpc()) continue;
-				Log.setLocation(m.getSourceFileName(), dcl.getLine());
+				Log.setLocation(m.getSourceFileName(), dcl.getLine(), dcl.getCol());
 				if (useNameSpace) {
 				   Log.warn("'"+dcl.getUserName()+"' in module '" +m.getModuleName()+"' is never used");
 				} else {
@@ -172,11 +174,11 @@ public class CheckSpcDcl {
 
 	private void checkType(SpcProblemPart spc, DclProblemPart dcl) {
 		if (!spc.getType().equals(dcl.getType())) {
-			Log.setLocation(spc.getModule().getSourceFileName() , spc.getLine());
+			Log.setLocation(spc.getModule().getSourceFileName() , spc.getLine(),spc.getCol());
 
 			Log.error("type mismatch: expected in SPC: of '"+ spc.getUserName()+
 					"' as type '"+ spc.getType()+"'");
-			Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(),
+			Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
 					"found in DCL :'"+ dcl.getType()+"'");
 			return;
 		}
@@ -184,20 +186,20 @@ public class CheckSpcDcl {
 			if (!spc.getDationType().equals(dcl.getDationType())) {
 				Log.error("mismatch in type of transfer data of '"+spc.getUserName()+"' expected in SPC: "+
 						spc.getDationType()+"'"); 
-				Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(),
+				Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
 						"type in DCL: "+ dcl.getDationType());
 			}
 			if (!spc.getDationAttributes().equals(dcl.getDationAttributes())) {
 				Log.error("mismatch in DATION attributes of '"+spc.getUserName()+"'" +
 						spc.getDationAttributes());
-				Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(),
+				Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
 						"attributes in DCL "+ dcl.getDationAttributes());
 			}
 		} else if (spc.getType().equals("PROC")) {
 			if (!spc.getProcParameters().equals(dcl.getProcParameters())) {
 				Log.error("mismatch in parameter list of PROC '"+spc.getUserName()+"' expected in SPC: "+
 						spc.getProcParameters()+"'"); 
-				Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(),
+				Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
 						"parameter list of PROC in DCL: "+ dcl.getProcParameters());
 			}
 
@@ -209,10 +211,10 @@ public class CheckSpcDcl {
 					   Log.error("type mismatch in result type of PROC '"+spc.getUserName()+"' does not return a value");
 				}
 				if (dcl.getProcReturns() != null) {
-				   Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(),
+				   Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
 						"result type in declaration of PROC '"+ dcl.getUserName()+"' is '" +dcl.getProcReturns()+"'");
 				} else {
-				   Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(),
+				   Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
 								"declaration of PROC '"+ dcl.getUserName()+"' does not return a value");
 					
 				}
@@ -225,7 +227,7 @@ public class CheckSpcDcl {
 
 	private void checkType(SpcProblemPart spc,
 			ModuleEntrySystemPart moduleEntrySystemPart) {
-		Log.setLocation(currentModule.getSourceFileName(), spc.getLine());
+		Log.setLocation(currentModule.getSourceFileName(), spc.getLine(), spc.getCol());
 		
 		PlatformSystemElement pse = Platform.getInstance().
 				getSystemElement(moduleEntrySystemPart.getNameOfSystemelement());
@@ -275,6 +277,7 @@ public class CheckSpcDcl {
 				if (!dataTypeMatch) {
 					Log.error("conflict in type of transfer data: SPC of '"+spc.getUserName()+"' has type '"+dataInSpc +"'");
 					Log.note(currentModule.getSourceFileName(), moduleEntrySystemPart.getLine(),
+							moduleEntrySystemPart.getCol(),
 							"declaration in SYSTEM part for '"+spc.getUserName()+
 							"' specifies type '" + dataInPlatform +"'");
 				}
@@ -298,6 +301,7 @@ public class CheckSpcDcl {
 					Log.error("dation attribute '" + attrListInSpc[i].trim()
 							+ "' not supported by system device");
 					Log.note(currentModule.getSourceFileName(), moduleEntrySystemPart.getLine(),
+							moduleEntrySystemPart.getCol(),
 							moduleEntrySystemPart.getNameOfSystemelement()+" supports "+attributesInPlatform.trim());
 				}
 			}

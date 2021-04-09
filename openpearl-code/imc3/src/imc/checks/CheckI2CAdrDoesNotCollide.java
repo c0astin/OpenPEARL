@@ -41,6 +41,12 @@ public class CheckI2CAdrDoesNotCollide {
 			this.isSharable = isShareable;
 			this.se = se;
 		}
+
+
+		public int getCol() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
 	}
 
 	public CheckI2CAdrDoesNotCollide(List<Module> modules) {
@@ -127,16 +133,22 @@ public class CheckI2CAdrDoesNotCollide {
 							if (connectedDevices.get(i).device.equals(connectedDevices.get(i).device)) continue;
 
 							// same address different device name
-							imc.utilities.Log.setLocation(m.getSourceFileName(), connectedDevices.get(j).se.getLine());
+							imc.utilities.Log.setLocation(m.getSourceFileName(), connectedDevices.get(j).se.getLine(),
+									connectedDevices.get(j).se.getCol());
 							imc.utilities.Log.error("I2C address of "+ connectedDevices.get(j).device + "already used.");
 							Log.note(m.getSourceFileName(), connectedDevices.get(i).se.getLine(),
+									connectedDevices.get(i).se.getCol(),
 									"previous usage by "+ connectedDevices.get(i).device);
 						} else {		
 							// at least one non sharable address
-							imc.utilities.Log.setLocation(m.getSourceFileName(), connectedDevices.get(j).se.getLine());
+							imc.utilities.Log.setLocation(m.getSourceFileName(),
+									connectedDevices.get(j).se.getLine(),
+									connectedDevices.get(i).se.getCol());
+							
 							imc.utilities.Log.error("I2C address "+ connectedDevices.get(j).adr + 
 									" of '"+ connectedDevices.get(j).se.getUserName() + "' is already used");
 							Log.note(m.getSourceFileName(), connectedDevices.get(i).se.getLine(),
+									connectedDevices.get(i).getCol(),
 									"previous usage from '" + connectedDevices.get(i).se.getUserName() + "'");
 						}
 					}
@@ -144,5 +156,7 @@ public class CheckI2CAdrDoesNotCollide {
 			}
 		}
 	}
+
+	
 
 }

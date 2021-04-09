@@ -33,13 +33,13 @@ package imc.utilities;
  * messages. The error message counter is used to stop compilation after each
  * step of check.
  * 
- * @author mueller
  * 
  */
 public class Log {
 	private static int numberOfErrors = 0;
 	private static String file;
 	private static int lineNbr;
+	private static int colNbr;
 	private static boolean showInfo = true;
 	private static long start;
 	
@@ -55,9 +55,10 @@ public class Log {
 	 * @param line
 	 *            the line number of the error producing element
 	 */
-	public static void setLocation(String fileName, int line) {
+	public static void setLocation(String fileName, int line, int col) {
 		file = fileName;
 		lineNbr = line;
+		colNbr = col;
 	}
 
 	/**
@@ -70,12 +71,12 @@ public class Log {
 	 */
 	public static void error(String message) {
 		numberOfErrors++;
-		System.err.println(location()+ "error: " + message+"\n");
+		System.err.println(location()+ "error: " + message);;
 	}
 
 	public static void internalError(String message) {
 		numberOfErrors++;
-		System.err.println(location()+ "internal error: " + message+"\n");
+		System.err.println(location()+ "internal error: " + message);
 	}
 
 	/**
@@ -87,7 +88,7 @@ public class Log {
 	 *            the error message
 	 */
 	public static void note(String message) {
-		System.err.println(location() + "note: " + message+"\n");
+		System.err.println(location() + "note: " + message);
 	}
 
 	/**
@@ -98,8 +99,8 @@ public class Log {
 	 * @param message
 	 *            the error message
 	 */
-	public static void note(String fileName, int lineNbr,String message) {
-		System.err.println(location(fileName,lineNbr) + "note: " + message+"\n");
+	public static void note(String fileName, int lineNbr, int col, String message) {
+		System.err.println(location(fileName,lineNbr,col) + "note: " + message);
 	}
 
 	/**
@@ -133,7 +134,7 @@ public class Log {
 	 */
 	public static void exitIfErrors() {
 		if (numberOfErrors > 0) {
-			System.err.println("*** check aborted due to errors");
+			System.out.println("*** check aborted due to errors");
 			System.exit(1);
 		}
 	}
@@ -177,10 +178,10 @@ public class Log {
 
 
 	private static String location() {
-		return location(file, lineNbr);
+		return location(file, lineNbr, colNbr);
 	}
 	
-	private static String location(String file, int lineNbr) {
-		return (file + ":" + lineNbr + ": ");
+	private static String location(String file, int lineNbr, int col) {
+		return (file + ":" + lineNbr + ":"+ col+": ");
 	}
 }

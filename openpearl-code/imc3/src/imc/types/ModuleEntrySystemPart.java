@@ -23,6 +23,11 @@ public class ModuleEntrySystemPart {
 	 * source line number of the definition of this element  
 	 */
 	private int line;
+
+	/**
+	 * source column number of the definition of this element  
+	 */
+	private int col;
 	
 	/**
 	 * list of the parameters of the platform element   
@@ -60,16 +65,18 @@ public class ModuleEntrySystemPart {
 	}
 	
 	
-	ModuleEntrySystemPart(int line, Node location) {
+	ModuleEntrySystemPart(int line, int col, Node location) {
 		parameters = new ArrayList<Parameter>();	
 		this.line = line;
+		this.col = col;
 		node = location;
 		prefix = "_";
 	}
 	
-	public ModuleEntrySystemPart(String userName, int line, Node location) {
+	public ModuleEntrySystemPart(String userName, int line, int col, Node location) {
 		parameters = new ArrayList<Parameter>();	
 		this.line = line;
+		this.col = col;
 		node = location;
 		this.userName = userName;
 		prefix = "_";
@@ -89,6 +96,10 @@ public class ModuleEntrySystemPart {
 		return line;
 	}
 
+	public int getCol() {
+   	    return col;	
+	}
+	
 	public Node getNode() {
 		return node;
 	}
@@ -168,7 +179,5 @@ public class ModuleEntrySystemPart {
 	public String getPrefix() {
 		return prefix;
 	}
-	
-
 
 }

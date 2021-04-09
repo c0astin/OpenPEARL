@@ -20,8 +20,8 @@ public class SpcProblemPart extends SpcDclProblemPart {
 	 * @param module the module which contains the specification
 	 * @param global the parameter of the GLOBAL attribute in the specification
 	 */
-	public SpcProblemPart(String sn, int line, String t, Node location, Module module, String global) {
-		super(sn, line, t, location, module, global);
+	public SpcProblemPart(String sn, int line, int col,  String t, Node location, Module module, String global) {
+		super(sn, line, col, t, location, module, global);
 		
 	}
 }

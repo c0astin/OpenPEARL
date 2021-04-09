@@ -12,8 +12,8 @@ import org.w3c.dom.Node;
  */
 public class ConfigurationSystemPart  extends ModuleEntrySystemPart {
 
-	public ConfigurationSystemPart(int line, Node location) {
-		super(line, location);
+	public ConfigurationSystemPart(int line, int col, Node location) {
+		super(line, col, location);
 	}
 
 }

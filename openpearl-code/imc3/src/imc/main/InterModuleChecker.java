@@ -9,6 +9,7 @@ import imc.checks.CheckMultipleSystemParts;
 import imc.checks.CheckPinsDoNotCollide;
 import imc.checks.CheckSpcDcl;
 import imc.checks.CheckSystempart;
+import imc.checks.CheckTFURequirements;
 import imc.types.Module;
 import imc.types.Platform;
 import imc.utilities.Log;
@@ -125,6 +126,9 @@ public class InterModuleChecker {
 		new CheckInstances(modules);
 		Log.exitIfErrors();
 
+		new CheckTFURequirements(modules);
+		Log.exitIfErrors();
+		
 		
 		new CheckI2CAdrDoesNotCollide(modules);
 		new CheckPinsDoNotCollide(modules);
