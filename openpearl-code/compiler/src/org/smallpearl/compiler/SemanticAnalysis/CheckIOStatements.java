@@ -164,9 +164,51 @@ SmallPearlVisitor<Void> {
 		return null;
 	}
 
-	/* ------------------------------------------------ */
-	/* start of check specific code */
-	/* ------------------------------------------------ */
+    /* ------------------------------------------------ */
+    /* start of check specific code */
+    /* ------------------------------------------------ */
+
+	@Override
+    public Void visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
+	  // just take the first name of the list, the attributes are the same
+	  String dationName = ctx.identifierDenotation().ID(0).toString();
+      //System.out.println("DationName: "+ dationName);
+  
+      ErrorStack.enter(ctx, "DationSPC");
+      
+
+      SymbolTableEntry entry1 = this.m_currentSymbolTable.lookup(dationName);
+
+      if (entry1 == null) {
+         ErrorStack.addInternal("Symbol table does not contain:"+dationName);
+         ErrorStack.leave();
+         return null;
+      }
+      SymbolTableEntry se = this.m_currentSymbolTable.lookup(dationName);
+      if (se != null &&
+          ! (se instanceof VariableEntry) &&
+          !(((VariableEntry)se).getType() instanceof TypeDation)
+              ) {
+        ErrorStack.addInternal("symbol "+dationName+" not found/or no dation");
+        ErrorStack.leave();
+        return null;
+      }
+      TypeDation d = (TypeDation)(((VariableEntry)se).getType());
+      
+      if (d.hasTypology() == true) {
+         ErrorStack.add("DIM not expeced on system dation");
+      }
+      if (d.hasTfu()) {
+         ErrorStack.add("TFU not expected on system dation");
+      }
+      ErrorStack.leave();
+      
+
+	   return null;
+	}
+
+	
+	
     @Override
     public Void visitDationDeclaration(SmallPearlParser.DationDeclarationContext ctx) {
         if (m_debug) {
@@ -175,8 +217,6 @@ SmallPearlVisitor<Void> {
         // we do not need to iterate over the names since they have all identical parameters
         //for (int i = 0; i<ctx.identifierDenotation().ID().size(); i++) {
         int i=0; // it is enough to test the first entry
-          int recordLengthUserdation=0;
-          int recordLengthSystemdation=0;
         
             String dationName = ctx.identifierDenotation().ID(i).toString();
             //System.out.println("DationName: "+ dationName);
@@ -219,32 +259,18 @@ SmallPearlVisitor<Void> {
                 if (d.getDimension3()<=0 || d.getDimension2()<=0) {
                   // '*' not allowed
                   ErrorStack.add("only first dimension may be '*'");
-                } else {
-                  recordLengthUserdation = d.getDimension3();
                 }
                 break;
               case  2:
                 if (d.getDimension2()==0) {
                   // '*' not allowed
                   ErrorStack.add("only first dimension may be '*'");
-                } else {
-                  recordLengthUserdation = d.getDimension2();
                 }
                 break;
               case  1:
-                if (d.getDimension1()>0) {
-                  recordLengthUserdation = d.getDimension3();
-                }
                 break;
             }
 
-            // multiply with elements size 
-            // not necessary for ALPHIC and ALL, since there is there 1 by specification
-            if (d.getTypeOfTransmission() != null) {
-              if (!d.getTypeOfTransmission().equals("ALL")) {
-                recordLengthUserdation *= d.getTypeOfTransmissionAsType().getSize();
-              }
-            }
 
             if (d.hasTfu() && d.getNumberOfDimensions() == 1 && d.getDimension1() == 0) {
               ErrorStack.add("TFU requires limited record length");
@@ -254,7 +280,7 @@ SmallPearlVisitor<Void> {
             SymbolTableEntry sys = this.m_currentSymbolTable.lookup(d.getCreatedOn());;
 
             if (sys == null) {
-              
+
               ErrorStack.add("system dation " + d.getCreatedOn()+" is not defined");
               ErrorStack.leave();
               return null;
@@ -266,24 +292,69 @@ SmallPearlVisitor<Void> {
             } else {    
               TypeDation sd = (TypeDation)(((VariableEntry)sys).getType());
 
-              // check compatibility
-              // (1) ALPHIC need !BASIC of the system dation
-              if (d.isAlphic() && sd.isBasic()) {
-                ErrorStack.add("attempt to create ALPHIC dation upon BASIC system dation");
-                ErrorStack.leave();
-                return null;
-              }
-              if (!d.isBasic() && sd.isBasic()) {
-                ErrorStack.add("attempt to create a 'type' dation upon a BASIC system dation");
-                ErrorStack.leave();
-                return null;
-              }
-              if (d.isBasic() && !sd.isBasic()) {
-                ErrorStack.add("attempt to create a BASIC dation upon an non BASIC system dation");
-                ErrorStack.leave();
-                return null;
-              }
 
+              // (4) ClassAttribute must fit
+                          // check compatibility
+              // use system dation as primary selector
+              if (sd.isBasic()) {
+                if (d.isAlphic()) {
+                  ErrorStack.add("attempt to create ALPHIC dation upon BASIC system dation");
+                  ErrorStack.leave();
+                  return null;
+                }
+                if ( !d.isBasic()) {
+                  // d is not of type ALPHOC and not type BASIC --> check typeOfTransmission for
+                  // correct error message
+                  if (d.getTypeOfTransmission()!= null) {
+                    ErrorStack.add("attempt to create a '"+d.getTypeOfTransmission()+"' dation upon a BASIC system dation");
+                  } else {
+                    ErrorStack.add("attempt to create an ALPHIC dation upon a BASIC system dation");                 
+                  }
+                  ErrorStack.leave();
+                  return null;
+                }
+
+              }
+              if ( sd.isAlphic()) {
+                if (!d.isAlphic()) {
+                  if (d.isBasic()) {
+                    ErrorStack.add("attempt to create a BASIC dation upon an ALPHIC system dation");
+                    ErrorStack.leave();
+                    return null;
+                  }
+                  if (d.getTypeOfTransmission()!= null) {
+                    ErrorStack.add("attempt to create a '"+d.getTypeOfTransmission()+"' dation upon an ALPHIC system dation");
+                    ErrorStack.leave();
+                    return null;
+                  }
+                }
+              }
+              if (sd.getTypeOfTransmission()!= null && !sd.isBasic()) {
+                if (d.isAlphic()) {
+                  if (!sd.getTypeOfTransmission().equals("ALL")) {
+                    ErrorStack.add("attempt to create an ALPHIC dation upon '" +d.getTypeOfTransmission()+ "' system dation");
+                    ErrorStack.leave();
+                    return null;
+                  }
+                }
+                if (d.isBasic()) {
+                  ErrorStack.add("attempt to create a BASIC dation upon non BASIC system dation");
+                  ErrorStack.leave();
+                  return null;
+                }
+                if (d.getTypeOfTransmission()!= null) {
+                  if (!sd.getTypeOfTransmission().equals("ALL")) {
+                    // types must be equal
+                    if (!sd.getTypeOfTransmissionAsType().equals(d.getTypeOfTransmissionAsType())) {
+                      ErrorStack.add("attempt to create a '" +
+                          d.getTypeOfTransmission() +"' dation upon a '" +
+                          sd.getTypeOfTransmission()+"' system dation");
+
+                    }
+                  }
+                } 
+              }
+              
               // (2) direction must fit (sourceSinkAttribute)
               if (d.isIn() && ! sd.isIn()) {
                 ErrorStack.add("system dation does not provide direction IN");
@@ -291,102 +362,29 @@ SmallPearlVisitor<Void> {
               if (d.isOut() && ! sd.isOut()) {
                 ErrorStack.add("system dation does not provide direction OUT");
               }
+              
 
-
-              // (4) ClassAttribute must fit
-              // use a do .. while(false)-loop to abort tests with break
-              do {
-
-                if (sd.isAlphic()) {
-                  if (!d.isAlphic()) {
-                    ErrorStack.add("userdation must be ALPHIC");
-                    break;
-                  }
-                } 
-                if (sd.isBasic()) {
-                  if (!d.isBasic()) {
-                    ErrorStack.add("userdation must be BASIC");
-                    break;
-                  }
-                }
-
-                // check type of transmission and calculate record length in system dation
-                switch (sd.getNumberOfDimensions()) {
-                  case  3:
-                    recordLengthSystemdation = sd.getDimension3();
-                    break;
-                  case  2:
-                    recordLengthSystemdation = sd.getDimension2();
-                    break;
-                  case  1:
-                    recordLengthSystemdation = sd.getDimension3();
-                    break;
-                }                
-                if (sd.getTypeOfTransmission() != null) {
-                  if (!sd.getTypeOfTransmission().equals("ALL")) {
-                    // types must be equal
-                    if (!sd.getTypeOfTransmissionAsType().equals(d.getTypeOfTransmissionAsType())) {
-                      if (d.isAlphic()) {
-                        ErrorStack.add("type mismatch: system dation provides "+
-                            sd.getTypeOfTransmission()+" -- user dation requests ALPHIC");
-                      } else {
-                      ErrorStack.add("type mismatch: system dation provides "+
-                          sd.getTypeOfTransmission()+" -- user dation requests "+
-                          d.getTypeOfTransmission() );
-                      }
-                      break;
-                    }
-                    recordLengthSystemdation *= sd.getTypeOfTransmissionAsType().getSize();
-                  }
-                } 
-                
-              } while(false);
-
+         
+              // (5) Typology
+              //    Userdation of type ALPHIC or type need 
+              //        * typology
+              //        * FORWARD/DIRECT
+              //        - STREAM/NOSTREAM/CYCLIC/NOCLYCIC without contradictions
               if (!d.isBasic() && !d.hasTypology()) {
                 ErrorStack.add("non BASIC user dation needs typology (DIM)");
               }
               
-//              if (sd.getTypeOfTransmission() == null) {
-//                // sd is ALPHIC
-//                if (!sd.isAlphic()) {
-//                  // the system dation misses some data -- this should be detected by the
-//                  // imc in all compilations
-//                  ErrorStack.addInternal(sd+" has no typeOfTransmission");
-//                  ErrorStack.leave();
-//                  return null;
-//                }
-//              } else if (!sd.getTypeOfTransmission().equals("ALL")) {
-//                if (!sd.getTypeOfTransmission().equals(d.getTypeOfTransmission())) {
-//                  ErrorStack.add("type of transmission mismatch (system:"+sd.getTypeOfTransmission()+
-//                      " user: "+d.getTypeOfTransmission()+")");
-//                }
-//                recordLength *= sd.getTypeOfTransmissionAsType().getSize();
-//              }
-
-              // (5) if the system dation specifies a TFU-size;
-              //     the user dation must do this also
-              //     the record length of the user must not exceed the size of the system dation
-              //     This is checked during runtime for STRUCT types
-              //     ALL,ALPHIC and simple types may be checked now
-
-              // TFU checks
-              // * does not agree with STREAM
-              // if sd hat TFU, the userdation needs TFU
+    
               if (d.hasTfu() && d.isStream()) {
                 ErrorStack.add("TFU requires NOSTREAM");
               }
-              if (sd.hasTfu() && !d.hasTfu()) {
-                ErrorStack.add("system dation requires TFU in user dation");
-              }
-              if (sd.hasTfu() && d.hasTfu()) {
-                // check record size
-                if (recordLengthSystemdation < recordLengthUserdation) {
-                  ErrorStack.add("TFU record of user dation too large ("+
-                      recordLengthUserdation + ") -- limit from system dation ("+
-                      recordLengthSystemdation+")");
-                }
-              }
-        
+
+             
+              // (x) if the system dation specifies a TFU-size;
+              //     the user dation must do this also
+              //     this is checked by the IMC, sine we do not know anything about
+              //     details of the system dation
+
             
             ErrorStack.leave();
             }
