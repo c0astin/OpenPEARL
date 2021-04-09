@@ -80,4 +80,8 @@ public class TypeFixed extends TypeDefinition {
     public int getNoOfBytes() {
         return m_precision / 8 + 1;
     }
+    
+    public Integer getSize() {
+      return (m_precision/8)+1;
+    }
 }

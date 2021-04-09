@@ -76,4 +76,9 @@ public class TypeBit extends TypeDefinition {
         // Custom equality check here.
         return this.m_precision == that.m_precision;
     }
+    
+    public Integer getSize() {
+      return ((m_precision-1)/8)+1;
+    }
+    
 }

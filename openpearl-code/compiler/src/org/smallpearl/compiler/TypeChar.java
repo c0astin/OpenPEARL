@@ -50,7 +50,7 @@ public class TypeChar extends TypeDefinition {
     public Integer getSize() {
         return m_size;
     }
-    
+ 
     public Integer getPrecision() { return m_size;}
 
     public String toString() {

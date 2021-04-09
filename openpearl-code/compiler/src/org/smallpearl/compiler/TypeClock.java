@@ -57,5 +57,10 @@ public class TypeClock extends TypeDefinition {
         ST st = group.getInstanceOf("clock_type");
         return st;
     }
-
+    
+    public Integer getSize() {
+      // clocks are stored as FIXED(63)
+      TypeFixed tf = new TypeFixed(63);
+      return tf.getSize();
+    }
 }

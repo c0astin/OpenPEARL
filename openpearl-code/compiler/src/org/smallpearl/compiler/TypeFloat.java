@@ -75,5 +75,13 @@ public class TypeFloat extends TypeDefinition {
     public int getNoOfBytes() {
         return m_precision / 8 + 1;
     }
-
+    
+    public Integer getSize() {
+      // we have only prcisions of 24 and 53, which are mapped to float and double, resp.
+      if (m_precision<30) {
+        return 4;
+      } else {
+        return 8;
+      }
+    }
 }

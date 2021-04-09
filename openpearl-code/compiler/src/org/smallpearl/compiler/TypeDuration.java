@@ -59,5 +59,10 @@ public class TypeDuration extends TypeDefinition {
         ST st = group.getInstanceOf("duration_type");
         return st;
     }
-
+    
+    public Integer getSize() {
+      // durations are stored as FIXED(63)
+      TypeFixed tf = new TypeFixed(63);
+      return tf.getSize();
+    }
 }
