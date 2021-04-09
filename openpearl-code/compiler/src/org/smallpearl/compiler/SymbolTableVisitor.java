@@ -1815,7 +1815,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         ModuleEntry moduleEntry = listOfModules.get(0);
         SymbolTable symbolTable = moduleEntry.scope;
 
-        symbolTable.setUsesSystemElements();
 
         /* ---------------- */
 
