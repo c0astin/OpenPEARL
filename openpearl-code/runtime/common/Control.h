@@ -41,6 +41,7 @@
 */
 
 namespace pearlrt {
+
    /**
    Provide operations to control the base system, like set the exit-code.
 
@@ -48,9 +49,18 @@ namespace pearlrt {
    to have access to some internal features of the system.
    */
    class Control {
+   public:
+     typedef void(*InitFunction)(void);
+     struct Initializer {
+        InitFunction init;
+        struct Initializer * next;
+      };
    private:
       Control();		// no ctor available
       static int exitCode;      // the exit code of the application
+
+      static Initializer* first;
+  
    public:
       /**
         set the exit code of the application.
@@ -68,6 +78,17 @@ namespace pearlrt {
         \returns the value of the desired exit code.
       */
       static int getExitCode();
+
+      /** add (module-)element to InitialiserChain 
+      \param module pointer to Initializer  element
+      */
+      static int addInitializer(Initializer * addMe);
+
+      /**
+      get next init element
+      \return pointer to init function and moves pointer to the next init elemtn
+      */
+      static InitFunction getNextInitializer();
    };
 }
 

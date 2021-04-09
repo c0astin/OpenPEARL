@@ -34,7 +34,6 @@ group smallpearl;
 Prologue( src,
           headerfiles,
           namespaces,
-          useSystemElements,
           taskSpecifierList,
           ConstantPoolList,
           StructureForwardDeclarationList,
@@ -42,13 +41,6 @@ Prologue( src,
 #include \<PearlIncludes.h>
 
 
-<if(useSystemElements)>
-namespace pearlrt {
-    extern int createSystemElements();
-}
-
-static int dummy = pearlrt::createSystemElements();
-<endif>
 
 const char* filename = (char*) "<src>";
 
@@ -184,6 +176,7 @@ ProblemPart(ScalarVariableDeclarations,
             BoltDeclarations,
             semaphoreArrays,boltArrays,
             ArrayDescriptors, ArrayVariableDeclarations,TaskDeclarations,DationSpecifications,DationDeclarations,
+            SystemDationInitializer,
             StructVariableDeclarations,
             ProcedureSpecifications,ProcedureDeclarations,
             InterruptSpecifications) ::= <<
@@ -218,6 +211,13 @@ ProblemPart(ScalarVariableDeclarations,
 // DATION DECLARATIONS
 /////////////////////////////////////////////////////////////////////////////
 <DationDeclarations>
+<endif>
+
+<if(SystemDationInitializer)>
+/////////////////////////////////////////////////////////////////////////////
+// SYSTEM DATION INITIALIZER
+/////////////////////////////////////////////////////////////////////////////
+<SystemDationInitializer>
 <endif>
 
 <if(ScalarVariableDeclarations)>
@@ -630,7 +630,7 @@ io_statement(code) ::= <<
 open_statement(id,paramlist,declFileName,refFileName,flen,rst_var) ::= <<
 {
     <if(declFileName)><declFileName><endif>
-    <id>.dationOpen(
+    <id>->dationOpen(
     <if(paramlist)>
         <paramlist>
     <else>
@@ -690,7 +690,7 @@ close_parameterlist(parameter) ::= <%
 %>
 
 close_statement(id,paramlist,rst_var) ::= <<
-  <id>.dationClose(<paramlist>, <if(rst_var)>&(<rst_var>)<else>(pearlrt::Fixed\<15>*) 0<endif>);
+  <id>->dationClose(<paramlist>, <if(rst_var)>&(<rst_var>)<else>(pearlrt::Fixed\<15>*) 0<endif>);
 >>
 
 close_parameter_can(attribute) ::= <%
@@ -736,7 +736,7 @@ iojob_io_statement(dation,command,datalist,formatlist,format_list_is_static) ::=
      .entry=NULL};
      <endif>
 
-  <dation>.<command>(me, &dataList , &formatList);
+  <dation>-><command>(me, &dataList , &formatList);
 }
 >>
 
@@ -1378,51 +1378,60 @@ DationSpecifications(decl) ::= <<
 <decl>
 >>
 
-DationSpecification(name,SpecifyTypeDation) ::= <<
+DationSpecificationInitialisiers(spec) ::= <<
+<spec>
+>>
+
+
+SpecificationUserDation(name,TypeDation,global) ::= <<
+extern pearlrt::<TypeDation> <user_variable(name)>;
+
+>>
+
+SpecificationSystemDation(name,TypeDation,global) ::= <<
 extern pearlrt::Device *d_<name>;
-<SpecifyTypeDation>
->>
-
-
-SpecificationSystemDationB(name,TypeDation,global) ::= <<
-extern pearlrt::Device *d_<name>;
-static pearlrt::SystemDationB* <user_variable(name)> = static_cast\<pearlrt::SystemDationB*>(d_<name>); <\n>
+static pearlrt::<TypeDation> *_<name>;
 
 >>
-
-
-SpecificationSystemDationNB(name,TypeDation,global) ::= <<
-extern pearlrt::Device *d_<name>;
-static pearlrt::SystemDationNB* <user_variable(name)> = static_cast\<pearlrt::SystemDationNB*>(d_<name>); <\n>
-
->>
-
-
-SpecificationSystemDationPG(name,TypeDation,global) ::= <<
-extern pearlrt::DationPG <user_variable(name)>;
-
->>
-
-SpecificationSystemDationTS(name,TypeDation,global) ::= <<
-extern pearlrt::DationTS <user_variable(name)>;
-
->>
-
-SpecificationSystemDationRW(name,TypeDation,global) ::= <<
-extern pearlrt::DationRW <user_variable(name)>;
-
->>
-
 
 
 DationDeclarations(decl) ::= <<
 <decl>
 >>
 
-DationDeclaration(name,Dation,TypeDation,Id,Typology, tfu) ::= <<
+DationInitialiser(decl, specs) ::= <<
+static void setupDationsAndPointers() {
+   <specs>
+   <decl>
+} 
+
+static pearlrt::Control::Initializer init={setupDationsAndPointers,NULL};
+int dummy = pearlrt::Control::addInitializer(&init);
+>>
+
+DationInitialisierSpecs(spec) ::= <<
+<spec>
+>>
+
+
+InitPointerToSpcSystemDation(name,TypeDation,global) ::= <<
+<user_variable(name)> = static_cast\<pearlrt::<TypeDation>*>(d_<name>); <\n>
+>>
+
+DationDeclaration(name,Dation) ::= <<
+pearlrt::<Dation> *_<name>;
+>>
+
+DationDeclarationInitialiers(decl) ::= <<
+<decl>
+>>
+
+DationDeclarationInitialiser(name,Dation,TypeDation,Id,Typology, tfu) ::= <<
 <if(Typology)><Typology><endif>
 <if(tfu)>static pearlrt::TFURecord\<<tfu>\>  tfu_<name>;<endif>
-pearlrt::<Dation> _<name>(_<Id>, <TypeDation><if(tfu)>, &tfu_<name><endif>);
+static pearlrt::<Dation> d_<name>(_<Id>, <TypeDation><if(tfu)>, &tfu_<name><endif>);
+_<name> = &d_<name>;
+
 <\n>
 >>
 
@@ -1481,6 +1490,8 @@ TypeOfTransmissionData(all,type,size) ::= <%
 <if(all)>1<endif>
 <if(type)>sizeof(<type>)<endif>
 %>
+
+/* --------------------- End of DATION -------------------------- */
 
 block_statement(code,id,isUserLabel) ::= <<
 // BLOCK BEGIN <id>

@@ -33,6 +33,7 @@
 
 namespace pearlrt {
    int Control::exitCode = 0; // the exit code of the application
+   Control::Initializer * Control::first = NULL;
 
    void Control::setExitCode(const Fixed<15> x) {
       exitCode = x.x;
@@ -41,6 +42,21 @@ namespace pearlrt {
    int Control::getExitCode() {
       return exitCode;
    }
+
+   int Control::addInitializer(Initializer * addMe) {
+       addMe->next = first;
+       first = addMe;
+       return 0;
+   }
+
+   Control::InitFunction Control::getNextInitializer() {
+      InitFunction result=NULL;
+      if (first) {
+         result = first->init;
+         first = first->next;
+      }
+      return result;
+   } 
 
 }
 

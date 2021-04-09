@@ -70,6 +70,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     private ST constantSemaphoreArrays;
     private LinkedList<LinkedList<String>> m_listOfBoltArrays;
     private ST constantBoltArrays;
+    private ST m_dationDeclarationInitializers;
+    private ST m_dationSpecificationInitializers;
 
     public enum Type {
         BIT, CHAR, FIXED
@@ -100,6 +102,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         m_ast = ast;
         m_tempVariableList = new Vector<ST>();
         m_tempVariableNbr = new Vector<Integer>();
+       
 
         LinkedList<ModuleEntry> listOfModules = this.m_currentSymbolTable
                 .getModules();
@@ -117,7 +120,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         this.ReadTemplate(filename);
         constantSemaphoreArrays = m_group.getInstanceOf("SemaphoreArrays");
         constantBoltArrays = m_group.getInstanceOf("BoltArrays");
-
+        m_dationDeclarationInitializers = m_group.getInstanceOf("DationDeclarationInitialiers");
+        m_dationSpecificationInitializers = m_group.getInstanceOf("DationSpecificationInitialisiers");
+        
+        
         // generateProlog is invoked via visitModule!!
         generatePrologue();
     }
@@ -1521,7 +1527,21 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         }
 
         problem_part.add("ArrayDescriptors", arrayDescriptors);
+        
+        // ad system dation initializer
+        ST dationInitializer = m_group.getInstanceOf("DationInitialiser");
+        ST initSpecs = m_group.getInstanceOf("DationInitialisierSpecs");
+        ST initDecls = m_group.getInstanceOf("DationInitialisierDecls");
 
+        dationInitializer.add("specs",m_dationSpecificationInitializers); 
+        dationInitializer.add("decl",m_dationDeclarationInitializers);
+
+        // add dation initializer only if at least one dation is used
+        if (m_dationDeclarationInitializers.render().length()>0 ||
+            m_dationDeclarationInitializers.render().length()>0) {
+            problem_part.add("SystemDationInitializer", dationInitializer);
+        }
+        
         return problem_part;
     }
 
@@ -4833,6 +4853,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitDationSpecification(
             SmallPearlParser.DationSpecificationContext ctx) {
         ST dationSpecifications = m_group.getInstanceOf("DationSpecifications");
+       
         boolean hasGlobalAttribute = false;
 
         ArrayList<String> identifierDenotationList = null;
@@ -4852,29 +4873,44 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             for (int i = 0; i < identifierDenotationList.size(); i++) {
                 if (dationClass.equals("SystemDationB")) {
                     ST specifyDation = m_group
-                            .getInstanceOf("SpecificationSystemDationB");
+                            .getInstanceOf("SpecificationSystemDation");
                     specifyDation.add("name", identifierDenotationList.get(i));
+                    specifyDation.add("TypeDation","SystemDationB");
                     dationSpecifications.add("decl", specifyDation);
+                    ST initializer = m_group.getInstanceOf("InitPointerToSpcSystemDation");
+                    initializer.add("name", identifierDenotationList.get(i));
+                    initializer.add("TypeDation","SystemDationB");
+                    m_dationSpecificationInitializers.add("spec", initializer);
                 } else if (dationClass.equals("SystemDationNB")) {
                     ST specifyDation = m_group
-                            .getInstanceOf("SpecificationSystemDationNB");
+                            .getInstanceOf("SpecificationSystemDation");
                     specifyDation.add("name", identifierDenotationList.get(i));
+                    specifyDation.add("TypeDation","SystemDationNB");
                     dationSpecifications.add("decl", specifyDation);
+                    ST initializer = m_group.getInstanceOf("InitPointerToSpcSystemDation");
+                    initializer.add("name", identifierDenotationList.get(i));
+                    initializer.add("TypeDation","SystemDationNB");
+                    m_dationSpecificationInitializers.add("spec", initializer);
                 } else if (dationClass.equals("DationTS")) {
                     ST specifyDation = m_group
-                            .getInstanceOf("SpecificationSystemDationTS");
+                            .getInstanceOf("SpecificationUserDation");
                     specifyDation.add("name", identifierDenotationList.get(i));
+                    specifyDation.add("TypeDation", "DationTS");
+
                     dationSpecifications.add("decl", specifyDation);
 
                 } else if (dationClass.equals("DationPG")) {
                     ST specifyDation = m_group
-                            .getInstanceOf("SpecificationSystemDationPG");
+                            .getInstanceOf("SpecificationUserDation");
                     specifyDation.add("name", identifierDenotationList.get(i));
+                    specifyDation.add("TypeDation", "DationPG");
                     dationSpecifications.add("decl", specifyDation);
+                    
                 } else if (dationClass.equals("DationRW")) {
                     ST specifyDation = m_group
-                            .getInstanceOf("SpecificationSystemDationRW");
+                            .getInstanceOf("SpecificationUserDation");
                     specifyDation.add("name", identifierDenotationList.get(i));
+                    specifyDation.add("TypeDation", "DationRW");
                     dationSpecifications.add("decl", specifyDation);
                 }
             }
@@ -4887,6 +4923,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitDationDeclaration(
             SmallPearlParser.DationDeclarationContext ctx) {
         ST dationDeclarations = m_group.getInstanceOf("DationDeclarations");
+        
         ST typeDation = m_group.getInstanceOf("TypeDation");
         dationDeclarations.add("decl",
                 visitIdentifierDenotation(ctx.identifierDenotation()));
@@ -4922,17 +4959,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             for (int i = 0; i < identifierDenotationList.size(); i++) {
                 ST v = m_group.getInstanceOf("DationDeclaration");
                 v.add("name", identifierDenotationList.get(i));
-                v.add("TypeDation", typeDation);
-
+               
                 if (ctx.typeDation().typology() != null) {
                     typology.add("name", identifierDenotationList.get(i));
-                    v.add("Typology", typology);
-                    if (m_tfuRecord > 0) {
-                        v.add("tfu", m_tfuRecord);
-                    }
-                }
+                  }
 
-                v.add("Id", ctx.ID().getText());
+
                 v.add("Dation", getDationClass(ctx.typeDation()
                         .classAttribute()));
 
@@ -4945,6 +4977,19 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 }
 
                 dationDeclarations.add("decl", v);
+                
+                ST dationInitialiser = m_group.getInstanceOf("DationDeclarationInitialiser");
+                // name,Dation,TypeDation,Id,Typology, tfu
+                dationInitialiser.add("name", identifierDenotationList.get(i));
+                dationInitialiser.add("Dation", getDationClass(ctx.typeDation()
+                    .classAttribute()));
+                dationInitialiser.add("TypeDation", typeDation);
+                dationInitialiser.add("Id", ctx.ID().getText());
+                dationInitialiser.add("Typology", typology );
+                if (m_tfuRecord > 0) {
+                   dationInitialiser.add("tfu", m_tfuRecord);
+                }
+                m_dationDeclarationInitializers.add("decl", dationInitialiser);
             }
         }
 

@@ -262,6 +262,8 @@ code. By this way, the compiler may pass the user names directly to
 C++ source code.
 */
 namespace pearlrt {
+   extern int createSystemElements();
+
 // ------------------------ prototypes of static functions
 
   // data for scanPearlRc
@@ -465,6 +467,7 @@ namespace pearlrt {
    }
 }  // of name space
 
+
 using namespace pearlrt;
 
 /**
@@ -492,11 +495,44 @@ int main() {
    char line[80];
    int numberOfCpus;
 
-
+   int nbrOfCtorFails = pearlrt::createSystemElements();
+   if (nbrOfCtorFails > 0) {
+      Log::error("*** %d system element(s) failed to initialize --> exit",
+        nbrOfCtorFails);
+      exit(1);
+   }
+  
+   // initialize all modules
+   for (pearlrt::Control::InitFunction i=pearlrt::Control::getNextInitializer(); i!=NULL;
+        i=pearlrt::Control::getNextInitializer()) {
+      if (i) {
+         printf("invoke initfcn %p\n");
+         (*i)(); 
+      } else {
+         printf("end of list\n");
+      }
+   }
+ 
    // setup default log file as defined in linux/Log.cc
    // or use system part setting for Log
    bool logFromSystemPart = pearlrt::Log::getInstance()->
 		isDefinedInSystemPart();
+   if (!logFromSystemPart) {
+      // setup emergency log to stderr
+      try {
+         // setup emergency log to stderr
+         new Log(); 
+
+         // create default log as ./pearl_log.txt
+         Disc * disc = new Disc("./", 1);
+         LogFile * logfile = new LogFile(disc, "pearl_log.txt");
+         Log(logfile, (char*)"EW"); // no debug and line trace
+      } catch (pearlrt::Signal & p) {
+         fprintf(stderr,
+                "*** cannot write to default log file on ./pearl_log.txt --> exit\n");
+         exit(1); 
+      }
+   }
 
 
    scanPearlRc();
