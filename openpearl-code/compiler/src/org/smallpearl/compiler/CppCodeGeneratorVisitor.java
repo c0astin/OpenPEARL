@@ -4210,7 +4210,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 } else if (ap.positionSOP() != null) {
                     ST fmt = m_group.getInstanceOf("iojob_position_sop");
                     for (int i = 0; i < ap.positionSOP().ID().size(); i++) {
-                        fmt.add("element" + (i + 1), getUserVariable(ap.positionSOP().ID(i).getText()));
+                        fmt.add("expression" + (i + 1), getUserVariable(ap.positionSOP().ID(i).getText()));
                         SymbolTableEntry se = m_currentSymbolTable.lookup(ap.positionSOP().ID(i).getText());
                         if (se instanceof VariableEntry) {
                             TypeFixed tf = (TypeFixed) (((VariableEntry) se).getType());

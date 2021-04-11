@@ -843,28 +843,28 @@ iojob_position_pos(expression1,expression2,expression3,direction,dimensions) ::=
 {
    .format=pearlrt::IOFormatEntry::POS<dimensions>,
    <if(expression1)>.fp1={.f31=<expression1>}<endif>
-   <if(expression2)>.fp2={.f31=<expression2>}<endif>
-   <if(expression3)>.fp3={.f31=<expression3>}<endif>
+   <if(expression2)>,.fp2={.f31=<expression2>}<endif>
+   <if(expression3)>,.fp3={.f31=<expression3>}<endif>
 }
 >>
 
-iojob_position_sop(expression1,size1, expression2,size2, expression3,size3, direction,dimensions) ::= <%
+iojob_position_sop(expression1,size1, expression2,size2, expression3,size3, direction,dimensions) ::= <<
 {
    .format=pearlrt::IOFormatEntry::SOP<dimensions>,
    <if(expression1)>
-      .fp1={.fpxxPtr={.voidPtr=&<expression1>}}
-      .fp1={.fpxxPtr={.size=&<size1>}}
+      .fp1={.fxxPtr={.voidPtr=&<expression1>,
+                      .size=<size1>}}
    <endif>
    <if(expression2)>
-      .fp2={.fpxxPtr={.voidPtr=&<expression2>}}
-      .fp2={.fpxxPtr={.size=&<size2>}}
+      ,.fp2={.fxxPtr={.voidPtr=&<expression2>,
+                       .size=<size2>}}
    <endif>
    <if(expression3)>
-      .fp3={.fpxxPtr={.voidPtr=&<expression3>}}
-      .fp3={.fpxxPtr={.size=&<size3>}}
+      ,.fp3={.fxxPtr={.voidPtr=&<expression3>,
+                       .size=<size3>}}
    <endif>
 }
-%>
+>>
 
 iojob_position_x(element,direction) ::= <<
 {
@@ -893,14 +893,14 @@ iojob_position_page(element,direction) ::= <<
 }
 >>
 
-iojob_position_adv(expression1,expression2,expression3,direction,dimensions) ::= <%
+iojob_position_adv(expression1,expression2,expression3,direction,dimensions) ::= <<
 {
    .format=pearlrt::IOFormatEntry::ADV<dimensions>,
-   <if(expression1)>.fp1={.fp31=<expression1>}<endif>
-   <if(expression2)>.fp2={.fp31=<expression2>}<endif>
-   <if(expression3)>.fp3={.fp31=<expression3>}<endif>
+   <if(expression1)>.fp1={.f31=<expression1>}<endif>
+   <if(expression2)>,.fp2={.f31=<expression2>}<endif>
+   <if(expression3)>,.fp3={.f31=<expression3>}<endif>
 }
-%>
+>>
 
 
 iojob_format_loopstart(elements,repetitions) ::= <<

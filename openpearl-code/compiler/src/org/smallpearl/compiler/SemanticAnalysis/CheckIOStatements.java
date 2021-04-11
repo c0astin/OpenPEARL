@@ -2054,7 +2054,9 @@ SmallPearlVisitor<Void> {
             break;
           }
           if (delta < 0) {
-            ErrorStack.add("no backward positioning allowed");
+            if (m_typeDation.isForward()) {
+               ErrorStack.add("no backward positioning allowed");
+            }
           }
         }
 

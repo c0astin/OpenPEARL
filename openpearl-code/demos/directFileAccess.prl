@@ -11,7 +11,7 @@ PROBLEM;
    DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED(so);
    DCL dataFile DATION INOUT FIXED(15) DIM(10,10) DIRECT  CREATED(disc);
    DCL readFile DATION IN FIXED(15) DIM(*) FORWARD NOCYCL STREAM CREATED(disc);
-   DCL size FIXED INIT(10);
+   DCL size FIXED(15) INIT(10);
 
 t: TASK MAIN;
    OPEN terminal;
@@ -163,26 +163,26 @@ numberedRectangleAdv: PROC;
    OPEN dataFile BY IDF('dataFile.bin'), ANY;
   
    WRITE data TO dataFile BY ADV(1,2),SOP(r,c);
-PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
+   !PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
    data = data + 1;
    FOR i FROM 4 TO 8 REPEAT
       WRITE data TO dataFile BY SOP(r,c);
-PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
+      !PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
       data = data + 1;
    END;
    FOR i FROM 3 TO 7 REPEAT
       WRITE data TO dataFile BY ADV(1,-1),SOP(r,c);
-PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
+      !PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
       data = data + 1;
    END;
    FOR i FROM 7 BY -1 TO 3 REPEAT
       WRITE data TO dataFile BY ADV(-2),SOP(r,c);
-PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
+      !PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
       data = data + 1;
    END;
    FOR i FROM 6 BY -1 TO 3 REPEAT
       WRITE data TO dataFile BY ADV(-1,-1),SOP(r,c);
-PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
+      ! PUT '(',r,',',c,')' TO terminal BY A,F(4), A,F(4), A;
       data = data + 1;
    END;
    CLOSE dataFile;
