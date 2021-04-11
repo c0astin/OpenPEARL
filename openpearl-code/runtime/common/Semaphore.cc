@@ -84,7 +84,7 @@ namespace pearlrt {
       for (i = 0; i < bd->nsemas; i++) {
          if (bd->semas[i]->getValue() == 0) {
             wouldBlock = 1;
-            // revert all previos decrements of this operation
+            // revert all previous decrements of this operation
             for (int j=0; j<i; j++) {
                bd->semas[j]->increment(); 
             }
@@ -109,6 +109,7 @@ namespace pearlrt {
       bd.u.sema.nsemas = nbrOfSemas;
       bd.u.sema.semas = semas;
 
+      // critical region start
       TaskCommon::mutexLock();
       Log::debug("request from task %s for %d semaphores", me->getName(),
                 nbrOfSemas);
@@ -116,10 +117,6 @@ namespace pearlrt {
       wouldBlock = internalDoTry(&(bd.u.sema));
 
       if (! wouldBlock) {
-         //for (i = 0; i < nbrOfSemas; i++) {
-         //   semas[i]->decrement();
-         //}
-
          // critical region end
          TaskCommon::mutexUnlock();
       } else {
