@@ -252,9 +252,9 @@ namespace pearlrt {
    }
 
    void UserDationNB::doTfuAndSeekStuff()  {
-printf("doTfuAndSeekStuff\n");
-printf("tfuBuffer used/notEmpty/dir  %d / %d / %d \n", tfuBuffer.isUsed(),
-       tfuBuffer.isNotEmpty(),currentDirection);
+//printf("doTfuAndSeekStuff\n");
+//printf("tfuBuffer used/notEmpty/dir  %d / %d / %d \n", tfuBuffer.isUsed(),
+//       tfuBuffer.isNotEmpty(),currentDirection);
       /* logical position is set -- now set the file position */
       // we have one dimensional system devices
       if (tfuBuffer.isUsed()) {

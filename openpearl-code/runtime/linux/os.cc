@@ -506,10 +506,7 @@ int main() {
    for (pearlrt::Control::InitFunction i=pearlrt::Control::getNextInitializer(); i!=NULL;
         i=pearlrt::Control::getNextInitializer()) {
       if (i) {
-         printf("invoke initfcn %p\n");
          (*i)(); 
-      } else {
-         printf("end of list\n");
       }
    }
  
