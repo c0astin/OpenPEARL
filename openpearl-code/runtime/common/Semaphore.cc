@@ -101,7 +101,6 @@ namespace pearlrt {
    void Semaphore::request(TaskCommon* me,
                            int nbrOfSemas,
                            Semaphore** semas) {
-      int i;
       int wouldBlock = 0;
       BlockData bd;
 
@@ -180,7 +179,6 @@ namespace pearlrt {
    }
 
    BitString<1> Semaphore::dotry(TaskCommon* me,  int nbrOfSemas, Semaphore** semas) {
-      int i;
       int wouldBlock = 0;
       BlockData bd;
       BitString<1> result(1);  // true

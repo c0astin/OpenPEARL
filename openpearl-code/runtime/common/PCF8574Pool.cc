@@ -46,8 +46,9 @@
 namespace pearlrt {
 
    static uint8_t bitMask[8] = {0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff};
+   bool PCF8574Pool::firstCall = true;
 
-   struct PCF8574Pool::PCF8574Usage PCF8574Pool::used[nbrOfEntries]={0};
+   struct PCF8574Pool::PCF8574Usage PCF8574Pool::used[nbrOfEntries];
    Mutex PCF8574Pool::mutex;
     
    int PCF8574Pool::registr(I2CProvider * provider, uint8_t i2cAdr,
@@ -56,6 +57,13 @@ namespace pearlrt {
        uint8_t bits;
 
        mutex.lock();
+       if (firstCall) {
+          firstCall = false;
+          for (i=0; i<nbrOfEntries; i++) {
+            used[i].provider = NULL;
+            used[i].i2cAdr   = 0;
+          }
+       }
        int found = -1;
        for (i=0; i<nbrOfEntries && found < 0; i++) {
            if (used[i].provider == provider &&

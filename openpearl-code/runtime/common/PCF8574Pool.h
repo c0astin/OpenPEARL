@@ -62,6 +62,7 @@ namespace pearlrt {
    class PCF8574Pool {
 
    private:
+      static bool firstCall; // used to preset the array used
       static const int nbrOfEntries = 10;
       static struct PCF8574Usage {
          I2CProvider * provider;
