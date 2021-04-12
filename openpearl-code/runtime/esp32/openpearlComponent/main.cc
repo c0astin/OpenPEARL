@@ -1,6 +1,5 @@
 /*
  [The "BSD license"]
- Copyright (c) 2013-2014 Florian Mahlecke
  Copyright (c) 2014 Rainer Mueller
  Copyright (c) 2018 Michael Kotzjan
  All rights reserved.
@@ -63,10 +62,9 @@ independent parts.
 #include "Signals.h"
 #include "TaskList.h"
 #include "Task.h"
-//#include "Post.h"
+#include "Control.h"
 #include "Log.h"
 #include "Clock.h"
-//#include "chip.h"
 #include "service.h"
 #include "Esp32Clock.h"
 //#include "Esp32WifiConfig.h"
@@ -74,6 +72,7 @@ independent parts.
 // read options from menuconfig
 #include "../../configuration/include/autoconf.h"
 
+#if 0
 static void testException() {
    try {
       printf("check exceptions\n");
@@ -114,6 +113,19 @@ extern "C" {
    }
 };
 
+namespace pearlrt {
+   extern int createSystemElements();
+   static void (*initFcn)(void) = NULL;;
+
+   int registerInits(void(*fcn)(void), int prio) {
+printf("regiesterInit called with %p\n", fcn);
+       initFcn = fcn;   
+       return 0;
+   }
+}
+
+#endif
+
 using namespace pearlrt;
 /*-----------------------------------------------------------*/
 /**
@@ -129,6 +141,7 @@ extern "C" {
       char line[40];
 
       printf("OpenPEARL started \n");
+      Control::initModules();
 
       // test for clock initialization
 
@@ -139,9 +152,9 @@ extern "C" {
 
 
       printf("set log level \n");
-      Log::getInstance()->setLevel(0x0c); //e+w
-//      Log::getInstance()->setLevel(0x0e);   //e+w+i
-//      Log::getInstance()->setLevel(0x0f);
+//      Log::getInstance()->setLevel(0x0c); //e+w
+      Log::getInstance()->setLevel(0x0e);   //e+w+i
+//      Log::getInstance()->setLevel(0x0f);     //e+w+i+d
 
       // start background service task
       init_service();
@@ -190,14 +203,14 @@ extern "C" {
       // dump unused size to log
       Log::info("Free Heap size: %d byte", xPortGetFreeHeapSize());
 
-
+#if 0
 /*
       xTaskCreate(&blink_task, "blink_task",
                   5000, //configMINIMAL_STACK_SIZE,
                   NULL, 5, NULL);
       printf("blink started\n");
 */
-
+#endif
    }
 
 }

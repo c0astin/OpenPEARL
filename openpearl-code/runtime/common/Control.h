@@ -85,10 +85,10 @@ namespace pearlrt {
       static int addInitializer(Initializer * addMe);
 
       /**
-      get next init element
-      \return pointer to init function and moves pointer to the next init elemtn
+      iniciate system part and init all registered
+      modules with initializer
       */
-      static InitFunction getNextInitializer();
+      static void initModules();
    };
 }
 

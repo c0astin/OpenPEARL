@@ -29,9 +29,12 @@
 
 #include "Control.h"
 #include "Fixed.h"
-
+#include "Log.h"
 
 namespace pearlrt {
+   /* ceateSystemElements becomes created by IMC  */
+   extern int createSystemElements();
+
    int Control::exitCode = 0; // the exit code of the application
    Control::Initializer * Control::first = NULL;
 
@@ -49,13 +52,23 @@ namespace pearlrt {
        return 0;
    }
 
-   Control::InitFunction Control::getNextInitializer() {
-      InitFunction result=NULL;
-      if (first) {
-         result = first->init;
-         first = first->next;
+   void Control::initModules() {
+      int nbrOfCtorFails = pearlrt::createSystemElements();
+      InitFunction next=NULL;
+
+      if (nbrOfCtorFails > 0) {
+         Log::error("*** %d system element(s) failed to initialize --> exit",
+           nbrOfCtorFails);
+         exit(1);
       }
-      return result;
+
+      while (first) {
+         next = first->init;
+         first = first->next;
+         if (next) {
+            (*next)();
+        }
+     }
    } 
 
 }

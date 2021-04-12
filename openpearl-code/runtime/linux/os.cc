@@ -262,7 +262,7 @@ code. By this way, the compiler may pass the user names directly to
 C++ source code.
 */
 namespace pearlrt {
-   extern int createSystemElements();
+  // extern int createSystemElements();
 
 // ------------------------ prototypes of static functions
 
@@ -495,6 +495,8 @@ int main() {
    char line[80];
    int numberOfCpus;
 
+   Control::initModules();
+/*
    int nbrOfCtorFails = pearlrt::createSystemElements();
    if (nbrOfCtorFails > 0) {
       Log::error("*** %d system element(s) failed to initialize --> exit",
@@ -509,7 +511,7 @@ int main() {
          (*i)(); 
       }
    }
- 
+*/ 
    // setup default log file as defined in linux/Log.cc
    // or use system part setting for Log
    bool logFromSystemPart = pearlrt::Log::getInstance()->
