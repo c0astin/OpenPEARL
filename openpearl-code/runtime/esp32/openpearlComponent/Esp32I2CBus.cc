@@ -64,26 +64,17 @@ namespace pearlrt{
         configiic.master.clk_speed = sclSpeed;
         ret = i2c_param_config((i2c_port_t)this->portNum, &configiic);
         if(ret != ESP_OK){
-            LOGGER("EspI2CBus on Port %d in init, i2c_param_config exited with: (%s)", this->portNum, esp_err_to_name(ret));
-            THROW_PARAMFAIL
+            Log::error("EspI2CBus on Port %d in init, i2c_param_config exited with: (%s)", this->portNum, esp_err_to_name(ret));
+            throw theDationParamSignal;
         }
         
         ret = i2c_driver_install((i2c_port_t)this->portNum, configiic.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
         if(ret != ESP_OK){
-            LOGGER("EspI2CBus on Port %d in init, i2c_driver_install exited with: (%s)", this->portNum, esp_err_to_name(ret));
-            THROW_DATIONFAIL
+            Log::error("EspI2CBus on Port %d in init, i2c_driver_install exited with: (%s)", this->portNum, esp_err_to_name(ret));
+            throw theInternalDationSignal;
         }
-        
-        if (LOW_CPU_CLCK){
-            ets_delay_us(100);
-            esp_pm_config_esp32_t configFreq;
-            configFreq.max_freq_mhz = 10;
-            configFreq.min_freq_mhz = 10;
-            configFreq.light_sleep_enable = false;
-            LOGGER("Config Frequence: %s\n", esp_err_to_name(esp_pm_configure(&configFreq)));
-        }
-        
-        INIT_MUTEX("Esp32I2CBus");
+       
+        mutex.name("Esp32I2CBus");
     }
 
     int Esp32I2CBus::readData(int adr, int n, uint8_t *data) {
@@ -91,11 +82,11 @@ namespace pearlrt{
         esp_err_t ret = 0;
         
         if ((n < 1)||(n>MAXBYTES)) {
-            LOGGER("EspI2CBus on Port %d, Adress %x in readData: length of data is not valid", this->portNum, adr);
-            THROW_PARAMFAIL
+            Log::error("EspI2CBus on Port %d, Adress %x in readData: length of data is not valid", this->portNum, adr);
+            throw theDationParamSignal;
         }
-        
-        MUTEX_LOCK();
+
+        mutex.lock();
         i2c_cmd_handle_t cmd = i2c_cmd_link_create();
         try{
             i2c_master_start(cmd);
@@ -108,18 +99,19 @@ namespace pearlrt{
             ret = i2c_master_cmd_begin((i2c_port_t)this->portNum, cmd, 1000 / portTICK_RATE_MS);
             if (ret != ESP_OK) {
                 i2c_cmd_link_delete(cmd);
-                MUTEX_UNLOCK();
-                LOGGER("EspI2CBus on Port %d, Adress %x in readData: (%s)", this->portNum, adr,  esp_err_to_name(ret));
-                THROW_READINGFAIL
+                mutex.unlock();
+                Log::error("EspI2CBus on Port %d, Adress %x in readData: (%s)",
+                   this->portNum, adr,  esp_err_to_name(ret));
+                throw theReadingFailedSignal;
             }
         
-        } catch (TERMINATE_TASK) {
+        } catch (TerminateRequestSignal &s) {
             i2c_cmd_link_delete(cmd);
-            MUTEX_UNLOCK();
+            mutex.unlock();
             throw;
         }
         i2c_cmd_link_delete(cmd);
-        MUTEX_UNLOCK();
+        mutex.unlock();
         return n;
     }
     
@@ -128,11 +120,11 @@ namespace pearlrt{
         esp_err_t ret = 0;
         
         if ((n < 1)||(n>MAXBYTES)) {
-            LOGGER("EspI2CBus on Port %d, Adress %x in writeData: length of data is not valid", this->portNum, adr);
-            THROW_PARAMFAIL
+            Log::error("EspI2CBus on Port %d, Adress %x in writeData: length of data is not valid", this->portNum, adr);
+            throw theDationParamSignal;
         }
         
-        MUTEX_LOCK();
+        mutex.lock();
         i2c_cmd_handle_t cmd = i2c_cmd_link_create();
         try{
             i2c_master_start(cmd);
@@ -142,22 +134,23 @@ namespace pearlrt{
             ret = i2c_master_cmd_begin((i2c_port_t)this->portNum, cmd, 1000 / portTICK_RATE_MS);
             if (ret != ESP_OK) {
                 i2c_cmd_link_delete(cmd);
-                MUTEX_UNLOCK();
-                LOGGER("EspI2CBus on Port %d, Adress %x in readData: (%s)", this->portNum, adr, esp_err_to_name(ret));
-                THROW_WRITINGFAIL
+                mutex.unlock();
+                Log::error("EspI2CBus on Port %d, Adress %x in readData: (%s)",
+                       this->portNum, adr, esp_err_to_name(ret));
+                throw theWritingFailedSignal;
             }
-        } catch (TERMINATE_TASK) {
+        } catch (TerminateRequestSignal &s) {
             i2c_cmd_link_delete(cmd);
-            MUTEX_UNLOCK();
             throw;
         }
         i2c_cmd_link_delete(cmd);
-        MUTEX_UNLOCK();
+        mutex.unlock();
         return n;
     }
     
     void Esp32I2CBus::rdwr(int n, I2CProvider::I2CMessage* data) {
-      LOGGER("I2C Bus: repeated start function not included");
-      THROW_DATIONFAIL
+      Log::error("I2C Bus: repeated start function not included");
+
+      throw theInternalDationSignal;
     }
 }

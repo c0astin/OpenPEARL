@@ -80,9 +80,11 @@ XMLFILES += openpearlComponent/Console.xml
 XMLFILES += openpearlComponent/Esp32Uart.xml
 XMLFILES += openpearlComponent/Esp32WifiConfig.xml
 XMLFILES += openpearlComponent/Esp32MqttTcpClient.xml
+XMLFILES += openpearlComponent/Esp32I2CBus.xml
 #XMLFILES += esp-idf/components/boardsupport/Esp32BME280.xml
 #XMLFILES += esp-idf/components/boardsupport/Esp32Wifi.xml
 #XMLFILES += esp-idf/components/boardsupport/TcpIpServer.xml
+$(warning XMLFILES=$(XMLFILES))
 
 define esp32build
 make -C esp-idf-project
@@ -120,7 +122,6 @@ esp-idf-build: ../common/Signals.hh ../common/Signals.hcc
 	@echo "[create] $@"
 	export IDF_PATH=$(ESP_IDF_PATH)
 	$(call esp32build)
-
 
 esp32.xml: $(XMLFILES)
 	@echo "[create] $@"

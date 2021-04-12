@@ -31,38 +31,8 @@
 #define Esp32I2CBus_INCLUDED
 
 #include "I2CProvider.h"
+#include "Mutex.h"
 
-#define TESTMODE 0
-
-#if !TESTMODE
-    #include "Mutex.h"
-    #define LOW_CPU_CLCK                0
-    #define MUTEX_TYPE                  Mutex
-    #define INIT_MUTEX(...)             mutex.name(__VA_ARGS__)
-    #define MUTEX_LOCK(...)             mutex.lock(__VA_ARGS__)
-    #define MUTEX_UNLOCK(...)           mutex.unlock(__VA_ARGS__)
-    #define LOGGER(...)                 Log::error(__VA_ARGS__)
-    #define THROW_PARAMFAIL             throw theDationParamSignal;
-    #define THROW_DATIONFAIL            throw theInternalDationSignal;
-    #define THROW_READINGFAIL           throw theReadingFailedSignal;
-    #define THROW_WRITINGFAIL           throw theWritingFailedSignal;
-    #define TERMINATE_TASK              TerminateRequestSignal s
-#else
-    #warning ESP32IC2Bus is currently not configured for openpearl -> define TESTMODE 1 
-    
-    #define LOW_CPU_CLCK                1
-    #define MUTEX_TYPE                  void*
-    #define INIT_MUTEX(...)             mutex = xSemaphoreCreateMutex()
-    #define MUTEX_LOCK(...)             xSemaphoreTake((SemaphoreHandle_t)mutex, portMAX_DELAY)
-    #define MUTEX_UNLOCK(...)           xSemaphoreGive((SemaphoreHandle_t)mutex)
-    #define LOGGER(...)                 printf(__VA_ARGS__)
-    #define THROW_PARAMFAIL             throw "PARAMFAIL";
-    #define THROW_DATIONFAIL            throw "DATIONFAIL";
-    #define THROW_READINGFAIL           throw "READINGFAIL";
-    #define THROW_WRITINGFAIL           throw "WRITINGFAIL";;
-    #define TERMINATE_TASK              ...
-#endif
-    
 /**
 \file
 */
@@ -79,7 +49,7 @@ namespace pearlrt {
    */
    class Esp32I2CBus : public I2CProvider {
    private:
-      MUTEX_TYPE mutex;
+      Mutex mutex;
       int portNum;
    public:
       /**
@@ -90,8 +60,9 @@ namespace pearlrt {
       \param scl the pin number configured for the scl wire
       \param sclSpeed configured clockspeed: 100000 bit/s or 400000 bit/s
       
-      //\throws theDationParamSignal if the parameters are not configured correctly
-      //\throws theInternalDationSignal if the driver install fails
+      \throws theDationParamSignal if the parameters are not
+                 configured correctly
+      \throws theInternalDationSignal if the driver install fails
       */
       Esp32I2CBus(int portNum, int sda, int scl, int sclSpeed);
 
@@ -100,7 +71,8 @@ namespace pearlrt {
       \param adr address of the i2c device
       \param n maximum number of expected data bytes
       \param data buffer of data elements
-      \throws theDationParamSignal if the parameters are not configured correctly
+      \throws theDationParamSignal if the parameters are not
+                   configured correctly
       \throws ReadingFailedSignal if a read problem was detected
       \returns number of receive data bytes
       */
@@ -112,7 +84,8 @@ namespace pearlrt {
       \param n number of data bytes to be written
       \param data buffer of data elements
       \returns number of transmitted data bytes
-      \throws theDationParamSignal if the parameters are not configured correctly
+      \throws theDationParamSignal if the parameters are not
+                  configured correctly
       \throws WritingFailedSignal if a write problem was detected
       */
       int writeData(int adr, int n, uint8_t *data);
