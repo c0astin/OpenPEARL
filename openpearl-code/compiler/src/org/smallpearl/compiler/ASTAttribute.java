@@ -29,7 +29,6 @@
 
 package org.smallpearl.compiler;
 
-import jdk.nashorn.internal.runtime.arrays.TypedArrayData;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
