@@ -38,10 +38,6 @@
 */
 
 
-#include "Clock.h"
-#include "Duration.h"
-#include "Log.h"
-#include "Fixed.h"
 #include "TaskCommon.h"
 #include "TaskTimerCommon.h"
 
@@ -73,103 +69,9 @@ namespace pearlrt {
       /**
       pointer to a callback function defined for easier coding
       */
-//      typedef void (*TimerCallback)(TaskCommon*);
    private:
-//      int counts;   //remaining number of timer periods to repeat the action
-//      int countsBackup;  //number of timer periods to repeat the action
       int signalNumber;
-//      TaskCommon* task;
-//      TimerCallback callback;
-//      timer_t timer;     // the timer
-//      struct itimerspec its;  // the timer data required in triggered when
    public:
-
-      /**
-      ctor - just construct the timer data
-
-      The timer data is set up - the timer is nether set, nor started
-      The timer is set via the set() method , which take all
-      time related scheduling parameters as given by the scheduling
-      operation.
-      The timer cancels automatically, if the schedule expires.
-      */
-      TaskTimer();
-
-      /*
-      setup the timer for the given schedule
-
-      The method check for valid scheduling conditions and
-      throws exceptions if the scheduling condition is not valid.
-
-      If the scheduling condition is valid, the systems timer data
-      structure is set up.
-
-      \param condition 	the scheduling condition. This parametered is an
-                       	ORed expression of task scheuduling flags
-      \param at	       	an exact start time
-      \param after	start delay
-      \param all	the cycle period
-      \param until    	an exact end time
-      \param during   	the execution period for the timer. The enabled
-                        time period starts relative to the execution
-                        of this statement
-      */
-      void set(
-         int condition,
-         Clock at,
-         Duration after,
-         Duration all,
-         Clock until,
-         Duration during);
-
-      /**
-      cancel the timer.
-      A stopped timer may be started again.
-      A cancelled timer must be set before it may be restarted.
-
-      In case the timer is active, it is stopped and cancelled.
-      If the timer is not active it is only cancelled.
-
-      \returns 0 on success; <br>-1 on error
-      */
-      int cancel();
-
-   private:
-      /**
-      stop the timer.
-
-      A stopped timer may be started again.
-      A cancelled timer must be set before it may be restarted.
-
-      In case the timer is active, it is stopped.
-      If the timer is not active: no operation.
-
-      \returns 0 on success; <br>-1 on error
-      */
-      int stop();
-
-   public:
-      /**
-      start the timer.
-
-      At each timer event the callback function is called.
-
-      \returns 0 on success; -1 else
-      */
-      int start();
-
-      /** check if timer is active
-      \returns true, if the timer is active<br>
-               false, if the timer is not active
-      */
-      bool isActive();
-
-      /** check if timer is set
-
-      \returns true, if the timer is set<br>false, if the timer is not set
-      */
-      bool isSet();
-
       /**
       initialize the timer facility
 
@@ -198,27 +100,6 @@ namespace pearlrt {
       */
       void create(TaskCommon * task, int signalNumber, TimerCallback cb);
 
-      /**
-      update at timer event.
-
-      This method is only required inside of the class.
-      It is common to all plattforms. The plattform specific part
-      must call this method on each timer event.
-      */
-      void update();
-
-#if 0
-      /**
-      print detailed status of timer into given string
-
-      \param id short form of the time 'ACT' or 'CONT'. This
-             parameter is set by the calling function and passed
-             to the resulting string
-      \param line string which receives the details about the timer
-             status
-      */
-      void detailedStatus(char * id, char * line);
-#endif
    };
 
 

@@ -906,6 +906,8 @@ namespace pearlrt {
                            Clock at,
                            Duration after,
                            Interrupt* when) {
+      static const Duration nullDelay(0,0);
+
       if (condition == 0) {
          return;
       }
@@ -933,6 +935,11 @@ namespace pearlrt {
          schedContinueData.when = when;
          schedContinueData.when->registerContinue(this,&nextContinue);
       } else {
+         if ((after==nullDelay).getBoolean()) {
+            // AFTER 0 SEC RESUME is no operation
+            mutexUnlock();
+            return;
+         }
 
          try {
             schedContinueData.taskTimer->set(Task::AFTER, Clock(),
@@ -959,7 +966,7 @@ namespace pearlrt {
       }
 
       // do the plattform specific part ... the release the mutexTasks lock
-      // is donew in the platform specific code
+      // is done in the platform specific code
       DEBUG("%s: call suspendMySelf", getCallingTaskName());
       suspendMySelf();
    }

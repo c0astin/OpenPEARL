@@ -44,7 +44,6 @@
 
 #include <bits/local_lim.h>  // PTHREAD_STACK_MIN
 #include <time.h>
-#include <errno.h>
 #include <sys/signalfd.h>  // signalfd
 
 #include "SignalMapper.h"
@@ -52,34 +51,8 @@
 #include "UnixSignal.h"
 #include "TaskTimer.h"
 #include "Log.h"
-#include "Task.h"
 
 namespace pearlrt {
-
-   void TaskTimer::update() {
-      //check for endcondition for during
-      if (counts < 0) {
-         // do it eternally
-      } else {
-         counts --;
-
-         if (counts == 0) {
-            // became zero --> stop timer
-            if (stop()) {
-               // error during cancellation
-               // ?????????????????????????
-            }
-         }
-      }
-
-      callback(task);
-      return;
-   }
-
-   TaskTimer::TaskTimer() {
-      counts = 0;
-      countsBackup = 0;
-   }
 
    void TaskTimer::create(TaskCommon * task, int signalNumber,
                           TimerCallback cb) {
@@ -98,174 +71,6 @@ namespace pearlrt {
          throw theInternalTaskSignal;
       }
    }
-
-   void TaskTimer::set(int condition,
-                       Clock at, Duration after, Duration all,
-                       Clock until, Duration during) {
-      int counts;
-      static const Duration nullDelay(0,0);
-      static const Duration oneDay(24 * 60 * 60,0);
-      Clock now = Clock::now();
-
-      // calculate start delay
-      if (condition & TaskCommon::AFTER) {
-         if ((after <= nullDelay).getBoolean()) {
-            Log::error("Task %s: negative value at AFTER", task->getName());
-            throw theIllegalSchedulingSignal;
-         }
-
-         counts = 1;
-      } else {
-         after = nullDelay;  // start immedially
-         counts = 0;
-      }
-
-      if (condition & TaskCommon::AT) {
-         after = at - now;
-
-         if ((after < nullDelay).getBoolean()) {
-            Log::warn("Task %s: negative value at AFTER --> next day",
-                      task->getName());
-
-            do {
-               after += oneDay;
-            } while ((after < nullDelay).getBoolean());
-         }
-
-         counts = 1;
-      }
-
-      its.it_value.tv_sec = after.getSec();
-      its.it_value.tv_nsec = after.getUsec() * 1000;
-      // calculate repetition counter for the schedule
-      its.it_interval.tv_sec = 0;
-      its.it_interval.tv_nsec = 0;
-
-      // calculate repetition counts
-      if (condition & TaskCommon::ALL) {
-         if ((all <= nullDelay).getBoolean()) {
-            Log::error("Task %s: negative value at ALL", task->getName());
-            throw theIllegalSchedulingSignal;
-         }
-
-         its.it_interval.tv_sec = all.getSec();;
-         its.it_interval.tv_nsec = all.getUsec() * 1000;
-
-         if (condition & TaskCommon::UNTIL) {
-            // transform absolute end time into relative duration
-            during = until - now;
-
-            // the AT-value is transformed into an AFTER some lines
-            // above --> treat both
-            if (condition & (TaskCommon::AT | TaskCommon::AFTER)) {
-               during = during - after;
-            }
-
-            if ((during <= nullDelay).getBoolean()) {
-               do {
-                  during += oneDay;
-               } while ((during < nullDelay).getBoolean());
-            }
-
-            counts = (during / all).x + 1;
-         } else if (condition & TaskCommon::DURING) {
-            // the AT-value is transformed into an AFTER some lines
-            // above --> treat both
-            /* regard DURING based on the end of the delayed start
-               --> remove these lines
-                        if (condition & (TaskCommon::AT | TaskCommon::AFTER)) {
-                           during = during - after;
-                        }
-            */
-            if ((during <= nullDelay).getBoolean()) {
-               Log::error("Task %s: negative (effective) value at DURING",
-                          task->getName());
-
-               throw theIllegalSchedulingSignal;
-            }
-
-            counts = (during / all).x + 1;
-            Log::debug(
-               "task %s: scheduled after=%.3f s all %.3f s %d times",
-               task->getName(),
-               its.it_value.tv_sec + its.it_value.tv_nsec / 1e9,
-               its.it_interval.tv_sec + its.it_interval.tv_nsec / 1e9,
-               counts);
-         } else {
-            counts = -1;
-            Log::debug(
-               "task %s: scheduled  after=%.3f s all %.3f s eternally",
-               task->getName(),
-               its.it_value.tv_sec + its.it_value.tv_nsec / 1e9,
-               its.it_interval.tv_sec + its.it_interval.tv_nsec / 1e9);
-         }
-      }
-
-      if ((condition & (TaskCommon:: AT | TaskCommon::ALL | TaskCommon::AFTER |
-                        TaskCommon::UNTIL | TaskCommon::DURING)) != 0) {
-         // timed activate/continue, set initial delay to repetion delay
-         // if no initial delay is specified
-         if (its.it_value.tv_sec == 0 && its.it_value.tv_nsec == 0) {
-            its.it_value.tv_sec = its.it_interval.tv_sec;
-            its.it_value.tv_nsec = its.it_interval.tv_nsec;
-         }
-      }
-
-      countsBackup = counts;
-   }
-
-   int TaskTimer::start() {
-      counts = countsBackup;   // restore number for triggeredActivate
-      Log::debug("%s: TaskTimer::start", task->getName());
-
-      if (its.it_value.tv_sec != 0 || its.it_value.tv_nsec != 0) {
-         if (timer_settime(timer, 0, &its, NULL) == -1) {
-            Log::error("task %s: error setting schedule timer (%s)",
-                       task->getName(), strerror(errno));
-            return (-1);
-         }
-      }
-
-      return 0;
-   }
-
-   bool TaskTimer::isActive() {
-      return counts != 0;
-   }
-
-   bool TaskTimer::isSet() {
-      return countsBackup != 0;
-   }
-
-   int TaskTimer::stop() {
-      // need local variable to keep time settings of the time
-      // unchanged for new start of the timer
-      struct itimerspec its;
-
-      its.it_value.tv_sec = 0;
-      its.it_value.tv_nsec = 0;
-      its.it_interval.tv_sec = 0;
-      its.it_interval.tv_nsec = 0;
-      counts = 0;
-
-      //kill the timer
-      if (timer_settime(timer, 0, &its, NULL) == -1) {
-         Log::error(
-            "task %s: error cancelling timer (%s)",
-            task->getName(), strerror(errno));
-         return (-1);
-      }
-
-      return 0;
-   }
-
-
-
-   int TaskTimer::cancel() {
-      countsBackup = 0;
-      return stop();
-   }
-
 
 
    /*---------------------------------------------------------------*/
@@ -407,7 +212,7 @@ namespace pearlrt {
             Log::error("timerTask: got wrong size");
          }
 
-         TaskTimer * t = (TaskTimer*)si.ssi_ptr;
+         TaskTimerCommon * t = (TaskTimerCommon*)si.ssi_ptr;
 
          if (si.ssi_signo == (uint32_t)SIG_ACTIVATE) {  // activate
             t->update();

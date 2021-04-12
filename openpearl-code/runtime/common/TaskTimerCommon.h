@@ -75,6 +75,16 @@ namespace pearlrt {
       struct itimerspec its;  ///< the timer data required in triggered when
 
    public:
+      /**
+      ctor - just construct the timer data
+
+      The timer data is set up - the timer is nether set, nor started
+      The timer is set via the set() method , which take all
+      time related scheduling parameters as given by the scheduling
+      operation.
+      The timer cancels automatically, if the schedule expires.
+      */
+      TaskTimerCommon();
 
       /**
       setup the timer for the given schedule
@@ -95,13 +105,13 @@ namespace pearlrt {
                         time period starts relative to the execution
                         of this statement
       */
-      virtual void set(
+      void set(
          int condition,
          Clock at,
          Duration after,
          Duration all,
          Clock until,
-         Duration during) = 0;
+         Duration during);
 
       /**
       cancel the timer.
@@ -113,7 +123,7 @@ namespace pearlrt {
 
       \returns 0 on success; <br>-1 on error
       */
-      virtual int cancel() = 0;
+      int cancel();
 
       /**
       start the timer.
@@ -124,7 +134,7 @@ namespace pearlrt {
 
       \returns 0 on success; -1 else
       */
-      virtual int start() = 0;
+      int start();
 
       /** check if timer is active
 
@@ -133,7 +143,7 @@ namespace pearlrt {
 
       \returns true, if the time is still active<br>false else
       */
-      virtual bool isActive() = 0;
+      bool isActive();
 
       /** check if timer is set
 
@@ -143,7 +153,31 @@ namespace pearlrt {
 
       \returns true, if the time is set <br>false else
       */
-      virtual bool isSet() = 0;
+      bool isSet();
+
+   private:
+      /**
+      stop the timer.
+
+      A stopped timer may be started again.
+      A cancelled timer must be set before it may be restarted.
+
+      In case the timer is active, it is stopped.
+      If the timer is not active: no operation.
+
+      \returns 0 on success; <br>-1 on error
+      */
+      int stop();
+ 
+   public:
+      /**
+      update at timer event.
+
+      This method is only required inside of the class.
+      It is common to all plattforms. The plattform specific part
+      must call this method on each timer event.
+      */
+      void update();
 
       /**
        print detailed status of timer into given string
