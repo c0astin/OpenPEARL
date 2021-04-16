@@ -105,14 +105,14 @@ definition of an error output channel.
 For the example of a system part as given below, a typical linux computer
 system is considered, with the following provided system names in \OpenPEARL{}:
 
-\begin{tabular}{ll@{\x}p{6cm}}
+\begin{tabular}{ll@{\x}p{8cm}}
 SystemName & Parameter & Device \\ \hline
 StdIn  &  - & standard input \\
 StdOut  &  - & standard output \\
 Disc       & '/home', 10 & files for reading and writing are located in the given folder. The maximum of concurrent open files also specified. \\
-RPiDigitalIn & ... & Digital input: Details are described in 
+RPiDigitalIn & ... & Digital input on an Rapberry Pi: Details are described in 
 		the plattform users guide \\
-RPiDigitalOut & ... & Digital output: Details are described in 
+RPiDigitalOut & ... & Digital output on an Rapberry Pi: Details are described in 
 		the plattform users guide \\
 \end{tabular}
 
@@ -127,9 +127,10 @@ SYSTEM;
    folder:   Disc('/tmp' ,10) ;  
    counter:  RPiDigitalIn(2,1); 
    switch:   RPiDigitalOut(3,1); 
-   motor:    RPiDigitalOut(8,4); ! Bit 8-11
+   motor:    RPiDigitalOut(8,4); ! Bit 8-5
    ic2bus1:  I2CBus('/dev/i2c-0', 100000);
    temp:     LM75('48'B4) --- i2cbus1;
+   temp1:    LM75('49'B4) --- i2cbus1;
 
    ! configuration elements 
    Log('EW') --- LogFile('pearl_log.txt') --- folder; 
@@ -140,14 +141,71 @@ PROBLEM;
 %%%\end{added}
 
 %%%\begin{added}
+The denotation of bits as used in \code{RPiDigitalIn} and \code{RPiDigitalOut}
+in the system part is traditionally
+defined by the starting bit number and number of bits.
+
 The configuration item for logging denotes that errors and warnings ('EW')
 should be gathered in the file '\code{pearl\_log.txt}' in the disc folder specified
-by the previous defined folder on the disc drive.
-%%%\end{added}
+by the previous defined \code{folder} on the disc drive.
 
-The available devices and the associated system names must be taken from
+
+Regard that some system deviced may be instanciated multiple times like \code{RPiDigitalOut}
+--- others like \code{I2CBus} may only instanciated once.
+ This feature and 
+the available devices and the associated system names must be taken from
 the corresponding user manual of the \OpenPEARL{} platform 
 specific implementation.
+
+In order to use such elements by multiple system names an 
+\code{Identifier}$\S $UsernameOfConnectionProvider should be used  as shown with the
+declarations of \code{temp} and \code{temp1}.
+The system structure is shown graphically in figure \ref{fig:systemStructure}.
+
+\begin{figure}
+\setlength{\unitlength}{1 mm}%
+\begin{picture}(140,70)
+\thicklines
+\put(110,5){\colorbox{gray!20}{\framebox(30,60){}}}
+\put(115,60){Raspberry Pi}
+\put( 90,50){\colorbox{white}{\framebox(30,5){StdIn}}}
+\put( 90,43){\colorbox{white}{\framebox(30,5){StdOut}}}
+\put( 90,36){\colorbox{white}{\framebox(30,5){Disc}}}
+\put( 90,29){\colorbox{white}{\framebox(30,5){RPiDigitalIn}}}
+\put( 90,22){\colorbox{white}{\framebox(30,5){RPiDigitalOut}}}
+\put( 90, 8){\colorbox{white}{\framebox(30,5){I2CBus}}}
+
+\put(60,50){\framebox(20,5){termin}}
+\put(80,52.5){\line(1,0){11}}
+\put(60,43){\framebox(20,5){termout}}
+\put(80,45.5){\line(1,0){11}}
+\put(60,36){\framebox(20,5){folder}}
+\put(80,38.5){\line(1,0){11}}
+\put(30,36){\framebox(20,5){LogFile}}
+\put(50,38.5){\line(1,0){10}}
+\put(0,36){\framebox(20,5){Log}}
+\put(20,38.5){\line(1,0){10}}
+\put(60,29){\framebox(20,5){counter}}
+\put(80,31.5){\line(1,0){11}}
+\put(60,22){\framebox(20,5){switch}}
+\put(80,24.5){\line(1,0){11}}
+\put(60,15){\framebox(20,5){motor}}
+\put(80,17.5){\line(2,1){11}}
+\put(60,8 ){\framebox(20,5){ic2bus}}
+\put(80,10.5){\line(1,0){11}}
+\put(00,15){\framebox(20,5){temp}}
+\put(20,17.5){\line(1,0){10}}
+\put(30,15){\framebox(20,5){LM75}}
+\put(50,17.5){\line(2,-1){10}}
+\put(00, 8){\framebox(20,5){temp1}}
+\put(20,10.5){\line(1,0){10}}
+\put(30,8){\framebox(20,5){LM75}}
+\put(50,10.5){\line(1,0){10}}
+\end{picture}
+\caption{System structure of example above}
+\label{fig:systemStructure}
+\end{figure}
+%%%\end{added}
 
 \section{Specification and Declaration of Data Stations (DATION) in 
 the Problem Part}   % 10.2
