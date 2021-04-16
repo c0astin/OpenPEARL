@@ -80,7 +80,6 @@ namespace pearlrt {
          Log::debug("fromT: width < 0");
          throw theClockFormatSignal;
       }
-//printf("w=%d d= %d\n", width, decimals);
 
       GetHelper helper(w, &source);
       helper.setDelimiters(GetHelper::EndOfLine);
@@ -100,7 +99,6 @@ namespace pearlrt {
                } else {
                   // read seconds
                   width = helper.getRemainingWidth();
-//printf("h=%d min = %d\n", hours, min);
 
                   if (helper.readSeconds(&sec) > 0) {
                      if (sec < 60) {
@@ -130,7 +128,7 @@ namespace pearlrt {
 
       while (width > 0) {
          width --;
-         c1 = source.getChar();
+         c1 = helper.readChar();
 
          if (errorWithLog) {
             if (charsToSet > 0) {

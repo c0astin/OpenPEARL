@@ -75,7 +75,7 @@ namespace pearlrt {
 
       enum {NUMBER = 1, HRS = 2, MIN = 4, POINT = 8, 
  	    SEC = 16, SPACE = 32};
-      int possibleElements = NUMBER | SPACE;
+      int possibleElements = NUMBER | SPACE | POINT;
       int remainingElements = HRS | MIN | SEC | POINT;
 
       if (width <= 3) {
@@ -120,9 +120,18 @@ namespace pearlrt {
                   goto errorExit;
                }
             } else {
-               Log::error("D-format: number expected");
-	       errorExitWithoutLog = true;
-               goto errorExit;
+               c1 = helper.readChar();
+               if (c1 == '.') {
+                  // ok, we may have .xx  SEC
+                  // return '.' to input and check this in next loop iteration
+                  possibleElements = POINT; 
+                  remainingElements = POINT | SEC;
+                  source.unGetChar(c1);
+               } else {
+                  Log::error("D-format: number expected");
+	          errorExitWithoutLog = true;
+                  goto errorExit;
+               }
             } 
          } else {
             if (possibleElements & (HRS | MIN | SEC | POINT)) {
@@ -231,6 +240,7 @@ namespace pearlrt {
          }
       } while (possibleElements );
 
+
       if (!(hasHours || hasMinutes || hasSeconds || hasNumber)) {
           Log::error("D-format: no data in field");
 	  errorExitWithoutLog = true;
@@ -256,8 +266,9 @@ namespace pearlrt {
           throw theDurationValueSignal;
       } 
       
-      if ( helper.skipSpaces() == -1) {
-         // end of field reached with spaces
+      if ( helper.skipSpaces() < 0) {
+         // end of field reached with spaces (-1)
+         // or with delimiter (-2)
          return 0;
       }
 
@@ -275,7 +286,9 @@ errorExit:
 
       while (width > 0) {
          width --;
-         c1 = source.getChar();
+         //c1 = source.getChar();
+         c1 = helper.readChar();
+
          if (charsToSet > 0) {
             logText[setCharsAt++] = c1;
             charsToSet --;

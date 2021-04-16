@@ -254,13 +254,6 @@ namespace pearlrt {
       }
 
 endSampling:
-/*
-      if (skipSpaces() == 0) {
-         discardRemaining();
-         Log::error("F: illegal character in field");
-         throw theFixedValueSignal;
-      }
-*/
       if (decimalPointPosition < 0) {
          decimalPointPosition = digitsProcessed - decimals;
       }
