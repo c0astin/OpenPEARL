@@ -5,4 +5,7 @@
       </parameters>
       <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
       <data>ALL</data>
+      <associationProvider>
+         <associationType name="NamedAlphicOutProvider"/>
+      </associationProvider>
    </dation>

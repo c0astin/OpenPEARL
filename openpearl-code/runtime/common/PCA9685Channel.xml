@@ -9,6 +9,6 @@
       <needAssociation name="PCA9685Provider" />
       <checks>
          <check pinDoesNotCollide="PCA9685Channel"
-                start="channel" errorText="pwm channel" />
+                start="$channel" errorText="pwm channel" />
       </checks>
    </dation>

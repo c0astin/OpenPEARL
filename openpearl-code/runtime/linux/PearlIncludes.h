@@ -93,6 +93,9 @@ Only this file mus be included.
 #include "Semaphore.h"
 #include "Bolt.h"
 
+#include "Log.h"
+#include "LogFile.h"
+
 #include "SystemDationNBSink.h"
 #include "SystemDationNBSource.h"
 

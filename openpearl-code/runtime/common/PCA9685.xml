@@ -21,6 +21,6 @@
       </associationProvider>
       <needAssociation name="I2CBusProvider" />
       <checks>
-        <check i2cAdrDoesNotCollide="PCA8596" nonsharable="$iicAdr" />
+        <check i2cAdrDoesNotCollide="PCA8596" nonShareable="$iicAdr" />
       </checks>
    </connection>
