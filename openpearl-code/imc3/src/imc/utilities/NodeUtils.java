@@ -14,7 +14,7 @@ public class NodeUtils {
 	/**
 	 * return the child node which has the given name
 	 * 
-	 * @param node the node, who's childrens are subject on interrest
+	 * @param node the node, who's children are subject on interest
 	 * @param name the desired node name
 	 * @return the requested node, or null
 	 */

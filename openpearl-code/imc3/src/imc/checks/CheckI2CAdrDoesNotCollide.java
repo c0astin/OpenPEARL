@@ -1,17 +1,18 @@
 package imc.checks;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import imc.types.Module;
 import imc.types.ModuleEntrySystemPart;
 import imc.types.Platform;
 import imc.utilities.EvaluateNamedExpression;
 import imc.utilities.Log;
-
-import java.util.List;
-import java.util.ArrayList;
-
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  * check if an I2C address is not used conflicting with other devices on the same bus
@@ -98,6 +99,7 @@ public class CheckI2CAdrDoesNotCollide {
 							
 							Node nShare= nl.item(i).getAttributes().getNamedItem("shareable");
 							Node nonShare= nl.item(i).getAttributes().getNamedItem("nonShareable");
+							NamedNodeMap nn = nl.item(i).getAttributes();
 							if ( (nShare == null) == (nonShare==null)) {
 								imc.utilities.Log.internalError(se.getNameOfSystemelement()+" check i2cAdrDoesNotCollide needs ether attribute 'shareable' or 'nonShareable'");
 								return;
@@ -135,7 +137,7 @@ public class CheckI2CAdrDoesNotCollide {
 							// same address different device name
 							imc.utilities.Log.setLocation(m.getSourceFileName(), connectedDevices.get(j).se.getLine(),
 									connectedDevices.get(j).se.getCol());
-							imc.utilities.Log.error("I2C address of "+ connectedDevices.get(j).device + "already used.");
+							imc.utilities.Log.error("I2C address of "+ connectedDevices.get(j).device + " already used.");
 							Log.note(m.getSourceFileName(), connectedDevices.get(i).se.getLine(),
 									connectedDevices.get(i).se.getCol(),
 									"previous usage by "+ connectedDevices.get(i).device);
@@ -149,13 +151,14 @@ public class CheckI2CAdrDoesNotCollide {
 									" of '"+ connectedDevices.get(j).se.getUserName() + "' is already used");
 							Log.note(m.getSourceFileName(), connectedDevices.get(i).se.getLine(),
 									connectedDevices.get(i).getCol(),
-									"previous usage from '" + connectedDevices.get(i).se.getUserName() + "'");
+									"previous usage by '" + connectedDevices.get(i).se.getUserName() + "'");
 						}
 					}
 				}
 			}
 		}
 	}
+	
 
 	
 

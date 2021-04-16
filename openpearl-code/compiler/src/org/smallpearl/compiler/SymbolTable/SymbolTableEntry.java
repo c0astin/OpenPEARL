@@ -57,6 +57,12 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
     protected ParserRuleContext m_ctx;
     private static final int const_isUsed = 0x01;
     
+    // the symbol is defined in the system part
+    private static final int const_isUserName = 0x02;
+    
+    // the symbol is name of a SystemName (
+    private static final int const_isSystemName = 0x04;
+    
     SymbolTableEntry() {
         m_name = null;
         m_ctx=null;
@@ -67,6 +73,11 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
     SymbolTableEntry(String name) {
         m_name = name;
     }
+
+    SymbolTableEntry(ParserRuleContext ctx, String name) {
+      m_name = name;
+      m_ctx = ctx;
+  }
 
     public String getName() {
         return m_name;
@@ -132,4 +143,29 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
     public boolean isUsed() {
       return ((m_flags & const_isUsed) != 0);
     }
+
+    public void setIsUsername(boolean used) {
+      if (used) {
+        m_flags |= const_isUserName;
+      } else {
+        m_flags &= ~ const_isUserName;
+      }
+    }
+    
+    public boolean isUserName() {
+      return ((m_flags & const_isUserName) != 0);
+    }
+
+    public void setIsSystemName(boolean used) {
+      if (used) {
+        m_flags |= const_isSystemName;
+      } else {
+        m_flags &= ~ const_isSystemName;
+      }
+    }
+    
+    public boolean isSystemName() {
+      return ((m_flags & const_isSystemName) != 0);
+    }
+
 }

@@ -498,12 +498,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     ST decl = m_group.getInstanceOf("cpp_inline");
                     st.add("cpp_inlines",
                             visitCpp_inline((SmallPearlParser.Cpp_inlineContext) c));
-                } else if (c instanceof SmallPearlParser.Username_declarationContext) {
-                    visitUsername_declaration((SmallPearlParser.Username_declarationContext) c);
-                } else if (c instanceof SmallPearlParser.UserConfigurationWithoutAssociationContext) {
-                    visitUserConfigurationWithoutAssociation((SmallPearlParser.UserConfigurationWithoutAssociationContext) c);
-                } else if (c instanceof SmallPearlParser.UserConfigurationWithAssociationContext) {
-                    visitUserConfigurationWithAssociation((SmallPearlParser.UserConfigurationWithAssociationContext) c);
+   //             } else if (c instanceof SmallPearlParser.Username_declarationContext) {
+   //                 visitUsername_declaration((SmallPearlParser.Username_declarationContext) c);
+   //             } else if (c instanceof SmallPearlParser.UserConfigurationWithoutAssociationContext) {
+   //                 visitUserConfigurationWithoutAssociation((SmallPearlParser.UserConfigurationWithoutAssociationContext) c);
+   //             } else if (c instanceof SmallPearlParser.UserConfigurationWithAssociationContext) {
+   //                 visitUserConfigurationWithAssociation((SmallPearlParser.UserConfigurationWithAssociationContext) c);
                 }
             }
         }
@@ -5581,42 +5581,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return st;
     }
 
-    @Override
-    public ST visitUsername_declaration(
-            SmallPearlParser.Username_declarationContext ctx) {
-        return visitChildren(ctx);
-    }
-
-    @Override
-    public ST visitUsername_declaration_without_data_flow_direction(
-            SmallPearlParser.Username_declaration_without_data_flow_directionContext ctx) {
-        return visitChildren(ctx);
-    }
-
-    @Override
-    public ST visitUsername_declaration_with_data_flow_direction(
-            SmallPearlParser.Username_declaration_with_data_flow_directionContext ctx) {
-        return visitChildren(ctx);
-    }
-
-    @Override
-    public ST visitUserConfigurationWithAssociation(
-            SmallPearlParser.UserConfigurationWithAssociationContext ctx) {
-        return visitChildren(ctx);
-    }
-
-    @Override
-    public ST visitUserConfigurationWithoutAssociation(
-            SmallPearlParser.UserConfigurationWithoutAssociationContext ctx) {
-        return visitChildren(ctx);
-    }
-
-    @Override
-    public ST visitUsername_parameters(
-            SmallPearlParser.Username_parametersContext ctx) {
-        return visitChildren(ctx);
-    }
-
+ 
     @Override
     public ST visitTOFIXEDExpression(
             SmallPearlParser.TOFIXEDExpressionContext ctx) {

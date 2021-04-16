@@ -119,79 +119,86 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
   @Override
   public ST visitSystem_part(SmallPearlParser.System_partContext ctx) {
     systemPart = group.getInstanceOf("SystemPart");
-
+    
+    ErrorStack.enter(ctx, "system part");
     if (ctx != null) {
       visitChildren(ctx);
-//      for (ParseTree c : ctx.children) {
-//        if (c instanceof SmallPearlParser.Username_declarationContext) {
-//          st.add("decls", visitUsername_declaration((SmallPearlParser.Username_declarationContext) c));
-//        } else if (c instanceof SmallPearlParser.UserConfigurationWithoutAssociationContext) {
-//          st.add("decls", visitUserConfigurationWithoutAssociation((SmallPearlParser.UserConfigurationWithoutAssociationContext) c));
-//        } else if (c instanceof SmallPearlParser.UserConfigurationWithAssociationContext) {
-//          st.add("decls", visitUserConfigurationWithAssociation((SmallPearlParser.UserConfigurationWithAssociationContext) c));
-//        }
-//      }
     }
+    ErrorStack.leave();
 
     return null;
   }
 
+ 
   @Override
-  public ST visitUsername_declaration(SmallPearlParser.Username_declarationContext ctx) {
-    ST decl = group.getInstanceOf("Username_Declaration");
+  public ST visitSystemElementDefinition(SmallPearlParser.SystemElementDefinitionContext ctx) {
+    ST decl = group.getInstanceOf("SystemElementDefinition");
 
-    decl.add("username", ctx.ID().getText());
+    decl.add("username", ctx.systemPartName().getText());
     decl.add("lineno", ctx.start.getLine());
     decl.add("col",  ctx.start.getCharPositionInLine()+1);
-    if (ctx.username_declaration_with_data_flow_direction() != null) {
-      decl.add("decl", visitUsername_declaration_with_data_flow_direction(ctx.username_declaration_with_data_flow_direction()));
-    } else if (ctx.username_declaration_without_data_flow_direction() != null) {
-      decl.add("decl", visitUsername_declaration_without_data_flow_direction(ctx.username_declaration_without_data_flow_direction()));
-    }
+    decl.add("decl", visit(ctx.systemDescription()));
+
     systemPart.add("decls",  decl);
     return null;
   }
 
   @Override
-  public ST visitUsername_declaration_without_data_flow_direction(SmallPearlParser.Username_declaration_without_data_flow_directionContext ctx) {
-    ST decl = group.getInstanceOf("Username_Declaration_Without_Dataflow_Direction");
+  public ST visitConfigurationElement(SmallPearlParser.ConfigurationElementContext ctx) {
+    ST decl = group.getInstanceOf("ConfigurationElement");
 
     decl.add("lineno", ctx.start.getLine());
     decl.add("col",  ctx.start.getCharPositionInLine()+1);
-    decl.add("sysname", ctx.ID().toString());
+    decl.add("decl", visit(ctx.systemDescription()));
 
-    if (ctx.username_parameters() != null) {
-      decl.add("parameters", visitUsername_parameters(ctx.username_parameters()));
-    }
-
-    return decl;
+    systemPart.add("decls",  decl);
+    return null;
   }
 
+
   @Override
-  public ST visitUsername_declaration_with_data_flow_direction(SmallPearlParser.Username_declaration_with_data_flow_directionContext ctx) {
-    ST decl = group.getInstanceOf("Username_Declaration_With_Dataflow_Direction");
+  public ST visitSystemDescription(SmallPearlParser.SystemDescriptionContext ctx) {
+    ST decl = group.getInstanceOf("SystemDescription");
+    
+    // we may have
+    SymbolTableEntry se = m_currentSymbolTable.lookupSystemPartName(ctx.systemPartName().ID().toString());
+    // the symbol table visitor enshures that this entry is a system name
+    decl.add("sysname", se.getName()); ///ctx.systemPartName().ID().toString());
 
-    decl.add("sysname", ctx.ID(0).toString());
-
-    if (ctx.username_parameters() != null) {
-      decl.add("parameters", visitUsername_parameters(ctx.username_parameters(0)));
-
-      ST association = group.getInstanceOf("Association");
-      association.add("name", ctx.ID(1).toString());
-      if (ctx.username_parameters().size() > 1) {
-        association.add("parameters", visitUsername_parameters(ctx.username_parameters(1)));
+    if (ctx.systemElementParameters() != null) {
+      decl.add("parameters", visitSystemElementParameters(ctx.systemElementParameters()));
+    }
+    if (ctx.association().size() > 0) {
+      ST previousSt = decl;     
+      for (int i=0; i<ctx.association().size(); i++) {
+         ST association = group.getInstanceOf("Association");
+         previousSt.add("association", association);
+         String name = ctx.association(i).systemPartName().ID().toString();
+         se = m_currentSymbolTable.lookupSystemPartName(name);
+         
+         association.add("name", ctx.association(i).systemPartName().ID());
+         
+ 
+         if (ctx.association(i).systemElementParameters()!= null) {
+           if (se.isUserName()) {
+               // we have an user defined name as system element name
+               ErrorStack.add(ctx.association(i).systemPartName(),"no parameters allowed for user names","");
+               return null;
+            }
+            association.add("parameters", visitSystemElementParameters(ctx.association(i).systemElementParameters()));
+         }
+         previousSt = association;
+      
       }
-
-      decl.add("association", association);
     }
-
+    
     return decl;
   }
 
 
   @Override
-  public ST visitUsername_parameters(SmallPearlParser.Username_parametersContext ctx) {
-    ST parameters = group.getInstanceOf("Username_Parameters");
+  public ST visitSystemElementParameters(SmallPearlParser.SystemElementParametersContext ctx) {
+    ST parameters = group.getInstanceOf("SystemElementParameters");
 
     for (int i = 0; i < ctx.literal().size(); i++) {
       ST parameter = group.getInstanceOf("Parameter");
@@ -217,43 +224,6 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
     }
 
     return parameters;
-  }
-
-
-  @Override
-  public ST visitUserConfigurationWithoutAssociation(SmallPearlParser.UserConfigurationWithoutAssociationContext ctx) {
-    ST user_configuration = group.getInstanceOf("User_Configuration");
-
-    user_configuration.add("lineno", ctx.start.getLine());
-    user_configuration.add("col",  ctx.start.getCharPositionInLine());
-    user_configuration.add("sysname", ctx.user_configuration_without_association().ID().toString());
-
-    if (ctx.user_configuration_without_association().username_parameters() != null) {
-      user_configuration.add("parameters", visitUsername_parameters(ctx.user_configuration_without_association().username_parameters()));
-    }
-
-    systemPart.add("decl",  user_configuration);
-    return null;
-  }
-
-  @Override
-  public ST visitUserConfigurationWithAssociation(SmallPearlParser.UserConfigurationWithAssociationContext ctx) {
-    ST user_configuration = group.getInstanceOf("User_Configuration");
-
-    user_configuration.add("lineno", ctx.start.getLine());
-    user_configuration.add("col",  ctx.start.getCharPositionInLine()+1);
-    user_configuration.add("sysname", ctx.user_configuration_with_association().ID(0).toString());
-
-    if (ctx.user_configuration_with_association().username_parameters() != null) {
-      user_configuration.add("parameters", visitUsername_parameters(ctx.user_configuration_with_association().username_parameters()));
-    }
-
-    ST association = group.getInstanceOf("Association");
-    association.add("name", ctx.user_configuration_with_association().ID(1).toString());
-    user_configuration.add("association", association);
-
-    systemPart.add("decls", user_configuration);
-    return null;
   }
 
   @Override

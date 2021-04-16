@@ -1,5 +1,4 @@
 /*
- * [The "BSD license"]
  *  Copyright (c) 2012-2016 Marcel Schaible
  *  All rights reserved.
  *
@@ -57,6 +56,17 @@ import java.util.Vector;
  * <li>since the context is unique, we may store loop- and block-entries
  *     in a list (Vector) for the complete module
  * </ul>
+ * 
+ * Special treatment of names in system part.
+ * All names in the system part are stored in a static vector.
+ * Attributes may differ, if a name is user define (was seen in the system part left of the colon (':')
+ * <br>
+ *
+ * Supplied Methods:
+ * <ul>
+ * <li>enterSystemPartName
+ * <li>lookupSystemPartName
+ * </ul> 
  */
 public class SymbolTable {
 
@@ -240,6 +250,9 @@ public class SymbolTable {
     public void dump() {
         System.out.println();
         System.out.println("Symboltable:");
+        System.out.println(toString(m_systemPartNames));
+   
+        System.out.println("PROBLEM part:");
         System.out.println(toString()+"\n");
     }
 
@@ -528,7 +541,29 @@ public class SymbolTable {
         }
     }
 
+    public void enterSystemPartName(SymbolTableEntry se) {
+       m_systemPartNames.add(se);
+    }
+    
+    public SymbolTableEntry lookupSystemPartName(String name) {
+      SymbolTableEntry result = null;
+      for (int i=0; i<m_systemPartNames.size(); i++) {
+        if (name.equals(m_systemPartNames.elementAt(i).getName())) {
+          return m_systemPartNames.elementAt(i);
+        }
+      }
+      return result;
+    }
 
+    private String toString(Vector<SymbolTableEntry> v) {
+        String result = "SYSTEM part:\n";
+        for (int i=0; i< m_systemPartNames.size(); i++) {
+          SystemPartName s = (SystemPartName)(m_systemPartNames.elementAt(i)  );
+          result += s.toString(2) + "\n";
+        }
+        return result;
+    }
+    
     public void setUsesSystemElements() { m_usesSystemElements = true;}
     public boolean usesSystemElements() { return m_usesSystemElements;}
 
@@ -537,5 +572,6 @@ public class SymbolTable {
     public int m_level;
     private boolean m_usesSystemElements;
     private static  Vector<SymbolTableEntry>  m_loopsAndBlocks = new Vector<SymbolTableEntry>(); 
+    private static Vector<SymbolTableEntry> m_systemPartNames = new Vector<SymbolTableEntry>(); 
     
 }

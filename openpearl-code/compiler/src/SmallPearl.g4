@@ -94,41 +94,44 @@ module:
 
 system_part:
     'SYSTEM' ';'
-    ( username_declaration | user_configuration | cpp_inline )*
+    ( systemElementDefinition | configurationElement | cpp_inline )*
     ;
 
-////////////////////////////////////////////////////////////////////////////////
-//  SystemName ::=
-//    Identifier [ (nni§index) ]
-////////////////////////////////////////////////////////////////////////////////
+
+// Changes added by Hertwig modified by rainer (2021-04-13)
+////////////////////////////////////////////////////
+//
+// Possible composition of the PEARL system part (new syntax)
+// pca    : PCA9685Channel(0) --- PCA9685('40'B4,30) --- i2cbus;
+// tempsensor: LM75('48'B4) --- i2cbus;
+
+systemElementDefinition:
+    systemPartName ':' systemDescription ';'
+	;
+	
+systemPartName:
+    ID
+    ;
+    
+configurationElement:
+    systemDescription ';'
+	;
 
 ////////////////////////////////////////////////////////////////////////////////
-//  nni ::= IntegerWithoutPrecision§NonNegative
-////////////////////////////////////////////////////////////////////////////////
+// should match right hand side of system dation definition
+// as well as configuration elements
 
-////////////////////////////////////////////////////////////////////////////////
-// ExtensionProcessDevice ::=
-//  ⇤nni§ChannelNumber [ ⇤nni§Position [ , nni§Width ] ]
-////////////////////////////////////////////////////////////////////////////////
+systemDescription:
+	systemPartName systemElementParameters? (association)*
+	;
 
-////////////////////////////////////////////////////////////////////////////////
-//  DeviceAssociation ::=
-//    UserName: SystemName [ ExtensionProcessDevice ]
-////////////////////////////////////////////////////////////////////////////////
+association:
+    '---' systemPartName systemElementParameters?
+    ;
 
-////////////////////////////////////////////////////////////////////////////////
-//  UserName ::= Identifier
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-//  SystemName   Device
-//  -----------  -------------------------------------------------
-//  STDIN        standard input (console)
-//  STDOUT       standard output (console)
-//  SERIAL       for I/O with serial interfaces
-//  DISC         for reading and writing files (disk, floppy,...)
-//  DIGIO        digital I/O
-////////////////////////////////////////////////////////////////////////////////
+systemElementParameters:
+    '(' literal (',' literal)* ')'
+    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  DationSpecification ::=
@@ -182,58 +185,6 @@ problem_part:
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// Changes added by Hertwig ////////////////////////////////////////////////////
-//
-// Possible composition of the PEARL system part (new syntax)
-// Thus the grammar must be capable of dealing with this type of declaration
-// ...
-// i2cbus : i2cbus_1 ('/dev/i2cbus', 100000);
-// tempsensor : i2cbus <- LM75(100.000);	1st version
-// tempsensor : IN : i2cbus <--- LM75(100.000);	2nd version
-// tempsensor : IN : i2cbus --- LM75(100.000);	3rd version (final)
-
-username_declaration:
-    ID ':' (username_declaration_without_data_flow_direction |
-			username_declaration_with_data_flow_direction ) ';'
-	;
-
-////////////////////////////////////////////////////////////////////////////////
-
-username_declaration_without_data_flow_direction:
-	ID username_parameters?
-	;
-
-////////////////////////////////////////////////////////////////////////////////
-
-username_declaration_with_data_flow_direction:
-    ID username_parameters '---' ID username_parameters?
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-
-user_configuration:
-      user_configuration_without_association        #userConfigurationWithoutAssociation
-    | user_configuration_with_association           #userConfigurationWithAssociation
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-
-user_configuration_without_association:
-    ID username_parameters? ';'
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-
-user_configuration_with_association:
-    ID username_parameters? '---' ID ';'
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-
-username_parameters:
-    '(' literal (',' literal)* ')'
-    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO: Identification ::=

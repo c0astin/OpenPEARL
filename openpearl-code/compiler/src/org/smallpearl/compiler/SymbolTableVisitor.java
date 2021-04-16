@@ -103,21 +103,101 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         this.m_currentSymbolTable = this.symbolTable.newLevel(moduleEntry);
         this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
 
-        if (ctx != null) {
-            for (ParseTree c : ctx.children) {
-                if (c instanceof SmallPearlParser.System_partContext) {
-                    visitSystem_part((SmallPearlParser.System_partContext) c);
-                } else if (c instanceof SmallPearlParser.Problem_partContext) {
-                    visitProblem_part((SmallPearlParser.Problem_partContext) c);
-                }
-            }
-        }
-
+//        if (ctx != null) {
+//            for (ParseTree c : ctx.children) {
+//                if (c instanceof SmallPearlParser.System_partContext) {
+//                    visitSystem_part((SmallPearlParser.System_partContext) c);
+//                } else if (c instanceof SmallPearlParser.Problem_partContext) {
+//                    visitProblem_part((SmallPearlParser.Problem_partContext) c);
+//                }
+//            }
+//        }
+        
+        visitChildren(ctx);
+        
 
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;
     }
+    
+    @Override
+    public Void visitSystemElementDefinition(SmallPearlParser.SystemElementDefinitionContext ctx) {
+        Log.debug("SymbolTableVisitor:visitSystemElementDefinition:ctx" + CommonUtils.printContext(ctx));
 
+        if (ctx != null) {
+          String name = ctx.systemPartName().ID().toString();
+          SymbolTableEntry se = m_currentSymbolTable.lookupSystemPartName(name);
+          
+          if (se != null) {
+            if (se.isSystemName()) {
+               ErrorStack.enter(ctx);
+               ErrorStack.add("'"+name+"' already used as system name");
+               ErrorStack.note(se.getCtx(), "previous usage was here","");
+               ErrorStack.leave();
+            } else if (se.isUserName()) {
+              ErrorStack.enter(ctx);
+              ErrorStack.add("'"+name+"' already defined");
+              ErrorStack.note(se.getCtx(), "previous definition was here","");
+              ErrorStack.leave();
+            } else {
+              se.setIsUsername(true);
+            }
+          }
+         if (se == null) {
+          SystemPartName s = new SystemPartName(name,ctx);
+          s.setIsUsername(true);
+          m_currentSymbolTable.enterSystemPartName(s);
+         }
+//          // we must enshure that the SystemName is not used as Username
+//          String sysName = ctx.systemDescription().systemPartName().ID().toString();
+//          
+//          SymbolTableEntry entry1 = m_currentSymbolTable.lookupSystemPartName(sysName);
+//          if (entry1 == null) {
+//            s = new SystemPartName(name,ctx.systemDescription().systemPartName());
+//            m_currentSymbolTable.enterSystemPartName(s);
+//          } else {
+//            s.setIsSystemName(true);
+//          }
+         
+          visit(ctx.systemDescription());
+        }
+        return null;
+    }
+    
+    @Override
+    public Void visitSystemDescription(SmallPearlParser.SystemDescriptionContext ctx) {
+        Log.debug("SymbolTableVisitor:visitSystemElementDefinition:ctx" + CommonUtils.printContext(ctx));
+
+        if (ctx != null) {
+          String name = ctx.systemPartName().ID().toString();
+          // this name must be a name of a system element (e.g.StdOut)
+          SymbolTableEntry se = m_currentSymbolTable.lookupSystemPartName(name);
+          if (se != null && !se.isSystemName()) {
+            ErrorStack.enter(ctx);
+            ErrorStack.add("user name '"+name+"' not allowed");
+            ErrorStack.note(se.getCtx(), "previous definition was here","");
+            ErrorStack.leave();
+          }
+          if (se == null) {
+             SystemPartName s = new SystemPartName(name,ctx);
+             s.setIsSystemName(true);
+             m_currentSymbolTable.enterSystemPartName(s);
+          }
+          
+          // lets treat the associations
+          for (int i=0; i< ctx.association().size(); i++) {
+            AssociationContext a = ctx.association(i);
+            name = a.systemPartName().ID().getText();
+            se = m_currentSymbolTable.lookupSystemPartName(name);
+            if (se == null) {
+              se = new SystemPartName(name, a);
+              m_currentSymbolTable.enterSystemPartName(se);
+            }
+          }
+        }
+        return null;
+    }
+    
     @Override
     public Void visitProblem_part(SmallPearlParser.Problem_partContext ctx) {
         Log.debug("SymbolTableVisitor:visitProblem_part:ctx" + CommonUtils.printContext(ctx));
@@ -1506,7 +1586,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
             if (entry1 != null) {
                 ErrorStack.add("symbol " + dationName + " already defined");
-                //throw new DoubleDeclarationException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
             VariableEntry ve = new VariableEntry(dationName, d, ctx);

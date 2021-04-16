@@ -58,7 +58,7 @@ import java.util.List;
  */
 
 /**
- * The code generater class creates the C++-file with the system information
+ * The code generator class creates the C++-file with the system information
  * 
  * OpenPEARL make an intensive use of static objects. The sequence instantiation
  * of these objects in not defined across compilation units. User dation on
@@ -214,6 +214,9 @@ public class CodeGenerator {
 	private static void doAllPrerequisites(ModuleEntrySystemPart se, int remainingDepth) {
 		Log.setLocation(module.getSourceFileName(),se.getLine(),se.getCol());
 		Log.info("treat "+se.getNameOfSystemelement());
+		if (se.isCodeGenerated()) {
+			return;
+		}
 		if (remainingDepth >= 0) {
 			Association a = se.getAssociation();
 			if (a==null) {

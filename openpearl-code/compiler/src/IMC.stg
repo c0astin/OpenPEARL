@@ -50,7 +50,7 @@ ProblemPart(decls) ::= <<
 >>
 
 
-Username_Declaration(lineno,col,username,decl) ::= <<
+SystemElementDefinition(lineno,col,username,decl) ::= <<
 \<username name="<username>"  line="<lineno>" col="<col>" >
   <decl>
 \</username>
@@ -58,38 +58,35 @@ Username_Declaration(lineno,col,username,decl) ::= <<
 
 >>
 
-Username_Declaration_Without_Dataflow_Direction(lineno,col,sysname,parameters) ::= <<
-\<sysname name="<sysname>">
-  <if(parameters)><parameters><endif>
-\</sysname>
+ConfigurationElement(lineno,col,sys,decl) ::= <<
+\<configuration line="<lineno>" col="<col>" >
+   <decl>
+\</configuration>
+
 >>
 
-Username_Declaration_With_Dataflow_Direction(sysname,parameters,association) ::= <<
+
+SystemDescription(sysname,parameters,association) ::= <<
 \<sysname name="<sysname>">
   <if(parameters)><parameters><endif>
   <if(association)><association><endif>
 \</sysname>
+
 >>
 
-Username_Parameters(params) ::= <<
+
+SystemElementParameters(params) ::= <<
   \<parameters>
     <params: {param| <param> }; separator="\n">
   \</parameters>
 >>
 
-User_Configuration(lineno,col,sysname,parameters,association) ::= <<
-\<configuration line="<lineno>" col="<col>" >
-  \<sysname name="<sysname>" >
-    <if(parameters)><parameters><endif>
-    <association>
-  \</sysname>
-\</configuration>
 
->>
 
-Association(name,parameters) ::= <<
+Association(name,parameters,association) ::= <<
 \<association name="<name>">
   <if(parameters)><parameters><endif>
+   <association>
 \</association>
 >>
 

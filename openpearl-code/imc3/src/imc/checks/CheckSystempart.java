@@ -275,9 +275,9 @@ public class CheckSystempart {
 
 
 
-		// System.out.println("#P1= " + nbrModuleParameters + "  #P2="
-		// + nbrTargetParameters);
-
+//		System.out.println("#P1= " + nbrModuleParameters + "  #P2="
+//				+ nbrTargetParameters);
+//
 
 
 		if (nbrModuleParameters != nbrTargetParameters) {
@@ -293,36 +293,42 @@ public class CheckSystempart {
 		NodeList moduleParameterNodes = moduleParameters.getChildNodes();
 		NodeList targetParameterNodes = targetParameters.getChildNodes();
 		int targetParameterIndex = 0;
+		int parameterNbr = 0;
+
 
 		for (int i = 0; i < moduleParameterNodes.getLength(); i++) {
-			if (moduleParameterNodes.item(i).getNodeType() == Node.ELEMENT_NODE) {
-			//	System.out.println("ElementNode "
-		//		+ moduleParameterNodes.item(i).getNodeName());
 
-				Parameter p1 = new Parameter(moduleParameterNodes.item(i));
-		//		 System.out.println("P1: " + p1.getValue() + " " +
-		//		 p1.getType()
-		//		 + " " + p1.length());
-
-				// find next target parameter
-				while (targetParameterIndex < targetParameterNodes.getLength()
-						&& targetParameterNodes.item(targetParameterIndex)
-						.getNodeType() != Node.ELEMENT_NODE) {
-					targetParameterIndex++;
-				}
-
-				// das sollte nie passieren!
-				if (targetParameterIndex >= targetParameterNodes.getLength()) {
-					Log.internalError("CheckSystempart.compareParameterTypes: too many parameters given");
-					return false;
-				}
-
-				checkParameterTypeAndValue(i,
-						targetParameterNodes.item(targetParameterIndex),
-						p1, se);
-				targetParameterIndex++;
-				se.addParameter(p1);
+			if (moduleParameters.getChildNodes().item(i).getNodeType() != Node.ELEMENT_NODE) {
+				continue;
 			}
+
+//			System.out.println("ElementNode "
+//					+ moduleParameters.getChildNodes().item(i).getNodeName());
+
+			Parameter p1 = new Parameter(moduleParameters.getChildNodes().item(i));
+//			System.out.println("P1: " + p1.getValue() + " " +
+//					p1.getType()
+//			+ " " + p1.length());
+
+			// find next target parameter
+			while (targetParameterIndex < targetParameterNodes.getLength()
+					&& targetParameters.getChildNodes().item(targetParameterIndex)
+					.getNodeType() != Node.ELEMENT_NODE) {
+				targetParameterIndex++;
+			}
+
+			// das sollte nie passieren!
+			if (targetParameterIndex >= targetParameterNodes.getLength()) {
+				Log.internalError("CheckSystempart.compareParameterTypes: too many parameters given");
+				return false;
+			}
+
+			checkParameterTypeAndValue(parameterNbr,
+					targetParameters.getChildNodes().item(targetParameterIndex),
+					p1, se);
+			targetParameterIndex++;
+			se.addParameter(p1);
+			parameterNbr ++;
 		}
 
 		return true;
@@ -349,12 +355,12 @@ public class CheckSystempart {
 		}
 
 		if (type != p.getType()) {
-			Log.error("parameter "+parameterNumber+1 + " has wrong type '" + type + "' expected: '"
+			Log.error("parameter "+(parameterNumber+1) + " has wrong type '" + type + "' expected: '"
 					+ p.getType()+"'");
 			return false;
 		}
 		if (length < p.length()) {
-			Log.error("parameter "+parameterNumber+1 + " of type " + type + "(" + length
+			Log.error("parameter "+(parameterNumber+1) + " of type " + type + "(" + length
 					+ ") does not fit into expected type" + p.getType() + "("
 					+ p.length() + ")");
 			return false;
@@ -489,22 +495,28 @@ public class CheckSystempart {
 				nodeInPlatform = Platform.getInstance().getNodeOfSystemname(systemDevice);
 
 				Node providers = NodeUtils.getChildByName(nodeInPlatform, "associationProvider");
-				String providedAssociations = "";
-				NodeList nl = providers.getChildNodes();
 				boolean found = false;
-				for (int i=0; i< nl.getLength() && ! found; i++) {
-					if (nl.item(i).getNodeName() == "associationType") {
-						String p = nl.item(i).getAttributes().getNamedItem("name").getTextContent();
-						providedAssociations += p + " ";
-						if (p.equals(requiredAssociation)){
-							found = true;
+				
+		
+				String providedAssociations = "";
+				if (providers != null) {
+					NodeList nl = providers.getChildNodes();
+
+					for (int i=0; i< nl.getLength() && ! found; i++) {
+						if (nl.item(i).getNodeName() == "associationType") {
+							String p = nl.item(i).getAttributes().getNamedItem("name").getTextContent();
+							providedAssociations += p + " ";
+							if (p.equals(requiredAssociation)){
+								found = true;
+							}
 						}
 					}
 				}
 				if (! found) {
 					Log.setLocation(module.getSourceFileName(), se.getLine(),se.getCol());
-					Log.error("type of requested association not supported\n\trequested: "+requiredAssociation+
-							"\n\tsupported: "+providedAssociations);
+					Log.error("type of requested association not supported"+
+							"\n\t"+systemName+" requests: "+requiredAssociation+
+							"\n\t"+systemDevice+" supports: "+providedAssociations);
 				}
 			}
 		}	
