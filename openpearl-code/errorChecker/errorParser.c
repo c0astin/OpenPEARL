@@ -48,7 +48,7 @@ Error treatment
 #include <errno.h>
 #include <ctype.h>
 
-#define LINELENGTH 256
+#define LINELENGTH 1024
 #define SOURCELEN 128
 #define DEBUG 0
 

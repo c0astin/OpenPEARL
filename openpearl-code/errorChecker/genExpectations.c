@@ -23,7 +23,7 @@ The output is named like the source file, with the extension '.exp'
 #include <stdio.h>
 #include <errno.h>
 
-#define LINELENGTH 256
+#include "config.h"
 
 static void removeSpaces(char * line) {
    char * help=line;
