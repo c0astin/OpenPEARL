@@ -1,0 +1,111 @@
+MODULE(ProducerConsumer);
+SYSTEM;
+so: StdOut;
+
+PROBLEM;
+   SPC so DATION OUT SYSTEM ALPHIC;
+   DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+   DCL bufferSize INV FIXED INIT(10);
+   DCL buffer(0:bufferSize -1) FIXED;
+   DCL writeMutex SEMA PRESET(1);
+   DCL writePointer FIXED INIT(0);
+   DCL freeElement SEMA PRESET(10);!bufferSize);
+   DCL readMutex SEMA PRESET(1);
+   DCL readPointer FIXED INIT(0);
+   DCL usedElement SEMA PRESET(0);
+
+   DCL (goOnProduce, goOnConsume) BIT(1) INIT('1'B1,'1'B1);
+
+produce: PROC(data FIXED);
+   REQUEST freeElement;
+   REQUEST writeMutex;
+      buffer(writePointer) := data;
+      writePointer := (writePointer + 1) REM bufferSize;
+   RELEASE writeMutex;
+   RELEASE usedElement;
+END;
+
+consume: PROC RETURNS (FIXED);
+  DCL result FIXED;
+
+  REQUEST usedElement;
+  REQUEST readMutex;
+     result := buffer(readPointer);
+     readPointer := (readPointer+1) REM bufferSize;  
+  RELEASE readMutex;
+  RELEASE freeElement;
+  RETURN (result);
+END;
+
+p1: TASK PRIO 5;
+   WHILE goOnProduce REPEAT
+      produce(1);      
+      AFTER 0.2 SEC RESUME;
+   END;
+END;
+
+p2: TASK PRIO 4;
+   WHILE goOnProduce REPEAT
+      produce(2);      
+      AFTER 0.5 SEC RESUME;
+   END;
+END;
+
+p3: TASK PRIO 3;
+   WHILE goOnProduce REPEAT
+      produce(3);      
+      AFTER 0.8 SEC RESUME;
+   END;
+END;
+
+c1: TASK PRIO 2;
+   DCL data FIXED;
+   WHILE goOnConsume REPEAT
+      data=consume;
+      PUT 'consumer 1 got ' ,data TO stdout BY A,F(3),SKIP;
+      AFTER 0.1 SEC RESUME;
+   END;
+END;
+
+c2: TASK PRIO 20;
+   DCL data FIXED;
+   WHILE goOnConsume REPEAT
+      data=consume;
+      PUT 'consumer 2 got ' ,data TO stdout BY A,F(3),SKIP;
+   END;
+END;
+
+c3: TASK PRIO 21;
+   DCL data FIXED;
+   WHILE goOnConsume REPEAT
+      data=consume;
+      PUT 'consumer 3 got ' ,data TO stdout BY A,F(3),SKIP;
+   END;
+END;
+
+t1: TASK PRIO 1 MAIN;
+   OPEN stdout;
+   ACTIVATE c1;
+   ACTIVATE c2;
+   ACTIVATE c3;
+   ACTIVATE p1;
+   ACTIVATE p2;
+   ACTIVATE p3;
+   AFTER 10 SEC RESUME;
+   ! smooth shutdown ; first producer
+   PUT 'stop producers' TO stdout BY A, SKIP;
+   goOnProduce := '0'B1;
+
+   AFTER 1 SEC RESUME;
+   PUT 'stop consumers and send some dummy data for them' TO stdout BY A, SKIP;
+   goOnConsume := '0'B1;
+   ! smooth shutdown ; then the producer
+   produce(0);
+   produce(0);
+   produce(0);
+END;
+
+MODEND;
+   
+
