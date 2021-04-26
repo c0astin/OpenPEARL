@@ -40,6 +40,7 @@ stops the system when no more activity may occur
 #include <stdio.h>
 
 #include "TaskMonitor.h"
+#include "Control.h"
 #include "Log.h"
 
 // remove comments     vv  to enable debug messages
@@ -48,6 +49,7 @@ namespace pearlrt {
 
    TaskMonitor::TaskMonitor() {
       nbrPendingTasks = 0;
+      exitCallback = NULL;
       mutex.name("TaskMonitor");
    }
 
@@ -63,7 +65,10 @@ namespace pearlrt {
          //    vTaskEndScheduler();
          // Just print the end message to show the user that his application
          // has finished
-         printf("last task exited -- end.\n");
+         printf("last task exited -- end with exit code %d\n", Control::getExitCode());
+         if (exitCallback) {
+            (*exitCallback)();
+         }
          //exit(0);
       }
    }

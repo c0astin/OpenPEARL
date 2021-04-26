@@ -288,8 +288,11 @@ namespace pearlrt {
 
 
    static void noMoreTasksPendingHandler(int sig) {
-      printf("*** no more tasks active or scheduled --> stop\n");
-      Log::info("no more tasks active or scheduled --> stop");
+      printf("*** no more tasks active or scheduled "
+             "--> stop with exit code %d\n",
+         Control::getExitCode());
+      Log::info("no more tasks active or scheduled --> stop with code %d",
+         Control::getExitCode());
       sleep(1);
       Log::exit();
       exit(Control::getExitCode());

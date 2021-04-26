@@ -62,6 +62,14 @@ namespace pearlrt {
       TaskMonitor(TaskMonitor const&);			// hidden!!
       TaskMonitor& operator= (TaskMonitor const&);	// hidden!!
 
+      /**
+      pointer to callback function, which should become called 
+      at the end of the last task
+      
+      used in microcontroller environment for testing purposes
+      */
+      void (*exitCallback)();				
+
    public:
       /**
        get the object
@@ -93,6 +101,13 @@ namespace pearlrt {
          \returns the number of pending tasks
       */
       int getPendingTasks();
+
+      /**
+        set the exit callback function
+
+        the given function is invoked when the last task exits
+      */
+      void setExitCallback(void (*cb)());
    };
 
 /**

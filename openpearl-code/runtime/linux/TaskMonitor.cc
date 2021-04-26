@@ -49,6 +49,7 @@ namespace pearlrt {
 
    TaskMonitor::TaskMonitor() {
       nbrPendingTasks = 0;
+      exitCallback = NULL;
       pid = getpid();  // get current pid; necessary to send signal at the end
       mutex.name("TaskMonitor");
    }

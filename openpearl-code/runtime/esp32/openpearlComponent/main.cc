@@ -62,6 +62,7 @@ independent parts.
 #include "Signals.h"
 #include "TaskList.h"
 #include "Task.h"
+#include "TaskMonitor.h"
 #include "Control.h"
 #include "Log.h"
 #include "Clock.h"
@@ -126,13 +127,19 @@ printf("regiesterInit called with %p\n", fcn);
 
 #endif
 
+namespace pearlrt {
+  static void exitCallback() {
+     printf("esp32-exit callback called\n");
+  } 
+}
+
 using namespace pearlrt;
 /*-----------------------------------------------------------*/
 /**
 main entry to the OpenPearl application
 
 Show the list of defined tasks, activate all "MAIN"-tasks
-and start FreeRTOS-scheduler
+This is done in an FreeRTOS thread created by the esp-idf
 
 \returns nothing - will never return!
 */
@@ -150,6 +157,7 @@ extern "C" {
          Esp32Clock dummy(0);  // the object may be discarded immediately
       }
 
+      TaskMonitor::Instance().setExitCallback(exitCallback);
 
       printf("set log level \n");
 //      Log::getInstance()->setLevel(0x0c); //e+w

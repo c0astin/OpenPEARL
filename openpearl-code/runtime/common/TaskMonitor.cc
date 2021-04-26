@@ -69,4 +69,8 @@ namespace pearlrt {
       return nbrPendingTasks;
    }
 
+   void TaskMonitor::setExitCallback(void (*cb)()) {
+      exitCallback = cb;
+   }
+
 }
