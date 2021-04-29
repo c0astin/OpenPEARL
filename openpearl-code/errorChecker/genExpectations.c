@@ -205,9 +205,8 @@ printf("col=%d\n", annotation.col);
    fclose(output);
 
    if (annotationCount ==0) {
-      fprintf(stderr,"%s:%d: no annotation found\n",
+      fprintf(stderr,"%s: **** warning no annotation found\n",
              inputFileName);
-      return 1;
    } else {
       printf("%s: %d annotations found\n", inputFileName,annotationCount);
    }
