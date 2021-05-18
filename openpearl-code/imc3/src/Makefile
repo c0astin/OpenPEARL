@@ -25,7 +25,13 @@ clean:
 
 install: ../out/imc.jar
 	cp ../out/imc.jar $(CONFIG_INSTALL_Target)/bin/imc.jar
-	echo 'java -cp $(CONFIG_INSTALL_Target)/bin/imc.jar imc/main/InterModuleChecker -noNameSpace -b $$PLATTFORM  -I $(CONFIG_INSTALL_Target) -o system.cc $$fn' > ../imc.inc
+	echo '# auto generated file' > ./imc.inc
+	echo 'if [ "$$CONFIGELEMENT" = "" ]' >> ../imc.inc
+	echo 'then' >> ../imc.inc
+	echo '   java -cp $(CONFIG_INSTALL_Target)/bin/imc.jar imc/main/InterModuleChecker -noNameSpace -b $$PLATTFORM  -I $(CONFIG_INSTALL_Target) -o system.cc $$fn' >> ../imc.inc
+	echo 'else' >> ../imc.inc
+	echo '   java -cp $(CONFIG_INSTALL_Target)/bin/imc.jar imc/main/InterModuleChecker -noNameSpace -b $$PLATTFORM  $$CONFIGELEMENT -I $(CONFIG_INSTALL_Target) -o system.cc $$fn' >> ../imc.inc
+	echo 'fi' >> ../imc.inc
 
 prepare:
 	touch $(CONFIG_INSTALL_Target)/bin/imc.jar

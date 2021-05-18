@@ -1,0 +1,7 @@
+   <configuration name="SendXML">
+      <parameters>
+      </parameters>
+      <checks>
+ 	<check instances="oncePerSet" set="SendXML"/>
+      </checks>
+   </configuration>

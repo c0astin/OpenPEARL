@@ -157,7 +157,6 @@ extern "C" {
          Esp32Clock dummy(0);  // the object may be discarded immediately
       }
 
-      TaskMonitor::Instance().setExitCallback(exitCallback);
 
       printf("set log level \n");
 //      Log::getInstance()->setLevel(0x0c); //e+w
@@ -192,18 +191,22 @@ extern "C" {
 
       if (TaskList::Instance().size() == 0) {
          printf("no task defined --> exit.\n");
+         if (TaskMonitor::Instance().getExitCallback()) {
+            (*TaskMonitor::Instance().getExitCallback())();
+         }
          //exit(1); //!! no exit on esp32
-      }
+      } else {
 
-      /*****************init end*******************/
-      //activate all threads which declared with "main"
-      Log::info("start all main-threads");
+         /*****************init end*******************/
+         //activate all threads which declared with "main"
+         Log::info("start all main-threads");
 
-      for (int i = 0; i < TaskList::Instance().size();  i++) {
-         Task *t = TaskList::Instance().getTaskByIndex(i);
+         for (int i = 0; i < TaskList::Instance().size();  i++) {
+            Task *t = TaskList::Instance().getTaskByIndex(i);
 
-         if (t->getIsMain()) {
-            t->activate(t);
+            if (t->getIsMain()) {
+               t->activate(t);
+            }
          }
       }
 

@@ -15,7 +15,10 @@ public class UserDationTfuInformation extends SpcDclProblemPart{
 		this.tfusize=tfusize;
 	}
 	
-	
+	/**
+	 * 
+	 * @return user name of system element
+	 */
 	public String getSystemDationName() {
 		return systemDationName;
 	}

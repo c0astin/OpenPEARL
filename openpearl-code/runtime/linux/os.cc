@@ -283,7 +283,11 @@ namespace pearlrt {
 //signal handler for SIGXCPU - cpu time limit exeeded
    static void sigXCPU(int dummy) {
       Log::error("CPU time exeeded - emergency stop now.");
-      exit(1);
+      Control::setExitCode(-1);
+      if (TaskMonitor::Instance().getExitCallback()) {
+         (*TaskMonitor::Instance().getExitCallback())();
+      }
+      exit(Control::getExitCode());
    }
 
 
@@ -295,6 +299,9 @@ namespace pearlrt {
          Control::getExitCode());
       sleep(1);
       Log::exit();
+      if (TaskMonitor::Instance().getExitCallback()) {
+         (*TaskMonitor::Instance().getExitCallback())();
+      }
       exit(Control::getExitCode());
    }
 
@@ -307,7 +314,11 @@ namespace pearlrt {
 
       if (mask == NULL) {
          perror("CPU_ALLOC: ");
-         exit(1);
+         Control::setExitCode(-1);
+         if (TaskMonitor::Instance().getExitCallback()) {
+            (*TaskMonitor::Instance().getExitCallback())();
+         }
+         exit(Control::getExitCode());
       }
 
       //get the size in bytes of to hold cpu sets for n cores
@@ -324,7 +335,11 @@ namespace pearlrt {
       //set the CPU_MASK for the process
       if (sched_setaffinity(0, size, mask) != 0) {
          perror("setaffinity:");
-         exit(1);
+         Control::setExitCode(-1);
+         if (TaskMonitor::Instance().getExitCallback()) {
+            (*TaskMonitor::Instance().getExitCallback())();
+         }
+         exit(Control::getExitCode());
       }
 
       CPU_FREE(mask);
@@ -532,14 +547,22 @@ int main() {
       } catch (pearlrt::Signal & p) {
          fprintf(stderr,
                 "*** cannot write to default log file on ./pearl_log.txt --> exit\n");
-         exit(1); 
+         Control::setExitCode(-1);
+         if (TaskMonitor::Instance().getExitCallback()) {
+            (*TaskMonitor::Instance().getExitCallback())();
+         }
+         exit(Control::getExitCode());
       }
    }
 
 
    scanPearlRc();
    if (pearlRcFileOk == false) {
-      exit(1);
+      Control::setExitCode(-1);
+      if (TaskMonitor::Instance().getExitCallback()) {
+         (*TaskMonitor::Instance().getExitCallback())();
+      }
+      exit(Control::getExitCode());
    }
 
    if (!logFromSystemPart) {
@@ -570,12 +593,20 @@ int main() {
    //get min and max priority for the scheduling policy SCHED_RR
    if ((min = sched_get_priority_min(SCHED_RR)) == -1) {
       perror("sched_get_priority_min: ");
-      exit(1);
+      Control::setExitCode(-1);
+      if (TaskMonitor::Instance().getExitCallback()) {
+         (*TaskMonitor::Instance().getExitCallback())();
+      }
+      exit(Control::getExitCode());
    }
 
    if ((max = sched_get_priority_max(SCHED_RR)) == -1) {
       perror("sched_get_priority_max: ");
-      exit(1);
+      Control::setExitCode(-1);
+      if (TaskMonitor::Instance().getExitCallback()) {
+         (*TaskMonitor::Instance().getExitCallback())();
+      }
+      exit(Control::getExitCode());
    }
 
    param.sched_priority = max;
@@ -583,7 +614,11 @@ int main() {
 
    if (pthread_attr_init(&attr) != 0) {
       perror("init scheduling attributes");
-      exit(1);
+      Control::setExitCode(-1);
+      if (TaskMonitor::Instance().getExitCallback()) {
+         (*TaskMonitor::Instance().getExitCallback())();
+      }
+      exit(Control::getExitCode());
    }
 
 
@@ -599,7 +634,11 @@ int main() {
 
          if (pthread_attr_setschedparam(&attr, &param) != 0) {
             perror("error on setting priority");
-            exit(1);
+            Control::setExitCode(-1);
+            if (TaskMonitor::Instance().getExitCallback()) {
+               (*TaskMonitor::Instance().getExitCallback())();
+            }
+            exit(Control::getExitCode());
          }
       }
 
@@ -633,12 +672,20 @@ int main() {
 
    if (TaskList::Instance().size() == 0) {
       printf("no task defined --> exit.\n");
-      exit(1);
+      Control::setExitCode(1);
+      if (TaskMonitor::Instance().getExitCallback()) {
+         (*TaskMonitor::Instance().getExitCallback())();
+      }
+      exit(Control::getExitCode());
    }
 
    if (TaskList::Instance().getNbrOfMainTasks() == 0) {
       printf("no MAIN task defined --> exit.\n");
-      exit(1);
+      Control::setExitCode(1);
+      if (TaskMonitor::Instance().getExitCallback()) {
+         (*TaskMonitor::Instance().getExitCallback())();
+      }
+      exit(Control::getExitCode());
    }
 
    /*****************init end*******************/

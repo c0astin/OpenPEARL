@@ -24,3 +24,36 @@ The log level is defined by the character string. Possible letters are:
 
 The default log level is 'EW'.
 
+\subsection{SendXML --- report exit status code as XML}
+The configuration element SendXML allows to report the 
+exit code at the end of the application to the standard output.
+The exit code may be affected with the statment:
+
+\begin{PEARLCode}
+__cpp__('pearlrt::Control::setExitCode(1);');
+\end{PEARLCode}
+
+Sample usage:
+\begin{PEARLCode}
+SendXML;
+\end{PEARLCode}
+
+This feature is good for automatic testing on remote microcontroller systems.
+A minitoring computer may flash and run test applications and parse the output 
+for the starting xml-tag.
+
+In order to use this feature with changing the source file, it is possible to
+ pass an additional module to the \texttt{prl}-command via the option \texttt{-add}.
+
+Example:
+\texttt{prl HelloWorld.prl -add SendXML} 
+needs a file SendXML.xml in the current folder. 
+This file may be created with the following OpenPEARL-module.
+
+\begin{PEARLCode}
+MODULE(SendXML);
+SYSTEM;
+   SendXML;
+MODEND;
+\end{PEARLCode}
+

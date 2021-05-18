@@ -11,6 +11,7 @@ import imc.checks.CheckSpcDcl;
 import imc.checks.CheckSystempart;
 import imc.checks.CheckTFURequirements;
 import imc.types.Module;
+import imc.types.ModuleEntrySystemPart;
 import imc.types.Platform;
 import imc.utilities.Log;
 
@@ -120,6 +121,7 @@ public class InterModuleChecker {
 		
 		// start checks ...
 		CheckSystempart.checkSystemelementsForSystemParts(modules);
+		Log.exitIfErrors();
 		CheckSystempart.checkAssociationType(modules);
 		Log.exitIfErrors();
 		
@@ -131,10 +133,13 @@ public class InterModuleChecker {
 		
 		
 		new CheckI2CAdrDoesNotCollide(modules);
+		Log.exitIfErrors();
 		new CheckPinsDoNotCollide(modules);
 		Log.exitIfErrors();
 		
 		new CheckMultipleSystemParts(modules);
+		Log.exitIfErrors();
+
 		CheckSpcDcl cSpcDcl = new CheckSpcDcl(modules,useNameSpace);
 		cSpcDcl.spcHasOneDcl();
 		cSpcDcl.dclHasSpc();

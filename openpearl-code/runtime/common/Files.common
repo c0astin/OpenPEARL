@@ -83,7 +83,8 @@ CXX_COMMON = \
 	Control.cc \
 	ConsoleCommon.cc \
 	FullDuplexDationAbortNB.cc\
-	SampleBasicDation.cc 
+	SampleBasicDation.cc  \
+	SendXML.cc
 
 #CONFIG_HAC_I2C must be set manually by the makefile of
 # the platform, which is build now
@@ -102,6 +103,7 @@ ifeq ($(CONFIG_HAS_I2C),y)
 endif
 
 XML_COMMON += Log.xml LogFile.xml SampleBasicDation.xml SoftInt.xml
+XML_COMMON += SendXML.xml
 
 HDR_COMMON = $(CXX_COMMON:%.cc=%.h) \
 	BitString.h \

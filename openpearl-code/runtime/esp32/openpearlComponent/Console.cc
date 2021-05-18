@@ -69,6 +69,7 @@ namespace pearlrt {
 
          if (taskEntered) {
             TaskCommon::mutexLock();
+printf("console: unblock %s\n", taskEntered->getName());
             taskEntered->unblock();
             TaskCommon::mutexUnlock();
          }
@@ -187,7 +188,7 @@ namespace pearlrt {
 
    void Console::dationWrite(void * source, size_t size) {
       esp32Uart->dationWrite(source, size);
-      consoleCommon.startNextWriter();
+      //consoleCommon.startNextWriter();
    }
 
    void Console::dationUnGetChar(const char x) {
@@ -205,9 +206,17 @@ namespace pearlrt {
       return true;
    }
 
+   void Console::triggerWaitingTask(void * task, int direction) {
+      consoleMutex.lock();
+      consoleCommon.triggerWaitingTask(task, direction);
+      consoleMutex.unlock();
+   }
+
    void Console::registerWaitingTask(void * task, int direction) {
       // just delegate to the platform independent part
+      consoleMutex.lock();
       consoleCommon.registerWaitingTask(task, direction);
+      consoleMutex.unlock();
    }
 
    void Console::suspend(TaskCommon * ioPerformingTask) {

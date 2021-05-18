@@ -1,6 +1,6 @@
 /*
  [A "BSD license"]
- Copyright (c) 2012-2016 Raier Mueller
+ Copyright (c) 2021 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -27,54 +27,21 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/**
-\file
+#include <stdio.h>
 
-\brief monitor of runningtasks
-
-stops the system when no more activity may occur
-
-\author R. Mueller
-*/
-
+#include "SendXML.h"
+#include "Control.h"
 #include "TaskMonitor.h"
 
 namespace pearlrt {
-
-   TaskMonitor& TaskMonitor::Instance() {
-      // static objects are initialized at first call of the function
-      // see eg: www.devarticles-com/c/a/Cplusplus/
-      //        C-plus-plus-In-Theory-The-Singleton-Pattern-Part-I/4/
-      static TaskMonitor tm;
-      return tm;
+   SendXML::SendXML() {
+      TaskMonitor::Instance().setExitCallback(sendExitCode);
    }
 
-   /*
-      TaskMonitor::TaskMonitor() {
-         nbrPendingTasks = 0;
-
-         // get current pid; necessary to send signal at the end
-         pid = getpid();
-         mutex.name("TaskMonitor");
-      }
-   */
-
-   void TaskMonitor::incPendingTasks() {
-      mutex.lock();
-      nbrPendingTasks ++;
-      mutex.unlock();
-   }
-
-   int TaskMonitor::getPendingTasks() {
-      return nbrPendingTasks;
-   }
-
-   void TaskMonitor::setExitCallback(TaskMonitor::ExitCallback* cb) {
-      exitCallback = cb;
-   }
-
-   TaskMonitor::ExitCallback* TaskMonitor::getExitCallback() {
-      return exitCallback;
+   void SendXML::sendExitCode() {
+      printf("\n\n<xml>\n   <exitcode>%d</exitcode>\n</xml>\n",
+         Control::getExitCode());
    }
 
 }
+

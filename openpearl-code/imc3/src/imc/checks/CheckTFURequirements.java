@@ -24,6 +24,7 @@ public class CheckTFURequirements {
 			   UserDationTfuInformation userDationTfuInfo = userDationTfuInformations.get(i);
 			   // locate system node
 			   String sysname = userDationTfuInfo.getSystemDationName();
+			   if (sysname==null) continue; // nothing to do for configurations
 			   Node systemEntry = getNodeOfSystemElement(modules, sysname);
 			   Node tfuInSystemEntry = NodeUtils.getChildByName(systemEntry, "requireTFU");
 			   String platformName = NodeUtils.getAttributeByName(systemEntry, "name");
@@ -62,8 +63,8 @@ public class CheckTFURequirements {
 					//Node seSystem = NodeUtils.getChildByName(se.getNode(), "sysname");
 					String sysnameInSystemPart = se.getNameOfSystemelement();
 					String unameInSystemPart = se.getUserName();
+					if (unameInSystemPart==null) continue; // try next module
 					if (unameInSystemPart.equals(sysname)) {
-						//String systemName = NodeUtils.getAttributeByName(se.getNode(), "sysname");
 						Node platformNode = Platform.getInstance().getNodeOfSystemname(sysnameInSystemPart);
 						return platformNode; //seSystem.getNode();
 					}

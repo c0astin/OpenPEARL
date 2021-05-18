@@ -62,13 +62,14 @@ namespace pearlrt {
       TaskMonitor(TaskMonitor const&);			// hidden!!
       TaskMonitor& operator= (TaskMonitor const&);	// hidden!!
 
+      typedef void ExitCallback(void);
       /**
       pointer to callback function, which should become called 
       at the end of the last task
       
       used in microcontroller environment for testing purposes
       */
-      void (*exitCallback)();				
+      ExitCallback * exitCallback;				
 
    public:
       /**
@@ -107,7 +108,14 @@ namespace pearlrt {
 
         the given function is invoked when the last task exits
       */
-      void setExitCallback(void (*cb)());
+      void setExitCallback(ExitCallback *cb);
+
+      /**
+        get the exit callback function
+
+        the given function is invoked when the last task exits
+      */
+      ExitCallback* getExitCallback();
    };
 
 /**

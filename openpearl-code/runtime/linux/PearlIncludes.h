@@ -100,6 +100,7 @@ Only this file mus be included.
 #include "SystemDationNBSource.h"
 
 #include "Control.h"
+#include "SendXML.h"
 
 #include "StdIn.h"
 #include "StdOut.h"

@@ -66,7 +66,6 @@ public class CheckSystempart {
 					//Node inModule = se.getNode();
 					// get node which contains the parameters
 					Node seSystem = NodeUtils.getChildByName(se.getNode(), "sysname");
-
 					Log.info("   check illegal autoInstanciate usage");
                     checkAutoInstanciate(se,seSystem,systemNode);
 
@@ -92,7 +91,7 @@ public class CheckSystempart {
         if (systemNode.getAttributes().getNamedItem("autoInstanciate") != null) {
             Log.error("illegal instantiation of '"+seSystem.getAttributes().getNamedItem("name").getTextContent()+"'");
         }
-        // no further opration required here
+        // no further operation required here
         // all items with autoInstanciate-tag will be scanned in pinDoesNotCollide test
 	}
 	
@@ -257,10 +256,11 @@ public class CheckSystempart {
 		Node s = pl.getNodeOfSystemname(systemName);
 		if (s == null) {
 			Log.error("system name '" + systemName+ "' does not exist in this platform");
-		}
+		} else {
 
-		if (NodeUtils.getAttributeByName(s, "private")!= null) {
-			Log.error("system name '" + systemName+ "' may not used by PEARL application directly");
+		   if (NodeUtils.getAttributeByName(s, "private")!= null) {
+			   Log.error("system name '" + systemName+ "' may not used by PEARL application directly");
+		   }
 		}
 		return s;
 	}

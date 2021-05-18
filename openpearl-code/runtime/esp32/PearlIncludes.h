@@ -92,6 +92,7 @@ Only this file mus be included.
 #include "SystemDationNBSource.h"
 
 #include "Control.h"
+#include "SendXML.h"
 
 //#include "StdOut.h"
 #include "SoftInt.h"
@@ -112,5 +113,13 @@ Only this file mus be included.
 #include "Esp32Uart.h"
 #include "Esp32WifiConfig.h"
 #include "Esp32MqttTcpClient.h"
+#include "Esp32I2CBus.h"
 
+#include "BME280.h"
+#include "PCA9685.h"
+#include "PCA9685Channel.h"
+#include "LM75.h"
+#include "ADS1015SE.h"
+#include "PCF8574In.h"
+#include "PCF8574Out.h"
 

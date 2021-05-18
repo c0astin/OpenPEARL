@@ -14,6 +14,7 @@ fi
 COMPILEONLY=
 RUN=
 HELP=
+CONFIGELEMENT=
 
 while [ "$1" != "" ] ; do
     case $1 in
@@ -23,6 +24,7 @@ while [ "$1" != "" ] ; do
         -r) RUN=1;                shift;;
         -nosys) NOSYSTEMPART=1;   shift;;
         -h) HELP=1;        shift;;
+        -add) CONFIGELEMENT=$2;  shift 2;;
 	 *) if [ "$INPUT" != "" ] ; then
                echo "illegal parameter " $1; 
                shift;
@@ -48,7 +50,8 @@ then
    echo "        known plattforms: $plattforms"
    echo "    -r run application on MCU" 
    echo "    -i <interface> download interface for MCU (default /dev/ttyUSB0)" 
-   echo "    -nosys do not invke the imc - no system part is used"
+   echo "    -nosys do not invoke the imc - no system part is used"
+   echo "    -add <configuration> add configuration element by imc"
    echo "    -h this page" 
    echo "   Example: "
    echo "     prl x.prl -c   : compile only until C++ source"

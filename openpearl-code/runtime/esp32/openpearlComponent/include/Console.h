@@ -241,6 +241,17 @@ namespace pearlrt {
       void registerWaitingTask(void * task, int direction);
 
       /**
+      trigger a registered waiting task  for an IO-operation
+
+      The method is only called if allowMultipleIORequests is set by the
+      system dation
+
+      \param task the pointer to the calling task
+      \param direction is ether Dation::IN or Dation::OUT
+      */
+      void triggerWaitingTask(void * task, int direction);
+
+      /**
       signal that this device allows multiple io operations
 
       \return true, always
