@@ -1,0 +1,33 @@
+MODULE(i2clm75tst);
+SYSTEM;
+   i2cbus_0: Esp32I2CBus(0, 21, 22, 100000);
+   lm75_0: LM75('48'B4) --- i2cbus_0;
+   con: StdOut; !Console;
+PROBLEM;
+
+   SPC lm75_0 DATION IN SYSTEM BASIC FIXED(15) GLOBAL;
+   SPC con DATION OUT SYSTEM ALPHIC;
+   
+   DCL thermometer_0 DATION IN BASIC FIXED(15) CREATED(lm75_0);
+   DCL console DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(con);
+   
+   DCL global_temp_0 FLOAT;
+   
+
+readTemp_0: TASK MAIN ;
+  DCL t FIXED(15);
+  OPEN console;
+  OPEN thermometer_0;
+  PUT 'i2ctest@lm75 start' TO console BY A,SKIP;
+  PUT 'lm75@0x48' TO console BY A,SKIP;
+  AFTER 0.5 SEC RESUME;
+  REPEAT
+     TAKE t FROM thermometer_0;
+     global_temp_0 = t/10;
+     PUT global_temp_0 TO console BY F(6,1),SKIP;
+     AFTER 0.5 SEC RESUME;
+  END;
+  CLOSE thermometer_0;
+END;
+
+MODEND;

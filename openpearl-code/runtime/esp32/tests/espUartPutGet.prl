@@ -1,0 +1,39 @@
+
+/*
+Demonstration application 'Hello World'
+*/
+
+MODULE(mhello);
+
+SYSTEM;
+  stdio : Esp32Uart(0,115200,8,1,'N','0'B1);
+
+PROBLEM;
+    SPC stdio DATION INOUT SYSTEM ALPHIC GLOBAL;
+    DCL term DATION INOUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdio);
+
+   DCL f FIXED(15) INIT(30000);
+
+x: PROC;
+   PUT 'hallo' TO term BY A, SKIP;
+   PUT 'f=',f TO term BY A,F(6), SKIP;
+END;
+
+! the task hello is started automatically due to the attribute 'MAIN'
+hello: TASK MAIN;
+   OPEN term;
+__cpp__("printf(\"hello is %p\n\", pearlrt::Task::currentTask());");
+   PUT 'Hello World from PEARL' TO term BY A, SKIP;
+   CALL x;
+AFTER 3 SEC ACTIVATE kill;
+   PUT 'enter fixed value' TO term BY A, SKIP;
+   GET f FROM term BY F(6), SKIP;
+   CALL x;
+   CLOSE term;
+END;
+
+kill: TASK ;
+   TERMINATE hello;
+END;
+MODEND;
+

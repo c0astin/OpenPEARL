@@ -1,0 +1,4 @@
+MODULE(SendXML);
+SYSTEM;
+   SendXML;
+MODEND;
