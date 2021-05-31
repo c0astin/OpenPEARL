@@ -1,0 +1,10 @@
+   <configuration name="Esp32WifiConfig">
+      <parameters>
+         <CHAR length="16" name="ssid"></CHAR>
+         <CHAR length="32" name="password"></CHAR>
+      </parameters>
+      <checks>
+         <check instances="oncePerSet" set="Esp32WifiConfig"/>
+      </checks>
+
+   </configuration>

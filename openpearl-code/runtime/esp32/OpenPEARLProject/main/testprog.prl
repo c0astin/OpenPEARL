@@ -1,0 +1,6 @@
+MODULE(testProg);
+SYSTEM;
+  Esp32WifiConfig(' ',' ');
+MODEND;
+
+

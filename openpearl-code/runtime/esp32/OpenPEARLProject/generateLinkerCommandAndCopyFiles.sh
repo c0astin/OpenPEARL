@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "*** get new library list and linkter commands from linker.txt"
+source ../../../configuration/.config
+echo $CONFIG_INSTALL_Target
+echo $IDF_PATH
+gcc idf2mk.c -o idf2mk
+echo "*** convert linker.txt  -> ./cp-cmd and ./esp_idf_build.mk"
+./idf2mk linker.txt $IDF_PATH/components/ $CONFIG_INSTALL_Target/lib/OpenPEARLesp32
+chmod +x cp.cmd
+echo "*** copy libraries  and linker scripts to $CONFIG_INSTALL_Target/lib/OpenPEARLesp32"
+./cp.cmd
+echo "*** done. ./esp_idf_builf.mk is automatically read by ../Makefile" 
+
