@@ -4,7 +4,7 @@
 // if we detect portNUM_PROCESSORS to be defined we expect to be on the ESP32
 
 
-UBaseType_t uxTaskGetCurrentFreeStack( void )
+size_t uxTaskGetCurrentFreeStack( void )
 {
     UBaseType_t x; // place one value on the stack
     #if( portSTACK_GROWTH < 0 )

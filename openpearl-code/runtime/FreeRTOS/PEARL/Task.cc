@@ -46,8 +46,8 @@
 
 #include <string.h>
 
-#include "FreeRTOS.h"
-#include "task.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "allTaskPriorities.h"
 
 #include "TaskMonitor.h"
@@ -87,7 +87,7 @@ namespace pearlrt {
       // FreeRTOS part
       stackDepth = sizeof(stack)/sizeof(stack[0]);
 
-      xth = pdFALSE;
+      xth = NULL; //pdFALSE;
       TaskList::Instance().add(this);
    }
 

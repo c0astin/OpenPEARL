@@ -74,7 +74,7 @@ namespace pearlrt {
    class Bolt {
    private:
       Bolt();                // hide default constructor
-      uint state;            // the internal bolt variable state
+      int state;            // the internal bolt variable state
       uint32_t nbrOfEnterOperations;
       const char * name;
       static PriorityQueue waiters;

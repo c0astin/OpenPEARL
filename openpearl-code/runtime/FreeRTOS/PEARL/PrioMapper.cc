@@ -44,7 +44,7 @@
 #include "Fixed.h"
 #include "Signals.h"
 #include "PrioMapper.h"
-#include "FreeRTOS.h"
+#include "freertos/FreeRTOS.h"
 #include "allTaskPriorities.h"
 
 namespace pearlrt {

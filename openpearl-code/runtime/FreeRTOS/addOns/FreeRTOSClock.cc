@@ -31,8 +31,8 @@
 #include <stdio.h>
 
 #include "time_addons.h"
-#include "FreeRTOS.h"
-#include "FreeRTOSConfig.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/FreeRTOSConfig.h"
 #include "FreeRTOSClock.h"
 
 /**
@@ -43,7 +43,7 @@
 
 namespace pearlrt {
 
-   int FreeRTOSClock::ticks = 0;
+   volatile int FreeRTOSClock::ticks = 0;
 
    void FreeRTOSClock::set(const struct tm * time) {
       struct tm t = *time; // mktime expects non const value
@@ -85,7 +85,11 @@ namespace pearlrt {
       *nsec = tickBasedTime;
    }
 
+#ifdef OPENPEARL_ESP32
+   void IRAM_ATTR FreeRTOSClock::tick(void) {
+#else
    void FreeRTOSClock::tick(void) {
+#endif
       // increment the tick based time on each FreeRTOS-Tick
       tickBasedTime += 1000000L;  // one milli second
 

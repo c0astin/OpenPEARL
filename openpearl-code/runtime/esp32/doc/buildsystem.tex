@@ -11,8 +11,11 @@ framework components. The build of an ESP-IDF application is done
 The OpenPEARL buildsystem requires the invocation of the suitable 
 g++ compiler/linker upon the c++ files, which result from the PRL to C++ 
 translation of the OpenPEARL compiler.
-For the usage of the ESP-IDF by OpenPEARL, the files of the IDF should NOT 
-become compiled for each PEARL application build.
+
+To use the ESP-IDF, the steps for installation must be done as described in 
+getting started guide from Espressif.
+To check the installation an presence of all prerequisites you should build
+ one the provided examples of the ESP-IDF as described there.
 
 \subsection{Integration of the ESP-IDF with the OpenPEARL-Repostory}
 The ESP-IDF becomes extended in high rate. Thus we do not copy a specific
@@ -25,36 +28,73 @@ The integration of OpenPEARL and the ESP-IDF is done via the following steps:
    of the concrete project 
    (run \texttt{make menuconfig} in \texttt{esp-idf-project}) 
 \item There is a need for a concrete project to build.
-   This project is located in the folder \texttt{.../runtime/esp32/esp-idf-project}
-   This folder contains the \texttt{sdkconfig} for the setting for the 
-   OpenPEARL usage of the components. During build, the libraries are created and moved to
-   the installation location.
-\item The folder \texttt{.../runtime/esp32} contains also a link the
-  to the esp-idf folder.
-\item OpenPEARL needs some changes in the FreeRTOS implementation.
-  The folder \texttt{patchFiles} contains the expected and patched 
-  version of some esp-idf releases.
-\item the setup of the links is done von \texttt{make setuplinks patch},
-   which is automatically done at \texttt{make all} 
+   This project is located in the folder \texttt{.../runtime/esp32/OpenPEARLProject}
+   This folder contains the \texttt{MakeFiles.txt} and the default \textit{application}-component \texttt{main}.
+\item The main folder contains 
+  \begin{itemize}
+  \item symlinks to the platform independent parts (common)
+  \item FreeRTOS specific parts (PEARL)
+  \item  some additionals files in (addOns)
+  \item the ESP32 specific device drivers
+  \item CMakeFiles.txt with a list of all contribuing files
+  \item OpenPEARL needs some changes in the FreeRTOS implementation.
+    The folder \texttt{patchFiles} contains the expected and patched 
+    version of some esp-idf releases.
+  \end{itemize}
 \end{enumerate}
 
-The OpenPEARL build system is based on \verb|make|.
-The OpenPEARL specific parts of the runtime system is added to the ESP-IDF
-by setting some links into the OpenPEARL working directory.
-E.g.
-\begin{lstlisting}[breaklines]
-ln -s /user/xxx/Openpearl/openpearl-code/runtime/esp32/openpearlspecific ~/esp/esp-idf/components/openpearl
-\end{lstlisting}
-After this, the ESP-IDF recognize a new component named 'openpearl' and
- treat this like any other ESP-IDF component.
+The OpenPEARL build system is based on \verb|make|. The EspIdf is now based 
+on cmake.
 
-To use the ESP-IDF, the steps for installation must be done as described in 
-getting started guide from Espressif.
-To check the installation an presence of all prerequisites you should build
- one the provided examples of the ESP-IDF as described there.
+\subsection{Integration of esp-idf to OpenPEARL}
+The folder ..../esp32/OpenPEARLProject contains a complete OpenPEARL applicationwith no tasks but an PEARL-application module \texttt{testprog.prl} 
+and its compiled outputs: 
+\texttt{testproc.cc} and its \texttt{system.cc}
 
-The \verb|Makefile|  for the esp32 port of OpenPEARL creates automatically all
-required links.
+In the folder \texttt{.../OpenPEARLProject} we need:
+\begin{description}
+\item[\texttt{. ~/esp/esp/idf/export.sh}] to setup the path entries and
+   environment variables for the esp-idf-
+\item [\texttt{idf.py build}] the create the idf-project, with support of all
+   esp-idf components, which are required for the testprog.prl
+\item the interesting part is the library, which coresponds 
+   to the main-component
+\item we can use this library later for the make-bases OpenPEARL linkage, afer
+  we removed the objects of \texttt{testprog} and \texttt{system}
+\item during \texttt{make install} the compile and link commands
+  are created with the help of some generated files
+  \begin{itemize}
+  \item esp\_idf\_build.mk contains lists of linker parameters and the setting of  the \texttt{CXX} variable for make
+  \item cp.cmd contains copy commands for the shell to copy all required
+   libraries and linker command files the the installation target
+  \item these files may be recreated with the script \texttt{generateLinkerCommandAndCopyFiles.sh}, if there is need of change
+  \end{itemize}
+\end{description}
+
+
+\subsection{Steps to use new esp-idf-components}
+If a new esp32 specifig device becomes integrated in OpenPEARL, it is
+possible that currently unsed esp-idf components are required. 
+You will notice this by error messages from the c++-compiler and/or linker.
+
+Update procedure:
+
+\begin{enumerate}
+\item enter folder \texttt{OpenPEARLProject}
+\item extend \texttt{testprog.prl} with the new system elements
+\item compile them with \texttt{prl -c -b esp32 testprog.prl}
+\item enable idf-virtual environment with \texttt{. ~/esp/esp-idf/export.sh}
+\item Build the OpenPEARLProject with \texttt{idf.py -v build} \newline
+   The option \texttt{-v} is important
+\item select the printed linker command (this is one of the lasts steps)
+   and copy this command in a file \texttt{linker.txt.new}
+\item remove all decoration stuff from linker.txt.new (see linker.txt as
+   a reference)
+\item replace linker.txt with your new version
+\item run \texttt{./generateLinkerCommandAndCopyFiles.sh}
+\item enter parent folder
+\item run \texttt{make install} --- this should be ok now.
+\end{enumerate}
 
 \subsection{cc\_bin and run\_bin}
 The overall script 'prl' for compiling and linking of an OpenPEARL application
@@ -85,11 +125,14 @@ configuration file is replaced by the OpenPEARL specific version.
 \section{Notes about updates in ESP-IDF}
 If a new release of ESP-IDF should be used, several checks must be done:
 \begin{itemize}
-\item update the \verb|sdkconfig| in the esp-idf-project in the repository.
-\item check changes in the ESP-IDF \verb|FreeRTOSConfig.h|
-\item update the xtensa compiler to the new version
-\item the FreeRTOS implementation of tasks.c and tasks.h was extended by one
-  funktion. This must be added by include in taskAddOns.c.inc and taskAddOns.h
+\item check changes in the ESP-IDF system
+  \begin{itemize}
+    \item location of  \verb|FreeRTOSConfig.h|
+    \item  the FreeRTOS implementation of tasks.c and tasks.h may be 
+       not compatible with the versions in pathFiles
+  \end{itemize}
+\item check changes in the components API and names
+\item .. ??? ... hope that it works
 \end{itemize}
 
 \section{Partitions on the Flash Memory}
@@ -111,12 +154,11 @@ The partition \texttt{ota-1} and \texttt{ota-2} are used for updates over the ai
 
 \subsection{Resize the Application Partition}
 For larger applications, the size of 1MB of the partition \texttt{factory} is too small.
-The project \texttt{esp-idf-project} in OpenPEARL development region contain a custom 
+The project \texttt{OpenPEARLProject} contains a custom 
 partition table --- currently with a 2MB partition for the application.
 
-To enable this partition table, you must flash it manually in the esp-if-project folder:
 \begin{verbatim}
-make partition_table-flash
+make initial_flash
 \end{verbatim}
 
 \subsection{Non Volatile Storage Partition (nvs)}
@@ -128,17 +170,22 @@ The nvs-storage is used by OpenPEARL in the namespace \texttt{OpenPEARL} for
 \end{itemize}
 
 
+\subsection{Flash Bootloader and Partition Table}
+The bootloader an partition table are not flashed with the OpenPEARL application.
+This must be done at least once for each ESP32-module before first use.
 
 
 \section{Open Issues}
 \subsection{Core Usage}
 Currently only one core is used.
+In version V4.2 there is a problem with the WiFi-setup using two cores which leads to a panic failure.
+
 In future, the second core should be used also.
 The automatic restart of an application task assumes that only one processor core ist 
 available.
 There are two possibilities to overcome this obstancle:
 \begin{enumerate}
-\item enshure that all application tasks are on the same core and use the othr core for i/o-tasks
+\item enshure that all application tasks are on the same core and use the other core for i/o-tasks
 \item add a patch to FreeRTOS to restart an overrun task automatically at its termination.
 \end{enumerate}
 

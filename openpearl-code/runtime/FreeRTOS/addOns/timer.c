@@ -60,10 +60,10 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-#include "FreeRTOS.h"
-#include "FreeRTOSConfig.h"
-#include "task.h"
-#include "queue.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/FreeRTOSConfig.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
 #include "time_addons.h"
 #include "FreeRTOSClock.h"
 #include "allTaskPriorities.h"
@@ -489,7 +489,11 @@ int timer_settime(const timer_t timerid, const int flags,
    return 0; // success
 }
 
+#if defined OPENPEARL_ESP32
+void IRAM_ATTR resume_timer_task_from_ISR() {
+#else
 void resume_timer_task_from_ISR() {
+#endif
    static ServiceJob s = {timerJob, NULL};
 
    add_service_from_ISR(&s);

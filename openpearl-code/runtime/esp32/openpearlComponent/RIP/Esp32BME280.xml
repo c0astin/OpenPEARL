@@ -1,8 +1,0 @@
-   <dation name="Esp32BME280">
-      <parameters>
-        <FIXED length="31"><NotEmpty/></FIXED>
-        <FIXED length="31"><NotEmpty/></FIXED>
-      </parameters>
-      <attributes> IN, SYSTEM, BASIC</attributes>
-      <data>ALL</data>
-   </dation>

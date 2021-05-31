@@ -1,8 +1,8 @@
 #include "Signals.h"
 #include "Log.h"
-#include "FreeRTOSConfig.h"
-#include "FreeRTOS.h"
-#include "task.h"
+#include "freertos/FreeRTOSConfig.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 /** minimum number of required free stack elements (words of 4 bytes)
   in an application thread

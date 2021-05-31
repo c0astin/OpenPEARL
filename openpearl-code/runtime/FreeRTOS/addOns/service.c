@@ -34,10 +34,10 @@
 
 #include <stdio.h>
 
-#include "FreeRTOS.h"
-#include "FreeRTOSConfig.h"
-#include "task.h"
-#include "queue.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/FreeRTOSConfig.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
 #include "time_addons.h"
 #include "FreeRTOSClock.h"
 #include "allTaskPriorities.h"
@@ -78,7 +78,11 @@ void init_service() {
 
 }
 
+#if defined OPENPEARL_ESP32
+void IRAM_ATTR add_service_from_ISR(ServiceJob * s) {
+#else
 void add_service_from_ISR(ServiceJob * s) {
+#endif
    if (xServiceTaskHandle) {
       if (pdTRUE != xQueueSendFromISR(serviceQueue, s, NULL)) {
          printf("error at xQuereSendFromISR\n");

@@ -1,4 +1,4 @@
 MODULE(esp32WifiConfig);
 SYSTEM;
-  Esp32WifiConfig('',''); ! start dialog for wifi parameters
+  Esp32WifiConfig(' ',' '); ! start dialog for wifi parameters
 MODEND;

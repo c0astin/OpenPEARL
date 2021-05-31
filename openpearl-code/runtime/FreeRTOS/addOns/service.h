@@ -57,7 +57,11 @@ send a service request to the service task from an interrupt service routine
 
 \param j pointer of a service job
 */
-void add_service_from_ISR(ServiceJob * j);
+#if defined OPENPEARL_ESP32
+void IRAM_ATTR add_service_from_ISR(ServiceJob * s) ;
+#else
+void add_service_from_ISR(ServiceJob * s) ;
+#endif
 
 /**
 send a service request to the service task from normal context

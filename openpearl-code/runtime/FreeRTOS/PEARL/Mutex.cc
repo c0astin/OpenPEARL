@@ -30,11 +30,11 @@
 /**
 \file
 
-\brief Mutex implementation with pthread_mutex
+\brief Mutex implementation with freertos
 
 */
-#include "FreeRTOS.h"  // FreeRTOS
-#include "semphr.h"   // FreeRTOS
+#include "freertos/FreeRTOS.h"  // FreeRTOS
+#include "freertos/semphr.h"   // FreeRTOS
 
 #include "Mutex.h"
 #include "Log.h"

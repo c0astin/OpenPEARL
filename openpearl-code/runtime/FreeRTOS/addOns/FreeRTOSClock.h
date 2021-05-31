@@ -52,7 +52,7 @@ namespace pearlrt {
    class FreeRTOSClock {
    private:
       static uint64_t tickBasedTime;
-      static int ticks;
+      static volatile int ticks;
 
       static void gettime(uint64_t * nsec);
       static void setTimeOut(uint64_t nsec);
@@ -77,7 +77,11 @@ namespace pearlrt {
 
       To be called from vApplicationTickHook()
       */
+#ifdef OPENPEARL_ESP32
+      static void IRAM_ATTR tick(void);
+#else
       static void tick(void);
+#endif
    };
 }
 #else

@@ -2,11 +2,10 @@ MODULE(mqttDemo);
 SYSTEM;
 !   Esp32MqttTcpClient('mqtt://192.168.178.78', 1883);
    Esp32MqttTcpClient('mqtt://ra-tow', 1883);
-   con: Console;
+   con: StdOut;
 PROBLEM;
-   SPC con DATION INOUT SYSTEM ALPHIC;
-   DCL console DATION INOUT ALPHIC TFU DIM(*,80) FORWARD STREAM CREATED(con);
-   DCL consoleMutex SEMA PRESET(1);
+   SPC con DATION OUT SYSTEM ALPHIC;
+   DCL console DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(con);
    
 mqttPublish: PROC(topic CHAR(40) , data CHAR(40) );
   DCL xx CHAR(40);
@@ -30,9 +29,7 @@ pub: TASK MAIN;
     REPEAT
        count := count + 1;
        CONVERT 'count=',count TO data BY A, F(4);
-!       REQUEST consoleMutex;
-       PUT 'publish: topic=',topic,' data=',data TO console BY A,A,SKIP;
-!       RELEASE consoleMutex;
+       PUT '--> publish: topic=',topic,' data=',data TO console BY A,A,SKIP;
        mqttPublish(topic, data);
        AFTER 1 SEC RESUME;
     END;
@@ -49,9 +46,7 @@ receiver: TASK;
      __cpp__(
           "cl->readMessage(_topic, _data);"
      );
-!       REQUEST consoleMutex;
-     PUT 'received topic:',topic,'data: ',data TO console BY A,A,SKIP,A,A,SKIP;
-!       RELEASE consoleMutex;
+     PUT '       <-- received topic:',topic,'data: ',data TO console BY A,A,SKIP,A,X(20),A,SKIP;
    END; 
 END;
 MODEND;

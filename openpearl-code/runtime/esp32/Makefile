@@ -1,3 +1,5 @@
+.ONESHELL:
+
 # lets get the absolute path of this directory
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
@@ -9,12 +11,14 @@ $(warning PATH=$(PATH))
 # modifies MAKEFILE_PATH
 include ../../configuration/.config
 
+
 #remove quotes from the config-variable
 ESP_IDF_PATH:= $(subst $\",,$(CONFIG_ESP32_IDF_PATH))
-#$(warning ESP_IDF_PATH: $(ESP_IDF_PATH))
+$(warning ESP_IDF_PATH: $(ESP_IDF_PATH))
 
-#setup the variable for esp-idf build process
-export IDF_PATH=$(ESP_IDF_PATH)
+##setup the variable for esp-idf build process
+#export IDF_PATH=$(ESP_IDF_PATH)
+$(warning IDF_PATH: $(IDF_PATH))
 
 #and have a look into this folder
 UID=$(shell id -u)
@@ -27,12 +31,18 @@ ifneq (0,$(UID))
   endif
 endif
 
-#$(warning CURRENT_DIR: $(CURRENT_DIR))
+## have a look on the idf-version
+#exp=$(shell . $(ESP_IDF_PATH)/export.sh)
+#version=$(shell idf.py --version)
+##version=idf.py --version
+##$(warning IDF-Version: $(version))
 
+#$(warning CURRENT_DIR: $(CURRENT_DIR))
 
 OPENPEARL_DIR := $(abspath $(MAKEFILE_PATH)/../../..)
 export OPENPEARL_DIR
 
+IDF_PY := idf.py -C OpenPEARLProject
 
 phony = all clean
 _all: all
@@ -40,18 +50,7 @@ _all: all
 
 include makefile.conf
 
-CC := $(CROSS)$(CC)
-CXX := $(CROSS)$(CXX)
-AR := $(CROSS)$(AR)
-
-
-# make silent compilations
-COMPILE.c = @echo compile $<; $(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
-COMPILE.cc = @echo [compile] $<; $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
-#COMPILE.cc = echo [compile] $<; $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
-LINK.o = $(LINK.cc)
-#LINK = @echo [link] $@; $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
-LINK = @echo [link] $@; $(CXX) $(PURECFLAGS) -DTARGET=3 $(CXXFLAGS) $(CPPFLAGS) $(LFLAGS) $(LDFLAGS) $^ -o $@
+-include OpenPEARLProject/esp_idf_build.mk
 
 IC_DIR = ../includeComposer
 IC = $(IC_DIR)/ic
@@ -68,26 +67,27 @@ CONFIG_HAS_I2C=y
 include ../common/Files.common
 XMLFILES  += $(addprefix ../common/,$(XML_COMMON))
 
-# -------------------- add includes for the include composer
-INCS += esp-idf/components/freertos_specific/addOns
-INCS += esp-idf/components/freertos_specific/PEARL
-INCS += esp-idf/components/openpearl/include
-INCS += esp-idf/components/openpearl/common
+
+## -------------------- add includes for the include composer
+INCS += OpenPEARLProject/main/PEARL
+INCS += OpenPEARLProject/main/common
+INCS += OpenPEARLProject/main
+INCS += OpenPEARLProject/main/addOns
 
 # -------------------- add boardsupport component xml files
-XMLFILES += openpearlComponent/StdOut.xml
-XMLFILES += openpearlComponent/Console.xml
-XMLFILES += openpearlComponent/Esp32Uart.xml
-XMLFILES += openpearlComponent/Esp32WifiConfig.xml
-XMLFILES += openpearlComponent/Esp32MqttTcpClient.xml
-XMLFILES += openpearlComponent/Esp32I2CBus.xml
+XMLFILES += OpenPEARLProject/main/StdOut.xml
+XMLFILES += OpenPEARLProject/main/Console.xml
+XMLFILES += OpenPEARLProject/main/Esp32Uart.xml
+XMLFILES += OpenPEARLProject/main/Esp32WifiConfig.xml
+XMLFILES += OpenPEARLProject/main/Esp32MqttTcpClient.xml
+XMLFILES += OpenPEARLProject/main/Esp32I2CBus.xml
 #XMLFILES += esp-idf/components/boardsupport/Esp32BME280.xml
 #XMLFILES += esp-idf/components/boardsupport/Esp32Wifi.xml
-#XMLFILES += esp-idf/components/boardsupport/TcpIpServer.xml
+#XMLFILES += OpenPEARLProject/main/TcpIpServer.xml
 $(warning XMLFILES=$(XMLFILES))
 
 define esp32build
-make -C esp-idf-project
+  idf.py -C OpenPEARLProject
 endef
 
 
@@ -95,33 +95,32 @@ endef
 
 # ------------------------ finalize variables 
 INCS:=$(addprefix -I ,$(INCS))
-PURECXXFLAGS := $(CXXFLAGS)
+#PURECXXFLAGS := $(CXXFLAGS)
 
-PURECFLAGS := $(CFLAGS)
-CFLAGS += $(INCS)
-CXXFLAGS += $(INCS)
+#PURECFLAGS := $(CFLAGS)
+#CFLAGS += $(INCS)
+#CXXFLAGS += $(INCS)
 
 # TARGET 3 is the ESP32
 CXXFLAGS += -DTARGET=3
 
-# allow non pod union members
-CXXFLAGS += -std=c++11
+## allow non pod union members
+#CXXFLAGS += -std=c++11
 
-# list of files to check for code convention (make checkformat)
-CHECK_FILES := $(wildcard openpearlComponent/*.cc)
-CHECK_FILES += $(wildcard openpearlComponent/include/*.h)
-CHECK_FILES := $(sort $(CHECK_FILES))
+## list of files to check for code convention (make checkformat)
+#CHECK_FILES := $(wildcard openpearlComponent/*.cc)
+#CHECK_FILES += $(wildcard openpearlComponent/include/*.h)
+#CHECK_FILES := $(sort $(CHECK_FILES))
 #$(warning CHECK_FILES=$(CHECK_FILES))
 
-all: setuplinks patch esp-idf-build $(targets)
+all: patch $(targets)
 
 tests/testStackOverflow.s: tests/testStackOverflow.cc
 	$(CXX) $^ -S $(CXXFLAGS)  $(PURECXXFLAGS)
 
-esp-idf-build: ../common/Signals.hh ../common/Signals.hcc
-	@echo "[create] $@"
-	export IDF_PATH=$(ESP_IDF_PATH)
-	$(call esp32build)
+#OpenPEARLProject: ../common/Signals.hh ../common/Signals.hcc
+#	@echo "[create] $@"
+#	(./runbuild.sh $(IDF_PATH))
 
 esp32.xml: $(XMLFILES)
 	@echo "[create] $@"
@@ -132,14 +131,8 @@ esp32.xml: $(XMLFILES)
 	@cat $(XMLFILES) >> $@
 	@echo "</platform>" >> $@
 
-# obsolete - this is done by the esp-idf
-#phony += depend
-#depend: ../common/Signals.hh ../common/Signals.hcc $(SRCS)
-#	@echo "[create] $@"
-#	@$(CXX) -MM $(CFLAGS) $(CPPFLAGS) $(INCS) $^ >.depend
-
 phony += clean
-clean: setuplinks
+clean: 
 	$(call esp32build) clean
 	@rm -f $(targets)
 	@rm -f $(GTEST_OBJS)
@@ -163,30 +156,20 @@ doc:
 phony += gitclean
 gitclean:
 	@echo "clean all files and links for git operations"
-	@rm -f esp-idf 
-	@rm -f openpearlComponent/common
-	@rm -f FreeRTOSspecificComponent/PEARL
-	@rm -f FreeRTOSspecificComponent/addOns
-	@rm -rf esp-idf-project/build
+	@rm -rf OpenPEARLProject/build
+	@rm OpenPEARLProject/main/common
+	@rm OpenPEARLProject/main/addOns
+	@rm OpenPEARLProject/main/PEARL
+	@rm OpenPEARLProject/main/PearlIncludes.h
 
-phony += setuplinks
-setuplinks:
-	@echo [ setup links from/to esp-idf ]
-	@# to avoid spurious other links
-	rm -f esp-idf
-	ln -s $(ESP_IDF_PATH) esp-idf
-	rm -f openpearlComponent/common
-	ln -s $(CURRENT_DIR)../common  openpearlComponent/common
-	rm -f $(ESP_IDF_PATH)/components/openpearl
-	ln -s $(CURRENT_DIR)openpearlComponent $(ESP_IDF_PATH)/components/openpearl
-	rm -f $(ESP_IDF_PATH)/components/freertos_specific
-	ln -s $(CURRENT_DIR)FreeRTOSspecificComponent $(ESP_IDF_PATH)/components/freertos_specific
-	rm -f FreeRTOSspecificComponent/PEARL
-	ln -s $(CURRENT_DIR)../FreeRTOS/PEARL $(CURRENT_DIR)/FreeRTOSspecificComponent/PEARL
-	rm -f FreeRTOSspecificComponent/addOns
-	ln -s $(CURRENT_DIR)../FreeRTOS/addOns $(ESP_IDF_PATH)/components/freertos_specific/addOns
-	rm -f $(ESP_IDF_PATH)/components/freertos/include/freertos/FreeRTOSConfig.h
-	ln -s $(CURRENT_DIR)/FreeRTOSConfig.h $(ESP_IDF_PATH)/components/freertos/include/freertos
+phony += links
+links:
+	ln -s ../../pearl.h OpenPEARLProject/main/PearlIncludes.h
+	ln -s ../../../FreeRTOS/PEARL OpenPEARLProject/main/PEARL
+	ln -s ../../../FreeRTOS/addOns OpenPEARLProject/main/addOns
+	ln -s ../../../common OpenPEARLProject/main/common
+
+
 
 phony += patch
 patch:
@@ -200,80 +183,69 @@ prepare:
 	@touch $(CONFIG_INSTALL_Target)/lib/esp32.xml
 	@chmod 666 $(CONFIG_INSTALL_Target)/lib/esp32.xml
 
+#.phone += OpenPEARLProject/idf2mk  
+#OpenPEARLProject/idf2mk:  
+#	(cd OpenPEARLProject; gcc idf2mk.c -o idf2mk)
+#	#(cd OpenPEARLProject; ./idf2mk linker.txt $(IDF_PATH)/components/)
+#	#(cd OpenPEARLProject; cat esp_idf_builf.mk)
+
+phony += OpenPEARLProject
+OpenPEARLProject:  
+	echo [build] $@
+	rm -f pearl2.h
+	echo "create pearl.h"
+	$(IC) -c $(INCS) -DOPENPEARL_ESP32  <PearlIncludes.h | $(DWS) >pearl2.h
+	cat sysincs.h pearl2.h >pearl.h
+	rm -f pearl2.h sysincs.h
+	rm -f OpenPEARLProject/main/PearlIncludes.h
+	ln -s ../../pearl.h OpenPEARLProject/main/PearlIncludes.h
+	./runbuild.sh $(IDF_PATH)
+	
 phony += install
-install: all cc_bin run_bin
-	@echo [install]
-	@rm -f pearl2.h
-	@echo $(INCS)
-	@$(IC) -c $(INCS) -DOPENPEARL_ESP32  <PearlIncludes.h | $(DWS) >pearl2.h
-	@cat sysincs.h pearl2.h >pearl.h
-	@rm -f pearl2.h sysincs.h
-	#Find and copy all generated esp32 libraries
-	#limit search to depth 2 to exclude libraries from the bootloader
-	@find esp-idf-project/build/ -maxdepth 2 -regex ".*\.a" -exec cp {} $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32 \;
-	#Find and copy all generated linker files
-	@find esp-idf-project/build/ -regex ".*\.ld" -exec cp {} $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32 \;
-	@find $(ESP_IDF_PATH)/components -regex ".*\.a" -exec cp {} $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32 \;
-	#Find and copy all predefined linker files
-	@find $(ESP_IDF_PATH)/components/ -regex ".*\.ld" -exec cp {} $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32 \;
-	cp esp-idf-project/build/bootloader/bootloader.bin $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
-	@cp esp32.xml $(CONFIG_INSTALL_Target)/lib
+install: OpenPEARLProject esp32.xml cc_bin run_bin
+	echo [install]
+	ar d OpenPEARLProject/build/esp-idf/main/libmain.a testprog.cc.obj system.cc.obj
+	(cd OpenPEARLProject; ./cp.cmd)
+	cp OpenPEARLProject/build/bootloader/bootloader.bin $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
+	cp OpenPEARLProject/build/partition_table/partition-table.bin $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
+	cp esp32.xml $(CONFIG_INSTALL_Target)/lib
 
-####### TODO 
-### 2020-11-05: library list cleaned
-## currently unused libraries
-# -lapp_trace 
-# -laws_iot 
-# -lbootloader_support  
-# -lbt -lcoap -lconsole
-# -lespnow 
-# -lesp_adc_cal -lethernet
-# -lexpat -lfatfs 
-# -lidf_test -ljsmn 
-# -ljson -llibsodium 
-# -lopenssl 
-# -lsdmmc
-# -lspiffs 
-# -lulp 
-# -lwear_levelling 
-
-RUNTIMELIBS :=-L/usr/local/lib/OpenPEARLesp32  \
-		-lapp_update\
-		-lcxx -u __cxa_guard_dummy -ldriver \
-		-lesp_ringbuf \
-		-lesp32 -lhal  -lcore -lrtc -lnet80211 -lpp -lwpa \
-		-lsmartconfig -lsmartconfig_ack \
-		 -lmqtt -lcoexist -lwps -lwpa2 -lphy \
-	-ltcp_transport \
-		-lesp-tls -lmesh\
-		-lfreertos -Wl,--undefined=uxTopUsedPriority -lheap \
-		-llog -llwip \
-		-lmbedtls -lmdns -lmicro-ecc -lc -lm -lnewlib -lnghttp \
-		-lnvs_flash -lopenpearl -lfreertos_specific \
-		-lpthread \
-		-lsoc -lspi_flash \
-		-ltcpip_adapter \
-		-lvfs \
-		-lwpa_supplicant -lxtensa-debug-module \
-		-lgcc -lstdc++ -lgcov -Wl,--end-group -Wl,-EL
-LINKERSCRIPTS:= -T esp32_out.ld -u ld_include_panic_highint_hdl \
-		-T esp32.common.ld -T esp32.rom.ld -T esp32.peripherals.ld\
-		-T esp32.rom.spiram_incompatible_fns.ld 
 
 phony += cc_bin
 cc_bin:
 	@echo "[create] $@"
 	@echo "# auto generated " > cc_bin.inc
-	@echo '$(CXX) -g -DTARGET=3 -std=c++11 -nostdlib -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,-static -Wl,--start-group -mlongcalls -frtti -u call_user_start_cpu0 -Os -I $(CONFIG_INSTALL_Target)/include $$SYSTEM $$fn.cc $(RUNTIMELIBS) $(LINKERSCRIPTS) -o $$fn -Wl,-Map=$$fn.map' >> cc_bin.inc
-	@echo 'python $(CURRENT_DIR)esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 elf2image --flash_mode "dio" --flash_freq "40m" --flash_size "2MB"  -o $$fn.bin $$fn' >> cc_bin.inc
+	#
+	@echo '$(CXX) -g -DTARGET=3 -std=c++11 -I /usr/local/include \
+ 		$(LINK_PARAMETERS_1) \
+		  $$fn.cc $$SYSTEM -o $$fn.elf\
+		$(LINK_PARAMETERS_2)' >> cc_bin.inc
+	@echo 'python  $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 elf2image --flash_mode "dio" --flash_freq "40m" --flash_size "2MB"  -o $$fn.bin $$fn.elf' >> cc_bin.inc
+	@echo 'size $$fn.elf' >> cc_bin.inc
 
 phony += run_bin
 run_bin:
 	@echo "[create] $@"
 	@echo "# auto generated " > run_bin.inc
-#	@echo 'python $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 --port $$INTERFACE --baud 115200 --before default_reset --after hard_reset write_flash -u --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/bootloader.bin 0x10000 $$fn.bin 0x8000 $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/partitions_singleapp.bin' >>run_bin.inc
-	@echo 'python $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 --port $$INTERFACE --baud 115200 --before default_reset --after hard_reset write_flash -u --flash_mode dio --flash_freq 40m --flash_size detect 0x10000 $$fn.bin' >>run_bin.inc
+	@echo 'python $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 --port $$INTERFACE --baud 115200 --before default_reset --after hard_reset write_flash -u --flash_mode dio --flash_freq 40m --flash_size detect  0x10000 $$fn.bin' >>run_bin.inc
 	@echo 'python -m serial.tools.miniterm --rts 0 --dtr 0 --eol CR --raw $$INTERFACE 115200' >>run_bin.inc
+
+phony += monitor
+monitor:
+	# note: /dev/ttyUSB0 fits in the momemnt - we should add a menuconfig item for this
+	python -m serial.tools.miniterm --rts 0 --dtr 1 --eol CR --raw /dev/ttyUSB0 115200
+
+
+monitor:
+phony += initial_flash
+initial_flash:
+	python $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py \
+	   --chip esp32 --port $(CONFIG_ESP32_FLASH_INTERFACE) --baud 115200 \
+           --before default_reset --after hard_reset write_flash \
+           -u --flash_mode dio --flash_freq 40m \
+           --flash_size detect\
+           0x1000 $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/bootloader.bin\
+           0x8000 $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/partition-table.bin
 
 # -------------------------------------------------
 # additional rules to enable make to build the autogenerated files
@@ -292,17 +264,13 @@ phony +=  checkformat
 checkformat:
 	@$(foreach f,$(CHECK_FILES),../codestyle/check.sh $(f);)
 
--include .depend
 
 phony += help
 help:
-	@echo make setup	- setup links to esp-idf
-	@echo make prepare	- setup rw/permissions to installation files
-	@echo make install	- build esp-specific OpenPEARL library and install
-
-phony += partition_table-flash
-partition_table-flash:
-	$(call esp32build) partition_table-flash 
+	@echo " make prepare	 - setup rw/permissions to installation files"
+	@echo " make initial_flash - flash partition table and bootloader"
+	@echo "                      must be done once for a new esp32-system"
+	@echo " make install	 - build esp-specific OpenPEARL library and install"
 
 phony += info
 info:
@@ -315,6 +283,7 @@ info:
 	@echo "LFLAGS " $(LFLAGS)
 	@echo "LDFLAGS " $(LDFLAGS)
 	@echo "PHONY " $(phony)
+
 
 .PHONY: $(phony)
 

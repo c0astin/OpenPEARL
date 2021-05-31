@@ -57,12 +57,14 @@ void clock_gettime_nsec(uint64_t * nsec) {
    (*clock_gettime_cb)(nsec);
 }
 
+#ifndef OPENPEARL_ESP32
 /* prototype in <time.h>  */
 struct tm *localtime_r(const time_t *_time, struct tm * tm) {
    //always assume localtime was UTC
    gmtime_r(_time, tm);
    return tm;
 }
+#endif
 
 /* prototype in <time.h>  */
 struct tm *localtime(const time_t *_time) {
@@ -91,6 +93,7 @@ static void clock_gettime_cb_notready(uint64_t * nsec) {
 }
 
 /* prototype in <sys/time.h>  */
+#ifndef OPENPEARL_ESP32
 int gettimeofday(struct timeval *__p, void *__tz) {
    struct timespec ts;
    clock_gettime(CLOCK_REALTIME, &ts);
@@ -103,3 +106,4 @@ int gettimeofday(struct timeval *__p, void *__tz) {
    __p->tv_sec = ts.tv_sec;
    return 0;
 }
+#endif

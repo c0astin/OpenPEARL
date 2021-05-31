@@ -40,7 +40,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-#define _POSIX_TIMERS
+//#define _POSIX_TIMERS    // not required for esp32 v4.2
 #include <time.h>
 #include <errno.h>
 
