@@ -234,11 +234,11 @@ buildPart1: links
 	rm -f OpenPEARLProject/main/PearlIncludes.h
 	ln -s ../../pearl.h OpenPEARLProject/main/PearlIncludes.h
 	#./runbuild.sh $(IDF_PATH)
-	(. $(IDF_PATH)/export.sh; idf.py -C OpenPEARLProject bootloader)
+	(. $(ESP_IDF_PATH)/export.sh; idf.py -C OpenPEARLProject bootloader)
 
 phony += OpenPEARLProject
 OpenPEARLProject: buildPart1 mkFakeTypes 
-	(. $(IDF_PATH)/export.sh; idf.py -C OpenPEARLProject app)
+	(. $(ESP_IDF_PATH)/export.sh; idf.py -C OpenPEARLProject app)
 	
 phony += install
 install: OpenPEARLProject esp32.xml cc_bin run_bin
