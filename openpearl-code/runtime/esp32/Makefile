@@ -225,6 +225,7 @@ mkFakeTypes:
 phony += buildPart1
 buildPart1: links
 	echo [build] $@
+	(. $(ESP_IDF_PATH)/export.sh; idf.py -C OpenPEARLProject bootloader)
 	rm -f pearl2.h
 	echo "create pearl.h"
 	$(IC) -c $(INCS) -DOPENPEARL_ESP32  <PearlIncludes.h | $(DWS) >pearl2.h
@@ -232,8 +233,6 @@ buildPart1: links
 	rm -f pearl2.h sysincs.h
 	rm -f OpenPEARLProject/main/PearlIncludes.h
 	ln -s ../../pearl.h OpenPEARLProject/main/PearlIncludes.h
-	#./runbuild.sh $(IDF_PATH)
-	(. $(ESP_IDF_PATH)/export.sh; idf.py -C OpenPEARLProject bootloader)
 
 phony += OpenPEARLProject
 OpenPEARLProject: buildPart1 mkFakeTypes 
