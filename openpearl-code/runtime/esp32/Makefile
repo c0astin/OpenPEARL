@@ -238,8 +238,8 @@ OpenPEARLProject: bootloader mkFakeTypes ../common/Signals.hh ../common/Signals.
 	ln -s ../../pearl.h OpenPEARLProject/main/PearlIncludes.h
 	(. $(ESP_IDF_PATH)/export.sh; idf.py -C OpenPEARLProject app)
 	
-phony += removeSignaksHhHcc
-removeSignaksHhHcc: 
+phony += removeSignalsHhHcc
+removeSignalsHhHcc: 
 	rm -f ../common/Signals.hh ../common/Signals.hcc
 
 phony += install
