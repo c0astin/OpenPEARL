@@ -1,0 +1,91 @@
+MODULE(mqtt_lm75);
+SYSTEM;
+   Esp32MqttTcpClient('mqtt://ra-tow', 1883); !change ip or domain name to your mqtt_broker
+   i2cbus_0: Esp32I2CBus(0, 21, 22, 100000);
+   lm75_0: LM75('48'B4) --- i2cbus_0;
+   con: StdOut;
+PROBLEM;
+
+   SPC lm75_0 DATION IN SYSTEM BASIC FIXED(15) GLOBAL;
+   SPC con DATION OUT SYSTEM ALPHIC;
+   
+   DCL thermometer_0 DATION IN BASIC FIXED(15) CREATED(lm75_0);
+   DCL console DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(con);
+   
+   DCL consoleMutex SEMA PRESET(1);
+   DCL temp0Mutex SEMA PRESET(1);
+   
+   DCL global_temp_0 FLOAT;
+   
+mqttPublish: PROC(topic CHAR(40) , data CHAR(40) );
+  DCL xx CHAR(40);
+  xx = topic;
+
+   __cpp__(
+    "pearlrt::Esp32MqttTcpClient* cl = pearlrt::Esp32MqttTcpClient::getInstance();"
+    "cl->publish(_topic, _data);"
+);
+END;
+
+pub: TASK PRIO 1 MAIN;
+    DCL topic0 CHAR(40) INIT('/keller/temperatur');
+    DCL topic1 CHAR(40) INIT('/keller/timestamp');
+    DCL data CHAR(40);
+    DCL seconds FIXED(31) INIT(0);
+ 
+    global_temp_0=0;
+    OPEN console;
+
+    ACTIVATE readTemp_0;
+    
+    REPEAT
+       seconds = seconds + 1;
+
+       REQUEST temp0Mutex;
+       CONVERT 'Temperatur_0=',global_temp_0 
+       TO data BY A, F(5,1);
+       RELEASE temp0Mutex;
+       PUT 'publish: topic=',topic0,' data=',data TO console BY A,A,SKIP;
+       mqttPublish(topic0, data);
+
+       CONVERT 'timestamp=',seconds TO data BY A, F(10);
+       PUT 'publish: topic=', topic1,' data=',data TO console BY A,A,SKIP;
+       mqttPublish(topic1, data);
+       
+       AFTER 1.0 SEC RESUME;
+    END;
+END;
+
+/*
+receiver: TASK PRIO 3;
+   DCL topic CHAR(40) INIT('/topic/prl');
+   DCL data CHAR(40);
+     __cpp__(
+          "pearlrt::Esp32MqttTcpClient* cl = pearlrt::Esp32MqttTcpClient::getInstance();"
+         "cl->subscribe(_topic);"
+   );
+   REPEAT
+     __cpp__(
+          "cl->readMessage(_topic, _data);"
+     );
+       REQUEST consoleMutex;
+       PUT 'received topic:',topic,'data: ',data TO console BY A,A,SKIP,A,A,SKIP;
+       RELEASE consoleMutex;
+   END;
+END;
+*/
+
+readTemp_0: TASK PRIO 1;
+  DCL t FIXED(15);
+  OPEN thermometer_0;
+  REPEAT
+     TAKE t FROM thermometer_0;
+     REQUEST temp0Mutex;
+     global_temp_0 = t/10;
+     RELEASE temp0Mutex;
+     AFTER 0.5 SEC RESUME;
+  END;
+  CLOSE thermometer_0;
+END;
+
+MODEND;
