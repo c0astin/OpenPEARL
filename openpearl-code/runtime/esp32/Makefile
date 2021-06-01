@@ -220,7 +220,7 @@ mkFakeTypes:
 	rm -f sizes.txt mkFakeTypes.o check_FakeTypes.o fakeTypes)
 
 # build part 1 
-#   run iclude composer needed for dummy application in OpenPEARLProject
+#   run include composer needed for dummy application in OpenPEARLProject
 #   build bootloader to (re-)create sdkconfig.h needed for mkFakeTypes
 phony += bootloader
 bootloader: links
@@ -228,7 +228,7 @@ bootloader: links
 	(. $(ESP_IDF_PATH)/export.sh; idf.py -C OpenPEARLProject bootloader)
 
 phony += OpenPEARLProject
-OpenPEARLProject: bootloader mkFakeTypes 
+OpenPEARLProject: bootloader mkFakeTypes ../common/Signals.hh ../common/Signals.hcc
 	rm -f pearl2.h
 	echo "create pearl.h"
 	$(IC) -c $(INCS) -DOPENPEARL_ESP32  <PearlIncludes.h | $(DWS) >pearl2.h
@@ -238,8 +238,12 @@ OpenPEARLProject: bootloader mkFakeTypes
 	ln -s ../../pearl.h OpenPEARLProject/main/PearlIncludes.h
 	(. $(ESP_IDF_PATH)/export.sh; idf.py -C OpenPEARLProject app)
 	
+phony += removeSignaksHhHcc
+removeSignaksHhHcc: 
+	rm -f ../common/Signals.hh ../common/Signals.hcc
+
 phony += install
-install: OpenPEARLProject esp32.xml cc_bin run_bin
+install: removeSignalsHhHcc OpenPEARLProject esp32.xml cc_bin run_bin
 	echo [install]
 	ar d OpenPEARLProject/build/esp-idf/main/libmain.a testprog.cc.obj system.cc.obj
 	(cd OpenPEARLProject; ./cp.cmd)
