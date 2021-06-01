@@ -1,4 +1,3 @@
-.ONESHELL:
 
 # lets get the absolute path of this directory
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -17,7 +16,7 @@ ESP_IDF_PATH:= $(subst $\",,$(CONFIG_ESP32_IDF_PATH))
 $(warning ESP_IDF_PATH: $(ESP_IDF_PATH))
 
 ##setup the variable for esp-idf build process
-#export IDF_PATH=$(ESP_IDF_PATH)
+export IDF_PATH=$(shell dirname $(ESP_IDF_PATH)/exports.sh)
 $(warning IDF_PATH: $(IDF_PATH))
 
 #and have a look into this folder
