@@ -222,10 +222,13 @@ mkFakeTypes:
 # build part 1 
 #   run iclude composer needed for dummy application in OpenPEARLProject
 #   build bootloader to (re-)create sdkconfig.h needed for mkFakeTypes
-phony += buildPart1
-buildPart1: links
+phony += bootloader
+bootloader: links
 	echo [build] $@
 	(. $(ESP_IDF_PATH)/export.sh; idf.py -C OpenPEARLProject bootloader)
+
+phony += OpenPEARLProject
+OpenPEARLProject: bootloader mkFakeTypes 
 	rm -f pearl2.h
 	echo "create pearl.h"
 	$(IC) -c $(INCS) -DOPENPEARL_ESP32  <PearlIncludes.h | $(DWS) >pearl2.h
@@ -233,9 +236,6 @@ buildPart1: links
 	rm -f pearl2.h sysincs.h
 	rm -f OpenPEARLProject/main/PearlIncludes.h
 	ln -s ../../pearl.h OpenPEARLProject/main/PearlIncludes.h
-
-phony += OpenPEARLProject
-OpenPEARLProject: buildPart1 mkFakeTypes 
 	(. $(ESP_IDF_PATH)/export.sh; idf.py -C OpenPEARLProject app)
 	
 phony += install
