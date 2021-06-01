@@ -90,6 +90,20 @@ define esp32build
   idf.py -C OpenPEARLProject
 endef
 
+ESPINCS := -I . -I OpenPEARLProject/build/config \
+	-I $(ESP_IDF_PATH)/components/freertos/include/freertos \
+	-I $(ESP_IDF_PATH)/components/freertos/xtensa/include \
+	-I $(ESP_IDF_PATH)/components/xtensa/include \
+	-I $(ESP_IDF_PATH)/components/xtensa/esp32/include \
+	-I $(ESP_IDF_PATH)/components/freertos/xtensa/include/freertos \
+	-I $(ESP_IDF_PATH)/components/esp_rom/include \
+	-I $(ESP_IDF_PATH)/components/esp_common/include \
+	-I $(ESP_IDF_PATH)/components/esp_timer/include \
+	-I $(ESP_IDF_PATH)/components/soc/include \
+	-I $(ESP_IDF_PATH)/components/soc/src/esp32/include \
+	-I $(ESP_IDF_PATH)/components/soc/soc/esp32/include \
+	-I $(ESP_IDF_PATH)/components/heap/include \
+	-I $(ESP_IDF_PATH)/components/esp_system/include
 
 # ---------------- add remaining board depending modules
 
@@ -133,7 +147,6 @@ esp32.xml: $(XMLFILES)
 
 phony += clean
 clean: 
-	$(call esp32build) clean
 	@rm -f $(targets)
 	@rm -f $(GTEST_OBJS)
 	@rm -f $(GTEST_OBJS1)
@@ -147,29 +160,35 @@ clean:
 	@rm -rf latex
 	@rm -f ../common/tests/*.o
 	@rm -f tests/*.o
+	@rm -rf OpenPEARLProject/build       #$(call esp32build) clean
+	@rm -f OpenPEARLProject/main/common
+	@rm -f OpenPEARLProject/main/addOns
+	@rm -f OpenPEARLProject/main/PEARL
+	@rm -f OpenPEARLProject/main/PearlIncludes.h
+	@rm -f FreeRTOSConfig.h
 
 phony += doc
 doc:
 	doxygen doc_stuff/Doxyfile
 #	(cd latex; make pdf; cd ..)
 
-phony += gitclean
-gitclean:
-	@echo "clean all files and links for git operations"
-	@rm -rf OpenPEARLProject/build
-	@rm OpenPEARLProject/main/common
-	@rm OpenPEARLProject/main/addOns
-	@rm OpenPEARLProject/main/PEARL
-	@rm OpenPEARLProject/main/PearlIncludes.h
 
-phony += links
-links:
+# setup links to other OpenPEARL groups
+OpenPEARLProject/main/PearlIncludes.h:
 	ln -s ../../pearl.h OpenPEARLProject/main/PearlIncludes.h
+
+OpenPEARLProject/main/PEARL:
 	ln -s ../../../FreeRTOS/PEARL OpenPEARLProject/main/PEARL
+
+OpenPEARLProject/main/addOns:
 	ln -s ../../../FreeRTOS/addOns OpenPEARLProject/main/addOns
+
+OpenPEARLProject/main/common:
 	ln -s ../../../common OpenPEARLProject/main/common
 
-
+phony += links
+links: OpenPEARLProject/main/PearlIncludes.h OpenPEARLProject/main/PEARL\
+	OpenPEARLProject/main/addOns OpenPEARLProject/main/common
 
 phony += patch
 patch:
@@ -189,8 +208,23 @@ prepare:
 #	#(cd OpenPEARLProject; ./idf2mk linker.txt $(IDF_PATH)/components/)
 #	#(cd OpenPEARLProject; cat esp_idf_builf.mk)
 
-phony += OpenPEARLProject
-OpenPEARLProject:  
+phony += mkFakeTypes
+mkFakeTypes:
+	@echo "[create] $@"
+	echo $(CXX) $(INCS) $(ESPINCS) -c ../FreeRTOS/addOns/mkFakeTypes.c
+	$(CXX) $(INCS) $(ESPINCS) -c ../FreeRTOS/addOns/mkFakeTypes.c
+	@mv mkFakeTypes.o ../FreeRTOS/addOns/
+	@(cd ../FreeRTOS/addOns; size -A mkFakeTypes.o >sizes.txt;\
+	  gcc fakeTypes.c -o fakeTypes; ./fakeTypes)
+	@$(CXX) $(INCS) $(ESPINCS) -c ../FreeRTOS/addOns/check_FakeTypes.c
+	@(cd ../FreeRTOS/addOns; \
+	rm -f sizes.txt mkFakeTypes.o check_FakeTypes.o fakeTypes)
+
+# build part 1 
+#   run iclude composer needed for dummy application in OpenPEARLProject
+#   build bootloader to (re-)create sdkconfig.h needed for mkFakeTypes
+phony += buildPart1
+buildPart1: links
 	echo [build] $@
 	rm -f pearl2.h
 	echo "create pearl.h"
@@ -199,7 +233,12 @@ OpenPEARLProject:
 	rm -f pearl2.h sysincs.h
 	rm -f OpenPEARLProject/main/PearlIncludes.h
 	ln -s ../../pearl.h OpenPEARLProject/main/PearlIncludes.h
-	./runbuild.sh $(IDF_PATH)
+	#./runbuild.sh $(IDF_PATH)
+	(. $(IDF_PATH)/export.sh; idf.py -C OpenPEARLProject bootloader)
+
+phony += OpenPEARLProject
+OpenPEARLProject: buildPart1 mkFakeTypes 
+	(. $(IDF_PATH)/export.sh; idf.py -C OpenPEARLProject app)
 	
 phony += install
 install: OpenPEARLProject esp32.xml cc_bin run_bin
@@ -271,6 +310,7 @@ help:
 	@echo " make initial_flash - flash partition table and bootloader"
 	@echo "                      must be done once for a new esp32-system"
 	@echo " make install	 - build esp-specific OpenPEARL library and install"
+	@echo " make clean       - remove previously created flies"
 
 phony += info
 info:
