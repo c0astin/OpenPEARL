@@ -246,7 +246,7 @@ phony += install
 install: removeSignalsHhHcc OpenPEARLProject esp32.xml cc_bin run_bin
 	echo [install]
 	ar d OpenPEARLProject/build/esp-idf/main/libmain.a testprog.cc.obj system.cc.obj
-	(cd OpenPEARLProject; ./cp.cmd)
+	(cd OpenPEARLProject; ./cp.cmd `pwd`)
 	cp OpenPEARLProject/build/bootloader/bootloader.bin $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
 	cp OpenPEARLProject/build/partition_table/partition-table.bin $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32
 	cp esp32.xml $(CONFIG_INSTALL_Target)/lib
