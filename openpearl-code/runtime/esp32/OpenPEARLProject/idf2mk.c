@@ -3,17 +3,20 @@ convert idf link command into Makefile version
 * to create the input file
   * just invoke idf.py -v build in the OpnePEARLProject folder
   * copy the prelast (eq: [70/71] action into a text file and remove
-    text befor the g++ invokation and any pernig text after the link command
+    text before the g++ invocation and any pending text after the link command
 * the input file contains archives in the current project and
    in the esp/esp-idf folders
-* these archives must becom copied into
-    $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/prj  - in short $1/prj and
+* these archives must become copied into
+    $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/prj  - in short $1/prj
+       if the filename starts with the current working directory
+     and
     $(CONFIG_INSTALL_Target)/lib/OpenPEARLesp32/idf  - in short $1/idf 
+      if the filename starts with the absolute path of the location of esp/esp-idf
 * the -L option must become adopted according the new location
   * all -L options are created with absolute path
   * the esp-idf-path is already known by the 'pattern' parameter
   * the project related folders must contain 'runtime/esp32/OpenPEARLProject'
-    we may take the reaning part relative the the target location
+    we may take the remaining part relative the the target location
   * the paths are based on ~/esp/esp-idf/components/ 
     and .../runtime/esp32/OpenPEARLProject/build/esp-idf/
 * the -T option lists linkter command files. They must become copied 
@@ -37,6 +40,7 @@ static   FILE * in;
 static   FILE * cp;
 static   FILE * esp_idf_build;
 static   char* patternCommon;
+static   char* currentWorkingDir;;
 static   char* installPath;
 static   int fail = 0;
 
@@ -111,19 +115,22 @@ int main(int narg, char **argv) {
    int nextIsForLinker = NOTFORLINKER;
    int beforeMinusO = 1;
 
-   if (narg == 4) {
+   if (narg == 5) {
       src = argv[1];
       patternCommon = argv[2];
-      installPath = argv[3];
+      currentWorkingDir = argv[3];
+      installPath = argv[4];
    } else {
       fprintf(stderr,"call with\n");
-      fprintf(stderr,"    name of file with idf-build command\n");
+      fprintf(stderr,"    name of file with idf-build command (e.g. linker.txt)\n");
       fprintf(stderr,"    pattern for common archives (e.g. /home/.../component) \n");
+      fprintf(stderr,"    the current working directory as absolute path \n");
       fprintf(stderr,"    install path for libraries (e.g. /usr/local/lib/OpenPEARLesp32/\n");
       exit(1);
    }
    printf("src: %s\n",src);
    printf("patternCommon: %s\n",patternCommon);
+   printf("currentWorkingDir: %s\n",currentWorkingDir);
    printf("installPath: %s\n",installPath);
   
    if (!stringEndsWith(patternCommon,"/")) {
@@ -167,7 +174,12 @@ int main(int narg, char **argv) {
                   sprintf(currentLinkDestination,
                           "%s/idf/%s",
                           installPath, item+strlen(patternCommon));
-               } else {
+//               } else if (stringStartsWith(item,currentWorkingDir)) {
+//                  sprintf(currentLinkDestination,
+//                          "$1/%s/idf/%s",
+//                          installPath, item+strlen(patternCommon));
+//
+	       } else {
                   sprintf(currentLinkDestination,
                           "%s/prj/%s",
                           installPath,
@@ -182,8 +194,14 @@ int main(int narg, char **argv) {
        	      sprintf(destPath,"%s/%s", currentLinkDestination,item);
               discardFilename(destPath);	
               fprintf(cp,"mkdir -p %s\n", destPath);
-              fprintf(cp," cp %s/%s %s/%s\n",
+              if (stringStartsWith(currentLinkSource, currentWorkingDir)) {
+                 fprintf(cp," cp $1/%s/%s %s/%s\n",
+                     currentLinkSource+strlen(currentWorkingDir),item,
+                     currentLinkDestination, item);
+              } else {
+                 fprintf(cp," cp %s/%s %s/%s\n",
                      currentLinkSource,item,currentLinkDestination, item);
+              }
             } else {
               fprintf(esp_idf_build,"%s\\\n", item);
             }

@@ -569,9 +569,9 @@ mkdir -p /usr/local/lib/OpenPEARLesp32/idf/esp_rom/esp32/ld
 mkdir -p /usr/local/lib/OpenPEARLesp32/idf/esp_rom/esp32/ld
  cp /home/mueller/esp/esp-idf/components/esp_rom/esp32/ld/esp32.rom.newlib-funcs.ld /usr/local/lib/OpenPEARLesp32/idf/esp_rom/esp32/ld/esp32.rom.newlib-funcs.ld
 mkdir -p /usr/local/lib/OpenPEARLesp32/prj/esp32
- cp /home/mueller/OpenPEARL/openpearl-code/runtime/esp32/OpenPEARLProject/build/esp-idf/esp32/esp32_out.ld /usr/local/lib/OpenPEARLesp32/prj/esp32/esp32_out.ld
+ cp $1//build/esp-idf/esp32/esp32_out.ld /usr/local/lib/OpenPEARLesp32/prj/esp32/esp32_out.ld
 mkdir -p /usr/local/lib/OpenPEARLesp32/prj/esp32/ld
- cp /home/mueller/OpenPEARL/openpearl-code/runtime/esp32/OpenPEARLProject/build/esp-idf/esp32/ld/esp32.project.ld /usr/local/lib/OpenPEARLesp32/prj/esp32/ld/esp32.project.ld
+ cp $1//build/esp-idf/esp32/ld/esp32.project.ld /usr/local/lib/OpenPEARLesp32/prj/esp32/ld/esp32.project.ld
 mkdir -p /usr/local/lib/OpenPEARLesp32/idf/esp32/ld
  cp /home/mueller/esp/esp-idf/components/esp32/ld/esp32.peripherals.ld /usr/local/lib/OpenPEARLesp32/idf/esp32/ld/esp32.peripherals.ld
 mkdir -p /usr/local/lib/OpenPEARLesp32/prj/newlib
