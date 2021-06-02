@@ -21,7 +21,7 @@ T1: TASK MAIN;
    ! produces an exception
    x := 10;
    __cpp__ (
-	"} catch (FixedRangeSignal s) { "
+	"} catch (pearlrt::FixedRangeSignal s) { "
 	"   pearlrt::Control::setExitCode(1); "
         " } " );
 END;

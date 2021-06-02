@@ -13,7 +13,7 @@ T1: TASK MAIN;
    null = 0;
    __cpp__ (" try {");
    x := x // y;
-   __cpp__("} catch (FixedDivideByZeroSignal s) { ");
+   __cpp__("} catch (pearlrt::FixedDivideByZeroSignal s) { ");
       z := 1;
    __cpp__("}");
    !   PUT 'FAILED' ...

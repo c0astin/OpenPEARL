@@ -2,6 +2,7 @@ CXX=/home/mueller/.espressif/tools/xtensa-esp32-elf/esp-2020r3-8.4.0/xtensa-esp3
 
 LINK_PARAMETERS_1= -mlongcalls\
  -Wno-frame-address\
+ -mtext-section-literals\
 
 LINK_PARAMETERS_2= /usr/local/lib/OpenPEARLesp32/prj/xtensa/libxtensa.a \
  /usr/local/lib/OpenPEARLesp32/prj/mbedtls/libmbedtls.a \

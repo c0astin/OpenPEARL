@@ -16,8 +16,17 @@
 # the result of make doesnotbuild is ok, if no test cases work
 
 #	800_struct_decl  \
+
+include ../../configuration/.config
  
 DONOTBUILD= 030_signals 031_signalsInduce  \
+	851_ref_deref
+
+# on ESP32 we have no Disc
+DONOTBUILDESP32= 030_signals 031_signalsInduce  \
+	224_bit_slice 410_charSelection\
+	700_dation_rw 701_dation_pg 703_userdation_dcl \
+	704_dation_open 705_dation_close 707_dation_pg_formats 710_rst \
 	851_ref_deref
 
 DONOTRUN=000_empty \
@@ -32,7 +41,15 @@ DONOTRUN=000_empty \
 
 TESTS=$(shell ls *.prl)
 BINS=$(TESTS:%.prl=%)
+
+ifeq ($(CONFIG_LINUX),y) 
 BUILD=$(filter-out $(DONOTBUILD),$(BINS)) 
+endif
+
+ifeq ($(CONFIG_ESP32),y) 
+BUILDESP32=$(filter-out $(DONOTBUILDESP32),$(BINS)) 
+endif
+
 RUN=$(filter-out $(DONOTRUN) $(DONOTBUILD) ,$(BINS)) 
 
 .PHONY: help all run build clean allbuild allrun redo
@@ -57,18 +74,36 @@ redo:	build doesnotbuild run doesnotrun
 allbuild:
 	@echo "try to build test programs"
 	@echo "--------------------------"
-	@../run-compile.sh 0 $(BINS)
+ifeq ($(CONFIG_LINUX),y) 
+	@../run-compile.sh 0 linux $(BINS) 
+endif
+ifeq ($(CONFIG_ESP32),y) 
+	@../run-compile.sh 0 esp32 $(BINS) 
+endif
 
 build:
 	@echo "try to build test programs"
 	@echo "--------------------------"
-	@../run-compile.sh 1 $(BUILD)
+ifeq ($(CONFIG_LINUX),y) 
+	@../run-compile.sh 1 linux $(BUILD)
+	@echo
 	@echo "excluded (NOT build): " $(DONOTBUILD)
+endif
+ifeq ($(CONFIG_ESP32),y) 
+	@../run-compile.sh 1 esp32 $(BUILDESP32)
+	@echo
+	@echo "excluded (NOT build): " $(DONOTBUILDESP32)
+endif
 
 doesnotbuild:
 	@echo "none of the programs should build"
 	@echo "--------------------------"
-	@../run-compile.sh 2 $(DONOTBUILD)
+ifeq ($(CONFIG_LINUX),y) 
+	@../run-compile.sh 2 linux $(DONOTBUILD)
+endif
+ifeq ($(CONFIG_ESP32),y) 
+	@../run-compile.sh 2 esp32 $(DONOTBUILDESP32)
+endif
 
 allrun:
 	@echo "run simple test programs"
