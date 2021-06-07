@@ -56,6 +56,7 @@ then
    echo "   Example: "
    echo "     prl x.prl -c   : compile only until C++ source"
    echo "     prl x.prl      : compile and link"
+   echo "     prl x.prl -r   : compile, link and run"
    echo "     prl x.cc       : compile previously created C++ source and link"
    echo "     prl -r x       : run application "
    exit 1
@@ -82,26 +83,60 @@ fn=${INPUT%.*}
 #echo ext: $inp_ext
 #echo fn: $fn 
 
-if [ "$RUN" = "1" ] ; then
-   if [ "$fn" != "$ext" ] ; then
-#include "runtime/run_bin.inc"
-      if [ $rc -ne 0 ]; then
-          echo "*** program terminated with error ($rc) ***"
-      fi
-   else
-      echo "specify executable file to perform run "
+# ----- check input parameters and decide what to do
+# --- result flags are prlcc, ccbin, runbin
+if [ "$COMPILEONLY" = "1" ] ; then
+   if [ "$RUN" = "1" ] ; then
+      echo "cannot specify -c and -r simultaneously"
       exit 1
    fi
-else
- if [ "$inp_ext" = "prl" ] ; then
-   prlcc=1;
- else if [ "$inp_ext" != "cc" ] ; then
-   echo "cannot treat extension " $inp_ext;
-   exit 1;
- fi;
+   if [ "$inp_ext" != "prl" ] ; then
+      echo " option -c requires pearl-source"
+      exit 1
+   fi
 fi
 
-#echo "prlcc=" $prlcc
+
+if [ "$inp_ext" = "prl" ] ; then
+   prlcc=1
+   if [ "$COMPILEONLY" = "1" ] ; then
+      ccbin=0
+      runbin=0
+   else
+      ccbin=1
+   fi
+   if [ "$RUN" = "1" ] ; then
+      runbin=1
+   fi
+fi
+
+if [ "$inp_ext" = "cc" ] ; then
+   prlcc=0
+   ccbin=1
+   if [ "$RUN" = "1" ] ; then
+      runbin=1
+   fi
+fi
+
+if [ "$inp_ext" = "$fn" ] ; then
+   prlcc=0
+   ccbin=0
+   if [ "$RUN" = "1" ] ; then
+      runbin=1
+   else 
+      echo " option -r needs prl, cc or application"
+      exit 1
+   fi
+fi
+# -------------
+#echo "prlcc" $prlcc
+#echo "ccbin" $ccbin
+#echo "runbin" $runbin
+
+# --------------------
+# evaluate flags and build the desired targets
+
+
 if [ "$prlcc" = "1" ] ; then 
 #   echo "PRL-> C++"
  #include "compiler/prl_cc.inc"
@@ -111,23 +146,28 @@ if [ "$prlcc" = "1" ] ; then
   echo "terminate due to errors in stage 1"
   exit $rc
  fi
-else  if [ "$COMPILEONLY" = "1" ] ; then
-   echo " C++ input conflicts with option -c"
-   exit 1
-   fi
 fi
-if [ "$COMPILEONLY" != "1" ] ; then
-  if [ "$NOSYSTEMPART" != "1" ] ; then
-    SYSTEM="system.cc"
-    #include "imc3/imc.inc"
-    rc=$?
-    if [ $rc -ne 0 ]
-    then
-      echo "terminate due to errors in stage 1b (imc)"
-      exit $rc
-    fi
+
+if [ "$COMPILEONLY" = "1" ] ; then
+   exit 0
+fi
+
+
+
+if [ "$NOSYSTEMPART" != "1" ] ; then
+#   echo "run IMC"
+  SYSTEM="system.cc"
+  #include "imc3/imc.inc"
+  rc=$?
+  if [ $rc -ne 0 ]
+  then
+    echo "terminate due to errors in stage 1b (imc)"
+    exit $rc
   fi
-  #   echo "C++->BIN"
+fi
+
+if [ "$ccbin" = "1" ] ; then 
+  #  echo "C++->BIN"
 #include "runtime/cc_bin.inc"
   if [ $rc -ne 0 ]
   then
@@ -136,5 +176,11 @@ if [ "$COMPILEONLY" != "1" ] ; then
      exit $rc
   fi
 fi
-fi
 
+
+if [ "$runbin" = "1" ] ; then 
+   #include "runtime/run_bin.inc"
+   if [ $rc -ne 0 ]; then
+      echo "*** program terminated with error ($rc) ***"
+   fi
+fi
