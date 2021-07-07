@@ -77,7 +77,7 @@ public class TypeFloat extends TypeDefinition {
     }
     
     public Integer getSize() {
-      // we have only prcisions of 24 and 53, which are mapped to float and double, resp.
+      // we have only precisions of 24 and 53, which are mapped to float and double, resp.
       if (m_precision<30) {
         return 4;
       } else {

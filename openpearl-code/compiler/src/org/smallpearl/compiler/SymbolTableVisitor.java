@@ -460,8 +460,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
         Log.debug("SymbolTableVisitor:visitVariableDenotation:ctx" + CommonUtils.printContext(ctx));
 
+
         m_type = null;
-        
 
         if (ctx != null) {
             for (ParseTree c : ctx.children) {
@@ -510,6 +510,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                     if (j < initElementList.size()) {
                         if ( initElementList.get(j) instanceof SimpleInitializer) {
                             SimpleInitializer initializer = (SimpleInitializer)initElementList.get(j);
+                            checkTypeCompability(m_type,initializer);
                             fixPrecision(ctx, m_type, initializer);
                             variableEntry = new VariableEntry(identifierDenotationList.get(i), m_type, hasAllocationProtection, ctx, initElementList.get(j));
                             j++;
@@ -543,6 +544,28 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
         return null;
     }
 
+    /**
+     * Check the compability of the varioble type and the initializer
+     *
+     * @param type of the variable
+     * @param initializer
+     */
+
+    private void checkTypeCompability(TypeDefinition type, SimpleInitializer initializer) {
+        Log.debug("SymbolTableVisitor:checkTypeCompability:type" + type);
+
+        if ((type instanceof TypeFixed && !(initializer.getConstant() instanceof ConstantFixedValue)) ||
+                (type instanceof TypeFloat && (!(initializer.getConstant() instanceof ConstantFloatValue) &&
+                !(initializer.getConstant() instanceof ConstantFixedValue))) ||
+                (type instanceof TypeDuration && !(initializer.getConstant() instanceof ConstantDurationValue)) ||
+                (type instanceof TypeClock && (!(initializer.getConstant() instanceof ConstantDurationValue) &&
+                        !(initializer.getConstant() instanceof ConstantClockValue))) ||
+                (type instanceof TypeChar && !(initializer.getConstant() instanceof ConstantCharacterValue)) ||
+                (type instanceof TypeBit && !(initializer.getConstant() instanceof ConstantBitValue))) {
+            ErrorStack.add(initializer.m_context, null, " Init type does not much type of variable");
+        }
+    }
+
     private void fixPrecision(ParserRuleContext ctx, TypeDefinition type, SimpleInitializer initializer) {
         Log.debug("SymbolTableVisitor:fixPrecision:ctx" + CommonUtils.printContext(ctx));
 
@@ -552,8 +575,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             if (initializer.getConstant() instanceof ConstantFixedValue) {
                 ConstantFixedValue value = (ConstantFixedValue) initializer.getConstant();
                 value.setPrecision(typ.getPrecision());
-            } else {
-                throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else if (type instanceof TypeFloat) {
             TypeFloat typ = (TypeFloat) type;
@@ -566,8 +587,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 ConstantFloatValue floatValue = new ConstantFloatValue((double) fixedValue.getValue(), typ.getPrecision());
                 m_constantPool.add(floatValue);
                 initializer.setConstant(floatValue);
-            } else {
-                throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         }
     }
@@ -1740,6 +1759,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
             precision = ((TypeFloat)type).getPrecision();
         } else if ( type instanceof TypeBit) {
             precision = ((TypeBit)type).getPrecision();
+        } else if ( type instanceof TypeClock) {
+            precision = 0;
         } else if ( type instanceof TypeArray) {
             TypeArray arrType = (TypeArray)type;
             precision = getPrecisionByType(index, arrType.getBaseType());
@@ -1904,7 +1925,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
         ErrorStack.enter(ctx, "DationSPC");
 
-
         visitTypeDation(ctx.typeDation());
         TypeDation d = (TypeDation)m_type;
         d.setIsDeclaration(false);
@@ -1950,7 +1970,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
                 InterruptEntry ie = new InterruptEntry(iName, isGlobal, ctx);
                 m_currentSymbolTable.enter(ie);
             }
-
         }
         return null;
     }
