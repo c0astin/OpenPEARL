@@ -1,0 +1,25 @@
+MODULE(tochar);
+SYSTEM;
+ so: StdOut;
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC;
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+t1: TASK MAIN;
+  DCL c1 CHAR;
+  DCL c2 CHAR(2) INIT('ab');
+
+  OPEN stdout;
+
+  c1 = TOCHAR 65;
+  PUT c1, 'sollte A sein' TO stdout BY 2A,SKIP;
+
+  PUT c2 TO stdout BY A, SKIP;;
+  c2.CHAR(1) = c2.CHAR(2);
+  PUT c2,' sollte bb sein'  TO stdout BY A, SKIP;;
+  c2.CHAR(1) = TOCHAR 65;
+  PUT c2,' sollte Ab sein'  TO stdout BY A, SKIP;;
+END;
+
+MODEND;
+
