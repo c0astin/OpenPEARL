@@ -181,7 +181,10 @@ namespace pearlrt {
       \param rhs the new value of the substring, which is adressed
                  by the current object
       */
-      void setSlice(const Character<1> rhs);
+      template<size_t S>
+      void setSlice(Character<S> rhs) {
+         setSlice(CharSlice(rhs));
+      }
 
 
       /**
