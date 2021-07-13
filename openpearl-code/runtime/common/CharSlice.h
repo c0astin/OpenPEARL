@@ -183,7 +183,6 @@ namespace pearlrt {
       */
       void setSlice(const Character<1> rhs);
 
-      /**
 
       /**
       upper bound
