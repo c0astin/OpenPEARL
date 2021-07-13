@@ -176,6 +176,16 @@ namespace pearlrt {
       void setSlice(const CharSlice& rhs);
 
       /**
+      write the character of rhs to the current object
+
+      \param rhs the new value of the substring, which is adressed
+                 by the current object
+      */
+      void setSlice(const Character<1> rhs);
+
+      /**
+
+      /**
       upper bound
 
       return the upper limit of the index

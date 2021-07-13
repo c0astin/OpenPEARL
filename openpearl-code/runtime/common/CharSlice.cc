@@ -157,4 +157,9 @@ namespace pearlrt {
       }
    }
 
+   void CharSlice::setSlice(const Character<1> rhs) {
+      characterSafeCopy(data, rhs.data, 1);
+      characterFillSpaces(data + 1, length.x  - 1);
+   }
+
 }
