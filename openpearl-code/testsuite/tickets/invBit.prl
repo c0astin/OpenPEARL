@@ -1,0 +1,18 @@
+MODULE(philo);
+
+
+PROBLEM;
+  DCL ordered INV BIT INIT('1'B1); ! '0'B simultaneous; '1'B1  ordered
+
+DCL x FIXED;
+
+main: TASK PRIO 1 MAIN;
+   IF ordered THEN
+      x := 1;
+   ELSE;
+      x := 2;
+   FIN;
+END;
+
+MODEND;
+
