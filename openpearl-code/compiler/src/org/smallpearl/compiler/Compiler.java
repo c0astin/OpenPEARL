@@ -48,7 +48,7 @@ import static org.smallpearl.compiler.Log.LEVEL_DEBUG;
 import static org.smallpearl.compiler.Log.LEVEL_ERROR;
 
 public class Compiler {
-    static String version = "v0.8.9.40";
+    static String version = "v0.8.9.41";
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();
@@ -445,6 +445,7 @@ public class Compiler {
                 int ch = System.in.read();
             }
             catch (IOException ex) {
+                ;
             }
         }
 
@@ -462,7 +463,8 @@ public class Compiler {
                 writer.println(code.render(lineWidth));
                 writer.close();
             } catch (IOException e) {
-                System.err.println("Problem writing to the file " + outputFilename);
+                System.err.println("ERROR: Cannot write file " + outputFilename);
+                System.exit(-1);
             }
         } else {
             if(verbose>0) {
@@ -492,6 +494,7 @@ public class Compiler {
                 int ch = System.in.read();
             }
             catch (IOException ex) {
+                ;
             }
         }
 
@@ -507,7 +510,8 @@ public class Compiler {
             writer.println(systemPart.render(lineWidth));
             writer.close();
         } catch (IOException e) {
-            System.err.println("Problem writing the IMC file " + outputFileName);
+            System.err.println("ERROR: Cannot write IMC file " + outputFileName);
+            System.exit(-1);
         }
 
         return null;
