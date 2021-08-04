@@ -72,6 +72,19 @@ namespace pearlrt {
       int d = decimals.x;
       int w = width.x;
       int widthNeeded;
+
+      if (d > 0) {
+         static int rounding[] = {0, 50000, 5000, 500, 50, 5, 0};
+         decimal = 100000;
+         if (d<= 6) {
+            us +=  rounding[d];   // d is from 1 to 6
+            if (us > 1000000) {
+               us -= 1000000;
+               sec++;
+            }
+         }
+      }
+      
       hours = sec / 3600 ;
       sec %= 3600;
       min = sec / 60;
@@ -107,14 +120,9 @@ namespace pearlrt {
       sink.putChar(':');
       i2sink(sec, false, sink);
 
-      if (d > 0) {
-         static int rounding[] = {0, 50000, 5000, 500, 50, 5, 0};
-         sink.putChar('.');
-         decimal = 100000;
-         if (d<= 6) {
-            us +=  rounding[d];   // d is from 1 to 6
-         }
 
+      if (d > 0) {
+         sink.putChar('.');
          // we have only 6 digits precision (micro seconds)
          for (int i=0; i<d; i++) {
             if (i<6) {
