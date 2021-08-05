@@ -76,7 +76,6 @@ __cpp__("ok &= _f31.x == -4;");
 
 
    f31 := SIZEOF x23;
-   f31 := SIZEOF(x23);
 
    ! mixed type operations
    f15 = 3;

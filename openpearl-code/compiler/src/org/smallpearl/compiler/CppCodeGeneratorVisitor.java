@@ -4628,10 +4628,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitSizeofExpression(SmallPearlParser.SizeofExpressionContext ctx) {
         ST st = m_group.getInstanceOf("SIZEOF");
-        if (ctx.expression() != null) {
-            ASTAttribute attr = m_ast.lookup(ctx.expression());
-            if (attr.getVariable() != null) {
 
+        if (ctx.name() != null) {
+            ASTAttribute attr = m_ast.lookup(ctx);
+            if (attr.getVariable() != null) {
                 VariableEntry ve = attr.getVariable();
                 String name = ve.getName();
                 if (ve.getType() instanceof TypeArray) {
@@ -4659,7 +4659,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     length = Integer.parseInt(ctx.simpleType().typeFloatingPointNumber().IntegerConstant().toString());
                 }
                 typeName = "pearlrt::Float<" + length + ">";
-
             } else if (ctx.simpleType().typeBitString() != null) {
                 long length = Defaults.BIT_LENGTH;
                 if (ctx.simpleType().typeBitString().IntegerConstant() != null) {
@@ -4672,7 +4671,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     length = Integer.parseInt(ctx.simpleType().typeCharacterString().IntegerConstant().toString());
                 }
                 typeName = "pearlrt::Character<" + length + ">";
-
             } else {
                 // emergency -- set compiler internal type --> cause c++ errors
                 typeName = ctx.simpleType().getText().toString();

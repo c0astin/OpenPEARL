@@ -1090,7 +1090,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
         if (ctx.IntegerConstant() != null) {
             width = Integer.parseInt(ctx.IntegerConstant().getText());
-            if (width < 1 || width > 63) {
+            if (width < Defaults.FIXED_MIN_LENGTH || width > Defaults.FIXED_MAX_LENGTH) {
                 throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         }
@@ -1107,6 +1107,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements S
 
         if (ctx.IntegerConstant() != null) {
             width = Integer.parseInt(ctx.IntegerConstant().getText());
+            // TODO: Add Defaults here!
             if (width < 1 || width > 255) {
                 throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
