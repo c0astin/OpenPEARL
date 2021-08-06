@@ -1,0 +1,54 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs
+!*/
+
+### Above combination will ignore all files without extension ###
+
+admin/
+compiler/testsuite/
+compiler/.idea/
+gen-railroad.sh
+*.depends
+*.orig
+*~
+*.backup
+*.save
+smallpearl.tmproj
+thirdparty/
+tmp/
+website/
+runtime/FreeRTOS_V8.1.2
+*.cproject
+*.project
+*.settings
+*.a
+*.o
+*.hh
+*.hcc
+*.elf
+*.hex
+*.map
+*.class
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.log
+*.swp
+*.*#
+
+### Ignore ANTLR generated files:
+SmallPearl.interp
+SmallPearl.tokens
+SmallPearlBaseVisitor.java
+SmallPearlLexer.interp
+SmallPearlLexer.java
+SmallPearlLexer.tokens
+SmallPearlParser.java
+SmallPearlVisitor.java
+
