@@ -28,7 +28,7 @@ T1: TASK MAIN;
    !__cpp__ (' _y31 = _x31.abs(); ');
    y31 := SIGN(x31);
    !__cpp__ (' _y31 = _x31.sign(); ');
-   y31 := SIZEOF(x31);
+   y31 := SIZEOF x31;
    !__cpp__ (' _y31 = _x31.size(); ');
 
    fl = SIN(x15);

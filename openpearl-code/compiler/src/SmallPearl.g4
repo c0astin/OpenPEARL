@@ -2116,7 +2116,7 @@ ioStructureComponent
 ////////////////////////////////////////////////////////////////////////////////
 
 expression:
-    primaryExpression                                     # baseExpression
+    primaryExpression                                       # baseExpression
     | op='ATAN' expression                                  # atanExpression
     | op='COS' expression                                   # cosExpression
     | op='EXP' expression                                   # expExpression
@@ -2127,7 +2127,8 @@ expression:
     | op='TANH' expression                                  # tanhExpression
     | op='ABS' expression                                   # absExpression
     | op='SIGN' expression                                  # signExpression
-    | op='SIZEOF' ( expression | simpleType )               # sizeofExpression
+    | op='SIZEOF' ( name | simpleType | typeStructure)
+                  ('MAX'|'LENGTH')?                         # sizeofExpression
     | op='NOT' expression                                   # notExpression
     | op='TOBIT' expression                                 # TOBITExpression
     | op='TOFIXED' expression                               # TOFIXEDExpression

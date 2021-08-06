@@ -1901,7 +1901,6 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implement
 
         m_autoDereference = false;
         visit(ctx.name());
-
         m_autoDereference = true;
 
         attrName = m_ast.lookup(ctx.name());
@@ -1939,6 +1938,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implement
                 ((TypeReference) (attrName.getType())).getBaseType() instanceof TypeProcedure) {
             m_autoDereference = false;
         }
+
         visit(ctx.expression());
 
         m_autoDereference = false;
@@ -1963,12 +1963,24 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void> implement
     public Void visitSizeofExpression(SmallPearlParser.SizeofExpressionContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitSizeofExpression:ctx" + CommonUtils.printContext(ctx));
 
+        ErrorStack.enter(ctx.getParent()); // TODO: MS Wrong ctx ?!?
+
         TypeFixed type = new TypeFixed(Defaults.FIXED_LENGTH);
         ASTAttribute expressionResult = new ASTAttribute(type);
-        m_ast.put(ctx, expressionResult);
-        if (ctx.expression() != null) {
-            visit(ctx.expression());
+        expressionResult.setReadOnly(true);
+
+        if ( ctx.name() != null) {
+            SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.name().ID().getText());
+            if (entry != null && entry instanceof VariableEntry) {
+                expressionResult.setVariable((VariableEntry)entry);
+            } else {
+                ErrorStack.add("'" + ctx.name().ID().getText() + "' is not defined ***");
+            }
         }
+
+        m_ast.put(ctx, expressionResult);
+
+        ErrorStack.leave();
         return null;
     }
 
