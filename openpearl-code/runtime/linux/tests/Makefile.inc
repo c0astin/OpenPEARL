@@ -114,13 +114,13 @@ TEST_FILES_2_REMOVE += $(addpostfix .o,$(targets))
 $(LIBGTEST):
 	(cd ../googletest/make; make)
 
-tests/signalTest: tests/signalTest.o $(PLIB)
+tests/signalTest: tests/signalTest.o tests/dummySystem.o $(PLIB)
 	$(LINK)
 
-tests/api: tests/api.o $(PLIB)
+tests/api: tests/api.o tests/dummySystem.o $(PLIB)
 	$(LINK)
 
-tests/lot_of_tasks: tests/lot_of_tasks.o $(PLIB)
+tests/lot_of_tasks: tests/lot_of_tasks.o tests/dummySystem.o $(PLIB)
 	$(LINK)
 
 tests/DataTypeTests: $(GTEST_OBJS) $(PLIB) $(LIBGTEST)
@@ -129,37 +129,38 @@ tests/DataTypeTests: $(GTEST_OBJS) $(PLIB) $(LIBGTEST)
 tests/DationTests: $(GTEST_DATION_OBJS) $(PLIB) $(LIBGTEST)
 	$(LINK)
 
-tests/terminateTests: ../common/tests/terminateTests.o $(PLIB)
+tests/terminateTests: ../common/tests/terminateTests.o tests/dummySystem.o $(PLIB)
 	$(LINK)
 
 
 # ----- rules for sources from common/tests
 
-tests/interruptTest: ../common/tests/interruptTest.o $(PLIB)
+tests/interruptTest: ../common/tests/interruptTest.o tests/dummySystem.o $(PLIB)
 	$(LINK)
 
-tests/bolttest: ../common/tests/bolttest.o $(PLIB)
+tests/bolttest: ../common/tests/bolttest.o tests/dummySystem.o $(PLIB)
 	$(LINK)
 
-tests/RefTest: ../common/tests/RefTest.o $(PLIB)
+tests/RefTest: ../common/tests/RefTest.o tests/dummySystem.o $(PLIB)
 	$(LINK)
 
-tests/SampleBasicDationTests: ../common/tests/SampleBasicDationTests.o $(PLIB)
+tests/SampleBasicDationTests: ../common/tests/SampleBasicDationTests.o \
+	tests/dummySystem.o $(PLIB)
 	$(LINK)
 
-tests/sched_demo: ../common/tests/sched_demo.o \
+tests/sched_demo: ../common/tests/sched_demo.o tests/dummySystem.o  \
 	../common/tests/round_robin_test.o $(PLIB) 
 	$(LINK)
 
-tests/susp_cont_test: ../common/tests/susp_cont_test.o $(PLIB)
+tests/susp_cont_test: ../common/tests/susp_cont_test.o tests/dummySystem.o $(PLIB)
 	$(LINK)
 
 
 tests/log_test: ../common/tests/log_test.o $(PLIB)
 	$(LINK)
 
-tests/sematest: ../common/tests/sematest.o $(PLIB)
+tests/sematest: ../common/tests/sematest.o tests/dummySystem.o $(PLIB)
 	$(LINK)
 
-tests/DationSuspendTerminateTests: tests/DationSuspendTerminateTests.o $(PLIB)
+tests/DationSuspendTerminateTests: tests/DationSuspendTerminateTests.o tests/dummySystem.o  $(PLIB)
 	$(LINK)

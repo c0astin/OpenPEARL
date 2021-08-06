@@ -1,0 +1,31 @@
+MODULE(philo);
+
+SYSTEM;
+  so: StdOut;
+
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC;
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED (so);
+
+  DCL (g1,g2,g3,g4) SEMA PRESET(1,1,1,1);
+
+philo: PROC(nummer FIXED, links SEMA , rechts SEMA );   
+   PUT NOW, 'Philosoph ',nummer,' hat hunger' TO stdout 
+     BY T(10,1),X,A,F(2),A, SKIP;
+   REQUEST links,rechts;
+   PUT NOW,'Philosoph ',nummer,' isst' TO stdout 
+     BY T(10,1),X,A,F(2),A, SKIP;
+   AFTER 5 SEC RESUME;
+   RELEASE g1,g4;
+   PUT NOW,'Philosoph ', nummer,' denkt' TO stdout 
+     BY T(10,1),X,A,F(2),A, SKIP;
+END;
+
+
+p1: TASK;
+   philo(1,g1,g4);
+END;
+   
+
+MODEND;
+

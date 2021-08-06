@@ -246,7 +246,7 @@ namespace pearlrt {
 
       \throws CharacterTooLongSignal
       */
-      template<size_t T> Character(Character<T> &string) {
+      template<size_t T> Character(Character<T> string) {
          //unsigned int i;
 
          if (length < T) {
