@@ -4,12 +4,12 @@ PROBLEM;
 
 t1: TASK MAIN;
     DCL f FIXED;
-!    DCL c CHAR(10);
+    DCL c CHAR(10);
     DCL p FIXED;
 
-    p = SIZEOF(f) * 42;
-!    p = SIZEOF(f);
-!    p = SIZEOF(c);
+    p = SIZEOF f * 42;
+    p = SIZEOF f ;
+    p = SIZEOF c ;
 END;
 
 MODEND;
