@@ -149,7 +149,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 s.setIsUsername(true);
                 m_currentSymbolTable.enterSystemPartName(s);
             }
-            //          // we must enshure that the SystemName is not used as Username
+            // we must ensure that the SystemName is not
+            // used as Username
             //          String sysName = ctx.systemDescription().systemPartName().ID().toString();
             //
             //          SymbolTableEntry entry1 =
