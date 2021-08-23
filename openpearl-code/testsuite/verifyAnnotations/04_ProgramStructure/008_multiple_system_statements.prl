@@ -4,7 +4,7 @@ SYSTEM;
 SYSTEM;
 /*$
 ^
-ERROR : Syntax error :mismatched input 'SYSTEM' expecting {'MODEND', 'PROBLEM', '__cpp__', '__cpp', ID}
+ERROR : Syntax error :mismatched input 'SYSTEM' expecting {'MODEND', 'PROBLEM'}
 */
 
 MODEND;

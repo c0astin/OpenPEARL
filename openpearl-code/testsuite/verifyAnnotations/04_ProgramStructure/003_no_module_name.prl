@@ -1,6 +1,6 @@
 MODULE;
 /*$   ^
-ERROR : Syntax error :no viable alternative at input ';'
+ERROR : Syntax error :mismatched input ';' expecting {'(', ID}
 */
 
 MODEND;

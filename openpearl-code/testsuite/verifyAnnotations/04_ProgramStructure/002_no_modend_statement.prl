@@ -2,5 +2,5 @@ MODULE(m1);
 
 /*$  line+=5
 ^
-ERROR : Syntax error :mismatched input '<EOF>' expecting 'MODEND'
+ERROR : Syntax error :mismatched input '<EOF>' expecting {'MODEND', 'SYSTEM', 'PROBLEM', '__cpp__', '__cpp'}
 */
