@@ -11,6 +11,10 @@ The column position is derived from a circumflex character ether in the
 start of the annotation - or in the next line.
 If no circumflex is used, the column position may be defined with
 'col=xxx' in the start of the annotation line.
+
+'line+=xxx' may be used to modify the expected error line. This option must 
+be in start of annotation line
+
 After the circumflex character is detected the next line denotes the message
 text.
 
@@ -149,6 +153,9 @@ int main(int narg, char * argv[]) {
                               inputFileName, lineNumber);
                        exit(-1);
                     } 
+                    if (strstr(inputLine,"line+=")) {
+                        annotation.line += atoi(strstr(inputLine,"line+=")+6);
+                    }
                     if (strchr(inputLine,'^')) {
                         annotation.col = strchr(inputLine,'^') - inputLine+1;
                         annotationStatus = 2;
