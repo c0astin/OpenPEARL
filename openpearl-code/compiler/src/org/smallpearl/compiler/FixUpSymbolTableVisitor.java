@@ -36,8 +36,10 @@ import org.smallpearl.compiler.Exception.NotYetImplementedException;
 import org.smallpearl.compiler.SymbolTable.*;
 
 import java.util.LinkedList;
+import org.smallpearl.compiler.CommonErrorMessages;
 
-public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
+public class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void>
+        implements SmallPearlVisitor<Void> {
 
     private int m_verbose;
     private boolean m_debug;
@@ -50,22 +52,19 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
     private ParseTreeProperty<ASTAttribute> m_properties = null;
     private AST m_ast = null;
 
-    public FixUpSymbolTableVisitor(int verbose,
-                                   boolean debug,
-                                   SymbolTableVisitor symbolTableVisitor,
-                                   ExpressionTypeVisitor expressionTypeVisitor,
-                                   ConstantPoolVisitor   constantPoolVisitor,
-                                   AST ast) {
+    public FixUpSymbolTableVisitor(int verbose, boolean debug,
+            SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
+            ConstantPoolVisitor constantPoolVisitor, AST ast) {
 
         m_verbose = verbose;
         m_debug = debug;
 
         m_symbolTableVisitor = symbolTableVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
-        m_ast =  ast;
+        m_ast = ast;
 
         m_expressionTypeVisitor = expressionTypeVisitor;
-        m_constantPoolVisitor  = constantPoolVisitor;
+        m_constantPoolVisitor = constantPoolVisitor;
 
         LinkedList<ModuleEntry> listOfModules = this.m_symboltable.getModules();
 
@@ -85,7 +84,7 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
             System.out.println("FixUpSymbolTableVisitor: visitModule");
         }
 
-//        this.m_currentSymbolTable = this.symbolTable.newLevel(moduleEntry);
+        //        this.m_currentSymbolTable = this.symbolTable.newLevel(moduleEntry);
 
         visitChildren(ctx);
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
@@ -99,10 +98,8 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
             System.out.println("FixUpSymbolTableVisitor: vistTaskDeclaration");
         }
 
-        String s = ctx.ID().getText();
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(ctx.ID().getText());
-
-
+        String s = ctx.nameOfModuleTaskProc().ID().getText();
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(s);
 
         if (entry != null) {
             if (entry instanceof TaskEntry) {
@@ -110,13 +107,17 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
                 visitChildren(ctx);
                 this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
             } else {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                CommonErrorMessages.doubleDeclarationError(s, ctx.nameOfModuleTaskProc(),
+                        entry.getCtx());
+                //                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else {
+
             m_symboltable.dump();
             m_currentSymbolTable.dump();
 
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+                    ctx.start.getCharPositionInLine());
         }
 
         return null;
@@ -127,8 +128,8 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
         if (m_verbose > 0) {
             System.out.println("FixUpSymbolTableVisitor: visitProcedureDeclaration");
         }
-
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(ctx.ID().getText());
+        String s = ctx.nameOfModuleTaskProc().ID().getText();
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(s);
 
         if (entry != null) {
             if (entry instanceof ProcedureEntry) {
@@ -137,10 +138,13 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
                 visitChildren(ctx);
                 this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
             } else {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                CommonErrorMessages.doubleDeclarationError(s, ctx.nameOfModuleTaskProc(),
+                        entry.getCtx());
+                //                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+                    ctx.start.getCharPositionInLine());
         }
 
         return null;
@@ -170,12 +174,14 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
         m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
 
         if (ctx.loopStatement_for() != null) {
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.loopStatement_for().ID().getText());
+            SymbolTableEntry entry =
+                    m_currentSymbolTable.lookup(ctx.loopStatement_for().ID().getText());
 
             if (entry != null && entry instanceof VariableEntry) {
                 var = (VariableEntry) entry;
             } else {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+                        ctx.start.getCharPositionInLine());
             }
         }
 
@@ -188,33 +194,33 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
         ASTAttribute byRes = null;
 
         int fromPrecision = 1;
-        int toPrecision   = Defaults.FIXED_LENGTH;
-        int byPrecision   = 1;
+        int toPrecision = Defaults.FIXED_LENGTH;
+        int byPrecision = 1;
 
         precision = 0;
-        
+
         if (ctx.loopStatement_from() != null) {
             fromRes = m_ast.lookup(ctx.loopStatement_from().expression());
-            fromPrecision = ((TypeFixed)fromRes.getType()).getPrecision();
+            fromPrecision = ((TypeFixed) fromRes.getType()).getPrecision();
             fromType = new TypeFixed(fromPrecision);
             precision = Math.max(precision, fromPrecision);
         }
 
         if (ctx.loopStatement_to() != null) {
             toRes = m_ast.lookup(ctx.loopStatement_to().expression());
-            toPrecision = ((TypeFixed)toRes.getType()).getPrecision();
+            toPrecision = ((TypeFixed) toRes.getType()).getPrecision();
             toType = new TypeFixed(toPrecision);
             precision = Math.max(precision, toPrecision);
         }
 
         if (ctx.loopStatement_by() != null) {
             byRes = m_ast.lookup(ctx.loopStatement_by().expression());
-            byPrecision = ((TypeFixed)byRes.getType()).getPrecision();
+            byPrecision = ((TypeFixed) byRes.getType()).getPrecision();
             byType = new TypeFixed(byPrecision);
             precision = Math.max(precision, byPrecision);
-         }
+        }
 
-        
+
 
         // this is not correct!
         // FOR i FROM 1 BY 10 TO 100 REPEAT ... END
@@ -223,12 +229,12 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
         /*if ( byPrecision > fromPrecision || byPrecision > toPrecision) {
             throw new LoopByOutOfRangeException(null, ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
-		*/
+        	*/
         if (precision == 0) {
-        	precision = m_currentSymbolTable.lookupDefaultFixedLength();	
+            precision = m_currentSymbolTable.lookupDefaultFixedLength();
         }
-          
-  
+
+
         /*
         if ( fromType != null) {
             if ( toType != null ) {
@@ -241,7 +247,7 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
         else if ( toType != null ) {
             precision = ((TypeFixed)toRes.getType()).getPrecision();
         }
-
+        
         if ( var != null) {
             TypeDefinition varType = var.getType();
             if (varType != null && varType instanceof TypeFixed) {
@@ -250,12 +256,12 @@ public  class FixUpSymbolTableVisitor extends SmallPearlBaseVisitor<Void> implem
             }
         }
          */
-        
+
         m_constantPoolVisitor.add(new ConstantFixedValue(0, precision));
         m_constantPoolVisitor.add(new ConstantFixedValue(1, precision));
 
-        if ( fromType == null ) {
-            m_constantPoolVisitor.add(new ConstantFixedValue(1,precision));
+        if (fromType == null) {
+            m_constantPoolVisitor.add(new ConstantFixedValue(1, precision));
         }
 
         visitChildren(ctx);

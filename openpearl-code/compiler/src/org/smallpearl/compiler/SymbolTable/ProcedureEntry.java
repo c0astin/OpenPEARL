@@ -32,14 +32,10 @@ package org.smallpearl.compiler.SymbolTable;
 import org.smallpearl.compiler.SmallPearlParser;
 import org.smallpearl.compiler.ASTAttribute;
 import org.smallpearl.compiler.TypeDefinition;
-
 import java.util.LinkedList;
 
 public class ProcedureEntry extends SymbolTableEntry {
 
-    private Boolean m_isMain;
-    private String  m_globalId;
-    private Integer m_priority;
     private LinkedList<FormalParameter> m_formalParameters;
     private ASTAttribute m_resultType;
 
@@ -47,12 +43,13 @@ public class ProcedureEntry extends SymbolTableEntry {
         this.m_formalParameters = null;
     }
 
-    public ProcedureEntry(String name, LinkedList<FormalParameter> formalParameters, ASTAttribute resultType, String globalId, SmallPearlParser.ProcedureDeclarationContext ctx, SymbolTable scope) {
+    public ProcedureEntry(String name, LinkedList<FormalParameter> formalParameters,
+            ASTAttribute resultType, String globalId,
+            SmallPearlParser.ProcedureDeclarationContext ctx, SymbolTable scope) {
         super(name);
         this.m_formalParameters = formalParameters;
-        this.m_ctx = ctx;
+        this.m_ctx = ctx.nameOfModuleTaskProc();
         this.scope = scope;
-        this.m_globalId = globalId;
         this.m_resultType = resultType;
     }
 
@@ -60,10 +57,10 @@ public class ProcedureEntry extends SymbolTableEntry {
         Boolean prefixComma = false;
         String s = indentString(m_level) + super.toString(m_level) + "proc";
 
-        if ( m_formalParameters != null && m_formalParameters.size() > 0 ) {
+        if (m_formalParameters != null && m_formalParameters.size() > 0) {
             s += "(";
             for (FormalParameter formalParameter : m_formalParameters) {
-                if ( prefixComma ) {
+                if (prefixComma) {
                     s += ", ";
                 } else {
                     s += " ";
@@ -76,7 +73,7 @@ public class ProcedureEntry extends SymbolTableEntry {
             s += " )";
         }
 
-        if ( m_resultType != null && m_resultType.getType() != null) {
+        if (m_resultType != null && m_resultType.getType() != null) {
             s += " returns " + m_resultType.getType();
         }
 
@@ -89,22 +86,14 @@ public class ProcedureEntry extends SymbolTableEntry {
         return scope == null ? "\n" : "\n" + scope.toString(m_level);
     }
 
-// deprecated. is now in SymboleTableEntry     
-//    public int getSourceLineNo() {
-//        return m_ctx.getStart().getLine();
-//    }
-//    public int getCharPositionInLine() {
-//        return m_ctx.getStart().getCharPositionInLine();
-//    }
-//
-//    private  SmallPearlParser.ProcedureDeclarationContext m_ctx;
 
-    
-    public TypeDefinition getResultType() { return m_resultType != null ? m_resultType.getType() : null; }
+    public TypeDefinition getResultType() {
+        return m_resultType != null ? m_resultType.getType() : null;
+    }
 
     public SymbolTable scope;
-   
-	public LinkedList<FormalParameter> getFormalParameters() {
-		return m_formalParameters;
-	}
+
+    public LinkedList<FormalParameter> getFormalParameters() {
+        return m_formalParameters;
+    }
 }

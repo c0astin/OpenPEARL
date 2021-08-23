@@ -38,8 +38,7 @@ public class BlockEntry extends SymbolTableEntry {
     /**
      * Construct this with null data fields.
      */
-    public BlockEntry() {
-    }
+    public BlockEntry() {}
 
 
     /**
@@ -58,30 +57,16 @@ public class BlockEntry extends SymbolTableEntry {
         return indentString(level) + super.toString(level) + "block" + scopeString(level);
     }
 
-    /**
-     * Called by toString to stringify the list of formal parameter names.
-     */
-//    protected String formalsString(int m_level) {
-//        return formals == null ? "" : "\n" + indentString(m_level) +
-//                " Formals: " + formals.toString(m_level + 5);
-//    }
 
     /**
      * Called by toString to recursively stringify the scope, if non-null.
      */
     protected String scopeString(int m_level) {
 
-      return scope == null ? "" : "\n" + scope.toString(m_level);
+        return scope == null ? "" : "\n" + scope.toString(m_level);
     }
 
-// deprecated. is now in SymboleTableEntry    
-//    public int getSourceLineNo() {
-//        return m_ctx.getStart().getLine();
-//    }
-//
-//    public int getCharPositionInLine() {
-//        return m_ctx.getStart().getCharPositionInLine();
-//    }
+
 
     /** Local scope for this function. */
     public SymbolTable scope;

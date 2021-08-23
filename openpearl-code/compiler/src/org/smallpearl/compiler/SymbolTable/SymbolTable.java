@@ -82,7 +82,7 @@ public class SymbolTable {
         m_entries = new HashMap<String, SymbolTableEntry>();
         m_level = 0;
         m_usesSystemElements = false;
-        
+
     }
 
     /**
@@ -144,7 +144,7 @@ public class SymbolTable {
     public SymbolTable newLevel(LoopEntry loopEntry) {
         SymbolTable newst;
         m_loopsAndBlocks.add(loopEntry);
-        
+
         enter(loopEntry);
         newst = loopEntry.scope = new SymbolTable();
         newst.parent = this;
@@ -158,7 +158,7 @@ public class SymbolTable {
         SymbolTableEntry se;
         Log.debug("SymbolTable:lookup: name=" + name);
 
-       for (st = this; st != null; st = st.parent) {
+        for (st = this; st != null; st = st.parent) {
             if ((se = (SymbolTableEntry) st.m_entries.get(name)) != null) {
                 return se;
             }
@@ -166,18 +166,18 @@ public class SymbolTable {
 
         return null;
     }
-   
+
     public SymbolTableEntry lookupLoopBlock(ParserRuleContext ctx) {
-      SymbolTable st;
-      SymbolTableEntry se;
-     
-      for (int i=0; i<m_loopsAndBlocks.size(); i++) {
-        if (m_loopsAndBlocks.get(i).getCtx().equals(ctx)) {
-          return m_loopsAndBlocks.get(i);
+        SymbolTable st;
+        SymbolTableEntry se;
+
+        for (int i = 0; i < m_loopsAndBlocks.size(); i++) {
+            if (m_loopsAndBlocks.get(i).getCtx().equals(ctx)) {
+                return m_loopsAndBlocks.get(i);
+            }
         }
-      }
-      return null;
-  }
+        return null;
+    }
 
     public SymbolTableEntry lookupLocal(String name) {
         Log.debug("SymbolTable:lookupLocal: name=" + name);
@@ -192,11 +192,11 @@ public class SymbolTable {
      */
     public boolean enter(SymbolTableEntry se) {
 
- 
+
         if (lookupLocal(se.getName()) != null) {
             return false;
         }
-   
+
         se.setLevel(m_level);
         m_entries.put(se.getName(), se);
         return true;
@@ -218,29 +218,28 @@ public class SymbolTable {
         SymbolTableEntry se = lookupLocal(name);
 
         try {
-            if ( se == null) {
+            if (se == null) {
                 return this;
             }
 
-            if ( se.getClass() != Class.forName("ModuleEntry")) {
+            if (se.getClass() != Class.forName("ModuleEntry")) {
                 return ((ModuleEntry) se).scope;
             }
 
-            if ( se.getClass() != Class.forName("ProcedureEntry")) {
+            if (se.getClass() != Class.forName("ProcedureEntry")) {
                 return ((ProcedureEntry) se).scope;
             }
 
-            if ( se.getClass() != Class.forName("TaskEntry")) {
+            if (se.getClass() != Class.forName("TaskEntry")) {
                 return ((TaskEntry) se).scope;
             }
 
-            if ( se.getClass() != Class.forName("BlockEntry")) {
+            if (se.getClass() != Class.forName("BlockEntry")) {
                 return ((BlockEntry) se).scope;
             }
 
             return this;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println(e);
             e.printStackTrace();
             return null;
@@ -251,9 +250,9 @@ public class SymbolTable {
         System.out.println();
         System.out.println("Symboltable:");
         System.out.println(toString(m_systemPartNames));
-   
+
         System.out.println("PROBLEM part:");
-        System.out.println(toString()+"\n");
+        System.out.println(toString() + "\n");
     }
 
     public String toString() {
@@ -265,22 +264,21 @@ public class SymbolTable {
         String output = "";
         int nextLevel = level + 1;
 
-        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
-            output += it.next().toString(nextLevel) +
-                    (it.hasNext() ? "\n" : "");
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
+            output += it.next().toString(nextLevel) + (it.hasNext() ? "\n" : "");
         }
 
         return output;
     }
 
     public LinkedList<TaskEntry> getTaskDeclarations() {
-        LinkedList<TaskEntry>  listOfTaskEntries = new  LinkedList<TaskEntry>();
+        LinkedList<TaskEntry> listOfTaskEntries = new LinkedList<TaskEntry>();
         SymbolTableEntry e;
 
-        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
-            if ( symbolTableEntry instanceof TaskEntry ) {
-                TaskEntry taskEntry = (TaskEntry)symbolTableEntry;
+            if (symbolTableEntry instanceof TaskEntry) {
+                TaskEntry taskEntry = (TaskEntry) symbolTableEntry;
                 listOfTaskEntries.add(taskEntry);
             }
         }
@@ -289,13 +287,14 @@ public class SymbolTable {
     }
 
     public LinkedList<VariableEntry> getVariableDeclarations() {
-        LinkedList<VariableEntry>  listOfVariableDeclarationsEntries = new  LinkedList<VariableEntry>();
+        LinkedList<VariableEntry> listOfVariableDeclarationsEntries =
+                new LinkedList<VariableEntry>();
         SymbolTableEntry e;
 
-        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
-            if ( symbolTableEntry instanceof VariableEntry ) {
-                VariableEntry variableEntry = (VariableEntry)symbolTableEntry;
+            if (symbolTableEntry instanceof VariableEntry) {
+                VariableEntry variableEntry = (VariableEntry) symbolTableEntry;
                 listOfVariableDeclarationsEntries.add(variableEntry);
             }
         }
@@ -307,18 +306,18 @@ public class SymbolTable {
     public LinkedList<VariableEntry> getAllArrayDeclarations(SymbolTable symbolTable) {
         LinkedList<VariableEntry> listOfArrayDeclarations = new LinkedList<VariableEntry>();
 
-        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry entry = it.next();
-       }
+        }
 
         return listOfArrayDeclarations;
     }
 
     public LinkedList<SemaphoreEntry> getSemaphoreDeclarations() {
-        LinkedList<SemaphoreEntry>  listOfSemaEntries = new  LinkedList<SemaphoreEntry>();
+        LinkedList<SemaphoreEntry> listOfSemaEntries = new LinkedList<SemaphoreEntry>();
         SymbolTableEntry e;
 
-        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof SemaphoreEntry) {
                 SemaphoreEntry semaEntry = (SemaphoreEntry) symbolTableEntry;
@@ -330,10 +329,10 @@ public class SymbolTable {
     }
 
     public LinkedList<BoltEntry> getBoltDeclarations() {
-        LinkedList<BoltEntry>  listOfBoltEntries = new  LinkedList<BoltEntry>();
+        LinkedList<BoltEntry> listOfBoltEntries = new LinkedList<BoltEntry>();
         SymbolTableEntry e;
 
-        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof BoltEntry) {
                 BoltEntry boltEntry = (BoltEntry) symbolTableEntry;
@@ -345,9 +344,9 @@ public class SymbolTable {
     }
 
     public LinkedList<ModuleEntry> getModules() {
-        LinkedList<ModuleEntry>  listOfModules = new  LinkedList<ModuleEntry>();
+        LinkedList<ModuleEntry> listOfModules = new LinkedList<ModuleEntry>();
 
-        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof ModuleEntry) {
                 ModuleEntry moduleEntry = (ModuleEntry) symbolTableEntry;
@@ -358,40 +357,44 @@ public class SymbolTable {
         return listOfModules;
     }
 
-    public HashMap<String,TypeStructure> getStructureDeclarations() {
-        HashMap<String,TypeStructure>  structures = new  HashMap<>();
+    public HashMap<String, TypeStructure> getStructureDeclarations() {
+        HashMap<String, TypeStructure> structures = new HashMap<>();
         SymbolTableEntry e;
 
-        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext(); ) {
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof ModuleEntry) {
-                getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope, structures);
+                getStructureDeclarationsForSymboltable(((ModuleEntry) symbolTableEntry).scope,
+                        structures);
             }
         }
 
         return structures;
     }
 
-    private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable, HashMap<String,TypeStructure>  structures) {
+    private void getStructureDeclarationsForSymboltable(SymbolTable symbolTable,
+            HashMap<String, TypeStructure> structures) {
         SymbolTableEntry e;
 
-        for (Iterator<SymbolTableEntry> it = symbolTable.m_entries.values().iterator(); it.hasNext(); ) {
+        for (Iterator<SymbolTableEntry> it = symbolTable.m_entries.values().iterator(); it
+                .hasNext();) {
             SymbolTableEntry symbolTableEntry = (SymbolTableEntry) it.next();
 
             if (symbolTableEntry instanceof VariableEntry) {
-                VariableEntry entry = (VariableEntry)symbolTableEntry;
-                if ( entry.getType() instanceof TypeStructure ) {
-                    TypeStructure struct = (TypeStructure)entry.getType();
-                    getStructureDeclarationsForStructure(struct.getStructureName(),struct,structures);
+                VariableEntry entry = (VariableEntry) symbolTableEntry;
+                if (entry.getType() instanceof TypeStructure) {
+                    TypeStructure struct = (TypeStructure) entry.getType();
+                    getStructureDeclarationsForStructure(struct.getStructureName(), struct,
+                            structures);
                 } else if (entry.getType() instanceof TypeArray) {
-                    TypeArray array = (TypeArray)entry.getType();
-                    if ( array.getBaseType() instanceof TypeStructure) {
+                    TypeArray array = (TypeArray) entry.getType();
+                    if (array.getBaseType() instanceof TypeStructure) {
                         TypeStructure struct = (TypeStructure) array.getBaseType();
-                        getStructureDeclarationsForStructure(struct.getStructureName(), struct, structures);
+                        getStructureDeclarationsForStructure(struct.getStructureName(), struct,
+                                structures);
                     }
                 }
-            }
-            else if (symbolTableEntry instanceof ProcedureEntry) {
+            } else if (symbolTableEntry instanceof ProcedureEntry) {
                 ProcedureEntry procedureEntry = (ProcedureEntry) symbolTableEntry;
 
                 if (procedureEntry.getResultType() != null) {
@@ -401,38 +404,41 @@ public class SymbolTable {
                     }
                 }
 
-                getStructureDeclarationsForSymboltable(((ProcedureEntry) symbolTableEntry).scope, structures);
-            }
-            else if (symbolTableEntry instanceof TaskEntry) {
-                getStructureDeclarationsForSymboltable(((TaskEntry) symbolTableEntry).scope, structures);
-            }
-            else if (symbolTableEntry instanceof BlockEntry) {
-                getStructureDeclarationsForSymboltable(((BlockEntry) symbolTableEntry).scope, structures);
-            }
-            else if (symbolTableEntry instanceof LoopEntry) {
-                getStructureDeclarationsForSymboltable(((LoopEntry) symbolTableEntry).scope, structures);
+                getStructureDeclarationsForSymboltable(((ProcedureEntry) symbolTableEntry).scope,
+                        structures);
+            } else if (symbolTableEntry instanceof TaskEntry) {
+                getStructureDeclarationsForSymboltable(((TaskEntry) symbolTableEntry).scope,
+                        structures);
+            } else if (symbolTableEntry instanceof BlockEntry) {
+                getStructureDeclarationsForSymboltable(((BlockEntry) symbolTableEntry).scope,
+                        structures);
+            } else if (symbolTableEntry instanceof LoopEntry) {
+                getStructureDeclarationsForSymboltable(((LoopEntry) symbolTableEntry).scope,
+                        structures);
             }
         }
     }
 
-    private void getStructureDeclarationsForStructure(String name, TypeStructure structure, HashMap<String,TypeStructure>  structures) {
+    private void getStructureDeclarationsForStructure(String name, TypeStructure structure,
+            HashMap<String, TypeStructure> structures) {
         SymbolTableEntry e;
 
         structures.put(name, structure);
 
-        for (Iterator<StructureComponent> it = structure.m_listOfComponents.iterator(); it.hasNext(); ) {
+        for (Iterator<StructureComponent> it = structure.m_listOfComponents.iterator(); it
+                .hasNext();) {
             StructureComponent structureComponent = (StructureComponent) it.next();
 
-            if ( structureComponent.m_type instanceof TypeStructure) {
-                TypeStructure struct = (TypeStructure)structureComponent.m_type;
-                getStructureDeclarationsForStructure(struct.getStructureName(), struct,structures);
-            }
-            else if ( structureComponent.m_type instanceof TypeArray) {
-                TypeArray array = (TypeArray)structureComponent.m_type;
+            if (structureComponent.m_type instanceof TypeStructure) {
+                TypeStructure struct = (TypeStructure) structureComponent.m_type;
+                getStructureDeclarationsForStructure(struct.getStructureName(), struct, structures);
+            } else if (structureComponent.m_type instanceof TypeArray) {
+                TypeArray array = (TypeArray) structureComponent.m_type;
 
-                if ( array.getBaseType() instanceof TypeStructure) {
+                if (array.getBaseType() instanceof TypeStructure) {
                     TypeStructure struct = (TypeStructure) array.getBaseType();
-                    getStructureDeclarationsForStructure(struct.getStructureName(), struct, structures);
+                    getStructureDeclarationsForStructure(struct.getStructureName(), struct,
+                            structures);
                 }
             }
         }
@@ -441,10 +447,10 @@ public class SymbolTable {
     public int lookupDefaultFixedLength() {
         SymbolTableEntry entry = this.lookup("~LENGTH_FIXED~");
 
-        if ( entry != null ) {
-            if ( entry instanceof LengthEntry) {
+        if (entry != null) {
+            if (entry instanceof LengthEntry) {
                 LengthEntry e = (LengthEntry) entry;
-                if (e.getType() instanceof TypeFixed ) {
+                if (e.getType() instanceof TypeFixed) {
                     TypeFixed typ = (TypeFixed) e.getType();
                     return typ.getPrecision();
                 }
@@ -459,10 +465,10 @@ public class SymbolTable {
     public int lookupDefaultFloatLength() {
         SymbolTableEntry entry = this.lookup("~LENGTH_FLOAT~");
 
-        if ( entry != null ) {
-            if ( entry instanceof LengthEntry) {
+        if (entry != null) {
+            if (entry instanceof LengthEntry) {
                 LengthEntry e = (LengthEntry) entry;
-                if (e.getType() instanceof TypeFloat ) {
+                if (e.getType() instanceof TypeFloat) {
                     TypeFloat typ = (TypeFloat) e.getType();
                     return typ.getPrecision();
                 }
@@ -477,8 +483,8 @@ public class SymbolTable {
     public int lookupDefaultCharLength() {
         SymbolTableEntry entry = this.lookup("~LENGTH_CHAR~");
 
-        if ( entry != null ) {
-            if ( entry instanceof LengthEntry) {
+        if (entry != null) {
+            if (entry instanceof LengthEntry) {
                 LengthEntry e = (LengthEntry) entry;
                 if (e.getType() instanceof TypeChar) {
                     TypeChar typ = (TypeChar) e.getType();
@@ -495,10 +501,10 @@ public class SymbolTable {
     public int lookupDefaultBitLength() {
         SymbolTableEntry entry = this.lookup("~LENGTH_BIT~");
 
-        if ( entry != null ) {
-            if ( entry instanceof LengthEntry) {
+        if (entry != null) {
+            if (entry instanceof LengthEntry) {
                 LengthEntry e = (LengthEntry) entry;
-                if (e.getType() instanceof TypeBit ) {
+                if (e.getType() instanceof TypeBit) {
                     TypeBit typ = (TypeBit) e.getType();
                     return typ.getPrecision();
                 }
@@ -513,13 +519,12 @@ public class SymbolTable {
     public int getNumberOfComponents(TypeStructure typ) {
         int numberOfComponents = 0;
 
-        for (int i = 0; i < typ.m_listOfComponents.size(); i++ ) {
+        for (int i = 0; i < typ.m_listOfComponents.size(); i++) {
             TypeDefinition componentType = typ.m_listOfComponents.get(i).m_type;
 
             if (componentType instanceof TypeFixed) {
                 numberOfComponents++;
-            }
-            else {
+            } else {
                 numberOfComponents += getNumberOfComponents(componentType);
             }
         }
@@ -532,46 +537,51 @@ public class SymbolTable {
     }
 
     public int getNumberOfComponents(TypeDefinition typ) {
-        if ( typ instanceof TypeArray) {
-            return getNumberOfComponents((TypeArray)typ);
-        } else if ( typ instanceof TypeStructure) {
-            return getNumberOfComponents((TypeStructure)typ);
+        if (typ instanceof TypeArray) {
+            return getNumberOfComponents((TypeArray) typ);
+        } else if (typ instanceof TypeStructure) {
+            return getNumberOfComponents((TypeStructure) typ);
         } else {
             return 1;
         }
     }
 
     public void enterSystemPartName(SymbolTableEntry se) {
-       m_systemPartNames.add(se);
+        m_systemPartNames.add(se);
     }
-    
+
     public SymbolTableEntry lookupSystemPartName(String name) {
-      SymbolTableEntry result = null;
-      for (int i=0; i<m_systemPartNames.size(); i++) {
-        if (name.equals(m_systemPartNames.elementAt(i).getName())) {
-          return m_systemPartNames.elementAt(i);
+        SymbolTableEntry result = null;
+        for (int i = 0; i < m_systemPartNames.size(); i++) {
+            if (name.equals(m_systemPartNames.elementAt(i).getName())) {
+                return m_systemPartNames.elementAt(i);
+            }
         }
-      }
-      return result;
+        return result;
     }
 
     private String toString(Vector<SymbolTableEntry> v) {
         String result = "SYSTEM part:\n";
-        for (int i=0; i< m_systemPartNames.size(); i++) {
-          SystemPartName s = (SystemPartName)(m_systemPartNames.elementAt(i)  );
-          result += s.toString(2) + "\n";
+        for (int i = 0; i < m_systemPartNames.size(); i++) {
+            SystemPartName s = (SystemPartName) (m_systemPartNames.elementAt(i));
+            result += s.toString(2) + "\n";
         }
         return result;
     }
-    
-    public void setUsesSystemElements() { m_usesSystemElements = true;}
-    public boolean usesSystemElements() { return m_usesSystemElements;}
+
+    public void setUsesSystemElements() {
+        m_usesSystemElements = true;
+    }
+
+    public boolean usesSystemElements() {
+        return m_usesSystemElements;
+    }
 
     public SymbolTable parent;
     protected HashMap<String, SymbolTableEntry> m_entries;
     public int m_level;
     private boolean m_usesSystemElements;
-    private static  Vector<SymbolTableEntry>  m_loopsAndBlocks = new Vector<SymbolTableEntry>(); 
-    private static Vector<SymbolTableEntry> m_systemPartNames = new Vector<SymbolTableEntry>(); 
-    
+    private static Vector<SymbolTableEntry> m_loopsAndBlocks = new Vector<SymbolTableEntry>();
+    private static Vector<SymbolTableEntry> m_systemPartNames = new Vector<SymbolTableEntry>();
+
 }

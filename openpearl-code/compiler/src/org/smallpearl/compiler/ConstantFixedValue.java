@@ -31,7 +31,7 @@ package org.smallpearl.compiler;
 
 public class ConstantFixedValue extends ConstantValue {
     private long m_value;
-    private int  m_precision;
+    private int m_precision;
 
     ConstantFixedValue(Integer value) {
         m_value = value.longValue();
@@ -89,10 +89,9 @@ public class ConstantFixedValue extends ConstantValue {
         String name = "CONST_" + getBaseType().toUpperCase();
         long value = Math.abs(m_value);
 
-        if ( m_value < 0 ) {
+        if (m_value < 0) {
             name += "_N";
-        }
-        else if ( m_value >= 0 ) {
+        } else if (m_value >= 0) {
             name += "_P";
         }
 

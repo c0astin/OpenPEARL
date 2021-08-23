@@ -87,7 +87,9 @@ ID :   Letter ( Letter | Digit | '_' )* ;
 ////////////////////////////////////////////////////////////////////////////////
 
 module:
-  'MODULE' ( '(' ID ')' | ID ) ';' cpp_inline* system_part? problem_part? 'MODEND' ';'
+  'MODULE' ( '(' nameOfModuleTaskProc ')' 
+             | nameOfModuleTaskProc ) ';' 
+	cpp_inline* system_part? problem_part? 'MODEND' ';'
   ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,7 +177,7 @@ problem_part:
         | semaDeclaration
         | boltDeclaration
         | interruptSpecification
-        | identification
+//        | identification        removed until rework for mixed types  of DCL and SPC
         | dationSpecification
         | dationDeclaration
         | taskDeclaration
@@ -189,7 +191,8 @@ problem_part:
 ////////////////////////////////////////////////////////////////////////////////
 // TODO: Identification ::=
 //           { SPECIFY | SPC } Identifier [ AllocationProtection ] Type IdentificationAttribute ;
-
+/* must be redefined for SPC with mixed types and SPC .. IDENT
+  removed for the moment (rm, 2021-08-20)
 identification:
     ( 'SPECIFY' | 'SPC' ) ID  allocation_protection? type? identification_attribute? globalAttribute? ';'
     ;
@@ -208,6 +211,7 @@ allocation_protection:
 identification_attribute:
     'IDENT' '(' ID ')'
     ;
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -306,7 +310,7 @@ simpleType :
      | typeFloatingPointNumber
      | typeBitString
      | typeCharacterString
-     | typeTime
+     | typeClock
      | typeDuration
     ;
 
@@ -338,19 +342,23 @@ integerWithoutPrecision :
 ////////////////////////////////////////////////////////////////////////////////
 
 typeFloatingPointNumber :
-    'FLOAT' ( '(' IntegerConstant ')' )?
+    'FLOAT' ( '(' length ')' )?
     ;
 
 typeBitString :
-    'BIT' ( '(' IntegerConstant ')' )?
+    'BIT' ( '(' length ')' )?
     ;
 
 typeCharacterString :
-    ( 'CHARACTER' | 'CHAR' ) ( '(' IntegerConstant ')' )?
+    ( 'CHARACTER' | 'CHAR' ) ( '(' length ')' )?
     ;
 
 typeDuration :
     'DURATION' | 'DUR'
+    ;
+
+typeClock :
+    'CLOCK' 
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,7 +367,7 @@ typeDuration :
 ////////////////////////////////////////////////////////////////////////////////
 
 identifierDenotation :
-    ID | '(' ID ( ',' ID )*  ')'
+    identifier | '(' identifier ( ',' identifier )*  ')'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -399,7 +407,6 @@ structVariableDeclaration :
 ////////////////////////////////////////////////////////////////////////////////
 
 structureDenotation :
-//    ID dimensionAttribute? assignmentProtection? typeStructure globalAttribute? initialisationAttribute?
     ID dimensionAttribute? assignmentProtection? typeStructure globalAttribute? initialisationAttribute?
     ;
 
@@ -489,12 +496,14 @@ arrayDenotation :
 ////////////////////////////////////////////////////////////////////////////////
 
 typeAttributeForArray :
-      type_fixed
-    | type_float
-    | type_duration
-    | type_clock
-    | type_bit
-    | type_char
+    simpleType
+//   | 
+//      type_fixed
+//    | type_float
+//    | type_duration
+//    | type_clock
+//    | type_bit
+//    | type_char
     | typeReference
     | typeStructure
     ;
@@ -611,7 +620,7 @@ preset :
 
 procedureDeclaration:
 //	 ID ':' ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute? globalAttribute? ';'
-	 ID ':' typeProcedure globalAttribute? ';'
+	 nameOfModuleTaskProc ':' typeProcedure globalAttribute? ';'
         procedureBody
       'END' ';'
     ;
@@ -646,8 +655,12 @@ listOfFormalParameters :
 ////////////////////////////////////////////////////////////////////////////////
 
 formalParameter :
-    ( ID | '(' ID ( ',' ID)* ')' ) virtualDimensionList? assignmentProtection? parameterType passIdentical?
+    ( identifier | '(' identifier ( ',' identifier)* ')' ) virtualDimensionList? assignmentProtection? parameterType passIdentical?
     ;
+
+identifier:
+   ID
+   ;
 
 virtualDimensionList :
 	'('  commas  ')'
@@ -759,9 +772,12 @@ resultType :
 ////////////////////////////////////////////////////////////////////////////////
 
 taskDeclaration :
-    ID ':' 'TASK' priority? task_main? ';' taskBody 'END' ';' cpp_inline?
+    nameOfModuleTaskProc ':' 'TASK' priority? task_main? ';' taskBody 'END' ';' cpp_inline?
     ;
 
+nameOfModuleTaskProc :
+    ID
+    ;
 ////////////////////////////////////////////////////////////////////////////////
 
 task_main: 'MAIN';
@@ -1806,7 +1822,7 @@ endIndex:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/* obsolete
 type
     : simple_type
     | type_realtime_object
@@ -1865,6 +1881,7 @@ type_realtime_object
     | 'INTERRUPT'
     | 'SIGNAL'
     ;
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // SystemInterruptDeclaration ::=
@@ -1882,7 +1899,7 @@ type_realtime_object
 ////////////////////////////////////////////////////////////////////////////////
 
 interruptSpecification
-    : ( 'SPECIFY' | 'SPC' ) ID (',' ID)* ( 'INTERRUPT' | 'IRPT' ) globalAttribute? ';'
+    : ( 'SPECIFY' | 'SPC' ) identifierDenotation ( 'INTERRUPT' | 'IRPT' ) globalAttribute? ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2748,7 +2765,7 @@ cpp_inline
 ////////////////////////////////////////////////////////////////////////////////
 
 lengthDefinition
-    : 'LENGTH' lengthDefinitionType '(' IntegerConstant ')' ';'
+    : 'LENGTH' lengthDefinitionType '(' length ')' ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////

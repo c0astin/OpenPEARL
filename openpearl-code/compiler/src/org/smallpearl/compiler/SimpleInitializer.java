@@ -32,38 +32,40 @@ package org.smallpearl.compiler;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 public class SimpleInitializer extends Initializer {
-	private ConstantValue     m_constant;
+    private ConstantValue m_constant;
 
     public SimpleInitializer(ParserRuleContext ctx, ConstantValue constant) {
         super(ctx);
         m_constant = constant;
     }
 
-	public ParserRuleContext getContext() { return m_context; }
-	public ConstantValue getConstant() { return m_constant; }
-    public void setConstant(ConstantValue constant) { m_constant = constant; }
+    public ParserRuleContext getContext() {
+        return m_context;
+    }
 
-	public String toString() {
-	 	if ( m_constant instanceof ConstantFixedValue) {
-	 		return m_constant.toString();
-		}
-		else if ( m_constant instanceof ConstantFloatValue) {
+    public ConstantValue getConstant() {
+        return m_constant;
+    }
+
+    public void setConstant(ConstantValue constant) {
+        m_constant = constant;
+    }
+
+    public String toString() {
+        if (m_constant instanceof ConstantFixedValue) {
+            return m_constant.toString();
+        } else if (m_constant instanceof ConstantFloatValue) {
+            return m_constant.toString();
+        } else if (m_constant instanceof ConstantDurationValue) {
+            return m_constant.toString();
+        } else if (m_constant instanceof ConstantClockValue) {
+            return m_constant.toString();
+        } else if (m_constant instanceof ConstantCharacterValue) {
+            return m_constant.toString();
+        } else if (m_constant instanceof ConstantBitValue) {
+            return m_constant.toString();
+        } else {
             return m_constant.toString();
         }
-        else if ( m_constant instanceof ConstantDurationValue) {
-            return m_constant.toString();
-        }
-        else if ( m_constant instanceof ConstantClockValue) {
-            return m_constant.toString();
-        }
-        else if ( m_constant instanceof ConstantCharacterValue) {
-            return m_constant.toString();
-        }
-        else if ( m_constant instanceof ConstantBitValue) {
-            return m_constant.toString();
-        }
-        else {
-			return m_constant.toString();
-		}
-	}
+    }
 }

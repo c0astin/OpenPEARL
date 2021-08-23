@@ -96,215 +96,199 @@ import java.util.Stack;
  */
 public class CheckGotoExit extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
 
-  private int m_verbose;
-  private boolean m_debug;
-  private String m_sourceFileName;
-  private ExpressionTypeVisitor m_expressionTypeVisitor;
-  private SymbolTableVisitor m_symbolTableVisitor;
-  private SymbolTable m_symboltable;
-  private SymbolTable m_currentSymbolTable;
-  private ModuleEntry m_module;
-  private AST m_ast = null;
-  private int m_autoLabelNumber;
+    private boolean m_debug;
+    private SymbolTableVisitor m_symbolTableVisitor;
+    private SymbolTable m_symboltable;
+    private SymbolTable m_currentSymbolTable;
+    private AST m_ast = null;
+    private int m_autoLabelNumber;
 
-  public CheckGotoExit(String sourceFileName,
-      int verbose,
-      boolean debug,
-      SymbolTableVisitor symbolTableVisitor,
-      ExpressionTypeVisitor expressionTypeVisitor,
-      AST ast) {
+    public CheckGotoExit(String sourceFileName, int verbose, boolean debug,
+            SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
+            AST ast) {
 
-    m_debug = debug;
-    m_verbose = verbose;
-    m_sourceFileName = sourceFileName;
-    m_symbolTableVisitor = symbolTableVisitor;
-    m_expressionTypeVisitor = expressionTypeVisitor;
-    m_symboltable = symbolTableVisitor.symbolTable;
-    m_currentSymbolTable = m_symboltable;
-    m_ast = ast;
-    m_autoLabelNumber = 0;
+        m_debug = debug;
+        m_symbolTableVisitor = symbolTableVisitor;
+        m_symboltable = symbolTableVisitor.symbolTable;
+        m_currentSymbolTable = m_symboltable;
+        m_ast = ast;
+        m_autoLabelNumber = 0;
 
-    Log.debug( "    Check GOTO and EXIT");
-  }
-
-  @Override
-  public Void visitModule(SmallPearlParser.ModuleContext ctx) {
-    if (m_debug) {
-      System.out.println( "Semantic: Check Case: visitModule");
+        Log.debug("    Check GOTO and EXIT");
     }
 
-    org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable.lookupLocal(ctx.ID().getText());
-    m_currentSymbolTable = ((ModuleEntry)symbolTableEntry).scope;
-    visitChildren(ctx);
-    m_currentSymbolTable = m_currentSymbolTable.ascend();
-    return null;
-  }
-
-  @Override
-  public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
-    if (m_debug) {
-      System.out.println( "Semantic: Check Case: visitProcedureDeclaration");
-    }
-
-    this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-    visitChildren(ctx);
-    this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-    return null;
-  }
-
-  @Override
-  public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
-    if (m_debug) {
-      System.out.println( "Semantic: Check Case: visitTaskDeclaration");
-    }
-
-    this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-    visitChildren(ctx);
-    m_currentSymbolTable = m_currentSymbolTable.ascend();
-    return null;
-  }
-
-  @Override
-  public Void visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
-    if (m_debug) {
-      System.out.println( "Semantic: Check Case: visitBlock_statement");
-    }
-    BlockEntry be = (BlockEntry)(m_currentSymbolTable.lookupLoopBlock(ctx));
-    ASTAttribute attr = m_ast.lookup(ctx);
-    if (be.getName() == null) {
-      be.setName(nextAutoBlockOrLoopName());
-      if (attr==null) {
-        attr = new ASTAttribute(null);
-        m_ast.put(ctx, attr);
-      } 
-      attr.setIsInternal(true);
-    }
-    this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-    visitChildren(ctx);
-    this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-    return null;
-  }
-
-  private String nextAutoBlockOrLoopName() {
-    String autoName = "automaticLabel"+m_autoLabelNumber;
-    m_autoLabelNumber++;
-    return autoName;
-  }
-
-  @Override
-  public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
-    if (m_debug) {
-      System.out.println( "Semantic: Check Case: visitLoopStatement");
-    }
-    LoopEntry le = (LoopEntry)(m_currentSymbolTable.lookupLoopBlock(ctx));
-    ASTAttribute attr = m_ast.lookup(ctx);
-    if (le.getName() == null) {
-      le.setName(nextAutoBlockOrLoopName());
-      if (attr==null) {
-        attr = new ASTAttribute(null);
-        m_ast.put(ctx, attr);
-      } 
-      attr.setIsInternal(true);
-    }
-
-    this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-    visitChildren(ctx);
-    this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-    return null;
-  }
-  
-
-  @Override
-  public Void visitExitStatement(SmallPearlParser.ExitStatementContext ctx) {
-    SymbolTable st=m_currentSymbolTable;
-    String name = null;
-    SymbolTableEntry se = null;
-    if (ctx.ID()!=null) {
-      name = ctx.ID().getText();
- //     System.out.println("EXIT "+name);
-    } else {
- //      System.out.println("EXIT *anon*");
-    }
-    
-    if (!(name != null)) {
-      // exit after first loop or block
-      RuleContext c = ctx;
-      while (c!= null && se == null) {
-        String id="";
-        c = c.parent;
-        if (c instanceof LoopStatementContext) {
-          LoopStatementContext lctx = (LoopStatementContext)c;
-//          if (lctx.loopStatement_end().ID() != null) {
-//            id = lctx.loopStatement_end().ID().getText();
-//          }
-          se = m_currentSymbolTable.lookupLoopBlock(lctx);
-        }        
-        if (c instanceof Block_statementContext) {
-          Block_statementContext bctx = (Block_statementContext)c;
-//          if (bctx.ID() != null) {
-//            id = bctx.ID().getText();
-//          }
-          se=m_currentSymbolTable.lookupLoopBlock(bctx);
+    @Override
+    public Void visitModule(SmallPearlParser.ModuleContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Case: visitModule");
         }
-      }
-    } else {
-      // we must verify the correct loop/block via the ID
-      // let's walk the ctx up until we find the block or loop
-      // with the requested name or we reead the end of the AST
-      RuleContext c = ctx;
 
-      while (c!= null && se == null) {
-        String id="";
-        c = c.parent;
-        if (c instanceof LoopStatementContext) {
-          LoopStatementContext lctx = (LoopStatementContext)c;
-          if (lctx.loopStatement_end().ID() != null) {
-            id = lctx.loopStatement_end().ID().getText();
-          }
-          if (id.equals(name)) {
-             se=m_currentSymbolTable.lookupLoopBlock(lctx);
-          }
+        org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry =
+                m_currentSymbolTable.lookupLocal(ctx.nameOfModuleTaskProc().ID().getText());
+        m_currentSymbolTable = ((ModuleEntry) symbolTableEntry).scope;
+        visitChildren(ctx);
+        m_currentSymbolTable = m_currentSymbolTable.ascend();
+        return null;
+    }
+
+    @Override
+    public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Case: visitProcedureDeclaration");
         }
-        if (c instanceof Block_statementContext) {
-          Block_statementContext bctx = (Block_statementContext)c;
-          if (bctx.blockId() != null) {
-            id = bctx.blockId().ID().getText();
-          }
-          
-          if (id.equals(name)) {
-            se=m_currentSymbolTable.lookupLoopBlock(bctx);
-         }
+
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+        return null;
+    }
+
+    @Override
+    public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Case: visitTaskDeclaration");
         }
-      }
 
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        m_currentSymbolTable = m_currentSymbolTable.ascend();
+        return null;
     }
 
-    if (se == null) {
-      ErrorStack.add(ctx,"EXIT","no block or loop with name '"+name+"' found");
-    } else {
-      // we have a surrounding loop/block found 
-      // set an ASTAttribute for the CppCodeGeneratorVisitor
-      ASTAttribute attr = new ASTAttribute(null,se);
-      m_ast.put(ctx, attr);
-      se.setIsUsed(true);
+    @Override
+    public Void visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Case: visitBlock_statement");
+        }
+        BlockEntry be = (BlockEntry) (m_currentSymbolTable.lookupLoopBlock(ctx));
+        ASTAttribute attr = m_ast.lookup(ctx);
+        if (be.getName() == null) {
+            be.setName(nextAutoBlockOrLoopName());
+            if (attr == null) {
+                attr = new ASTAttribute(null);
+                m_ast.put(ctx, attr);
+            }
+            attr.setIsInternal(true);
+        }
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+        return null;
     }
-    return null;
-  }
 
-  @Override
-  public Void visitGotoStatement(SmallPearlParser.GotoStatementContext ctx) {
-    String name = ctx.ID().getText(); 
-    SymbolTableEntry se = m_currentSymbolTable.lookup(name);
-    if (se == null) {
-      ErrorStack.add(ctx,"GOTO","label '"+name+"' not found");
-    } else {
-      if (!(se instanceof LabelEntry)) {
-        ErrorStack.add(ctx,"GOTO","'"+name+"' is not a label --- "+se.getClass().getName());
-      } else {
-        se.setIsUsed(true);
-      }
+    private String nextAutoBlockOrLoopName() {
+        String autoName = "automaticLabel" + m_autoLabelNumber;
+        m_autoLabelNumber++;
+        return autoName;
     }
-    return null;
-  }
+
+    @Override
+    public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Case: visitLoopStatement");
+        }
+        LoopEntry le = (LoopEntry) (m_currentSymbolTable.lookupLoopBlock(ctx));
+        ASTAttribute attr = m_ast.lookup(ctx);
+        if (le.getName() == null) {
+            le.setName(nextAutoBlockOrLoopName());
+            if (attr == null) {
+                attr = new ASTAttribute(null);
+                m_ast.put(ctx, attr);
+            }
+            attr.setIsInternal(true);
+        }
+
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+        return null;
+    }
+
+
+    @Override
+    public Void visitExitStatement(SmallPearlParser.ExitStatementContext ctx) {
+        String name = null;
+        SymbolTableEntry se = null;
+        if (ctx.ID() != null) {
+            name = ctx.ID().getText();
+            //     System.out.println("EXIT "+name);
+        } else {
+            //      System.out.println("EXIT *anon*");
+        }
+
+        if (!(name != null)) {
+            // exit after first loop or block
+            RuleContext c = ctx;
+            while (c != null && se == null) {
+                c = c.parent;
+                if (c instanceof LoopStatementContext) {
+                    LoopStatementContext lctx = (LoopStatementContext) c;
+                    se = m_currentSymbolTable.lookupLoopBlock(lctx);
+                }
+                if (c instanceof Block_statementContext) {
+                    Block_statementContext bctx = (Block_statementContext) c;
+                    se = m_currentSymbolTable.lookupLoopBlock(bctx);
+                }
+            }
+        } else {
+            // we must verify the correct loop/block via the ID
+            // let's walk the ctx up until we find the block or loop
+            // with the requested name or we read the end of the AST
+            RuleContext c = ctx;
+
+            while (c != null && se == null) {
+                String id = "";
+                c = c.parent;
+                if (c instanceof LoopStatementContext) {
+                    LoopStatementContext lctx = (LoopStatementContext) c;
+                    if (lctx.loopStatement_end().ID() != null) {
+                        id = lctx.loopStatement_end().ID().getText();
+                    }
+                    if (id.equals(name)) {
+                        se = m_currentSymbolTable.lookupLoopBlock(lctx);
+                    }
+                }
+                if (c instanceof Block_statementContext) {
+                    Block_statementContext bctx = (Block_statementContext) c;
+                    if (bctx.blockId() != null) {
+                        id = bctx.blockId().ID().getText();
+                    }
+
+                    if (id.equals(name)) {
+                        se = m_currentSymbolTable.lookupLoopBlock(bctx);
+                    }
+                }
+            }
+
+        }
+
+        if (se == null) {
+            ErrorStack.add(ctx, "EXIT", "no block or loop with name '" + name + "' found");
+        } else {
+            // we have a surrounding loop/block found 
+            // set an ASTAttribute for the CppCodeGeneratorVisitor
+            ASTAttribute attr = new ASTAttribute(null, se);
+            m_ast.put(ctx, attr);
+            se.setIsUsed(true);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitGotoStatement(SmallPearlParser.GotoStatementContext ctx) {
+        String name = ctx.ID().getText();
+        SymbolTableEntry se = m_currentSymbolTable.lookup(name);
+        if (se == null) {
+            ErrorStack.add(ctx, "GOTO", "label '" + name + "' not found");
+        } else {
+            if (!(se instanceof LabelEntry)) {
+                ErrorStack.add(ctx, "GOTO",
+                        "'" + name + "' is not a label --- " + se.getClass().getName());
+            } else {
+                se.setIsUsed(true);
+            }
+        }
+        return null;
+    }
 
 }

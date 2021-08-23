@@ -33,14 +33,13 @@ import org.smallpearl.compiler.SmallPearlParser;
 
 public class ModuleEntry extends SymbolTableEntry {
 
-    public ModuleEntry() {
-    }
+    public ModuleEntry() {}
 
 
     public ModuleEntry(String name, SmallPearlParser.ModuleContext ctx, SymbolTable scope) {
         super(name);
         this.scope = scope;
-        this.m_ctx = ctx;
+        this.m_ctx = ctx.nameOfModuleTaskProc();
     }
 
 
@@ -52,16 +51,7 @@ public class ModuleEntry extends SymbolTableEntry {
         return scope == null ? "" : "\n" + scope.toString(m_level);
     }
 
-// deprecated. is now in SymboleTableEntry   
-//    public int getSourceLineNo() {
-//        return m_ctx.getStart().getLine();
-//    }
-//
-//    public int getCharPositionInLine() {
-//        return m_ctx.getStart().getCharPositionInLine();
-//    }
-//    
-//  private SmallPearlParser.ModuleContext m_ctx;
+
     /**
      * Local scope for this function.
      */

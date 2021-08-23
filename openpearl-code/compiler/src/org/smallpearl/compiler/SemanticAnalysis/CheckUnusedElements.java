@@ -51,7 +51,7 @@ import java.util.Stack;
  * 
  * Checks:
  * <ul>
- * <li>tif all labels are used
+ * <li>if all labels are used
  * </ul>
  *
  * Principle of operation:
@@ -77,107 +77,101 @@ import java.util.Stack;
  *  </ol>
  *
  */
-public class CheckUnusedElements extends SmallPearlBaseVisitor<Void> implements SmallPearlVisitor<Void> {
+public class CheckUnusedElements extends SmallPearlBaseVisitor<Void>
+        implements SmallPearlVisitor<Void> {
 
-  private int m_verbose;
-  private boolean m_debug;
-  private String m_sourceFileName;
-  private ExpressionTypeVisitor m_expressionTypeVisitor;
-  private SymbolTableVisitor m_symbolTableVisitor;
-  private SymbolTable m_symboltable;
-  private SymbolTable m_currentSymbolTable;
-  private ModuleEntry m_module;
+    private int m_verbose;
+    private boolean m_debug;
+    private String m_sourceFileName;
+    private ExpressionTypeVisitor m_expressionTypeVisitor;
+    private SymbolTableVisitor m_symbolTableVisitor;
+    private SymbolTable m_symboltable;
+    private SymbolTable m_currentSymbolTable;
+    
+    public CheckUnusedElements(String sourceFileName, int verbose, boolean debug,
+            SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
+            AST ast) {
 
-  private AST m_ast = null;
-
-  public CheckUnusedElements(String sourceFileName,
-      int verbose,
-      boolean debug,
-      SymbolTableVisitor symbolTableVisitor,
-      ExpressionTypeVisitor expressionTypeVisitor,
-      AST ast) {
-
-    m_debug = debug;
-    m_verbose = verbose;
-    m_sourceFileName = sourceFileName;
-    m_symbolTableVisitor = symbolTableVisitor;
-    m_expressionTypeVisitor = expressionTypeVisitor;
-    m_symboltable = symbolTableVisitor.symbolTable;
-    m_currentSymbolTable = m_symboltable;
-    m_ast = ast;
-
-    Log.debug( "    Check GOTO and EXIT");
-  }
-
-  @Override
-  public Void visitModule(SmallPearlParser.ModuleContext ctx) {
-    if (m_debug) {
-      System.out.println( "Semantic: Check Case: visitModule");
+        m_debug = debug;
+        m_verbose = verbose;
+        m_sourceFileName = sourceFileName;
+        m_symbolTableVisitor = symbolTableVisitor;
+        m_expressionTypeVisitor = expressionTypeVisitor;
+        m_symboltable = symbolTableVisitor.symbolTable;
+        m_currentSymbolTable = m_symboltable;
+        Log.debug("    Check GOTO and EXIT");
     }
 
-    org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable.lookupLocal(ctx.ID().getText());
-    m_currentSymbolTable = ((ModuleEntry)symbolTableEntry).scope;
-    visitChildren(ctx);
-    m_currentSymbolTable = m_currentSymbolTable.ascend();
-    return null;
-  }
+    @Override
+    public Void visitModule(SmallPearlParser.ModuleContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Case: visitModule");
+        }
 
-  @Override
-  public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
-    if (m_debug) {
-      System.out.println( "Semantic: Check Case: visitProcedureDeclaration");
+        org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry =
+                m_currentSymbolTable.lookupLocal(ctx.nameOfModuleTaskProc().ID().getText());
+        m_currentSymbolTable = ((ModuleEntry) symbolTableEntry).scope;
+        visitChildren(ctx);
+        m_currentSymbolTable = m_currentSymbolTable.ascend();
+        return null;
     }
 
-    this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-    visitChildren(ctx);
-    this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-    return null;
-  }
+    @Override
+    public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Case: visitProcedureDeclaration");
+        }
 
-  @Override
-  public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
-    if (m_debug) {
-      System.out.println( "Semantic: Check Case: visitTaskDeclaration");
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+        return null;
     }
 
-    this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-    visitChildren(ctx);
-    m_currentSymbolTable = m_currentSymbolTable.ascend();
-    return null;
-  }
+    @Override
+    public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Case: visitTaskDeclaration");
+        }
 
-  @Override
-  public Void visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
-    if (m_debug) {
-      System.out.println( "Semantic: Check Case: visitBlock_statement");
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        m_currentSymbolTable = m_currentSymbolTable.ascend();
+        return null;
     }
 
-    this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-    visitChildren(ctx);
-    this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-    return null;
-  }
+    @Override
+    public Void visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Case: visitBlock_statement");
+        }
 
-  @Override
-  public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
-    if (m_debug) {
-      System.out.println( "Semantic: Check Case: visitLoopStatement");
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+        return null;
     }
 
-    this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-    visitChildren(ctx);
-    this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-    return null;
-  }
+    @Override
+    public Void visitLoopStatement(SmallPearlParser.LoopStatementContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Case: visitLoopStatement");
+        }
 
-  public Void visitLabel_statement(SmallPearlParser.Label_statementContext ctx) {
-    String id = ctx.ID().getText();
-
-    LabelEntry le = (LabelEntry)(m_currentSymbolTable.lookup(id));
-    if (!le.isUsed()) {
-      ErrorStack.warn(ctx,"label '"+id+"'","is never used");
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+        return null;
     }
 
-    return null;
-  }
+    public Void visitLabel_statement(SmallPearlParser.Label_statementContext ctx) {
+        String id = ctx.ID().getText();
+
+        LabelEntry le = (LabelEntry) (m_currentSymbolTable.lookup(id));
+        if (!le.isUsed()) {
+            ErrorStack.warn(ctx, "label '" + id + "'", "is never used");
+        }
+
+        return null;
+    }
 }

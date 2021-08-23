@@ -106,7 +106,7 @@ public class CheckCondition extends SmallPearlBaseVisitor<Void> implements Small
             System.out.println( "Semantic: Check Condition: visitModule");
         }
 
-        org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable.lookupLocal(ctx.ID().getText());
+        org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry = m_currentSymbolTable.lookupLocal(ctx.nameOfModuleTaskProc().ID().getText());
         m_currentSymbolTable = ((ModuleEntry)symbolTableEntry).scope;
         visitChildren(ctx);
         m_currentSymbolTable = m_currentSymbolTable.ascend();

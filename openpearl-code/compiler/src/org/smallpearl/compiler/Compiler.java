@@ -74,15 +74,15 @@ public class Compiler {
     static boolean stacktrace = false;
     static boolean imc = true;
     static boolean printSysInfo = false;
-    static int     noOfErrors = 0;
-    static int     noOfWarnings = 0;
-    static int     warninglevel = 255;
-    static int     lineWidth = 80;
+    static int noOfErrors = 0;
+    static int noOfWarnings = 0;
+    static int warninglevel = 255;
+    static int lineWidth = 80;
     static boolean coloured = false;
 
     public static void main(String[] args) {
         int i, j;
-        
+
         if (args.length < 1) {
             printHelp();
             return;
@@ -128,8 +128,7 @@ public class Compiler {
                 */
 
                 lexer = new SmallPearlLexer(new ANTLRFileStream(m_sourceFilename));
-            }
-            catch(IOException ex) {
+            } catch (IOException ex) {
                 System.out.println("Error:" + ex.getMessage());
                 System.exit(-2);
             }
@@ -169,68 +168,71 @@ public class Compiler {
                         symbolTableVisitor.symbolTable.dump();
                     }
                 } else {
-                  // hot fix - if the parser exited with an error - no further steps are 
-                  // useful - we need an non-ok result value for the scripts
-                  System.out.println("compilation aborted with errors");
-                  System.exit(1);
+                    // hot fix - if the parser exited with an error - no further steps are 
+                    // useful - we need an non-ok result value for the scripts
+                    System.out.println("compilation aborted with errors");
+                    System.exit(1);
                 }
 
-                ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose, debug, symbolTableVisitor, constantPool, ast);
-                if (ErrorStack.getTotalErrorCount()<=0) {
-                       expressionTypeVisitor.visit(tree);
+                ExpressionTypeVisitor expressionTypeVisitor = new ExpressionTypeVisitor(verbose,
+                        debug, symbolTableVisitor, constantPool, ast);
+                if (ErrorStack.getTotalErrorCount() <= 0) {
+                    expressionTypeVisitor.visit(tree);
                 }
 
-                if (ErrorStack.getTotalErrorCount()<=0) {
-                    ConstantFoldingVisitor constantFoldingVisitor = new ConstantFoldingVisitor(symbolTableVisitor, ast);
+                if (ErrorStack.getTotalErrorCount() <= 0) {
+                    ConstantFoldingVisitor constantFoldingVisitor =
+                            new ConstantFoldingVisitor(symbolTableVisitor, ast);
                     constantFoldingVisitor.visit(tree);
                 }
-                    
-                ConstantPoolVisitor constantPoolVisitor = new ConstantPoolVisitor(lexer.getSourceName(),
-                        verbose,
-                        debug,
-                        symbolTableVisitor,
-                        constantPool,
-                        expressionTypeVisitor,
-                        ast);
 
-                if (ErrorStack.getTotalErrorCount()<=0) {
+                ConstantPoolVisitor constantPoolVisitor =
+                        new ConstantPoolVisitor(lexer.getSourceName(), verbose, debug,
+                                symbolTableVisitor, constantPool, expressionTypeVisitor, ast);
+
+                if (ErrorStack.getTotalErrorCount() <= 0) {
                     constantPoolVisitor.visit(tree);
                 }
 
-                ConstantExpressionEvaluatorVisitor constantExpressionVisitor = new ConstantExpressionEvaluatorVisitor(verbose, debug, symbolTableVisitor, constantPoolVisitor);
-                if (ErrorStack.getTotalErrorCount()<=0) {
-                    	constantExpressionVisitor.visit(tree);
+                ConstantExpressionEvaluatorVisitor constantExpressionVisitor =
+                        new ConstantExpressionEvaluatorVisitor(verbose, debug, symbolTableVisitor,
+                                constantPoolVisitor);
+                if (ErrorStack.getTotalErrorCount() <= 0) {
+                    constantExpressionVisitor.visit(tree);
                 }
 
-                if (ErrorStack.getTotalErrorCount()<=0) {
-                    FixUpSymbolTableVisitor fixUpSymbolTableVisitor = new FixUpSymbolTableVisitor(verbose,debug,symbolTableVisitor,expressionTypeVisitor,constantPoolVisitor,ast);
+                if (ErrorStack.getTotalErrorCount() <= 0) {
+                    FixUpSymbolTableVisitor fixUpSymbolTableVisitor =
+                            new FixUpSymbolTableVisitor(verbose, debug, symbolTableVisitor,
+                                    expressionTypeVisitor, constantPoolVisitor, ast);
                     fixUpSymbolTableVisitor.visit(tree);
                 }
-                    
+
                 // expressionTypeVisitor.visit(tree);
 
                 if (dumpConstantPool) {
-                        ConstantPool.dump();
+                    ConstantPool.dump();
                 }
 
                 if (ErrorStack.getTotalErrorCount() <= 0 && !nosemantic) {
-                        SemanticCheck semanticCheck = new SemanticCheck(lexer.getSourceName(), verbose, debug, tree, symbolTableVisitor, expressionTypeVisitor, ast);
+                    SemanticCheck semanticCheck = new SemanticCheck(lexer.getSourceName(), verbose,
+                            debug, tree, symbolTableVisitor, expressionTypeVisitor, ast);
                 }
                 if (ErrorStack.getTotalErrorCount() <= 0 && imc) {
-                    	SystemPartExport(lexer.getSourceName(), tree,symbolTableVisitor,ast);
+                    SystemPartExport(lexer.getSourceName(), tree, symbolTableVisitor, ast);
                 }
                 if (ErrorStack.getTotalErrorCount() <= 0) {
-                       CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor, expressionTypeVisitor, constantExpressionVisitor, ast);
+                    CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor,
+                            expressionTypeVisitor, constantExpressionVisitor, ast);
                 }
-            }
-            catch(Exception ex) {
+            } catch (Exception ex) {
                 System.err.println(ex.getMessage());
                 ex.printStackTrace();
                 if (debug) {
-                  ex.printStackTrace();
+                    ex.printStackTrace();
                 }
-                
-                if ( verbose > 0 ) {
+
+                if (verbose > 0) {
                     System.err.println("Compilation aborted.");
                 }
 
@@ -242,17 +244,17 @@ public class Compiler {
                     ConstantPool.dump();
                 }
 
-                if ( stacktrace )  {
-                    System.err.println( getStackTrace(ex));
+                if (stacktrace) {
+                    System.err.println(getStackTrace(ex));
                 }
 
                 System.exit(-1);
             }
 
-            if (ErrorStack.getTotalErrorCount()>0 ) {
-            	System.out.println("compilation aborted with errors");
-                
-                if ( verbose > 0 ) {
+            if (ErrorStack.getTotalErrorCount() > 0) {
+                System.out.println("compilation aborted with errors");
+
+                if (verbose > 0) {
                     System.err.println("Compilation aborted.");
                 }
 
@@ -263,26 +265,27 @@ public class Compiler {
                 if (dumpConstantPool) {
                     ConstantPool.dump();
                 }
-            	
+
                 System.exit(-1);
-            	
+
             }
-            
+
             noOfErrors = parser.getNumberOfSyntaxErrors();
 
             System.out.flush();
             System.out.println();
-            System.out.println("Number of errors in " + inputFiles.get(i) + " encountered: " + noOfErrors);
+            System.out.println(
+                    "Number of errors in " + inputFiles.get(i) + " encountered: " + noOfErrors);
 
-            if ( printSysInfo) {
+            if (printSysInfo) {
                 String lines;
                 long difference = System.nanoTime() - startTime;
 
                 lines = "System Information:\n";
-                lines += "Total execution time: " +
-                        String.format("%d.%d sec",
-                                TimeUnit.NANOSECONDS.toSeconds(difference),
-                                TimeUnit.NANOSECONDS.toMillis(difference) - TimeUnit.NANOSECONDS.toSeconds(difference) * 1000);
+                lines += "Total execution time: "
+                        + String.format("%d.%d sec", TimeUnit.NANOSECONDS.toSeconds(difference),
+                                TimeUnit.NANOSECONDS.toMillis(difference)
+                                        - TimeUnit.NANOSECONDS.toSeconds(difference) * 1000);
 
                 SystemInformation sysinfo = new SystemInformation();
                 lines += "\n" + sysinfo.Info();
@@ -290,7 +293,7 @@ public class Compiler {
                 System.out.println(lines);
             }
 
-            if ( noOfErrors == 0 ) {
+            if (noOfErrors == 0) {
                 System.exit(0);
             } else {
                 System.exit(1);
@@ -301,31 +304,31 @@ public class Compiler {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static void printHelp() {
-        System.err.println("java org.smallpearl.compiler                             \n" +
-                " Options:                                                           \n" +
-                "  --help                      Print this help message               \n" +
-                "  --version                   Print version information             \n" +
-                "  --verbose                   Print more information                \n" +
-                "  --quiet                     Be quiet                              \n" +
-                "  --trace                                                           \n" +
-                "  --nosemantic                Disable semantic checker              \n" +
-                "  --noconstantfolding         Disable constant folding              \n" +
-                "  --printAST                  Print Abtract Syntax Tree             \n" +
-                "  --dumpDFA                   Print DFA                             \n" +
-                "  --dumpSymbolTable           Print the SymbolTable                 \n" +
-                "  --dumpConstantPool          Print the constant pool               \n" +
-                "  --debug                     Generate debug information            \n" +
-                "  --stacktrace                Print stacktrace in case of an        \n" +
-                "                              exception                             \n" +
-                "  --warninglevel <m_level>      Set the warning m_level             \n" +
-                "                              Level   0: no warning                 \n" +
-                "                              Level 255: all warnings (default)     \n" +
-                " --imc                        Enable Inter Module Checker           \n" +
-                "                              file                                  \n" +
-                "  --sysinfo                   Print system information              \n" +
-                "  --coloured                  mark errors with colour               \n" +
-                "  --output <filename>         Filename of the generated code        \n" +
-                "  infile ...                                                        \n");
+        System.err.println("java org.smallpearl.compiler                             \n"
+                + " Options:                                                           \n"
+                + "  --help                      Print this help message               \n"
+                + "  --version                   Print version information             \n"
+                + "  --verbose                   Print more information                \n"
+                + "  --quiet                     Be quiet                              \n"
+                + "  --trace                                                           \n"
+                + "  --nosemantic                Disable semantic checker              \n"
+                + "  --noconstantfolding         Disable constant folding              \n"
+                + "  --printAST                  Print Abtract Syntax Tree             \n"
+                + "  --dumpDFA                   Print DFA                             \n"
+                + "  --dumpSymbolTable           Print the SymbolTable                 \n"
+                + "  --dumpConstantPool          Print the constant pool               \n"
+                + "  --debug                     Generate debug information            \n"
+                + "  --stacktrace                Print stacktrace in case of an        \n"
+                + "                              exception                             \n"
+                + "  --warninglevel <m_level>      Set the warning m_level             \n"
+                + "                              Level   0: no warning                 \n"
+                + "                              Level 255: all warnings (default)     \n"
+                + " --imc                        Enable Inter Module Checker           \n"
+                + "                              file                                  \n"
+                + "  --sysinfo                   Print system information              \n"
+                + "  --coloured                  mark errors with colour               \n"
+                + "  --output <filename>         Filename of the generated code        \n"
+                + "  infile ...                                                        \n");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -376,7 +379,7 @@ public class Compiler {
             } else if (arg.equals("--imc")) {
                 imc = true;
             } else if (arg.equals("--coloured")) {
-            	coloured = true;
+                coloured = true;
             } else if (arg.equals("--output")) {
                 if (i >= args.length) {
                     System.err.println("missing filename on --output");
@@ -400,7 +403,7 @@ public class Compiler {
                 psFile = args[i];
                 i++;
             } else if (arg.equals("--version")) {
-                    System.out.println("OpenPEARL compiler version "+version);
+                System.out.println("OpenPEARL compiler version " + version);
                 i++;
             } else if (arg.equals("--warninglevel")) {
                 if (i >= args.length) {
@@ -420,43 +423,34 @@ public class Compiler {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private static Void CppGenerate(String sourceFileName,
-                                    ParserRuleContext tree,
-                                    SymbolTableVisitor symbolTableVisitor,
-                                    ExpressionTypeVisitor expressionTypeVisitor,
-                                    ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor,
-                                    AST ast) {
+    private static Void CppGenerate(String sourceFileName, ParserRuleContext tree,
+            SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
+            ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor, AST ast) {
 
-        CppCodeGeneratorVisitor cppCodeGenerator = new CppCodeGeneratorVisitor( sourceFileName,
-                                                                                groupFile,
-                                                                                verbose,
-                                                                                debug,
-                                                                                symbolTableVisitor,
-                                                                                expressionTypeVisitor,
-                                                                                constantExpressionEvaluatorVisitor,
-                                                                                ast);
+        CppCodeGeneratorVisitor cppCodeGenerator = new CppCodeGeneratorVisitor(sourceFileName,
+                groupFile, verbose, debug, symbolTableVisitor, expressionTypeVisitor,
+                constantExpressionEvaluatorVisitor, ast);
 
         ST code = cppCodeGenerator.visit(tree);
 
-        if ( debugSTG ) {
-            System.out.println( "Press a key to continue" );
+        if (debugSTG) {
+            System.out.println("Press a key to continue");
             code.inspect();
             try {
                 int ch = System.in.read();
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 ;
             }
         }
 
         if (outputFilename != null) {
             try {
-                if ( outputFilename.lastIndexOf(".") == - 1 ) {
+                if (outputFilename.lastIndexOf(".") == -1) {
                     outputFilename += ".cc";
                 }
 
-                if (verbose>0) {
-                    System.out.println("Generating output file "+outputFilename);
+                if (verbose > 0) {
+                    System.out.println("Generating output file " + outputFilename);
                 }
 
                 PrintWriter writer = new PrintWriter(outputFilename, "UTF-8");
@@ -467,7 +461,7 @@ public class Compiler {
                 System.exit(-1);
             }
         } else {
-            if(verbose>0) {
+            if (verbose > 0) {
                 System.out.println("Generated output:");
             }
 
@@ -480,20 +474,19 @@ public class Compiler {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static Void SystemPartExport(String sourceFileName, ParserRuleContext tree,
-        SymbolTableVisitor symbolTableVisitor, AST ast) {
+            SymbolTableVisitor symbolTableVisitor, AST ast) {
         String outputFileName = sourceFileName;
 
-        SystemPartExporter  systemPartExporter = new SystemPartExporter(sourceFileName,verbose, debug,
-            symbolTableVisitor,ast);
+        SystemPartExporter systemPartExporter =
+                new SystemPartExporter(sourceFileName, verbose, debug, symbolTableVisitor, ast);
         ST systemPart = systemPartExporter.visit(tree);
 
-        if ( debugSTG ) {
-            System.out.println( "Press a key to continue" );
+        if (debugSTG) {
+            System.out.println("Press a key to continue");
             systemPart.inspect();
             try {
                 int ch = System.in.read();
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 ;
             }
         }
@@ -502,8 +495,8 @@ public class Compiler {
 
         try {
 
-            if (verbose>0) {
-                System.out.println("Generating IMC file "+outputFileName);
+            if (verbose > 0) {
+                System.out.println("Generating IMC file " + outputFileName);
             }
 
             PrintWriter writer = new PrintWriter(outputFileName, "UTF-8");
@@ -530,7 +523,7 @@ public class Compiler {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    static String  getBaseName(String filename) {
+    static String getBaseName(String filename) {
         String basename = "";
 
         if (filename != null) {

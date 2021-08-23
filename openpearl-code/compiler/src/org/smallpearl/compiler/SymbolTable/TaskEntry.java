@@ -38,52 +38,38 @@ public class TaskEntry extends SymbolTableEntry {
     private Boolean m_isGlobal;
     private SmallPearlParser.PriorityContext m_priority;
 
-    public TaskEntry() {
-    }
+    public TaskEntry() {}
 
-    public TaskEntry(String name, SmallPearlParser.PriorityContext priority, Boolean isMain, Boolean isGlobal, SmallPearlParser.TaskDeclarationContext ctx, SymbolTable scope) {
+    public TaskEntry(String name, SmallPearlParser.PriorityContext priority, Boolean isMain,
+            Boolean isGlobal, SmallPearlParser.TaskDeclarationContext ctx, SymbolTable scope) {
         super(name);
 
         m_priority = priority;
-        m_isMain   = isMain;
+        m_isMain = isMain;
         m_isGlobal = isGlobal;
 
-        this.m_ctx = ctx;
+        this.m_ctx = ctx.nameOfModuleTaskProc();
         this.scope = scope;
     }
 
     public String toString(int level) {
         String taskPriority;
-        if( m_priority != null ) {
+        if (m_priority != null) {
             taskPriority = m_priority.expression().getText();
-        }
-        else
-        {
+        } else {
             taskPriority = Integer.toString(Defaults.DEFAULT_TASK_PRIORITY);
 
         }
 
-        return  indentString(level) + super.toString(level) + "task" +
-                " priority(" +taskPriority + ")" +
-                (m_isMain ? " main" : "") +
-                (m_isGlobal ? " global" : "") +
-                scopeString(level);
+        return indentString(level) + super.toString(level) + "task" + " priority(" + taskPriority
+                + ")" + (m_isMain ? " main" : "") + (m_isGlobal ? " global" : "")
+                + scopeString(level);
     }
 
     protected String scopeString(int m_level) {
         return scope == null ? "" : "\n" + scope.toString(m_level);
     }
 
-// deprecated. is now in SymboleTableEntry     
-//    public int getSourceLineNo() {
-//        return m_ctx.getStart().getLine();
-//    }
-//
-//    public int getCharPositionInLine() {
-//        return m_ctx.getStart().getCharPositionInLine();
-//    }
-//
-//    private SmallPearlParser.TaskDeclarationContext m_ctx;    
 
     public SymbolTable scope;
 

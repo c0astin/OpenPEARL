@@ -32,11 +32,13 @@ package org.smallpearl.compiler.Exception;
 public class InternalCompilerErrorException extends RuntimeException {
 
     public InternalCompilerErrorException(String sNumber, int line, int column) {
-        super("Error at line " + line + ":" + column + ": Internal compiler error. Please send a bug report!");
+        super("Error at line " + line + ":" + column
+                + ": Internal compiler error. Please send a bug report!");
     }
 
     public InternalCompilerErrorException(String sNumber, int line, int column, String sReason) {
-        super("Error at line " + line + ":" + column + ": Internal compiler error: " + sReason + ". Please send a bug report!");
+        super("Error at line " + line + ":" + column + ": Internal compiler error: " + sReason
+                + ". Please send a bug report!");
     }
 
     public InternalCompilerErrorException(String sReason) {

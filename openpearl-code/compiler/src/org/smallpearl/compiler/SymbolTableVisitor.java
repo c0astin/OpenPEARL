@@ -99,19 +99,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         Log.debug("SymbolTableVisitor:visitModule:ctx" + CommonUtils.printContext(ctx));
 
         org.smallpearl.compiler.SymbolTable.ModuleEntry moduleEntry =
-                new org.smallpearl.compiler.SymbolTable.ModuleEntry(ctx.ID().getText(), ctx, null);
+                new org.smallpearl.compiler.SymbolTable.ModuleEntry(
+                        ctx.nameOfModuleTaskProc().ID().getText(), ctx, null);
         this.m_currentSymbolTable = this.symbolTable.newLevel(moduleEntry);
         this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
-
-        //        if (ctx != null) {
-        //            for (ParseTree c : ctx.children) {
-        //                if (c instanceof SmallPearlParser.System_partContext) {
-        //                    visitSystem_part((SmallPearlParser.System_partContext) c);
-        //                } else if (c instanceof SmallPearlParser.Problem_partContext) {
-        //                    visitProblem_part((SmallPearlParser.Problem_partContext) c);
-        //                }
-        //            }
-        //        }
 
         visitChildren(ctx);
 
@@ -121,9 +112,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
     @Override
     public Void visitSystemElementDefinition(SmallPearlParser.SystemElementDefinitionContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitSystemElementDefinition:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitSystemElementDefinition:ctx"
+                + CommonUtils.printContext(ctx));
 
         if (ctx != null) {
             String name = ctx.systemPartName().ID().toString();
@@ -169,9 +159,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
     @Override
     public Void visitSystemDescription(SmallPearlParser.SystemDescriptionContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitSystemElementDefinition:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitSystemElementDefinition:ctx"
+                + CommonUtils.printContext(ctx));
 
         if (ctx != null) {
             String name = ctx.systemPartName().ID().toString();
@@ -208,34 +197,35 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         Log.debug("SymbolTableVisitor:visitProblem_part:ctx" + CommonUtils.printContext(ctx));
 
         if (ctx != null) {
-            for (ParseTree c : ctx.children) {
-                if (c instanceof SmallPearlParser.ScalarVariableDeclarationContext) {
-                    visitScalarVariableDeclaration(
-                            (SmallPearlParser.ScalarVariableDeclarationContext) c);
-                } else if (c instanceof SmallPearlParser.SemaDeclarationContext) {
-                    visitSemaDeclaration((SmallPearlParser.SemaDeclarationContext) c);
-                } else if (c instanceof SmallPearlParser.BoltDeclarationContext) {
-                    visitBoltDeclaration((SmallPearlParser.BoltDeclarationContext) c);
-                } else if (c instanceof SmallPearlParser.TaskDeclarationContext) {
-                    visitTaskDeclaration((SmallPearlParser.TaskDeclarationContext) c);
-                } else if (c instanceof SmallPearlParser.DationSpecificationContext) {
-                    visitDationSpecification((SmallPearlParser.DationSpecificationContext) c);
-                } else if (c instanceof SmallPearlParser.DationDeclarationContext) {
-                    visitDationDeclaration((SmallPearlParser.DationDeclarationContext) c);
-                } else if (c instanceof SmallPearlParser.ProcedureDeclarationContext) {
-                    visitProcedureDeclaration((SmallPearlParser.ProcedureDeclarationContext) c);
-                } else if (c instanceof SmallPearlParser.LengthDefinitionContext) {
-                    visitLengthDefinition((SmallPearlParser.LengthDefinitionContext) c);
-                } else if (c instanceof SmallPearlParser.StructVariableDeclarationContext) {
-                    visitStructVariableDeclaration(
-                            (SmallPearlParser.StructVariableDeclarationContext) c);
-                } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
-                    visitArrayVariableDeclaration(
-                            (SmallPearlParser.ArrayVariableDeclarationContext) c);
-                } else if (c instanceof SmallPearlParser.InterruptSpecificationContext) {
-                    visitInterruptSpecification((SmallPearlParser.InterruptSpecificationContext) c);
-                }
-            }
+            visitChildren(ctx);
+            //            for (ParseTree c : ctx.children) {
+            //                if (c instanceof SmallPearlParser.ScalarVariableDeclarationContext) {
+            //                    visitScalarVariableDeclaration(
+            //                            (SmallPearlParser.ScalarVariableDeclarationContext) c);
+            //                } else if (c instanceof SmallPearlParser.SemaDeclarationContext) {
+            //                    visitSemaDeclaration((SmallPearlParser.SemaDeclarationContext) c);
+            //                } else if (c instanceof SmallPearlParser.BoltDeclarationContext) {
+            //                    visitBoltDeclaration((SmallPearlParser.BoltDeclarationContext) c);
+            //                } else if (c instanceof SmallPearlParser.TaskDeclarationContext) {
+            //                    visitTaskDeclaration((SmallPearlParser.TaskDeclarationContext) c);
+            //                } else if (c instanceof SmallPearlParser.DationSpecificationContext) {
+            //                    visitDationSpecification((SmallPearlParser.DationSpecificationContext) c);
+            //                } else if (c instanceof SmallPearlParser.DationDeclarationContext) {
+            //                    visitDationDeclaration((SmallPearlParser.DationDeclarationContext) c);
+            //                } else if (c instanceof SmallPearlParser.ProcedureDeclarationContext) {
+            //                    visitProcedureDeclaration((SmallPearlParser.ProcedureDeclarationContext) c);
+            //                } else if (c instanceof SmallPearlParser.LengthDefinitionContext) {
+            //                    visitLengthDefinition((SmallPearlParser.LengthDefinitionContext) c);
+            //                } else if (c instanceof SmallPearlParser.StructVariableDeclarationContext) {
+            //                    visitStructVariableDeclaration(
+            //                            (SmallPearlParser.StructVariableDeclarationContext) c);
+            //                } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
+            //                    visitArrayVariableDeclaration(
+            //                            (SmallPearlParser.ArrayVariableDeclarationContext) c);
+            //                } else if (c instanceof SmallPearlParser.InterruptSpecificationContext) {
+            //                    visitInterruptSpecification((SmallPearlParser.InterruptSpecificationContext) c);
+            //                }
+            //            }
         }
 
         return null;
@@ -249,25 +239,27 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
         Log.debug("SymbolTableVisitor:visitTaskDeclaration:ctx" + CommonUtils.printContext(ctx));
 
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().toString());
+        String s = ctx.nameOfModuleTaskProc().ID().toString();
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(s);
         if (entry != null) {
-            throw new DoubleDeclarationException(
-                    ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            CommonErrorMessages.doubleDeclarationError(s, ctx.nameOfModuleTaskProc(),
+                    entry.getCtx());
+        } else {
+            entry = this.m_currentSymbolTable.lookup(s);
+            if (entry != null) {
+                CommonErrorMessages.doubleDeclarationWarning("task definition ", s,
+                        ctx.nameOfModuleTaskProc(), entry.getCtx());
+            }
         }
+
 
         isMain = ctx.task_main() != null;
         if (ctx.priority() != null) {
             priority = ctx.priority();
         }
 
-        TaskEntry taskEntry =
-                new TaskEntry(
-                        ctx.ID().getText(),
-                        priority,
-                        isMain,
-                        isGlobal,
-                        ctx,
-                        this.m_currentSymbolTable);
+        TaskEntry taskEntry = new TaskEntry(ctx.nameOfModuleTaskProc().ID().getText(), priority,
+                isMain, isGlobal, ctx, this.m_currentSymbolTable);
         this.m_currentSymbolTable = this.m_currentSymbolTable.newLevel(taskEntry);
         this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
 
@@ -276,6 +268,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;
     }
+
+
 
     @Override
     public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
@@ -288,15 +282,13 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         TypeProcedureContext tpc = ctx.typeProcedure();
         for (ParseTree c : tpc.children) {
             if (c instanceof SmallPearlParser.ResultAttributeContext) {
-                resultType =
-                        new ASTAttribute(
-                                getResultAttribute((SmallPearlParser.ResultAttributeContext) c));
+                resultType = new ASTAttribute(
+                        getResultAttribute((SmallPearlParser.ResultAttributeContext) c));
             } else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
-                globalId = ctx.ID().getText();
+                globalId = ctx.nameOfModuleTaskProc().getText();
             } else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
-                formalParameters =
-                        getListOfFormalParameters(
-                                (SmallPearlParser.ListOfFormalParametersContext) c);
+                formalParameters = getListOfFormalParameters(
+                        (SmallPearlParser.ListOfFormalParametersContext) c);
             }
         }
 
@@ -304,34 +296,21 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             globalId = ctx.globalAttribute().ID().getText();
         }
 
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().toString());
+        String s = ctx.nameOfModuleTaskProc().ID().toString();
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(s);
         if (entry != null) {
-            // --------------
-            // the context is the complete procedure - it would be good to have the ID as a separate
-            // context to limit the message to the pure ID
-            // for this - we must change the grammar towards
-            //     procName ':' 'PROC' ....   instead of
-            //     ID       ':' 'PROC'
-            // ------
-            // ErrorStack.enter(ctx,"definition");
-            // ErrorStack.add("'"+ctx.ID().toString()+"' is multiple defined");
-            // ErrorStack.warn("previous definition was at
-            // "+((ModuleEntry)(entry)).getSourceLineNo()+":"+
-            //		((ModuleEntry)(entry)).getCharPositionInLine());
-            // ErrorStack.leave();
-            // return null;   // abort treatment
-            throw new DoubleDeclarationException(
-                    ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            CommonErrorMessages.doubleDeclarationError(s, ctx.nameOfModuleTaskProc(),
+                    entry.getCtx());
+        } else {
+            entry = this.m_currentSymbolTable.lookup(s);
+            if (entry != null) {
+                CommonErrorMessages.doubleDeclarationWarning("procedure definition ", s,
+                        ctx.nameOfModuleTaskProc(), entry.getCtx());
+            }
         }
 
-        ProcedureEntry procedureEntry =
-                new ProcedureEntry(
-                        ctx.ID().getText(),
-                        formalParameters,
-                        resultType,
-                        globalId,
-                        ctx,
-                        this.m_currentSymbolTable);
+        ProcedureEntry procedureEntry = new ProcedureEntry(ctx.nameOfModuleTaskProc().getText(),
+                formalParameters, resultType, globalId, ctx, this.m_currentSymbolTable);
         this.m_currentSymbolTable = this.m_currentSymbolTable.newLevel(procedureEntry);
 
         /* Enter formal parameter into the local symbol table of this procedure */
@@ -341,7 +320,14 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 // formalParameter.type,
                 // formalParameter.assignmentProtection, formalParameter.m_ctx, null);
                 // this.m_currentSymbolTable.enter(param);
+
+                entry = this.m_currentSymbolTable.lookup(formalParameter.getName());
+                if (entry != null) {
+                    CommonErrorMessages.doubleDeclarationWarning("formal parameter ",
+                            formalParameter.getName(), formalParameter.getCtx(), entry.getCtx());
+                }
                 this.m_currentSymbolTable.enter(formalParameter);
+
             }
         }
 
@@ -375,19 +361,18 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         return listOfFormalParameters;
     }
 
-    private Void getFormalParameter(
-            LinkedList<FormalParameter> listOfFormalParameters,
+    private Void getFormalParameter(LinkedList<FormalParameter> listOfFormalParameters,
             SmallPearlParser.FormalParameterContext ctx) {
         Log.debug("SymbolTableVisitor:getFormalParameter:ctx" + CommonUtils.printContext(ctx));
 
         if (ctx != null) {
-            for (int i = 0; i < ctx.ID().size(); i++) {
+            for (int i = 0; i < ctx.identifier().size(); i++) {
                 int nbrDimensions = 0; // default to scalar value
                 String name = null;
                 Boolean assignmentProtection = false;
                 Boolean passIdentical = false;
 
-                name = ctx.ID(i).getText();
+                name = ctx.identifier(i).ID().getText();
 
                 if (ctx.virtualDimensionList() != null) {
 
@@ -419,9 +404,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                     m_type = array;
                 }
 
-                listOfFormalParameters.add(
-                        new FormalParameter(
-                                name, m_type, assignmentProtection, passIdentical, ctx));
+                listOfFormalParameters.add(new FormalParameter(name, m_type, assignmentProtection,
+                        passIdentical, ctx));
             }
         }
 
@@ -453,13 +437,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
             SymbolTableEntry se = m_currentSymbolTable.lookup(blockLabel);
             if (se != null) {
-                ErrorStack.add(
-                        ctx.blockId(), "BLOCK", "duplicate name '" + blockLabel + "' in scope");
+                ErrorStack.add(ctx.blockId(), "BLOCK",
+                        "duplicate name '" + blockLabel + "' in scope");
                 if (se instanceof LoopEntry) {
-                    ErrorStack.note(
-                            ((LoopStatementContext) (se.getCtx())).loopStatement_end(),
-                            "previous definion",
-                            "");
+                    ErrorStack.note(((LoopStatementContext) (se.getCtx())).loopStatement_end(),
+                            "previous definion", "");
                 }
                 if (se instanceof BlockEntry) {
                     ErrorStack.note(se.getCtx(), "superior definition", "");
@@ -480,14 +462,15 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitScalarVariableDeclaration(
             SmallPearlParser.ScalarVariableDeclarationContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitScalarVariableDeclaration:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitScalarVariableDeclaration:ctx"
+                + CommonUtils.printContext(ctx));
 
         if (ctx != null) {
+            ErrorStack.enter(ctx);
             for (int i = 0; i < ctx.variableDenotation().size(); i++) {
                 visitVariableDenotation(ctx.variableDenotation().get(i));
             }
+            ErrorStack.leave();
         }
 
         return null;
@@ -508,9 +491,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         if (ctx != null) {
             for (ParseTree c : ctx.children) {
                 if (c instanceof SmallPearlParser.IdentifierDenotationContext) {
-                    identifierDenotationList =
-                            getIdentifierDenotation(
-                                    (SmallPearlParser.IdentifierDenotationContext) c);
+                    identifierDenotationList = getIdentifierDenotation(
+                            (SmallPearlParser.IdentifierDenotationContext) c);
                 } else if (c instanceof SmallPearlParser.AllocationProtectionContext) {
                     hasAllocationProtection = true;
                 } else if (c instanceof SmallPearlParser.TypeAttributeContext) {
@@ -518,9 +500,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 } else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
                     hasGlobalAttribute = true;
                 } else if (c instanceof SmallPearlParser.InitialisationAttributeContext) {
-                    initElementList =
-                            getInitialisationAttribute(
-                                    (SmallPearlParser.InitialisationAttributeContext) c);
+                    initElementList = getInitialisationAttribute(
+                            (SmallPearlParser.InitialisationAttributeContext) c);
                 }
             }
 
@@ -531,15 +512,14 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 TypeDefinition base = ((TypeReference) m_type).getBaseType();
                 if (base instanceof TypeArraySpecification) {
                     TypeDefinition arraySpec = ((TypeArraySpecification) base).getBaseType();
-                    if (arraySpec instanceof TypeTask
-                            || arraySpec instanceof TypeInterrupt
+                    if (arraySpec instanceof TypeTask || arraySpec instanceof TypeInterrupt
                             || arraySpec instanceof TypeSignal
                             || arraySpec instanceof TypeProcedure) {
-                        ErrorStack.add(
-                                ctx.typeAttribute(), null, " REF () not allowed on " + arraySpec);
+                        ErrorStack.add(ctx.typeAttribute(), null,
+                                " REF () not allowed on " + arraySpec);
                     } else if (arraySpec instanceof TypeDation) {
-                        ErrorStack.add(
-                                ctx.typeAttribute(), null, " REF () DATION is not supported");
+                        ErrorStack.add(ctx.typeAttribute(), null,
+                                " REF () DATION is not supported");
                     }
                 }
             }
@@ -548,8 +528,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
             if (initElementList != null
                     && identifierDenotationList.size() != initElementList.size()) {
-                throw new NumberOfInitializerMismatchException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                ErrorStack.enter(ctx.initialisationAttribute());
+                ErrorStack.add("wrong number of intitialisers: found " + initElementList.size()
+                        + " -- required " + identifierDenotationList.size());
+                ErrorStack.leave();
             }
 
             int j = 0;
@@ -563,13 +545,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                                     (SimpleInitializer) initElementList.get(j);
                             checkTypeCompability(m_type, initializer);
                             fixPrecision(ctx, m_type, initializer);
-                            variableEntry =
-                                    new VariableEntry(
-                                            identifierDenotationList.get(i),
-                                            m_type,
-                                            hasAllocationProtection,
-                                            ctx,
-                                            initElementList.get(j));
+                            variableEntry = new VariableEntry(identifierDenotationList.get(i),
+                                    m_type, hasAllocationProtection, ctx, initElementList.get(j));
                             j++;
                         }
                     } else {
@@ -577,46 +554,17 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                             SimpleInitializer initializer =
                                     (SimpleInitializer) initElementList.get(j - 1);
                             fixPrecision(ctx, m_type, initializer);
-                            variableEntry =
-                                    new VariableEntry(
-                                            identifierDenotationList.get(i),
-                                            m_type,
-                                            hasAllocationProtection,
-                                            ctx,
-                                            initElementList.get(j - 1));
+                            variableEntry = new VariableEntry(identifierDenotationList.get(i),
+                                    m_type, hasAllocationProtection, ctx,
+                                    initElementList.get(j - 1));
                         }
                     }
                 } else {
-                    variableEntry =
-                            new VariableEntry(
-                                    identifierDenotationList.get(i),
-                                    m_type,
-                                    hasAllocationProtection,
-                                    ctx,
-                                    null);
+                    variableEntry = new VariableEntry(identifierDenotationList.get(i), m_type,
+                            hasAllocationProtection, ctx, null);
                 }
-
-                if (!m_currentSymbolTable.enter(variableEntry)) {
-                    SymbolTableEntry entry =
-                            m_currentSymbolTable.lookupLocal(identifierDenotationList.get(i));
-                    if (entry != null) {
-                        if (entry instanceof VariableEntry) {
-                            if (((VariableEntry) entry).getLoopControlVariable()) {
-                                throw new SemanticError(
-                                        ctx.getText(),
-                                        ctx.start.getLine(),
-                                        ctx.start.getCharPositionInLine(),
-                                        "Loop control variable cannot be declared");
-                            }
-                        }
-                    }
-
-                    throw new SemanticError(
-                            ctx.getText(),
-                            ctx.start.getLine(),
-                            ctx.start.getCharPositionInLine(),
-                            "Double definition of " + identifierDenotationList.get(i));
-                }
+                String s = identifierDenotationList.get(i).toString();
+                checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx, s);
             }
         }
 
@@ -624,7 +572,9 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     }
 
     /**
-     * Check the compability of the varioble type and the initializer
+     * Check the compability of the variable type and the initializer
+     * 
+     * missing stuff: treatment of identifier for REF variables
      *
      * @param type of the variable
      * @param initializer
@@ -632,8 +582,9 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     private void checkTypeCompability(TypeDefinition type, SimpleInitializer initializer) {
         Log.debug("SymbolTableVisitor:checkTypeCompability:type" + type);
 
+
         if ((type instanceof TypeFixed
-                        && !(initializer.getConstant() instanceof ConstantFixedValue))
+                && !(initializer.getConstant() instanceof ConstantFixedValue))
                 || (type instanceof TypeFloat
                         && (!(initializer.getConstant() instanceof ConstantFloatValue)
                                 && !(initializer.getConstant() instanceof ConstantFixedValue)))
@@ -646,13 +597,13 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                         && !(initializer.getConstant() instanceof ConstantCharacterValue))
                 || (type instanceof TypeBit
                         && !(initializer.getConstant() instanceof ConstantBitValue))) {
-            ErrorStack.add(
-                    initializer.m_context, null, " Init type does not much type of variable");
+            ErrorStack.add(initializer.m_context, null,
+                    " init type does not match type of variable");
         }
     }
 
-    private void fixPrecision(
-            ParserRuleContext ctx, TypeDefinition type, SimpleInitializer initializer) {
+    private void fixPrecision(ParserRuleContext ctx, TypeDefinition type,
+            SimpleInitializer initializer) {
         Log.debug("SymbolTableVisitor:fixPrecision:ctx" + CommonUtils.printContext(ctx));
 
         if (type instanceof TypeFixed) {
@@ -703,8 +654,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 visitTypeBitString(ctx.typeBitString());
             } else if (ctx.typeFloatingPointNumber() != null) {
                 visitTypeFloatingPointNumber(ctx.typeFloatingPointNumber());
-            } else if (ctx.typeTime() != null) {
-                visitTypeTime(ctx.typeTime());
+            } else if (ctx.typeClock() != null) {
+                visitTypeClock(ctx.typeClock());
             } else if (ctx.typeCharacterString() != null) {
                 visitTypeCharacterString(ctx.typeCharacterString());
             }
@@ -764,8 +715,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                     d.setIn(true);
                     d.setOut(true);
                 } else {
-                    throw new InternalCompilerErrorException(
-                            "SymbolTableVisitor-untreated SourceSinkAttribute");
+                    ErrorStack.addInternal(ctx.sourceSinkAttribute(), "SymbolTableVisitor",
+                            "untreated SourceSinkAttribute");
                 }
             }
             if (ctx.classAttribute() != null) {
@@ -823,17 +774,23 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         if (ctx.accessAttribute() != null) {
             ErrorStack.enter(ctx.accessAttribute(), "accessAttributes");
             for (ParseTree c1 : ctx.accessAttribute().children) {
-                if (c1.getText().equals("DIRECT")) d.setDirect(true);
-                else if (c1.getText().equals("FORWARD")) d.setForward(true);
+                if (c1.getText().equals("DIRECT"))
+                    d.setDirect(true);
+                else if (c1.getText().equals("FORWARD"))
+                    d.setForward(true);
                 else if (c1.getText().equals("FORBACK")) {
                     ErrorStack.add("FORBACK is not supported");
-                } else if (c1.getText().equals("CYCLIC")) d.setCyclic(true);
-                else if (c1.getText().equals("NOCYCL")) d.setCyclic(false);
-                else if (c1.getText().equals("STREAM")) d.setStream(true);
-                else if (c1.getText().equals("NOSTREAM")) d.setStream(false);
+                } else if (c1.getText().equals("CYCLIC"))
+                    d.setCyclic(true);
+                else if (c1.getText().equals("NOCYCL"))
+                    d.setCyclic(false);
+                else if (c1.getText().equals("STREAM"))
+                    d.setStream(true);
+                else if (c1.getText().equals("NOSTREAM"))
+                    d.setStream(false);
                 else {
-                    throw new InternalCompilerErrorException(
-                            "DationDCL untreated accessAttribute" + c1.getText());
+                    ErrorStack.addInternal(ctx.accessAttribute(), "SymbolTableVisitor",
+                            "untreated accessAttribute");
                 }
             }
             ErrorStack.leave();
@@ -845,9 +802,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
     @Override
     public Void visitTypeReferenceTaskType(SmallPearlParser.TypeReferenceTaskTypeContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceTaskType:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitTypeReferenceTaskType:ctx"
+                + CommonUtils.printContext(ctx));
 
         m_type = new TypeTask();
         return null;
@@ -855,9 +811,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
     @Override
     public Void visitTypeReferenceSemaType(SmallPearlParser.TypeReferenceSemaTypeContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceSemaType:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitTypeReferenceSemaType:ctx"
+                + CommonUtils.printContext(ctx));
 
         m_type = new TypeSemaphore();
         return null;
@@ -865,9 +820,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
     @Override
     public Void visitTypeReferenceBoltType(SmallPearlParser.TypeReferenceBoltTypeContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceBoltType:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitTypeReferenceBoltType:ctx"
+                + CommonUtils.printContext(ctx));
 
         m_type = new TypeBolt();
         return null;
@@ -885,9 +839,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 resultType = getResultAttribute((SmallPearlParser.ResultAttributeContext) c);
                 resultAttr = new ASTAttribute(resultType);
             } else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
-                formalParameters =
-                        getListOfFormalParameters(
-                                (SmallPearlParser.ListOfFormalParametersContext) c);
+                formalParameters = getListOfFormalParameters(
+                        (SmallPearlParser.ListOfFormalParametersContext) c);
             }
         }
         m_type = new TypeProcedure(formalParameters, resultType);
@@ -898,9 +851,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitTypeReferenceProcedureType(
             SmallPearlParser.TypeReferenceProcedureTypeContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceProcedureType:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitTypeReferenceProcedureType:ctx"
+                + CommonUtils.printContext(ctx));
 
         m_type = new TypeProcedure();
         return null;
@@ -909,9 +861,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitTypeReferenceInterruptType(
             SmallPearlParser.TypeReferenceInterruptTypeContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceInterruptType:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitTypeReferenceInterruptType:ctx"
+                + CommonUtils.printContext(ctx));
 
         m_type = new TypeInterrupt();
         return null;
@@ -919,9 +870,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
     @Override
     public Void visitTypeReferenceSignalType(SmallPearlParser.TypeReferenceSignalTypeContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceSignalType:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitTypeReferenceSignalType:ctx"
+                + CommonUtils.printContext(ctx));
 
         m_type = new TypeSignal();
         return null;
@@ -934,12 +884,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         if (ctx != null) {
             for (ParseTree c : ctx.children) {
                 if (c instanceof SmallPearlParser.MprecisionContext) {
-                    size =
-                            Integer.parseInt(
-                                    ((SmallPearlParser.MprecisionContext) c)
-                                            .integerWithoutPrecision()
-                                            .IntegerConstant()
-                                            .getText());
+                    size = Integer.parseInt(((SmallPearlParser.MprecisionContext) c)
+                            .integerWithoutPrecision().IntegerConstant().getText());
+                    if (size < Defaults.FIXED_MIN_LENGTH || size > Defaults.FIXED_MAX_LENGTH) {
+                        CommonErrorMessages.wrongFixedPrecission(ctx.mprecision());
+                    }
                 }
             }
         }
@@ -953,11 +902,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         Log.debug("SymbolTableVisitor:visitTypeBitString:ctx" + CommonUtils.printContext(ctx));
         int length = m_currentSymbolTable.lookupDefaultBitLength();
 
-        if (ctx.IntegerConstant() != null) {
-            length = Integer.parseInt(ctx.IntegerConstant().getText());
-            if (length < 1 || length > 64) {
-                throw new NotSupportedTypeException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+        if (ctx.length() != null) {
+            length = Integer.parseInt(ctx.length().getText());
+            if (length < Defaults.BIT_MIN_LENGTH || length > Defaults.BIT_MAX_LENGTH) {
+                CommonErrorMessages.wrongBitLength(ctx.length());
             }
         }
 
@@ -970,12 +918,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     public Void visitTypeCharacterString(SmallPearlParser.TypeCharacterStringContext ctx) {
         int length = m_currentSymbolTable.lookupDefaultCharLength();
 
-        if (ctx.IntegerConstant() != null) {
-            length = Integer.parseInt(ctx.IntegerConstant().getText());
+        if (ctx.length() != null) {
+            length = Integer.parseInt(ctx.length().getText());
 
-            if (length < 1 || length > Defaults.CHARACTER_MAX_LENGTH) {
-                throw new NotSupportedTypeException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            if (length < Defaults.CHARACTER_LENGTH || length > Defaults.CHARACTER_MAX_LENGTH) {
+                CommonErrorMessages.wrongCharLength(ctx.length());
             }
         }
 
@@ -988,13 +935,12 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     public Void visitTypeFloatingPointNumber(SmallPearlParser.TypeFloatingPointNumberContext ctx) {
         int precision = m_currentSymbolTable.lookupDefaultFloatLength();
 
-        if (ctx.IntegerConstant() != null) {
-            precision = Integer.parseInt(ctx.IntegerConstant().getText());
+        if (ctx.length() != null) {
+            precision = Integer.parseInt(ctx.length().getText());
 
             if (precision != Defaults.FLOAT_SHORT_PRECISION
                     && precision != Defaults.FLOAT_LONG_PRECISION) {
-                throw new NotSupportedTypeException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                CommonErrorMessages.wrongFloatPrecission(ctx.length());
             }
         }
 
@@ -1009,39 +955,25 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
+    @Override
+    public Void visitTypeClock(SmallPearlParser.TypeClockContext ctx) {
+        m_type = new TypeClock();
+        return null;
+    }
+
     private ArrayList<String> getIdentifierDenotation(
             SmallPearlParser.IdentifierDenotationContext ctx) {
         ArrayList<String> identifierDenotationList = new ArrayList<String>();
 
         if (ctx != null) {
-            for (int i = 0; i < ctx.ID().size(); i++) {
-                identifierDenotationList.add(ctx.ID().get(i).toString());
+            for (int i = 0; i < ctx.identifier().size(); i++) {
+                identifierDenotationList.add(ctx.identifier(i).ID().toString());
             }
         }
 
         return identifierDenotationList;
     }
 
-    @Override
-    public Void visitTypeTime(SmallPearlParser.TypeTimeContext ctx) {
-        Log.debug("SymbolTableVisitor:visitTypeTime:ctx" + CommonUtils.printContext(ctx));
-
-        if (ctx.type_clock() != null) {
-            m_type = new TypeClock();
-        } else if (ctx.type_duration() != null) {
-            m_type = new TypeDuration();
-        }
-
-        return null;
-    }
-
-    @Override
-    public Void visitType_clock(SmallPearlParser.Type_clockContext ctx) {
-        Log.debug("SymbolTableVisitor:visitType_clock:ctx" + CommonUtils.printContext(ctx));
-
-        m_type = new TypeClock();
-        return null;
-    }
 
     @Override
     public Void visitArrayVariableDeclaration(
@@ -1098,23 +1030,15 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 }
             }
 
-            addArrayDescriptor(
-                    new ArrayDescriptor(
-                            ((TypeArray) m_type).getNoOfDimensions(),
-                            ((TypeArray) m_type).getDimensions()));
+            addArrayDescriptor(new ArrayDescriptor(((TypeArray) m_type).getNoOfDimensions(),
+                    ((TypeArray) m_type).getDimensions()));
 
             for (int i = 0; i < identifierDenotationList.size(); i++) {
-                VariableEntry variableEntry =
-                        new VariableEntry(
-                                identifierDenotationList.get(i),
-                                m_type,
-                                hasAssigmentProtection,
-                                ctx,
-                                arrayOrStructureInitializer);
-                if (!m_currentSymbolTable.enter(variableEntry)) {
-                    System.out.println(
-                            "ERR: Double definition of " + identifierDenotationList.get(i));
-                }
+                VariableEntry variableEntry = new VariableEntry(identifierDenotationList.get(i),
+                        m_type, hasAssigmentProtection, ctx, arrayOrStructureInitializer);
+
+                String s = identifierDenotationList.get(i).toString();
+                checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx, s);
             }
         }
 
@@ -1131,19 +1055,16 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitBoundaryDenotation(SmallPearlParser.BoundaryDenotationContext ctx) {
         if (ctx.constantFixedExpression().size() == 1) {
-            int upb =
-                    CommonUtils.getConstantFixedExpression(
-                            ctx.constantFixedExpression(0), m_currentSymbolTable);
+            int upb = CommonUtils.getConstantFixedExpression(ctx.constantFixedExpression(0),
+                    m_currentSymbolTable);
             ((TypeArray) m_type)
                     .addDimension(new ArrayDimension(Defaults.DEFAULT_ARRAY_LWB, upb, ctx));
             // Integer.parseInt(ctx.constantFixedExpression(0).getText())));
         } else {
-            int lwb =
-                    CommonUtils.getConstantFixedExpression(
-                            ctx.constantFixedExpression(0), m_currentSymbolTable);
-            int upb =
-                    CommonUtils.getConstantFixedExpression(
-                            ctx.constantFixedExpression(1), m_currentSymbolTable);
+            int lwb = CommonUtils.getConstantFixedExpression(ctx.constantFixedExpression(0),
+                    m_currentSymbolTable);
+            int upb = CommonUtils.getConstantFixedExpression(ctx.constantFixedExpression(1),
+                    m_currentSymbolTable);
             ((TypeArray) m_type).addDimension(new ArrayDimension(lwb, upb, ctx));
         }
 
@@ -1152,113 +1073,18 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
     @Override
     public Void visitTypeAttributeForArray(SmallPearlParser.TypeAttributeForArrayContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitTypeAttributeForArray:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitTypeAttributeForArray:ctx"
+                + CommonUtils.printContext(ctx));
 
-        if (ctx.type_bit() != null) {
-            TypeDefinition tempType = m_type;
-            visitType_bit(ctx.type_bit());
-            ((TypeArray) tempType).setBaseType(m_type);
-            m_type = tempType;
-        } else if (ctx.type_char() != null) {
-            TypeDefinition tempType = m_type;
-            visitType_char(ctx.type_char());
-            ((TypeArray) tempType).setBaseType(m_type);
-            m_type = tempType;
-        } else if (ctx.type_clock() != null) {
-            ((TypeArray) m_type).setBaseType(new TypeClock());
-        } else if (ctx.type_duration() != null) {
-            ((TypeArray) m_type).setBaseType(new TypeDuration());
-        } else if (ctx.type_fixed() != null) {
-            TypeDefinition tempType = m_type;
-            visitType_fixed(ctx.type_fixed());
-            ((TypeArray) tempType).setBaseType(m_type);
-            m_type = tempType;
-        } else if (ctx.type_float() != null) {
-            TypeDefinition tempType = m_type;
-            visitType_float(ctx.type_float());
-            ((TypeArray) tempType).setBaseType(m_type);
-            m_type = tempType;
-        } else if (ctx.typeReference() != null) {
-            TypeDefinition tempType = m_type;
-            visitTypeReference(ctx.typeReference());
-            ((TypeArray) tempType).setBaseType(m_type);
-            m_type = tempType;
-        } else if (ctx.typeStructure() != null) {
-            TypeDefinition tempType = m_type;
-            visitTypeStructure(ctx.typeStructure());
-            ((TypeArray) tempType).setBaseType(m_type);
-            m_type = tempType;
-        }
+        TypeDefinition tempType = m_type;
+        visitChildren(ctx);
+
+        ((TypeArray) tempType).setBaseType(m_type);
+        m_type = tempType;
 
         return null;
     }
 
-    @Override
-    public Void visitType_bit(SmallPearlParser.Type_bitContext ctx) {
-        Log.debug("SymbolTableVisitor:visitType_bit:ctx" + CommonUtils.printContext(ctx));
-
-        Integer width = Defaults.BIT_LENGTH;
-
-        if (ctx.IntegerConstant() != null) {
-            width = Integer.parseInt(ctx.IntegerConstant().getText());
-        }
-
-        m_type = new TypeBit(width);
-        return null;
-    }
-
-    @Override
-    public Void visitType_fixed(SmallPearlParser.Type_fixedContext ctx) {
-        Log.debug("SymbolTableVisitor:visitType_fixed:ctx" + CommonUtils.printContext(ctx));
-
-        Integer width = Defaults.FIXED_LENGTH;
-
-        if (ctx.IntegerConstant() != null) {
-            width = Integer.parseInt(ctx.IntegerConstant().getText());
-            if (width < Defaults.FIXED_MIN_LENGTH || width > Defaults.FIXED_MAX_LENGTH) {
-                throw new NotSupportedTypeException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-        }
-
-        m_type = new TypeFixed(width);
-        return null;
-    }
-
-    @Override
-    public Void visitType_char(SmallPearlParser.Type_charContext ctx) {
-        Log.debug("SymbolTableVisitor:visitType_char:ctx" + CommonUtils.printContext(ctx));
-
-        Integer width = Defaults.CHARACTER_LENGTH;
-
-        if (ctx.IntegerConstant() != null) {
-            width = Integer.parseInt(ctx.IntegerConstant().getText());
-            // TODO: Add Defaults here!
-            if (width < 1 || width > 255) {
-                throw new NotSupportedTypeException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-        }
-
-        m_type = new TypeChar(width);
-        return null;
-    }
-
-    @Override
-    public Void visitType_float(SmallPearlParser.Type_floatContext ctx) {
-        Log.debug("SymbolTableVisitor:visitType_float:ctx" + CommonUtils.printContext(ctx));
-
-        Integer precision = Defaults.FLOAT_PRECISION;
-
-        if (ctx.IntegerConstant() != null) {
-            precision = Integer.parseInt(ctx.IntegerConstant().getText());
-        }
-
-        m_type = new TypeFloat(precision);
-        return null;
-    }
 
     @Override
     public Void visitSemaDeclaration(SmallPearlParser.SemaDeclarationContext ctx) {
@@ -1280,10 +1106,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         }
 
         for (int i = 0; i < identifierDenotationList.size(); i++) {
-            SemaphoreEntry entry = new SemaphoreEntry(identifierDenotationList.get(i), ctx);
-            if (!m_currentSymbolTable.enter(entry)) {
-                System.out.println("ERR: Double definition of " + identifierDenotationList.get(i));
-            }
+            String s = identifierDenotationList.get(i);
+            SemaphoreEntry variableEntry = new SemaphoreEntry(s, ctx);
+            checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx, s);
+
         }
 
         return null;
@@ -1296,14 +1122,12 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         if (ctx != null) {
             if (ctx.label_statement() != null) {
                 for (int i = 0; i < ctx.label_statement().size(); i++) {
-                    LabelEntry entry =
-                            new LabelEntry(
-                                    ctx.label_statement(i).ID().getText(), ctx.label_statement(i));
+                    LabelEntry entry = new LabelEntry(ctx.label_statement(i).ID().getText(),
+                            ctx.label_statement(i));
 
                     if (!m_currentSymbolTable.enter(entry)) {
-                        System.out.println(
-                                "ERR: Double definition of "
-                                        + ctx.label_statement(i).ID().getText());
+                        System.out.println("ERR: Double definition of "
+                                + ctx.label_statement(i).ID().getText());
                     }
                 }
             }
@@ -1314,162 +1138,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
-    //    @Override
-    //    public Void visitSemaTry(SmallPearlParser.SemaTryContext ctx) {
-    //        Log.debug("SymbolTableVisitor:visitSemaTry:ctx" + CommonUtils.printContext(ctx));
-    //
-    //        LinkedList<SemaphoreEntry> listOfSemaphores = new LinkedList<SemaphoreEntry>();
-    //
-    //        LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
-    //
-    //        if (listOfModules.size() > 1) {
-    //            throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //        }
-    //
-    //        ModuleEntry moduleEntry = listOfModules.get(0);
-    //        SymbolTable symbolTable = moduleEntry.scope;
-    //
-    //        for (int i = 0; i < ctx.name().size(); i++) {
-    //            SymbolTableEntry entry = symbolTable.lookup(ctx.name(i).getText());
-    //
-    //            if (entry != null && entry instanceof SemaphoreEntry) {
-    //                listOfSemaphores.add((SemaphoreEntry) entry);
-    //            } else {
-    //                throw new ArgumentMismatchException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //            }
-    //        }
-    //
-    //        Collections.sort(listOfSemaphores);
-    //        addToListOfTemporarySemaphoreArrays(listOfSemaphores);
-    //
-    //        return null;
-    //    }
-    //
-    //    @Override
-    //    public Void visitSemaRequest(SmallPearlParser.SemaRequestContext ctx) {
-    //        Log.debug("SymbolTableVisitor:visitSemaRequest:ctx" + CommonUtils.printContext(ctx));
-    //
-    //        LinkedList<SemaphoreEntry> listOfSemaphores = new LinkedList<SemaphoreEntry>();
-    //
-    //        LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
-    //
-    //        if (listOfModules.size() > 1) {
-    //            throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //        }
-    //
-    //        ModuleEntry moduleEntry = listOfModules.get(0);
-    //        SymbolTable symbolTable = moduleEntry.scope;
-    //
-    //        for (int i = 0; i < ctx.name().size(); i++) {
-    //            SymbolTableEntry entry = symbolTable.lookup(ctx.name(i).getText());
-    //
-    //            if (entry != null && entry instanceof SemaphoreEntry) {
-    //                listOfSemaphores.add((SemaphoreEntry) entry);
-    //            } else {
-    //                throw new ArgumentMismatchException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //            }
-    //        }
-    //
-    //        Collections.sort(listOfSemaphores);
-    //        addToListOfTemporarySemaphoreArrays(listOfSemaphores);
-    //
-    //        return null;
-    //    }
-    //
-    //    @Override
-    //    public Void visitSemaRelease(SmallPearlParser.SemaReleaseContext ctx) {
-    //        Log.debug("SymbolTableVisitor:visitSemaRelease:ctx" + CommonUtils.printContext(ctx));
-    //
-    //        LinkedList<SemaphoreEntry> listOfSemaphores = new LinkedList<SemaphoreEntry>();
-    //
-    //        LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
-    //
-    //        if (listOfModules.size() > 1) {
-    //            throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //        }
-    //
-    //        ModuleEntry moduleEntry = listOfModules.get(0);
-    //        SymbolTable symbolTable = moduleEntry.scope;
-    //
-    //        for (int i = 0; i < ctx.name().size(); i++) {
-    //          String s = ctx.name(i).getText();
-    //            SymbolTableEntry entry = symbolTable.lookup(ctx.name(i).getText());
-    //
-    //            if (entry != null && entry instanceof SemaphoreEntry) {
-    //                listOfSemaphores.add((SemaphoreEntry) entry);
-    //            } else {
-    //                throw new ArgumentMismatchException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //            }
-    //        }
-    //
-    //        Collections.sort(listOfSemaphores);
-    //        addToListOfTemporarySemaphoreArrays(listOfSemaphores);
-    //
-    //        return null;
-    //    }
-    //
-    //    private Void addToListOfTemporarySemaphoreArrays(LinkedList<SemaphoreEntry>
-    // listOfSemaphores) {
-    //        Boolean found = false;
-    //        for (int i = 0; i < m_listOfTemporarySemaphoreArrays.size(); i++) {
-    //            LinkedList<SemaphoreEntry> semaphores = m_listOfTemporarySemaphoreArrays.get(i);
-    //            if (semaphores.size() == listOfSemaphores.size()) {
-    //                int j = 0;
-    //                for (j = 0; j < semaphores.size(); j++) {
-    //                    if (semaphores.get(j).compareTo(listOfSemaphores.get(j)) != 0) {
-    //                        break;
-    //                    }
-    //                }
-    //
-    //                if (j == semaphores.size()) {
-    //                    found = true;
-    //                    break;
-    //                }
-    //            }
-    //        }
-    //
-    //        if (!found) {
-    //            this.m_listOfTemporarySemaphoreArrays.add(listOfSemaphores);
-    //        }
-    //
-    //        return null;
-    //    }
-    //
-    //    public LinkedList<LinkedList<SemaphoreEntry>> getListOfTemporarySemaphoreArrays() {
-    //        return m_listOfTemporarySemaphoreArrays;
-    //    }
-    //
-    //    private Void addToListOfTemporaryBoltArrays(LinkedList<BoltEntry> listOfBolts) {
-    //        Boolean found = false;
-    //        for (int i = 0; i < m_listOfTemporaryBoltArrays.size(); i++) {
-    //            LinkedList<BoltEntry> bolts = m_listOfTemporaryBoltArrays.get(i);
-    //            if (bolts.size() == listOfBolts.size()) {
-    //                for (int j = 0; j < bolts.size(); j++) {
-    //                    if (bolts.get(j).compareTo(listOfBolts.get(j)) == 0) {
-    //                        found = true;
-    //                        break;
-    //                    }
-    //                }
-    //            }
-    //        }
-    //
-    //        if (!found) {
-    //            this.m_listOfTemporaryBoltArrays.add(listOfBolts);
-    //        }
-    //
-    //        return null;
-    //    }
-    //
-    //    public LinkedList<LinkedList<BoltEntry>> getListOfTemporaryBoltArrays() {
-    //        return m_listOfTemporaryBoltArrays;
-    //    }
-    //
+
     public LinkedList<ArrayDescriptor> getListOfArrayDescriptors() {
         Log.debug("SymbolTableVisitor:getListOfArrayDescriptors");
 
@@ -1491,14 +1160,12 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
             SymbolTableEntry se = m_currentSymbolTable.lookup(label);
             if (se != null) {
-                ErrorStack.add(
-                        ctx.loopStatement_end(), "LOOP", "duplicate name '" + label + "' in scope");
+                ErrorStack.add(ctx.loopStatement_end(), "LOOP",
+                        "duplicate name '" + label + "' in scope");
 
                 if (se instanceof LoopEntry) {
-                    ErrorStack.note(
-                            ((LoopStatementContext) (se.getCtx())).loopStatement_end(),
-                            "previous definion",
-                            "");
+                    ErrorStack.note(((LoopStatementContext) (se.getCtx())).loopStatement_end(),
+                            "previous definion", "");
                 }
                 if (se instanceof BlockEntry) {
                     ErrorStack.note(se.getCtx(), "previous definion", "");
@@ -1516,12 +1183,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             // and updates the precision of the loop control variable to fit with start-value,
             // increment nad end-value as far as they are given
             VariableEntry controlVariable =
-                    new VariableEntry(
-                            ctx.loopStatement_for().ID().getText(),
-                            new TypeFixed(Defaults.FIXED_LENGTH),
-                            true,
-                            null,
-                            null);
+                    new VariableEntry(ctx.loopStatement_for().ID().getText(),
+                            new TypeFixed(Defaults.FIXED_LENGTH), true, null, null);
             controlVariable.setLoopControlVariable();
             m_currentSymbolTable.enter(controlVariable);
         }
@@ -1575,146 +1238,15 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         }
 
         for (int i = 0; i < identifierDenotationList.size(); i++) {
-            BoltEntry entry = new BoltEntry(identifierDenotationList.get(i), ctx);
-            if (!m_currentSymbolTable.enter(entry)) {
-                System.out.println("ERR: Double definition of " + identifierDenotationList.get(i));
-            }
+            String s = identifierDenotationList.get(i);
+            BoltEntry variableEntry = new BoltEntry(s, ctx);
+            checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx, s);
+
         }
 
         return null;
     }
 
-    //    @Override
-    //    public Void visitBoltReserve(SmallPearlParser.BoltReserveContext ctx) {
-    //        Log.debug("SymbolTableVisitor:visitBoltReserve:ctx" + CommonUtils.printContext(ctx));
-    //
-    //        LinkedList<BoltEntry> listOfBolts = new LinkedList<BoltEntry>();
-    //
-    //        LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
-    //
-    //        if (listOfModules.size() > 1) {
-    //            throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //        }
-    //
-    //        ModuleEntry moduleEntry = listOfModules.get(0);
-    //        SymbolTable symbolTable = moduleEntry.scope;
-    //
-    //        for (int i = 0; i < ctx.name().size(); i++) {
-    //            SymbolTableEntry entry = symbolTable.lookup(ctx.name(i).getText());
-    //
-    //            if (entry != null && entry instanceof BoltEntry) {
-    //                listOfBolts.add((BoltEntry) entry);
-    //            } else {
-    //                throw new ArgumentMismatchException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //            }
-    //        }
-    //
-    //        Collections.sort(listOfBolts);
-    //        addToListOfTemporaryBoltArrays(listOfBolts);
-    //
-    //        return null;
-    //    }
-    //
-    //    @Override
-    //    public Void visitBoltFree(SmallPearlParser.BoltFreeContext ctx) {
-    //        Log.debug("SymbolTableVisitor:visitBoltFree:ctx" + CommonUtils.printContext(ctx));
-    //
-    //        LinkedList<BoltEntry> listOfBolts = new LinkedList<BoltEntry>();
-    //
-    //        LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
-    //
-    //        if (listOfModules.size() > 1) {
-    //            throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //        }
-    //
-    //        ModuleEntry moduleEntry = listOfModules.get(0);
-    //        SymbolTable symbolTable = moduleEntry.scope;
-    //
-    //        for (int i = 0; i < ctx.name().size(); i++) {
-    //            SymbolTableEntry entry = symbolTable.lookup(ctx.name(i).getText());
-    //
-    //            if (entry != null && entry instanceof BoltEntry) {
-    //                listOfBolts.add((BoltEntry) entry);
-    //            } else {
-    //                throw new ArgumentMismatchException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //            }
-    //        }
-    //
-    //        Collections.sort(listOfBolts);
-    //        addToListOfTemporaryBoltArrays(listOfBolts);
-    //
-    //        return null;
-    //    }
-    //
-    //    @Override
-    //    public Void visitBoltEnter(SmallPearlParser.BoltEnterContext ctx) {
-    //        Log.debug("SymbolTableVisitor:visitBoltEnter:ctx" + CommonUtils.printContext(ctx));
-    //
-    //        LinkedList<BoltEntry> listOfBolts = new LinkedList<BoltEntry>();
-    //
-    //        LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
-    //
-    //        if (listOfModules.size() > 1) {
-    //            throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //        }
-    //
-    //        ModuleEntry moduleEntry = listOfModules.get(0);
-    //        SymbolTable symbolTable = moduleEntry.scope;
-    //
-    //        for (int i = 0; i < ctx.name().size(); i++) {
-    //            SymbolTableEntry entry = symbolTable.lookup(ctx.name(i).getText());
-    //
-    //            if (entry != null && entry instanceof BoltEntry) {
-    //                listOfBolts.add((BoltEntry) entry);
-    //            } else {
-    //                throw new ArgumentMismatchException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //            }
-    //        }
-    //
-    //        Collections.sort(listOfBolts);
-    //        addToListOfTemporaryBoltArrays(listOfBolts);
-    //
-    //        return null;
-    //    }
-    //
-    //    @Override
-    //    public Void visitBoltLeave(SmallPearlParser.BoltLeaveContext ctx) {
-    //        Log.debug("SymbolTableVisitor:visitBoltLeave:ctx" + CommonUtils.printContext(ctx));
-    //
-    //        LinkedList<BoltEntry> listOfBolts = new LinkedList<BoltEntry>();
-    //
-    //        LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
-    //
-    //        if (listOfModules.size() > 1) {
-    //            throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //        }
-    //
-    //        ModuleEntry moduleEntry = listOfModules.get(0);
-    //        SymbolTable symbolTable = moduleEntry.scope;
-    //
-    //        for (int i = 0; i < ctx.name().size(); i++) {
-    //            SymbolTableEntry entry = symbolTable.lookup(ctx.name(i).getText());
-    //
-    //            if (entry != null && entry instanceof BoltEntry) {
-    //                listOfBolts.add((BoltEntry) entry);
-    //            } else {
-    //                throw new ArgumentMismatchException(ctx.getText(), ctx.start.getLine(),
-    // ctx.start.getCharPositionInLine());
-    //            }
-    //        }
-    //
-    //        Collections.sort(listOfBolts);
-    //        addToListOfTemporaryBoltArrays(listOfBolts);
-    //
-    //        return null;
-    //    }
 
     public SymbolTable getSymbolTablePerContext(ParseTree ctx) {
         return m_symboltablePerContext.get(ctx);
@@ -1753,21 +1285,13 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     /* START of common for dationDeclaration and dationSpecification 	    */
     /* -------------------------------------------------------------------  */
     private void treatIdentifierDenotation(IdentifierDenotationContext ctx, TypeDation d) {
-        for (int i = 0; i < ctx.ID().size(); i++) {
-            String dationName = ctx.ID(i).toString();
+        for (int i = 0; i < ctx.identifier().size(); i++) {
+            String dationName = ctx.identifier(i).ID().toString();
             // System.out.println("DationName: "+ dationName);
 
-            SymbolTableEntry entry1 = this.m_currentSymbolTable.lookup(dationName);
+            VariableEntry variableEntry = new VariableEntry(dationName, d, ctx);
+            checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx, dationName);
 
-            if (entry1 != null) {
-                ErrorStack.add("symbol " + dationName + " already defined");
-            }
-
-            VariableEntry ve = new VariableEntry(dationName, d, ctx);
-            if (!m_currentSymbolTable.enter(ve)) {
-                throw new InternalCompilerErrorException(
-                        "SymbolTableVisitor- could not add symbol");
-            }
         }
     }
 
@@ -1798,40 +1322,50 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             System.out.println("SymbolTableVisitor: visitLengthDefinition");
         }
 
-        if (ctx.lengthDefinitionType()
-                instanceof SmallPearlParser.LengthDefinitionFixedTypeContext) {
-            TypeFixed typ = new TypeFixed(Integer.valueOf((ctx.IntegerConstant().toString())));
+        if (ctx.lengthDefinitionType() instanceof SmallPearlParser.LengthDefinitionFixedTypeContext) {
+            TypeFixed typ =
+                    new TypeFixed(Integer.valueOf((ctx.length().IntegerConstant().toString())));
 
             if (typ.getPrecision() < Defaults.FIXED_MIN_LENGTH
                     || typ.getPrecision() > Defaults.FIXED_MAX_LENGTH) {
-                throw new PrecisionNotSupportedException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                CommonErrorMessages.wrongFixedPrecission(ctx.lengthDefinitionType());
             }
 
             LengthEntry entry = new LengthEntry(typ, ctx);
             m_currentSymbolTable.enterOrReplace(entry);
-        } else if (ctx.lengthDefinitionType()
-                instanceof SmallPearlParser.LengthDefinitionFloatTypeContext) {
-            TypeFloat typ = new TypeFloat(Integer.valueOf((ctx.IntegerConstant().toString())));
+        } else if (ctx
+                .lengthDefinitionType() instanceof SmallPearlParser.LengthDefinitionFloatTypeContext) {
+            TypeFloat typ =
+                    new TypeFloat(Integer.valueOf((ctx.length().IntegerConstant().toString())));
 
             if (typ.getPrecision() != Defaults.FLOAT_SHORT_PRECISION
                     && typ.getPrecision() != Defaults.FLOAT_LONG_PRECISION) {
-                throw new PrecisionNotSupportedException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                CommonErrorMessages.wrongFloatPrecission(ctx.length());
             }
 
             LengthEntry entry = new LengthEntry(typ, ctx);
             m_currentSymbolTable.enterOrReplace(entry);
-        } else if (ctx.lengthDefinitionType()
-                instanceof SmallPearlParser.LengthDefinitionBitTypeContext) {
-            TypeBit typ = new TypeBit(Integer.valueOf((ctx.IntegerConstant().toString())));
+        } else if (ctx
+                .lengthDefinitionType() instanceof SmallPearlParser.LengthDefinitionBitTypeContext) {
+            TypeBit typ = new TypeBit(Integer.valueOf((ctx.length().IntegerConstant().toString())));
             LengthEntry entry = new LengthEntry(typ, ctx);
-            m_currentSymbolTable.enterOrReplace(entry);
-        } else if (ctx.lengthDefinitionType()
-                instanceof SmallPearlParser.LengthDefinitionCharacterTypeContext) {
-            TypeChar typ = new TypeChar(Integer.valueOf((ctx.IntegerConstant().toString())));
+            if (typ.getPrecision() < Defaults.BIT_MIN_LENGTH
+                    || typ.getPrecision() > Defaults.BIT_MAX_LENGTH) {
+                CommonErrorMessages.wrongBitLength(ctx.length());
+            } else {
+                m_currentSymbolTable.enterOrReplace(entry);
+            }
+        } else if (ctx
+                .lengthDefinitionType() instanceof SmallPearlParser.LengthDefinitionCharacterTypeContext) {
+            TypeChar typ =
+                    new TypeChar(Integer.valueOf((ctx.length().IntegerConstant().toString())));
             LengthEntry entry = new LengthEntry(typ, ctx);
-            m_currentSymbolTable.enterOrReplace(entry);
+            if (typ.getPrecision() < Defaults.CHARACTER_LENGTH
+                    || typ.getPrecision() > Defaults.CHARACTER_MAX_LENGTH) {
+                CommonErrorMessages.wrongCharLength(ctx.length());
+            } else {
+                m_currentSymbolTable.enterOrReplace(entry);
+            }
         }
 
         return null;
@@ -1853,9 +1387,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
     private ArrayList<Initializer> getInitialisationAttribute(
             SmallPearlParser.InitialisationAttributeContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:getInitialisationAttribute:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:getInitialisationAttribute:ctx"
+                + CommonUtils.printContext(ctx));
 
         ArrayList<Initializer> initElementList = new ArrayList<>();
 
@@ -1889,38 +1422,41 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         } else if (ctx.constant() != null) {
             constant = getConstant(index, ctx.constant());
         } else if (ctx.ID() != null) {
+            // check for names constant 
             SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().toString());
 
             if (entry == null) {
-                throw new UnknownIdentifierException(
-                        ctx.getText(),
-                        ctx.start.getLine(),
-                        ctx.start.getCharPositionInLine(),
-                        (ctx.ID().toString()));
-            }
+                // may be a forward reference, which is not treated yet 
+                ErrorStack.add(ctx, "initializer", "is not defined yet");
+                //                throw new UnknownIdentifierException(
+                //                        ctx.getText(),
+                //                        ctx.start.getLine(),
+                //                        ctx.start.getCharPositionInLine(),
+                //                        (ctx.ID().toString()));
+            } else {
+                if (entry instanceof VariableEntry) {
 
-            if (entry instanceof VariableEntry) {
-                VariableEntry var = (VariableEntry) entry;
+                    VariableEntry var = (VariableEntry) entry;
 
-                if (var.getAssigmentProtection()) {
-                    if (var.getInitializer() instanceof SimpleInitializer) {
-                        constant = ((SimpleInitializer) var.getInitializer()).getConstant();
+                    if (var.getAssigmentProtection()) {
+                        if (var.getInitializer() instanceof SimpleInitializer) {
+                            constant = ((SimpleInitializer) var.getInitializer()).getConstant();
+                        } else {
+                            throw new InternalCompilerErrorException(ctx.getText(),
+                                    ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                        }
                     } else {
-                        throw new InternalCompilerErrorException(
-                                ctx.getText(),
-                                ctx.start.getLine(),
-                                ctx.start.getCharPositionInLine());
+                        ErrorStack.add(ctx, "initializer", "must be INV");
+                        //                    throw new TypeMismatchException(
+                        //                            ctx.getText(),
+                        //                            ctx.start.getLine(),
+                        //                            ctx.start.getCharPositionInLine(),
+                        //                            (ctx.ID().toString()));
                     }
                 } else {
-                    throw new TypeMismatchException(
-                            ctx.getText(),
-                            ctx.start.getLine(),
-                            ctx.start.getCharPositionInLine(),
-                            (ctx.ID().toString()));
+                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+                            ctx.start.getCharPositionInLine());
                 }
-            } else {
-                throw new InternalCompilerErrorException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         }
 
@@ -1944,9 +1480,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             precision = getPrecisionByType(index, arrType.getBaseType());
         } else if (type instanceof TypeStructure) {
             TypeStructure structType = (TypeStructure) type;
-            precision =
-                    getPrecisionByType(
-                            index, structType.getStructureComponentByIndex(index).m_type);
+            precision = getPrecisionByType(index,
+                    structType.getStructureComponentByIndex(index).m_type);
         } else {
             throw new InternalCompilerErrorException("Cannot determine lenght of type");
         }
@@ -1974,12 +1509,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             int curlen = m_currentSymbolTable.lookupDefaultFixedLength();
 
             if (ctx.fixedConstant().fixedNumberPrecision() != null) {
-                curlen =
-                        Integer.parseInt(
-                                ctx.fixedConstant()
-                                        .fixedNumberPrecision()
-                                        .IntegerConstant()
-                                        .toString());
+                curlen = Integer.parseInt(
+                        ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
             } else {
                 curlen = getPrecisionByType(index, m_type);
             }
@@ -2003,45 +1534,30 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             Double seconds = 0.0;
 
             if (ctx.durationConstant().hours() != null) {
-                hours =
-                        Integer.valueOf(
-                                ctx.durationConstant().hours().IntegerConstant().toString());
+                hours = Integer
+                        .valueOf(ctx.durationConstant().hours().IntegerConstant().toString());
             }
             if (ctx.durationConstant().minutes() != null) {
-                minutes =
-                        Integer.valueOf(
-                                ctx.durationConstant().minutes().IntegerConstant().toString());
+                minutes = Integer
+                        .valueOf(ctx.durationConstant().minutes().IntegerConstant().toString());
             }
             if (ctx.durationConstant().seconds() != null) {
                 if (ctx.durationConstant().seconds().IntegerConstant() != null) {
-                    seconds =
-                            Double.valueOf(
-                                    ctx.durationConstant().seconds().IntegerConstant().toString());
+                    seconds = Double
+                            .valueOf(ctx.durationConstant().seconds().IntegerConstant().toString());
                 } else if (ctx.durationConstant().seconds().floatingPointConstant() != null) {
-                    seconds =
-                            CommonUtils.getFloatingPointConstantValue(
-                                    ctx.durationConstant().seconds().floatingPointConstant());
+                    seconds = CommonUtils.getFloatingPointConstantValue(
+                            ctx.durationConstant().seconds().floatingPointConstant());
                 }
             }
 
             constant = new ConstantDurationValue(hours, minutes, seconds);
-            //  TODO MS          }
-            //            else if ( m_type instanceof TypeClock) {
-            //                constant = new ConstantClockValue(hours, minutes, seconds);
-            //            }
-            //            else {
-            //                throw new InternalCompilerErrorException(ctx.getText(),
-            // ctx.start.getLine(),
-            // ctx.start.getCharPositionInLine());
-            //            }
 
         } else if (ctx.bitStringConstant() != null) {
-            long value =
-                    CommonUtils.convertBitStringToLong(
-                            ctx.bitStringConstant().BitStringLiteral().getText());
-            int nb =
-                    CommonUtils.getBitStringLength(
-                            ctx.bitStringConstant().BitStringLiteral().getText());
+            long value = CommonUtils
+                    .convertBitStringToLong(ctx.bitStringConstant().BitStringLiteral().getText());
+            int nb = CommonUtils
+                    .getBitStringLength(ctx.bitStringConstant().BitStringLiteral().getText());
             constant = new ConstantBitValue(value, nb);
         } else if (ctx.timeConstant() != null) {
             Integer hours = 0;
@@ -2052,14 +1568,13 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             minutes = Integer.valueOf(ctx.timeConstant().IntegerConstant(1).toString());
 
             if (ctx.timeConstant().floatingPointConstant() != null) {
-                seconds =
-                        CommonUtils.getFloatingPointConstantValue(
-                                ctx.timeConstant().floatingPointConstant());
+                seconds = CommonUtils
+                        .getFloatingPointConstantValue(ctx.timeConstant().floatingPointConstant());
             } else if (ctx.timeConstant().IntegerConstant(2) != null) {
                 seconds = Double.valueOf(ctx.timeConstant().IntegerConstant(2).toString());
             } else {
-                throw new InternalCompilerErrorException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+                        ctx.start.getCharPositionInLine());
             }
 
             constant = new ConstantClockValue(hours, minutes, seconds);
@@ -2083,22 +1598,13 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     private ConstantValue getConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
         Log.debug("SymbolTableVisitor:getConstantExpression:ctx" + CommonUtils.printContext(ctx));
 
-        ConstantFixedExpressionEvaluator evaluator =
-                new ConstantFixedExpressionEvaluator(
-                        m_verbose, m_debug, m_currentSymbolTable, null, null);
+        ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose,
+                m_debug, m_currentSymbolTable, null, null);
         ConstantValue constant = evaluator.visit(ctx.constantFixedExpression());
 
         return constant;
     }
 
-    /* moved to CommonUtils
-     private ConstantFixedValue getConstantFixedExpression(SmallPearlParser.ConstantFixedExpressionContext ctx) {
-     	ConstantFixedExpressionEvaluator evaluator = new ConstantFixedExpressionEvaluator(m_verbose, m_debug, m_currentSymbolTable,null, null);
-    	ConstantFixedValue constant = evaluator.visit(ctx);
-
-    	return constant;
-    }
-    */
 
     @Override
     public Void visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
@@ -2108,8 +1614,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 "SymbolTableVisitor:visitDationSpecification:ctx" + CommonUtils.printContext(ctx));
 
         if (listOfModules.size() > 1) {
-            throw new NotYetImplementedException(
-                    ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(),
+                    ctx.start.getCharPositionInLine());
         }
 
         ModuleEntry moduleEntry = listOfModules.get(0);
@@ -2157,15 +1663,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             isGlobal = true;
         }
 
-        for (int i = 0; i < ctx.ID().size(); i++) {
-            String iName = ctx.ID(i).toString();
-            SymbolTableEntry se = m_currentSymbolTable.lookup(iName);
-            if (se != null) {
-                ErrorStack.add("'" + iName + "' already defined as " + se);
-            } else {
-                InterruptEntry ie = new InterruptEntry(iName, isGlobal, ctx);
-                m_currentSymbolTable.enter(ie);
-            }
+        for (int i = 0; i < ctx.identifierDenotation().identifier().size(); i++) {
+            String iName = ctx.identifierDenotation().identifier(i).ID().toString();
+            InterruptEntry ie = new InterruptEntry(iName, isGlobal, ctx);
+            checkDoubleDefinitionAndEnterToSymbolTable(ie, ctx, iName);
         }
         return null;
     }
@@ -2173,9 +1674,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitStructVariableDeclaration(
             SmallPearlParser.StructVariableDeclarationContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitStructVariableDeclaration:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitStructVariableDeclaration:ctx"
+                + CommonUtils.printContext(ctx));
         visitChildren(ctx);
         return null;
     }
@@ -2187,12 +1687,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         boolean hasAssignmentProtection = false;
 
         ArrayList<Initializer> initElementList = null;
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(ctx.ID().toString());
 
-        if (entry != null) {
-            throw new DoubleDeclarationException(
-                    ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        }
 
         m_typeStructure = null;
         visitTypeStructure(ctx.typeStructure());
@@ -2203,15 +1698,13 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             m_type = new TypeArray();
             visitDimensionAttribute(ctx.dimensionAttribute());
             ((TypeArray) m_type).setBaseType(m_typeStructure);
-            addArrayDescriptor(
-                    new ArrayDescriptor(
-                            ((TypeArray) m_type).getNoOfDimensions(),
-                            ((TypeArray) m_type).getDimensions()));
+            addArrayDescriptor(new ArrayDescriptor(((TypeArray) m_type).getNoOfDimensions(),
+                    ((TypeArray) m_type).getDimensions()));
         } else if (ctx.typeStructure() != null) {
             m_type = m_typeStructure;
         } else {
-            throw new InternalCompilerErrorException(
-                    ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+                    ctx.start.getCharPositionInLine());
         }
 
         if (ctx.initialisationAttribute() != null) {
@@ -2229,14 +1722,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         int no = symbolTable.getNumberOfComponents(m_type);
         hasAssignmentProtection = ctx.assignmentProtection() != null;
 
-        VariableEntry variableEntry =
-                new VariableEntry(
-                        ctx.ID().toString(),
-                        m_type,
-                        hasAssignmentProtection,
-                        ctx,
-                        arrayOrStructureInitializer);
-        m_currentSymbolTable.enter(variableEntry);
+        VariableEntry variableEntry = new VariableEntry(ctx.ID().toString(), m_type,
+                hasAssignmentProtection, ctx, arrayOrStructureInitializer);
+
+        String s = ctx.ID().toString();
+        checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx, s);
 
         return null;
     }
@@ -2301,9 +1791,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitTypeAttributeInStructureComponent(
             SmallPearlParser.TypeAttributeInStructureComponentContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitTypeAttributeInStructureComponent:ctx"
-                        + CommonUtils.printContext(ctx));
+        Log.debug("SymbolTableVisitor:visitTypeAttributeInStructureComponent:ctx"
+                + CommonUtils.printContext(ctx));
 
         if (ctx.simpleType() != null) {
             visitSimpleType(ctx.simpleType());
@@ -2312,8 +1801,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         } else if (ctx.typeReference() != null) {
             visitTypeReference(ctx.typeReference());
         } else {
-            ErrorStack.addInternal(
-                    ctx,
+            ErrorStack.addInternal(ctx,
                     "SymbolTableVisitor::visitTypeAttributeInStructureComponent",
                     "missing alternative");
         }
@@ -2327,4 +1815,21 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         visitChildren(ctx);
         return null;
     }
+
+    private void checkDoubleDefinitionAndEnterToSymbolTable(SymbolTableEntry newEntry,
+            ParserRuleContext ctx, String msg) {
+        String s = newEntry.getName();
+        SymbolTableEntry entry = m_currentSymbolTable.lookupLocal(s);
+        if (entry != null) {
+            CommonErrorMessages.doubleDeclarationError(s, ctx, entry.getCtx());
+        } else {
+            entry = m_currentSymbolTable.lookup(s);
+            if (entry != null) {
+                CommonErrorMessages.doubleDeclarationWarning("double declaration of ", s, ctx,
+                        entry.getCtx());
+            }
+            m_currentSymbolTable.enter(newEntry);
+        }
+    }
+
 }
