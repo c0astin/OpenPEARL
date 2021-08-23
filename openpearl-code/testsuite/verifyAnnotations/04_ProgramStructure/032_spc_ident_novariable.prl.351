@@ -3,6 +3,8 @@ MODULE(m1);
 PROBLEM;
    ! must fail --  xx not defined
    SPC x FIXED IDENT(xx);
-
+/*$                  ^
+error: identifier 'xx' not defined
+*/
 END;
 MODEND;

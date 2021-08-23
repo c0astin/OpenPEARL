@@ -1,3 +1,0 @@
-004_no_module_name1.prl:1:7: ERROR : Syntax error :missing ID at ')'
-MODULE();
-       ^

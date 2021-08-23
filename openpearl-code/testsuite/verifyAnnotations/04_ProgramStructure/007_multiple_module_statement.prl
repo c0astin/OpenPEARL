@@ -1,0 +1,8 @@
+MODULE(m1);
+
+MODULE(m2);
+/*$
+^
+ERROR : Syntax error :mismatched input 'MODULE' expecting {'MODEND', 'SYSTEM', 'PROBLEM', '__cpp__', '__cpp'}
+*/
+MODEND;

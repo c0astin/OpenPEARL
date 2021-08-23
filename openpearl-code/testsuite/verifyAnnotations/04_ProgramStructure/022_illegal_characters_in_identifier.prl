@@ -4,4 +4,9 @@ PROBLEM;
 ! legal characters
    DCL legal1 FIXED;
    DCL illegaäl FIXED;
+/*$
+             ^
+ERROR : Syntax error :no viable alternative at input 'DCL illegaä'
+*/
+
 MODEND;

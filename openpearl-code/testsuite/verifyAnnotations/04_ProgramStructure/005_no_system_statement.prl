@@ -1,0 +1,10 @@
+MODULE(m1);
+
+stdout: StdOut;  ! system part statement
+/*$
+^
+ERROR : Syntax error :mismatched input 'stdout' expecting {'MODEND', 'SYSTEM', 'PROBLEM', '__cpp__', '__cpp'}
+*/
+
+MODEND;
+

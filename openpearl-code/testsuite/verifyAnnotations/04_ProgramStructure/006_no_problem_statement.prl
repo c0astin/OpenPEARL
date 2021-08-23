@@ -1,0 +1,8 @@
+MODULE(m1);
+DCL f FIXED;
+/*$
+^
+ERROR : Syntax error :mismatched input 'DCL' expecting {'MODEND', 'SYSTEM', 'PROBLEM', '__cpp__', '__cpp'}
+*/
+MODEND;
+

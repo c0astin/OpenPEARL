@@ -1,0 +1,8 @@
+MODULE(m1);
+
+PROBLEM;
+   SPC f1,f2 FIXED GLOBAL(b);
+/*$          ^
+ERROR : Syntax error :extraneous input 'FIXED' expecting {',', 'INTERRUPT', 'IRPT'}
+*/
+MODEND;

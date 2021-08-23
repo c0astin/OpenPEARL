@@ -1,0 +1,15 @@
+MODULE(m1);
+PROBLEM;
+
+! legal characters
+   DCL legal1 CHAR(50) INIT('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+   DCL legal2 CHAR(50) INIT('abcdefghijklmnopqrstuvwxyz');
+   DCL legal3 CHAR(50) INIT('1234567890 +-*/_!(),.;:=<>[]'); ! ' and \ are special
+   ! Openpearl accepts unicode in literals
+   DCL legal4 CHAR(50) INIT('äöüßÄÖÜ');
+  
+   DCL illegal1 CHAR(50) INIT('12345'67890 +-*/_!(),.;:=<>[]'); ! ' and \ are special
+/*$                                  ^
+ERROR : Syntax error :mismatched input '67890' expecting {')', ','}
+*/
+MODEND;

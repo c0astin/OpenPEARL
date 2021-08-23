@@ -1,0 +1,6 @@
+MODULE(m1);
+
+/*$  line+=5
+^
+ERROR : Syntax error :mismatched input '<EOF>' expecting 'MODEND'
+*/

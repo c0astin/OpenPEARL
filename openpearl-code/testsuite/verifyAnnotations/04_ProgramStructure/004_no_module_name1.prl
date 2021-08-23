@@ -1,0 +1,6 @@
+MODULE();
+/*$   ^
+ERROR : Syntax error :no viable alternative at input '()'
+*/
+
+MODEND;

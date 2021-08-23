@@ -1,0 +1,16 @@
+MODULE(m1);
+
+PROBLEM;
+   ! must fail --  xx is of type FLOAT
+   SPC x FIXED IDENT(xx);
+/*$                  ^
+error: type mismatch: 'xx' is expected to be FIXED, but is FLOAT
+*/
+   DCL xx FLOAT;
+/*$
+      ^
+note: definition of 'xx' is here
+*/ 
+ 
+END;
+MODEND;

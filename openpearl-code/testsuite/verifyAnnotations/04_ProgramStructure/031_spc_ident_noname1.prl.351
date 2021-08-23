@@ -1,0 +1,15 @@
+MODULE(m1);
+
+PROBLEM;
+   ! must fail -- missing identifier 
+   SPC x FIXED IDENT();
+/*$                 ^
+ERROR : Syntax error :mismatched input '()' expecting '('
+*/
+! test for sandalone END statement
+END;
+/*$
+^
+ERROR : Syntax error :extraneous input 'END' expecting {'MODEND', 'SPECIFY', 'SPC', 'TYPE', 'DECLARE', 'DCL', 'LENGTH', '__cpp__', '__cpp', ID}
+*/
+MODEND;

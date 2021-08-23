@@ -1,4 +1,0 @@
-MODULE(m1);
-
-MODULE(m2);
-MODEND;

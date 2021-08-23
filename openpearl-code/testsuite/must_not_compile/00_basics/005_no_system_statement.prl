@@ -1,6 +1,0 @@
-MODULE(m1);
-
-stdout: StdOut;  ! system part statement
-
-MODEND;
-
