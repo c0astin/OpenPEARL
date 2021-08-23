@@ -6,6 +6,6 @@ PROBLEM;
 PROBLEM;
 /*$
 ^
-ERROR : Syntax error :extraneous input 'PROBLEM' expecting {'MODEND', 'SPECIFY', 'SPC', 'TYPE', 'DECLARE', 'DCL', 'LENGTH', '__cpp__', '__cpp', ID}
+ERROR : Syntax error :extraneous input 'PROBLEM' expecting {'MODEND', 'TYPE', 'DECLARE', 'DCL', 'SPECIFY', 'SPC', 'LENGTH', '__cpp__', '__cpp', ID}
 */
 MODEND;

@@ -8,17 +8,17 @@ PROBLEM;
 
    DCL stdout00 DATION  OUT   ALPHIC FORWARD;
 /*$                                         ^ 
-ERROR : Syntax error :mismatched input ';' expecting {'GLOBAL', 'CREATED'}
+ERROR : Syntax error :mismatched input ';' expecting 'CREATED'
 */
 
    DCL stdout01 DATION  OUT   ALPHIC;
 /*$                                 ^ 
-ERROR : Syntax error :mismatched input ';' expecting {'GLOBAL', 'CREATED'}
+ERROR : Syntax error :mismatched input ';' expecting 'CREATED'
 */
 
    DCL stdout00 DATION  OUT   ALPHIC FORWARD DIM(*,*,*);
 /*$                                          ^ 
-ERROR : Syntax error :mismatched input 'DIM' expecting {'GLOBAL', 'CREATED'}
+ERROR : Syntax error :mismatched input 'DIM' expecting 'CREATED'
 */
 
 MODEND;
