@@ -148,9 +148,9 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         Log.debug(
                 "ExpressionTypeVisitor:visitPrimaryExpression:ctx" + CommonUtils.printContext(ctx));
 
-        if (ctx.literal() != null) {
-            visitLiteral(ctx.literal());
-            ASTAttribute expressionResult = m_ast.lookup(ctx.literal());
+        if (ctx.constant() != null) {
+            visitConstant(ctx.constant());
+            ASTAttribute expressionResult = m_ast.lookup(ctx.constant());
             if (expressionResult != null) {
                 m_ast.put(ctx, expressionResult);
             } else {
@@ -1588,102 +1588,110 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
-    @Override
-    public Void visitLiteral(SmallPearlParser.LiteralContext ctx) {
-        Log.debug("ExpressionTypeVisitor:visitLiteral:ctx" + CommonUtils.printContext(ctx));
-
-
-        if (ctx.durationConstant() != null) {
-            ASTAttribute expressionResult = new ASTAttribute(new TypeDuration(), true);
-            expressionResult
-                    .setConstant(CommonUtils.getConstantDurationValue(ctx.durationConstant(), 1));
-            m_ast.put(ctx, expressionResult);
-        } else if (ctx.floatingPointConstant() != null) {
-
-            try {
-                double value =
-                        CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
-                int precision =
-                        CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(),
-                                m_currentSymbolTable.lookupDefaultFloatLength());
-
-                ASTAttribute expressionResult = new ASTAttribute(new TypeFloat(precision), true);
-                m_ast.put(ctx, expressionResult);
-            } catch (NumberFormatException ex) {
-                //        throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-                ErrorStack.add(ctx, "floating point constant", "illegal number");
-            }
-
-        } else if (ctx.timeConstant() != null) {
-            ASTAttribute expressionResult = new ASTAttribute(new TypeClock(), true);
-            expressionResult.setConstant(getConstantClockValue(ctx.timeConstant()));
-            m_ast.put(ctx, expressionResult);
-        } else if (ctx.StringLiteral() != null) {
-            ConstantCharacterValue ccv = getConstantStringLiteral(ctx.StringLiteral());
-            int length = ccv.getLength();
-            if (length == 0) {
-                ErrorStack.add(ctx, "char literal", "need at least 1 character");
-            }
-            // generate AST Attribute for further analysis
-            ASTAttribute expressionResult = new ASTAttribute(new TypeChar(ccv.getLength()), true);
-            ConstantValue cv = m_constantPool.add(ccv); // add to constant pool; maybe we have it already
-            expressionResult.setConstant(cv);
-            m_ast.put(ctx, expressionResult);
-
-        } else if (ctx.BitStringLiteral() != null) {
-            ASTAttribute expressionResult = new ASTAttribute(
-                    new TypeBit(CommonUtils.getBitStringLength(ctx.BitStringLiteral().getText())),
-                    true);
-            m_ast.put(ctx, expressionResult);
-        } else if (ctx.fixedConstant() != null) {
-            long value = 0;
-            int precision;
-            try {
-                precision = m_currentSymbolTable.lookupDefaultFixedLength();
-
-                if (m_currFixedLength != null) {
-                    precision = m_currFixedLength;
-                }
-
-                m_calculateRealFixedLength = true;
-                if (m_calculateRealFixedLength) {
-                    value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
-
-                    precision = Long.toBinaryString(Math.abs(value)).length();
-                    if (value < 0) {
-                        precision++;
-                    }
-                }
-
-                m_calculateRealFixedLength = false;
-
-                if (ctx.fixedConstant().fixedNumberPrecision() != null) {
-                    precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision()
-                            .IntegerConstant().toString());
-                }
-
-
-                ASTAttribute expressionResult = new ASTAttribute(new TypeFixed(precision), true);
-                ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
-                ConstantValue cv = m_constantPool.add(cfv); // add to constant pool; maybe we have it already
-                expressionResult.setConstant(cv);
-                m_ast.put(ctx, expressionResult);
-            } catch (NumberFormatException ex) {
-                ErrorStack.add(ctx, "integer literal", "illegal number");
-            }
-
-        } else if (ctx.referenceConstant() != null) {
-            // NIL fits to any type; thus we have NO basetype
-            ASTAttribute expressionResult = new ASTAttribute(new TypeReference());
-            ConstantNILReference cnr = new ConstantNILReference();
-            ConstantValue cv = m_constantPool.add(cnr); // add to constant pool; maybe we have it already
-            expressionResult.setConstant(cv);
-            m_ast.put(ctx, expressionResult);
-        }
-        return null;
-    }
+    //    @Override
+    //    public Void visitLiteral(SmallPearlParser.LiteralContext ctx) {
+    //        Log.debug("ExpressionTypeVisitor:visitLiteral:ctx" + CommonUtils.printContext(ctx));
+    //
+    //
+    //        if (ctx.durationConstant() != null) {
+    //            ASTAttribute expressionResult = new ASTAttribute(new TypeDuration(), true);
+    //            expressionResult
+    //                    .setConstant(CommonUtils.getConstantDurationValue(ctx.durationConstant(), 1));
+    //            m_ast.put(ctx, expressionResult);
+    //        } else if (ctx.floatingPointConstant() != null) {
+    //
+    //            try {
+    //                double value =
+    //                        CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+    //                int precision =
+    //                        CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(),
+    //                                m_currentSymbolTable.lookupDefaultFloatLength());
+    //
+    //                ASTAttribute expressionResult = new ASTAttribute(new TypeFloat(precision), true);
+    //                m_ast.put(ctx, expressionResult);
+    //            } catch (NumberFormatException ex) {
+    //                //        throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+    //                ErrorStack.add(ctx, "floating point constant", "illegal number");
+    //            }
+    //
+    //        } else if (ctx.timeConstant() != null) {
+    //            ASTAttribute expressionResult = new ASTAttribute(new TypeClock(), true);
+    //            expressionResult.setConstant(getConstantClockValue(ctx.timeConstant()));
+    //            m_ast.put(ctx, expressionResult);
+    //        } else if (ctx.StringLiteral() != null) {
+    //            ConstantCharacterValue ccv = getConstantStringLiteral(ctx.StringLiteral());
+    //            int length = ccv.getLength();
+    //            if (length == 0) {
+    //                ErrorStack.add(ctx, "char literal", "need at least 1 character");
+    //            }
+    //            // generate AST Attribute for further analysis
+    //            ASTAttribute expressionResult = new ASTAttribute(new TypeChar(ccv.getLength()), true);
+    //            ConstantValue cv = m_constantPool.add(ccv); // add to constant pool; maybe we have it already
+    //            expressionResult.setConstant(cv);
+    //            m_ast.put(ctx, expressionResult);
+    //
+    //        } else if (ctx.BitStringLiteral() != null) {
+    //            ASTAttribute expressionResult = new ASTAttribute(
+    //                    new TypeBit(CommonUtils.getBitStringLength(ctx.BitStringLiteral().getText())),
+    //                    true);
+    //            m_ast.put(ctx, expressionResult);
+    //        } else if (ctx.fixedConstant() != null) {
+    //            long value = 0;
+    //            int precision;
+    //            try {
+    //                precision = m_currentSymbolTable.lookupDefaultFixedLength();
+    //
+    //                if (m_currFixedLength != null) {
+    //                    precision = m_currFixedLength;
+    //                }
+    //
+    //                m_calculateRealFixedLength = true;
+    //                if (m_calculateRealFixedLength) {
+    //                    value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
+    //
+    //                    precision = Long.toBinaryString(Math.abs(value)).length();
+    //                    if (value < 0) {
+    //                        precision++;
+    //                    }
+    //                }
+    //
+    //                m_calculateRealFixedLength = false;
+    //
+    //                if (ctx.fixedConstant().fixedNumberPrecision() != null) {
+    //                    precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision()
+    //                            .IntegerConstant().toString());
+    //                }
+    //
+    //
+    //                ASTAttribute expressionResult = new ASTAttribute(new TypeFixed(precision), true);
+    //                ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
+    //                ConstantValue cv = m_constantPool.add(cfv); // add to constant pool; maybe we have it already
+    //                expressionResult.setConstant(cv);
+    //                m_ast.put(ctx, expressionResult);
+    //            } catch (NumberFormatException ex) {
+    //                ErrorStack.add(ctx, "integer literal", "illegal number");
+    //            }
+    //
+    //        } else if (ctx.referenceConstant() != null) {
+    //            // NIL fits to any type; thus we have NO basetype
+    //            ASTAttribute expressionResult = new ASTAttribute(new TypeReference());
+    //            ConstantNILReference cnr = new ConstantNILReference();
+    //            ConstantValue cv = m_constantPool.add(cnr); // add to constant pool; maybe we have it already
+    //            expressionResult.setConstant(cv);
+    //            m_ast.put(ctx, expressionResult);
+    //        }
+    //        return null;
+    //    }
 
     private ConstantCharacterValue getConstantStringLiteral(TerminalNode terminalNode) {
+        String s = terminalNode.toString();
+
+        ConstantCharacterValue result = new ConstantCharacterValue(s);
+
+        return result;
+    }
+
+    private ConstantCharacterValue getConstantStringConstant(TerminalNode terminalNode) {
         String s = terminalNode.toString();
 
         ConstantCharacterValue result = new ConstantCharacterValue(s);
@@ -2949,19 +2957,171 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
     }
 
     @Override
-    public Void visitInitElement(SmallPearlParser.InitElementContext ctx) {
-        Log.debug("ExpressionTypeVisitor:visitInitElement:ctx" + CommonUtils.printContext(ctx));
+    public Void visitIdentifier(SmallPearlParser.IdentifierContext ctx) {
+        String s = ctx.getText();
+        SymbolTableEntry se = m_currentSymbolTable.lookup(s);
+        TypeDefinition type = null;
+        if (se instanceof VariableEntry) {
+            type = ((VariableEntry) se).getType();
+            ASTAttribute attr = new ASTAttribute(type);
 
-        visitChildren(ctx);
+            if (((VariableEntry) se).getAssigmentProtection()) {
+                Initializer i = ((VariableEntry) se).getInitializer();
+                if (i instanceof SimpleInitializer) {
+                    attr.setConstant(((SimpleInitializer) i).getConstant());
+                }
+            }
+            m_ast.put(ctx, attr);
+        } else if (se == null) {
+            //System.out.println(s+" not found");
+        } else {
+            ErrorStack.addInternal(ctx, "ExpressionTypeVisitor:visitIdentifer",
+                    "missing alternative");
+        }
         return null;
     }
+
+    @Override
+    public Void visitInitElement(SmallPearlParser.InitElementContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitInitElement:ctx" + CommonUtils.printContext(ctx));
+        // may be ID, constant or constantExpression
+        visitChildren(ctx);
+        ASTAttribute attr = null;
+        if (ctx.constant() != null) {
+            attr = m_ast.lookup(ctx.constant());
+        } else if (ctx.constantExpression() != null) {
+            attr = m_ast.lookup(ctx.constantExpression());
+        } else if (ctx.identifier() != null) {
+            //System.out.println("ID as initeleemnt: "+ctx.identifier().getText());
+            attr = m_ast.lookup(ctx.identifier());
+        }
+        m_ast.put(ctx, attr);
+        return null;
+    }
+
+    /*
+     * constant:
+      sign? ( fixedConstant | floatingPointConstant )
+    | timeConstant
+    | sign? durationConstant
+    | bitStringConstant
+    | stringConstant
+    | 'NIL'
+    ;
+     */
+    @Override
+    public Void visitConstant(SmallPearlParser.ConstantContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitConstant:ctx" + CommonUtils.printContext(ctx));
+
+        if (ctx.durationConstant() != null) {
+            ASTAttribute expressionResult = new ASTAttribute(new TypeDuration(), true);
+            expressionResult
+                    .setConstant(CommonUtils.getConstantDurationValue(ctx.durationConstant(), 1));
+            m_ast.put(ctx, expressionResult);
+        } else if (ctx.floatingPointConstant() != null) {
+
+            try {
+                double value =
+                        CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+                int precision =
+                        CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(),
+                                m_currentSymbolTable.lookupDefaultFloatLength());
+
+                ASTAttribute expressionResult = new ASTAttribute(new TypeFloat(precision), true);
+                m_ast.put(ctx, expressionResult);
+            } catch (NumberFormatException ex) {
+                //        throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                ErrorStack.add(ctx, "floating point constant", "illegal number");
+            }
+
+        } else if (ctx.timeConstant() != null) {
+            ASTAttribute expressionResult = new ASTAttribute(new TypeClock(), true);
+            expressionResult.setConstant(getConstantClockValue(ctx.timeConstant()));
+            m_ast.put(ctx, expressionResult);
+        } else if (ctx.stringConstant() != null) {
+            ConstantCharacterValue ccv =
+                    getConstantStringLiteral(ctx.stringConstant().StringLiteral());
+            int length = ccv.getLength();
+            if (length == 0) {
+                ErrorStack.add(ctx, "char literal", "need at least 1 character");
+            }
+            // generate AST Attribute for further analysis
+            ASTAttribute expressionResult = new ASTAttribute(new TypeChar(ccv.getLength()), true);
+            ConstantValue cv = m_constantPool.add(ccv); // add to constant pool; maybe we have it already
+            expressionResult.setConstant(cv);
+            m_ast.put(ctx, expressionResult);
+
+        } else if (ctx.bitStringConstant() != null) {
+            ASTAttribute expressionResult = new ASTAttribute(
+                    new TypeBit(CommonUtils.getBitStringLength(ctx.bitStringConstant().getText())),
+                    true);
+            m_ast.put(ctx, expressionResult);
+        } else if (ctx.fixedConstant() != null) {
+            long value = 0;
+            int precision;
+            try {
+                precision = m_currentSymbolTable.lookupDefaultFixedLength();
+
+                if (m_currFixedLength != null) {
+                    precision = m_currFixedLength;
+                }
+
+                m_calculateRealFixedLength = true;
+                if (m_calculateRealFixedLength) {
+                    value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
+
+                    precision = Long.toBinaryString(Math.abs(value)).length();
+                    if (value < 0) {
+                        precision++;
+                    }
+                }
+
+                m_calculateRealFixedLength = false;
+
+                if (ctx.fixedConstant().fixedNumberPrecision() != null) {
+                    precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision()
+                            .IntegerConstant().toString());
+                }
+
+
+                ASTAttribute expressionResult = new ASTAttribute(new TypeFixed(precision), true);
+                ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
+                ConstantValue cv = m_constantPool.add(cfv); // add to constant pool; maybe we have it already
+                expressionResult.setConstant(cv);
+                m_ast.put(ctx, expressionResult);
+            } catch (NumberFormatException ex) {
+                ErrorStack.add(ctx, "integer literal", "illegal number");
+            }
+
+        } else if (ctx.referenceConstant() != null) {
+            // NIL fits to any type; thus we have NO basetype
+            ASTAttribute expressionResult = new ASTAttribute(new TypeReference());
+            ConstantNILReference cnr = new ConstantNILReference();
+            ConstantValue cv = m_constantPool.add(cnr); // add to constant pool; maybe we have it already
+            expressionResult.setConstant(cv);
+            m_ast.put(ctx, expressionResult);
+        }
+        return null;
+    }
+
 
     @Override
     public Void visitConstantExpression(SmallPearlParser.ConstantExpressionContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitConstantExpression:ctx"
                 + CommonUtils.printContext(ctx));
-
+        ASTAttribute attr = null;
         visitChildren(ctx);
+        if (ctx.constantFixedExpression() != null) {
+            attr = m_ast.lookup(ctx.constantFixedExpression());
+        } else if (ctx.floatingPointConstant() != null) {
+            attr = m_ast.lookup(ctx.floatingPointConstant());
+        } else if (ctx.durationConstant() != null) {
+            attr = m_ast.lookup(ctx.durationConstant());
+        } else {
+            ErrorStack.addInternal(ctx, "ExpressionTypeVisitor:visitConstantExpression",
+                    "untreated alternative");
+        }
+        m_ast.put(ctx, attr);
         return null;
     }
 

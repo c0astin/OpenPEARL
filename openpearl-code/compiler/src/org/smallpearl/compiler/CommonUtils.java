@@ -1144,6 +1144,12 @@ public class CommonUtils {
 
         return precision;
     }
+    
+//    public long    getFixedConstantValue(SmallPearlParser.FixedConstantContext ctx) {
+//        
+//        return 0;
+//    }
+    
 
     public static TypeDefinition getBaseTypeForReferenceType(TypeReferenceContext typeReference) {
         TypeDefinition type = null;

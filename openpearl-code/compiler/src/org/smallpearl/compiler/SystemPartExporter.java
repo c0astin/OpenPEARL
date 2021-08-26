@@ -31,6 +31,7 @@ package org.smallpearl.compiler;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.smallpearl.compiler.Exception.NotSupportedTypeException;
+import org.smallpearl.compiler.SymbolTable.InterruptEntry;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
@@ -39,6 +40,7 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements SmallPearlVisitor<ST> {
 
@@ -94,11 +96,18 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
             visitChildren(ctx);
         }
         module.add("SystemPart", systemPart);
+        problemPart = group.getInstanceOf("ProblemPart");
+        tfuUsage = group.getInstanceOf("TfuUsage");
+        problemPart.add("decls", tfuUsage);
+        
+        exportInterruptSpecifications();
+        exportDations();
         module.add("ProblemPart", problemPart);
 
         m_currentSymbolTable = m_currentSymbolTable.ascend();
         return module;
     }
+
 
     @Override
     public ST visitSystem_part(SmallPearlParser.System_partContext ctx) {
@@ -187,21 +196,21 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
     public ST visitSystemElementParameters(SmallPearlParser.SystemElementParametersContext ctx) {
         ST parameters = group.getInstanceOf("SystemElementParameters");
 
-        for (int i = 0; i < ctx.literal().size(); i++) {
+        for (int i = 0; i < ctx.constant().size(); i++) {
             ST parameter = group.getInstanceOf("Parameter");
-            String param = ctx.literal(i).getText();
+            String param = ctx.constant(i).getText();
             //            param = param.replaceAll("^'","");
             //            param = param.replaceAll("'$","");
 
-            if (ctx.literal(i).StringLiteral() != null) {
+            if (ctx.constant(i).stringConstant() != null) {
                 ST type = group.getInstanceOf("Type_Char");
                 type.add("name", param);
                 parameter.add("type", type);
-            } else if (ctx.literal(i).BitStringLiteral() != null) {
+            } else if (ctx.constant(i).bitStringConstant() != null) {
                 ST type = group.getInstanceOf("Type_Bit");
                 type.add("name", param);
                 parameter.add("type", type);
-            } else if (ctx.literal(i).fixedConstant() != null) {
+            } else if (ctx.constant(i).fixedConstant() != null) {
                 ST type = group.getInstanceOf("Type_Fixed");
                 type.add("name", param);
                 parameter.add("type", type);
@@ -212,7 +221,85 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
 
         return parameters;
     }
+    
+    private void exportInterruptSpecifications() {
+        // export interrupt specifications
+        // export dation specifications and declaractions
+       LinkedList<InterruptEntry> l=m_currentSymbolTable.getInterruptSpecifications();
+       for (InterruptEntry v : l) {
+    
+               ST interruptSpecification = group.getInstanceOf("Specification");
+               interruptSpecification.add("type", "INTERRUPT");
+               interruptSpecification.add("lineno", v.getCtx().start.getLine());
+               interruptSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
+               interruptSpecification.add("name", v.getName());
+               problemPart.add("decls", interruptSpecification);
+           }        
+    }
+   
+    private void exportDations() {
+        LinkedList<VariableEntry> l = m_currentSymbolTable.getVariableDeclarations();
 
+        for (VariableEntry v : l) {
+            if (v.getBaseType() instanceof TypeDation) {
+
+                ST dationSpecification = group.getInstanceOf("DationSpecification");
+
+                dationSpecification.add("lineno", v.getCtx().start.getLine());
+                dationSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
+                dationSpecification.add("name", v.getName());
+
+                TypeDation td = (TypeDation)(v.getBaseType());
+
+                ST datalist = group.getInstanceOf("DataList");
+                ST attributes = group.getInstanceOf("Attributes");
+                if (td.isAlphic()) {
+                    ST data = group.getInstanceOf("Data");
+                    data.add("name", "ALPHIC");
+                    datalist.add("data", data);
+                } else if (td.isBasic()) {
+                    ST attribute = group.getInstanceOf("Attribute");
+                    attribute.add("name", "BASIC");
+                    attributes.add("attributes", attribute);
+                } 
+                if (td.isSystemDation()) {
+                    ST attribute = group.getInstanceOf("Attribute");
+                    attribute.add("name", "SYSTEM");
+                    attributes.add("attributes", attribute);
+                }
+
+                if (td.getTypeOfTransmission()!= null) {
+                    ST data = group.getInstanceOf("Data");
+                    data.add("name", td.getTypeOfTransmission());
+                    datalist.add("data", data);
+                }
+                if (td.isIn() && td.isOut()) {
+                    ST attribute = group.getInstanceOf("Attribute");
+                    attribute.add("name", "INOUT");
+                    attributes.add("attributes", attribute);
+                } else if (td.isIn() && !td.isOut()) {
+                    ST attribute = group.getInstanceOf("Attribute");
+                    attribute.add("name", "IN");
+                    attributes.add("attributes", attribute);
+                } else if (!td.isIn() && td.isOut()) {
+                    ST attribute = group.getInstanceOf("Attribute");
+                    attribute.add("name", "OUT");
+                    attributes.add("attributes", attribute);
+                }
+
+
+
+                dationSpecification.add("datalist", datalist);
+                dationSpecification.add("attributes", attributes);
+        
+            problemPart.add("decls", dationSpecification);
+        }
+    }
+
+return;
+}
+
+/*
     @Override
     public ST visitProblem_part(SmallPearlParser.Problem_partContext ctx) {
         problemPart = group.getInstanceOf("ProblemPart");
@@ -332,7 +419,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
     }
 
     @Override
-    public ST visitDationDeclaration(SmallPearlParser.DationDeclarationContext ctx) {
+    public ST visitDationDenotation(SmallPearlParser.DationDenotationContext ctx) {
         boolean hasGlobalAttribute = false;
 
         ArrayList<String> identifierDenotationList = null;
@@ -384,7 +471,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
                         if (recordLength < 0)
                             recordLength = d.getDimension1();
 
-                        // detect element size if not ALPPHIC or ALL
+                        // detect element size if not ALPHIC or ALL
                         if (d.getTypeOfTransmission() != null) {
                             if (!d.getTypeOfTransmission().contentEquals("ALL")) {
                                 recordLength *= d.getTypeOfTransmissionAsType().getSize();
@@ -419,4 +506,5 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
 
         return identifierDenotationList;
     }
+    */
 }

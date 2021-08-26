@@ -91,9 +91,9 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void>
 
         ASTAttribute primaryExpr = m_ast.lookup(ctx);
 
-        if (ctx.literal() != null) {
-            visitLiteral(ctx.literal());
-            ASTAttribute literal = m_ast.lookup(ctx.literal());
+        if (ctx.constant() != null) {
+            visitConstant(ctx.constant());
+            ASTAttribute literal = m_ast.lookup(ctx.constant());
             primaryExpr = literal;
             //        } else if (ctx.name() != null) {
             //            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
@@ -133,8 +133,8 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void>
     }
 
     @Override
-    public Void visitLiteral(SmallPearlParser.LiteralContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitLiteral:ctx" + CommonUtils.printContext(ctx));
+    public Void visitConstant(SmallPearlParser.ConstantContext ctx) {
+        Log.debug("ConstantFoldingVisitor:visitConstant:ctx" + CommonUtils.printContext(ctx));
 
         if (ctx.durationConstant() != null) {
             ConstantDurationValue cv =
@@ -152,54 +152,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void>
             }
 
             attr.setConstantDurationValue(cv);
-            //        m_ast.put(ctx, expressionResult);
 
-            //            try {
-            //            	long hours=0;
-            //                int minutes=0;
-            //                double seconds=0;
-            //
-            //            	if (ctx.durationConstant().hours() != null) {
-            //            	   hours = Long.parseLong(ctx.durationConstant().hours().IntegerConstant().toString());
-            //            	}
-            //            	if (ctx.durationConstant().minutes() != null) {
-            //             	   minutes = Integer.parseInt(ctx.durationConstant().minutes().IntegerConstant().toString());
-            //             	}
-            //            	if (ctx.durationConstant().seconds() != null) {
-            //            		String s = "";
-            //            		
-            //            		 if (ctx.durationConstant().seconds().floatingPointConstant() != null) {
-            //            		 	 seconds =CommonUtils.getFloatingPointConstantValue(ctx.durationConstant().seconds().floatingPointConstant());
-            //            		 } else if (ctx.durationConstant().seconds().IntegerConstant() != null) {
-            //            			 s = ctx.durationConstant().seconds().IntegerConstant().toString();
-            //            			 seconds = Integer.parseInt(s);
-            //            		 } else {
-            //            			 System.out.println("***error missing alternative ConstantFolding duration");
-            //            		 }
-            //          		 
-            //             	   
-            //             	}
-            //                ASTAttribute expressionResult = new ASTAttribute( new TypeDuration(),true);
-            //
-            //                ASTAttribute attr = m_ast.lookup(ctx);
-            //
-            //                if ( attr == null ) {
-            //                  ErrorStack.enter(ctx);
-            //                  ErrorStack.addInternal("no ASTAttributes found for '"+ctx.getText()+"'");
-            //                  ErrorStack.leave();
-            //                  return null;
-            //                }
-            //                
-            //                attr.setConstantDurationValue( new ConstantDurationValue (hours, minutes, seconds));
-            //                m_ast.put(ctx, expressionResult);
-            //
-            //            	} catch (NumberFormatException ex) {
-            //            	   ErrorStack.enter(ctx.durationConstant());
-            //            	   ErrorStack.addInternal("bad number '"+ctx.durationConstant().getText()+"'");
-            //            	   ErrorStack.leave();
-            //            	   return null;
-            ////                throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            //            }
 
         } else if (ctx.floatingPointConstant() != null) {
             try {
@@ -232,9 +185,9 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void>
             }
         } else if (ctx.timeConstant() != null) {
             Log.error("missing code for timeConstant");
-        } else if (ctx.StringLiteral() != null) {
+        } else if (ctx.stringConstant() != null) {
             Log.error("missing code for StringLiteral");
-        } else if (ctx.BitStringLiteral() != null) {
+        } else if (ctx.bitStringConstant() != null) {
             Log.error("missing code for BitStringLiteral");
         } else if (ctx.fixedConstant() != null) {
             try {
@@ -342,8 +295,8 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void>
             SymbolTableEntry se = m_currentSymbolTable.lookup(op.getVariable().getName());
             if (se != null) {
                 if (se instanceof VariableEntry) {
-                    Initializer ini = ((VariableEntry) se).getInitializer();
-                    ConstantValue cv = ((SimpleInitializer) ini).getConstant();
+                    Initializer init = ((VariableEntry) se).getInitializer();
+                    ConstantValue cv = ((SimpleInitializer) init).getConstant();
                     if (cv instanceof ConstantFixedValue) {
                         return (ConstantFixedValue) cv;
                     }

@@ -149,8 +149,9 @@ public class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<Vo
 
                 if (sctx != null) {
                     if (sctx instanceof SmallPearlParser.VariableDenotationContext) {
+                        if (((SmallPearlParser.VariableDenotationContext) sctx).problemPartDataAttribute() != null) {
                         SmallPearlParser.TypeAttributeContext typeAttributeContext =
-                                ((SmallPearlParser.VariableDenotationContext) sctx).typeAttribute();
+                                ((SmallPearlParser.VariableDenotationContext) sctx).problemPartDataAttribute().typeAttribute();
                         if (typeAttributeContext.simpleType() != null) {
                             SmallPearlParser.SimpleTypeContext simpleTypeContext =
                                     typeAttributeContext.simpleType();
@@ -165,6 +166,7 @@ public class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<Vo
                                             .toString());
                                 }
                             }
+                        }
                         }
                     } else if (sctx instanceof SmallPearlParser.ArrayDenotationContext) {
                     }

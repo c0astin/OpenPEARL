@@ -1,12 +1,12 @@
 package org.smallpearl.compiler.SymbolTable;
 
-import org.smallpearl.compiler.SmallPearlParser;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 public class BoltEntry extends SymbolTableEntry {
     public BoltEntry() {
     }
 
-    public BoltEntry(String name, SmallPearlParser.BoltDeclarationContext ctx)
+    public BoltEntry(String name, ParserRuleContext ctx)
     {
         super(name);
         this.m_ctx = ctx;

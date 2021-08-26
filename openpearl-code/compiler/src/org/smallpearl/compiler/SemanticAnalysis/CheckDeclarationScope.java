@@ -30,6 +30,7 @@
 package org.smallpearl.compiler.SemanticAnalysis;
 
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.SmallPearlParser.BoltDenotationContext;
 import org.smallpearl.compiler.Exception.DeclarationScopeException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
@@ -182,7 +183,7 @@ public class CheckDeclarationScope extends SmallPearlBaseVisitor<Void>
     }
 
     @Override
-    public Void visitDationDeclaration(SmallPearlParser.DationDeclarationContext ctx) {
+    public Void visitDationDenotation(SmallPearlParser.DationDenotationContext ctx) {
         if (m_debug) {
             System.out.println("Semantic: Check Declaration Scope: visitDationDeclaration");
         }
@@ -217,7 +218,7 @@ public class CheckDeclarationScope extends SmallPearlBaseVisitor<Void>
     }
 
     @Override
-    public Void visitBoltDeclaration(SmallPearlParser.BoltDeclarationContext ctx) {
+    public Void visitBoltDenotation(BoltDenotationContext ctx) {
         if (m_debug) {
             System.out.println("Semantic: Check Declaration Scope: visitBoltDeclaration");
         }
@@ -234,7 +235,7 @@ public class CheckDeclarationScope extends SmallPearlBaseVisitor<Void>
     }
 
     @Override
-    public Void visitSemaDeclaration(SmallPearlParser.SemaDeclarationContext ctx) {
+    public Void visitSemaDenotation(SmallPearlParser.SemaDenotationContext ctx) {
         if (m_debug) {
             System.out.println("Semantic: Check Declaration Scope: visitSemaDeclaration");
         }

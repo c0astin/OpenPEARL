@@ -1090,6 +1090,10 @@ TypeDuration(code) ::= <<
 pearlrt::Duration
 >>
 
+TypeClock(code) ::= <<
+pearlrt::Clock
+>>
+
 
 
 TypeBitString(length) ::= <<

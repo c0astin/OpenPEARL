@@ -189,14 +189,16 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
 
 
     @Override
-    public Void visitDationDeclaration(SmallPearlParser.DationDeclarationContext ctx) {
+    public Void visitDationDenotation(SmallPearlParser.DationDenotationContext ctx) {
         if (m_debug) {
             System.out.println("Semantic: visitDationDeclaration");
         }
         // we do not need to iterate over the names since they have all identical parameters
         int i = 0; // it is enough to test the first entry
 
-        String dationName = ctx.identifierDenotation().identifier(i).ID().toString();
+        // retrieve the first dation name
+        VariableDenotationContext vctx = (VariableDenotationContext)(ctx.parent);
+        String dationName = vctx.identifierDenotation().identifier(i).ID().toString();
         //System.out.println("DationName: "+ dationName);
 
         ErrorStack.enter(ctx, "DationDCL");

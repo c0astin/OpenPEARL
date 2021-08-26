@@ -39,7 +39,7 @@ public class TypeBolt extends TypeDefinition {
     }
 
     public String toString() {
-        return "Type:" + this.getName() ;
+        return this.getName() ;
     }
 
     @Override

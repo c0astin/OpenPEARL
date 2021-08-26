@@ -132,7 +132,7 @@ association:
     ;
 
 systemElementParameters:
-    '(' literal (',' literal)* ')'
+    '(' constant (',' constant)* ')'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,15 +171,10 @@ problem_part:
     (
           lengthDefinition
         | typeDefinition
-        | arrayVariableDeclaration
-        | scalarVariableDeclaration
-        | structVariableDeclaration
-        | semaDeclaration
-        | boltDeclaration
+        | variableDeclaration
         | interruptSpecification
 //        | identification        removed until rework for mixed types  of DCL and SPC
         | dationSpecification
-        | dationDeclaration
         | taskDeclaration
         | procedureDeclaration
         | cpp_inline
@@ -258,8 +253,9 @@ typeDefinition :
 //  ScalarVariableDeclaration ::=
 //      { DECLARE | DCL } VariableDenotation [ , VariableDenotation ] ... ;
 ////////////////////////////////////////////////////////////////////////////////
+// modification for all types of variables in 1 rule
 
-scalarVariableDeclaration :
+variableDeclaration :
     ( 'DECLARE' | 'DCL' ) variableDenotation ( ',' variableDenotation )* ';'
     | cpp_inline
     ;
@@ -271,7 +267,18 @@ scalarVariableDeclaration :
 
 
 variableDenotation :
-    identifierDenotation allocationProtection? typeAttribute globalAttribute? initialisationAttribute?
+    identifierDenotation dimensionAttribute?
+        (problemPartDataAttribute | semaDenotation | boltDenotation | dationDenotation)
+    ;
+
+problemPartDataAttribute :
+    allocationProtection? typeAttribute globalAttribute? initialisationAttribute?
+    ;
+
+typeAttribute :
+    simpleType
+    | typeStructure
+    | typeReference
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -294,11 +301,11 @@ globalAttribute :
 //      SimpleType | TypeReference | Identifier§ForType
 ////////////////////////////////////////////////////////////////////////////////
 
-typeAttribute
-    : simpleType
-    | typeReference
-    | ID
-    ;
+//typeAttribute
+//    : simpleType
+//    | typeReference
+//    | ID
+//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // SimpleType ::=
@@ -385,7 +392,7 @@ initialisationAttribute :
 ////////////////////////////////////////////////////////////////////////////////
 
 initElement
-    : ID
+    : identifier
     | constant
     | constantExpression
     ;
@@ -394,11 +401,12 @@ initElement
 // StructureDeclaration ::=
 //   { DECLARE | DCL } StructureDenotation [ , StructureDenotation ] ... ;
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 structVariableDeclaration :
     ( 'DECLARE' | 'DCL' ) structureDenotation ( ',' structureDenotation )* ';'
     | cpp_inline
     ;
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // StructureDenotation ::=
@@ -406,10 +414,10 @@ structVariableDeclaration :
 //   TypeStructure [ GlobalAttribute ][ InitialisationAttribute ]
 ////////////////////////////////////////////////////////////////////////////////
 
-structureDenotation :
-    ID dimensionAttribute? assignmentProtection? typeStructure globalAttribute? initialisationAttribute?
+/*structureDenotation :
+    typeStructure globalAttribute? initialisationAttribute?
     ;
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 // TypeStructure ::=
 //   STRUCT [ StructureComponent [ , StructureComponent ] ... ]
@@ -468,11 +476,11 @@ structureDenotationS :
 // ArrayDeclaration ::=
 //   { DECLARE | DCL } ArrayDenotation [ , ArrayDenotation ] ... ;
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 arrayVariableDeclaration :
     ( 'DECLARE' | 'DCL' ) arrayDenotation ( ',' arrayDenotation )* ';'
     ;
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 // ArrayDenotation ::=
 //   OneIdentifierOrList DimensionAttribute [ INV ] TypeAttributeForArray
@@ -599,8 +607,8 @@ typeReferenceCharType
 //   { DECLARE | DCL } Identifier or IdentifierList [ DimensionAttribute ] SEMA [ GlobalAttribute ]
 ////////////////////////////////////////////////////////////////////////////////
 
-semaDeclaration :
-    ( 'DECLARE' | 'DCL' ) identifierDenotation 'SEMA' globalAttribute? preset? ';'
+semaDenotation :
+    'SEMA' globalAttribute? preset? 
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -608,7 +616,7 @@ semaDeclaration :
 ////////////////////////////////////////////////////////////////////////////////
 
 preset :
-    'PRESET' '(' integerWithoutPrecision (',' integerWithoutPrecision )* ')'
+    'PRESET' '(' initElement (',' initElement )* ')'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -636,7 +644,7 @@ typeProcedure:
 ////////////////////////////////////////////////////////////////////////////////
 
 procedureBody :
-    ( scalarVariableDeclaration | structVariableDeclaration | arrayVariableDeclaration | dationDeclaration | lengthDefinition)*
+    ( variableDeclaration | lengthDefinition)*
     statement*
     ;
 
@@ -785,7 +793,7 @@ task_main: 'MAIN';
 ////////////////////////////////////////////////////////////////////////////////
 
 taskBody:
-    ( scalarVariableDeclaration | structVariableDeclaration | arrayVariableDeclaration | dationDeclaration | lengthDefinition)*
+    ( variableDeclaration | lengthDefinition)*
     procedureDeclaration*
     statement*
     ;
@@ -1067,7 +1075,7 @@ constantCharacterString
 
 block_statement:
     'BEGIN'
-    ( scalarVariableDeclaration | structVariableDeclaration | arrayVariableDeclaration | dationDeclaration | lengthDefinition )*
+    ( variableDeclaration | lengthDefinition )*
     statement*
     'END' blockId? ';'
     ;
@@ -1094,7 +1102,7 @@ loopStatement:
     ;
 
 loopBody:
-    ( scalarVariableDeclaration | structVariableDeclaration | arrayVariableDeclaration | dationDeclaration | lengthDefinition)*
+    ( variableDeclaration | lengthDefinition)*
     statement*
     ;
 
@@ -1293,8 +1301,8 @@ semaTry
 //   { DECLARE | DCL } Identifier or IdentifierList [ DimensionAttribute ] BOLT [ GlobalAttribute ] ;
 //
 
-boltDeclaration :
-    ( 'DECLARE' | 'DCL' ) identifierDenotation 'BOLT' globalAttribute? ';'
+boltDenotation :
+    'BOLT' globalAttribute? 
     ;
 
 // BoltSpecification ::=
@@ -1956,8 +1964,8 @@ specifyTypeDation
 //    {DECLARE | DCL} IdentifierDenotation TypeDation [GlobalAttribute] CREATED (Name§SystemDefDation);
 ////////////////////////////////////////////////////////////////////////////////
 
-dationDeclaration
-    : ( 'DECLARE' | 'DCL' ) identifierDenotation typeDation  globalAttribute? 'CREATED' '(' ID  ')' ';'
+dationDenotation :
+    typeDation  globalAttribute? 'CREATED' '(' ID  ')' 
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2261,7 +2269,7 @@ index:
 primaryExpression:
     '(' expression ')'
     | name
-    | literal
+    | constant
     | semaTry
     | stringSelection
     ;
@@ -2432,7 +2440,7 @@ charSlice:
 	;
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 literal:
     fixedConstant
     | floatingPointConstant
@@ -2442,7 +2450,7 @@ literal:
     | durationConstant
     | referenceConstant
     ;
-    
+*/    
 referenceConstant:
 	'NIL'
 	;    
@@ -2625,7 +2633,7 @@ constant:
     | sign? durationConstant
     | bitStringConstant
     | stringConstant
-    | 'NIL'
+    | referenceConstant
     ;
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -31,12 +31,9 @@ package org.smallpearl.compiler.SymbolTable;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.smallpearl.compiler.*;
-import org.smallpearl.compiler.Exception.NotYetImplementedException;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Vector;
 
 /**
@@ -260,7 +257,6 @@ public class SymbolTable {
     }
 
     public String toString(int level) {
-        SymbolTableEntry e;
         String output = "";
         int nextLevel = level + 1;
 
@@ -342,7 +338,22 @@ public class SymbolTable {
 
         return listOfBoltEntries;
     }
+    public LinkedList<InterruptEntry> getInterruptSpecifications() {
+        LinkedList<InterruptEntry> listOfVariableDeclarationsEntries =
+                new LinkedList<InterruptEntry>();
+        SymbolTableEntry e;
 
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
+            SymbolTableEntry symbolTableEntry = it.next();
+            if (symbolTableEntry instanceof InterruptEntry) {
+                InterruptEntry variableEntry = (InterruptEntry) symbolTableEntry;
+                listOfVariableDeclarationsEntries.add(variableEntry);
+            }
+        }
+
+        return listOfVariableDeclarationsEntries;
+    }
+    
     public LinkedList<ModuleEntry> getModules() {
         LinkedList<ModuleEntry> listOfModules = new LinkedList<ModuleEntry>();
 

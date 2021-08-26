@@ -30,8 +30,6 @@
 package org.smallpearl.compiler;
 
 
-import org.smallpearl.compiler.Exception.NotYetImplementedException;
-import org.smallpearl.compiler.SymbolTable.SemaphoreEntry;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
@@ -141,13 +139,6 @@ public class TypeStructure extends TypeDefinition {
         }
 
         return "~?~";
-    }
-
-    private int getNumberOfBytes(TypeDefinition type) {
-        if ( type instanceof TypeFixed)           return type.getNoOfBytes();
-        if ( type instanceof TypeFloat)           return type.getNoOfBytes();
-
-        return 0;
     }
 
     public String getStructureName() {

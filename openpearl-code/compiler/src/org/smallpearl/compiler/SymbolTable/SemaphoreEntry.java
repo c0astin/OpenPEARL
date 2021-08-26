@@ -3,11 +3,9 @@ package org.smallpearl.compiler.SymbolTable;
 import org.smallpearl.compiler.SmallPearlParser;
 
 public class SemaphoreEntry extends SymbolTableEntry {
-    public SemaphoreEntry() {
-    }
+    public SemaphoreEntry() {}
 
-    public SemaphoreEntry(String name, SmallPearlParser.SemaDeclarationContext ctx)
-    {
+    public SemaphoreEntry(String name, SmallPearlParser.SemaDenotationContext ctx) {
         super(name);
         this.m_ctx = ctx;
     }
@@ -15,15 +13,7 @@ public class SemaphoreEntry extends SymbolTableEntry {
     public String toString(int level) {
         return indentString(level) + super.toString(level) + "var " + "SEMA";
     }
-    
- // deprecated. is now in SymboleTableEntry     
-// 
-//    public int getSourceLineNo() {
-//        return m_ctx.getStart().getLine();
-//    }
-//    public int getCharPositionInLine() {
-//        return m_ctx.getStart().getCharPositionInLine();
-//    }
-//    private SmallPearlParser.SemaDeclarationContext m_ctx;
+
+
 
 }

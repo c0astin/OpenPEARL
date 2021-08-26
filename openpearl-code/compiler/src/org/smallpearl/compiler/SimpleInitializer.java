@@ -65,7 +65,7 @@ public class SimpleInitializer extends Initializer {
         } else if (m_constant instanceof ConstantBitValue) {
             return m_constant.toString();
         } else {
-            return m_constant.toString();
+            return "NULL";
         }
     }
 }
