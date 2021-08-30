@@ -192,6 +192,18 @@ namespace pearlrt {
       }
 
       /**
+      ctor with given preset. The preset value is passed as Float<T>,
+
+
+      \param xx the preset value
+      \tparam T size of the Fixed value
+      */
+      template <int T>
+      Float<S>(Float<T> xx) {
+         x = xx.x;  // use the c++ internal type conversion
+      }
+
+      /**
       assignment operator works only for larger or same type
 
       \tparam T size of the target Float()
