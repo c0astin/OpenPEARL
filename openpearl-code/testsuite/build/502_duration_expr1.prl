@@ -2,7 +2,7 @@ MODULE(durationexpr1);
 ! declare and initialize durations at module and task level
 ! and perform some calculations
 PROBLEM;
-   DCL xxxxx1 DURATION INIT(1234.654321 SEC);
+   !DCL xxxxx1 DURATION INIT(1234.654321 SEC); ! illegal constant
 
    DCL x DURATION INIT(1 SEC);
    DCL x1 DURATION INIT(1 HRS 3 MIN 1.1 SEC);
@@ -10,7 +10,7 @@ PROBLEM;
    DCL x3 DURATION INIT(1 HRS);
    DCL x4 DURATION INIT(1 HRS 2 MIN 3.45 SEC);
 
-   DCL nxxxxx1 DURATION INIT(-1234.654321 SEC);
+   ! DCL nxxxxx1 DURATION INIT(-1234.654321 SEC); !! illegal constant
 
    DCL nx DURATION INIT(-1 SEC);
    DCL nx1 DURATION INIT(-1 HRS 3 MIN 1.1 SEC);
