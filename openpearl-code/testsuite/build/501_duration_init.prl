@@ -1,9 +1,9 @@
 MODULE(durationinit);
 ! declare and initialize durations at module and task level
 PROBLEM;
-   DCL xxxxx1 DURATION INIT(1234.654321 SEC);
+!   DCL xxxxx1 DURATION INIT(1234.654321 SEC);  ! <<< illegal const! 
 
-   DCL x DURATION INIT(1 SEC);
+   DCL x DURATION INIT(59 SEC);
    DCL x1 DURATION INIT(1 HRS 3 MIN 1.1 SEC);
    DCL x2 DURATION INIT(1 MIN);
    DCL x3 DURATION INIT(1 HRS);
