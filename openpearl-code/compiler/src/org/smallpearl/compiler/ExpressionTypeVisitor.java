@@ -96,6 +96,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
     private boolean m_autoDereference = false;
     private boolean m_isFunctionCall = false;
 
+
     public ExpressionTypeVisitor(int verbose, boolean debug, SymbolTableVisitor symbolTableVisitor,
             ConstantPool constantPool, org.smallpearl.compiler.AST ast) {
 
@@ -1699,30 +1700,30 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         return result;
     }
 
-
-    private ConstantClockValue getConstantClockValue(SmallPearlParser.TimeConstantContext ctx) {
-        Integer hours = 0;
-        Integer minutes = 0;
-        Double seconds = 0.0;
-
-        hours = (Integer.valueOf(ctx.IntegerConstant(0).toString()) % 24);
-        minutes = Integer.valueOf(ctx.IntegerConstant(1).toString());
-
-        if (ctx.IntegerConstant().size() == 3) {
-            seconds = Double.valueOf(ctx.IntegerConstant(2).toString());
-        }
-
-        if (ctx.floatingPointConstant() != null) {
-            seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
-        }
-
-        if (hours < 0 || minutes < 0 || minutes > 59) {
-            ErrorStack.add(ctx, "clock value", "illegal value");
-        }
-
-        return new ConstantClockValue(hours, minutes, seconds);
-    }
-
+//    moved to CommonUtils
+//    private ConstantClockValue getConstantClockValue(SmallPearlParser.TimeConstantContext ctx) {
+//        Integer hours = 0;
+//        Integer minutes = 0;
+//        Double seconds = 0.0;
+//
+//        hours = (Integer.valueOf(ctx.IntegerConstant(0).toString()) % 24);
+//        minutes = Integer.valueOf(ctx.IntegerConstant(1).toString());
+//
+//        if (ctx.IntegerConstant().size() == 3) {
+//            seconds = Double.valueOf(ctx.IntegerConstant(2).toString());
+//        }
+//
+//        if (ctx.floatingPointConstant() != null) {
+//            seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+//        }
+//
+//        if (hours < 0 || minutes < 0 || minutes > 59) {
+//            ErrorStack.add(ctx, "clock value", "illegal value");
+//        }
+//
+//        return new ConstantClockValue(hours, minutes, seconds);
+//    }
+//
 
     @Override
     public Void visitModule(SmallPearlParser.ModuleContext ctx) {
@@ -2027,6 +2028,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         }
 
         visit(ctx.expression());
+        ASTAttribute a = m_ast.lookup(ctx.expression());
 
         m_autoDereference = false;
 
@@ -2930,29 +2932,6 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
 
         ErrorStack.addInternal(ctx, "FIT", "code for constant fixed expression missing");
 
-        //        visit(ctx.expression(0));
-        //        op1 = m_ast.lookup(ctx.expression(0));
-        //
-        //        if (op1 == null) {
-        //            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        //        }
-        //
-        //        visit(ctx.expression(1));
-        //        op2 = m_ast.lookup(ctx.expression(1));
-        //
-        //        if (op2 == null) {
-        //            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        //        }
-        //
-        //        if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeBit) {
-        //            TypeBit type = new TypeBit( Math.max( ((TypeBit)op1.getType()).getPrecision(),((TypeBit)op2.getType()).getPrecision()));
-        //            ASTAttribute expressionResult = new ASTAttribute(type);
-        //            m_ast.put(ctx, expressionResult);
-        //        }
-        //        else {
-        //            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-        //        }
-
         return null;
     }
 
@@ -2972,11 +2951,13 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                 }
             }
             m_ast.put(ctx, attr);
+        }  else if (se instanceof InterruptEntry) {
+            // currently no action needed for interrupt
         } else if (se == null) {
-            //System.out.println(s+" not found");
+            ErrorStack.addInternal(ctx, "ExpressionTypeVisitor", "no entry found for "+ s);
         } else {
             ErrorStack.addInternal(ctx, "ExpressionTypeVisitor:visitIdentifer",
-                    "missing alternative");
+                    "missing alternative@2979");
         }
         return null;
     }
@@ -2999,44 +2980,44 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
-    /*
-     * constant:
-      sign? ( fixedConstant | floatingPointConstant )
-    | timeConstant
-    | sign? durationConstant
-    | bitStringConstant
-    | stringConstant
-    | 'NIL'
-    ;
-     */
+
     @Override
     public Void visitConstant(SmallPearlParser.ConstantContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitConstant:ctx" + CommonUtils.printContext(ctx));
-
+        int sign = 1;
+        ASTAttribute expressionResult = null;
+        
+        if (ctx.sign()!= null) {
+            if (ctx.sign().getText().equals("-")) sign = -1;
+        }
         if (ctx.durationConstant() != null) {
-            ASTAttribute expressionResult = new ASTAttribute(new TypeDuration(), true);
-            expressionResult
-                    .setConstant(CommonUtils.getConstantDurationValue(ctx.durationConstant(), 1));
-            m_ast.put(ctx, expressionResult);
+            expressionResult = new ASTAttribute(new TypeDuration(), true);
+            ConstantDurationValue c = (ConstantDurationValue)(CommonUtils.getConstantDurationValue(ctx.durationConstant(),sign));
+            expressionResult.setConstant(c);
+            m_constantPool.add(c); 
         } else if (ctx.floatingPointConstant() != null) {
-
+           // ConstantFloatValue c = CommonUtils.getConstantFloatValue(ctx,sign));
             try {
                 double value =
-                        CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+                        CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant())*sign;
                 int precision =
                         CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(),
                                 m_currentSymbolTable.lookupDefaultFloatLength());
 
-                ASTAttribute expressionResult = new ASTAttribute(new TypeFloat(precision), true);
-                m_ast.put(ctx, expressionResult);
+                ConstantFloatValue c = new ConstantFloatValue(value, precision);
+                expressionResult = new ASTAttribute(new TypeFloat(precision), true);
+                expressionResult.setConstant(c);
+                m_constantPool.add(c); 
             } catch (NumberFormatException ex) {
                 //        throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 ErrorStack.add(ctx, "floating point constant", "illegal number");
             }
 
+
         } else if (ctx.timeConstant() != null) {
-            ASTAttribute expressionResult = new ASTAttribute(new TypeClock(), true);
-            expressionResult.setConstant(getConstantClockValue(ctx.timeConstant()));
+            expressionResult = new ASTAttribute(new TypeClock(), true);
+            ConstantClockValue c = CommonUtils.getConstantClockValue(ctx.timeConstant());
+            expressionResult.setConstant(c);
             m_ast.put(ctx, expressionResult);
         } else if (ctx.stringConstant() != null) {
             ConstantCharacterValue ccv =
@@ -3046,16 +3027,17 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                 ErrorStack.add(ctx, "char literal", "need at least 1 character");
             }
             // generate AST Attribute for further analysis
-            ASTAttribute expressionResult = new ASTAttribute(new TypeChar(ccv.getLength()), true);
+            expressionResult = new ASTAttribute(new TypeChar(ccv.getLength()), true);
             ConstantValue cv = m_constantPool.add(ccv); // add to constant pool; maybe we have it already
             expressionResult.setConstant(cv);
             m_ast.put(ctx, expressionResult);
 
         } else if (ctx.bitStringConstant() != null) {
-            ASTAttribute expressionResult = new ASTAttribute(
-                    new TypeBit(CommonUtils.getBitStringLength(ctx.bitStringConstant().getText())),
-                    true);
+            ConstantBitValue c = CommonUtils.getConstantBitValue(ctx.bitStringConstant());
+            expressionResult = new ASTAttribute(new TypeBit(c.getLength()), true);
+            expressionResult.setConstant(c);
             m_ast.put(ctx, expressionResult);
+            m_constantPool.add(c);
         } else if (ctx.fixedConstant() != null) {
             long value = 0;
             int precision;
@@ -3084,23 +3066,24 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                 }
 
 
-                ASTAttribute expressionResult = new ASTAttribute(new TypeFixed(precision), true);
+                expressionResult = new ASTAttribute(new TypeFixed(precision), true);
                 ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
                 ConstantValue cv = m_constantPool.add(cfv); // add to constant pool; maybe we have it already
                 expressionResult.setConstant(cv);
-                m_ast.put(ctx, expressionResult);
+                m_constantPool.add(cv);
             } catch (NumberFormatException ex) {
                 ErrorStack.add(ctx, "integer literal", "illegal number");
             }
 
         } else if (ctx.referenceConstant() != null) {
             // NIL fits to any type; thus we have NO basetype
-            ASTAttribute expressionResult = new ASTAttribute(new TypeReference());
+            expressionResult = new ASTAttribute(new TypeReference());
             ConstantNILReference cnr = new ConstantNILReference();
             ConstantValue cv = m_constantPool.add(cnr); // add to constant pool; maybe we have it already
             expressionResult.setConstant(cv);
-            m_ast.put(ctx, expressionResult);
+
         }
+        m_ast.put(ctx, expressionResult);     
         return null;
     }
 
@@ -3110,7 +3093,10 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         Log.debug("ExpressionTypeVisitor:visitConstantExpression:ctx"
                 + CommonUtils.printContext(ctx));
         ASTAttribute attr = null;
+
         visitChildren(ctx);
+
+
         if (ctx.constantFixedExpression() != null) {
             attr = m_ast.lookup(ctx.constantFixedExpression());
         } else if (ctx.floatingPointConstant() != null) {
@@ -3119,7 +3105,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
             attr = m_ast.lookup(ctx.durationConstant());
         } else {
             ErrorStack.addInternal(ctx, "ExpressionTypeVisitor:visitConstantExpression",
-                    "untreated alternative");
+                    "untreated alternative@3134");
         }
         m_ast.put(ctx, attr);
         return null;
@@ -3514,7 +3500,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
             expr0 = ctx.expression(0).getText();
 
         } else {
-            ErrorStack.addInternal("visitCharSelectionSlice: missing alternative");
+            ErrorStack.addInternal("visitCharSelectionSlice: missing alternative@3521");
         }
 
         if (ctx.expression(1) != null) {

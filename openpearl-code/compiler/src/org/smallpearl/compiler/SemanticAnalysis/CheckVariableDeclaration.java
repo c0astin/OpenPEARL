@@ -50,6 +50,7 @@ import java.util.List;
  * <li>symbol table contains all defined and specified symbols
  * <li>no initializers are in the symbol table
  * <li>for each expression we have an ASTAttribute
+ * <li>initializers of type identifier must be INV
  * </ol>
  * 
  * Check initialisers for
@@ -76,6 +77,8 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
     private SymbolTable m_symboltable;
     private SymbolTable m_currentSymbolTable;
     private AST m_ast;
+    private ArrayList<String> m_identifierDenotationList = null;
+
     
     public CheckVariableDeclaration(String sourceFileName, int verbose, boolean debug,
             SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
@@ -190,10 +193,8 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
 
     @Override
     public Void visitVariableDenotation(SmallPearlParser.VariableDenotationContext ctx) {
-        ArrayList<String> identifierDenotationList = null;
-        ArrayList<ConstantValue> initElementList = null;
         List<InitElementContext> initElements = null;
-        identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
+        m_identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
 
         // all identifier have the same type --> first element to retrieve the initialiser-list
         if (ctx.semaDenotation() != null) {
@@ -214,7 +215,7 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
         int nextInitializer = 0;
 
         int requiredNumberOfInitializers = 0;
-        for (String identifier : identifierDenotationList) {
+        for (String identifier : m_identifierDenotationList) {
          
             VariableEntry var = (VariableEntry) m_currentSymbolTable.lookup(identifier.toString());
             if (nextInitializer >= initElements.size()) {
@@ -240,16 +241,12 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
             } else {
                 // scalar type
                 requiredNumberOfInitializers = 1;
-                String msg = "ScalarVariable " + var.getName() + " init ";
-                if (var.getInitializer()!= null) {
-                    msg += var.getInitializer();
-                } else {
-                    msg += initElements.get(nextInitializer).getText();
-                }
-                
-                Log.debug(msg);
+
                 
                 ASTAttribute attr = m_ast.lookup(initElements.get(nextInitializer));
+                if (!attr.isReadOnly()) {
+                    ErrorStack.add(initElements.get(nextInitializer),"INIT","must be INV");
+                }
                 checkTypes(initElements.get(nextInitializer), tVar, attr.m_type);
                 nextInitializer++;
             }
@@ -263,14 +260,11 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
         // check type of initializers --> all identifiers have the same type 
         // => use first identifier
 
-        String firstIdentifier = identifierDenotationList.get(0).toString();
+        String firstIdentifier = m_identifierDenotationList.get(0).toString();
         SymbolTableEntry se = m_currentSymbolTable.lookup(firstIdentifier);
 
         if (se instanceof SemaphoreEntry) {
-            SmallPearlParser.VariableDenotationContext c =
-                    (SmallPearlParser.VariableDenotationContext) se.getCtx();
             for (InitElementContext i : initElements) {
-                ;
                 ASTAttribute attr = m_ast.lookup(i);
                 TypeDefinition t = attr.getType();
                 if (t instanceof TypeFixed) {
@@ -282,8 +276,6 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
                 }
                 //System.out.println(se.getName() + " . " + t);
             }
-            String s1 = c.getText();
-            s1 += ".";
         } else if (se instanceof VariableEntry) {
             InitElementContext i = initElements.get(0);
             ASTAttribute attr = m_ast.lookup(i);

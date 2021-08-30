@@ -70,8 +70,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     private ST constantSemaphoreArrays;
     private LinkedList<LinkedList<String>> m_listOfBoltArrays;
     private ST constantBoltArrays;
+    private ST m_dationDeclarations;
     private ST m_dationDeclarationInitializers;
     private ST m_dationSpecificationInitializers;
+    private ArrayList<String> m_identifierDenotationList = null;
 
     public enum Type {
         BIT, CHAR, FIXED
@@ -117,7 +119,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         m_dationDeclarationInitializers = m_group.getInstanceOf("DationDeclarationInitialiers");
         m_dationSpecificationInitializers =
                 m_group.getInstanceOf("DationSpecificationInitialisiers");
-
+        m_dationDeclarations = m_group.getInstanceOf("DationDeclarations");
 
         // generateProlog is invoked via visitModule!!
         generatePrologue();
@@ -478,6 +480,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     public ST visitSystem_part(SmallPearlParser.System_partContext ctx) {
         ST st = m_group.getInstanceOf("SystemPart");
 
+        visitChildren(ctx);
         if (ctx != null) {
             for (ParseTree c : ctx.children) {
                 if (c instanceof SmallPearlParser.Cpp_inlineContext) {
@@ -743,13 +746,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         ST variableDeclaration = m_group.getInstanceOf("variable_declaration");
         ST semaDeclarations = m_group.getInstanceOf("SemaDeclaraction");
 
-        ArrayList<String> identifierDenotationList = null;
         ST scalarVariableDeclaration = m_group.getInstanceOf("ScalarVariableDeclaration");
 
-        identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
-        for (int i = 0; i < identifierDenotationList.size(); i++) {
+        m_identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
+        for (int i = 0; i < m_identifierDenotationList.size(); i++) {
             ST st = null;
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(identifierDenotationList.get(i));
+            SymbolTableEntry entry = m_currentSymbolTable.lookup(m_identifierDenotationList.get(i));
             if (entry instanceof VariableEntry) {
                 VariableEntry ve = (VariableEntry) entry;
                 if (ve.getType() instanceof TypeArray) {
@@ -806,8 +808,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     sema_decl.add("global", 1);
 
                     scalarVariableDeclaration.add("variable_denotations", sema_decl);
-                    //            } else if (entry instanceof TypeDation) {
-
+                  
+                    
+                } else if (ctx.dationDenotation()!= null) {
+                    st = visitDationDenotation(ctx.dationDenotation());
+                    //st.add("decl", entry.getName());
+                    //scalarVariableDeclaration.add("variable_denotations", st);
+                                        
                 } else {
                     ErrorStack.addInternal(ctx, "CppCodeGen:visitVariableDenotation",
                             "missing alternative@744 " + entry.toString());
@@ -828,31 +835,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return scalarVariableDeclaration;
     }
 
-    //    @Override
-    //    public ST visitProblemPartDataAttribute(SmallPearlParser.ProblemPartDataAttributeContext ctx) {
-    //        ST typeAttribute = m_group.getInstanceOf("TypeAttribute");
-    //
-    //        if (ctx != null) {
-    //    
-    //
-    //
-    //
-    //               
-    //
-    //
-    //
-    //
-    //                if (var.getInitializer() != null) {
-    //                    if (var.getInitializer() instanceof SimpleInitializer) {
-    //                        v.add("InitElement",
-    //                                ((SimpleInitializer) var.getInitializer()).getConstant());
-    //                    }
-    //                }
-    //
-    //        }
-    //
-    //        return variableDenotation;
-    //    }
 
 
     private ArrayList<String> getIdentifierDenotation(
@@ -1519,17 +1501,18 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         problem_part.add("ArrayDescriptors", arrayDescriptors);
 
-        // ad system dation initializer
+        // add dation declarations
+        problem_part.add("DationDeclarations", m_dationDeclarations);
+        // add system dation initializer
         ST dationInitializer = m_group.getInstanceOf("DationInitialiser");
         ST initSpecs = m_group.getInstanceOf("DationInitialisierSpecs");
         ST initDecls = m_group.getInstanceOf("DationInitialisierDecls");
-
         dationInitializer.add("specs", m_dationSpecificationInitializers);
         dationInitializer.add("decl", m_dationDeclarationInitializers);
 
         // add dation initializer only if at least one dation is used
         if (m_dationDeclarationInitializers.render().length() > 0
-                || m_dationDeclarationInitializers.render().length() > 0) {
+                || m_dationSpecificationInitializers.render().length() > 0) {
             problem_part.add("SystemDationInitializer", dationInitializer);
         }
 
@@ -4798,10 +4781,20 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
     @Override
     public ST visitDationDenotation(SmallPearlParser.DationDenotationContext ctx) {
-        ST dationDeclarations = m_group.getInstanceOf("DationDeclarations");
+       
+//        ParserRuleContext denotationCtx = ctx;
+//        // locate symboltable entry via first dationName
+//        while (!(denotationCtx.parent instanceof VariableDenotationContext)) {
+//            denotationCtx = (ParserRuleContext)(denotationCtx.parent);
+//        }
+//        denotationCtx = (ParserRuleContext)(denotationCtx.parent);
+
+        String name = m_identifierDenotationList.get(0).toString();
+        
+        VariableEntry d = (VariableEntry)(m_currentSymbolTable.lookup(name));
 
         ST typeDation = m_group.getInstanceOf("TypeDation");
-        dationDeclarations.add("decl", visitIdentifierDenotation(ctx.identifierDenotation()));
+      
         typeDation =
                 getTypeDation(ctx.typeDation(), getDationClass(ctx.typeDation().classAttribute()));
 
@@ -4821,23 +4814,16 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             visitGlobalAttribute(ctx.globalAttribute());
         }
 
-        ArrayList<String> identifierDenotationList = null;
+        
 
-        if (ctx != null) {
-            for (ParseTree c : ctx.children) {
-                if (c instanceof SmallPearlParser.IdentifierDenotationContext) {
-                    identifierDenotationList = getIdentifierDenotation(
-                            (SmallPearlParser.IdentifierDenotationContext) c);
-                    getIdentifierDenotation((SmallPearlParser.IdentifierDenotationContext) c);
-                }
-            }
 
-            for (int i = 0; i < identifierDenotationList.size(); i++) {
+            for (int i = 0; i < m_identifierDenotationList.size(); i++) {
+                //dationDeclarations.add("decl",m_identifierDenotationList.get(i));
                 ST v = m_group.getInstanceOf("DationDeclaration");
-                v.add("name", identifierDenotationList.get(i));
+                v.add("name", m_identifierDenotationList.get(i));
 
                 if (ctx.typeDation().typology() != null) {
-                    typology.add("name", identifierDenotationList.get(i));
+                    typology.add("name", m_identifierDenotationList.get(i));
                 }
 
 
@@ -4848,14 +4834,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 }
 
                 if (ctx.typeDation().typology() != null) {
-                    typeDation.add("Dim", identifierDenotationList.get(i));
+                    typeDation.add("Dim", m_identifierDenotationList.get(i));
                 }
 
-                dationDeclarations.add("decl", v);
+                m_dationDeclarations.add("decl", v);
 
                 ST dationInitialiser = m_group.getInstanceOf("DationDeclarationInitialiser");
                 // name,Dation,TypeDation,Id,Typology, tfu
-                dationInitialiser.add("name", identifierDenotationList.get(i));
+                dationInitialiser.add("name", m_identifierDenotationList.get(i));
                 dationInitialiser.add("Dation", getDationClass(ctx.typeDation().classAttribute()));
                 dationInitialiser.add("TypeDation", typeDation);
                 dationInitialiser.add("Id", ctx.ID().getText());
@@ -4865,9 +4851,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 }
                 m_dationDeclarationInitializers.add("decl", dationInitialiser);
             }
-        }
 
-        return dationDeclarations;
+        return null;
     }
 
     @Override
@@ -5049,15 +5034,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
 
         for (ParseTree c : ctx.children) {
-            if (c instanceof SmallPearlParser.VariableDenotationContext) {
+            if (c instanceof SmallPearlParser.VariableDeclarationContext) {
                 st.add("code",
-                        visitVariableDenotation((SmallPearlParser.VariableDenotationContext) c));
-                //            } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
-                //                st.add("code", visitArrayVariableDeclaration(
-                //                        (SmallPearlParser.ArrayVariableDeclarationContext) c));
-                //            } else if (c instanceof SmallPearlParser.StructVariableDeclarationContext) {
-                //                st.add("code", visitStructVariableDeclaration(
-                //                        (SmallPearlParser.StructVariableDeclarationContext) c));
+                        visitVariableDeclaration((SmallPearlParser.VariableDeclarationContext) c));
             } else if (c instanceof SmallPearlParser.StatementContext) {
                 st.add("code", visitStatement((SmallPearlParser.StatementContext) c));
             }
@@ -5773,40 +5752,40 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return s;
     }
 
-    @Override
-    public ST visitStructVariableDeclaration(
-            SmallPearlParser.StructVariableDeclarationContext ctx) {
-        Log.debug("CppCodeGeneratorVisitor:visitStructVariableDeclaration:ctx"
-                + CommonUtils.printContext(ctx));
-        ST st = m_group.getInstanceOf("StructureVariableDeclaration");
-
-        for (int i = 0; i < ctx.structureDenotation().size(); i++) {
-            String id = ctx.structureDenotation(i).ID().getText();
-
-            SymbolTableEntry symbolTableEntry =
-                    m_currentSymbolTable.lookupLocal(ctx.structureDenotation(i).ID().getText());
-
-            if (symbolTableEntry != null && symbolTableEntry instanceof VariableEntry) {
-                VariableEntry variable = (VariableEntry) symbolTableEntry;
-
-                if (variable.getType() instanceof TypeStructure) {
-                    TypeStructure typ = (TypeStructure) variable.getType();
-                    st.add("name", id);
-                    st.add("type", typ.getStructureName());
-                } else if (variable.getType() instanceof TypeArray) {
-                    TypeArray array = (TypeArray) variable.getType();
-
-                    if (array.getBaseType() instanceof TypeStructure) {
-                        TypeStructure typ = (TypeStructure) array.getBaseType();
-                        st.add("name", id);
-                        st.add("type", typ.getStructureName());
-                    }
-                }
-            }
-        }
-
-        return st;
-    }
+//    @Override
+//    public ST visitStructVariableDeclaration(
+//            SmallPearlParser.StructVariableDeclarationContext ctx) {
+//        Log.debug("CppCodeGeneratorVisitor:visitStructVariableDeclaration:ctx"
+//                + CommonUtils.printContext(ctx));
+//        ST st = m_group.getInstanceOf("StructureVariableDeclaration");
+//
+//        for (int i = 0; i < ctx.structureDenotation().size(); i++) {
+//            String id = ctx.structureDenotation(i).ID().getText();
+//
+//            SymbolTableEntry symbolTableEntry =
+//                    m_currentSymbolTable.lookupLocal(ctx.structureDenotation(i).ID().getText());
+//
+//            if (symbolTableEntry != null && symbolTableEntry instanceof VariableEntry) {
+//                VariableEntry variable = (VariableEntry) symbolTableEntry;
+//
+//                if (variable.getType() instanceof TypeStructure) {
+//                    TypeStructure typ = (TypeStructure) variable.getType();
+//                    st.add("name", id);
+//                    st.add("type", typ.getStructureName());
+//                } else if (variable.getType() instanceof TypeArray) {
+//                    TypeArray array = (TypeArray) variable.getType();
+//
+//                    if (array.getBaseType() instanceof TypeStructure) {
+//                        TypeStructure typ = (TypeStructure) array.getBaseType();
+//                        st.add("name", id);
+//                        st.add("type", typ.getStructureName());
+//                    }
+//                }
+//            }
+//        }
+//
+//        return st;
+//    }
 
 
     private ST traverseNameForStruct(SmallPearlParser.NameContext ctx, TypeDefinition type) {

@@ -88,7 +88,7 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitPrimaryExpression(SmallPearlParser.PrimaryExpressionContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitPrimaryExpression");
-
+String s = ctx.getText();
         ASTAttribute primaryExpr = m_ast.lookup(ctx);
 
         if (ctx.constant() != null) {
@@ -136,6 +136,9 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void>
     public Void visitConstant(SmallPearlParser.ConstantContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitConstant:ctx" + CommonUtils.printContext(ctx));
 
+            String s = ctx.getText();
+                    
+        
         if (ctx.durationConstant() != null) {
             ConstantDurationValue cv =
                     CommonUtils.getConstantDurationValue(ctx.durationConstant(), 1);
@@ -160,19 +163,14 @@ public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void>
                         CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
                 Integer precision = CommonUtils.getFloatingPointConstantPrecision(
                         ctx.floatingPointConstant(), Defaults.FLOAT_SHORT_PRECISION);
-                //                ASTAttribute expressionResult = new ASTAttribute( new TypeFloat(precision),true);
-
                 ASTAttribute attr = m_ast.lookup(ctx);
-
+               
                 if (attr == null) {
-                    ErrorStack.enter(ctx);
-                    ErrorStack.addInternal("no ASTAttributes found for '" + ctx.getText() + "'");
-                    ErrorStack.leave();
+                    ErrorStack.addInternal(ctx,"ConstantFolding","@170: no ASTAttributes found for '" + ctx.getText() + "'");
                     return null;
-                    //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
-                attr.setConstantFloatValue(new ConstantFloatValue(value, precision));
+                //attr.setConstantFloatValue(new ConstantFloatValue(value, precision));
                 //m_ast.put(ctx, expressionResult);
                 m_ast.put(ctx, attr);
             } catch (NumberFormatException ex) {

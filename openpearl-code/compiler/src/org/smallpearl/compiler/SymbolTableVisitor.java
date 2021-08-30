@@ -451,7 +451,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         m_type = null;
         m_hasAllocationProtection = false;
         if (ctx != null) {
-            // visit dimension attribute at last item
+            // visit dimension attribute as last item
 
             if (ctx.problemPartDataAttribute() != null) {
                 visitProblemPartDataAttribute(ctx.problemPartDataAttribute());
@@ -470,7 +470,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 visitDationDenotation(ctx.dationDenotation());
             } else {
                 ErrorStack.addInternal(ctx, "SymbolTableVisitor:variableDenotation",
-                        "missing alternative");
+                        "missing alternative@473");
             }
 
         }
@@ -517,6 +517,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 }
 
             }
+        } else if (ctx.dationDenotation() != null) {
+            if (ctx.dimensionAttribute()!=null) {
+                ErrorStack.add(ctx, "DationDCL", "no arrays of DATIONs allowed");
+            }
+            
         }
 
 

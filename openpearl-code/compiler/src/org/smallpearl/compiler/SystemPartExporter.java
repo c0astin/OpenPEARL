@@ -242,6 +242,8 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
 
         for (VariableEntry v : l) {
             if (v.getBaseType() instanceof TypeDation) {
+                TypeDation t = (TypeDation)v.getBaseType();
+                if (!t.isSystemDation()) continue;
 
                 ST dationSpecification = group.getInstanceOf("DationSpecification");
 

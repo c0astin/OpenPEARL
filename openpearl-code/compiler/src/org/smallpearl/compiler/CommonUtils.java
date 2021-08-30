@@ -36,6 +36,7 @@ import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
 import org.smallpearl.compiler.Exception.ValueOutOfBoundsException;
 import org.smallpearl.compiler.SymbolTable.*;
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.SmallPearlParser.DurationConstantContext;
 import org.smallpearl.compiler.SmallPearlParser.TypeReferenceContext;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -928,6 +929,174 @@ public class CommonUtils {
         }
         return td;
     }
+    
+    // added experiment for simplifing other parts
+    // not used yet
+//    public static ConstantValue getConstantValue(SmallPearlParser.ConstantContext ctx) {
+//        int sign = 1;
+//        if (ctx.sign() != null) {
+//            if (ctx.sign().getText().equals("-")) sign = -1;
+//        }
+//        
+//        if (ctx.fixedConstant()!= null) {
+//            long value;
+//            int prec;
+//            try {
+//                value = Long.parseLong(ctx.fixedConstant().getText());
+//             } catch (NumberFormatException e) {
+//                    ErrorStack.add(ctx,"fixed constant","value too large");
+//                    return null;
+//             }
+//            if (ctx.fixedConstant().fixedNumberPrecision()!= null) {
+//                try {
+//                    prec = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision().getText());
+//                 } catch (NumberFormatException e) {
+//                        ErrorStack.add(ctx,"fixed constant","precision too large");
+//                        return null;
+//                 }
+//            } else {
+//                prec = (int)(Long.toBinaryString(value).length());
+//             }
+//            
+//            ConstantFixedValue v = new ConstantFixedValue(value*sign,prec);
+//            return v;
+//        } else if (ctx.floatingPointConstant()!= null) {
+//           double value = getFloatingPointConstantValue(ctx.floatingPointConstant());
+//           ConstantFloatValue v = new ConstantFloatValue(value*sign, null);
+//           return v;
+//        } else if (ctx.timeConstant()!= null) {
+//            int hours=0, minutes=0;
+//            double secs=0.0;
+//            try {
+//               hours = Integer.parseInt(ctx.timeConstant().IntegerConstant(0).getText());
+//            } catch (NumberFormatException e) {
+//                   ErrorStack.add(ctx,"clock constant","hours too large");
+//                   return null;
+//            }
+//            try {
+//                minutes = Integer.parseInt(ctx.timeConstant().IntegerConstant(1).getText());
+//             } catch (NumberFormatException e) {
+//                    ErrorStack.add(ctx,"clock constant","minutes too large");
+//                    return null;
+//             }
+//             if (ctx.timeConstant().floatingPointConstant()!= null) {
+//                 secs = getFloatingPointConstantValue(ctx.floatingPointConstant());
+//             } else {
+//                 try {
+//                     secs = Integer.parseInt(ctx.timeConstant().IntegerConstant(2).getText());
+//                  } catch (NumberFormatException e) {
+//                         ErrorStack.add(ctx,"clock constant","secs too large");
+//                         return null;
+//                  }
+//                         
+//             }
+//             ConstantClockValue value = new ConstantClockValue(hours, minutes, secs);
+//             return value;
+//        } else if (ctx.durationConstant() != null) {
+//            return getConstantDurationValue(ctx.durationConstant(), sign);
+//        } else if (ctx.bitStringConstant()!= null) {
+//            String s = ctx.bitStringConstant().getText();
+//            long value;
+//            try {
+//                value = Long.parseLong(ctx.bitStringConstant().getText());
+//             } catch (NumberFormatException e) {
+//                    ErrorStack.add(ctx,"bit constant","value too large");
+//                    return null;
+//             }            
+//            int length = getBitStringLength(s);
+//            return new ConstantBitValue(value, length);
+//        } else if (ctx.stringConstant()!= null) {
+//            String s = ctx.stringConstant().getText();
+//            s = s.substring(1, s.length()-1);
+//            return new ConstantCharacterValue(s);
+//            
+//        } else if (ctx.referenceConstant()!= null) {
+//            return new ConstantNILReference();
+//        } else {
+//            ErrorStack.addInternal(ctx, "CommonUtils", "untreated alternative@1000");
+//            return new ConstantValue() {};
+//        }
+//        
+//    }
+
+    public static ConstantBitValue getConstantBitValue(
+            SmallPearlParser.BitStringConstantContext ctx) {
+  String s = ctx.getText();
+  
+  long value = convertBitStringToLong(s);
+         
+  int length = getBitStringLength(s);
+  return new ConstantBitValue(value, length);
+    }
+    /**
+     * Get the ConstantClockValue from a given TimeConstantContext, taken into account a possible sign
+     *
+     * @param ctx  the FixedConstantContext
+     * @param sign the sign +1 or -1
+     * @return ConstantFixedValue
+     */
+    public static ConstantClockValue getConstantClockValue(
+            SmallPearlParser.TimeConstantContext ctx) {
+  int hours=0, minutes=0;
+  double secs=0.0;
+  try {
+     hours = Integer.parseInt(ctx.IntegerConstant(0).getText());
+  } catch (NumberFormatException e) {
+         ErrorStack.add(ctx,"clock constant","hours too large");
+         return null;
+  }
+  try {
+      minutes = Integer.parseInt(ctx.IntegerConstant(1).getText());
+   } catch (NumberFormatException e) {
+          ErrorStack.add(ctx,"clock constant","minutes too large");
+          return null;
+   }
+   if (ctx.floatingPointConstant()!= null) {
+       secs = getFloatingPointConstantValue(ctx.floatingPointConstant());
+   } else {
+       try {
+           secs = Integer.parseInt(ctx.IntegerConstant(2).getText());
+        } catch (NumberFormatException e) {
+               ErrorStack.add(ctx,"clock constant","secs too large");
+               return null;
+        }
+               
+   }
+   ConstantClockValue value = new ConstantClockValue(hours, minutes, secs);
+   return value;
+    }
+    /**
+     * Get the ConstantFixedValue from a given FixedConstantContext, taken into account a possible sign
+     *
+     * @param ctx  the FixedConstantContext
+     * @param sign the sign +1 or -1
+     * @return ConstantFixedValue
+     */
+    public static ConstantFixedValue getConstantFixedValue(
+            SmallPearlParser.FixedConstantContext ctx, int sign) {
+        
+  long value;
+  int prec;
+  try {
+      value = Long.parseLong(ctx.getText());
+   } catch (NumberFormatException e) {
+          ErrorStack.add(ctx,"fixed constant","value too large");
+          return null;
+   }
+  if (ctx.fixedNumberPrecision()!= null) {
+      try {
+          prec = Integer.parseInt(ctx.fixedNumberPrecision().getText());
+       } catch (NumberFormatException e) {
+              ErrorStack.add(ctx,"fixed constant","precision too large");
+              return null;
+       }
+  } else {
+      prec = (int)(Long.toBinaryString(value).length());
+   }
+  
+  ConstantFixedValue v = new ConstantFixedValue(value*sign,prec);
+  return v;
+    }
 
     /**
      * Get the ConstantDurationValue from a given DurationConstantContext, taken into account a possible sign
@@ -953,6 +1122,12 @@ public class CommonUtils {
 
             if (ctx.seconds() != null) {
                 seconds = getSeconds(ctx.seconds());
+            }
+            if (minutes > 59) {
+                ErrorStack.add(ctx,"illegal value","minutes must be less than 60");
+            }
+            if (!(seconds < 60)) {
+                ErrorStack.add(ctx,"illegal value","seconds must be less than 60");
             }
         }
 
@@ -1145,11 +1320,7 @@ public class CommonUtils {
         return precision;
     }
     
-//    public long    getFixedConstantValue(SmallPearlParser.FixedConstantContext ctx) {
-//        
-//        return 0;
-//    }
-    
+   
 
     public static TypeDefinition getBaseTypeForReferenceType(TypeReferenceContext typeReference) {
         TypeDefinition type = null;

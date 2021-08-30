@@ -212,7 +212,8 @@ public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<Con
                   ErrorStack.enter(ctx);
                   ErrorStack.add("constant expected");
                   ErrorStack.leave();
-                  throw new ConstantExpectedException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                  return new ConstantFixedValue(1); // let's return for smooth ending of pass
+                  //throw new ConstantExpectedException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
                 if ( !(variableEntry.getType() instanceof TypeFixed )) {
