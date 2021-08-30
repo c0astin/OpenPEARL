@@ -3035,9 +3035,9 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         } else if (ctx.bitStringConstant() != null) {
             ConstantBitValue c = CommonUtils.getConstantBitValue(ctx.bitStringConstant());
             expressionResult = new ASTAttribute(new TypeBit(c.getLength()), true);
-            expressionResult.setConstant(c);
             m_ast.put(ctx, expressionResult);
-            m_constantPool.add(c);
+            c = (ConstantBitValue)m_constantPool.add(c);
+            expressionResult.setConstant(c);
         } else if (ctx.fixedConstant() != null) {
             long value = 0;
             int precision;
