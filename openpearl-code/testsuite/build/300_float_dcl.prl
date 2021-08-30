@@ -1,7 +1,7 @@
 MODULE(float_dcl);
 
 PROBLEM;
-DCL y00 FLOAT(23) INIT(0(31));
+!DCL y00 FLOAT(23) INIT(0(31));   semantic error occurs 
                       !^^^^  this should produce a semantic error
                       ! illegal implicit type conversion fixed(31)->float(24)
 DCL y24 FLOAT(23) INIT(1.234);
