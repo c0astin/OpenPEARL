@@ -543,7 +543,7 @@ typeReference :
 	;
 
 typeRefChar:
-	'CHAR' '('  ')' 
+	'CHAR' ('('  ')' | '()')
 	;
 	
 /*

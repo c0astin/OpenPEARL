@@ -4,6 +4,11 @@ SYSTEM;
    so: StdOut;
 
 PROBLEM;
+
+  DCL rf REF FIXED INIT(a);
+  DCL a FIXED;
+
+
   SPC so DATION OUT SYSTEM ALPHIC ;
   DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED (so);
 
@@ -43,8 +48,8 @@ t1: TASK MAIN;
 
 
 !    PUT 'LENGTH test' TO stdout BY A, SKIP;
-!    PUT 'fixed31+1=', fixed31+1 TO stdout BY A, F(3), SKIP;
-!    PUT 'SIZEOF defaultFixed', SIZEOF defaultFixed TO stdout BY A, F(3), SKIP;
+    PUT 'fixed31+1=', fixed31+1 TO stdout BY A, F(3), SKIP;
+    PUT 'SIZEOF defaultFixed', SIZEOF defaultFixed TO stdout BY A, F(3), SKIP;
 
 /**
     PUT 'SIZEOF fixed7', SIZEOF fixed7 TO stdout
