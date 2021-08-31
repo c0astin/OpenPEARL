@@ -189,25 +189,28 @@ String s = ctx.getText();
             Log.error("missing code for BitStringLiteral");
         } else if (ctx.fixedConstant() != null) {
             try {
+                long value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
+
                 int precision = m_currentSymbolTable.lookupDefaultFixedLength();
 
                 if (ctx.fixedConstant().fixedNumberPrecision() != null) {
                     precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision()
                             .IntegerConstant().toString());
+                } else {
+
+                    
+                    
+                    if (m_currFixedLength != null) {
+                        precision = m_currFixedLength;
+                    }
+                    // no explicit precision given
+
+                    precision = Long.toBinaryString(Math.abs(value)).length();
+
+                    if (value < 0) {
+                        precision++;
+                    }
                 }
-
-                if (m_currFixedLength != null) {
-                    precision = m_currFixedLength;
-                }
-
-                long value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
-
-                precision = Long.toBinaryString(Math.abs(value)).length();
-
-                if (value < 0) {
-                    precision++;
-                }
-
                 Log.debug("ConstantFoldingVisitor:visitLiteral:precision=" + precision);
                 ASTAttribute attr = m_ast.lookup(ctx);
 
@@ -219,7 +222,7 @@ String s = ctx.getText();
                     //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
-                attr.setConstantFixedValue(new ConstantFixedValue(value));
+                attr.setConstantFixedValue(new ConstantFixedValue(value,precision));
             } catch (NumberFormatException ex) {
                 ErrorStack.enter(ctx.fixedConstant());
                 ErrorStack.addInternal("bad number '" + ctx.fixedConstant().getText() + "'");

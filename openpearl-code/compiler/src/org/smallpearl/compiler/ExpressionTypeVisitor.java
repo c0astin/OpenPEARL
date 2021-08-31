@@ -3069,8 +3069,8 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                 expressionResult = new ASTAttribute(new TypeFixed(precision), true);
                 ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
                 ConstantValue cv = m_constantPool.add(cfv); // add to constant pool; maybe we have it already
+                cv = m_constantPool.add(cv);
                 expressionResult.setConstant(cv);
-                m_constantPool.add(cv);
             } catch (NumberFormatException ex) {
                 ErrorStack.add(ctx, "integer literal", "illegal number");
             }

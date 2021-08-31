@@ -719,6 +719,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitTypeStructure(SmallPearlParser.TypeStructureContext ctx) {
         ST st = m_group.getInstanceOf("StructureFormalParameter");
+        ASTAttribute attr = m_ast.lookup(ctx);
+        String s = ctx.getText();
+
         st.add("type", "????");
         return st;
     }
@@ -772,7 +775,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                     //variableDeclaration.add("decl", st);
                 } else if (ve.getType() instanceof TypeStructure) {
-
+                    return visitStructVariableDenotation(ctx);
                 } else if (ctx.problemPartDataAttribute() != null) {
 
                     st = m_group.getInstanceOf("variable_declaration");
@@ -912,6 +915,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             if (initElement != null) {
                 ASTAttribute attr = m_ast.lookup(initElement);
                 ST stValue = m_group.getInstanceOf("expression");
+                
                 stValue.add("code", attr.m_constant);
                 st.add("value", stValue);
             } else {
@@ -1272,6 +1276,10 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
             type.add("Type", visitSimpleType(ctx.simpleType()));
         } else if (ctx.typeReference() != null) {
             type.add("Type", visitTypeReference(ctx.typeReference()));
+        } else if (ctx.typeStructure()!= null) {
+            type.add("Type", visitTypeStructure(ctx.typeStructure()));
+        } else {
+            ErrorStack.addInternal(ctx, "CppCodeGenerator", "missing alternative"+ctx.typeStructure().getText());
         }
 
         return type;
@@ -5752,40 +5760,41 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return s;
     }
 
-//    @Override
-//    public ST visitStructVariableDeclaration(
-//            SmallPearlParser.StructVariableDeclarationContext ctx) {
-//        Log.debug("CppCodeGeneratorVisitor:visitStructVariableDeclaration:ctx"
-//                + CommonUtils.printContext(ctx));
-//        ST st = m_group.getInstanceOf("StructureVariableDeclaration");
-//
-//        for (int i = 0; i < ctx.structureDenotation().size(); i++) {
-//            String id = ctx.structureDenotation(i).ID().getText();
-//
-//            SymbolTableEntry symbolTableEntry =
-//                    m_currentSymbolTable.lookupLocal(ctx.structureDenotation(i).ID().getText());
-//
-//            if (symbolTableEntry != null && symbolTableEntry instanceof VariableEntry) {
-//                VariableEntry variable = (VariableEntry) symbolTableEntry;
-//
-//                if (variable.getType() instanceof TypeStructure) {
-//                    TypeStructure typ = (TypeStructure) variable.getType();
-//                    st.add("name", id);
-//                    st.add("type", typ.getStructureName());
-//                } else if (variable.getType() instanceof TypeArray) {
-//                    TypeArray array = (TypeArray) variable.getType();
-//
-//                    if (array.getBaseType() instanceof TypeStructure) {
-//                        TypeStructure typ = (TypeStructure) array.getBaseType();
-//                        st.add("name", id);
-//                        st.add("type", typ.getStructureName());
-//                    }
-//                }
-//            }
-//        }
-//
-//        return st;
-//    }
+   
+    private ST visitStructVariableDenotation(
+            SmallPearlParser.VariableDenotationContext ctx) {
+        Log.debug("CppCodeGeneratorVisitor:visitStructVariableDeclaration:ctx"
+                + CommonUtils.printContext(ctx));
+        ST st = m_group.getInstanceOf("StructureVariableDeclaration");
+
+        for (int i = 0; i < ctx.identifierDenotation().identifier().size(); i++) {
+            ASTAttribute attr = m_ast.lookup(ctx.identifierDenotation().identifier(i));
+            String id = ctx.identifierDenotation().identifier(i).getText();
+
+            SymbolTableEntry symbolTableEntry =
+                    m_currentSymbolTable.lookupLocal(id);
+
+            if (symbolTableEntry != null && symbolTableEntry instanceof VariableEntry) {
+                VariableEntry variable = (VariableEntry) symbolTableEntry;
+
+                if (variable.getType() instanceof TypeStructure) {
+                    TypeStructure typ = (TypeStructure) variable.getType();
+                    st.add("name", id);
+                    st.add("type", typ.getStructureName());
+                } else if (variable.getType() instanceof TypeArray) {
+                    TypeArray array = (TypeArray) variable.getType();
+
+                    if (array.getBaseType() instanceof TypeStructure) {
+                        TypeStructure typ = (TypeStructure) array.getBaseType();
+                        st.add("name", id);
+                        st.add("type", typ.getStructureName());
+                    }
+                }
+            }
+        }
+
+        return st;
+    }
 
 
     private ST traverseNameForStruct(SmallPearlParser.NameContext ctx, TypeDefinition type) {
