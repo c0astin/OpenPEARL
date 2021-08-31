@@ -431,8 +431,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void>
                     // walk up the AST and get VariableDenotationContext:
                     ParserRuleContext sctx = ctx.getParent();
                     while (sctx != null
-                            && !((sctx instanceof SmallPearlParser.VariableDenotationContext)
-                                    || (sctx instanceof SmallPearlParser.ArrayDenotationContext))) {
+                            && !((sctx instanceof SmallPearlParser.VariableDenotationContext))) {
+//                                    || (sctx instanceof SmallPearlParser.ArrayDenotationContext))) {
                         sctx = sctx.getParent();
                     }
 
@@ -458,7 +458,7 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void>
                                 }
                             }
                             }
-                        } else if (sctx instanceof SmallPearlParser.ArrayDenotationContext) {
+   //                     } else if (sctx instanceof SmallPearlParser.ArrayDenotationContext) {
                         }
                     }
                 }
