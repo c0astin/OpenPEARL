@@ -1761,6 +1761,17 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
+
+    @Override
+    public Void visitPositionSKIP(SmallPearlParser.PositionSKIPContext ctx) {
+        if (ctx.expression()!= null) {
+        visit(ctx.expression());
+        ASTAttribute a = m_ast.lookup(ctx.expression());
+        }
+        return null;
+    }
+    
+
     @Override
     public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitProcedureDeclaration:ctx"
@@ -3068,7 +3079,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
 
 
                 expressionResult = new ASTAttribute(new TypeFixed(precision), true);
-                ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
+                ConstantFixedValue cfv = new ConstantFixedValue(value*sign, precision);
                 ConstantValue cv = m_constantPool.add(cfv); // add to constant pool; maybe we have it already
                 cv = m_constantPool.add(cv);
                 expressionResult.setConstant(cv);
