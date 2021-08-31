@@ -481,6 +481,9 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
 
         if (ctx.dimensionAttribute() != null) {
+            TypeDefinition baseType = m_type;
+            m_type = new TypeArray();
+            ((TypeArray) m_type).setBaseType(baseType);
             visitDimensionAttribute(ctx.dimensionAttribute());
             if (identifierDenotationList.size() > 1) {
                 ErrorStack.add(ctx.identifierDenotation(), "array declaration", "no list allowed");
@@ -1084,63 +1087,63 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     //        return null;
     //    }
 
-    @Override
-    public Void visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
-        Log.debug("SymbolTableVisitor:visitArrayDenotation:ctx" + CommonUtils.printContext(ctx));
-
-        boolean hasGlobalAttribute = false;
-        boolean hasAssigmentProtection = false;
-        ArrayList<String> identifierDenotationList = new ArrayList<String>();
-        ArrayOrStructureInitializer arrayOrStructureInitializer = null;
-
-        m_type = new TypeArray();
-
-        if (ctx != null) {
-            for (int i = 0; i < ctx.ID().size(); i++) {
-                identifierDenotationList.add(ctx.ID().get(i).toString());
-            }
-        }
-
-        if (ctx != null) {
-            for (ParseTree c : ctx.children) {
-                if (c instanceof SmallPearlParser.DimensionAttributeContext) {
-                    visitDimensionAttribute((SmallPearlParser.DimensionAttributeContext) c);
-                } else if (c instanceof SmallPearlParser.AssignmentProtectionContext) {
-                    hasAssigmentProtection = true;
-                } else if (c instanceof SmallPearlParser.TypeAttributeForArrayContext) {
-                    visitTypeAttributeForArray((SmallPearlParser.TypeAttributeForArrayContext) c);
-                } else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
-                    hasGlobalAttribute = true;
-                }
-            }
-
-            if (ctx.initialisationAttribute() != null) {
-                ArrayList<Initializer> initElementList = null;
-
-                initElementList = getInitialisationAttribute(ctx.initialisationAttribute());
-
-                if (initElementList != null && initElementList.size() > 0) {
-                    arrayOrStructureInitializer =
-                            new ArrayOrStructureInitializer(ctx, initElementList);
-                } else {
-                    arrayOrStructureInitializer = null;
-                }
-            }
-
-            addArrayDescriptor(new ArrayDescriptor(((TypeArray) m_type).getNoOfDimensions(),
-                    ((TypeArray) m_type).getDimensions()));
-
-            for (int i = 0; i < identifierDenotationList.size(); i++) {
-                VariableEntry variableEntry = new VariableEntry(identifierDenotationList.get(i),
-                        m_type, hasAssigmentProtection, ctx, arrayOrStructureInitializer);
-
-                String s = identifierDenotationList.get(i).toString();
-                checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx, s);
-            }
-        }
-
-        return null;
-    }
+//    @Override
+//    public Void visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
+//        Log.debug("SymbolTableVisitor:visitArrayDenotation:ctx" + CommonUtils.printContext(ctx));
+//
+//        boolean hasGlobalAttribute = false;
+//        boolean hasAssigmentProtection = false;
+//        ArrayList<String> identifierDenotationList = new ArrayList<String>();
+//        ArrayOrStructureInitializer arrayOrStructureInitializer = null;
+//
+//        m_type = new TypeArray();
+//
+//        if (ctx != null) {
+//            for (int i = 0; i < ctx.ID().size(); i++) {
+//                identifierDenotationList.add(ctx.ID().get(i).toString());
+//            }
+//        }
+//
+//        if (ctx != null) {
+//            for (ParseTree c : ctx.children) {
+//                if (c instanceof SmallPearlParser.DimensionAttributeContext) {
+//                    visitDimensionAttribute((SmallPearlParser.DimensionAttributeContext) c);
+//                } else if (c instanceof SmallPearlParser.AssignmentProtectionContext) {
+//                    hasAssigmentProtection = true;
+//                } else if (c instanceof SmallPearlParser.TypeAttributeForArrayContext) {
+//                    visitTypeAttributeForArray((SmallPearlParser.TypeAttributeForArrayContext) c);
+//                } else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
+//                    hasGlobalAttribute = true;
+//                }
+//            }
+//
+//            if (ctx.initialisationAttribute() != null) {
+//                ArrayList<Initializer> initElementList = null;
+//
+//                initElementList = getInitialisationAttribute(ctx.initialisationAttribute());
+//
+//                if (initElementList != null && initElementList.size() > 0) {
+//                    arrayOrStructureInitializer =
+//                            new ArrayOrStructureInitializer(ctx, initElementList);
+//                } else {
+//                    arrayOrStructureInitializer = null;
+//                }
+//            }
+//
+//            addArrayDescriptor(new ArrayDescriptor(((TypeArray) m_type).getNoOfDimensions(),
+//                    ((TypeArray) m_type).getDimensions()));
+//
+//            for (int i = 0; i < identifierDenotationList.size(); i++) {
+//                VariableEntry variableEntry = new VariableEntry(identifierDenotationList.get(i),
+//                        m_type, hasAssigmentProtection, ctx, arrayOrStructureInitializer);
+//
+//                String s = identifierDenotationList.get(i).toString();
+//                checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx, s);
+//            }
+//        }
+//
+//        return null;
+//    }
 
     //    @Override
     //    public Void visitDimensionAttribute(SmallPearlParser.DimensionAttributeContext ctx) {
@@ -1152,8 +1155,8 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitBoundaryDenotation(SmallPearlParser.BoundaryDenotationContext ctx) {
 
-        TypeArray ta = new TypeArray();
-        ta.setBaseType(m_type);
+        TypeArray ta = (TypeArray)m_type;
+//        ta.setBaseType(m_type);
 
         if (ctx.constantFixedExpression().size() == 1) {
             int upb = CommonUtils.getConstantFixedExpression(ctx.constantFixedExpression(0),
@@ -1171,19 +1174,19 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
-    @Override
-    public Void visitTypeAttributeForArray(SmallPearlParser.TypeAttributeForArrayContext ctx) {
-        Log.debug("SymbolTableVisitor:visitTypeAttributeForArray:ctx"
-                + CommonUtils.printContext(ctx));
-
-        TypeDefinition tempType = m_type;
-        visitChildren(ctx);
-
-        ((TypeArray) tempType).setBaseType(m_type);
-        m_type = tempType;
-
-        return null;
-    }
+//    @Override
+//    public Void visitTypeAttributeForArray(SmallPearlParser.TypeAttributeForArrayContext ctx) {
+//        Log.debug("SymbolTableVisitor:visitTypeAttributeForArray:ctx"
+//                + CommonUtils.printContext(ctx));
+//
+//        TypeDefinition tempType = m_type;
+//        visitChildren(ctx);
+//
+//        ((TypeArray) tempType).setBaseType(m_type);
+//        m_type = tempType;
+//
+//        return null;
+//    }
 
 
     @Override
@@ -1783,8 +1786,9 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     public Void visitTypeStructure(SmallPearlParser.TypeStructureContext ctx) {
         Log.debug("SymbolTableVisitor:visitTypeStructure:ctx" + CommonUtils.printContext(ctx));
 
+        
         m_typeStructure = new TypeStructure();
-
+        m_type = m_typeStructure;
 
         for (int i = 0; i < ctx.structureComponent().size(); i++) {
             visitStructureComponent(ctx.structureComponent(i));
@@ -1806,34 +1810,35 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
         TypeStructure saved_typeStructure = m_typeStructure;
 
-        //        if (ctx.dimensionAttribute() != null) {
-        //            Log.debug("SymbolTableVisitor:visitStructureComponent: ARRAY");
-        //            array = new TypeArray();
-        //            m_type = array;
-        //            visitDimensionAttribute(ctx.dimensionAttribute());
-        //            addArrayDescriptor(
-        //                    new ArrayDescriptor(array.getNoOfDimensions(), array.getDimensions()));
-        //        }
-
-        if (ctx.typeAttributeInStructureComponent() != null) {
-            type_saved = m_type;
-            visitTypeAttributeInStructureComponent(ctx.typeAttributeInStructureComponent());
-            m_typeStructure = saved_typeStructure;
-
-            for (int i = 0; i < ctx.ID().size(); i++) {
-                component = new StructureComponent();
-
-                if (ctx.dimensionAttribute() != null) {
-                    visitDimensionAttribute(ctx.dimensionAttribute());
-                }
-                component.m_type = m_type;
-
-
-                component.m_id = ctx.ID(i).getText();
-                saved_typeStructure.add(component);
-            }
-            m_type = m_typeStructure;
+        if (ctx.dimensionAttribute() != null) {
+            Log.debug("SymbolTableVisitor:visitStructureComponent: ARRAY");
+            array = new TypeArray();
+            m_type = array;
+            visitDimensionAttribute(ctx.dimensionAttribute());
+            addArrayDescriptor(
+                    new ArrayDescriptor(array.getNoOfDimensions(), array.getDimensions()));
         }
+
+
+        type_saved = m_type;
+        visitTypeAttributeInStructureComponent(ctx.typeAttributeInStructureComponent());
+
+        if (type_saved instanceof TypeArray) {
+            ((TypeArray) type_saved).setBaseType(m_type);
+        } else {
+            type_saved = m_type;
+        }
+        m_typeStructure = saved_typeStructure;
+        
+        for (int i = 0; i < ctx.ID().size(); i++) {
+            component = new StructureComponent();
+            component.m_type = type_saved;
+            component.m_id = ctx.ID(i).getText();
+
+            saved_typeStructure.add(component);
+           
+        }
+        m_type = m_typeStructure;
 
         return null;
     }
