@@ -761,8 +761,8 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     st = m_group.getInstanceOf("ArrayVariableDeclaration");
                     st.add("name", ve.getName());
                     if (ctx.problemPartDataAttribute() != null) {
-                        st.add("type",
-                                visitTypeAttribute(ctx.problemPartDataAttribute().typeAttribute()));
+                        st.add("type",visitTypeAttribute(((TypeArray)(ve.getType())).getBaseType()));
+                                //visitTypeAttribute(ctx.problemPartDataAttribute().typeAttribute()));
                     } else if (ctx.semaDenotation() != null) {
                         ErrorStack.addInternal(ctx, "CppCodeGen", "Sema-Arrays not supported yet");
                         //st.add("type", new TypeSemaphore());
@@ -775,13 +775,22 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
                     //variableDeclaration.add("decl", st);
                 } else if (ve.getType() instanceof TypeStructure) {
-                    return visitStructVariableDenotation(ctx);
+                    TypeDefinition td= ve.getType();
+                    st = m_group.getInstanceOf("variable_declaration");
+                    st.add("name", ve.getName());
+                    st.add("type",
+                            visitTypeAttribute(ve.getType()));
+                    st.add("init", getInitialiser(i, ve));
+
+                    st.add("inv", ve.getAssigmentProtection());
+                    scalarVariableDeclaration.add("variable_denotations", st);
+                    //return visitStructVariableDenotation(ctx);
                 } else if (ctx.problemPartDataAttribute() != null) {
 
                     st = m_group.getInstanceOf("variable_declaration");
                     st.add("name", ve.getName());
                     st.add("type",
-                            visitTypeAttribute(ctx.problemPartDataAttribute().typeAttribute()));
+                            visitTypeAttribute(ve.getType()));//ctx.problemPartDataAttribute().typeAttribute()));
 
                     st.add("init", getInitialiser(i, ve));
 
@@ -814,6 +823,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                   
                     
                 } else if (ctx.dationDenotation()!= null) {
+                    
                     st = visitDationDenotation(ctx.dationDenotation());
                     //st.add("decl", entry.getName());
                     //scalarVariableDeclaration.add("variable_denotations", st);
@@ -1268,6 +1278,13 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     //        return type;
     //    }
 
+    private ST visitTypeAttribute(TypeDefinition type) {
+        ST st = m_group.getInstanceOf("TypeAttribute");
+        String s = type.toString();
+        
+        return type.toST(m_group);
+    }
+    
     @Override
     public ST visitTypeAttribute(SmallPearlParser.TypeAttributeContext ctx) {
         ST type = m_group.getInstanceOf("TypeAttribute");
@@ -5520,50 +5537,50 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     //        return declarations;
     //    }
 
-    @Override
-    public ST visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
-        ST declarations = m_group.getInstanceOf("ArrayVariableDeclarations");
-
-        for (int i = 0; i < ctx.ID().size(); i++) {
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().get(i).toString());
-
-            if (entry == null || !(entry instanceof VariableEntry)) {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-                        ctx.start.getCharPositionInLine());
-            }
-
-            VariableEntry variableEntry = (VariableEntry) entry;
-
-            if (variableEntry.getType() instanceof TypeArray) {
-                ArrayList<ST> initElementList = null;
-
-                ST declaration = m_group.getInstanceOf("ArrayVariableDeclaration");
-
-                declaration.add("name", variableEntry.getName());
-
-                if (variableEntry.getType() instanceof TypeArray) {
-                    TypeArray type = (TypeArray) variableEntry.getType();
-                    declaration.add("type", type.getBaseType().toST(m_group));
-                } else {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-                            ctx.start.getCharPositionInLine());
-                }
-
-                declaration.add("assignmentProtection", variableEntry.getAssigmentProtection());
-                declaration.add("totalNoOfElements",
-                        ((TypeArray) variableEntry.getType()).getTotalNoOfElements());
-
-                if (ctx.initialisationAttribute() != null) {
-                    declaration.add("initElements", getArrayInitialisationAttribute(variableEntry));
-                }
-
-                declarations.add("declarations", declaration);
-            }
-        }
-
-        return declarations;
-    }
-
+//    @Override
+//    public ST visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
+//        ST declarations = m_group.getInstanceOf("ArrayVariableDeclarations");
+//
+//        for (int i = 0; i < ctx.ID().size(); i++) {
+//            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().get(i).toString());
+//
+//            if (entry == null || !(entry instanceof VariableEntry)) {
+//                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+//                        ctx.start.getCharPositionInLine());
+//            }
+//
+//            VariableEntry variableEntry = (VariableEntry) entry;
+//
+//            if (variableEntry.getType() instanceof TypeArray) {
+//                ArrayList<ST> initElementList = null;
+//
+//                ST declaration = m_group.getInstanceOf("ArrayVariableDeclaration");
+//
+//                declaration.add("name", variableEntry.getName());
+//
+//                if (variableEntry.getType() instanceof TypeArray) {
+//                    TypeArray type = (TypeArray) variableEntry.getType();
+//                    declaration.add("type", type.getBaseType().toST(m_group));
+//                } else {
+//                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+//                            ctx.start.getCharPositionInLine());
+//                }
+//
+//                declaration.add("assignmentProtection", variableEntry.getAssigmentProtection());
+//                declaration.add("totalNoOfElements",
+//                        ((TypeArray) variableEntry.getType()).getTotalNoOfElements());
+//
+//                if (ctx.initialisationAttribute() != null) {
+//                    declaration.add("initElements", getArrayInitialisationAttribute(variableEntry));
+//                }
+//
+//                declarations.add("declarations", declaration);
+//            }
+//        }
+//
+//        return declarations;
+//    }
+//
 
     /**
      * create code for CONVERT .. TO
