@@ -63,6 +63,25 @@ public class TypeStructure extends TypeDefinition {
         return line + " ] ";
     }
 
+    public int getTotalNoOfElements() {
+        int nbr = 0;
+        for (int i=0; i<m_listOfComponents.size(); i++) {
+            StructureComponent sc = m_listOfComponents.get(i);
+            if (sc.m_type instanceof TypeStructure) {
+                nbr += ((TypeStructure)(sc.m_type)).getTotalNoOfElements();
+            } else if (sc.m_type instanceof TypeArray) {
+                TypeArray ta = (TypeArray)(sc.m_type);
+                if (ta.getBaseType() instanceof TypeStructure) {
+                  nbr += ta.getTotalNoOfElements()*((TypeStructure)(ta.getBaseType())).getTotalNoOfElements();
+                } else {
+                    nbr += ta.getTotalNoOfElements();
+                }
+            } else {
+                nbr ++;
+            }
+        }
+        return nbr;
+    }
     public int noOfEntries() {
         return this.m_listOfComponents.size();
     }
