@@ -111,40 +111,40 @@ public class CheckArrayDeclarationAccess extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
-    @Override
-    public Void visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
-
-        if (ctx != null) {
-
-            for (int i = 0; i < ctx.ID().size(); i++) {
-
-                String s = ctx.ID().get(i).toString();
-                SymbolTableEntry se = m_currentSymbolTable.lookup(s);
-                if (!(se instanceof VariableEntry)) {
-                    throw new InternalError("expected variable entry");
-                }
-                VariableEntry ve = (VariableEntry) se;
-                if (!(ve.getType() instanceof TypeArray)) {
-                    throw new InternalError("expected variable entry with TypeArray");
-                }
-
-                TypeArray ta = (TypeArray) ve.getType();
-                ArrayList<ArrayDimension> dims = ta.getDimensions();
-
-                for (i = 0; i < ta.getNoOfDimensions(); i++) {
-                    ErrorStack.enter(dims.get(i).getCtx(), "array boundary");
-                    if (dims.get(i).getLowerBoundary() > dims.get(i).getUpperBoundary()) {
-                        ErrorStack.add("lower boundary must not exceed upper boundary");
-                    }
-                    ErrorStack.leave();
-                }
-
-            }
-        }
-
-
-        return null;
-    }
+//    @Override
+//    public Void visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
+//
+//        if (ctx != null) {
+//
+//            for (int i = 0; i < ctx.ID().size(); i++) {
+//
+//                String s = ctx.ID().get(i).toString();
+//                SymbolTableEntry se = m_currentSymbolTable.lookup(s);
+//                if (!(se instanceof VariableEntry)) {
+//                    throw new InternalError("expected variable entry");
+//                }
+//                VariableEntry ve = (VariableEntry) se;
+//                if (!(ve.getType() instanceof TypeArray)) {
+//                    throw new InternalError("expected variable entry with TypeArray");
+//                }
+//
+//                TypeArray ta = (TypeArray) ve.getType();
+//                ArrayList<ArrayDimension> dims = ta.getDimensions();
+//
+//                for (i = 0; i < ta.getNoOfDimensions(); i++) {
+//                    ErrorStack.enter(dims.get(i).getCtx(), "array boundary");
+//                    if (dims.get(i).getLowerBoundary() > dims.get(i).getUpperBoundary()) {
+//                        ErrorStack.add("lower boundary must not exceed upper boundary");
+//                    }
+//                    ErrorStack.leave();
+//                }
+//
+//            }
+//        }
+//
+//
+//        return null;
+//    }
 
 
     @Override
