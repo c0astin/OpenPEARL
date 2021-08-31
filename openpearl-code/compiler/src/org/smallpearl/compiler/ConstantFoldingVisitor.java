@@ -135,103 +135,92 @@ String s = ctx.getText();
     @Override
     public Void visitConstant(SmallPearlParser.ConstantContext ctx) {
         Log.debug("ConstantFoldingVisitor:visitConstant:ctx" + CommonUtils.printContext(ctx));
-
-            String s = ctx.getText();
-                    
-        
-        if (ctx.durationConstant() != null) {
-            ConstantDurationValue cv =
-                    CommonUtils.getConstantDurationValue(ctx.durationConstant(), 1);
-
-            //        ASTAttribute expressionResult = new ASTAttribute( new TypeDuration(),true);
-
-            ASTAttribute attr = m_ast.lookup(ctx);
-
-            if (attr == null) {
-                ErrorStack.enter(ctx);
-                ErrorStack.addInternal("no ASTAttributes found for '" + ctx.getText() + "'");
-                ErrorStack.leave();
-                return null;
-            }
-
-            attr.setConstantDurationValue(cv);
-
-
-        } else if (ctx.floatingPointConstant() != null) {
-            try {
-                double value =
-                        CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
-                Integer precision = CommonUtils.getFloatingPointConstantPrecision(
-                        ctx.floatingPointConstant(), Defaults.FLOAT_SHORT_PRECISION);
-                ASTAttribute attr = m_ast.lookup(ctx);
-               
-                if (attr == null) {
-                    ErrorStack.addInternal(ctx,"ConstantFolding","@170: no ASTAttributes found for '" + ctx.getText() + "'");
-                    return null;
-                }
-
-                //attr.setConstantFloatValue(new ConstantFloatValue(value, precision));
-                //m_ast.put(ctx, expressionResult);
-                m_ast.put(ctx, attr);
-            } catch (NumberFormatException ex) {
-                ErrorStack.enter(ctx.floatingPointConstant());
-                ErrorStack
-                        .addInternal("bad number '" + ctx.floatingPointConstant().getText() + "'");
-                ErrorStack.leave();
-                return null;
-                // throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
-        } else if (ctx.timeConstant() != null) {
-            Log.error("missing code for timeConstant");
-        } else if (ctx.stringConstant() != null) {
-            Log.error("missing code for StringLiteral");
-        } else if (ctx.bitStringConstant() != null) {
-            Log.error("missing code for BitStringLiteral");
-        } else if (ctx.fixedConstant() != null) {
-            try {
-                long value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
-
-                int precision = m_currentSymbolTable.lookupDefaultFixedLength();
-
-                if (ctx.fixedConstant().fixedNumberPrecision() != null) {
-                    precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision()
-                            .IntegerConstant().toString());
-                } else {
-
-                    
-                    
-                    if (m_currFixedLength != null) {
-                        precision = m_currFixedLength;
-                    }
-                    // no explicit precision given
-
-                    precision = Long.toBinaryString(Math.abs(value)).length();
-
-                    if (value < 0) {
-                        precision++;
-                    }
-                }
-                Log.debug("ConstantFoldingVisitor:visitLiteral:precision=" + precision);
-                ASTAttribute attr = m_ast.lookup(ctx);
-
-                if (attr == null) {
-                    ErrorStack.enter(ctx);
-                    ErrorStack.addInternal("no ASTAttributes found for '" + ctx.getText() + "'");
-                    ErrorStack.leave();
-                    return null;
-                    //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-                }
-
-                attr.setConstantFixedValue(new ConstantFixedValue(value,precision));
-            } catch (NumberFormatException ex) {
-                ErrorStack.enter(ctx.fixedConstant());
-                ErrorStack.addInternal("bad number '" + ctx.fixedConstant().getText() + "'");
-                ErrorStack.leave();
-                return null;
-                //  throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-            }
+        ASTAttribute attr = m_ast.lookup(ctx);
+        if (attr == null) {
+            ErrorStack.addInternal(ctx,"ConstantFolding","@140: no ASTAttributes found for '" + ctx.getText() + "'");
+            return null;
         }
+        if (attr.getConstant()==null) {
+            ErrorStack.addInternal(ctx,"ConstantFolding","@144: no constant entry set in ASTAttributes for '" + ctx.getText() + "'");
+            return null;
+        }
+        
+        // all constant values are already added to ASTAttributes by ExpressionTypeVisitor
 
+
+//        if (ctx.durationConstant() != null) {
+//            ConstantDurationValue cv = attr.getConstantDurationValue();
+//        } else if (ctx.floatingPointConstant() != null) {
+//            try {
+//                double value =
+//                        CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+//                Integer precision = CommonUtils.getFloatingPointConstantPrecision(
+//                        ctx.floatingPointConstant(), Defaults.FLOAT_SHORT_PRECISION);
+//                
+//               
+//
+//                //attr.setConstantFloatValue(new ConstantFloatValue(value, precision));
+//                //m_ast.put(ctx, expressionResult);
+//                m_ast.put(ctx, attr);
+//            } catch (NumberFormatException ex) {
+//                ErrorStack.enter(ctx.floatingPointConstant());
+//                ErrorStack
+//                        .addInternal("bad number '" + ctx.floatingPointConstant().getText() + "'");
+//                ErrorStack.leave();
+//                return null;
+//                // throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//            }
+//        } else if (ctx.timeConstant() != null) {
+//            Log.error("missing code for timeConstant");
+//        } else if (ctx.stringConstant() != null) {
+//            Log.error("missing code for StringLiteral");
+//        } else if (ctx.bitStringConstant() != null) {
+//            Log.error("missing code for BitStringLiteral");
+//        } else if (ctx.fixedConstant() != null) {
+//            try {
+//                long value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
+//
+//                int precision = m_currentSymbolTable.lookupDefaultFixedLength();
+//
+//                if (ctx.fixedConstant().fixedNumberPrecision() != null) {
+//                    precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision()
+//                            .IntegerConstant().toString());
+//                } else {
+//
+//                    
+//                    
+//                    if (m_currFixedLength != null) {
+//                        precision = m_currFixedLength;
+//                    }
+//                    // no explicit precision given
+//
+//                    precision = Long.toBinaryString(Math.abs(value)).length();
+//
+//                    if (value < 0) {
+//                        precision++;
+//                    }
+//                }
+//                Log.debug("ConstantFoldingVisitor:visitLiteral:precision=" + precision);
+//                ASTAttribute attrp = m_ast.lookup(ctx);
+//
+//                if (attrp == null) {
+//                    ErrorStack.enter(ctx);
+//                    ErrorStack.addInternal("no ASTAttributes found for '" + ctx.getText() + "'");
+//                    ErrorStack.leave();
+//                    return null;
+//                    //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//                }
+//
+//                attr.setConstantFixedValue(new ConstantFixedValue(value,precision));
+//            } catch (NumberFormatException ex) {
+//                ErrorStack.enter(ctx.fixedConstant());
+//                ErrorStack.addInternal("bad number '" + ctx.fixedConstant().getText() + "'");
+//                ErrorStack.leave();
+//                return null;
+//                //  throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+//            }
+//        }
+//
         return null;
     }
 
