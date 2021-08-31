@@ -31,19 +31,15 @@ package org.smallpearl.compiler.SemanticAnalysis;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.smallpearl.compiler.*;
-import org.smallpearl.compiler.Exception.DationDeclarationNotAllowedHereException;
-import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
-import org.smallpearl.compiler.Exception.NumberOfInitializerMismatchException;
 import org.smallpearl.compiler.SmallPearlParser.InitElementContext;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SemaphoreEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
-import org.stringtemplate.v4.ST;
-
 import java.util.ArrayList;
 import java.util.List;
+
 /*
  * current state
  * <ol>
@@ -226,8 +222,7 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
             TypeDefinition tVar = var.getType();
             if (tVar instanceof TypeArray) {
                 requiredNumberOfInitializers = ((TypeArray) tVar).getTotalNoOfElements();
-//                System.out.println("Array " + var.getName() + " init "
-//                        + initElements.get(nextInitializer).getText());
+
                 for (int i = 0; i < requiredNumberOfInitializers
                         && nextInitializer < initElements.size(); i++) {
                     ASTAttribute attr = m_ast.lookup(initElements.get(nextInitializer));
@@ -236,7 +231,15 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
                     nextInitializer++;
                 }
             } else if (tVar instanceof TypeStructure) {
-                ErrorStack.addInternal(var.getCtx(), "ChackVariableDeclaration",
+                TypeStructure ts = (TypeStructure)tVar;
+                requiredNumberOfInitializers = ts.getTotalNoOfElements();
+                if (requiredNumberOfInitializers > initElements.size()) {
+                    ErrorStack.add(ctx, "INIT", "all STRUCT members must have initialiser");
+                }
+                if (requiredNumberOfInitializers < initElements.size()) {
+                    ErrorStack.add(ctx, "INIT", "too many initialisers");
+                }
+                ErrorStack.addInternal(var.getCtx(), "CheckVariableDeclaration",
                         "STRUCT +INIT not supported yet");
             } else {
                 // scalar type
@@ -486,35 +489,35 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
 //        return null;
 //    }
 
-    @Override
-    public Void visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
-        for (int i = 0; i < ctx.ID().size(); i++) {
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().get(i).toString());
-
-            if (entry == null || !(entry instanceof VariableEntry)) {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-                        ctx.start.getCharPositionInLine());
-            }
-
-            VariableEntry variableEntry = (VariableEntry) entry;
-
-            if (variableEntry.getType() instanceof TypeArray) {
-                ArrayList<ST> initElementList = null;
-
-                if (variableEntry.getType() instanceof TypeArray) {
-                    TypeArray type = (TypeArray) variableEntry.getType();
-                } else {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-                            ctx.start.getCharPositionInLine());
-                }
-
-                if (ctx.initialisationAttribute() != null) {
-                }
-
-            }
-        }
-
-        return null;
-    }
+//    @Override
+//    public Void visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
+//        for (int i = 0; i < ctx.ID().size(); i++) {
+//            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().get(i).toString());
+//
+//            if (entry == null || !(entry instanceof VariableEntry)) {
+//                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+//                        ctx.start.getCharPositionInLine());
+//            }
+//
+//            VariableEntry variableEntry = (VariableEntry) entry;
+//
+//            if (variableEntry.getType() instanceof TypeArray) {
+//                ArrayList<ST> initElementList = null;
+//
+//                if (variableEntry.getType() instanceof TypeArray) {
+//                    TypeArray type = (TypeArray) variableEntry.getType();
+//                } else {
+//                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+//                            ctx.start.getCharPositionInLine());
+//                }
+//
+//                if (ctx.initialisationAttribute() != null) {
+//                }
+//
+//            }
+//        }
+//
+//        return null;
+//    }
 
 }
