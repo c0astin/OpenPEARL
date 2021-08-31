@@ -4804,6 +4804,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         return dationSpecifications;
     }
 
+/*
     @Override
     public ST visitDationDenotation(SmallPearlParser.DationDenotationContext ctx) {
        
@@ -4879,6 +4880,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         return null;
     }
+*/
 
     @Override
     public ST visitTypeDation(SmallPearlParser.TypeDationContext ctx) {
@@ -5812,7 +5814,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         return st;
     }
-
 
     private ST traverseNameForStruct(SmallPearlParser.NameContext ctx, TypeDefinition type) {
         ST st = m_group.getInstanceOf("Name");

@@ -499,6 +499,7 @@ arrayDenotation :
 //  | TypeBitString | TypeCharacterString
 //  | TypeDefinition
 //  | REF { TypeDation | SEMA | BOLT
+//  | REF { TypeDation | SEMA | BOLT
 //  | typeRefedure | TASK | CHAR()
 //  ??? INTERRUPT, IPRT,SIGNAL
 ////////////////////////////////////////////////////////////////////////////////
