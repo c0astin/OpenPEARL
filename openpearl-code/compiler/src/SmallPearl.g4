@@ -480,7 +480,7 @@ structureDenotationS :
 arrayVariableDeclaration :
     ( 'DECLARE' | 'DCL' ) arrayDenotation ( ',' arrayDenotation )* ';'
     ;
-*/
+
 ////////////////////////////////////////////////////////////////////////////////
 // ArrayDenotation ::=
 //   OneIdentifierOrList DimensionAttribute [ INV ] TypeAttributeForArray
@@ -515,7 +515,7 @@ typeAttributeForArray :
     | typeReference
     | typeStructure
     ;
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 // TypeReference ::=
 //   REF
