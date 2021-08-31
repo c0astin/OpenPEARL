@@ -3017,6 +3017,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         } else if (ctx.timeConstant() != null) {
             expressionResult = new ASTAttribute(new TypeClock(), true);
             ConstantClockValue c = CommonUtils.getConstantClockValue(ctx.timeConstant());
+            c = (ConstantClockValue)(m_constantPool.add(c));
             expressionResult.setConstant(c);
             m_ast.put(ctx, expressionResult);
         } else if (ctx.stringConstant() != null) {
