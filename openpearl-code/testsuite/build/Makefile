@@ -20,7 +20,7 @@
 include ../../configuration/.config
  
 DONOTBUILD= 030_signals 031_signalsInduce  \
-	851_ref_deref
+	800_struct_decl 	851_ref_deref
 
 # on ESP32 we have no Disc
 DONOTBUILDESP32= 030_signals 031_signalsInduce  \

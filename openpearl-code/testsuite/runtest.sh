@@ -13,7 +13,7 @@ do
    nooftests=$(($nooftests + 1))
 
   if [ -f $test ] ; then
-     ./$test > $test.log
+     ./$test >> $test.log 2>>$test.log
      rc=$?
      if [ $rc -ne 0 ] ; then
 	    printf "%-40s :  *** fail ***\n" $test
