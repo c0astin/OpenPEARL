@@ -54,7 +54,6 @@ else
 endif
 
 install: prl configuration/include/autoconf.h  flashinterface.inc 
-	(cd errorChecker; make ; )
 	(cd runtime; make clean; )
 	(cd imc3; make clean; )
 	(cd imc3; make install; )
