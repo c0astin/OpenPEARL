@@ -6,7 +6,7 @@ PROBLEM;
    DCL illegaäl FIXED;
 /*$
              ^
-ERROR : Syntax error :no viable alternative at input 'DCL illegaä'
+ERROR : Syntax error :mismatched input 'ä' expecting {'(', 'INV', 'FIXED', 'FLOAT', 'BIT', 'CHARACTER', 'CHAR', 'DURATION', 'DUR', 'CLOCK', 'STRUCT', 'REF', 'SEMA', 'BOLT', 'DATION'}
 */
 
 MODEND;
