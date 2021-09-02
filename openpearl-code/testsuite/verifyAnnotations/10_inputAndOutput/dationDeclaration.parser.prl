@@ -20,6 +20,11 @@ ERROR : Syntax error :mismatched input ';' expecting {'GLOBAL', 'CREATED'}
 /*$                                          ^ 
 ERROR : Syntax error :mismatched input 'DIM' expecting {'GLOBAL', 'CREATED'}
 */
-
+/*$                                                ^
+ERROR : Syntax error :mismatched input '*' expecting {'(', ID}
+*/
+/*$                                                  ^
+ERROR : Syntax error :mismatched input '*' expecting {'(', ID}
+*/
 MODEND;
 
