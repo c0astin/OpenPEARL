@@ -133,47 +133,9 @@ public class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<Vo
 
         if (ctx.fixedConstant() != null) {
             curval = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
-            precision = m_currentSymbolTable.lookupDefaultFixedLength();
-
-            if (ctx.fixedConstant().fixedNumberPrecision() != null) {
-                precision = Integer.parseInt(
-                        ctx.fixedConstant().fixedNumberPrecision().IntegerConstant().toString());
-            } else {
-                // walk up the AST and get VariableDenotationContext:
-                ParserRuleContext sctx = ctx.getParent();
-                while (sctx != null
-                        && !((sctx instanceof SmallPearlParser.VariableDenotationContext))) {
-//                                || (sctx instanceof SmallPearlParser.ArrayDenotationContext))) {
-                    sctx = sctx.getParent();
-                }
-
-                if (sctx != null) {
-                    if (sctx instanceof SmallPearlParser.VariableDenotationContext) {
-                        if (((SmallPearlParser.VariableDenotationContext) sctx).problemPartDataAttribute() != null) {
-                        SmallPearlParser.TypeAttributeContext typeAttributeContext =
-                                ((SmallPearlParser.VariableDenotationContext) sctx).problemPartDataAttribute().typeAttribute();
-                        if (typeAttributeContext.simpleType() != null) {
-                            SmallPearlParser.SimpleTypeContext simpleTypeContext =
-                                    typeAttributeContext.simpleType();
-
-                            if (simpleTypeContext.typeInteger() != null) {
-                                SmallPearlParser.TypeIntegerContext typeIntegerContext =
-                                        simpleTypeContext.typeInteger();
-
-                                if (typeIntegerContext.mprecision() != null) {
-                                    precision = Integer.parseInt(typeIntegerContext.mprecision()
-                                            .integerWithoutPrecision().IntegerConstant()
-                                            .toString());
-                                }
-                            }
-                        }
-                        }
-//                    } else if (sctx instanceof SmallPearlParser.ArrayDenotationContext) {
-                    }
-                }
-            }
         }
-        value = new ConstantFixedValue(curval, precision);
+
+        value = new ConstantFixedValue(curval);
 
         if (m_enterResultinConstantPool) {
             m_constantPoolVisitor.add(value);

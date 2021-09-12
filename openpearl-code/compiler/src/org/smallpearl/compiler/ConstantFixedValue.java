@@ -35,7 +35,7 @@ public class ConstantFixedValue extends ConstantValue {
 
     ConstantFixedValue(Integer value) {
         m_value = value.longValue();
-        m_precision = Long.toBinaryString(Math.abs(m_value)).length();
+        m_precision = calcPrecision();
     }
 
     ConstantFixedValue(Integer value, Integer precision) {
@@ -50,7 +50,7 @@ public class ConstantFixedValue extends ConstantValue {
 
     ConstantFixedValue(Long value) {
         m_value = value;
-        m_precision = Long.toBinaryString(Math.abs(m_value)).length();
+        m_precision = calcPrecision();
     }
 
     ConstantFixedValue(Long value, Integer precision) {
@@ -68,7 +68,6 @@ public class ConstantFixedValue extends ConstantValue {
         m_precision = precision;
     }
 
-
     public long getValue() {
         return m_value;
     }
@@ -79,6 +78,15 @@ public class ConstantFixedValue extends ConstantValue {
 
     public void setPrecision(int precision) {
         m_precision = precision;
+    }
+
+    private int calcPrecision() {
+        int precision = Long.toBinaryString(Math.abs(m_value)).length();
+        if (m_value < 0) {
+            precision++;
+        }
+
+        return precision;
     }
 
     public String getBaseType() {

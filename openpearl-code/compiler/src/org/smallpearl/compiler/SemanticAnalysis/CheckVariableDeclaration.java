@@ -241,11 +241,13 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
                 }
                 ErrorStack.addInternal(var.getCtx(), "CheckVariableDeclaration",
                         "STRUCT +INIT not supported yet");
+            } else if (tVar instanceof TypeReference) {
+                //TODO: Check for valid reference
+                TypeReference ts = (TypeReference)tVar;
+                nextInitializer++;
             } else {
                 // scalar type
                 requiredNumberOfInitializers = 1;
-
-                
                 ASTAttribute attr = m_ast.lookup(initElements.get(nextInitializer));
                 if (!attr.isReadOnly()) {
                     ErrorStack.add(initElements.get(nextInitializer),"INIT","must be INV");
@@ -254,11 +256,10 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
                 nextInitializer++;
             }
         }
+
         if (nextInitializer < initElements.size()) {
             ErrorStack.add(ctx, "INIT", "too many initialisiers");
         }
-
-
 
         // check type of initializers --> all identifiers have the same type 
         // => use first identifier

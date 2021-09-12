@@ -1570,11 +1570,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             }
         }
 
-        //        if ( ctx.stringConstant() != null) {
-        //            constant = new
-        // ConstantCharacterValue(ctx.stringConstant().StringLiteral().toString());
-        //        }
-        //        else
         if (ctx.fixedConstant() != null) {
             long curval = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
             int curlen = m_currentSymbolTable.lookupDefaultFixedLength();
@@ -1675,7 +1670,6 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
         return constant;
     }
-
 
     @Override
     public Void visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
