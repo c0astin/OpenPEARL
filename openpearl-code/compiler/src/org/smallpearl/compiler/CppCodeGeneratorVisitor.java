@@ -4559,20 +4559,20 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 long length = Defaults.FLOAT_PRECISION;
                 if (ctx.simpleType().typeFloatingPointNumber().length() != null) {
                     length = Integer.parseInt(
-                            ctx.simpleType().typeFloatingPointNumber().length().toString());
+                            ctx.simpleType().typeFloatingPointNumber().length().IntegerConstant().toString());
                 }
                 typeName = "pearlrt::Float<" + length + ">";
             } else if (ctx.simpleType().typeBitString() != null) {
                 long length = Defaults.BIT_LENGTH;
                 if (ctx.simpleType().typeBitString().length() != null) {
-                    length = Integer.parseInt(ctx.simpleType().typeBitString().length().toString());
+                    length = Integer.parseInt(ctx.simpleType().typeBitString().length().IntegerConstant().toString());
                 }
                 typeName = "pearlrt::BitString<" + length + ">";
             } else if (ctx.simpleType().typeCharacterString() != null) {
                 long length = Defaults.CHARACTER_LENGTH;
                 if (ctx.simpleType().typeCharacterString().length() != null) {
                     length = Integer
-                            .parseInt(ctx.simpleType().typeCharacterString().length().toString());
+                            .parseInt(ctx.simpleType().typeCharacterString().length().IntegerConstant().toString());
                 }
                 typeName = "pearlrt::Character<" + length + ">";
             } else {
@@ -5812,7 +5812,6 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 
         return st;
     }
-
 
     private ST traverseNameForStruct(SmallPearlParser.NameContext ctx, TypeDefinition type) {
         ST st = m_group.getInstanceOf("Name");

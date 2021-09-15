@@ -424,47 +424,8 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void>
 
                 value = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
 
-                if (ctx.fixedConstant().fixedNumberPrecision() != null) {
-                    precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision()
-                            .IntegerConstant().toString());
-                } else {
-                    // walk up the AST and get VariableDenotationContext:
-                    ParserRuleContext sctx = ctx.getParent();
-                    while (sctx != null
-                            && !((sctx instanceof SmallPearlParser.VariableDenotationContext))) {
-//                                    || (sctx instanceof SmallPearlParser.ArrayDenotationContext))) {
-                        sctx = sctx.getParent();
-                    }
-
-                    if (sctx != null) {
-                        if (sctx instanceof SmallPearlParser.VariableDenotationContext) {
-                            SmallPearlParser.ProblemPartDataAttributeContext p = ((SmallPearlParser.VariableDenotationContext) sctx).problemPartDataAttribute();
-                            if ( p!= null) {
-                               SmallPearlParser.TypeAttributeContext typeAttributeContext =p.typeAttribute();
-                            
-                            if (typeAttributeContext.simpleType() != null) {
-                                SmallPearlParser.SimpleTypeContext simpleTypeContext =
-                                        typeAttributeContext.simpleType();
-
-                                if (simpleTypeContext.typeInteger() != null) {
-                                    SmallPearlParser.TypeIntegerContext typeIntegerContext =
-                                            simpleTypeContext.typeInteger();
-
-                                    if (typeIntegerContext.mprecision() != null) {
-                                        precision = Integer.parseInt(typeIntegerContext.mprecision()
-                                                .integerWithoutPrecision().IntegerConstant()
-                                                .toString());
-                                    }
-                                }
-                            }
-                            }
-   //                     } else if (sctx instanceof SmallPearlParser.ArrayDenotationContext) {
-                        }
-                    }
-                }
-
                 value = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
-                m_constantPool.add(new ConstantFixedValue(value, precision));
+                m_constantPool.add(new ConstantFixedValue(value));
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(),
                         ctx.start.getCharPositionInLine());

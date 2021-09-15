@@ -286,9 +286,11 @@ String s = ctx.getText();
             if (se != null) {
                 if (se instanceof VariableEntry) {
                     Initializer init = ((VariableEntry) se).getInitializer();
-                    ConstantValue cv = ((SimpleInitializer) init).getConstant();
-                    if (cv instanceof ConstantFixedValue) {
-                        return (ConstantFixedValue) cv;
+                    if (init != null) {
+                        ConstantValue cv = ((SimpleInitializer) init).getConstant();
+                        if (cv instanceof ConstantFixedValue) {
+                            return (ConstantFixedValue) cv;
+                        }
                     }
                 }
             }
