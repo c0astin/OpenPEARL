@@ -2065,7 +2065,6 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                 "ExpressionTypeVisitor:visitSizeofExpression:ctx" + CommonUtils.printContext(ctx));
 
         ErrorStack.enter(ctx.getParent()); // TODO: MS Wrong ctx ?!?
-
         TypeFixed type = new TypeFixed(Defaults.FIXED_LENGTH);
         ASTAttribute expressionResult = new ASTAttribute(type);
         expressionResult.setReadOnly(true);
@@ -2073,7 +2072,8 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         if (ctx.name() != null) {
             SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.name().ID().getText());
             if (entry != null && entry instanceof VariableEntry) {
-                expressionResult.setVariable((VariableEntry) entry);
+                ASTAttribute nameAttr = new ASTAttribute(type);
+                m_ast.put(ctx.name(), nameAttr);
             } else {
                 ErrorStack.add("'" + ctx.name().ID().getText() + "' is not defined ***");
             }

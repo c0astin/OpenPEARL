@@ -4528,19 +4528,11 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
     @Override
     public ST visitSizeofExpression(SmallPearlParser.SizeofExpressionContext ctx) {
         ST st = m_group.getInstanceOf("SIZEOF");
+        ASTAttribute attr = m_ast.lookup(ctx);
 
         if (ctx.name() != null) {
-            ASTAttribute attr = m_ast.lookup(ctx);
-            if (attr.getVariable() != null) {
-                VariableEntry ve = attr.getVariable();
-                String name = ve.getName();
-                if (ve.getType() instanceof TypeArray) {
-                    st.add("operand", "data_" + name);
-                } else {
-                    st.add("operand", getUserVariable(name));
-                }
-            }
-        } else if (ctx.simpleType() != null) {
+            st.add("operand", visitName(ctx.name()));
+         } else if (ctx.simpleType() != null) {
             String typeName = "";
             if (ctx.simpleType().typeInteger() != null) {
                 long length = Defaults.FIXED_LENGTH;
