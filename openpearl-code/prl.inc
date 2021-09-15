@@ -22,6 +22,7 @@ while [ "$1" != "" ] ; do
         -i) INTERFACE=$2;  shift 2;;
         -c) COMPILEONLY=1;        shift;;
         -r) RUN=1;                shift;;
+        -v) VERBOSE=1;            shift;;
         -nosys) NOSYSTEMPART=1;   shift;;
         -h) HELP=1;        shift;;
         -add) CONFIGELEMENT=$2;  shift 2;;
@@ -33,7 +34,6 @@ while [ "$1" != "" ] ; do
             INPUT=$1; shift;;
      esac
 done
-
 
 #echo "HELP=" $HELP 
 #echo PLATFORM = $PLATFORM
@@ -52,6 +52,7 @@ then
    echo "    -i <interface> download interface for MCU (default /dev/ttyUSB0)" 
    echo "    -nosys do not invoke the imc - no system part is used"
    echo "    -add <configuration> add configuration element by imc"
+   echo "    -v verbose: prints c++ compiler output to console"
    echo "    -h this page" 
    echo "   Example: "
    echo "     prl x.prl -c   : compile only until C++ source"
@@ -96,7 +97,6 @@ if [ "$COMPILEONLY" = "1" ] ; then
    fi
 fi
 
-
 if [ "$inp_ext" = "prl" ] ; then
    prlcc=1
    if [ "$COMPILEONLY" = "1" ] ; then
@@ -136,7 +136,6 @@ fi
 # --------------------
 # evaluate flags and build the desired targets
 
-
 if [ "$prlcc" = "1" ] ; then 
 #   echo "PRL-> C++"
  #include "compiler/prl_cc.inc"
@@ -151,8 +150,6 @@ fi
 if [ "$COMPILEONLY" = "1" ] ; then
    exit 0
 fi
-
-
 
 if [ "$NOSYSTEMPART" != "1" ] ; then
 #   echo "run IMC"
@@ -169,6 +166,11 @@ fi
 if [ "$ccbin" = "1" ] ; then 
   #  echo "C++->BIN"
 #include "runtime/cc_bin.inc"
+
+  if [ "$VERBOSE" = "1" ] ; then
+      cat $fn.log
+  fi
+    
   if [ $rc -ne 0 ]
   then
      echo "compilation stage 2 terminated with errors"
@@ -176,7 +178,6 @@ if [ "$ccbin" = "1" ] ; then
      exit $rc
   fi
 fi
-
 
 if [ "$runbin" = "1" ] ; then 
    #include "runtime/run_bin.inc"
