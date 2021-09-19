@@ -1,3 +1,0 @@
-051_fixed_assign_char.prl:10:6: ERROR : cannot assign CHAR(1) to FIXED(15)
-   f1 := f2;
-      ^

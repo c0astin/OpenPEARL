@@ -1,3 +1,0 @@
-022_fixed_init_clock.prl:5:22: ERROR : init element has incompatible type
-DCL f FIXED(15) INIT(12:00:00);
-                     ^

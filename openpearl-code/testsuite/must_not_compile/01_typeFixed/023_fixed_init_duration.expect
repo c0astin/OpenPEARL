@@ -1,3 +1,0 @@
-023_fixed_init_duration.prl:5:22: ERROR : init element has incompatible type
-DCL f FIXED(15) INIT(2 MIN);
-                     ^

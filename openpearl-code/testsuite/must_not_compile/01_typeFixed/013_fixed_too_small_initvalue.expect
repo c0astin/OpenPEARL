@@ -1,3 +1,0 @@
-013_fixed_too_small_initvalue.prl:5:22: ERROR : init element out of data range
-DCL f FIXED(15) INIT(-32769);
-                    ^
