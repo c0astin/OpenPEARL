@@ -5195,7 +5195,8 @@ TickType_t uxReturn;
 
 UBaseType_t uxTaskGetCurrentFreeStack( void )
 {
-    UBaseType_t x; // place one value on the stack
+    volatile UBaseType_t x; // place one value on the stack
+		taskENTER_CRITICAL(&xTaskQueueMutex);
     #if( portSTACK_GROWTH < 0 )
     {
        #ifdef portNUM_PROCESSORS
@@ -5213,6 +5214,7 @@ UBaseType_t uxTaskGetCurrentFreeStack( void )
        #endif
     }
     #endif
+	taskEXIT_CRITICAL(&xTaskQueueMutex);
     return x;
 }
 // OpenPEARL addon end

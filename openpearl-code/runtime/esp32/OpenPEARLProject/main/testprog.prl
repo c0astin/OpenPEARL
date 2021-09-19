@@ -1,5 +1,6 @@
 MODULE(testProg);
 SYSTEM;
+  SendXML;
   Esp32WifiConfig(' ',' ');
 MODEND;
 

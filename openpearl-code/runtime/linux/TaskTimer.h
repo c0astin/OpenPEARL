@@ -71,6 +71,13 @@ namespace pearlrt {
       */
    private:
       int signalNumber;
+      timer_t timer;     ///< the timer object
+      struct itimerspec its;  ///< the timer data required in triggered when
+   protected:
+      void setTimer(int condition, 
+            Duration after, Duration all, int count);
+      int startTimer();
+      int stopTimer();
    public:
       /**
       initialize the timer facility
@@ -100,8 +107,9 @@ namespace pearlrt {
       */
       void create(TaskCommon * task, int signalNumber, TimerCallback cb);
 
-   };
+      void detailedStatus(char*id, char* line);
 
+   };
 
    /**
    @}

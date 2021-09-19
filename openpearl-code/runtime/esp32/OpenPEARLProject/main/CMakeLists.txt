@@ -79,6 +79,7 @@ set(srcs
     common/FullDuplexDationAbortNB.cc
     common/SampleBasicDation.cc
     common/LM75.cc
+    common/SendXML.cc
     # ---
     addOns/timer.c
     addOns/service.c

@@ -174,15 +174,19 @@ doc:
 
 # setup links to other OpenPEARL groups
 OpenPEARLProject/main/PearlIncludes.h:
+	rm -f OpenPEARLProject/main/PearlIncludes.h
 	ln -s ../../pearl.h OpenPEARLProject/main/PearlIncludes.h
 
 OpenPEARLProject/main/PEARL:
+	@rm -f OpenPEARLProject/main/PEARL
 	ln -s ../../../FreeRTOS/PEARL OpenPEARLProject/main/PEARL
 
 OpenPEARLProject/main/addOns:
+	@rm -f OpenPEARLProject/main/addOns
 	ln -s ../../../FreeRTOS/addOns OpenPEARLProject/main/addOns
 
 OpenPEARLProject/main/common:
+	@rm -f OpenPEARLProject/main/common
 	ln -s ../../../common OpenPEARLProject/main/common
 
 phony += links
@@ -243,7 +247,7 @@ removeSignalsHhHcc:
 	rm -f ../common/Signals.hh ../common/Signals.hcc
 
 phony += install
-install: removeSignalsHhHcc OpenPEARLProject esp32.xml cc_bin run_bin
+install: patch removeSignalsHhHcc OpenPEARLProject esp32.xml cc_bin run_bin
 	echo [install]
 	ar d OpenPEARLProject/build/esp-idf/main/libmain.a testprog.cc.obj system.cc.obj
 	(cd OpenPEARLProject; ./cp.cmd `pwd`)

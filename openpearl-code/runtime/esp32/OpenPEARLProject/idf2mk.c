@@ -1,7 +1,7 @@
 /*
 convert idf link command into Makefile version
 * to create the input file
-  * just invoke idf.py -v build in the OpnePEARLProject folder
+  * just invoke idf.py -v build in the OpenPEARLProject folder
   * copy the prelast (eq: [70/71] action into a text file and remove
     text before the g++ invocation and any pending text after the link command
 * the input file contains archives in the current project and

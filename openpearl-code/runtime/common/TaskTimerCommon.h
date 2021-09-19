@@ -71,8 +71,10 @@ namespace pearlrt {
       int countsBackup;  ///<number of timer periods to repeat the action
       TaskCommon* task;  ///< task to be treated by the callback
       TimerCallback callback; ///< function to invoke if time is passed
+#if 0
       timer_t timer;     ///< the timer object
       struct itimerspec its;  ///< the timer data required in triggered when
+#endif
 
    public:
       /**
@@ -113,6 +115,9 @@ namespace pearlrt {
          Clock until,
          Duration during);
 
+      virtual void setTimer(int condition, 
+            Duration after, Duration all, int count) = 0;
+
       /**
       cancel the timer.
       A stopped timer may be started again.
@@ -123,6 +128,7 @@ namespace pearlrt {
 
       \returns 0 on success; <br>-1 on error
       */
+
       int cancel();
 
       /**
@@ -135,6 +141,7 @@ namespace pearlrt {
       \returns 0 on success; -1 else
       */
       int start();
+      virtual int startTimer() = 0;
 
       /** check if timer is active
 
@@ -168,6 +175,7 @@ namespace pearlrt {
       \returns 0 on success; <br>-1 on error
       */
       int stop();
+      virtual int stopTimer()=0;
  
    public:
       /**

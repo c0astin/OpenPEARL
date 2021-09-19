@@ -58,31 +58,45 @@ namespace pearlrt {
    This class provides the timer functions required for task scheduling.
 
    A timer may be set using the PEARL scheduling parameters.
-   A timer my be started. Using the start operation repeatedly will
+   A timer may be started. Using the start operation repeatedly will
    restart the timer if it is not expired, or will restart it.
    A timer may be cancelled to disable any further start unless
    it is set again.
 
-   The linux itimer facility is used to realize the timers.
-   These itimers are implemented in the FreeRTOS/addOns/timer.c.
+   FreeRTOS timers are used. They operate on tick base. 
+   For a AFTER ALL-construct the timer ist restarted in the first hit
+   to the ALL-period.
 
-   The FreeRTOS variant don't emit a signal, they invoke a callback
-   function at the expiration of a timer.
-   The timer thread delegates the treatment
-   of the timer event of a callback function, which is specified in the
-   create()-method
    */
    class TaskTimer : public TaskTimerCommon {
    public:
+
       /**
       pointer to a callback function defined for easier coding
       */
       typedef void (*TimerCallback)(TaskCommon*);
+
+      typedef void (*TimerCallbackFunction_t)( FakeTimerHandle_t xTimer );
+
    private:
-      struct {
-      		  void *cb;
-      		  void *th;
-      	  }timer_callback;
+      FakeTimerHandle_t timerHandle;
+      FakeStaticTimer_t timerBuffer;
+
+      enum TimerStates{STOPPED, DOINGAFTER, DOINGALL} state;
+
+      // information needed for AFTER-ALL statements
+      // we must reconfigure the timer after the initial delay
+      Duration all; 
+      int condition; // required to know if AFTER/ALL is used
+
+      static void callbackFromFreeRTOS(FakeTimerHandle_t time);
+
+   protected:
+      void setTimer(int condition,
+            Duration after, Duration all, int count);
+      int startTimer();
+      int stopTimer();
+
    public:
 
       /**
@@ -112,6 +126,9 @@ namespace pearlrt {
              of the timer
       */
       void create(TaskCommon * task, int signalNumber, TimerCallback cb);
+
+      void detailedStatus(char*id, char* line);
+
    };
 
    /** @} */

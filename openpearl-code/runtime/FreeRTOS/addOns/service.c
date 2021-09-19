@@ -50,7 +50,9 @@
 #endif
 
 #ifdef OPENPEARL_ESP32
-#define SERVICE_STACK_SIZE 4000
+//#define SERVICE_STACK_SIZE 4000
+//#define SERVICE_STACK_SIZE (configMINIMAL_STACK_SIZE + 4000)
+#define SERVICE_STACK_SIZE (configMINIMAL_STACK_SIZE + 8000)
 #define STACKLIMIT 500	// limit of minimum free stack for the service task
 #endif
 
@@ -114,21 +116,25 @@ void add_service(ServiceJob * s) {
 
 static void serviceTask(void *pcParameters) {
    int freeStack;
+   int highWaterMark;
    ServiceJob s;
+   static int cnt=0;
 
    while (1) {
       if (!xQueueReceive(serviceQueue, &s, portMAX_DELAY)) {
          printf("error at xQueueReceive\n");
       }
 
-      /*
-      printf("ServiceTask: current free elements: %d and  stack %d elements"
-             " --> invoke job\n",
-              uxQueueSpacesAvailable(serviceQueue), freeStack);
-      */
-      s.job(s.param);
-
       freeStack = uxTaskGetCurrentFreeStack();
+
+
+      highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+
+
+      printf("ServiceTask@1:%d: free queue elements: %d  free stack %d  highWater %d s@%p\n", cnt++,
+              uxQueueSpacesAvailable(serviceQueue), freeStack, highWaterMark, &s);
+	printf("  Job= %p(%p)\n",s.job,s.param);     
+
 
       if (freeStack < STACKLIMIT) {
          printf(
@@ -141,12 +147,20 @@ static void serviceTask(void *pcParameters) {
 //             freeStack);
       }
 
-      freeStack = uxTaskGetStackHighWaterMark(NULL);
+      s.job(s.param);
 
-      if (freeStack < STACKLIMIT) {
+      highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+
+      if (highWaterMark < STACKLIMIT) {
+
+        freeStack = uxTaskGetCurrentFreeStack();
+        printf("ServiceTask@2: free queue elements: %d  free stack %d  highWater %d\n",
+              uxQueueSpacesAvailable(serviceQueue), freeStack, highWaterMark);
+	printf("  Job= %p(%p)\n",s.job,s.param);     
+
          printf("ServiceTask: stack used up to %d free elements"
                 "ServiceTask terminates\n",
-                freeStack);
+                highWaterMark);
          vTaskDelete(NULL);
       } else {
 //       printf("ServiceTask: stack used up to %d free elements\n", freeStack);

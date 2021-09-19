@@ -112,10 +112,9 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             break;
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-    pearlrt::Esp32MqttTcpClient::getInstance()->
-            received(
-             event->topic_len, event->topic, 
-             event->data_len, event->data);
+            pearlrt::Esp32MqttTcpClient::getInstance()-> received(
+             		event->topic_len, event->topic, 
+             		event->data_len, event->data);
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -142,6 +141,7 @@ static void wifiTask(char * brokerIp) {
 
 
    esp_log_level_set("*", ESP_LOG_ERROR);
+   esp_log_level_set("MQTT_CLIENT", ESP_LOG_INFO);
    esp_log_level_set("MQTT_CLIENT", ESP_LOG_INFO);
    esp_log_level_set("wifi", ESP_LOG_INFO);
 
@@ -269,6 +269,9 @@ namespace pearlrt {
          trimString(topic_c,sizeof(topic));
          msg_id = esp_mqtt_client_subscribe((esp_mqtt_client_handle_t)client,
                                            topic_c, 0);
+         if (msg_id == -1) {
+            puts("Esp32Mqtt::subscribe: failed\n");
+         }
        mutex.unlock();
    }
 
@@ -287,6 +290,9 @@ namespace pearlrt {
 //printf("publish(%p,>%s<,>%s<\n", client,topic_c, data_c);
          msg_id = esp_mqtt_client_publish((esp_mqtt_client_handle_t)client,
                            topic_c, data_c, 0, 1, 0);
+         if (msg_id == -1) {
+            puts("Esp32Mqtt::publish: failed\n");
+         }
        mutex.unlock();
    }
 

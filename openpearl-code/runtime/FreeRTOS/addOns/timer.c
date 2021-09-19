@@ -157,7 +157,7 @@ static void retrigger_timer() {
             return;
          }
 
-//         printf("retrigger was too slow --> resumetimertask\n");
+         //printf("retrigger was too slow --> resumetimertask\n");
          resume_timer_task_from_ISR();
          return;
       }
@@ -442,13 +442,13 @@ int timer_settime(const timer_t timerid, const int flags,
 
    timer_init_if_necessary();
 
-   /*
+/*   
    printf("timer_settime(tid=%d val=%ld:%ld rept=%ld:%ld\n", (int)timerid,
                   (long int)value->it_value.tv_sec,
                   (long int)value->it_value.tv_nsec,
                   (long int)value->it_interval.tv_sec,
                   (long int)value->it_interval.tv_nsec);
-   */
+*/  
 
    if (timerid > MAXTIMER) {
       errno = EINVAL;

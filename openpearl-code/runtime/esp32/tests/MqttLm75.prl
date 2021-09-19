@@ -42,17 +42,17 @@ pub: TASK PRIO 1 MAIN;
        seconds = seconds + 1;
 
        REQUEST temp0Mutex;
-       CONVERT 'Temperatur_0=',global_temp_0 
-       TO data BY A, F(5,1);
+       CONVERT global_temp_0 
+       TO data BY F(5,1);
        RELEASE temp0Mutex;
-       PUT 'publish: topic=',topic0,' data=',data TO console BY A,A,SKIP;
+       PUT 'publish: ',topic0,data TO console BY A(15), A(20),X,A(20),SKIP;
        mqttPublish(topic0, data);
 
-       CONVERT 'timestamp=',seconds TO data BY A, F(10);
-       PUT 'publish: topic=', topic1,' data=',data TO console BY A,A,SKIP;
+       CONVERT seconds TO data BY  F(10);
+       PUT 'publish: ', topic1,data TO console BY A(15),A(20),X,A(20),SKIP;
        mqttPublish(topic1, data);
        
-       AFTER 1.0 SEC RESUME;
+       AFTER 0.1 SEC RESUME;
     END;
 END;
 
@@ -83,7 +83,7 @@ readTemp_0: TASK PRIO 1;
      REQUEST temp0Mutex;
      global_temp_0 = t/10;
      RELEASE temp0Mutex;
-     AFTER 0.5 SEC RESUME;
+     AFTER 0.05 SEC RESUME;
   END;
   CLOSE thermometer_0;
 END;

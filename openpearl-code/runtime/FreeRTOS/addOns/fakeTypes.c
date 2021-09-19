@@ -21,6 +21,7 @@ int sizeSTACKTYPE = -1;
 int sizePORTSHORT = -1;
 int sizeUBASETYPE = -1;
 int sizeStaticSemaphoreTYPE = -1;
+int sizeStaticTimerBuffer = -1;
 
 int sizeFATFS = -1;
 int sizeFIL = -1;
@@ -39,6 +40,9 @@ int main() {
     char* stacktype="";
     char* ubasetype="";
     char* uStaticSemaphoreType="";
+    char* staticTimerBuffer="";
+    char* staticTimerHandleType="";
+
     fp = fopen(FILENAME,"r");
 
     // discard the first two lines
@@ -89,6 +93,9 @@ int main() {
        if (strcmp(name,"StaticSemaphoreType") == 0) {
           sizeStaticSemaphoreTYPE = len;
        }     
+       if (strcmp(name,"StaticTimerBuffer") == 0) {
+	   sizeStaticTimerBuffer = len;
+       }
        if (strcmp(name,"FATFS") == 0) {
           sizeFATFS = len;
        }     
@@ -158,10 +165,18 @@ int main() {
    fprintf(fp,"typedef char FakeSemaphoreBuffer_t [%d];\n",
               sizeStaticSemaphoreTYPE );
 
+
+   if (sizeStaticTimerBuffer != -1) {
+      fprintf(fp,"typedef char FakeStaticTimer_t [%d];\n",
+              sizeStaticTimerBuffer );
+      fprintf(fp,"typedef void* FakeTimerHandle_t;\n");
+   }
+
    fprintf(fp,"typedef void* FakeTaskHandle_t;\n");
    fprintf(fp,"typedef struct {uint32_t assertAlign; char data[%d];}"
               " FakeTCB_t;\n",
                (int)(sizeTCB_T-sizeof(uint32_t)));
+
 
    if (sizeFATFS > 0 && sizeFIL >0 && sizeVOLUMES > 0) {
       fprintf(fp,"\n// Chan's FatFS stuff\n");

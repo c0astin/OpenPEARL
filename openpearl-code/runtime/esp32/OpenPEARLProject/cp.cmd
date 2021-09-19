@@ -1,3 +1,5 @@
+echo "copy to /usr/locla/lib/OpenPEARLexp32"
+
 mkdir -p /usr/local/lib/OpenPEARLesp32/prj/xtensa
 cp build/esp-idf/xtensa/libxtensa.a /usr/local/lib/OpenPEARLesp32/prj/xtensa/libxtensa.a
 mkdir -p /usr/local/lib/OpenPEARLesp32/prj/mbedtls

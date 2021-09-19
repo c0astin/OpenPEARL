@@ -72,6 +72,80 @@ namespace pearlrt {
       }
    }
 
+   void TaskTimer::setTimer(int condition,
+            Duration after, Duration all, int count) {
+
+      its.it_value.tv_sec = after.getSec();
+      its.it_value.tv_nsec = after.getUsec() * 1000;
+      // calculate repetition counter for the schedule
+      if (condition & TaskCommon::ALL) {
+         its.it_interval.tv_sec = all.getSec();;
+         its.it_interval.tv_nsec = all.getUsec() * 1000;
+      } else {
+         its.it_interval.tv_sec = 0;
+         its.it_interval.tv_nsec = 0;
+      }
+      // if no initial delay is set --> copy repetition time
+      if (its.it_value.tv_sec == 0 && its.it_value.tv_nsec == 0) {
+         its.it_value.tv_sec = its.it_interval.tv_sec;
+         its.it_value.tv_nsec = its.it_interval.tv_nsec;
+      }
+   }
+
+  int TaskTimer::startTimer() {
+      counts = countsBackup;   // restore number for triggeredActivate
+      Log::debug("%s: TaskTimer::start", task->getName());
+
+      if (its.it_value.tv_sec != 0 || its.it_value.tv_nsec != 0) {
+         if (timer_settime(timer, 0, &its, NULL) == -1) {
+            Log::error("task %s: error setting schedule timer",
+                       task->getName());
+            return (-1);
+         }
+      }
+
+      return 0;
+   }
+
+   int TaskTimer::stopTimer() {
+      // need local variable to keep time settings of the time
+      // unchanged for new start of the timer
+      struct itimerspec its;
+
+      its.it_value.tv_sec = 0;
+      its.it_value.tv_nsec = 0;
+      its.it_interval.tv_sec = 0;
+      its.it_interval.tv_nsec = 0;
+
+      //kill the timer
+      if (timer_settime(timer, 0, &its, NULL) == -1) {
+         Log::error(
+            "task %s: error cancelling timer", task->getName());
+         return (-1);
+      }
+
+      return 0;
+   }
+
+   void TaskTimer::detailedStatus(char *id, char * line) {
+      struct itimerspec its;
+      float next, rept;
+
+      timer_gettime(timer, &its);
+      next = its.it_value.tv_sec + its.it_value.tv_nsec / 1.e9;
+      rept = its.it_interval.tv_sec + its.it_interval.tv_nsec / 1.e9;
+
+      if (counts > 0) {
+         sprintf(line,
+                 "%s next %.1f sec : all %.1f sec : %d times remaining",
+                 id, next, rept, counts);
+      } else {
+         sprintf(line,
+                 "%s next %.1f sec : all %.1f sec : eternally",
+                 id, next, rept);
+      }
+
+   }
 
    /*---------------------------------------------------------------*/
    /* ---------------- linux specific extensions below -------------*/

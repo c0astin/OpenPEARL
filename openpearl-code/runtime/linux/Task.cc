@@ -664,12 +664,12 @@ namespace pearlrt {
    cpu_set_t * Task::getCpuSet() {
        return cpuset;
    }
-   
+  
    void Task::getCpuSetAsText(cpu_set_t * set, char* setAsText, size_t size) {
         setAsText[0] = 0;
         if (set) {
            char num[5]; // max cores in kernel are 1024 
-           for (int i=0; i<numberOfCores; i++) {
+           for (int i=0; i<numberOfCores && i < 1024; i++) {
               if (CPU_ISSET_S(i,CPU_ALLOC_SIZE(numberOfCores),set)) {
                  snprintf(num,sizeof(num),"%d,", i);
                  if (strlen(setAsText)+strlen(num) < size) {

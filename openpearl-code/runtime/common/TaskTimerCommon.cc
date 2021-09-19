@@ -49,6 +49,7 @@ namespace pearlrt {
       static const Duration nullDelay(0,0);
       static const Duration oneDay(24 * 60 * 60,0);
       Clock now = Clock::now();
+      float logAfter, logAll;
 
       // calculate start delay
       if (condition & TaskCommon::AFTER) {
@@ -83,11 +84,13 @@ namespace pearlrt {
          counts = 1;
       }
 
+#if 0
       its.it_value.tv_sec = after.getSec();
       its.it_value.tv_nsec = after.getUsec() * 1000;
       // calculate repetition counter for the schedule
       its.it_interval.tv_sec = 0;
       its.it_interval.tv_nsec = 0;
+#endif
 
       // calculate repetition counts
       if (condition & TaskCommon::ALL) {
@@ -95,10 +98,10 @@ namespace pearlrt {
             Log::error("Task %s: negative value at ALL", task->getName());
             throw theIllegalSchedulingSignal;
          }
-
+#if 0
          its.it_interval.tv_sec = all.getSec();;
          its.it_interval.tv_nsec = all.getUsec() * 1000;
-
+#endif
          if (condition & TaskCommon::UNTIL) {
             // transform absolute end time into relative duration
             during = until - now;
@@ -133,22 +136,22 @@ namespace pearlrt {
             }
 
             counts = (during / all).x + 1;
+            logAfter = after.getSec() + after.getUsec() / 1000000.0;
+            logAll = all.getSec() + all.getUsec() / 1000000.0;
             Log::debug(
-               "task %s: scheduled after=%.3f s all %.3f s %d times",
-               task->getName(),
-               its.it_value.tv_sec + its.it_value.tv_nsec / 1e9,
-               its.it_interval.tv_sec + its.it_interval.tv_nsec / 1e9,
-               counts);
+               "task %s: scheduled after=%.3f  all %.3f s %d times",
+               task->getName(), logAfter, logAll,counts);
          } else {
             counts = -1;
+            logAfter = after.getSec() + after.getUsec() / 1000000.0;
+            logAll = all.getSec() + all.getUsec() / 1000000.0;
             Log::debug(
-               "task %s: scheduled  after=%.3f s all %.3f s eternally",
-               task->getName(),
-               its.it_value.tv_sec + its.it_value.tv_nsec / 1e9,
-               its.it_interval.tv_sec + its.it_interval.tv_nsec / 1e9);
+               "task %s: scheduled  after %.3f all %.3f s eternally",
+               task->getName(),logAfter, logAll);
          }
       }
 
+#if 0
       if ((condition & (TaskCommon:: AT | TaskCommon::ALL | TaskCommon::AFTER |
                         TaskCommon::UNTIL | TaskCommon::DURING)) != 0) {
          // timed activate/continue, set initial delay to repetion delay
@@ -158,24 +161,23 @@ namespace pearlrt {
             its.it_value.tv_nsec = its.it_interval.tv_nsec;
          }
       }
-
+#endif
+      // AT|AFTER->AFTER
+      // ALL->ALL
+      if (condition & TaskCommon::AT) {
+         condition ^= TaskCommon::AT|TaskCommon::AFTER;
+      } 
+      setTimer(condition, after,all,counts);
       countsBackup = counts;
    }
 
+
    int TaskTimerCommon::start() {
       counts = countsBackup;   // restore number for triggeredActivate
-      Log::debug("%s: TaskTimer::start", task->getName());
-
-      if (its.it_value.tv_sec != 0 || its.it_value.tv_nsec != 0) {
-         if (timer_settime(timer, 0, &its, NULL) == -1) {
-            Log::error("task %s: error setting schedule timer",
-                       task->getName());
-            return (-1);
-         }
-      }
-
+      startTimer(); // platform specific
       return 0;
    }
+
 
    bool TaskTimerCommon::isActive() {
       return counts != 0;
@@ -186,23 +188,8 @@ namespace pearlrt {
    }
 
    int TaskTimerCommon::stop() {
-      // need local variable to keep time settings of the time
-      // unchanged for new start of the timer
-      struct itimerspec its;
-
-      its.it_value.tv_sec = 0;
-      its.it_value.tv_nsec = 0;
-      its.it_interval.tv_sec = 0;
-      its.it_interval.tv_nsec = 0;
       counts = 0;
-
-      //kill the timer
-      if (timer_settime(timer, 0, &its, NULL) == -1) {
-         Log::error(
-            "task %s: error cancelling timer", task->getName());
-         return (-1);
-      }
-
+      stopTimer();  // platform specific
       return 0;
    }
 
@@ -214,7 +201,7 @@ namespace pearlrt {
    }
 
 
-
+#if 0
    void TaskTimerCommon::detailedStatus(char *id, char * line) {
       struct itimerspec its;
       float next, rept;
@@ -234,4 +221,6 @@ namespace pearlrt {
       }
 
    }
+#endif
+
 }

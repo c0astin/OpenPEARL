@@ -90,8 +90,13 @@ namespace pearlrt {
 #else
    void FreeRTOSClock::tick(void) {
 #endif
+      // configTICK_RATE_HZ of 1000 means  1ms / tick
+      //                        100 means 10ms / tick
+      // we must incremnz the local time on base of ns
+      static const uint64_t inc_ns = 1000000000L / configTICK_RATE_HZ; 
+
       // increment the tick based time on each FreeRTOS-Tick
-      tickBasedTime += 1000000L;  // one milli second
+      tickBasedTime += inc_ns;  // tick increment as specified in FreeRTOS-Config
 
       if (ticks) {
          ticks --;

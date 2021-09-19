@@ -32,13 +32,13 @@
 \brief timer facility for tasking
 
 \author R. Mueller
-\author Jonas Meyer
 
 */
 
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <inttypes.h> // printf int64_t
 
 //#define _POSIX_TIMERS    // not required for esp32 v4.2
 #include <time.h>
@@ -48,34 +48,109 @@
 #include "TaskTimer.h"
 #include "Log.h"
 #include "Task.h"
-
-// with gcc 7.2.1 this causes an error 
-//struct sigevent {}; //shoehorn for casting
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/timers.h"
 
 namespace pearlrt {
 
-   static void freeRtosTimerCallback(void* tt_ptr) {
-      TaskTimer* tt = (TaskTimer*)tt_ptr;
+   void TaskTimer::callbackFromFreeRTOS(FakeTimerHandle_t timer) {
+      uint64_t period;
+      TickType_t ticks;
+      int result;
+      TaskTimer * tt = (TaskTimer*)(pvTimerGetTimerID(timer));
+      switch (tt->state) {
+         case DOINGAFTER:
+            if (tt->condition & TaskCommon::ALL) {
+              tt->state = DOINGALL;
+              vTimerSetReloadMode(tt->timerHandle, pdTRUE); //  autoreload
+              period = tt->all.getSec()*1000 + tt->all.getUsec()/1000;
+              ticks = period / portTICK_PERIOD_MS;
+//printf("set new period %d all=%" PRId64 " %d\n",ticks, tt->all.getSec(),tt->all.getUsec());
+              result = xTimerChangePeriod(tt->timerHandle,ticks,10); // 10 ms block time
+              if (result != pdPASS) {
+                 Log::error("could not modify timer within 10 ms");
+                 throw theInternalTaskSignal;
+              }
+	      tt->startTimer();
+            }
+            break;
+         case DOINGALL:
+            break;
+         default: break;
+      }
       tt->update();
    }
 
    void TaskTimer::create(TaskCommon * task, int signalNumber,
                           TimerCallback cb) {
-      int e; // error code for timer_create
 
-      this->timer_callback.cb = (void *)&freeRtosTimerCallback;
-      this->timer_callback.th = (void *)this;
       this->callback = cb;
       this->task = task;
-  
-      e = timer_create(CLOCK_REALTIME,
-                       (sigevent *)&timer_callback,
-                       &timer);
-      if (e == -1) {
-         Log::error("task %s: could not create timer for signal %d",
-                    task->getName(), signalNumber);
+
+      timerHandle = xTimerCreateStatic(NULL,  // name
+                         1, // period
+                         0, // auto reload
+                         this, // timer id
+                         callbackFromFreeRTOS, // callback
+		         (StaticTimer_t*)(&timerBuffer));
+       if (timerHandle == NULL) {
+         Log::error("could not create timer");
          throw theInternalTaskSignal;
       }
+      state = STOPPED;
    }
+
+   void TaskTimer::setTimer(int condition,
+            Duration after, Duration all, int count) {
+      uint64_t period;
+      TickType_t ticks;
+      BaseType_t result;
+      this->condition = condition;
+      this->all = all;
+      if (condition & TaskCommon::AFTER) {
+         vTimerSetReloadMode(timerHandle, pdFALSE); // no autoreload
+         period = after.getSec()*1000 + after.getUsec()/1000;
+         ticks = period / portTICK_PERIOD_MS;
+         state = DOINGAFTER;
+         result = xTimerChangePeriod(timerHandle,ticks,10); // 10 ms block time
+         if (result != pdPASS) {
+            Log::error("could not modify timer within 10 ms");
+            throw theInternalTaskSignal;
+         }
+         counts ++;  
+      } else if (condition & TaskCommon::ALL) {
+         vTimerSetReloadMode(timerHandle, pdTRUE); //  autoreload
+         period = all.getSec()*1000 + all.getUsec()/1000;
+         ticks = period / portTICK_PERIOD_MS;
+         state = DOINGALL;
+         result = xTimerChangePeriod(timerHandle,ticks,10); // 10 ms block time
+         if (result != pdPASS) {
+            Log::error("could not modify timer within 10 ms");
+            throw theInternalTaskSignal;
+         }
+      }
+   }
+
+   int TaskTimer::startTimer() {
+      BaseType_t result;
+      result = xTimerStart(timerHandle,10); // 10 ms block time
+      if (result != pdPASS) {
+         Log::error("could not start timer within 10 ms");
+         throw theInternalTaskSignal;
+      }
+      return 0;
+   }
+
+   int TaskTimer::stopTimer() {
+      BaseType_t result;
+      result = xTimerStop(timerHandle,10); // 10 ms block time
+      if (result != pdPASS) {
+         Log::error("could not stop timer within 10 ms");
+         throw theInternalTaskSignal;
+      }
+      return 0;
+   }
+
 
 }
