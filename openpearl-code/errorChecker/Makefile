@@ -1,4 +1,6 @@
 TARGETS = genExpectations errorParser
+CFLAGS += -g
+
 all: $(TARGETS)
 
 genExpectations: genExpectations.c config.h

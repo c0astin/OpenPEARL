@@ -77,6 +77,12 @@ static struct Message {
    int circumflexPos;
 } currentMessage;
 
+void clearLine(char * line) {
+   int i; 
+   for (i=0; i<LINELENGTH; i++) {
+      line[i] = 0;
+   }
+}
 void trimTrailingWhiteSpace(char * line) {
    int last;
    do {
@@ -92,11 +98,15 @@ int looksLikeErrorMessage(char* line) {
    char * pos, *pos1;
    int n,l,c;
 
-   pos = strstr(line,":");
+   pos = strstr(line,".prl:");
    if (pos == NULL) {
        return 0;
    }
-   n = sscanf(pos,":%d:%d",&l,&c);
+   // file name may not contain spaces
+   for (char *  i=line; i<pos; i++) {
+       if (isspace(*i)) return 0;
+   }
+   n = sscanf(pos+4,":%d:%d",&l,&c);
    //printf("n=%d l=%d c=%d\n",n,l,c);
    if (n !=2) {
      return 0;
@@ -105,78 +115,89 @@ int looksLikeErrorMessage(char* line) {
 }
 
 /*
- return 0, if a complete erro message from the compiler was detected
+ return 0, if a complete error message from the compiler was detected
         1, if the next error message (file:line:col:...) was detected
            instead of ^ or error-line
+	-1 unexpected input detected; error emitted
 */
 int parseError(char * line) {
    char * pos, *pos1;
+   if (!looksLikeErrorMessage(line)) {
+      fprintf(stderr,"unexpected line >%s<\n",line);
+      return -1;
+   }
+
+   // ok, we have an error message like "fname.prl:11:33:...."
+   // no further checks for format needed
    pos = strstr(line,":");
-   if (pos == NULL) {
-       // discard line if no ':' was detected
-       fprintf(stderr,"unexpected line >%s<\n", line);
-       return 0;
-   }
-   *pos = '\0';
+   *(pos) = '\0';
    strcpy(currentMessage.source, line);
+#if DEBUG == 1
+   printf("source file:>%s< remaining >%s<\n",line,pos+1);
+#endif
    pos1 = strstr(pos+1,":");
-   if (pos1 == NULL) {
-       // discard line if no ':' was detected
-       fprintf(stderr,"unexpected line >%s<\n", line);
-       return 0;
-   }
    *pos1 = '\0';
    currentMessage.line = atoi(pos+1);
    pos = strstr(pos1+1,":");
    *pos = '\0';
    currentMessage.col = atoi(pos1+1);
+#if DEBUG == 1
+printf("***line =%d col=%d pos=%p\n",currentMessage.line, currentMessage.col,pos);
+#endif
    strncpy(currentMessage.message,pos+2,strlen(pos+1));
-//   currentMessage.message[strlen(pos+1)-2] = '\0';
    trimTrailingWhiteSpace(currentMessage.message);
 
 #if DEBUG == 1
    printf("got message:\n");
    printf("file: %s line: %d  col: %d\n", currentMessage.source,
-       currentMessage.line, currentMessage.col);
+        currentMessage.line, currentMessage.col);
    printf("message: >%s<\n", currentMessage.message);
 #endif
 
+   // look at the next line, whether there is an error message or the next error message
+   clearLine(line);
    pos = fgets(line,LINELENGTH,stdin);
-//printf("next line: >%s<\n pos=%d\n",line,pos);
+#if DEBUG == 1
+   printf("next line: >%s<\n pos=%d\n",line,pos);
+#endif
 
    if (pos) {
+      // not eof
       if (looksLikeErrorMessage(line)) {
-//printf("next error instead of sourceline found\n");
-        return 1;
+#if DEBUG == 1
+          printf("next error instead of sourceline found\n");
+#endif
+           return 1;
       }
       strncpy(currentMessage.sourceLine, line, strlen(line)-1);
    } else {
+       fprintf(stderr,"<eof>\n");
        return 0;
-       fprintf(stderr,"malformed message\n");
-       exit(-1);
    }
 
 #if DEBUG == 1
    printf("sourceline: >%s<\n", currentMessage.sourceLine);
 #endif
 
+   // read circumflex line
+   clearLine(line);
    pos = fgets(line,LINELENGTH,stdin);
-   if (pos) {
+      if (pos) {
 //printf(line);
-      currentMessage.circumflexPos = strstr(line,"^") - line + 1;
-   } else {
-       fprintf(stderr,"malformed message\n");
-       exit(-1);
-   }
+         currentMessage.circumflexPos = strstr(line,"^") - line + 1;
+      } else {
+          fprintf(stderr,"<eof> detected\n");
+          return 0;
+      }
 #if DEBUG == 1
-   printf("circumflex at: %d\n", currentMessage.circumflexPos);
+      printf("circumflex at: %d\n", currentMessage.circumflexPos);
 #endif
-   if (currentMessage.circumflexPos != currentMessage.col) {
-      fprintf(stderr,"%s:%d:%d: circumflex position (%d) differs from column\n",
+      if (currentMessage.circumflexPos != currentMessage.col) {
+         fprintf(stderr,"%s:%d:%d: circumflex position (%d) differs from column\n",
                 currentMessage.source, currentMessage.line,
                 currentMessage.col, currentMessage.circumflexPos);
-      errorCount ++;
-   }
+         errorCount ++;
+      }
    return 0;
 }
 
@@ -203,7 +224,7 @@ static struct ExpectationFile* readExpectationIfNotLoadedYet() {
    }
 
 #if DEBUG == 1
-    printf("requsted source file >%s<\n", fileName);
+    printf("requested source file >%s<\n", fileName);
 #endif 
 
 
@@ -224,6 +245,7 @@ static struct ExpectationFile* readExpectationIfNotLoadedYet() {
     firstExpectationFile = expFile;
 
     do {
+       clearLine(line);
        pos1 = fgets(line, sizeof(line), fdExp);
        if (pos1==NULL && !feof(fdExp)) {
            fprintf(stderr,"read error in %s\n", fileName);
@@ -264,7 +286,7 @@ static struct ExpectationFile* readExpectationIfNotLoadedYet() {
 static void searchExpectationAndMarkUsed( struct ExpectationFile * expFile) {
    struct Expectation *exp;
    int found = 0;
-
+printf("searchAndMark start\n");
    // first pass - search exact match (line,col, message)
    for (exp=expFile->first; exp!= NULL && found == 0; exp=exp->next) {
        if (exp->line == currentMessage.line &&
@@ -277,10 +299,12 @@ static void searchExpectationAndMarkUsed( struct ExpectationFile * expFile) {
          }
        } 
    }
+printf("searchAndMark @1\n");
   
    if (found) {
       return;
    }
+printf("searchAndMark @2\n");
 
    found = 0;
    // second pass - (line,col) must match 
@@ -301,6 +325,7 @@ static void searchExpectationAndMarkUsed( struct ExpectationFile * expFile) {
                  currentMessage.col, currentMessage.message);
              errorCount ++;
    }
+printf("searchAndMark @3\n");
 }
 
 static void scanExpectations() {
@@ -338,7 +363,7 @@ int main(int narg, char*argv[]) {
       exit(-1);
    }
 
-   // read passed expectation file(s)
+   // read given expectation file(s)
    for (int i=1; i<narg;i++) {
        strcpy(currentMessage.source, argv[i]);
        readExpectationIfNotLoadedYet();
@@ -348,10 +373,11 @@ int main(int narg, char*argv[]) {
 
    do {
      if (!nextLinePresent) {
-//printf("read line\n");
+printf("read line\n");
+      clearLine(line);
       result = fgets(line,LINELENGTH,stdin);
      }
-//printf("result=%d\n line=>%s<\n",result,line);
+printf("result=%d\n line=>%s<\n",result,line);
 
       if (result) {
          if (line[strlen(line)-1] != '\n') {
@@ -359,12 +385,16 @@ int main(int narg, char*argv[]) {
             exit(-1);
          }
          line[strlen(line)-1] = '\0';
+printf("parseError>%s<\n",line);
          nextLinePresent = parseError(line);
+printf("nextLinePreset=%d\n",nextLinePresent);
          expFile = readExpectationIfNotLoadedYet();
+printf("expFile=%d\n",expFile);
          searchExpectationAndMarkUsed(expFile);
        }
     } while (nextLinePresent == 1 || !feof(stdin));
 
+printf("@scan\n");
     scanExpectations();
 
     if (errorCount) {
