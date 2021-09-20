@@ -30,5 +30,7 @@ fi
 
 espidf=$1/components/freertos
 testAndReplace $espidf tasks.c
+testAndReplace $espidf timers.c
 testAndReplace $espidf/include/freertos task.h 
+testAndReplace $espidf/include/freertos timers.h 
 testAndReplace $1/components/freertos/xtensa/include/freertos FreeRTOSConfig.h
