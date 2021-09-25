@@ -25,6 +25,7 @@ DONOTBUILD= 030_signals 031_signalsInduce  \
 
 # on ESP32 we have no Disc
 DONOTBUILDESP32= 030_signals 031_signalsInduce  \
+	120_length \
 	224_bit_slice 410_charSelection\
 	700_dation_rw 701_dation_pg 703_userdation_dcl \
 	704_dation_open 705_dation_close 707_dation_pg_formats 710_rst \
