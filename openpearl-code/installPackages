@@ -24,14 +24,8 @@ then
    echo "detected: Fedora 34 (Workstation Edition) "
    AptPackageList+=" gcc g++ make"
    AptPackageList+=" java-1.8.0-openjdk.x86_64"
-# untreated merge conflict
-# must be solved with the next test setup with fedora
-#<<<<<<< Updated upstream
-#   AptPackageList+=" flex flex-devel"
-#   AptPackageList+=" ncurses-libs.x86_64 ncurses-devel"
-#=======
-#   AptPackageList+=" flex ncurses-libs.x86_64 ncurses-devel"
-#>>>>>>> Stashed changes
+   AptPackageList+=" flex flex-devel"
+   AptPackageList+=" ncurses-libs.x86_64 ncurses-devel"
    AptPackageList+=" expat expat-devel.x86_64"
    AptPackageList+=" cpan"
    PackageManager="dnf"
@@ -39,7 +33,6 @@ then
    then
       AptPackageList+=" astyle graphviz doxygen"
       AptPackageList+=" texlive texlive-collection-langenglish"
-      AptPackageList+=" 3"
    fi
    SystemKnown=1
 fi
@@ -179,6 +172,29 @@ then
    SystemKnown=1
 fi
 
+# generic debian package list for all (newer) distrubutions
+grep "PRETTY_NAME=\"Debian GNU/Linux" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: generic Debian x.y "
+   AptPackageList+=" cpanminus"
+   AptPackageList+=" default-jdk"    # is open-jdk 11 in buster
+   AptPackageList+=" gcc g++ git make gawk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" zlib1g-dev"
+   PackageManager="apt-get"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-lang-english "
+      AptPackageList+=" texlive-latex-extra"
+   fi
+   SystemKnown=1
+fi
+
+# elder debain distributions should use their old (tested) lists
 grep "PRETTY_NAME=\"Debian GNU/Linux 8 \(jessie\)\"" /etc/os-release >/dev/null
 rc=$?
 if [ $rc -eq 0 ]
@@ -253,6 +269,7 @@ then
    SystemKnown=1
 fi
 
+
 grep "PRETTY_NAME=\"Raspbian GNU/Linux 9 \(stretch\)\"" /etc/os-release >/dev/null
 rc=$?
 if [ $rc -eq 0 ]
@@ -305,8 +322,8 @@ set -e
 if [ "$SystemKnown" -eq "1" ] 
 then
    # common for all platforms
-   wget http://www.antlr.org/download/antlr-4.5-complete.jar
-   mv antlr-4.5-complete.jar /usr/local/lib/
+   wget http://www.antlr.org/download/antlr-4.8-complete.jar
+   mv antlr-4.8-complete.jar /usr/local/lib/
    $PackageManager -y install $AptPackageList
    rc=$?
    if [ $rc -ne 0 ]
