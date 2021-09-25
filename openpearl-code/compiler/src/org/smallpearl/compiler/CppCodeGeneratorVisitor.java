@@ -2710,6 +2710,9 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                 expr.add("code", visitAndDereference(ctx.expression()));
             }
 
+        } else {
+            expr.add("code", ctx.op.getText());
+            expr.add("code", visitAndDereference(ctx.expression()));
         }
 
         m_sign = last_sign;

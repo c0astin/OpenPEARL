@@ -1,0 +1,23 @@
+MODULE(expressions);
+
+PROBLEM;	
+  
+main: TASK MAIN;   
+  DCL (x,y) FLOAT;
+
+  x = - SQRT y;
+  x = - (SQRT y);
+  x = - (SQRT y);		
+
+  x = + SQRT y;
+  x = + (SQRT y);
+  x = + (SQRT y);		
+
+  x = - SIN y; 
+  x = -(SIN y);
+
+  x = - SIN (- SIN y); 
+
+END;
+
+MODEND;
