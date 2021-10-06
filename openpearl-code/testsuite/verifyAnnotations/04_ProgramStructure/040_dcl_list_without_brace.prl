@@ -3,6 +3,6 @@ MODULE(m1);
 PROBLEM;
    DCL f1,f2 FIXED;
 /*$      ^
-ERROR : Syntax error :mismatched input ',' expecting {'(', 'INV', 'FIXED', 'FLOAT', 'BIT', 'CHARACTER', 'CHAR', 'DURATION', 'DUR', 'CLOCK', 'STRUCT', 'REF', 'SEMA', 'BOLT', 'DATION'}
+ERROR : Syntax error :mismatched input ',' expecting {'(', 'INV', 'FIXED', 'FLOAT', 'BIT', 'CHARACTER', 'CHAR', 'DURATION', 'DUR', 'CLOCK', 'STRUCT', 'REF', '()', 'SEMA', 'BOLT', 'DATION'}
 */
 MODEND;
