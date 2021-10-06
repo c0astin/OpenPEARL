@@ -32,7 +32,6 @@ DONOTBUILDESP32= 030_signals 031_signalsInduce  \
 	851_ref_deref
 
 DONOTRUN=000_empty \
-	350_conversions \
 	450_struct_dcl \
         703_userdation_dcl \
 	704_dation_open \
