@@ -1,0 +1,28 @@
+/*
+error messages from imc to be checked
+*/
+MODULE(ttt);
+SYSTEM;
+ con: Console;
+PROBLEM;
+  SPC con DATION INOUT SYSTEM ALPHIC;
+
+  DCL ccc DATION INOUT ALPHIC DIM(*,81) TFU FORWARD NOSTREAM CREATED(con);
+/*$ col=7
+error: userdation 'ccc' requires a TFU record of 81' -- system dation 'Console' provides max 80
+*/
+
+
+  DCL consoleOk DATION INOUT ALPHIC DIM(*,80) TFU FORWARD NOSTREAM CREATED(con);
+  DCL console DATION INOUT ALPHIC DIM(*,80) FORWARD NOSTREAM CREATED(con);
+/*$ col=7
+error: userdation 'console' has no TFU -- system dation 'Console' requires TFU
+*/
+
+t1: TASK MAIN;
+  
+  OPEN console;
+
+END;
+
+MODEND;

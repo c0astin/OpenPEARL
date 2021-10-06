@@ -25,16 +25,16 @@ PROBLEM;
    SPC con DATION INOUT  SYSTEM ALPHIC;
    SPC sbd DATION INOUT  SYSTEM BASIC FIXED(15);
    SPC sbdFail0 DATION INOUT  SYSTEM BASIC FIXED(16);
-/*$^
+/*$    ^
 error: SPC of 'sbdFail0' has no declaration
 */
    SPC sbdFail1 DATION INOUT  SYSTEM BASIC FIXED(16);
-/*$^
+/*$    ^
 error: conflict in type of transfer data: SPC of 'sbdFail1' has type 'FIXED(16)'
 */
 
    SPC sbdFail3 DATION INOUT  SYSTEM ALPHIC;
-/*$^
+/*$    ^
 error: conflict in type of transfer data: SPC of 'sbdFail3' has type 'ALPHIC'
 */
 

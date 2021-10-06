@@ -1,0 +1,151 @@
+MODULE(format);
+
+PROBLEM;
+SPC pipe DATION OUT SYSTEM ALPHIC;
+DCL pipe_out DATION OUT ALPHIC DIM(*,80)
+             FORWARD NOCYCL  STREAM 
+             CREATED(pipe);
+
+DCL sema SEMA PRESET(1);
+DCL bolt BOLT;
+otherDataOutByF: PROC;
+   DCL dur DURATION;
+   DCL clk CLOCK;
+   DCL bit BIT(1);
+   DCL ch  CHAR(1);
+   DCL rt REF TASK;
+   DCL rp REF PROC;
+
+   PUT dur TO pipe_out BY F(6), SKIP;
+/*$    ^
+error: PUT:expression type match format: DURATION does not apply to format 
+*/
+/*$                       ^
+note: PUT:expression type match format: F(6)
+*/
+
+   PUT clk TO pipe_out BY F(6), SKIP;
+/*$    ^
+error: PUT:expression type match format: CLOCK does not apply to format 
+*/
+/*$                       ^
+note: PUT:expression type match format: F(6)
+*/
+
+   PUT bit TO pipe_out BY F(6), SKIP;
+/*$    ^
+error: PUT:expression type match format: BIT(1) does not apply to format 
+*/
+/*$                       ^
+note: PUT:expression type match format: F(6)
+*/
+
+   PUT ch  TO pipe_out BY F(6), SKIP;
+/*$    ^
+error: PUT:expression type match format: CHAR(1) does not apply to format 
+*/
+/*$                       ^
+note: PUT:expression type match format: F(6)
+*/
+
+   PUT sema  TO pipe_out BY F(6), SKIP;
+/*$    ^
+error: PUT:expression type match format: SEMA does not apply to format 
+*/
+/*$                         ^
+note: PUT:expression type match format: F(6)
+*/
+
+   PUT bolt  TO pipe_out BY F(6), SKIP;
+/*$    ^
+error: PUT:expression type match format: BOLT does not apply to format 
+*/
+/*$                         ^
+note: PUT:expression type match format: F(6)
+*/
+
+   PUT fixedOutByF  TO pipe_out BY F(6), SKIP;
+/*$    ^
+error: PUT:expression type match format: PROC does not apply to format 
+*/
+/*$                                ^
+note: PUT:expression type match format: F(6)
+*/
+
+   PUT rt  TO pipe_out BY F(6), SKIP;
+/*$    ^
+error: PUT:expression type match format: REF TASK does not apply to format 
+*/
+/*$                       ^
+note: PUT:expression type match format: F(6)
+*/
+   PUT rp  TO pipe_out BY F(6), SKIP;
+/*$    ^
+error: PUT:expression type match format: REF PROC does not apply to format 
+*/
+/*$                       ^
+note: PUT:expression type match format: F(6)
+*/
+END;
+
+fixedOutByF: PROC;
+     DCL f FIXED INIT(0);
+
+     PUT f TO pipe_out BY F(1.0),SKIP;
+/*$                         ^
+error: PUT:F-format:fieldwidth: must by of type FIXED --- got FLOAT(23)
+*/
+
+     PUT f TO pipe_out BY F(0),SKIP;
+/*$                         ^
+error: PUT:F-format:fieldwidth: must be >0
+*/
+
+     PUT f TO pipe_out BY F(2,1.0),SKIP;
+/*$                           ^
+error: PUT:F-format:decimal positions: type must be FIXED
+*/
+
+     PUT f TO pipe_out BY F(2,0),SKIP;
+     PUT f TO pipe_out BY F(2,-1),SKIP;
+/*$                           ^
+error: PUT:F-format:decimal positions: must be >=0
+*/
+     PUT f TO pipe_out BY F(2,1),SKIP;
+/*$                       ^
+error: PUT:F-format: field width too small (at least 3 required)
+*/
+
+END;
+
+floatOutByF: PROC;
+     DCL f FLOAT INIT(0);
+
+     PUT f TO pipe_out BY F(1.0),SKIP;
+/*$                         ^
+error: PUT:F-format:fieldwidth: must by of type FIXED --- got FLOAT(23)
+*/
+
+     PUT f TO pipe_out BY F(0),SKIP;
+/*$                         ^
+error: PUT:F-format:fieldwidth: must be >0
+*/
+
+     PUT f TO pipe_out BY F(2,1.0),SKIP;
+/*$                           ^
+error: PUT:F-format:decimal positions: type must be FIXED
+*/
+
+     PUT f TO pipe_out BY F(2,0),SKIP;
+     PUT f TO pipe_out BY F(2,-1),SKIP;
+/*$                           ^
+error: PUT:F-format:decimal positions: must be >=0
+*/
+     PUT f TO pipe_out BY F(2,1),SKIP;
+/*$                       ^
+error: PUT:F-format: field width too small (at least 3 required)
+*/
+
+END;
+MODEND;
+
