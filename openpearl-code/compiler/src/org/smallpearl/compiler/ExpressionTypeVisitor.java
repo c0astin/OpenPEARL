@@ -3076,7 +3076,9 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                     precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision()
                             .IntegerConstant().toString());
                 }
-
+                if (precision > Defaults.FIXED_MAX_LENGTH) {
+                    CommonErrorMessages.wrongFixedPrecission(ctx.fixedConstant());
+                }
                 expressionResult = new ASTAttribute(new TypeFixed(precision), true);
                 ConstantFixedValue cfv = new ConstantFixedValue(value*sign, precision);
                 ConstantValue cv = m_constantPool.add(cfv); // add to constant pool; maybe we have it already
