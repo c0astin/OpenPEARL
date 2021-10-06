@@ -4,9 +4,9 @@ PROBLEM;
 T1: TASK MAIN;
     DCL b1i64 BIT(64)    INIT(
       '1111000011110000111100001111000011110000111100001111000011110000'B1);
-    __cpp__("pearlrt::BitString<64> b1i64(0xf0f0f0f0f0f0f0f0ULL);	");
 
     DCL b4i64 BIT(64)    INIT('F0F0F0F0F0F0F0F0'B4);
+    __cpp__("pearlrt::BitString<64> b1i64(0xf0f0f0f0f0f0f0f0ULL);	");
     __cpp__("pearlrt::BitString<64> b4i64(0xf0f0f0f0f0f0f0f0LL);	");
 
 END;
