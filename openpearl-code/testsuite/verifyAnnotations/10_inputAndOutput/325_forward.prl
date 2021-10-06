@@ -12,7 +12,7 @@ PROBLEM;
 
   DCL consol2 DATION INOUT ALPHIC DIM(*,80) TFU  FORWARD CREATED(con);
 /*$
-              ^
+      ^
 error: DationDCL: TFU requires NOSTREAM
 */
   DCL console DATION INOUT ALPHIC DIM(*,80) TFU  FORWARD NOSTREAM CREATED(con);
@@ -20,7 +20,7 @@ error: DationDCL: TFU requires NOSTREAM
   DCL stdin DATION IN ALPHIC DIM(*,80) FORWARD CREATED(si);
   DCL stdinTfu DATION IN ALPHIC DIM(*,80) TFU FORWARD CREATED(si);
 /*$ 
-               ^
+      ^
 error: DationDCL: TFU requires NOSTREAM
 */
 
