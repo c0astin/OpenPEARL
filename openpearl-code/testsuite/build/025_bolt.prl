@@ -115,14 +115,14 @@ T1: TASK PRIO 10 MAIN;
    IF n EQ 1 THEN
       PUT '*** multiple RESERVE is ok' TO console BY A, SKIP;
    ELSE
-      PUT '*** multiple RESERVE failed' TO console BY A, SKIP;
+      PUT '*** multiple RESERVE failed n=',n TO console BY A,F(3), SKIP;
       testOk = '0'B1;
    FIN;
    AFTER 3SEC RESUME;
    IF n EQ 0 THEN
       PUT '*** multiple FREE is ok' TO console BY A, SKIP;
    ELSE
-      PUT '*** multiple FREE failed' TO console BY A, SKIP;
+      PUT '*** multiple FREE failed n=',n TO console BY A,F(3), SKIP;
       testOk = '0'B1;
    FIN;
    __cpp__("printf(\"sequence: %s\\n\", buffer);");
