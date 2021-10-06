@@ -697,6 +697,9 @@ implements SmallPearlVisitor<Void> {
             if (m_type instanceof TypeArray)  {
                 // need ArrayOrStructureInitialiser
                 int maxOfInitializers = nbrOfVariables * ((TypeArray)(m_type)).getTotalNoOfElements();
+                if (((TypeArray)m_type).getBaseType() instanceof TypeStructure) {
+                    maxOfInitializers *= ((TypeStructure)((TypeArray)m_type).getBaseType()).getTotalNoOfElements();
+                }
                 if (nbrOfInitializer > maxOfInitializers) {
                     ErrorStack.add(initElements.get(maxOfInitializers),"INIT","too many initializers");
                 }
@@ -730,6 +733,9 @@ implements SmallPearlVisitor<Void> {
                 if (m_type instanceof TypeArray)  {
                     // need ArrayOrStructureInitialiser
                     int maxOfInitializers = ((TypeArray)(m_type)).getTotalNoOfElements();
+                    if (((TypeArray)m_type).getBaseType() instanceof TypeStructure) {
+                        maxOfInitializers *= ((TypeStructure)((TypeArray)m_type).getBaseType()).getTotalNoOfElements();
+                    }
                     int remainingInitializers = nbrOfInitializer-nextInitializerIndex;
                     if (remainingInitializers > maxOfInitializers) {
                         ParserRuleContext startCtx = initElements.get(nextInitializerIndex);
@@ -1829,13 +1835,9 @@ implements SmallPearlVisitor<Void> {
             double curval =
                     sign * CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
             int curlen = 0;
-
-            if (m_type instanceof TypeArray) {
-                curlen = ((TypeArray) m_type).getBaseType().getPrecision();
-            } else {
-                curlen = m_type.getPrecision();
-            }
-
+            curlen =
+                    CommonUtils.getFloatingPointConstantPrecision(ctx.floatingPointConstant(),
+                            m_currentSymbolTable.lookupDefaultFloatLength());
             constant = new ConstantFloatValue(curval, curlen);
         } else if (ctx.durationConstant() != null) {
             Integer hours = 0;

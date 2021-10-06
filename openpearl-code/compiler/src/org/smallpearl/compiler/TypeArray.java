@@ -91,9 +91,7 @@ public class TypeArray extends TypeDefinition {
         for (int i = 0; i < m_dimensions.size(); i++) {
             totalNoOfElements *= m_dimensions.get(i).getNoOfElements();
         }
-        if (m_baseType instanceof TypeStructure) {
-            totalNoOfElements *= ((TypeStructure)m_baseType).getTotalNoOfElements();
-        }
+
 
         return totalNoOfElements;
     }
