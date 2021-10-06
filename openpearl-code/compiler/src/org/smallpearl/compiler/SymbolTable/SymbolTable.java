@@ -285,8 +285,6 @@ public class SymbolTable {
     public LinkedList<VariableEntry> getVariableDeclarations() {
         LinkedList<VariableEntry> listOfVariableDeclarationsEntries =
                 new LinkedList<VariableEntry>();
-        SymbolTableEntry e;
-
         for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof VariableEntry) {
@@ -298,7 +296,24 @@ public class SymbolTable {
         return listOfVariableDeclarationsEntries;
     }
 
+    
+    public LinkedList<VariableEntry> getDationSpcAndDcl() {
+        LinkedList<VariableEntry> listOfVariableDeclarationsEntries =
+                new LinkedList<VariableEntry>();
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
+            SymbolTableEntry symbolTableEntry = it.next();
+            if (symbolTableEntry instanceof VariableEntry) {
+                VariableEntry variableEntry = (VariableEntry) symbolTableEntry;
+                if (variableEntry.getType() instanceof TypeDation) {
+                   listOfVariableDeclarationsEntries.add(variableEntry);
+                }
+            }
+        }
 
+        return listOfVariableDeclarationsEntries;
+    }
+
+    
     public LinkedList<VariableEntry> getAllArrayDeclarations(SymbolTable symbolTable) {
         LinkedList<VariableEntry> listOfArrayDeclarations = new LinkedList<VariableEntry>();
 
@@ -324,6 +339,7 @@ public class SymbolTable {
         return listOfSemaEntries;
     }
 
+    
     public LinkedList<BoltEntry> getBoltDeclarations() {
         LinkedList<BoltEntry> listOfBoltEntries = new LinkedList<BoltEntry>();
         SymbolTableEntry e;

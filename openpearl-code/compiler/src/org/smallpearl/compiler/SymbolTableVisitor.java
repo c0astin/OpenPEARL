@@ -69,23 +69,19 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     private final boolean m_debug;
 
     public SymbolTable symbolTable;
-    private SymbolTableEntry m_currentEntry;
     private SymbolTable m_currentSymbolTable;
-    private final TypeStructure m_currentTypeStructure;
-    private final LinkedList<LinkedList<SemaphoreEntry>> m_listOfTemporarySemaphoreArrays;
-    private final LinkedList<LinkedList<BoltEntry>> m_listOfTemporaryBoltArrays;
     private final LinkedList<ArrayDescriptor> m_listOfArrayDescriptors;
-    private LinkedList<TypeStructure> m_listOfStructureDeclarations;
-
     private TypeDefinition m_type;
-
     private ParseTreeProperty<SymbolTable> m_symboltablePerContext = null;
     private ConstantPool m_constantPool = null;
 
     private TypeStructure m_typeStructure = null;
-    private final StructureComponent m_structureComponent = null;
     private boolean m_hasAllocationProtection = false;
     private boolean m_isGlobal = false;
+    private String m_globalName;
+    private String m_currentModuleName;
+    private boolean m_isInSpecification = false;
+    private IdentifierDenotationContext  m_identifierDenotationContext;
 
     public SymbolTableVisitor(int verbose, ConstantPool constantPool) {
         m_debug = false;
@@ -94,12 +90,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         Log.debug("SymbolTableVisitor:Building new symbol table");
 
         this.symbolTable = new org.smallpearl.compiler.SymbolTable.SymbolTable();
-        this.m_listOfTemporarySemaphoreArrays = new LinkedList<LinkedList<SemaphoreEntry>>();
-        this.m_listOfTemporaryBoltArrays = new LinkedList<LinkedList<BoltEntry>>();
+        new LinkedList<LinkedList<SemaphoreEntry>>();
+        new LinkedList<LinkedList<BoltEntry>>();
         this.m_listOfArrayDescriptors = new LinkedList<ArrayDescriptor>();
         this.m_symboltablePerContext = new ParseTreeProperty<SymbolTable>();
         this.m_constantPool = constantPool;
-        this.m_currentTypeStructure = null;
         // TODO: MS REMOVE?:        this.m_currentStructureEntry = null;
         this.m_typeStructure = null;
     }
@@ -113,7 +108,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                         ctx.nameOfModuleTaskProc().ID().getText(), ctx, null);
         this.m_currentSymbolTable = this.symbolTable.newLevel(moduleEntry);
         this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
-
+        m_currentModuleName = ctx.nameOfModuleTaskProc().ID().getText();
         visitChildren(ctx);
 
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
@@ -202,8 +197,23 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
+    @Override
+    public Void visitVariableDeclaration(SmallPearlParser.VariableDeclarationContext ctx) {
+        m_isInSpecification = false;
+        visitChildren(ctx);
 
-
+        return null;
+    }
+    
+    @Override
+    public Void visitSpecification(SmallPearlParser.SpecificationContext ctx) {
+        m_isInSpecification = true;
+        visitChildren(ctx);
+        m_isInSpecification = false;
+        return null;
+    }
+   
+    
     @Override
     public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
         Boolean isMain = false;
@@ -442,28 +452,36 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitVariableDenotation(SmallPearlParser.VariableDenotationContext ctx) {
         boolean hasAllocationProtection = false;
-        List<InitElementContext> initElements = null;
-        ArrayList<String> identifierDenotationList = null;
 
-
+        
         Log.debug("SymbolTableVisitor:visitVariableDenotation:ctx" + CommonUtils.printContext(ctx));
 
         m_type = null;
         m_hasAllocationProtection = false;
+        m_identifierDenotationContext = ctx.identifierDenotation();
+              
+        
+        
         if (ctx != null) {
-            // visit dimension attribute as last item
+            // check if all variables are of type array
+            
+            if (ctx.dimensionAttribute() != null) {
+                //TypeDefinition baseType = m_type;
+                m_type = new TypeArray();
+//                ((TypeArray) m_type).setBaseType(baseType);
+                visitDimensionAttribute(ctx.dimensionAttribute());
 
+                addArrayDescriptor(new ArrayDescriptor(((TypeArray)m_type).getNoOfDimensions(),
+                            ((TypeArray)m_type).getDimensions()));
+            }
+            
             if (ctx.problemPartDataAttribute() != null) {
                 visitProblemPartDataAttribute(ctx.problemPartDataAttribute());
                 if (ctx.problemPartDataAttribute().initialisationAttribute() != null) {
-                    initElements =
-                            ctx.problemPartDataAttribute().initialisationAttribute().initElement();
-                }
+             }
+
             } else if (ctx.semaDenotation() != null) {
                 visitSemaDenotation(ctx.semaDenotation());
-                if (ctx.semaDenotation().preset() != null) {
-                    initElements = ctx.semaDenotation().preset().initElement();
-                }
             } else if (ctx.boltDenotation() != null) {
                 visitBoltDenotation(ctx.boltDenotation());
             } else if (ctx.dationDenotation() != null) {
@@ -473,32 +491,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                         "missing alternative@473");
             }
 
-        }
+
+         }
 
 
-
-        identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
-
-
-        if (ctx.dimensionAttribute() != null) {
-            TypeDefinition baseType = m_type;
-            m_type = new TypeArray();
-            ((TypeArray) m_type).setBaseType(baseType);
-            visitDimensionAttribute(ctx.dimensionAttribute());
-            if (identifierDenotationList.size() > 1) {
-                ErrorStack.add(ctx.identifierDenotation(), "array declaration", "no list allowed");
-            }
-
-
-            if (m_type instanceof TypeArray) {
-                addArrayDescriptor(new ArrayDescriptor(((TypeArray) m_type).getNoOfDimensions(),
-                        ((TypeArray) m_type).getDimensions()));
-            } else {
-                ErrorStack.addInternal(ctx, "SymbolTableVisitor:variableDenotation",
-                        "missing alternative@500");
-            }
-        }
-
+/*
         if (ctx.problemPartDataAttribute() != null) {
             m_type.setHasAssignmentProtection(m_hasAllocationProtection);
             if (m_type instanceof TypeReference) {
@@ -536,10 +533,10 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             if (initElements == null) {
                 ErrorStack.add(ctx, "DCL", "INV needs INIT");
             } else {
-                if (initElements.size() != identifierDenotationList.size()) {
+                if (initElements.size() != m_identifierDenotationContext.identifier().size()) {
                     ErrorStack.enter(ctx.identifierDenotation());
                     ErrorStack.add("wrong number of initialisers: found " + initElements.size()
-                            + " -- required " + identifierDenotationList.size());
+                            + " -- required " + m_identifierDenotationContext.identifier().size());
                     ErrorStack.leave();
                 } else {
                     // numbers look fine; target type is m_type!
@@ -619,6 +616,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                                         identifierDenotationList.get(i), m_type,
                                         m_hasAllocationProtection,
                                         ctx.identifierDenotation().identifier(i), initializer);
+
                                 String s = identifierDenotationList.get(i).toString();
                                 checkDoubleDefinitionAndEnterToSymbolTable(variableEntry,
                                         ctx.identifierDenotation().identifier(i), s);
@@ -633,8 +631,12 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                 }
             }
         } else {
-
+            
             for (int i = 0; i < identifierDenotationList.size(); i++) {
+                Initializer init = null;
+                if (i<initElements.size()) {
+                    init = initElements.get(i);
+                }
                 VariableEntry variableEntry = new VariableEntry(identifierDenotationList.get(i),
                         m_type, hasAllocationProtection, ctx.identifierDenotation().identifier(i),
                         null);
@@ -644,19 +646,218 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                         ctx.identifierDenotation().identifier(i), s);
             }
         }
-
-
+*/
+        
+        
 
         return null;
     }
 
+    @Override
+    public Void  visitProblemPartDataAttribute(ProblemPartDataAttributeContext ctx) {
+        List<InitElementContext> initElements = null;
+String sCtx = ctx.getText();
+        m_isGlobal = false;
+        m_globalName = null;
+
+        TypeDefinition safeType = m_type;
+        
+        if (ctx.initialisationAttribute() != null) {
+            initElements =
+                    ctx.initialisationAttribute().initElement();
+        }
+        
+        visitChildren(ctx);
+        
+        if (safeType instanceof TypeArray) {
+            ((TypeArray)safeType).setBaseType(m_type);
+            m_type = safeType;
+        }
+
+        if (initElements != null && m_isInSpecification) {
+                ErrorStack.add(ctx,"SPC", "no INIT allowed");
+        }
+
+        // treatment of initialisiers, eg
+        // DCL (x,y) FIXED INIT(1,2),
+        //     (arrA,arrb)(2) FIXED INIT(1,2,3),
+        //     (a,b) STRUCT [(c,d) FIXED] INIT(1,2,3,4);
+        // extract for each symbol the required number of initialisers
+        // create ArrayOrStructureInitialiser or SimpleInitializer
+        Initializer init = null;
+        int nbrOfInitializer =0;
+        if (initElements != null) {
+
+        
+        
+        nbrOfInitializer = initElements.size();
+        int nbrOfVariables = m_identifierDenotationContext.identifier().size();
+        
+        // check number of initializers
+        if (m_type instanceof TypeArray)  {
+            // need ArrayOrStructureInitialiser
+            int maxOfInitializers = nbrOfVariables * ((TypeArray)(m_type)).getTotalNoOfElements();
+            if (nbrOfInitializer > maxOfInitializers) {
+                ErrorStack.add(initElements.get(maxOfInitializers),"INIT","too many initializers");
+            }
+        } else if ( m_type instanceof TypeStructure) {
+            // need ArrayOrStructureInitialiser
+            int requiredInitializers = nbrOfVariables * ((TypeStructure)(m_type)).getTotalNoOfElements();
+            if (nbrOfInitializer < requiredInitializers) {
+                ErrorStack.add(initElements.get(requiredInitializers),"INIT",requiredInitializers-nbrOfInitializer+" initializers missing");
+            } else if (nbrOfInitializer > requiredInitializers) {
+                ErrorStack.add(initElements.get(requiredInitializers),"INIT","too many initializers");
+            }
+        } else if (m_type instanceof TypeReference){
+            // need NameInitializer
+            ErrorStack.addInternal("SymbolTableVisitor@708: NameInitializer missing");
+        } else {
+            // need SimpleInitializer
+            if (nbrOfInitializer<nbrOfVariables) {
+                ErrorStack.add(initElements.get(nbrOfVariables),"INIT",nbrOfVariables-nbrOfInitializer+" initializers missing");
+            } else if (nbrOfInitializer>nbrOfVariables) {
+                ErrorStack.add(initElements.get(nbrOfInitializer),"INIT","too many initializers");
+            }
+        }
+        }
+        int nextInitializerIndex = 0;
+        init = null;
+        for (int i=0; i<m_identifierDenotationContext.identifier().size(); i++) {
+            String s = m_identifierDenotationContext.identifier(i).getText();
+            if (initElements != null) {
+                // create initializers
+  
+            if (m_type instanceof TypeArray)  {
+                // need ArrayOrStructureInitialiser
+                int maxOfInitializers = ((TypeArray)(m_type)).getTotalNoOfElements();
+                int remainingInitializers = nbrOfInitializer-nextInitializerIndex;
+                if (remainingInitializers > maxOfInitializers) {
+                    ParserRuleContext startCtx = initElements.get(nextInitializerIndex);
+                    ArrayList<Initializer> ali = new ArrayList<Initializer>();
+                    for (int j=0; j<maxOfInitializers; j++) {
+                        ConstantValue constant = getInitElement(nextInitializerIndex, initElements.get(nextInitializerIndex));
+                        SimpleInitializer si = new SimpleInitializer(initElements.get(nextInitializerIndex), constant);
+                        nextInitializerIndex++;
+                        ali.add(si);
+                    }
+                    init = new ArrayOrStructureInitializer(startCtx, ali);
+                } else if (remainingInitializers == 0){
+                    // (re-)use last init element
+                    ParserRuleContext startCtx = initElements.get(nextInitializerIndex);
+                    ArrayList<Initializer> ali = new ArrayList<Initializer>();
+                    ConstantValue constant = getInitElement(nextInitializerIndex, initElements.get(nextInitializerIndex));
+                    SimpleInitializer si = new SimpleInitializer(initElements.get(nextInitializerIndex), constant);
+                    ali.add(si);
+                    init = new ArrayOrStructureInitializer(startCtx, ali);
+                } else {
+                    ArrayList<Initializer> ali = new ArrayList<Initializer>();
+                    ParserRuleContext startCtx = initElements.get(nextInitializerIndex);
+                    for (int j=0; j<remainingInitializers; j++) {
+                        ConstantValue constant = getInitElement(nextInitializerIndex, initElements.get(nextInitializerIndex));
+                        SimpleInitializer si = new SimpleInitializer(initElements.get(nextInitializerIndex), constant);
+                        nextInitializerIndex++;
+                        ali.add(si);
+                    }
+                    init = new ArrayOrStructureInitializer(startCtx, ali); 
+                }
+                
+       
+            } else if ( m_type instanceof TypeStructure) {
+                // need ArrayOrStructureInitialiser
+                int maxOfInitializers = ((TypeStructure)(m_type)).getTotalNoOfElements();
+                int remainingInitializers = nbrOfInitializer-nextInitializerIndex;
+                if (remainingInitializers >= maxOfInitializers) {
+                    ParserRuleContext startCtx = initElements.get(nextInitializerIndex);
+                    ArrayList<Initializer> ali = new ArrayList<Initializer>();
+                    for (int j=0; j<maxOfInitializers; j++) {
+                        ConstantValue constant = getInitElement(nextInitializerIndex, initElements.get(nextInitializerIndex));
+                        SimpleInitializer si = new SimpleInitializer(initElements.get(nextInitializerIndex), constant);
+                        nextInitializerIndex++;
+                        ali.add(si);
+                    }
+                    init = new ArrayOrStructureInitializer(startCtx, ali);
+                }
+            } else if (m_type instanceof TypeReference){
+                // need NameInitializer
+                ErrorStack.addInternal("SymbolTableVisitor@708: NameInitializer missing");
+            } else {
+                // need SimpleInitializer
+                ConstantValue constant = getInitElement(nextInitializerIndex, initElements.get(nextInitializerIndex));
+                init = new SimpleInitializer(initElements.get(nextInitializerIndex), constant);
+                nextInitializerIndex ++;
+            }
+            }
+            VariableEntry ve = new VariableEntry(s,
+                    m_type, m_hasAllocationProtection, ctx, init);
+
+            // spc/dcl and global attribute is treated in checkDoubleDefinitionAndEnterToSymbolTable
+            checkDoubleDefinitionAndEnterToSymbolTable(ve,
+                    m_identifierDenotationContext.identifier(i));
+
+        }
+        return null;
+    }
+
+
+    @Override
+    public Void  visitSemaDenotation(SemaDenotationContext ctx) {
+        m_isGlobal = false;
+        m_globalName = null;
+
+        List<InitElementContext> initElements = null;
+       if (ctx.preset() != null) {
+           initElements =
+                ctx.preset().initElement();
+       }
+       
+       m_type = new TypeSemaphore();
+       visitChildren(ctx);
+
+       if (initElements != null) {
+           if (m_isInSpecification) {
+               ErrorStack.add(ctx,"SPC", "no PRESET allowed");
+           } else {
+               if (m_identifierDenotationContext.identifier().size() < initElements.size()) {
+                   ErrorStack.add(ctx,"DCL", "too many PRESETs");
+               }
+           }
+       }
+       
+       Initializer init = null;
+       for (int i=0; i<m_identifierDenotationContext.identifier().size(); i++) {
+          if (initElements != null) {
+              if (i < initElements.size()) {
+                  init = new Initializer(initElements.get(i));
+              } else {
+                  // use last initializer
+              }
+          }
+          String s = m_identifierDenotationContext.identifier(i).getText();
+          VariableEntry ve = new VariableEntry(s,
+                  m_type, m_hasAllocationProtection, ctx, init);
+
+          // spc/dcl and global attribute is treated in checkDoubleDefinitionAndEnterToSymbolTable
+          checkDoubleDefinitionAndEnterToSymbolTable(ve,
+                  m_identifierDenotationContext.identifier(i));
+
+       }
+       return null;
+    }
+    
+    
     public Void visitAllocationProtection(SmallPearlParser.AllocationProtectionContext ctx) {
         m_hasAllocationProtection = true;
         return null;
     }
 
     public Void visitGlobalAttribute(SmallPearlParser.GlobalAttributeContext ctx) {
-        m_isGlobal = true;
+        if (ctx != null) {
+            m_isGlobal = true;
+            m_globalName = null;
+            if (ctx.ID()!= null) {
+                m_globalName = ctx.ID().getText();
+            }
+        }
         return null;
     }
 
@@ -1155,22 +1356,19 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitBoundaryDenotation(SmallPearlParser.BoundaryDenotationContext ctx) {
 
-        TypeArray ta = (TypeArray)m_type;
-//        ta.setBaseType(m_type);
-
         if (ctx.constantFixedExpression().size() == 1) {
             int upb = CommonUtils.getConstantFixedExpression(ctx.constantFixedExpression(0),
                     m_currentSymbolTable);
 
-            ta.addDimension(new ArrayDimension(Defaults.DEFAULT_ARRAY_LWB, upb, ctx));
+            ((TypeArray)m_type).addDimension(new ArrayDimension(Defaults.DEFAULT_ARRAY_LWB, upb, ctx));
         } else {
             int lwb = CommonUtils.getConstantFixedExpression(ctx.constantFixedExpression(0),
                     m_currentSymbolTable);
             int upb = CommonUtils.getConstantFixedExpression(ctx.constantFixedExpression(1),
                     m_currentSymbolTable);
-            ta.addDimension(new ArrayDimension(lwb, upb, ctx));
+            ((TypeArray)m_type).addDimension(new ArrayDimension(lwb, upb, ctx));
         }
-        m_type = ta;
+
         return null;
     }
 
@@ -1189,16 +1387,16 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 //    }
 
 
-    @Override
-    public Void visitSemaDenotation(SmallPearlParser.SemaDenotationContext ctx) {
-        Log.debug("SymbolTableVisitor:visitSemaDenotation:ctx" + CommonUtils.printContext(ctx));
-
-        m_type = new TypeSemaphore();
-
-        visitChildren(ctx);
-
-        return null;
-    }
+//    @Override
+//    public Void visitSemaDenotation(SmallPearlParser.SemaDenotationContext ctx) {
+//        Log.debug("SymbolTableVisitor:visitSemaDenotation:ctx" + CommonUtils.printContext(ctx));
+//
+//        m_type = new TypeSemaphore();
+//
+//        visitChildren(ctx);
+//
+//        return null;
+//    }
 
     @Override
     public Void visitStatement(SmallPearlParser.StatementContext ctx) {
@@ -1303,18 +1501,23 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitBoltDenotation(SmallPearlParser.BoltDenotationContext ctx) {
         Log.debug("SymbolTableVisitor:visitBoltDenotation:ctx" + CommonUtils.printContext(ctx));
+        m_isGlobal = false;
+        m_globalName = null;
+
         visitChildren(ctx);
 
         m_type = new TypeBolt();
+        for (int i=0; i<m_identifierDenotationContext.identifier().size(); i++) {
+            String s = m_identifierDenotationContext.identifier(i).getText();
+            VariableEntry ve = new VariableEntry(s,
+                    m_type, m_hasAllocationProtection, ctx);
 
-        //        for (int i = 0; i < identifierDenotationList.size(); i++) {
-        //            String s = identifierDenotationList.get(i);
-        //            VariableEntry variableEntry = new BoltEntry(s, ctx);
-        //            checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx, s);
-        //
-        //        }
+            // spc/dcl and global attribute is treated in checkDoubleDefinitionAndEnterToSymbolTable
+            checkDoubleDefinitionAndEnterToSymbolTable(ve,
+                    m_identifierDenotationContext.identifier(i));
 
-        return null;
+         }
+         return null;
     }
 
 
@@ -1326,27 +1529,51 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     public Void visitDationDenotation(SmallPearlParser.DationDenotationContext ctx) {
         // the TypeDation may have lot of parameters depending on user/system dation
         // so we just create an object and set the attributes while scanning the context
+        m_isGlobal = false;
+        m_globalName = null;
 
         if (m_verbose > 0) {
             System.out.println("SymbolTableVisitor: visitDationDenotation");
         }
 
-        ErrorStack.enter(ctx, "DationDCL");
-
-        visitTypeDation(ctx.typeDation());
-
-        TypeDation d = (TypeDation) m_type;
-        d.setIsDeclaration(true);
-        //treatIdentifierDenotation(ctx.identifierDenotation(), d);
-
-        if (ctx.globalAttribute() != null) {
-            treatGlobalAttribute(ctx.globalAttribute(), d);
+        if (m_isInSpecification) {
+            ErrorStack.enter(ctx, "DationSPC");
+        } else {
+            ErrorStack.enter(ctx, "DationDCL");
         }
 
-        // get CREATED parameter
-        d.setCreatedOn(ctx.ID().getText());
+        visitTypeDation(ctx.typeDation());
+        visitGlobalAttribute(ctx.globalAttribute());
+        if (m_isInSpecification && ctx.globalAttribute()==null) {
+            // special case: system dation from the system part of this module
+            m_isGlobal = true;
+            m_globalName = m_currentModuleName;
+        }
 
-        //
+        TypeDation d = (TypeDation) m_type;
+        d.setIsDeclaration(!m_isInSpecification);
+        //treatIdentifierDenotation(ctx.identifierDenotation(), d);
+
+       
+        treatGlobalAttribute(ctx.globalAttribute(), d);
+     
+        // get CREATED parameter if we are in a declaration, must no given in specification
+        if (ctx.ID() != null) {
+           d.setCreatedOn(ctx.ID().getText());
+        }
+        for (int i=0; i<m_identifierDenotationContext.identifier().size(); i++) {
+            String s = m_identifierDenotationContext.identifier(i).getText();
+            VariableEntry ve = new VariableEntry(s,
+                    m_type, m_hasAllocationProtection, ctx);
+
+            // spc/dcl and global attribute is treated in checkDoubleDefinitionAndEnterToSymbolTable
+            checkDoubleDefinitionAndEnterToSymbolTable(ve,
+                    m_identifierDenotationContext.identifier(i));
+
+         }
+
+
+ 
         ErrorStack.leave();
         return null;
     }
@@ -1360,14 +1587,14 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             // System.out.println("DationName: "+ dationName);
 
             VariableEntry variableEntry = new VariableEntry(dationName, d, ctx);
-            checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx, dationName);
+            checkDoubleDefinitionAndEnterToSymbolTable(variableEntry, ctx);
 
         }
     }
 
     int treatDimension(String s) {
         if (s.equals("*")) {
-            return 0; // '*'
+            return -1; // '*'
         } else {
             int nbr = Integer.parseInt(s);
             if (nbr <= 0) {
@@ -1378,8 +1605,17 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     }
 
     void treatGlobalAttribute(GlobalAttributeContext ctx, TypeDation d) {
-        if (ctx.ID() != null) {
-            d.setGlobal(ctx.ID().getText());
+        if (ctx == null) {
+            // no GLOBAL given --> default to m_currentModuleName if we are in a specification
+            if (m_isInSpecification) {
+                d.setGlobal(m_currentModuleName);
+            }
+        } else {
+            if (ctx.ID() != null) {
+                d.setGlobal(ctx.ID().getText());
+            } else {
+                d.setGlobal(m_currentModuleName);
+            }
         }
     }
     /* -------------------------------------------------------------------  */
@@ -1511,10 +1747,11 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
                     if (var.getAssigmentProtection()) {
                         if (var.getInitializer() instanceof SimpleInitializer) {
+                            
                             constant = ((SimpleInitializer) var.getInitializer()).getConstant();
                         } else {
-                            throw new InternalCompilerErrorException(ctx.getText(),
-                                    ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                            ErrorStack.add(ctx, "initializer", "not valid");
+                            return null;
                         }
                     } else {
                         ErrorStack.add(ctx, "initializer", "must be INV");
@@ -1525,13 +1762,14 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
                         //                            (ctx.ID().toString()));
                     }
                 } else {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-                            ctx.start.getCharPositionInLine());
+                    ErrorStack.addInternal("SymbolTableVisitor@1699: untreated alternative");
+                    return null;
                 }
             }
         }
 
         constant = m_constantPool.add(constant);
+       
         return constant;
     }
 
@@ -1671,71 +1909,112 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
         return constant;
     }
 
+//    @Override
+//    public Void visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
+//        LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
+//
+//        Log.debug(
+//                "SymbolTableVisitor:visitDationSpecification:ctx" + CommonUtils.printContext(ctx));
+//
+//        if (listOfModules.size() > 1) {
+//            throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(),
+//                    ctx.start.getCharPositionInLine());
+//        }
+//
+//        ModuleEntry moduleEntry = listOfModules.get(0);
+//        SymbolTable symbolTable = moduleEntry.scope;
+//
+//        /* ---------------- */
+//
+//        if (m_verbose > 0) {
+//            System.out.println("SymbolTableVisitor: visitDationSpecification");
+//        }
+//
+//        ErrorStack.enter(ctx, "DationSPC");
+//
+//        visitTypeDation(ctx.typeDation());
+//        TypeDation d = (TypeDation) m_type;
+//        d.setIsDeclaration(false);
+//
+//        treatIdentifierDenotation(ctx.identifierDenotation(), d);
+//
+//        if (ctx.globalAttribute() != null) {
+//            treatGlobalAttribute(ctx.globalAttribute(), d);
+//        }
+//
+//        //
+//        ErrorStack.leave();
+//
+//        /* ---------------- */
+//        return null;
+//    }
+
+    /**
+     * add specified interrupts to the symbol table maybe this would be better placed in
+     */
     @Override
-    public Void visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
-        LinkedList<ModuleEntry> listOfModules = this.symbolTable.getModules();
-
-        Log.debug(
-                "SymbolTableVisitor:visitDationSpecification:ctx" + CommonUtils.printContext(ctx));
-
-        if (listOfModules.size() > 1) {
-            throw new NotYetImplementedException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
-        }
-
-        ModuleEntry moduleEntry = listOfModules.get(0);
-        SymbolTable symbolTable = moduleEntry.scope;
-
-        /* ---------------- */
+    public Void visitInterruptDenotation(SmallPearlParser.InterruptDenotationContext ctx) {
+        m_isGlobal = false;
+        m_globalName = null;
 
         if (m_verbose > 0) {
-            System.out.println("SymbolTableVisitor: visitDationSpecification");
+            System.out.println("SymbolTableVisitor:visitInterruptDenotaion");
         }
 
-        ErrorStack.enter(ctx, "DationSPC");
+        visitChildren(ctx);
 
-        visitTypeDation(ctx.typeDation());
-        TypeDation d = (TypeDation) m_type;
-        d.setIsDeclaration(false);
-
-        treatIdentifierDenotation(ctx.identifierDenotation(), d);
-
-        if (ctx.globalAttribute() != null) {
-            treatGlobalAttribute(ctx.globalAttribute(), d);
+        for (int i = 0; i < ctx.identifierDenotation().identifier().size(); i++) {
+            String iName = ctx.identifierDenotation().identifier(i).ID().toString();
+            InterruptEntry ie = new InterruptEntry(iName, ctx.identifierDenotation().identifier(i));
+            checkDoubleDefinitionAndEnterToSymbolTable(ie, ctx.identifierDenotation().identifier(i));
+            
         }
-
-        //
-        ErrorStack.leave();
-
-        /* ---------------- */
         return null;
     }
 
     /**
      * add specified interrupts to the symbol table maybe this would be better placed in
-     * SymbolTableVisitor
      */
     @Override
-    public Void visitInterruptSpecification(SmallPearlParser.InterruptSpecificationContext ctx) {
-
-        boolean isGlobal = false;
+    public Void visitTaskDenotation(SmallPearlParser.TaskDenotationContext ctx) {
+        m_isGlobal = false;
+        m_globalName = null;
 
         if (m_verbose > 0) {
-            System.out.println("Semantic: Check RT-statements: visitInterruptSpecification");
+            System.out.println("SymbolTableVisitor:visitTaskDenotation");
         }
 
-        if (ctx.globalAttribute() != null) {
-            isGlobal = true;
-        }
+        visitChildren(ctx);
 
         for (int i = 0; i < ctx.identifierDenotation().identifier().size(); i++) {
             String iName = ctx.identifierDenotation().identifier(i).ID().toString();
-            InterruptEntry ie = new InterruptEntry(iName, isGlobal, ctx);
-            checkDoubleDefinitionAndEnterToSymbolTable(ie, ctx, iName);
+            TaskEntry ie = new TaskEntry(iName,ctx.identifierDenotation().identifier(i));
+            checkDoubleDefinitionAndEnterToSymbolTable(ie, ctx.identifierDenotation().identifier(i));
         }
         return null;
     }
 
+    public Void visitProcedureDenotation(SmallPearlParser.ProcedureDenotationContext ctx) {
+        m_isGlobal = false;
+        m_globalName = null;
+
+
+        if (m_verbose > 0) {
+            System.out.println("SymbolTableVisitor:visitProcedureDenotation");
+        }
+
+        visitChildren(ctx);
+
+        for (int i = 0; i < ctx.identifierDenotation().identifier().size(); i++) {
+            String iName = ctx.identifierDenotation().identifier(i).ID().toString();
+            Log.warn("SymbolTableVisitor@1924: visitProcedureDenotation still incomplete");
+//            ProcedureEntry ie = new ProcedureEntry(iName,ctx.identifierDenotation().identifier(i));
+//            checkDoubleDefinitionAndEnterToSymbolTable(ie, ctx.identifierDenotation().identifier(i));
+        }
+        return null;
+    }
+
+    
 
     //    @Override
     //    public Void visitStructureDenotation(SmallPearlParser.StructureDenotationContext ctx) {
@@ -1797,42 +2076,42 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitStructureComponent(SmallPearlParser.StructureComponentContext ctx) {
         Log.debug("SymbolTableVisitor:visitStructureComponent:ctx" + CommonUtils.printContext(ctx));
-        TypeDefinition type_saved = m_type;
-        TypeArray array = null;
-
+        TypeDefinition parentStructure = m_type;
+       
         StructureComponent component = null;
 
         TypeStructure saved_typeStructure = m_typeStructure;
+        
+        // principle of operation
+        // * in nested structs we work with recursion
+        // * parentStructure is the struct which contains the current component
+        // * if the current component is an array
 
+
+        visitTypeAttributeInStructureComponent(ctx.typeAttributeInStructureComponent());
+        
         if (ctx.dimensionAttribute() != null) {
             Log.debug("SymbolTableVisitor:visitStructureComponent: ARRAY");
-            array = new TypeArray();
-            m_type = array;
+            TypeArray ta = new TypeArray();
+            ta.setBaseType(m_type);
+            m_type = ta;
             visitDimensionAttribute(ctx.dimensionAttribute());
             addArrayDescriptor(
-                    new ArrayDescriptor(array.getNoOfDimensions(), array.getDimensions()));
-        }
+                    new ArrayDescriptor(((TypeArray)m_type).getNoOfDimensions(), ((TypeArray) m_type).getDimensions()));
+        }      
 
 
-        type_saved = m_type;
-        visitTypeAttributeInStructureComponent(ctx.typeAttributeInStructureComponent());
-
-        if (type_saved instanceof TypeArray) {
-            ((TypeArray) type_saved).setBaseType(m_type);
-        } else {
-            type_saved = m_type;
-        }
         m_typeStructure = saved_typeStructure;
         
         for (int i = 0; i < ctx.ID().size(); i++) {
             component = new StructureComponent();
-            component.m_type = type_saved;
+            component.m_type = m_type;
             component.m_id = ctx.ID(i).getText();
 
             saved_typeStructure.add(component);
            
         }
-        m_type = m_typeStructure;
+        m_type = parentStructure;
 
         return null;
     }
@@ -1866,7 +2145,7 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
     //    }
 
     private void checkDoubleDefinitionAndEnterToSymbolTable(SymbolTableEntry newEntry,
-            ParserRuleContext ctx, String msg) {
+            ParserRuleContext ctx) {
         String s = newEntry.getName();
         SymbolTableEntry entry = m_currentSymbolTable.lookupLocal(s);
         if (entry != null) {
@@ -1876,6 +2155,21 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             if (entry != null) {
                 CommonErrorMessages.doubleDeclarationWarning("double declaration of ", s, ctx,
                         entry.getCtx());
+            }
+            // setup SPC/DCL and GLOBAL information
+            if (m_isInSpecification) {
+                newEntry.setIsSpecified();
+            }
+            if (m_isGlobal) {
+                if (m_globalName!=null) {
+                    if (m_isInSpecification) {
+                       newEntry.setGlobalAttribute(m_globalName);
+                    } else {
+                        ErrorStack.add(ctx,"GLOBAL","no nameOfModule allowed in DCL");
+                    }
+                } else {
+                    newEntry.setGlobalAttribute(m_currentModuleName);
+                }
             }
             m_currentSymbolTable.enter(newEntry);
         }

@@ -154,6 +154,12 @@ public class TypeDation extends TypeDefinition {
 		this.m_out = m_out;
 	}
 
+	public String getDirectionAsString() {
+	    String result="";
+	    if (m_in)  result += "IN";
+	    if (m_out) result += "OUT";
+	    return result;
+	}
     public boolean isSystemDation() {
 		return m_systemDation;
 	}
@@ -271,6 +277,10 @@ public class TypeDation extends TypeDefinition {
 	public void setGlobal(String moduleName) {
 	   this.m_global = moduleName;
 	}
+	/**
+	 * 
+	 * @return -2 if not set;<br> -1 if unlimited <br> >0 if specified
+	 */
 	public int getDimension1() {
 		return m_dimension1;
 	}
@@ -280,6 +290,10 @@ public class TypeDation extends TypeDefinition {
 		this.m_dimension1 = m_dimension1;
 	}
 
+        /**
+         * 
+         * @return -2 if not set;<br> -1 if unlimited <br> >0 if specified
+         */
 	public int getDimension2() {
 		return m_dimension2;
 	}
@@ -288,6 +302,10 @@ public class TypeDation extends TypeDefinition {
 	   this.m_hasTypology = true;
 		this.m_dimension2 = m_dimension2;
 	}
+        /**
+         * 
+         * @return -2 if not set;<br> -1 if unlimited <br> >0 if specified
+         */
 	public int getDimension3() {
 		return m_dimension3;
 	}

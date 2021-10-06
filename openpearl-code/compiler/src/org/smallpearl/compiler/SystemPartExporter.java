@@ -29,8 +29,6 @@
 
 package org.smallpearl.compiler;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.smallpearl.compiler.Exception.NotSupportedTypeException;
 import org.smallpearl.compiler.SymbolTable.InterruptEntry;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
@@ -39,8 +37,25 @@ import org.smallpearl.compiler.SymbolTable.VariableEntry;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
-import java.util.ArrayList;
 import java.util.LinkedList;
+
+/**
+ * export module information as xml-file
+ * <ul>
+ * <li> system dation specifications
+ * <li> user dation declarations
+ * <li> tfu usage by user dations with reference to system dation
+ * </ul>
+ * 
+ * if global becomes supported, this must become extended by
+ * <ul>
+ * <li>specifications of problem part elements from other modules
+ * <li>declarations of global problem part elements of this module
+ * </ul>
+ * 
+ * The system part elements are generated from the AST.<br>
+ * The problem part elements are generated from the symbol table 
+ */
 
 public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements SmallPearlVisitor<ST> {
 
@@ -51,10 +66,10 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
     private String m_sourceFileName;
     private SymbolTable m_symboltable;
     private SymbolTable m_currentSymbolTable;
-    ST module = null;
-    ST systemPart = null;
-    ST problemPart = null;
-    ST tfuUsage = null;
+    private ST module = null;
+    private ST systemPart = null;
+    private ST problemPart = null;
+    private ST tfuUsage = null;
 
 
     public SystemPartExporter(String sourceFileName, int verbose, boolean debug,
@@ -99,7 +114,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
         problemPart = group.getInstanceOf("ProblemPart");
         tfuUsage = group.getInstanceOf("TfuUsage");
         problemPart.add("decls", tfuUsage);
-        
+
         exportInterruptSpecifications();
         exportDations();
         module.add("ProblemPart", problemPart);
@@ -126,7 +141,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
     @Override
     public ST visitSystemElementDefinition(SmallPearlParser.SystemElementDefinitionContext ctx) {
         ST decl = group.getInstanceOf("SystemElementDefinition");
-
+        
         decl.add("username", ctx.systemPartName().getText());
         decl.add("lineno", ctx.start.getLine());
         decl.add("col", ctx.start.getCharPositionInLine() + 1);
@@ -221,292 +236,123 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
 
         return parameters;
     }
-    
+
     private void exportInterruptSpecifications() {
         // export interrupt specifications
-        // export dation specifications and declaractions
-       LinkedList<InterruptEntry> l=m_currentSymbolTable.getInterruptSpecifications();
-       for (InterruptEntry v : l) {
-    
-               ST interruptSpecification = group.getInstanceOf("Specification");
-               interruptSpecification.add("type", "INTERRUPT");
-               interruptSpecification.add("lineno", v.getCtx().start.getLine());
-               interruptSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
-               interruptSpecification.add("name", v.getName());
-               problemPart.add("decls", interruptSpecification);
-           }        
+
+        LinkedList<InterruptEntry> l = m_currentSymbolTable.getInterruptSpecifications();
+        for (InterruptEntry v : l) {
+
+            ST interruptSpecification = group.getInstanceOf("Specification");
+            interruptSpecification.add("type", "INTERRUPT");
+            interruptSpecification.add("lineno", v.getCtx().start.getLine());
+            interruptSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
+            interruptSpecification.add("name", v.getName());
+            problemPart.add("decls", interruptSpecification);
+        }
     }
-   
+
     private void exportDations() {
+        // export dation specifications and declaractions
+        
         LinkedList<VariableEntry> l = m_currentSymbolTable.getVariableDeclarations();
 
         for (VariableEntry v : l) {
-            if (v.getBaseType() instanceof TypeDation) {
-                TypeDation t = (TypeDation)v.getBaseType();
-                if (!t.isSystemDation()) continue;
+            if (v.getType() instanceof TypeDation) {
+                TypeDation t = (TypeDation) v.getType();
+                if (!t.isSystemDation()) {
+                    treatTfuStuff(v);
+                } else {
 
-                ST dationSpecification = group.getInstanceOf("DationSpecification");
+                    ST dationSpecification = group.getInstanceOf("DationSpecification");
 
-                dationSpecification.add("lineno", v.getCtx().start.getLine());
-                dationSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
-                dationSpecification.add("name", v.getName());
+                    dationSpecification.add("lineno", v.getCtx().start.getLine());
+                    dationSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
+                    dationSpecification.add("name", v.getName());
 
-                TypeDation td = (TypeDation)(v.getBaseType());
+                    TypeDation td = (TypeDation) (v.getType());
 
-                ST datalist = group.getInstanceOf("DataList");
-                ST attributes = group.getInstanceOf("Attributes");
-                if (td.isAlphic()) {
-                    ST data = group.getInstanceOf("Data");
-                    data.add("name", "ALPHIC");
-                    datalist.add("data", data);
-                } else if (td.isBasic()) {
-                    ST attribute = group.getInstanceOf("Attribute");
-                    attribute.add("name", "BASIC");
-                    attributes.add("attributes", attribute);
-                } 
-                if (td.isSystemDation()) {
-                    ST attribute = group.getInstanceOf("Attribute");
-                    attribute.add("name", "SYSTEM");
-                    attributes.add("attributes", attribute);
-                }
-
-                if (td.getTypeOfTransmission()!= null) {
-                    ST data = group.getInstanceOf("Data");
-                    data.add("name", td.getTypeOfTransmission());
-                    datalist.add("data", data);
-                }
-                if (td.isIn() && td.isOut()) {
-                    ST attribute = group.getInstanceOf("Attribute");
-                    attribute.add("name", "INOUT");
-                    attributes.add("attributes", attribute);
-                } else if (td.isIn() && !td.isOut()) {
-                    ST attribute = group.getInstanceOf("Attribute");
-                    attribute.add("name", "IN");
-                    attributes.add("attributes", attribute);
-                } else if (!td.isIn() && td.isOut()) {
-                    ST attribute = group.getInstanceOf("Attribute");
-                    attribute.add("name", "OUT");
-                    attributes.add("attributes", attribute);
-                }
-
-
-
-                dationSpecification.add("datalist", datalist);
-                dationSpecification.add("attributes", attributes);
-        
-            problemPart.add("decls", dationSpecification);
-        }
-    }
-
-return;
-}
-
-/*
-    @Override
-    public ST visitProblem_part(SmallPearlParser.Problem_partContext ctx) {
-        problemPart = group.getInstanceOf("ProblemPart");
-        tfuUsage = group.getInstanceOf("TfuUsage");
-
-
-        if (ctx != null) {
-            visitChildren(ctx);
-
-        }
-        problemPart.add("decls", tfuUsage);
-        return problemPart;
-    }
-
-    //  @Override
-    //  public ST visitIdentification(SmallPearlParser.IdentificationContext ctx) {
-    //    ST st = group.getInstanceOf("Specification");
-    //
-    //    st.add("lineno", ctx.start.getLine());
-    //    st.add("col",  ctx.start.getCharPositionInLine()+1);
-    //    st.add("name", ctx.ID().toString());
-    //    if (ctx.type() != null) {
-    //      st.add("type", visitType(ctx.type()));
-    //    }
-    //    problemPart.add("decls", st);
-    //    return null;
-    //  }
-
-    @Override
-    public ST visitInterruptSpecification(SmallPearlParser.InterruptSpecificationContext ctx) {
-
-
-        for (int i = 0; i < ctx.identifierDenotation().identifier().size(); i++) {
-            ST interruptSpecification = group.getInstanceOf("Specification");
-            interruptSpecification.add("type", "INTERRUPT");
-            interruptSpecification.add("lineno", ctx.start.getLine());
-            interruptSpecification.add("col", ctx.start.getCharPositionInLine() + 1);
-            interruptSpecification.add("name",
-                    ctx.identifierDenotation().identifier(i).ID().toString());
-            problemPart.add("decls", interruptSpecification);
-        }
-
-        return null;
-    }
-
-    @Override
-    public ST visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
-
-
-        boolean hasGlobalAttribute = false;
-
-        ArrayList<String> identifierDenotationList = null;
-        if (ctx != null) {
-            if (ctx.identifierDenotation() != null) {
-                identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
-            }
-
-            if (ctx.globalAttribute() != null) {
-                hasGlobalAttribute = true;
-            }
-
-            for (int i = 0; i < identifierDenotationList.size(); i++) {
-                ST dationSpecification = group.getInstanceOf("DationSpecification");
-
-                dationSpecification.add("lineno", ctx.start.getLine());
-                dationSpecification.add("col", ctx.start.getCharPositionInLine() + 1);
-                dationSpecification.add("name", identifierDenotationList.get(i));
-
-                if (ctx.typeDation() != null) {
                     ST datalist = group.getInstanceOf("DataList");
                     ST attributes = group.getInstanceOf("Attributes");
-
-                    if (ctx.typeDation().classAttribute() != null) {
-                        if (ctx.typeDation().classAttribute().alphicDation() != null) {
-                            ST data = group.getInstanceOf("Data");
-                            data.add("name", "ALPHIC");
-                            datalist.add("data", data);
-                        }
-
-                        if (ctx.typeDation().classAttribute().basicDation() != null) {
-                            ST attribute = group.getInstanceOf("Attribute");
-                            attribute.add("name", "BASIC");
-                            attributes.add("attributes", attribute);
-                        }
-
-                        if (ctx.typeDation().classAttribute().systemDation() != null) {
-                            ST attribute = group.getInstanceOf("Attribute");
-                            attribute.add("name", "SYSTEM");
-                            attributes.add("attributes", attribute);
-                        }
-
-                        if (ctx.typeDation().classAttribute() != null) {
-                            if (ctx.typeDation().classAttribute()
-                                    .typeOfTransmissionData() != null) {
-                                ST data = group.getInstanceOf("Data");
-                                data.add("name", ctx.typeDation().classAttribute()
-                                        .typeOfTransmissionData().getText());
-                                datalist.add("data", data);
-                            }
-                        }
-                    }
-
-                    if (ctx.typeDation().sourceSinkAttribute() != null) {
+                    if (td.isAlphic()) {
+                        ST data = group.getInstanceOf("Data");
+                        data.add("name", "ALPHIC");
+                        datalist.add("data", data);
+                    } else if (td.isBasic()) {
                         ST attribute = group.getInstanceOf("Attribute");
-                        attribute.add("name", ctx.typeDation().sourceSinkAttribute().getText());
+                        attribute.add("name", "BASIC");
+                        attributes.add("attributes", attribute);
+                    }
+                    if (td.isSystemDation()) {
+                        ST attribute = group.getInstanceOf("Attribute");
+                        attribute.add("name", "SYSTEM");
                         attributes.add("attributes", attribute);
                     }
 
+                    if (td.getTypeOfTransmission() != null) {
+                        ST data = group.getInstanceOf("Data");
+                        data.add("name", td.getTypeOfTransmission());
+                        datalist.add("data", data);
+                    }
+                    if (td.isIn() && td.isOut()) {
+                        ST attribute = group.getInstanceOf("Attribute");
+                        attribute.add("name", "INOUT");
+                        attributes.add("attributes", attribute);
+                    } else if (td.isIn() && !td.isOut()) {
+                        ST attribute = group.getInstanceOf("Attribute");
+                        attribute.add("name", "IN");
+                        attributes.add("attributes", attribute);
+                    } else if (!td.isIn() && td.isOut()) {
+                        ST attribute = group.getInstanceOf("Attribute");
+                        attribute.add("name", "OUT");
+                        attributes.add("attributes", attribute);
+                    }
+
+
                     dationSpecification.add("datalist", datalist);
                     dationSpecification.add("attributes", attributes);
+
+                    problemPart.add("decls", dationSpecification);
                 }
-                problemPart.add("decls", dationSpecification);
             }
         }
 
-        return null;
+        return;
     }
 
-    @Override
-    public ST visitDationDenotation(SmallPearlParser.DationDenotationContext ctx) {
-        boolean hasGlobalAttribute = false;
+    private void treatTfuStuff(VariableEntry v) {
+        TypeDation d = (TypeDation) v.getType();
 
-        ArrayList<String> identifierDenotationList = null;
-        if (ctx != null) {
-            if (ctx.identifierDenotation() != null) {
-                identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
-            }
+        ST tfuInUserDation = group.getInstanceOf("TfuInUserDation");
+        tfuInUserDation.add("lineno", v.getSourceLineNo());
+        tfuInUserDation.add("col", v.getCharPositionInLine() + 1);
 
-            if (ctx.globalAttribute() != null) {
-                hasGlobalAttribute = true;
-            }
-            ErrorStack.enter(ctx, "DationDCL");
+        tfuUsage.add("decls", tfuInUserDation);
+        tfuInUserDation.add("userdation", v.getName());
+        tfuInUserDation.add("systemdation", d.getCreatedOn());
+        if (d.hasTfu()) {
+            // already checked, that the last dimension is const > 0
+            // get last defined dimension
+            int recordLength = d.getDimension3();
+            if (recordLength < 0)
+                recordLength = d.getDimension2();
+            if (recordLength < 0)
+                recordLength = d.getDimension1();
 
-            for (int i = 0; i < identifierDenotationList.size(); i++) {
-
-                String dationName = ctx.identifierDenotation().identifier(i).ID().toString();
-                //System.out.println("DationName: "+ dationName);
-
-
-                SymbolTableEntry entry1 = this.m_currentSymbolTable.lookup(dationName);
-
-                if (entry1 == null) {
-                    ErrorStack.addInternal("Symbol table does not contain:" + dationName);
-                    ErrorStack.leave();
-                    return null;
+            // detect element size if not ALPHIC or ALL
+            if (d.getTypeOfTransmission() != null) {
+                if (!d.getTypeOfTransmission().contentEquals("ALL")) {
+                    recordLength *= d.getTypeOfTransmissionAsType().getSize();
                 }
-                SymbolTableEntry se = this.m_currentSymbolTable.lookup(dationName);
-                if (se != null && !(se instanceof VariableEntry)
-                        && !(((VariableEntry) se).getType() instanceof TypeDation)) {
-                    ErrorStack.addInternal("symbol " + dationName + " not found/or no dation");
-                    ErrorStack.leave();
-                    return null;
+                // getSize returns -1, if the size is unknown to the compiler
+                // the test od sufficient record size must be done at runtime
+                // indicate this which recordLength=0
+                if (recordLength < 0) {
+                    recordLength = 0;
                 }
-                TypeDation d = (TypeDation) (((VariableEntry) se).getType());
-                if (!d.isSystemDation()) {
-                    ST tfuInUserDation = group.getInstanceOf("TfuInUserDation");
-                    tfuInUserDation.add("lineno", se.getSourceLineNo());
-                    tfuInUserDation.add("col", se.getCharPositionInLine() + 1);
-
-                    tfuUsage.add("decls", tfuInUserDation);
-                    tfuInUserDation.add("userdation", identifierDenotationList.get(i));
-                    tfuInUserDation.add("systemdation", d.getCreatedOn());
-                    if (d.hasTfu()) {
-                        // already checked, that the last dimension is const > 0
-                        // get last defined dimension
-                        int recordLength = d.getDimension3();
-                        if (recordLength < 0)
-                            recordLength = d.getDimension2();
-                        if (recordLength < 0)
-                            recordLength = d.getDimension1();
-
-                        // detect element size if not ALPHIC or ALL
-                        if (d.getTypeOfTransmission() != null) {
-                            if (!d.getTypeOfTransmission().contentEquals("ALL")) {
-                                recordLength *= d.getTypeOfTransmissionAsType().getSize();
-                            }
-                            // getSize returns -1, if the size is unknown to the compiler
-                            // the test od sufficient record size must be done at runtime
-                            // indicate this which recordLength=0
-                            if (recordLength < 0) {
-                                recordLength = 0;
-                            }
-                        }
-                        tfuInUserDation.add("tfusize", recordLength);
-                    }
-                }
-
             }
+            tfuInUserDation.add("tfusize", recordLength);
         }
-
-        return null;
     }
 
-
-    private ArrayList<String> getIdentifierDenotation(
-            SmallPearlParser.IdentifierDenotationContext ctx) {
-        ArrayList<String> identifierDenotationList = new ArrayList<String>();
-
-        if (ctx != null) {
-            for (int i = 0; i < ctx.identifier().size(); i++) {
-                identifierDenotationList.add(ctx.identifier(i).ID().toString());
-            }
-        }
-
-        return identifierDenotationList;
-    }
-    */
 }

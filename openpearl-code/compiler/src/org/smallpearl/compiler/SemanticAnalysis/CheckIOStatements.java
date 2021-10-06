@@ -30,6 +30,7 @@
 package org.smallpearl.compiler.SemanticAnalysis;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
@@ -66,6 +67,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
     private boolean m_directionInput;
     private TypeDation m_typeDation;
     private boolean abortCheck; // flag to abort a check after a severe error was detected
+    private boolean m_isInSpecification = false;
 
     public CheckIOStatements(String sourceFileName, int verbose, boolean debug,
             SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
@@ -81,6 +83,8 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
         if (m_verbose > 0) {
             System.out.println("    Check IOFormats");
         }
+        
+
     }
 
     @Override
@@ -93,8 +97,204 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
                 m_currentSymbolTable.lookupLocal(ctx.nameOfModuleTaskProc().ID().getText());
         m_currentSymbolTable = ((ModuleEntry) symbolTableEntry).scope;
         visitChildren(ctx);
+
+        
+        // get all dation entries from the symbol table
+        LinkedList<VariableEntry> entries = m_currentSymbolTable.getDationSpcAndDcl();
+        for (int i=0; i<entries.size(); i++) {
+           VariableEntry ve = entries.get(i); 
+           TypeDation td = (TypeDation)(ve.getType());
+           System.out.println(ve.toString(1));
+               if (ve.isSpecified() ) {
+                   if (td.isSystemDation()) {
+                       checkSystemDationSpecification(ve,td);
+                   } else {
+                       checkUserDation(ve,td,false);
+                   }
+               } else {   
+                 checkUserDation(ve,td,true);
+               }
+         
+        }
         m_currentSymbolTable = m_currentSymbolTable.ascend();
         return null;
+    }
+
+    private void checkSystemDationSpecification(VariableEntry ve, TypeDation d) {
+        System.out.println("SysSPC: "+ve.getName());
+//        TypeDation d = (TypeDation) (((VariableEntry) se).getType());
+        ErrorStack.enter(ve.getCtx());
+        if (d.hasTypology() == true) {
+            ErrorStack.add("DIM not expeced on system dation");
+        }
+        if (d.hasTfu()) {
+            ErrorStack.add("TFU not expected on system dation");
+        }
+        ErrorStack.leave();
+    }
+
+    private void checkUserDation(VariableEntry ve, TypeDation d, boolean isDecl) {
+        ErrorStack.enter(ve.getCtx());
+        if (isDecl) {
+            System.out.println("UserDCL: "+ve.getName());
+            if (d.isSystemDation()) {
+                ErrorStack.add("SYSTEM dations may not be declared");
+                return;
+            }
+            
+ 
+        } else {
+            System.out.println("UserSPC: "+ve.getName());
+        }
+        // userdation must be 
+        // of type ALPHIC                      -> DationPG
+        // or type BASIC + typeOfTransmission  -> DationTS
+        // or type of       typeOfTransmission -> DationRW
+        // this is all enforced by the grammar
+
+
+
+        // dimension settings must be >0 or '*' if given
+        // only the last dimension may be '*' - the not 0 check is not in the grammar
+        switch (d.getNumberOfDimensions()) {
+            case 3:
+                if (d.getDimension3() <= 0 || d.getDimension2() <= 0) {
+                    // '*' not allowed
+                    ErrorStack.add("only first dimension may be '*'");
+                }
+                break;
+            case 2:
+                if (d.getDimension2() == 0) {
+                    // '*' not allowed
+                    ErrorStack.add("only first dimension may be '*'");
+                }
+                break;
+            case 1:
+                break;
+        }
+
+
+        if (d.hasTfu() && d.getNumberOfDimensions() == 1 && d.getDimension1() == 0) {
+            ErrorStack.add("TFU requires limited record length");
+        }
+
+        if (isDecl) {
+        SymbolTableEntry sys = this.m_currentSymbolTable.lookup(d.getCreatedOn());;
+
+        if (sys == null) {
+
+            ErrorStack.add("system dation " + d.getCreatedOn() + " is not defined");
+            ErrorStack.leave();
+            return ;
+        } else if ((!(sys instanceof VariableEntry))
+                || (!(((VariableEntry) sys).getType() instanceof TypeDation))) {
+            ErrorStack.add(d.getCreatedOn() + " is not of type DATION");
+            ErrorStack.leave();
+            return ;
+        } else {
+            TypeDation sd = (TypeDation) (((VariableEntry) sys).getType());
+
+
+            // (4) ClassAttribute must fit
+            // check compatibility
+            // use system dation as primary selector
+            if (sd.isBasic()) {
+                if (d.isAlphic()) {
+                    ErrorStack.add("attempt to create ALPHIC dation upon BASIC system dation");
+                    ErrorStack.leave();
+                    return ;
+                }
+                if (!d.isBasic()) {
+                    // d is not of type ALPHIC and not type BASIC --> check typeOfTransmission for
+                    // correct error message
+                    if (d.getTypeOfTransmission() != null) {
+                        ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
+                                + "' dation upon a BASIC system dation");
+                    } else {
+                        ErrorStack.add(
+                                "attempt to create an ALPHIC dation upon a BASIC system dation");
+                    }
+                    ErrorStack.leave();
+                    return ;
+                }
+
+            }
+            if (sd.isAlphic()) {
+                if (!d.isAlphic()) {
+                    if (d.isBasic()) {
+                        ErrorStack.add(
+                                "attempt to create a BASIC dation upon an ALPHIC system dation");
+                        ErrorStack.leave();
+                        return ;
+                    }
+                    if (d.getTypeOfTransmission() != null) {
+                        ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
+                                + "' dation upon an ALPHIC system dation");
+                        ErrorStack.leave();
+                        return ;
+                    }
+                }
+            }
+            if (sd.getTypeOfTransmission() != null && !sd.isBasic()) {
+                if (d.isAlphic()) {
+                    if (!sd.getTypeOfTransmission().equals("ALL")) {
+                        ErrorStack.add("attempt to create an ALPHIC dation upon '"
+                                + d.getTypeOfTransmission() + "' system dation");
+                        ErrorStack.leave();
+                        return ;
+                    }
+                }
+                if (d.isBasic()) {
+                    ErrorStack.add("attempt to create a BASIC dation upon non BASIC system dation");
+                    ErrorStack.leave();
+                    return ;
+                }
+                if (d.getTypeOfTransmission() != null) {
+                    if (!sd.getTypeOfTransmission().equals("ALL")) {
+                        // types must be equal
+                        if (!sd.getTypeOfTransmissionAsType()
+                                .equals(d.getTypeOfTransmissionAsType())) {
+                            ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
+                                    + "' dation upon a '" + sd.getTypeOfTransmission()
+                                    + "' system dation");
+
+                        }
+                    }
+                }
+            }
+
+            // (2) direction must fit (sourceSinkAttribute)
+            if (d.isIn() && !sd.isIn()) {
+                ErrorStack.add("system dation does not provide direction IN");
+            }
+            if (d.isOut() && !sd.isOut()) {
+                ErrorStack.add("system dation does not provide direction OUT");
+            }
+
+
+
+            // (5) Typology
+            //    Userdation of type ALPHIC or type need 
+            //        * typology
+            //        * FORWARD/DIRECT
+            //        - STREAM/NOSTREAM/CYCLIC/NOCLYCIC without contradictions
+            if (!d.isBasic() && !d.hasTypology()) {
+                ErrorStack.add("non BASIC user dation needs typology (DIM)");
+            }
+        }
+
+            if (d.hasTfu() && d.isStream()) {
+                ErrorStack.add("TFU requires NOSTREAM");
+            }
+
+
+            // (x) if the system dation specifies a TFU-size;
+            //     the user dation must do this also
+            //     this is checked by the IMC, since we do not know anything about
+            //     details of the system dation
+
+        }
+        ErrorStack.leave();
     }
 
     @Override
@@ -109,6 +309,20 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
+    @Override
+    public Void visitVariableDeclaration(SmallPearlParser.VariableDeclarationContext ctx) {
+        m_isInSpecification = false;
+        visitChildren(ctx);
+        return null;
+    }
+    
+    @Override
+    public Void visitSpecification(SmallPearlParser.SpecificationContext ctx) {
+        m_isInSpecification = true;
+        visitChildren(ctx);
+        m_isInSpecification = false;
+        return null;
+    }
     @Override
     public Void visitTaskDeclaration(SmallPearlParser.TaskDeclarationContext ctx) {
         if (m_debug) {
@@ -149,235 +363,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
     /* start of check specific code */
     /* ------------------------------------------------ */
 
-    @Override
-    public Void visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
-        // just take the first name of the list, the attributes are the same
-        String dationName = ctx.identifierDenotation().identifier(0).ID().toString();
-        //System.out.println("DationName: "+ dationName);
-
-        ErrorStack.enter(ctx, "DationSPC");
-
-
-        SymbolTableEntry entry1 = this.m_currentSymbolTable.lookup(dationName);
-
-        if (entry1 == null) {
-            ErrorStack.addInternal("Symbol table does not contain:" + dationName);
-            ErrorStack.leave();
-            return null;
-        }
-        SymbolTableEntry se = this.m_currentSymbolTable.lookup(dationName);
-        if (se != null && !(se instanceof VariableEntry)
-                && !(((VariableEntry) se).getType() instanceof TypeDation)) {
-            ErrorStack.addInternal("symbol " + dationName + " not found/or no dation");
-            ErrorStack.leave();
-            return null;
-        }
-        TypeDation d = (TypeDation) (((VariableEntry) se).getType());
-
-        if (d.hasTypology() == true) {
-            ErrorStack.add("DIM not expeced on system dation");
-        }
-        if (d.hasTfu()) {
-            ErrorStack.add("TFU not expected on system dation");
-        }
-        ErrorStack.leave();
-
-
-        return null;
-    }
-
-
-
-    @Override
-    public Void visitDationDenotation(SmallPearlParser.DationDenotationContext ctx) {
-        if (m_debug) {
-            System.out.println("Semantic: visitDationDeclaration");
-        }
-        // we do not need to iterate over the names since they have all identical parameters
-        int i = 0; // it is enough to test the first entry
-
-        // retrieve the first dation name
-        VariableDenotationContext vctx = (VariableDenotationContext)(ctx.parent);
-        String dationName = vctx.identifierDenotation().identifier(i).ID().toString();
-        //System.out.println("DationName: "+ dationName);
-
-        ErrorStack.enter(ctx, "DationDCL");
-
-
-        SymbolTableEntry entry1 = this.m_currentSymbolTable.lookup(dationName);
-
-        if (entry1 == null) {
-            ErrorStack.addInternal("Symbol table does not contain:" + dationName);
-            ErrorStack.leave();
-            return null;
-        }
-        SymbolTableEntry se = this.m_currentSymbolTable.lookup(dationName);
-        if (se != null && !(se instanceof VariableEntry)
-                && !(((VariableEntry) se).getType() instanceof TypeDation)) {
-            ErrorStack.addInternal("symbol " + dationName + " not found/or no dation");
-            ErrorStack.leave();
-            return null;
-        }
-        TypeDation d = (TypeDation) (((VariableEntry) se).getType());
-
-        // userdation must be 
-        // of type ALPHIC                      -> DationPG
-        // or type BASIC + typeOfTransmission  -> DationTS
-        // or type of       typeOfTransmission -> DationRW
-        // this is all enforced by the grammar
-
-        if (d.isSystemDation()) {
-            ErrorStack.add("SYSTEM dations may not be declared");
-        }
-
-        // dimension settings must be >0 or '*' if given
-        // only the last dimension may be '*' - the not 0 check is not in the grammar
-        switch (d.getNumberOfDimensions()) {
-            case 3:
-                if (d.getDimension3() <= 0 || d.getDimension2() <= 0) {
-                    // '*' not allowed
-                    ErrorStack.add("only first dimension may be '*'");
-                }
-                break;
-            case 2:
-                if (d.getDimension2() == 0) {
-                    // '*' not allowed
-                    ErrorStack.add("only first dimension may be '*'");
-                }
-                break;
-            case 1:
-                break;
-        }
-
-
-        if (d.hasTfu() && d.getNumberOfDimensions() == 1 && d.getDimension1() == 0) {
-            ErrorStack.add("TFU requires limited record length");
-        }
-
-
-        SymbolTableEntry sys = this.m_currentSymbolTable.lookup(d.getCreatedOn());;
-
-        if (sys == null) {
-
-            ErrorStack.add("system dation " + d.getCreatedOn() + " is not defined");
-            ErrorStack.leave();
-            return null;
-        } else if ((!(sys instanceof VariableEntry))
-                || (!(((VariableEntry) sys).getType() instanceof TypeDation))) {
-            ErrorStack.add(d.getCreatedOn() + " is not of type DATION");
-            ErrorStack.leave();
-            return null;
-        } else {
-            TypeDation sd = (TypeDation) (((VariableEntry) sys).getType());
-
-
-            // (4) ClassAttribute must fit
-            // check compatibility
-            // use system dation as primary selector
-            if (sd.isBasic()) {
-                if (d.isAlphic()) {
-                    ErrorStack.add("attempt to create ALPHIC dation upon BASIC system dation");
-                    ErrorStack.leave();
-                    return null;
-                }
-                if (!d.isBasic()) {
-                    // d is not of type ALPHIC and not type BASIC --> check typeOfTransmission for
-                    // correct error message
-                    if (d.getTypeOfTransmission() != null) {
-                        ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
-                                + "' dation upon a BASIC system dation");
-                    } else {
-                        ErrorStack.add(
-                                "attempt to create an ALPHIC dation upon a BASIC system dation");
-                    }
-                    ErrorStack.leave();
-                    return null;
-                }
-
-            }
-            if (sd.isAlphic()) {
-                if (!d.isAlphic()) {
-                    if (d.isBasic()) {
-                        ErrorStack.add(
-                                "attempt to create a BASIC dation upon an ALPHIC system dation");
-                        ErrorStack.leave();
-                        return null;
-                    }
-                    if (d.getTypeOfTransmission() != null) {
-                        ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
-                                + "' dation upon an ALPHIC system dation");
-                        ErrorStack.leave();
-                        return null;
-                    }
-                }
-            }
-            if (sd.getTypeOfTransmission() != null && !sd.isBasic()) {
-                if (d.isAlphic()) {
-                    if (!sd.getTypeOfTransmission().equals("ALL")) {
-                        ErrorStack.add("attempt to create an ALPHIC dation upon '"
-                                + d.getTypeOfTransmission() + "' system dation");
-                        ErrorStack.leave();
-                        return null;
-                    }
-                }
-                if (d.isBasic()) {
-                    ErrorStack.add("attempt to create a BASIC dation upon non BASIC system dation");
-                    ErrorStack.leave();
-                    return null;
-                }
-                if (d.getTypeOfTransmission() != null) {
-                    if (!sd.getTypeOfTransmission().equals("ALL")) {
-                        // types must be equal
-                        if (!sd.getTypeOfTransmissionAsType()
-                                .equals(d.getTypeOfTransmissionAsType())) {
-                            ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
-                                    + "' dation upon a '" + sd.getTypeOfTransmission()
-                                    + "' system dation");
-
-                        }
-                    }
-                }
-            }
-
-            // (2) direction must fit (sourceSinkAttribute)
-            if (d.isIn() && !sd.isIn()) {
-                ErrorStack.add("system dation does not provide direction IN");
-            }
-            if (d.isOut() && !sd.isOut()) {
-                ErrorStack.add("system dation does not provide direction OUT");
-            }
-
-
-
-            // (5) Typology
-            //    Userdation of type ALPHIC or type need 
-            //        * typology
-            //        * FORWARD/DIRECT
-            //        - STREAM/NOSTREAM/CYCLIC/NOCLYCIC without contradictions
-            if (!d.isBasic() && !d.hasTypology()) {
-                ErrorStack.add("non BASIC user dation needs typology (DIM)");
-            }
-
-
-            if (d.hasTfu() && d.isStream()) {
-                ErrorStack.add("TFU requires NOSTREAM");
-            }
-
-
-            // (x) if the system dation specifies a TFU-size;
-            //     the user dation must do this also
-            //     this is checked by the IMC, sine we do not know anything about
-            //     details of the system dation
-
-
-            ErrorStack.leave();
-        }
-    
-        return null;
-    }
-
-
-
+   
     @Override
     public Void visitOpen_statement(SmallPearlParser.Open_statementContext ctx) {
         ErrorStack.enter(ctx, "OPEN");

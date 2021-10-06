@@ -55,6 +55,8 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
     private int m_level;
     private int m_flags;
     protected ParserRuleContext m_ctx;
+    private String m_globalAttribute;
+    
     private static final int const_isUsed = 0x01;
     
     // the symbol is defined in the system part
@@ -62,13 +64,19 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
     
     // the symbol is name of a SystemName (
     private static final int const_isSystemName = 0x04;
-    
+
+    // the symbol is specified, default is declared
+    private static final int const_isSpecified = 0x08;
+
     SymbolTableEntry() {
         m_name = null;
+        m_globalAttribute = null;
         m_ctx=null;
         m_level=0;
         m_flags=0;
     }
+
+
 
     SymbolTableEntry(String name) {
         m_name = name;
@@ -90,7 +98,15 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
 
     public String toString(int level) {
         if (m_name != null) {
-            return indentString(level) + Integer.toString(level) + ": " + m_name + " ";
+            String s = indentString(level) + Integer.toString(level) + ": " + m_name + " ";
+            if (m_globalAttribute != null) {
+               if (isSpecified()) {
+                  s += " SPC("+m_globalAttribute+") ";
+               } else {
+                  s += " DCL("+m_globalAttribute+") "; 
+               }
+            }
+            return s;
         }
         else {
             return indentString(level) + Integer.toString(level) + ": ";
@@ -168,4 +184,20 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
       return ((m_flags & const_isSystemName) != 0);
     }
 
+    public boolean isSpecified() {
+        return ((m_flags & const_isSpecified) != 0);  
+    }
+
+    public void setIsSpecified() {
+        m_flags |= const_isSpecified;
+    }
+      
+   
+    public String getGlobalAttribute() {
+        return m_globalAttribute;
+    }
+
+    public void setGlobalAttribute(String moduleName) {
+        this.m_globalAttribute = moduleName;
+    }
 }

@@ -104,6 +104,7 @@ module(src,name,prologue,SystemPart,ProblemPart,cpp_inlines) ::= <<
 <endif>
 
 <if(cpp_inlines)>
+// module: cpp_inlines
 <cpp_inline(cpp_inlines)>
 <endif>
 
@@ -175,11 +176,13 @@ ProblemPart(ScalarVariableDeclarations,
             SemaDeclarations,
             BoltDeclarations,
             semaphoreArrays,boltArrays,
-            ArrayDescriptors, ArrayVariableDeclarations,TaskDeclarations,DationSpecifications,DationDeclarations,
+            ArrayDescriptors, ArrayVariableDeclarations,TaskDeclarations,
+            DationSpecifications,DationDeclarations,
             SystemDationInitializer,
             StructVariableDeclarations,
             ProcedureSpecifications,ProcedureDeclarations,
-            InterruptSpecifications) ::= <<
+            InterruptSpecifications,
+            cpp_inlines) ::= <<
 /////////////////////////////////////////////////////////////////////////////
 // PROBLEM PART
 /////////////////////////////////////////////////////////////////////////////
@@ -276,6 +279,13 @@ ProblemPart(ScalarVariableDeclarations,
 <StructVariableDeclarations>
 <endif>
 
+<if(cpp_inlines)>
+/////////////////////////////////////////////////////////////////////////////
+// cpp_inlines
+/////////////////////////////////////////////////////////////////////////////
+<cpp_inline(cpp_inlines)>
+<endif>
+
 <if(ProcedureDeclarations)>
 /////////////////////////////////////////////////////////////////////////////
 // PROCEDURE DECLARATIONS
@@ -289,16 +299,29 @@ ProblemPart(ScalarVariableDeclarations,
 /////////////////////////////////////////////////////////////////////////////
 <TaskDeclarations>
 <endif>
+
+
 >>
 
 
 /*********************** VARIABLE DECLARATION ***********************/
+// does not work for local variables
+//<if(isGlobal)><else>static <endif>
+//
+variable_declaration(name,type,init,isGlobal,global,inv,no_decoration) ::= <%
 
-variable_declaration(name,type,init,global,inv,no_decoration) ::= <%
 <if(inv)>const  <endif><type>  <if(no_decoration)><name><else><variable(name)><endif>
 <if(init)>(<variable_init(init)>)<endif>
-<if(global)>  (GLOBAL)<endif>;
+;
+
 %>
+
+variable_specification(name,type,global,inv,no_decoration) ::= <<
+
+extern <if(inv)>const  <endif><type>  <if(no_decoration)><name><else><variable(name)><endif>;
+
+>>
+
 
 variable(name) ::= <<
 <user_variable(name)>
@@ -416,10 +439,6 @@ if_statement(rhs, then_block, else_block) ::= <<
 	}<endif>
 >>
 
-task_body(decls,statements) ::= <<
-    <decls>
-    <statements>
->>
 
 statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList) ::= <<
 <if(srcFilename)>
@@ -1430,7 +1449,7 @@ DationDeclarationInitialiers(decl) ::= <<
 <decl>
 >>
 
-DationDeclarationInitialiser(name,Dation,TypeDation,Id,Typology, tfu) ::= <<
+DationDeclarationInitialiser(name,Dation,TypeDation,Id, Typology, tfu) ::= <<
 <if(Typology)><Typology><endif>
 <if(tfu)>static pearlrt::TFURecord\<<tfu>\>  tfu_<name>;<endif>
 static pearlrt::<Dation> d_<name>(_<Id>, <TypeDation><if(tfu)>, &tfu_<name><endif>);
@@ -1511,6 +1530,7 @@ block_statement(code,id,isUserLabel) ::= <<
   <endif>
 <endif>
 >>
+
 
 
 user_procedure(name) ::= <%
@@ -1634,6 +1654,11 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoo
 <endif>
 >>
 
+Body(declarations,statements) ::= <<
+<declarations>
+<statements>
+>>
+
 /* --------------------- PROCEDURES -------------------------- */
 
 TypeProcedure(listOfFormalParameters, resultAttribute) ::= <%
@@ -1657,10 +1682,6 @@ ProcedureDeclaration(id,listOfFormalParameters,body,resultAttribute,globalAttrib
 
 >>
 
-ProcedureBody(declarations,statements) ::= <<
-<declarations>
-<statements>
->>
 
 ResultAttribute(type) ::= <%
     <type>
@@ -1971,8 +1992,8 @@ struct <name> {<\n>
 };<\n>
 %>
 
-StructureVariableDeclaration(name,type) ::= <%
-<type>  <user_variable(name)>;<\n>
+StructureVariableDeclaration(name,inv,type,initElements) ::= <%
+<if(inv)> const <endif><type>  <user_variable(name)> <if(initElements)> = <initElements><endif>;<\n>
 %>
 
 StructComponentDeclaration(name,TypeAttribute) ::= <<

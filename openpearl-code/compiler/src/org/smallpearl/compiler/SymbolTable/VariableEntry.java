@@ -73,16 +73,16 @@ public class VariableEntry extends SymbolTableEntry {
                 m_type + " " +
                 assigmenProtection +
                 (this.m_loopControlVariable ? " LC" :"") +
-                (this.m_initializer != null ? "  INIT-Index(" + m_initializer + ")" : "");
+                (this.m_initializer != null ? "  INIT(" + m_initializer + ")" : "");
     }
 
 
 	public TypeDefinition getType() { return m_type; }
 
-	// TODO: add array, struct, ref
-	public TypeDefinition getBaseType() {
-        return m_type;
-    }
+//	// TODO: add array, struct, ref
+//	public TypeDefinition getBaseType() {
+//        return m_type;
+//    }
 
     public Boolean getAssigmentProtection() { return m_hasAssigmentProtection; }
 

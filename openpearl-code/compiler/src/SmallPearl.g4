@@ -1,6 +1,6 @@
 /*
- [The "BSD license"]
- Copyright (c) 2012-2020 Rainer Muelle & Marcel Schaible
+ [A "BSD license"]
+ Copyright (c) 2012-2021 Rainer Mueller & Marcel Schaible
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,12 @@
 /* changelog
 2020-05-50 (rm): loopStatement: loopBody now as separate rule to  simplify the 
    treatment in the ExpressionTypeVisitor 
+   
+   
+2021-10-03 (rm):
+   DCL and SPC with mixed types in one DCL/SPC
+   task/proc usage with list of identifiers
+      
 */
 grammar SmallPearl;
 
@@ -156,15 +162,6 @@ systemElementParameters:
 //    IN | OUT | INOUT
 ////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-//  Declaration ::=
-//    LengthDefinition
-//    | TypeDefinition
-//    | VariableDeclaration
-//    | FormatDeclaration
-//    | ProcedureDeclaration
-//    | TaskDeclaration
-////////////////////////////////////////////////////////////////////////////////
 
 problem_part:
     'PROBLEM' ';'
@@ -172,9 +169,7 @@ problem_part:
           lengthDefinition
         | typeDefinition
         | variableDeclaration
-        | interruptSpecification
-//        | identification        removed until rework for mixed types  of DCL and SPC
-        | dationSpecification
+        | specification
         | taskDeclaration
         | procedureDeclaration
         | cpp_inline
@@ -184,29 +179,39 @@ problem_part:
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-// TODO: Identification ::=
+// Identification ::=
 //           { SPECIFY | SPC } Identifier [ AllocationProtection ] Type IdentificationAttribute ;
-/* must be redefined for SPC with mixed types and SPC .. IDENT
-  removed for the moment (rm, 2021-08-20)
+
 identification:
-    ( 'SPECIFY' | 'SPC' ) ID  allocation_protection? type? identification_attribute? globalAttribute? ';'
+    ( 'SPECIFY' | 'SPC' ) identificationDenotation ';'
     ;
 
-////////////////////////////////////////////////////////////////////////////////
 
-allocation_protection:
-    ID
-    ;
+identificationDenotation:
+	 ID  allocationProtection? typeForIdentification identificationAttribute
+	 ;
+	 
+typeForIdentification:
+	 parameterType
+	 ;
+
+typeAttributeForIdentification:
+
+     ;
+
+//allocation_protection:
+//    ID
+//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  IdentificationAttribute ::=
 //    IDENT ( Name§Object )
 ////////////////////////////////////////////////////////////////////////////////
 
-identification_attribute:
-    'IDENT' '(' ID ')'
+identificationAttribute:
+    'IDENT' '(' name ')'
     ;
-*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -253,17 +258,12 @@ typeDefinition :
 //  ScalarVariableDeclaration ::=
 //      { DECLARE | DCL } VariableDenotation [ , VariableDenotation ] ... ;
 ////////////////////////////////////////////////////////////////////////////////
-// modification for all types of variables in 1 rule
+// modification for all types of variable declarations in 1 rule
 
 variableDeclaration :
     ( 'DECLARE' | 'DCL' ) variableDenotation ( ',' variableDenotation )* ';'
-    | cpp_inline
+//    | cpp_inline
     ;
-
-////////////////////////////////////////////////////////////////////////////////
-//  VariableDenotation ::=
-//      IdentifierDenotation [ AllocationProtection ] TypeAttribute [ GlobalAttribute ] [ InitialisationAttribute ]
-////////////////////////////////////////////////////////////////////////////////
 
 
 variableDenotation :
@@ -296,16 +296,19 @@ globalAttribute :
     'GLOBAL'  ( '(' ID ')' )?
     ;
 
-////////////////////////////////////////////////////////////////////////////////
-//  TypeAttribute ::=
-//      SimpleType | TypeReference | Identifier§ForType
-////////////////////////////////////////////////////////////////////////////////
+specification :
+( 'SPECIFY' | 'SPC' ) specificationItem ( ',' specificationItem )* ';'
+ //   | cpp_inline
+    ;
 
-//typeAttribute
-//    : simpleType
-//    | typeReference
-//    | ID
-//    ;
+specificationItem :
+	variableDenotation 
+	| taskDenotation
+	| procedureDenotation
+	| interruptDenotation
+	| identification
+	;    
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // SimpleType ::=
@@ -473,51 +476,6 @@ structureDenotationS :
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-// ArrayDeclaration ::=
-//   { DECLARE | DCL } ArrayDenotation [ , ArrayDenotation ] ... ;
-////////////////////////////////////////////////////////////////////////////////
-/*
-arrayVariableDeclaration :
-    ( 'DECLARE' | 'DCL' ) arrayDenotation ( ',' arrayDenotation )* ';'
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-// ArrayDenotation ::=
-//   OneIdentifierOrList DimensionAttribute [ INV ] TypeAttributeForArray
-//  [ GlobalAttribute ] [ InitialisationAttribute ]
-////////////////////////////////////////////////////////////////////////////////
-
-arrayDenotation :
-     ( ID | '(' ID ( ',' ID)* ')' ) dimensionAttribute assignmentProtection? typeAttributeForArray globalAttribute?
-     initialisationAttribute?
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-// TypeAttributeForArray ::=
-//    TypeInteger | TypeFloat
-//  | TypeDuration | TypeClock
-//  | TypeBitString | TypeCharacterString
-//  | TypeDefinition
-//  | REF { TypeDation | SEMA | BOLT
-//  | REF { TypeDation | SEMA | BOLT
-//  | typeRefedure | TASK | CHAR()
-//  ??? INTERRUPT, IPRT,SIGNAL
-////////////////////////////////////////////////////////////////////////////////
-
-typeAttributeForArray :
-    simpleType
-//   | 
-//      type_fixed
-//    | type_float
-//    | type_duration
-//    | type_clock
-//    | type_bit
-//    | type_char
-    | typeReference
-    | typeStructure
-    ;
-*/
-////////////////////////////////////////////////////////////////////////////////
 // TypeReference ::=
 //   REF
 //   { [ VirtualDimensionList ] [ INV ] { SimpleType | StructuredType }
@@ -603,11 +561,6 @@ typeReferenceCharType
     : 'CHAR' ( '(' expression ')' )?
     ;
 
-////////////////////////////////////////////////////////////////////////////////
-//  SemaDeclaration ::=
-//   { DECLARE | DCL } Identifier or IdentifierList [ DimensionAttribute ] SEMA [ GlobalAttribute ]
-////////////////////////////////////////////////////////////////////////////////
-
 semaDenotation :
     'SEMA' globalAttribute? preset? 
     ;
@@ -628,12 +581,15 @@ preset :
 ////////////////////////////////////////////////////////////////////////////////
 
 procedureDeclaration:
-//	 ID ':' ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute? globalAttribute? ';'
 	 nameOfModuleTaskProc ':' typeProcedure globalAttribute? ';'
         procedureBody
       'END' ';'
     ;
 
+procedureDenotation:
+	 identifierDenotation  typeProcedure globalAttribute? 
+    ;
+    
 
 typeProcedure:
 	 ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute?
@@ -752,27 +708,12 @@ resultAttribute :
 ////////////////////////////////////////////////////////////////////////////////
 
 resultType :
-      simpleType
+    simpleType
     | typeReference
     | typeStructure
     | ID
     ;
 
-////////////////////////////////////////////////////////////////////////////////
-// TODO: { SPECIFY | SPC } Identifier§Procedure { ENTRY | [ : ] PROC }
-//   [ ListOfParametersFor-SPC ] [ResultAttribute ] GlobalAttribute ;
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// TODO: ListOfParametersFor-SPC ::=
-//   (ParameterSpecification [ , ParameterSpecification ]...)
-////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////////////
-// TODO: ParameterSpecification ::=
-//   [ Identifier ] [ VirtualDimensionList ] [ AssignmentProtection ] ParameterType [ IDENTICAL | IDENT ]
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // TaskDeclaration ::=
@@ -784,6 +725,10 @@ taskDeclaration :
     nameOfModuleTaskProc ':' 'TASK' priority? task_main? ';' taskBody 'END' ';' cpp_inline?
     ;
 
+taskDenotation :
+	identifierDenotation 'TASK' globalAttribute?
+	;
+	
 nameOfModuleTaskProc :
     ID
     ;
@@ -1297,19 +1242,10 @@ semaTry
     ;
 
 
-////////////////////////////////////////////////////////////////////////////////
-// BoltDeclaration ::=
-//   { DECLARE | DCL } Identifier or IdentifierList [ DimensionAttribute ] BOLT [ GlobalAttribute ] ;
-//
-
 boltDenotation :
     'BOLT' globalAttribute? 
     ;
 
-// BoltSpecification ::=
-//   { SPECIFY | SPC } Identifier or IdentifierList [ VirtualDimensionAttribute ]
-//   BOLT { GlobalAttribute | IdentificationAttribute } ;
-//
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1830,85 +1766,9 @@ endIndex:
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/* obsolete
-type
-    : simple_type
-    | type_realtime_object
-    | typeTime
-    | typeReference
-    ;
 
-////////////////////////////////////////////////////////////////////////////////
-//  SimpleType ::=
-//      TypeInteger | TypeFloatingPointNumber | TypeBitString | TypeCharacterString | TypeTime | TypeDuration
-////////////////////////////////////////////////////////////////////////////////
-
-simple_type
-    : type_fixed
-    | type_float
-    | type_char
-    | type_bit
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-
-typeTime
-    : type_clock
-    | type_duration
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-
-type_char : ( 'CHARACTER' | 'CHAR' ) ( '(' IntegerConstant ')' )?;
-
-////////////////////////////////////////////////////////////////////////////////
-
-type_fixed: 'FIXED' ( '(' IntegerConstant ')' )?;
-
-////////////////////////////////////////////////////////////////////////////////
-
-type_float: 'FLOAT' ( '(' IntegerConstant ')' )?;
-
-////////////////////////////////////////////////////////////////////////////////
-
-type_duration: ( 'DURATION' | 'DUR' );
-
-////////////////////////////////////////////////////////////////////////////////
-
-type_clock: 'CLOCK';
-
-////////////////////////////////////////////////////////////////////////////////
-type_bit: 'BIT' ( '(' IntegerConstant ')' )?;
-
-////////////////////////////////////////////////////////////////////////////////
-
-type_realtime_object
-    : 'SEMA'
-    | 'BOLT'
-    | 'IRPT'
-    | 'INTERRUPT'
-    | 'SIGNAL'
-    ;
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-// SystemInterruptDeclaration ::=
-//   Identifier§InterruptSystemName [ ( ListOfConstants ) ] [ Association ] ;
-////////////////////////////////////////////////////////////////////////////////
-
-//systemInterruptDeclaration
-//    : ID [ ( ListOfConstants ) ] [ Association ] ';'
-//    ;
-
-////////////////////////////////////////////////////////////////////////////////
-// InterruptSpecification ::=
-//  { SPECIFY | SPC } OneIdentifierOrList { INTERRUPT | IRPT }
-//  [ GlobalAttribute ];
-////////////////////////////////////////////////////////////////////////////////
-
-interruptSpecification
-    : ( 'SPECIFY' | 'SPC' ) identifierDenotation ( 'INTERRUPT' | 'IRPT' ) globalAttribute? ';'
+interruptDenotation :
+     identifierDenotation ( 'INTERRUPT' | 'IRPT' ) globalAttribute? 
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1934,31 +1794,14 @@ interruptSpecification
 //  DationSpecification ::=
 //    { SPECIFY | SPC } IdentifierDenotation TypeDation [ GlobalAttribute ] ;
 ////////////////////////////////////////////////////////////////////////////////
-
+/* obsolte replaced by dationDenotation
 dationSpecification
 //    : ( 'SPECIFY' | 'SPC' ) identifierDenotation specifyTypeDation globalAttribute? ';'
     : ( 'SPECIFY' | 'SPC' ) identifierDenotation typeDation globalAttribute? ';'
     ;
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
-
-/*
-
-change in grammar 2019-10-12
-  dationSpecification and dationDeclaration 
-  - uses typeDation and specifyTypeDation, resp.
-  - typeDation and specifyTapeDation were identical
-  - classAttribute had an optional element 'SYSTEM' which is only possible 
-    in dationSecification
-  -> remove specifyTypeDation and use typeDation even in dationSpecification
-  -> leave the classAttribute unchanged and filter this in the semantic
-     analysis
-
-specifyTypeDation
-    : 'DATION' sourceSinkAttribute classAttribute
-    ;
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // DationDeclaration ::=
@@ -1966,7 +1809,7 @@ specifyTypeDation
 ////////////////////////////////////////////////////////////////////////////////
 
 dationDenotation :
-    typeDation  globalAttribute? 'CREATED' '(' ID  ')' 
+    typeDation  globalAttribute? ('CREATED' '(' ID  ')')? 
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2043,9 +1886,6 @@ accessAttribute
 // Typology ::=
 //      DIM( {⇤ |pi} [,pi[,pi]] ) [TFU[MAX]]
 ////////////////////////////////////////////////////////////////////////////////
-/* grammar changed for easier parsing
- 'TFU' ( 'MAX' )?  --> rule rule
-*/
 
 typology :
     'DIM'
@@ -2079,8 +1919,13 @@ tfuMax:
 // DimensionAttribute ::=
 //  (BoundaryDenotation§FirstDimension [ , BoundaryDenotation§FurtherDimension ] ...)
 ////////////////////////////////////////////////////////////////////////////////
-
 dimensionAttribute:
+	dimensionAttributeDeclaration
+	| virtualDimensionList
+	;
+
+	
+dimensionAttributeDeclaration:
     '(' boundaryDenotation ( ',' boundaryDenotation )* ')'
     ;
 

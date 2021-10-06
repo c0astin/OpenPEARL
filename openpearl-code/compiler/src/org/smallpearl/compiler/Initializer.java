@@ -15,6 +15,6 @@ public class Initializer  {
 	public ParserRuleContext getContext() { return m_context; }
 
 	public String toString() {
-		return "???";
+		return '"' + m_context.getText() + '"';
 	}
 }

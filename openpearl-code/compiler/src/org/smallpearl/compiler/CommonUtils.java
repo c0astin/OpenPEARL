@@ -925,7 +925,7 @@ public class CommonUtils {
         } else if (simpleType.typeDuration() != null) {
             td = new TypeDuration();
         } else if (simpleType.typeClock() != null) {
-            td = new TypeTime();
+            td = new TypeClock();
         }
         return td;
     }

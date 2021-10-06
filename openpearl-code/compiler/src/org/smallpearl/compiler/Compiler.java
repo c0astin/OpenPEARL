@@ -527,6 +527,12 @@ public class Compiler {
         String basename = "";
 
         if (filename != null) {
+            int posOfExtension = filename.lastIndexOf('.');
+            if (posOfExtension == -1) {
+               System.err.println("no extension for input file given");
+               System.exit(-2);
+            }
+            
             basename = filename.substring(0, filename.lastIndexOf('.'));
         }
 

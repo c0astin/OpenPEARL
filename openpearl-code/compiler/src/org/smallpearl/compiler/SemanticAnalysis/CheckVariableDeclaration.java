@@ -239,8 +239,7 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
                 if (requiredNumberOfInitializers < initElements.size()) {
                     ErrorStack.add(ctx, "INIT", "too many initialisers");
                 }
-                ErrorStack.addInternal(var.getCtx(), "CheckVariableDeclaration",
-                        "STRUCT +INIT not supported yet");
+                nextInitializer+=requiredNumberOfInitializers;
             } else if (tVar instanceof TypeReference) {
                 //TODO: Check for valid reference
                 TypeReference ts = (TypeReference)tVar;

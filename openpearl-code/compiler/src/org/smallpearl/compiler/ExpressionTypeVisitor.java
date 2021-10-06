@@ -3604,7 +3604,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                     visitChildren(ctx.listOfExpression());
 
                     if (var.getType() instanceof TypeArray) {
-                        m_type = ((TypeArray) (var.getBaseType())).getBaseType();
+                        m_type = ((TypeArray) (var.getType())).getBaseType();
                     }
                 }
 

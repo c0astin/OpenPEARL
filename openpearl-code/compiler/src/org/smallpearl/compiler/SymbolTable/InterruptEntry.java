@@ -45,28 +45,25 @@ import org.smallpearl.compiler.TypeInterrupt;
 public class InterruptEntry extends SymbolTableEntry {
 
 
-    private Boolean m_isGlobal;
-
     public InterruptEntry() {
     }
 
-    public InterruptEntry(String name,  Boolean isGlobal, SmallPearlParser.InterruptSpecificationContext ctx) {
+    public InterruptEntry(String name,   SmallPearlParser.IdentifierContext ctx) {
         super(name);
 
 
-        m_isGlobal = isGlobal;
-
+       
         this.m_ctx = ctx;
 
     }
 
     public String toString(int level) {
      
-        return  indentString(level) + super.toString(level) + "INTERRUPT" +
-        		(m_isGlobal ? " global" : "") ;
+        return  indentString(level) + super.toString(level) + "INTERRUPT";
+        		
                 
     }
-
+// m_global moved into SymbolTableEntry
 // deprecated. is now in SymboleTableEntry   
 //   public int getSourceLineNo() {
 //       return m_ctx.getStart().getLine();

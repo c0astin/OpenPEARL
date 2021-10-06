@@ -265,7 +265,7 @@ public class ASTAttribute {
                 this.m_type instanceof TypeClock ||
                 this.m_type instanceof TypeFixed ||
                 this.m_type instanceof TypeFloat ||
-                this.m_type instanceof TypeTime ||
+                this.m_type instanceof TypeClock ||
                 this.m_type instanceof TypeVariableChar;
     }
 }
