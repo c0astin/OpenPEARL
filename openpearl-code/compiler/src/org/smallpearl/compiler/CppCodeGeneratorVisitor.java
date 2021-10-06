@@ -45,7 +45,7 @@ import org.stringtemplate.v4.STGroupFile;
 import java.util.*;
 
 public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
-        implements SmallPearlVisitor<ST> {
+implements SmallPearlVisitor<ST> {
 
     private STGroup m_group;
     private int m_verbose;
@@ -570,7 +570,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         throw new NotYetImplementedException("REF PROC", ctx.start.getLine(),
                 ctx.start.getCharPositionInLine());
     }
-    
+
     @Override
     public ST visitTypeReferenceSemaType(
             SmallPearlParser.TypeReferenceSemaTypeContext ctx) {
@@ -579,7 +579,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         throw new NotYetImplementedException("REF SEMA", ctx.start.getLine(),
                 ctx.start.getCharPositionInLine());
     }
-    
+
     @Override
     public ST visitTypeReferenceBoltType(
             SmallPearlParser.TypeReferenceBoltTypeContext ctx) {
@@ -588,7 +588,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         throw new NotYetImplementedException("REF BOLT", ctx.start.getLine(),
                 ctx.start.getCharPositionInLine());
     }
-    
+
     @Override
     public ST visitTypeReferenceCharType(
             SmallPearlParser.TypeReferenceCharTypeContext ctx) {
@@ -597,7 +597,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         throw new NotYetImplementedException("REF CHAR", ctx.start.getLine(),
                 ctx.start.getCharPositionInLine());
     }
-    
+
     @Override
     public ST visitTypeReferenceSignalType(
             SmallPearlParser.TypeReferenceSignalTypeContext ctx) {
@@ -606,7 +606,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         throw new NotYetImplementedException("REF SIGNAL", ctx.start.getLine(),
                 ctx.start.getCharPositionInLine());
     }
-    
+
     @Override
     public ST visitTypeReferenceInterruptType(
             SmallPearlParser.TypeReferenceInterruptTypeContext ctx) {
@@ -615,12 +615,12 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         throw new NotYetImplementedException("REF INTERRUPT",
                 ctx.start.getLine(), ctx.start.getCharPositionInLine());
     }
-    
+
     @Override
     public ST visitType_fixed(SmallPearlParser.Type_fixedContext ctx) {
         ST fixed_type = m_group.getInstanceOf("fixed_type");
         int width = Defaults.FIXED_LENGTH;
-    
+
         if (ctx.IntegerConstant() != null) {
             width = Integer.parseInt(ctx.IntegerConstant().getText());
             if (width < 1 || width > 63) {
@@ -628,68 +628,68 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         }
-    
+
         fixed_type.add("size", width);
-    
+
         return fixed_type;
     }
-    
+
     @Override
     public ST visitType_char(SmallPearlParser.Type_charContext ctx) {
         ST char_type = m_group.getInstanceOf("char_type");
         Integer width = Defaults.CHARACTER_LENGTH;
-    
+
         if (ctx.IntegerConstant() != null) {
             width = Integer.parseInt(ctx.IntegerConstant().getText());
         }
-    
+
         char_type.add("size", width);
-    
+
         return char_type;
     }
-    
+
     @Override
     public ST visitType_float(SmallPearlParser.Type_floatContext ctx) {
         ST float_type = m_group.getInstanceOf("float_type");
         int precision = m_currentSymbolTable.lookupDefaultFloatLength();
-    
+
         if (ctx.IntegerConstant() != null) {
             precision = Integer.parseInt(ctx.IntegerConstant().getText());
         }
-    
+
         float_type.add("size", precision);
         return float_type;
     }
-    
+
     @Override
     public ST visitTypeTime(SmallPearlParser.TypeTimeContext ctx) {
         ST time_type = m_group.getInstanceOf("time_type");
-    
+
         if (ctx.type_clock() != null) {
             time_type.add("clock_type", visitType_clock(ctx.type_clock()));
         } else if (ctx.type_duration() != null) {
             time_type.add("duration_type",
                     visitType_duration(ctx.type_duration()));
         }
-    
+
         return time_type;
     }
-    
+
     @Override
     public ST visitType_clock(SmallPearlParser.Type_clockContext ctx) {
         ST type = m_group.getInstanceOf("clock_type");
-    
+
         type.add("init", 0);
         return type;
     }
-    
+
     @Override
     public ST visitType_duration(SmallPearlParser.Type_durationContext ctx) {
         ST type = m_group.getInstanceOf("duration_type");
         type.add("init", 0);
         return type;
     }
-    */
+     */
     //    @Override
     //    public ST visitVariableDenotation(
     //            SmallPearlParser.VariableDenotationContext ctx) {
@@ -720,7 +720,7 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         st.add("type", "????");
         return st;
     }
-*/
+     */
     @Override
     public ST visitVariableDeclaration(VariableDeclarationContext ctx) {
         ST scalarVariableDeclaration = m_group.getInstanceOf("ScalarVariableDeclaration");
@@ -730,14 +730,14 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                         visitVariableDenotation(ctx.variableDenotation().get(i)));
             }
 
-//            if (ctx.cpp_inline() != null) {
-//                scalarVariableDeclaration.add("cpp", visitCpp_inline(ctx.cpp_inline()));
-//            }
+            //            if (ctx.cpp_inline() != null) {
+            //                scalarVariableDeclaration.add("cpp", visitCpp_inline(ctx.cpp_inline()));
+            //            }
         }
         return scalarVariableDeclaration;
 
     }
-/*
+    /*
     @Override
     public ST visitVariableDenotation(SmallPearlParser.VariableDenotationContext ctx) {
 
@@ -815,16 +815,16 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
                     sema_decl.add("global", 1);
 
                     scalarVariableDeclaration.add("variable_denotations", sema_decl);
-                  
-                    
+
+
                 } else if (ctx.dationDenotation()!= null) {
                     VariableEntry s = (VariableEntry) entry;
                     TypeDation td = (TypeDation)(ve.getType());
-                    
+
                     //st = visitDationDenotation(ctx.dationDenotation());
                     //st.add("decl", entry.getName());
                     //scalarVariableDeclaration.add("variable_denotations", st);
-                                        
+
                 } else {
                     ErrorStack.addInternal(ctx, "CppCodeGen:visitVariableDenotation",
                             "missing alternative@744 " + entry.toString());
@@ -844,20 +844,20 @@ public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
         }
         return scalarVariableDeclaration;
     }
-*/
+     */
     private ST generateSpecification(InterruptEntry ve) {
         ST st = m_group.getInstanceOf("InterruptSpecifications");
-            ST spec = m_group.getInstanceOf("InterruptSpecification");
-            spec.add("id", ve.getName());
-            st.add("specs", spec);
-          return st;
+        ST spec = m_group.getInstanceOf("InterruptSpecification");
+        spec.add("id", ve.getName());
+        st.add("specs", spec);
+        return st;
     }
-    
+
     private ST generateSpecification(VariableEntry ve) {
         ST dationSpecifications = m_group.getInstanceOf("DationSpecifications");
-System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
+        //System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         TypeDefinition t = ve.getType();
-        
+
         if (t instanceof TypeDation) {
             TypeDation td = (TypeDation)t;
             if (td.isSystemDation() && td.isBasic()) {
@@ -897,19 +897,19 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
                 specifyDation.add("TypeDation", "DationRW");
                 dationSpecifications.add("decl", specifyDation);
             }                
-            
+
         } else if (isSimpleType(t)) {
             ST specifyVariable=m_group.getInstanceOf("variable_specification");
             specifyVariable.add("name",ve.getName());
             specifyVariable.add("type",getSimpleType(t));
             if (ve.getGlobalAttribute()!= null) {
-               specifyVariable.add("global",ve.getGlobalAttribute());
+                specifyVariable.add("global",ve.getGlobalAttribute());
             }
             dationSpecifications.add("decl",  specifyVariable);
         } else {
             ErrorStack.add(ve.getCtx(),"CppCodeGenerator:generateSpecification @865","missing alternative");
         }
-/*        
+        /*        
         if (ctx != null) {
             if (ctx.identifierDenotation() != null) {
                 identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
@@ -961,9 +961,9 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
                 }
             }
         }
-*/
+         */
         return dationSpecifications;
-   
+
     }
     private ST generateVariableDeclaration(VariableEntry ve) {
 
@@ -972,132 +972,132 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         ST scalarVariableDeclaration = m_group.getInstanceOf("ScalarVariableDeclaration");
         ST DationDeclarations = m_group.getInstanceOf("DationDeclarations");
         ST st = null;
-        
+
         if (ve instanceof FormalParameter) {
             // formal parameters are in the same scope, but they are defined in the 
             // procedure definition
             return null;
         }
-      //  System.out.println("genVarDecl:"+ ve.getName()+" "+ ve.getType());
-        
-                if (ve.getType() instanceof TypeArray) {
-                    st = m_group.getInstanceOf("ArrayVariableDeclaration");
-                    st.add("name", ve.getName());
-                    TypeDefinition t = ((TypeArray)(ve.getType())).getBaseType();
-                    if (t instanceof TypeSemaphore) {
-                        ErrorStack.addInternal(ve.getCtx(), "CppCodeGen", "Sema-Arrays not supported yet");
-                    } else if (t instanceof TypeBolt) {
-                        ErrorStack.addInternal(ve.getCtx(), "CppCodeGen", "Bolt-Arrays not supported yet");
-                    } else {
-                        st.add("type",visitTypeAttribute(t));
-                                //visitTypeAttribute(ctx.problemPartDataAttribute().typeAttribute()));
-                    }
-                    st.add("assignmentProtection", ve.getAssigmentProtection());
-                    st.add("totalNoOfElements", ((TypeArray) ve.getType()).getTotalNoOfElements());
-                    st.add("initElements", getArrayInitialisationAttribute(ve));
-                    return st; // only one id for arrays
-                } else if (ve.getType() instanceof TypeStructure) {
-                    TypeDefinition td= ve.getType();
-                    st = m_group.getInstanceOf("StructureVariableDeclaration");
-                    st.add("name", ve.getName());
-                    st.add("type",
-                            visitTypeAttribute(ve.getType()));
-                    //st.add("init", getInitialiser(i, ve));
-                    if (ve.getInitializer()!= null) {
-                        st.add("initElements", getArrayInitialisationAttribute(ve));
-                       // Log.warn("CppCodeGenerator@889: STRUCT+INIT incomplete");
-                    }
+        //  System.out.println("genVarDecl:"+ ve.getName()+" "+ ve.getType());
 
-                    st.add("inv", ve.getAssigmentProtection());
-                    scalarVariableDeclaration.add("variable_denotations", st);
-                    //return visitStructVariableDenotation(ctx);
-                } else if (isSimpleType(ve)) {
+        if (ve.getType() instanceof TypeArray) {
+            st = m_group.getInstanceOf("ArrayVariableDeclaration");
+            st.add("name", ve.getName());
+            TypeDefinition t = ((TypeArray)(ve.getType())).getBaseType();
+            if (t instanceof TypeSemaphore) {
+                ErrorStack.addInternal(ve.getCtx(), "CppCodeGen", "Sema-Arrays not supported yet");
+            } else if (t instanceof TypeBolt) {
+                ErrorStack.addInternal(ve.getCtx(), "CppCodeGen", "Bolt-Arrays not supported yet");
+            } else {
+                st.add("type",visitTypeAttribute(t));
+                //visitTypeAttribute(ctx.problemPartDataAttribute().typeAttribute()));
+            }
+            st.add("assignmentProtection", ve.getAssigmentProtection());
+            st.add("totalNoOfElements", ((TypeArray) ve.getType()).getTotalNoOfElements());
+            st.add("initElements", getArrayInitialisationAttribute(ve));
+            return st; // only one id for arrays
+        } else if (ve.getType() instanceof TypeStructure) {
+            TypeDefinition td= ve.getType();
+            st = m_group.getInstanceOf("StructureVariableDeclaration");
+            st.add("name", ve.getName());
+            st.add("type",
+                    visitTypeAttribute(ve.getType()));
+            //st.add("init", getInitialiser(i, ve));
+            if (ve.getInitializer()!= null) {
+                st.add("initElements", getArrayInitialisationAttribute(ve));
+                // Log.warn("CppCodeGenerator@889: STRUCT+INIT incomplete");
+            }
 
-                    st = m_group.getInstanceOf("variable_declaration");
-                    st.add("name", ve.getName());
-                    st.add("type",
-                            visitTypeAttribute(ve.getType()));//ctx.problemPartDataAttribute().typeAttribute()));
-                    if (ve.getInitializer() != null) {
-                       st.add("init", getInitialiser(ve.getInitializer()));
-                    }
- 
-                    st.add("inv", ve.getAssigmentProtection());
-                    scalarVariableDeclaration.add("variable_denotations", st);
- 
+            st.add("inv", ve.getAssigmentProtection());
+            scalarVariableDeclaration.add("variable_denotations", st);
+            //return visitStructVariableDenotation(ctx);
+        } else if (isSimpleType(ve)) {
 
-                } else if (ve.getType() instanceof TypeSemaphore) {
-                    ST sema_decl = m_group.getInstanceOf("sema_declaration");
-                    sema_decl.add("name", ve.getName());
-                    sema_decl.add("global", 1);
-                    if (ve.getInitializer() != null) {
-                       sema_decl.add("preset", getInitialiserForSema(ve.getInitializer()));
-                    }
+            st = m_group.getInstanceOf("variable_declaration");
+            st.add("name", ve.getName());
+            st.add("type",
+                    visitTypeAttribute(ve.getType()));//ctx.problemPartDataAttribute().typeAttribute()));
+            if (ve.getInitializer() != null) {
+                st.add("init", getInitialiser(ve.getInitializer()));
+            }
 
-                    scalarVariableDeclaration.add("variable_denotations", sema_decl);
+            st.add("inv", ve.getAssigmentProtection());
+            scalarVariableDeclaration.add("variable_denotations", st);
 
 
-                } else if (ve.getType() instanceof TypeBolt) {
+        } else if (ve.getType() instanceof TypeSemaphore) {
+            ST sema_decl = m_group.getInstanceOf("sema_declaration");
+            sema_decl.add("name", ve.getName());
+            sema_decl.add("global", 1);
+            if (ve.getInitializer() != null) {
+                sema_decl.add("preset", getInitialiserForSema(ve.getInitializer()));
+            }
 
-                    ST bolt_decl = m_group.getInstanceOf("bolt_declaration");
-                    bolt_decl.add("name", ve.getName());
-                    bolt_decl.add("global", 1);
+            scalarVariableDeclaration.add("variable_denotations", sema_decl);
 
-                    scalarVariableDeclaration.add("variable_denotations", bolt_decl);
-                  
-   
-                } else if (ve.getType() instanceof TypeDation) {
-              
-                    TypeDation td = (TypeDation)(ve.getType());
-                    
-                    ST dation_decl = visitDationDenotation(ve); //ctx.dationDenotation());
-                    //st.add("decl", entry.getName());
-                    m_dationDeclarationInitializers.add("decl",dation_decl);
-                    //dationDeclarations.add("decl",  dation_decl);
-                } else if (ve.getType() instanceof TypeReference) {
-                    st = m_group.getInstanceOf("variable_declaration");
-                    st.add("name", ve.getName());
- 
-                     
-                    TypeReference tr = ((TypeReference)ve.getType());
-                    ST ref = null;
-                    if (tr.getBaseType() instanceof TypeArray) {
-                        TypeDefinition basetype = ((TypeReference)ve.getType()).getBaseType();
-                        ref = m_group.getInstanceOf("TypeReferenceArray");
-                        ref.add("basetype", basetype);
-                    } else {
-                        ref = m_group.getInstanceOf("TypeReferenceSimpleType");
-                        ref.add("BaseType", visitTypeAttribute(tr.getBaseType()));
-                    }
-                    st.add("type",ref);
 
-                    if (ve.getInitializer() != null) {
-                       st.add("init", getInitialiser(ve.getInitializer()));
-                    }
- 
-                    st.add("inv", ve.getAssigmentProtection());
-                    scalarVariableDeclaration.add("variable_denotations", st);
+        } else if (ve.getType() instanceof TypeBolt) {
 
-                    
-                    
-                } else {
-                    ErrorStack.addInternal(ve.getCtx(), "CppCodeGen:visitVariableDenotation",
-                            "missing alternative@744 " + ve.getName());
+            ST bolt_decl = m_group.getInstanceOf("bolt_declaration");
+            bolt_decl.add("name", ve.getName());
+            bolt_decl.add("global", 1);
 
-                }
+            scalarVariableDeclaration.add("variable_denotations", bolt_decl);
 
-                //            VariableEntry var = (VariableEntry) entry;
-                //            
-                //            ST v = m_group.getInstanceOf("VariableDeclaration");
-                //            v.add("name", identifierDenotationList.get(i));
-                //            v.add("TypeAttribute", var.getType().toST(m_group));
-                //            // v.add("global", "?");
-                //            v.add("inv", var.getAssigmentProtection());
-                //            //variableDeclaration.add("decl", v);
-                //        }
-//            }
-//        }
-    
-    
+
+        } else if (ve.getType() instanceof TypeDation) {
+
+            TypeDation td = (TypeDation)(ve.getType());
+
+            ST dation_decl = visitDationDenotation(ve); //ctx.dationDenotation());
+            //st.add("decl", entry.getName());
+            m_dationDeclarationInitializers.add("decl",dation_decl);
+            //dationDeclarations.add("decl",  dation_decl);
+        } else if (ve.getType() instanceof TypeReference) {
+            st = m_group.getInstanceOf("variable_declaration");
+            st.add("name", ve.getName());
+
+
+            TypeReference tr = ((TypeReference)ve.getType());
+            ST ref = null;
+            if (tr.getBaseType() instanceof TypeArray) {
+                TypeDefinition basetype = ((TypeReference)ve.getType()).getBaseType();
+                ref = m_group.getInstanceOf("TypeReferenceArray");
+                ref.add("basetype", basetype);
+            } else {
+                ref = m_group.getInstanceOf("TypeReferenceSimpleType");
+                ref.add("BaseType", visitTypeAttribute(tr.getBaseType()));
+            }
+            st.add("type",ref);
+
+            if (ve.getInitializer() != null) {
+                st.add("init", getInitialiser(ve.getInitializer()));
+            }
+
+            st.add("inv", ve.getAssigmentProtection());
+            scalarVariableDeclaration.add("variable_denotations", st);
+
+
+
+        } else {
+            ErrorStack.addInternal(ve.getCtx(), "CppCodeGen:visitVariableDenotation",
+                    "missing alternative@744 " + ve.getName());
+
+        }
+
+        //            VariableEntry var = (VariableEntry) entry;
+        //            
+        //            ST v = m_group.getInstanceOf("VariableDeclaration");
+        //            v.add("name", identifierDenotationList.get(i));
+        //            v.add("TypeAttribute", var.getType().toST(m_group));
+        //            // v.add("global", "?");
+        //            v.add("inv", var.getAssigmentProtection());
+        //            //variableDeclaration.add("decl", v);
+        //        }
+        //            }
+        //        }
+
+
         return scalarVariableDeclaration;
     }
 
@@ -1107,7 +1107,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
     private boolean isSimpleType(VariableEntry ve) {
         return isSimpleType(ve.getType());
     }
-    
+
     private boolean isSimpleType(TypeDefinition t) {
         boolean result=false;
         if (t instanceof TypeFixed ||
@@ -1118,7 +1118,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
                 t instanceof TypeDuration) {
             result = true;
         }
-                
+
         return result;
     }
 
@@ -1154,29 +1154,29 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         if (init != null) {
             ASTAttribute attr = m_ast.lookup(init.m_context);
             result = attr.getConstantFixedValue().getValue();
-//        } else {
-//            VariableDenotationContext v = (VariableDenotationContext) ve.getCtx().parent.parent;
-//
-//            InitElementContext initElement = null;
-//            if (v.problemPartDataAttribute() != null
-//                    && v.problemPartDataAttribute().initialisationAttribute() != null) {
-//                initElement = v.problemPartDataAttribute().initialisationAttribute().initElement(i);
-//            } else if (v.semaDenotation() != null && v.semaDenotation().preset() != null) {
-//                initElement = v.semaDenotation().preset().initElement(i);
-//            }
-//            if (initElement != null) {
-//                ASTAttribute attr = m_ast.lookup(initElement);
-//                result = attr.getConstantFixedValue().getValue();
+            //        } else {
+            //            VariableDenotationContext v = (VariableDenotationContext) ve.getCtx().parent.parent;
+            //
+            //            InitElementContext initElement = null;
+            //            if (v.problemPartDataAttribute() != null
+            //                    && v.problemPartDataAttribute().initialisationAttribute() != null) {
+            //                initElement = v.problemPartDataAttribute().initialisationAttribute().initElement(i);
+            //            } else if (v.semaDenotation() != null && v.semaDenotation().preset() != null) {
+            //                initElement = v.semaDenotation().preset().initElement(i);
+            //            }
+            //            if (initElement != null) {
+            //                ASTAttribute attr = m_ast.lookup(initElement);
+            //                result = attr.getConstantFixedValue().getValue();
 
-            } else {
-                result = 0; // no preset --> init with 0
-            }
-      
+        } else {
+            result = 0; // no preset --> init with 0
+        }
+
 
         return result;
 
     }
-    
+
     private ST getInitialiser(Initializer initializer) {
         ST st = m_group.getInstanceOf("variable_init");
         ASTAttribute attr = m_ast.lookup(initializer.m_context);
@@ -1185,7 +1185,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         st.add("value", stValue); 
         return st;
     }
-    
+
     private ST getInitialiser(int i, VariableEntry ve) {
         ST st = m_group.getInstanceOf("variable_init");
         if (ve.getInitializer() != null) {
@@ -1206,7 +1206,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
             if (initElement != null) {
                 ASTAttribute attr = m_ast.lookup(initElement);
                 ST stValue = m_group.getInstanceOf("expression");
-                
+
                 stValue.add("code", attr.m_constant);
                 st.add("value", stValue);
             } else {
@@ -1234,11 +1234,11 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
             ErrorStack.addInternal("CppCodeGenerator@1086: nether Array nor Struct");
         }
         ArrayOrStructureInitializer initializer = (ArrayOrStructureInitializer)(variableEntry.getInitializer());
-        
+
 
         ST lastInitValue = null;
         if (initializer== null) {
-              
+
             return null;
         }
         int nbrOfInitializers = initializer.getInitElementList().size();
@@ -1570,10 +1570,10 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
     private ST visitTypeAttribute(TypeDefinition type) {
         ST st = m_group.getInstanceOf("TypeAttribute");
         String s = type.toString();
-        
+
         return type.toST(m_group);
     }
-    
+
     @Override
     public ST visitTypeAttribute(SmallPearlParser.TypeAttributeContext ctx) {
         ST type = m_group.getInstanceOf("TypeAttribute");
@@ -1707,10 +1707,10 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
 
         // get variable entries from SymbolTable and create code for their definition
         LinkedList<VariableEntry> entries = m_currentSymbolTable.getVariableDeclarations();
-     
+
         for (int i=0; i<entries.size(); i++) {
             VariableEntry ve = (VariableEntry)(entries.get(i));
-            System.out.println(ve.getName()+": " + ve.getType()+" "+ve.isSpecified());
+            // System.out.println(ve.getName()+": " + ve.getType()+" "+ve.isSpecified());
             if (ve.isSpecified()) {
                 problem_part.add("DationSpecifications", generateSpecification(ve));
             } else {
@@ -1719,19 +1719,19 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         }
         // get variable entries from SymbolTable and create code for their definition
         LinkedList<InterruptEntry> intEntries = m_currentSymbolTable.getInterruptSpecifications();
-     
+
         for (int i=0; i<intEntries.size(); i++) {
             InterruptEntry ve = intEntries.get(i);
-         
+
             problem_part.add("InterruptSpecifications", generateSpecification(ve));
-            
+
         }
-        
-        
+
+
         if (ctx != null) {
             for (ParseTree c : ctx.children) {
                 if (c instanceof SmallPearlParser.VariableDeclarationContext) {
-                   // problem_part.add("ScalarVariableDeclarations", visitVariableDeclaration(
+                    // problem_part.add("ScalarVariableDeclarations", visitVariableDeclaration(
                     //        (SmallPearlParser.VariableDeclarationContext) c));
                     //                } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                     //                    problem_part.add("ArrayVariableDeclarations", visitArrayVariableDeclaration(
@@ -1748,9 +1748,9 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
                 } else if (c instanceof SmallPearlParser.TaskDeclarationContext) {
                     problem_part.add("TaskDeclarations",
                             visitTaskDeclaration((SmallPearlParser.TaskDeclarationContext) c));
-//                } else if (c instanceof SmallPearlParser.DationSpecificationContext) {
-//                    problem_part.add("DationSpecifications", visitDationSpecification(
-//                            (SmallPearlParser.DationSpecificationContext) c));
+                    //                } else if (c instanceof SmallPearlParser.DationSpecificationContext) {
+                    //                    problem_part.add("DationSpecifications", visitDationSpecification(
+                    //                            (SmallPearlParser.DationSpecificationContext) c));
                     //                } else if (c instanceof SmallPearlParser.DationDeclarationContext) {
                     //                    problem_part.add("DationDeclarations",
                     //                            visitDationDeclaration((SmallPearlParser.DationDeclarationContext) c));
@@ -1856,46 +1856,46 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         return problem_part;
     }
 
-//    @Override
-//    public ST visitSemaDenotation(SmallPearlParser.SemaDenotationContext ctx) {
-//        ST st = m_group.getInstanceOf("SemaDeclaration");
-//        boolean hasGlobalAttribute = false;
-//
-//        ArrayList<String> identifierDenotationList = null;
-//        ArrayList<Integer> presetList = null;
-//
-//        if (ctx != null) {
-//            if (ctx.globalAttribute() != null) {
-//                hasGlobalAttribute = true;
-//            }
-//
-//            if (ctx.identifierDenotation() != null) {
-//                identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
-//            }
-//
-//            if (ctx.preset() != null) {
-//                presetList = getPreset(ctx.preset());
-//
-//                if (identifierDenotationList.size() != presetList.size()) {
-//                    throw new NumberOfInitializerMismatchException(ctx.getText(),
-//                            ctx.start.getLine(), ctx.start.getCharPositionInLine());
-//                }
-//            }
-//        }
-//
-//        for (int i = 0; i < identifierDenotationList.size(); i++) {
-//            ST v = m_group.getInstanceOf("sema_declaration");
-//            v.add("name", identifierDenotationList.get(i));
-//            v.add("global", hasGlobalAttribute);
-//
-//            if (presetList != null)
-//                v.add("preset", presetList.get(i));
-//
-//            st.add("decl", v);
-//        }
-//
-//        return st;
-//    }
+    //    @Override
+    //    public ST visitSemaDenotation(SmallPearlParser.SemaDenotationContext ctx) {
+    //        ST st = m_group.getInstanceOf("SemaDeclaration");
+    //        boolean hasGlobalAttribute = false;
+    //
+    //        ArrayList<String> identifierDenotationList = null;
+    //        ArrayList<Integer> presetList = null;
+    //
+    //        if (ctx != null) {
+    //            if (ctx.globalAttribute() != null) {
+    //                hasGlobalAttribute = true;
+    //            }
+    //
+    //            if (ctx.identifierDenotation() != null) {
+    //                identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
+    //            }
+    //
+    //            if (ctx.preset() != null) {
+    //                presetList = getPreset(ctx.preset());
+    //
+    //                if (identifierDenotationList.size() != presetList.size()) {
+    //                    throw new NumberOfInitializerMismatchException(ctx.getText(),
+    //                            ctx.start.getLine(), ctx.start.getCharPositionInLine());
+    //                }
+    //            }
+    //        }
+    //
+    //        for (int i = 0; i < identifierDenotationList.size(); i++) {
+    //            ST v = m_group.getInstanceOf("sema_declaration");
+    //            v.add("name", identifierDenotationList.get(i));
+    //            v.add("global", hasGlobalAttribute);
+    //
+    //            if (presetList != null)
+    //                v.add("preset", presetList.get(i));
+    //
+    //            st.add("decl", v);
+    //        }
+    //
+    //        return st;
+    //    }
 
     //    @Override
     //    public ST visitBoltDenotation(SmallPearlParser.BoltDenotationContext ctx) {
@@ -3722,14 +3722,14 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
             stmt.add("paramlist", visitOpen_parameterlist(ctx.open_parameterlist()));
 
             /* obsolete: semantic analsyis enshures <= 1 IDF
-            
+
             if (idfFilenames.size() > 1) {
             throw new NotSupportedFeatureException(
             "open_statement",
             			"OPEN: Mulitiple IDF not supported");
             ctx.start.getCharPositionInLine(),
             }
-            
+
             if (idfFilenames.size() == 1) {
              */
             Open_parameter_idfContext idfName = null;
@@ -3796,14 +3796,14 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
                 if (ctx.open_parameter(i).open_parameter_old_new_any() != null) {
                     Open_parameter_old_new_anyContext ctxTmp =
                             (Open_parameter_old_new_anyContext) ctx.open_parameter(i)
-                                    .open_parameter_old_new_any();
+                            .open_parameter_old_new_any();
                     st.add("parameter", visitOpen_parameter_old_new_any(ctxTmp));
                 }
 
                 if (ctx.open_parameter(i).open_close_parameter_can_prm() != null) {
                     Open_close_parameter_can_prmContext ctxTmp =
                             (Open_close_parameter_can_prmContext) ctx.open_parameter(i)
-                                    .open_close_parameter_can_prm();
+                            .open_close_parameter_can_prm();
                     st.add("parameter", visitOpen_close_parameter_can_prm(ctxTmp));
                 }
                 if (ctx.open_parameter(i).open_parameter_idf() != null) {
@@ -3876,7 +3876,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
                 if (ctx.close_parameter(i).open_close_parameter_can_prm() != null) {
                     Open_close_parameter_can_prmContext c =
                             (Open_close_parameter_can_prmContext) ctx.close_parameter(i)
-                                    .open_close_parameter_can_prm();
+                            .open_close_parameter_can_prm();
                     if (c.getText().equals("CAN")) {
                         ST can = m_group.getInstanceOf("close_parameter_can");
                         can.add("attribute", 1);
@@ -4625,7 +4625,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
             		ta.getNoOfDimensions(),
             		ta.getDimensions());
             param.add("ActualParameter",array_descriptor.getName());
-            */
+             */
             param.add("ActualParameter", getArrayDescriptor((VariableEntry) se));
 
             stmt.add("ActualParameter", param);
@@ -4848,7 +4848,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
 
         if (ctx.name() != null) {
             st.add("operand", visitName(ctx.name()));
-         } else if (ctx.simpleType() != null) {
+        } else if (ctx.simpleType() != null) {
             String typeName = "";
             if (ctx.simpleType().typeInteger() != null) {
                 long length = Defaults.FIXED_LENGTH;
@@ -5001,7 +5001,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
       ARRAY         REF()   lhs=arrayRef(...), rhs=visit
       NIL           REF()   rhs/lhs=visit(ctx0/1)
       NIL           NIL     rhs/lhs=visit(ctx0/1)
-     
+
      */
     private void treatIsIsnt(ST st, ExpressionContext ctx0, ExpressionContext ctx1) {
         ASTAttribute attrLhs = m_ast.lookup(ctx0);
@@ -5049,7 +5049,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         ST st = m_group.getInstanceOf("NOW");
         return st;
     }
-/*
+    /*
     @Override
     public ST visitDationSpecification(SmallPearlParser.DationSpecificationContext ctx) {
         ST dationSpecifications = m_group.getInstanceOf("DationSpecifications");
@@ -5111,21 +5111,21 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
 
         return dationSpecifications;
     }
-*/
- 
+     */
+
     private ST visitDationDenotation(VariableEntry ve) {
-       
-//        ParserRuleContext denotationCtx = ctx;
-//        // locate symboltable entry via first dationName
-//        while (!(denotationCtx.parent instanceof VariableDenotationContext)) {
-//            denotationCtx = (ParserRuleContext)(denotationCtx.parent);
-//        }
-//        denotationCtx = (ParserRuleContext)(denotationCtx.parent);
+
+        //        ParserRuleContext denotationCtx = ctx;
+        //        // locate symboltable entry via first dationName
+        //        while (!(denotationCtx.parent instanceof VariableDenotationContext)) {
+        //            denotationCtx = (ParserRuleContext)(denotationCtx.parent);
+        //        }
+        //        denotationCtx = (ParserRuleContext)(denotationCtx.parent);
 
         String name = ve.getName();
         TypeDation td = (TypeDation)(ve.getType());
         int tfuRecord = -1;
-       ST typeDation = m_group.getInstanceOf("TypeDation");
+        ST typeDation = m_group.getInstanceOf("TypeDation");
 
         typeDation =  getTypeDation(td);
 
@@ -5143,78 +5143,78 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
             if (tfuRecord < 0) {
                 tfuRecord = td.getDimension1();
             }
-          }
-//
+        }
+        //
         if (!(td.isBasic() && td.getTypeOfTransmission()!= null)) {
             // not needed for DationTS
-        if (td.isDirect()) accessAttributes.add("attribute", "DIRECT");
-        if (td.isForward()) accessAttributes.add("attribute", "FORWARD");
-        if (td.isCyclic()) accessAttributes.add("attribute", "CYCLIC");
-        else accessAttributes.add("attribute", "NOCYCL");
-        if (td.isStream()) accessAttributes.add("attribute", "STREAM");
-        else accessAttributes.add("attribute", "NOSTREAM");
-        typeDation.add("AccessAttribute", accessAttributes);
+            if (td.isDirect()) accessAttributes.add("attribute", "DIRECT");
+            if (td.isForward()) accessAttributes.add("attribute", "FORWARD");
+            if (td.isCyclic()) accessAttributes.add("attribute", "CYCLIC");
+            else accessAttributes.add("attribute", "NOCYCL");
+            if (td.isStream()) accessAttributes.add("attribute", "STREAM");
+            else accessAttributes.add("attribute", "NOSTREAM");
+            typeDation.add("AccessAttribute", accessAttributes);
         }
-//        if (ctx.globalAttribute() != null) {
-//            visitGlobalAttribute(ctx.globalAttribute());
-//        }
-//
-//        
-//
-//
+        //        if (ctx.globalAttribute() != null) {
+        //            visitGlobalAttribute(ctx.globalAttribute());
+        //        }
+        //
+        //        
+        //
+        //
 
-                //dationDeclarations.add("decl",m_identifierDenotationList.get(i));
-                ST v = m_group.getInstanceOf("DationDeclaration");
-                v.add("name", ve.getName());
-//
-                if (td.hasTypology()) {
-                    typology.add("name", ve.getName());
-                   
-                }
-//
-//
-                v.add("Dation", getDationClass(td));
+        //dationDeclarations.add("decl",m_identifierDenotationList.get(i));
+        ST v = m_group.getInstanceOf("DationDeclaration");
+        v.add("name", ve.getName());
+        //
+        if (td.hasTypology()) {
+            typology.add("name", ve.getName());
 
-//                if (ctx.typeDation().accessAttribute() != null) {
-//                    typeDation.add("AccessAttribute", accessAttributes);
-//                }
-//
-                if (td.hasTypology()) {
-                    typeDation.add("Dim", ve.getName());
-                }
+        }
+        //
+        //
+        v.add("Dation", getDationClass(td));
 
-                m_dationDeclarations.add("decl", v);
+        //                if (ctx.typeDation().accessAttribute() != null) {
+        //                    typeDation.add("AccessAttribute", accessAttributes);
+        //                }
+        //
+        if (td.hasTypology()) {
+            typeDation.add("Dim", ve.getName());
+        }
 
-                ST dationInitialiser = m_group.getInstanceOf("DationDeclarationInitialiser");
-                // name,Dation,TypeDation,Id,Typology, tfu
-                dationInitialiser.add("name", ve.getName());
-                dationInitialiser.add("Dation", getDationClass(td));
-                dationInitialiser.add("TypeDation", typeDation);
-                dationInitialiser.add("Id", td.getCreatedOn());
-                dationInitialiser.add("Typology", typology);
-                if (tfuRecord > 0) {
-                    dationInitialiser.add("tfu", tfuRecord);
-                }
-                m_dationDeclarationInitializers.add("decl", dationInitialiser);
-       
+        m_dationDeclarations.add("decl", v);
+
+        ST dationInitialiser = m_group.getInstanceOf("DationDeclarationInitialiser");
+        // name,Dation,TypeDation,Id,Typology, tfu
+        dationInitialiser.add("name", ve.getName());
+        dationInitialiser.add("Dation", getDationClass(td));
+        dationInitialiser.add("TypeDation", typeDation);
+        dationInitialiser.add("Id", td.getCreatedOn());
+        dationInitialiser.add("Typology", typology);
+        if (tfuRecord > 0) {
+            dationInitialiser.add("tfu", tfuRecord);
+        }
+        m_dationDeclarationInitializers.add("decl", dationInitialiser);
+
 
         return null;
     }
 
 
-//    private ST visitTypeDation(TypeDation t) {
-//        ST st = m_group.getInstanceOf("TypeDation");
-//        ST sourceSinkAttributte = m_group.getInstanceOf("SourceSinkAttribute");
-//    //    sourceSinkAttributte.add("attribute", ctx.sourceSinkAttribute().getText());
-//        st.add("SourceSinkAttribute", sourceSinkAttributte);
-//
-//        if (t.)
-////        if (ctx.classAttribute() != null) {
-////            st.add("ClassAttribute", getClassAttribute(ctx.classAttribute()));
-////        }
-//
-//        return st;
-//    }
+    //    private ST visitTypeDation(TypeDation t) {
+    //        ST st = m_group.getInstanceOf("TypeDation");
+    //        ST sourceSinkAttributte = m_group.getInstanceOf("SourceSinkAttribute");
+    //    //    sourceSinkAttributte.add("attribute", ctx.sourceSinkAttribute().getText());
+    //        st.add("SourceSinkAttribute", sourceSinkAttributte);
+    //
+    //        if (t.)
+    ////        if (ctx.classAttribute() != null) {
+    ////            st.add("ClassAttribute", getClassAttribute(ctx.classAttribute()));
+    ////        }
+    //
+    //        return st;
+    //    }
 
     private ST getTypeDation(TypeDation td) { //SmallPearlParser.TypeDationContext ctx, String dationClass) {
         ST st = m_group.getInstanceOf("TypeDation");
@@ -5222,15 +5222,15 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         sourceSinkAttributte.add("attribute",  td.getDirectionAsString());
         st.add("SourceSinkAttribute", sourceSinkAttributte);
 
-  //      if (dationClass.equals("DationRW") && ctx.classAttribute() != null) {
-            st.add("ClassAttribute", getClassAttribute(td));
-  //      }
+        //      if (dationClass.equals("DationRW") && ctx.classAttribute() != null) {
+        st.add("ClassAttribute", getClassAttribute(td));
+        //      }
 
         return st;
     }
 
 
-    
+
     private ST getTypology(TypeDation t) {
         ST st = m_group.getInstanceOf("Typology");
         // let's define the three dimension values with impossible preset
@@ -5239,7 +5239,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         int d1 = t.getDimension1();
         int d2 = t.getDimension2();
         int d3 = t.getDimension3();
-        
+
         if (d1 == -1) {              // '*'
             st.add("DIM1",-1);
             st.add("DIM1Unlimited", 1);
@@ -5254,62 +5254,62 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         }
 
 
-//        if (ctx.tfu() != null) {
-//            // we have TFU specified --> let's get the last given dimension
-//            if (d3 > 0) {
-//                m_tfuRecord = d3;
-//            } else if (d2 > 0) {
-//                m_tfuRecord = d2;
-//            } else {
-//                m_tfuRecord = d1;
-//            }
-//        }
+        //        if (ctx.tfu() != null) {
+        //            // we have TFU specified --> let's get the last given dimension
+        //            if (d3 > 0) {
+        //                m_tfuRecord = d3;
+        //            } else if (d2 > 0) {
+        //                m_tfuRecord = d2;
+        //            } else {
+        //                m_tfuRecord = d1;
+        //            }
+        //        }
         return st;
     }
 
-//    @Override
-//    public ST visitTypology(SmallPearlParser.TypologyContext ctx) {
-//        ST st = m_group.getInstanceOf("Typology");
-//        // let's define the three dimension values with impossible preset
-//        // 
-//        int d1 = -1;
-//        int d2 = -1;
-//        int d3 = -1;
-//
-//        for (ParseTree c : ctx.children) {
-//            if (c instanceof SmallPearlParser.Dimension1StarContext) {
-//                st.add("DIM1", -1);
-//                st.add("DIM1Unlimited", 1);
-//            } else if (c instanceof SmallPearlParser.Dimension1IntegerContext) {
-//                d1 = CommonUtils.getConstantFixedExpression(
-//                        ((SmallPearlParser.Dimension1IntegerContext) c).constantFixedExpression(),
-//                        m_currentSymbolTable);
-//                st.add("DIM1", d1);
-//            } else if (c instanceof SmallPearlParser.Dimension2IntegerContext) {
-//                d2 = CommonUtils.getConstantFixedExpression(
-//                        ((SmallPearlParser.Dimension2IntegerContext) c).constantFixedExpression(),
-//                        m_currentSymbolTable);
-//                st.add("DIM2", d2);
-//            } else if (c instanceof SmallPearlParser.Dimension3IntegerContext) {
-//                d3 = CommonUtils.getConstantFixedExpression(
-//                        ((SmallPearlParser.Dimension3IntegerContext) c).constantFixedExpression(),
-//                        m_currentSymbolTable);
-//                st.add("DIM3", d3);
-//            }
-//        }
-//
-//        if (ctx.tfu() != null) {
-//            // we have TFU specified --> let's get the last given dimension
-//            if (d3 > 0) {
-//                m_tfuRecord = d3;
-//            } else if (d2 > 0) {
-//                m_tfuRecord = d2;
-//            } else {
-//                m_tfuRecord = d1;
-//            }
-//        }
-//        return st;
-//    }
+    //    @Override
+    //    public ST visitTypology(SmallPearlParser.TypologyContext ctx) {
+    //        ST st = m_group.getInstanceOf("Typology");
+    //        // let's define the three dimension values with impossible preset
+    //        // 
+    //        int d1 = -1;
+    //        int d2 = -1;
+    //        int d3 = -1;
+    //
+    //        for (ParseTree c : ctx.children) {
+    //            if (c instanceof SmallPearlParser.Dimension1StarContext) {
+    //                st.add("DIM1", -1);
+    //                st.add("DIM1Unlimited", 1);
+    //            } else if (c instanceof SmallPearlParser.Dimension1IntegerContext) {
+    //                d1 = CommonUtils.getConstantFixedExpression(
+    //                        ((SmallPearlParser.Dimension1IntegerContext) c).constantFixedExpression(),
+    //                        m_currentSymbolTable);
+    //                st.add("DIM1", d1);
+    //            } else if (c instanceof SmallPearlParser.Dimension2IntegerContext) {
+    //                d2 = CommonUtils.getConstantFixedExpression(
+    //                        ((SmallPearlParser.Dimension2IntegerContext) c).constantFixedExpression(),
+    //                        m_currentSymbolTable);
+    //                st.add("DIM2", d2);
+    //            } else if (c instanceof SmallPearlParser.Dimension3IntegerContext) {
+    //                d3 = CommonUtils.getConstantFixedExpression(
+    //                        ((SmallPearlParser.Dimension3IntegerContext) c).constantFixedExpression(),
+    //                        m_currentSymbolTable);
+    //                st.add("DIM3", d3);
+    //            }
+    //        }
+    //
+    //        if (ctx.tfu() != null) {
+    //            // we have TFU specified --> let's get the last given dimension
+    //            if (d3 > 0) {
+    //                m_tfuRecord = d3;
+    //            } else if (d2 > 0) {
+    //                m_tfuRecord = d2;
+    //            } else {
+    //                m_tfuRecord = d1;
+    //            }
+    //        }
+    //        return st;
+    //    }
     // OpenPEARL Language Report: 11.5
     //
     // | BASIC | ALPHIC | ALL / type
@@ -5339,7 +5339,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         } else {
             return "DationRW";
         }
-     }
+    }
 
     private ST getStepSize(SmallPearlParser.ClassAttributeContext ctx) {
         ST st = m_group.getInstanceOf("StepSize");
@@ -5373,10 +5373,10 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
 
         if (td.getTypeOfTransmission().equals("ALL")) {
             st.add("all", "1");
-//        } else if (ctx instanceof SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) {
-//            SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext c =
-//                    (SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) ctx;
-//            st.add("type", visitSimpleType(c.simpleType()));
+            //        } else if (ctx instanceof SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) {
+            //            SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext c =
+            //                    (SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) ctx;
+            //            st.add("type", visitSimpleType(c.simpleType()));
         } else {
             st.add("type", getSimpleType(td.getTypeOfTransmissionAsType()));
         }
@@ -5387,41 +5387,41 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
     private ST getSimpleType(TypeDefinition t) {
         ST st= null;
 
-        
-            if (t instanceof TypeFixed) {
-                st =  m_group.getInstanceOf("TypeInteger");
-                st.add("size", ((TypeFixed)(t)).getPrecision());
-            } else if (t instanceof TypeDuration) {
-                st =  m_group.getInstanceOf("TypeDuration");
-            } else if (t instanceof TypeBit) {
-                st =  m_group.getInstanceOf("TypeBitString");
-                st.add("length", ((TypeBit)(t)).getPrecision());
-            } else if (t instanceof TypeFloat) {
-                st =  m_group.getInstanceOf("TypeFloatingPointNumber");
-                st.add("precision", ((TypeFloat)(t)).getPrecision());
-            } else if (t instanceof TypeClock) {
-                st =  m_group.getInstanceOf("TypeClock");
-            } else if (t instanceof  TypeChar) {
-                st =  m_group.getInstanceOf("TypeCharacterString");
-                st.add("size", ((TypeChar)(t)).getPrecision());
-            }
-    
+
+        if (t instanceof TypeFixed) {
+            st =  m_group.getInstanceOf("TypeInteger");
+            st.add("size", ((TypeFixed)(t)).getPrecision());
+        } else if (t instanceof TypeDuration) {
+            st =  m_group.getInstanceOf("TypeDuration");
+        } else if (t instanceof TypeBit) {
+            st =  m_group.getInstanceOf("TypeBitString");
+            st.add("length", ((TypeBit)(t)).getPrecision());
+        } else if (t instanceof TypeFloat) {
+            st =  m_group.getInstanceOf("TypeFloatingPointNumber");
+            st.add("precision", ((TypeFloat)(t)).getPrecision());
+        } else if (t instanceof TypeClock) {
+            st =  m_group.getInstanceOf("TypeClock");
+        } else if (t instanceof  TypeChar) {
+            st =  m_group.getInstanceOf("TypeCharacterString");
+            st.add("size", ((TypeChar)(t)).getPrecision());
+        }
+
 
         return st;
     }
 
 
 
-//    @Override
-//    public ST visitAccessAttribute(SmallPearlParser.AccessAttributeContext ctx) {
-//        ST st = m_group.getInstanceOf("AccessAttribute");
-//
-//        for (ParseTree c : ctx.children) {
-//            st.add("attribute", c.getText());
-//        }
-//
-//        return st;
-//    }
+    //    @Override
+    //    public ST visitAccessAttribute(SmallPearlParser.AccessAttributeContext ctx) {
+    //        ST st = m_group.getInstanceOf("AccessAttribute");
+    //
+    //        for (ParseTree c : ctx.children) {
+    //            st.add("attribute", c.getText());
+    //        }
+    //
+    //        return st;
+    //    }
 
     @Override
     public ST visitBlock_statement(SmallPearlParser.Block_statementContext ctx) {
@@ -5431,13 +5431,13 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         BlockEntry be = (BlockEntry) (m_currentSymbolTable.lookupLoopBlock(ctx));
         ASTAttribute attr = m_ast.lookup(ctx);
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-        
+
         addVariableDeclarationsToST(blockBody);
-        
+
         for (ParseTree c : ctx.children) {
             if (c instanceof SmallPearlParser.VariableDeclarationContext) {
-             //   st.add("code",
-             //           visitVariableDeclaration((SmallPearlParser.VariableDeclarationContext) c));
+                //   st.add("code",
+                //           visitVariableDeclaration((SmallPearlParser.VariableDeclarationContext) c));
             } else if (c instanceof SmallPearlParser.StatementContext) {
                 blockBody.add("statements", visitStatement((SmallPearlParser.StatementContext) c));
             }
@@ -5557,7 +5557,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
                 st.add("while_cond", cast);
             }
         }
-        
+
         ST loopBody = m_group.getInstanceOf("Body");
         st.add("body", loopBody);
         addVariableDeclarationsToST(loopBody);
@@ -5613,7 +5613,7 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
 
         return st;
     }
-    
+
 
     @Override
     public ST visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
@@ -5624,10 +5624,10 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
                 m_currentSymbolTable.lookup(ctx.nameOfModuleTaskProc().ID().toString());
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-       
+
         LinkedList<VariableEntry> entries = m_currentSymbolTable.getVariableDeclarations();
-        
-        
+
+
         for (ParseTree c : ctx.typeProcedure().children) {
             //if (c instanceof SmallPearlParser.ProcedureBodyContext) {
             //    st.add("body",
@@ -5752,14 +5752,14 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
     public ST visitProcedureBody(SmallPearlParser.ProcedureBodyContext ctx) {
         ST st = m_group.getInstanceOf("Body");
         //this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-        
+
         addVariableDeclarationsToST(st);
 
         if (ctx != null && ctx.children != null) {
             for (ParseTree c : ctx.children) {
                 if (c instanceof SmallPearlParser.VariableDeclarationContext) {
-                   // st.add("declarations", visitVariableDeclaration(
-                   //         (SmallPearlParser.VariableDeclarationContext) c));
+                    // st.add("declarations", visitVariableDeclaration(
+                    //         (SmallPearlParser.VariableDeclarationContext) c));
                     //                } else if (c instanceof SmallPearlParser.ArrayVariableDeclarationContext) {
                     //                    st.add("declarations", visitArrayVariableDeclaration(
                     //                            (SmallPearlParser.ArrayVariableDeclarationContext) c));
@@ -5778,34 +5778,34 @@ System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         return st;
     }
 
-private void addVariableDeclarationsToST(ST st) {
-    // get variable entries from SymbolTable and create code for their definition
-    // ignore loop control variables
-    
-    LinkedList<VariableEntry> entries = m_currentSymbolTable.getVariableDeclarations();
- 
-    for (int i=0; i<entries.size(); i++) {
-        VariableEntry ve = (VariableEntry)(entries.get(i));
-        if (ve.getLoopControlVariable()) continue;  
-        //System.out.println("BODY: "+ve.getName()+": " + ve.getType()+" "+ve.isSpecified());
-        if (ve.isSpecified()) {
-            // no specifications allowd - identifications are no treated yet
-        } else {
-            st.add("declarations", generateVariableDeclaration(ve));
+    private void addVariableDeclarationsToST(ST st) {
+        // get variable entries from SymbolTable and create code for their definition
+        // ignore loop control variables
+
+        LinkedList<VariableEntry> entries = m_currentSymbolTable.getVariableDeclarations();
+
+        for (int i=0; i<entries.size(); i++) {
+            VariableEntry ve = (VariableEntry)(entries.get(i));
+            if (ve.getLoopControlVariable()) continue;  
+            //System.out.println("BODY: "+ve.getName()+": " + ve.getType()+" "+ve.isSpecified());
+            if (ve.isSpecified()) {
+                // no specifications allowd - identifications are no treated yet
+            } else {
+                st.add("declarations", generateVariableDeclaration(ve));
+            }
+
         }
 
     }
-        
-    }
 
-//    @Override
-//    public ST visitGlobalAttribute(SmallPearlParser.GlobalAttributeContext ctx) {
-//        ST st = m_group.getInstanceOf("GlobalAttribute");
-//
-//        st.add("id", ctx.ID().getText());
-//
-//        return st;
-//    }
+    //    @Override
+    //    public ST visitGlobalAttribute(SmallPearlParser.GlobalAttributeContext ctx) {
+    //        ST st = m_group.getInstanceOf("GlobalAttribute");
+    //
+    //        st.add("id", ctx.ID().getText());
+    //
+    //        return st;
+    //    }
 
     @Override
     public ST visitResultAttribute(SmallPearlParser.ResultAttributeContext ctx) {
@@ -5940,50 +5940,50 @@ private void addVariableDeclarationsToST(ST st) {
     //        return declarations;
     //    }
 
-//    @Override
-//    public ST visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
-//        ST declarations = m_group.getInstanceOf("ArrayVariableDeclarations");
-//
-//        for (int i = 0; i < ctx.ID().size(); i++) {
-//            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().get(i).toString());
-//
-//            if (entry == null || !(entry instanceof VariableEntry)) {
-//                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-//                        ctx.start.getCharPositionInLine());
-//            }
-//
-//            VariableEntry variableEntry = (VariableEntry) entry;
-//
-//            if (variableEntry.getType() instanceof TypeArray) {
-//                ArrayList<ST> initElementList = null;
-//
-//                ST declaration = m_group.getInstanceOf("ArrayVariableDeclaration");
-//
-//                declaration.add("name", variableEntry.getName());
-//
-//                if (variableEntry.getType() instanceof TypeArray) {
-//                    TypeArray type = (TypeArray) variableEntry.getType();
-//                    declaration.add("type", type.getBaseType().toST(m_group));
-//                } else {
-//                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-//                            ctx.start.getCharPositionInLine());
-//                }
-//
-//                declaration.add("assignmentProtection", variableEntry.getAssigmentProtection());
-//                declaration.add("totalNoOfElements",
-//                        ((TypeArray) variableEntry.getType()).getTotalNoOfElements());
-//
-//                if (ctx.initialisationAttribute() != null) {
-//                    declaration.add("initElements", getArrayInitialisationAttribute(variableEntry));
-//                }
-//
-//                declarations.add("declarations", declaration);
-//            }
-//        }
-//
-//        return declarations;
-//    }
-//
+    //    @Override
+    //    public ST visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
+    //        ST declarations = m_group.getInstanceOf("ArrayVariableDeclarations");
+    //
+    //        for (int i = 0; i < ctx.ID().size(); i++) {
+    //            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().get(i).toString());
+    //
+    //            if (entry == null || !(entry instanceof VariableEntry)) {
+    //                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+    //                        ctx.start.getCharPositionInLine());
+    //            }
+    //
+    //            VariableEntry variableEntry = (VariableEntry) entry;
+    //
+    //            if (variableEntry.getType() instanceof TypeArray) {
+    //                ArrayList<ST> initElementList = null;
+    //
+    //                ST declaration = m_group.getInstanceOf("ArrayVariableDeclaration");
+    //
+    //                declaration.add("name", variableEntry.getName());
+    //
+    //                if (variableEntry.getType() instanceof TypeArray) {
+    //                    TypeArray type = (TypeArray) variableEntry.getType();
+    //                    declaration.add("type", type.getBaseType().toST(m_group));
+    //                } else {
+    //                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+    //                            ctx.start.getCharPositionInLine());
+    //                }
+    //
+    //                declaration.add("assignmentProtection", variableEntry.getAssigmentProtection());
+    //                declaration.add("totalNoOfElements",
+    //                        ((TypeArray) variableEntry.getType()).getTotalNoOfElements());
+    //
+    //                if (ctx.initialisationAttribute() != null) {
+    //                    declaration.add("initElements", getArrayInitialisationAttribute(variableEntry));
+    //                }
+    //
+    //                declarations.add("declarations", declaration);
+    //            }
+    //        }
+    //
+    //        return declarations;
+    //    }
+    //
 
     /**
      * create code for CONVERT .. TO
@@ -6078,9 +6078,9 @@ private void addVariableDeclarationsToST(ST st) {
         return stmt;
     }
 
-   /*
+    /*
       @Override
-    
+
     public ST visitInterruptDenotation(SmallPearlParser.InterruptDenotationContext ctx) {
         ST st = m_group.getInstanceOf("InterruptSpecifications");
 
@@ -6095,7 +6095,7 @@ private void addVariableDeclarationsToST(ST st) {
         }
         return st;
     }
-*/
+     */
     @Override
     public ST visitInterrupt_statement(SmallPearlParser.Interrupt_statementContext ctx) {
         if (m_verbose > 0) {
@@ -6182,7 +6182,7 @@ private void addVariableDeclarationsToST(ST st) {
         return s;
     }
 
-   
+
     private ST visitStructVariableDenotation(
             SmallPearlParser.VariableDenotationContext ctx) {
         Log.debug("CppCodeGeneratorVisitor:visitStructVariableDeclaration:ctx"

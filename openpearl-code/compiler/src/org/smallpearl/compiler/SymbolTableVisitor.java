@@ -704,7 +704,7 @@ implements SmallPearlVisitor<Void> {
                 // need ArrayOrStructureInitialiser
                 int requiredInitializers = nbrOfVariables * ((TypeStructure)(m_type)).getTotalNoOfElements();
                 if (nbrOfInitializer < requiredInitializers) {
-                    ErrorStack.add(initElements.get(requiredInitializers),"INIT",requiredInitializers-nbrOfInitializer+" initializers missing");
+                    ErrorStack.add(m_identifierDenotationContext,"INIT",requiredInitializers-nbrOfInitializer+" initializers missing");
                 } else if (nbrOfInitializer > requiredInitializers) {
                     ErrorStack.add(initElements.get(requiredInitializers),"INIT","too many initializers");
                 }
