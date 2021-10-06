@@ -1564,7 +1564,7 @@ String sCtx = ctx.getText();
         for (int i=0; i<m_identifierDenotationContext.identifier().size(); i++) {
             String s = m_identifierDenotationContext.identifier(i).getText();
             VariableEntry ve = new VariableEntry(s,
-                    m_type, m_hasAllocationProtection, ctx);
+                    m_type, m_hasAllocationProtection, m_identifierDenotationContext.identifier(i));
 
             // spc/dcl and global attribute is treated in checkDoubleDefinitionAndEnterToSymbolTable
             checkDoubleDefinitionAndEnterToSymbolTable(ve,

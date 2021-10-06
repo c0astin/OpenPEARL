@@ -1,5 +1,5 @@
 /*
- * [A "BSD license"]
+TFU  * [A "BSD license"]
  *  Copyright (c) 2019 Raier Müller
  *  All rights reserved.
  *
@@ -134,7 +134,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
     }
 
     private void checkUserDation(VariableEntry ve, TypeDation d, boolean isDecl) {
-        ErrorStack.enter(ve.getCtx());
+        ErrorStack.enter(ve.getCtx(),"DationDCL");
         if (isDecl) {
             System.out.println("UserDCL: "+ve.getName());
             if (d.isSystemDation()) {
