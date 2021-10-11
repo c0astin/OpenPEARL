@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- *  Copyright (c) 2012-2020 Rainer Mueller & Marcel Schaible
+ * *  Copyright (c) 2012-2021 Rainer Mueller & Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.*;
+import org.smallpearl.compiler.CommonErrorMessages.*;
 //import org.stringtemplate.v4.ST;
 
 import java.util.LinkedList;
@@ -3075,6 +3076,9 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                 if (ctx.fixedConstant().fixedNumberPrecision() != null) {
                     precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision()
                             .IntegerConstant().toString());
+                    if ( precision < Defaults.FIXED_MIN_LENGTH || precision > Defaults.FIXED_MAX_LENGTH) {
+                        CommonErrorMessages.wrongFixedPrecission(ctx.fixedConstant());
+                    }
                 }
                 if (precision > Defaults.FIXED_MAX_LENGTH) {
                     CommonErrorMessages.wrongFixedPrecission(ctx.fixedConstant());
@@ -3087,7 +3091,6 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
             } catch (NumberFormatException ex) {
                 ErrorStack.add(ctx, "integer literal", "illegal number");
             }
-
         } else if (ctx.referenceConstant() != null) {
             // NIL fits to any type; thus we have NO basetype
             expressionResult = new ASTAttribute(new TypeReference());

@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- *  Copyright (c) 2012-2016 Marcel Schaible
+ * *  Copyright (c) 2012-2021 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -423,14 +423,12 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void>
                 int precision = m_currentSymbolTable.lookupDefaultFixedLength();
 
                 value = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
-
                 value = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
                 m_constantPool.add(new ConstantFixedValue(value));
             } catch (NumberFormatException ex) {
                 throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(),
                         ctx.start.getCharPositionInLine());
             }
-
         } else if (ctx.stringConstant() != null) {
             String s = ctx.stringConstant().StringLiteral().toString();
             //s = CommonUtils.removeQuotes(s);
