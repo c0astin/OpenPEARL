@@ -64,6 +64,12 @@ import java.util.List;
  * </ul>
  *    
  */
+
+/**
+ * @author Marcel Schaible
+ * @version 1
+ *     <p><b>Description</b>
+ */
 public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
         implements SmallPearlVisitor<Void> {
 

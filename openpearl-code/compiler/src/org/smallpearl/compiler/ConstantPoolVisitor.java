@@ -40,6 +40,12 @@ import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
+/**
+ * @author Marcel Schaible
+ * @version 1
+ *     <p><b>Description</b>
+ */
+
 public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void>
         implements SmallPearlVisitor<Void> {
     private int m_verbose;

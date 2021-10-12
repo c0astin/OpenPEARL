@@ -51,6 +51,12 @@ import org.smallpearl.compiler.SymbolTable.*;
  *  DURATION started to implement
  *  BIT,CHAR and CLOCK are not treated
  */
+/**
+ * @author Marcel Schaible
+ * @version 1
+ *     <p><b>Description</b>
+ */
+
 public class ConstantFoldingVisitor extends SmallPearlBaseVisitor<Void>
         implements SmallPearlVisitor<Void> {
 

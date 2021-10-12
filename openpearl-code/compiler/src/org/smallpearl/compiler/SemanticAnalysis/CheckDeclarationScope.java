@@ -35,6 +35,12 @@ import org.smallpearl.compiler.Exception.DeclarationScopeException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 
+/**
+ * @author Marcel Schaible
+ * @version 1
+ *     <p><b>Description</b>
+ */
+
 public class CheckDeclarationScope extends SmallPearlBaseVisitor<Void>
         implements SmallPearlVisitor<Void> {
 

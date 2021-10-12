@@ -35,6 +35,12 @@ import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 
+/**
+ * @author Marcel Schaible
+ * @version 1
+ *     <p><b>Description</b>
+ */
+
 public  class ConstantFixedExpressionEvaluator extends SmallPearlBaseVisitor<ConstantFixedValue> implements SmallPearlVisitor<ConstantFixedValue> {
 
     private int m_verbose;

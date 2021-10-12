@@ -44,6 +44,12 @@ import org.stringtemplate.v4.STGroupFile;
 
 import java.util.*;
 
+/**
+ * @author Marcel Schaible
+ * @version 1
+ *     <p><b>Description</b>
+ */
+
 public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 implements SmallPearlVisitor<ST> {
 
