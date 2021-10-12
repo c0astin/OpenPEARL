@@ -240,43 +240,53 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
-    private ASTAttribute treatFixedFloatDyadic(TypeDefinition type1, TypeDefinition type2,
+    private ASTAttribute treatFixedFloatDyadic(TypeDefinition type1, TypeDefinition type2, boolean resIsFloat,
             Boolean isReadOnly, ASTAttribute op1, ASTAttribute op2, String operator) {
+
+        Log.debug("ExpressionTypeVisitor:treatFixedFloatDyadic");
+
         ASTAttribute res = null;
 
-        Integer precision = Math.max(type1.getPrecision(), type2.getPrecision());
+        int precision = Math.max(type1.getPrecision(), type2.getPrecision());
+
+        // If the result type is FLOAT, the precision must be FLOAT_SHORT_PRECISION or FLOAT_LONG_PRECISION
+        if ( resIsFloat)
+        {
+            if ( precision <= Defaults.FLOAT_SHORT_PRECISION) {
+                precision = Defaults.FLOAT_SHORT_PRECISION;
+            } else if ( precision <= Defaults.FLOAT_LONG_PRECISION) {
+                precision = Defaults.FLOAT_LONG_PRECISION;
+            } else {
+                ErrorStack.add("type mismatch: " + op1.getType().toString() + operator + op2.getType()
+                     + " not possible");
+            }
+        }
 
         if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeFixed(precision), isReadOnly);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#1");
+            if (resIsFloat)
+                res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
+            else
+                res = new ASTAttribute(new TypeFixed(precision), isReadOnly);
+
+            Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#1");
         } else if (type1 instanceof TypeFixed && type2 instanceof TypeFloat) {
             res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#2");
+            Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#2");
         } else if (type1 instanceof TypeFloat && type2 instanceof TypeFixed) {
             res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#3");
+            Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#3");
         } else if (type1 instanceof TypeFloat && type2 instanceof TypeFloat) {
             res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#4");
+            Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#4");
         } else if (type1 instanceof TypeDuration && type2 instanceof TypeDuration) {
             res = new ASTAttribute(new TypeDuration(), isReadOnly);
-
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#5");
+            Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#5");
         } else if (type1 instanceof TypeDuration && type2 instanceof TypeClock) {
             res = new ASTAttribute(new TypeClock(), isReadOnly);
-
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#6");
+            Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#6");
         } else if (type1 instanceof TypeClock && type2 instanceof TypeDuration) {
             res = new ASTAttribute(new TypeClock(), isReadOnly);
-
-            if (m_debug)
-                System.out.println("ExpressionTypeVisitor: AdditiveExpression: rule#7");
+            Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#7");
         } else {
             ErrorStack.add("type mismatch: " + op1.getType().toString() + operator + op2.getType()
                     + " not possible");
@@ -295,7 +305,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
     //            | operand 1 | operand 2 |             |
     // -----------+-----------+-----------+-------------+---------------------------------
     // op1 + op2  | FIXED(g1) | FIXED(g2) | FIXED(g3)   | addition of the values of
-    //            | FIXED(g1) | FLOAT(g2) | FLOAT(g3)   |the operands op1 and op2
+    //            | FIXED(g1) | FLOAT(g2) | FLOAT(g3)   | the operands op1 and op2
     //            | FLOAT(g1) | FIXED(g2) | FLOAT(g3)   |
     //            | FLOAT(g1) | FLOAT(g2) | FLOAT(g3)   | g3 = max (g1, g2)
     //            | DURATION  | DURATION  | DURATION    |
@@ -353,7 +363,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
 
                 Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#7");
             } else {
-                res = treatFixedFloatDyadic(type1, type2, isReadOnly, op1, op2, "+");
+                res = treatFixedFloatDyadic(type1, type2, false, isReadOnly, op1, op2, "+");
             }
             ErrorStack.leave();
 
@@ -432,7 +442,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
 
                 Log.debug("ExpressionTypeVisitor: SubtractiveExpression: rule#7");
             } else {
-                res = treatFixedFloatDyadic(type1, type2, isReadOnly, op1, op2, "-");
+                res = treatFixedFloatDyadic(type1, type2, false, isReadOnly, op1, op2, "-");
             }
             ErrorStack.leave();
 
@@ -727,7 +737,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                     && op2.getType() instanceof TypeFloat) {
                 res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
             } else {
-                res = treatFixedFloatDyadic(op1.getType(), op2.getType(), isReadOnly, op1, op2,
+                res = treatFixedFloatDyadic(op1.getType(), op2.getType(), false, isReadOnly, op1, op2,
                         "*");
             }
 
@@ -767,6 +777,7 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
 
         op1 = saveGetAttribute(ctx.expression(0), ctx, "/",
                 "no AST attribute found for lhs of operation /");
+
         op2 = saveGetAttribute(ctx.expression(1), ctx, "/",
                 "no AST attribute found for rhs of operation /");
 
@@ -801,9 +812,11 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
 
                 Log.debug("ExpressionTypeVisitor: DivideExpression: rule#7");
             } else {
-                res = treatFixedFloatDyadic(op1.getType(), op2.getType(), isReadOnly, op1, op2,
+                res = treatFixedFloatDyadic(op1.getType(), op2.getType(), true, isReadOnly, op1, op2,
                         "/");
+
             }
+
             m_ast.put(ctx, res);
         }
 
