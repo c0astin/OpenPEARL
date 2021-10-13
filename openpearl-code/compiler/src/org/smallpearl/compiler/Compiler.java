@@ -79,9 +79,10 @@ public class Compiler {
     static int warninglevel = 255;
     static int lineWidth = 80;
     static boolean coloured = false;
+    static boolean useNamespaceForGlobals = true;
 
     public static void main(String[] args) {
-        int i, j;
+        int i;
 
         if (args.length < 1) {
             printHelp();
@@ -219,11 +220,11 @@ public class Compiler {
                             debug, tree, symbolTableVisitor, expressionTypeVisitor, ast);
                 }
                 if (ErrorStack.getTotalErrorCount() <= 0 && imc) {
-                    SystemPartExport(lexer.getSourceName(), tree, symbolTableVisitor, ast);
+                    SystemPartExport(lexer.getSourceName(), tree, symbolTableVisitor, ast, useNamespaceForGlobals);
                 }
                 if (ErrorStack.getTotalErrorCount() <= 0) {
                     CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor,
-                            expressionTypeVisitor, constantExpressionVisitor, ast);
+                            expressionTypeVisitor, constantExpressionVisitor, ast, useNamespaceForGlobals);
                 }
             } catch (Exception ex) {
                 System.err.println(ex.getMessage());
@@ -326,6 +327,8 @@ public class Compiler {
                 + " --imc                        Enable Inter Module Checker           \n"
                 + "                              file                                  \n"
                 + "  --sysinfo                   Print system information              \n"
+                + "  -std=OpenPEARL              use OpenPEARL behavior (default)      \n"
+                + "  -std=PEARL90                use PEARL90 behavior                  \n"
                 + "  --coloured                  mark errors with colour               \n"
                 + "  --output <filename>         Filename of the generated code        \n"
                 + "  infile ...                                                        \n");
@@ -361,6 +364,10 @@ public class Compiler {
                 nosemantic = true;
             } else if (arg.equals("--noconstantfolding")) {
                 constantfolding = false;
+            } else if (arg.equals("-std=OpenPEARL")) {
+                useNamespaceForGlobals = true;
+            } else if (arg.equals("-std=PEARL90")) {
+                useNamespaceForGlobals = false;
             } else if (arg.equals("--diagnostics")) {
                 diagnostics = true;
             } else if (arg.equals("--dumpDFA")) {
@@ -425,11 +432,12 @@ public class Compiler {
 
     private static Void CppGenerate(String sourceFileName, ParserRuleContext tree,
             SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
-            ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor, AST ast) {
+            ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor, AST ast,
+            boolean useNameSpaceForGlobals) {
 
         CppCodeGeneratorVisitor cppCodeGenerator = new CppCodeGeneratorVisitor(sourceFileName,
                 groupFile, verbose, debug, symbolTableVisitor, expressionTypeVisitor,
-                constantExpressionEvaluatorVisitor, ast);
+                constantExpressionEvaluatorVisitor, ast, useNameSpaceForGlobals);
 
         ST code = cppCodeGenerator.visit(tree);
 
@@ -474,11 +482,11 @@ public class Compiler {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static Void SystemPartExport(String sourceFileName, ParserRuleContext tree,
-            SymbolTableVisitor symbolTableVisitor, AST ast) {
+            SymbolTableVisitor symbolTableVisitor, AST ast, Boolean useNamespaceForGlobals) {
         String outputFileName = sourceFileName;
 
         SystemPartExporter systemPartExporter =
-                new SystemPartExporter(sourceFileName, verbose, debug, symbolTableVisitor, ast);
+                new SystemPartExporter(sourceFileName, verbose, debug, symbolTableVisitor, ast, useNamespaceForGlobals);
         ST systemPart = systemPartExporter.visit(tree);
 
         if (debugSTG) {

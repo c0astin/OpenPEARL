@@ -70,13 +70,16 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
     private ST systemPart = null;
     private ST problemPart = null;
     private ST tfuUsage = null;
+    private boolean m_useNamespaceForGlobals;
+    private String m_thisNamespace;
 
 
     public SystemPartExporter(String sourceFileName, int verbose, boolean debug,
-            SymbolTableVisitor symbolTableVisitor, AST ast) {
+            SymbolTableVisitor symbolTableVisitor, AST ast, Boolean useNamespaceForGlobals) {
 
         m_verbose = verbose;
         m_sourceFileName = sourceFileName;
+        m_useNamespaceForGlobals = useNamespaceForGlobals;
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
         if (m_verbose > 1) {
@@ -102,6 +105,11 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
 
         module.add("sourcefile", m_sourceFileName);
         module.add("name", ctx.nameOfModuleTaskProc().ID().getText());
+        if (m_useNamespaceForGlobals) {
+            m_thisNamespace = ctx.nameOfModuleTaskProc().ID().getText();
+        } else {
+            m_thisNamespace = "pearlApp";
+        }
         org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry =
                 m_currentSymbolTable.lookupLocal(ctx.nameOfModuleTaskProc().ID().getText());
         m_currentSymbolTable = ((ModuleEntry) symbolTableEntry).scope;
@@ -116,7 +124,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
         problemPart.add("decls", tfuUsage);
 
         exportInterruptSpecifications();
-        exportDations();
+        exportProblemPartSpcAndDcl();
         module.add("ProblemPart", problemPart);
 
         m_currentSymbolTable = m_currentSymbolTable.ascend();
@@ -252,7 +260,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
         }
     }
 
-    private void exportDations() {
+    private void exportProblemPartSpcAndDcl() {
         // export dation specifications and declaractions
         
         LinkedList<VariableEntry> l = m_currentSymbolTable.getVariableDeclarations();
@@ -269,6 +277,9 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
                     dationSpecification.add("lineno", v.getCtx().start.getLine());
                     dationSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
                     dationSpecification.add("name", v.getName());
+                    if (m_useNamespaceForGlobals) {
+                        dationSpecification.add("fromNamespace", v.getGlobalAttribute());
+                    }
 
                     TypeDation td = (TypeDation) (v.getType());
 
@@ -314,6 +325,33 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
 
                     problemPart.add("decls", dationSpecification);
                 }
+            } else {
+                if (v.isSpecified()) {
+                    ST st = group.getInstanceOf("Specification");
+                    st.add("lineno", v.getSourceLineNo());
+                    st.add("col",v.getCharPositionInLine());
+                    st.add("name", v.getName());
+                    st.add("type", v.getType());
+                    if (m_useNamespaceForGlobals) {
+                       st.add("fromNamespace", v.getGlobalAttribute());
+                    }
+                    problemPart.add("decls",  st);
+                } else {
+                    if (v.getGlobalAttribute()!= null) {
+                        //Declaration(lineno,col,name,type,global) ::= <<
+                        ST st = group.getInstanceOf("Declaration");
+                        st.add("lineno", v.getSourceLineNo());
+                        st.add("col",v.getCharPositionInLine());
+                        st.add("name", v.getName());
+                        st.add("type", v.getType());
+                        if (m_useNamespaceForGlobals) {
+                           st.add("global", v.getGlobalAttribute());
+                        }
+                        problemPart.add("decls",  st);
+                    }
+                }
+                    
+                
             }
         }
 

@@ -274,10 +274,10 @@ implements SmallPearlVisitor<Void> {
                         (SmallPearlParser.ListOfFormalParametersContext) c);
             }
         }
-
-        if (ctx.globalAttribute() != null) {
-            globalId = ctx.globalAttribute().ID().getText();
-        }
+//
+//        if (ctx.globalAttribute() != null) {
+//            globalId = ctx.globalAttribute().ID().getText();
+//        }
 
         String s = ctx.nameOfModuleTaskProc().ID().toString();
         SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(s);

@@ -70,6 +70,8 @@ implements SmallPearlVisitor<ST> {
     private ST m_dationDeclarations;
     private ST m_dationDeclarationInitializers;
     private ST m_dationSpecificationInitializers;
+    private boolean m_useNamespaceForGlobals;
+    private String m_thisNamespace;
     public enum Type {
         BIT, CHAR, FIXED
     }
@@ -79,10 +81,13 @@ implements SmallPearlVisitor<ST> {
     public CppCodeGeneratorVisitor(String sourceFileName, String filename, int verbose,
             boolean debug, SymbolTableVisitor symbolTableVisitor,
             ExpressionTypeVisitor expressionTypeVisitor,
-            ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor, AST ast) {
+            ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor, AST ast, 
+            boolean useNamespaceForGlobals) {
 
+        
         m_debug = debug;
         m_verbose = verbose;
+        m_useNamespaceForGlobals = useNamespaceForGlobals;
         m_sourceFileName = sourceFileName;
         m_symbolTableVisitor = symbolTableVisitor;
         m_constantExpressionEvaluatorVisitor = constantExpressionEvaluatorVisitor;
@@ -441,7 +446,14 @@ implements SmallPearlVisitor<ST> {
         ST module = m_group.getInstanceOf("module");
 
         module.add("src", this.m_sourceFileName);
-        module.add("name", ctx.nameOfModuleTaskProc().ID().getText());
+        if (m_useNamespaceForGlobals) {
+            m_thisNamespace = ctx.nameOfModuleTaskProc().ID().getText();
+        } else {
+            m_thisNamespace = "pearlApp";
+        }
+
+        module.add("name", m_thisNamespace);
+
         module.add("prologue", generatePrologue());
 
         org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry =

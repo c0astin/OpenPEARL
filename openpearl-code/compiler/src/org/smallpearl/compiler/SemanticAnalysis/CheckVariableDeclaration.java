@@ -29,6 +29,7 @@
 
 package org.smallpearl.compiler.SemanticAnalysis;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.smallpearl.compiler.*;
 import org.smallpearl.compiler.SmallPearlParser.InitElementContext;
@@ -63,6 +64,14 @@ import java.util.List;
  * <li>the initialisiers become added to the SymbolTableEntries
  * </ul>
  *    
+ *    Problems:
+ *    <ol>
+ *    <li>SymbolTableVisitor created fixed constants with wrong length if they are longer than the type<br>
+ *    the ASTAttribute of constants should be set by the SymbolTableVisitor and not by the ExpressionTypeVisitor
+ *    <li>for TypeStructure we need an iterator over all component elements, even with nested structures
+ *    <li>we should not extend the initializer to the size of the variable to safe space in the C++-code - 
+ *       especially if CHAR-Variables become initialized like x CHAR(10) INIT (' '); 
+ *    </ol>
  */
 public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
         implements SmallPearlVisitor<Void> {
@@ -90,6 +99,118 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
         if (m_verbose > 0) {
             System.out.println("    Check Variable Declaration");
         }
+        List<VariableEntry> listOfVariables = m_symboltable.getAllVariableDeclarations();
+        for (VariableEntry v : listOfVariables) {
+            
+            //if (v.getInitializer()!= null) {
+                System.out.println(v.getName() + " "+ v.getType());
+            //    checkInitializer(v);
+            //}
+        }
+        System.out.println("for(int i=0; ...");
+        for (int i=0; i<listOfVariables.size(); i++) {
+            VariableEntry v = listOfVariables.get(i);
+        
+            
+            //if (v.getInitializer()!= null) {
+                System.out.println(v.getName() + " "+ v.getType());
+            //    checkInitializer(v);
+            //}
+        }
+
+    }
+    
+    private TypeDefinition getFirstStructureComponentElement (TypeStructure ts){
+        
+        return null;
+    }
+    private void checkInitializer(VariableEntry v) {
+         if (v.getType() instanceof TypeArray) {
+             TypeArray ta = (TypeArray)v.getType();
+             if (ta.getBaseType() instanceof TypeStructure) {
+                 
+                
+             } else if (isScalarType(ta.getBaseType())) {
+                // checkTypes(InitElementContext initElementContext, TypeDefinition tVar,
+                //         TypeDefinition m_type) 
+                 // all initializers must have a compatible type
+              
+             }
+         } else if (isScalarType(v.getType())) {
+            SimpleInitializer si = (SimpleInitializer )(v.getInitializer());
+            TypeDefinition typeOfConstant = getType(si.getConstant());
+ 
+            ASTAttribute attr = m_ast.lookup(v.getInitializer().getContext());
+            // anstell ASTAttribute besser Constant um getType erweitern -> erleichtert Lookup
+            
+             checkTypes(v.getInitializer().getContext(), v.getType(), attr.getType() );
+             
+             checkTypeCompatibility(v.getType(),typeOfConstant,si.getContext());
+        }
+        
+    }
+    
+    private boolean checkTypeCompatibility(TypeDefinition typeOfVariable, TypeDefinition typeOfInitializer, ParserRuleContext ctxOfInitElement) {
+        
+        if (typeOfVariable instanceof TypeFixed && typeOfInitializer instanceof TypeFixed) {
+            if (((TypeFixed)typeOfVariable).getPrecision() < ((TypeFixed)typeOfInitializer).getPrecision()) {
+                ErrorStack.add(ctxOfInitElement,"INIT",typeOfVariable +" := " + typeOfInitializer);
+            }
+            
+        } else {
+            ErrorStack.add(ctxOfInitElement,"INIT",typeOfVariable +" := " + typeOfInitializer);  
+        }
+        
+        return false;
+    }
+    private TypeDefinition getType(ConstantValue c) {
+        if (c instanceof ConstantFixedValue) {
+            return (new TypeFixed ( ((ConstantFixedValue)c).getPrecision()));
+        }
+        if (c instanceof ConstantFloatValue) {
+            return (new TypeFloat ( ((ConstantFloatValue)c).getPrecision()));
+        }
+        if (c instanceof ConstantCharacterValue) {
+            return (new TypeChar( ((ConstantCharacterValue)c).getLength()));
+        }        
+        if (c instanceof ConstantBitValue) {
+            return (new TypeBit ( ((ConstantBitValue)c).getLength()));
+        }
+        if (c instanceof ConstantDurationValue) {
+            return new TypeDuration();
+        }
+        if (c instanceof ConstantClockValue) {
+            return new TypeClock();
+        }
+        ErrorStack.addInternal(null, "CheckVariableDeclaration", "untreated type of constant@143");
+        return null;
+    }
+    
+    private boolean isSimpleType(TypeDefinition t) {
+        if (t instanceof TypeFixed ||
+                t instanceof TypeFloat ||
+                t instanceof TypeChar ||
+                t instanceof TypeBit ||
+                t instanceof TypeDuration ||
+                t instanceof TypeClock ) {
+            return true;
+        }
+        return false;
+    }
+    
+    private boolean isScalarType(TypeDefinition t) {
+        if (t instanceof TypeFixed ||
+                t instanceof TypeFloat ||
+                t instanceof TypeChar ||
+                t instanceof TypeBit ||
+                t instanceof TypeDuration ||
+                t instanceof TypeClock ||
+                t instanceof TypeSemaphore ||
+                t instanceof TypeBolt || 
+                t instanceof TypeReference) {
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -320,7 +441,7 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
         return null;
     }
 
-    private void checkTypes(InitElementContext initElementContext, TypeDefinition tVar,
+    private void checkTypes(ParserRuleContext initElementContext, TypeDefinition tVar,
             TypeDefinition m_type) {
         String error = "type mismatch in INIT";
       //  System.out.println("check types "+tVar+" <-> "+m_type);
@@ -372,8 +493,6 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
                 ErrorStack.add(initElementContext, error,"SEMA PRESET "+m_type);
             }
         }
-        
-        
     }
 
     private ArrayList<String> getIdentifierDenotation(

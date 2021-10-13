@@ -73,8 +73,8 @@ public class TaskEntry extends SymbolTableEntry {
 
         }
 
-        return indentString(level) + super.toString(level) + "task" + " priority(" + taskPriority
-                + ")" + (m_isMain ? " main" : "") + (m_isGlobal ? " global" : "")
+        return indentString(level) + super.toString(level) + "task"
+                + (!isSpecified()? " priority(" + taskPriority + ")" : "" )
                 + scopeString(level);
     }
 

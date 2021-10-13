@@ -189,7 +189,6 @@ public class SymbolTable {
      */
     public boolean enter(SymbolTableEntry se) {
 
-
         if (lookupLocal(se.getName()) != null) {
             return false;
         }
@@ -266,7 +265,7 @@ public class SymbolTable {
 
         return output;
     }
-
+  
     public LinkedList<TaskEntry> getTaskDeclarations() {
         LinkedList<TaskEntry> listOfTaskEntries = new LinkedList<TaskEntry>();
         SymbolTableEntry e;
@@ -281,6 +280,46 @@ public class SymbolTable {
 
         return listOfTaskEntries;
     }
+
+    private  LinkedList<VariableEntry> getAllVariableDeclarations(SymbolTable scope) {
+        LinkedList<VariableEntry> listOfVariableDeclarationsEntries =
+                new LinkedList<VariableEntry>();
+        
+        for (Iterator<SymbolTableEntry> it = m_currentSymbolTable.m_entries.values().iterator(); it.hasNext();) {
+            SymbolTableEntry ste = it.next();
+            if (ste instanceof VariableEntry) {
+                listOfVariableDeclarationsEntries.add((VariableEntry)ste);
+            } else if (ste instanceof TaskEntry) {
+                listOfVariableDeclarationsEntries.addAll(getAllArrayDeclarations(((TaskEntry)ste).scope));
+            } else if (ste instanceof LoopEntry) {
+                listOfVariableDeclarationsEntries.addAll(getAllArrayDeclarations(((LoopEntry)ste).scope));
+            } else if (ste instanceof BlockEntry) {
+                listOfVariableDeclarationsEntries.addAll(getAllArrayDeclarations(((BlockEntry)ste).scope));
+            } else if (ste instanceof ProcedureEntry) {
+                listOfVariableDeclarationsEntries.addAll(getAllArrayDeclarations(((ProcedureEntry)ste).scope));
+            } 
+            
+        }
+
+        return listOfVariableDeclarationsEntries;
+    }
+  
+    public LinkedList<VariableEntry> getAllVariableDeclarations() {
+        m_currentSymbolTable = this;
+        LinkedList<VariableEntry> listOfVariableDeclarationsEntries =
+                new LinkedList<VariableEntry>();
+        // hopefully we are on top level ....
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
+            SymbolTableEntry ste = it.next();
+            if (ste instanceof ModuleEntry) {
+                m_currentSymbolTable = ((ModuleEntry)ste).scope;
+                listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(m_currentSymbolTable));
+                m_currentSymbolTable = parent;
+            }
+        }
+        return listOfVariableDeclarationsEntries;
+    }
+    
 
     public LinkedList<VariableEntry> getVariableDeclarations() {
         LinkedList<VariableEntry> listOfVariableDeclarationsEntries =
@@ -605,6 +644,7 @@ public class SymbolTable {
     }
 
     public SymbolTable parent;
+    private SymbolTable m_currentSymbolTable; // needed for traversion the complete symbol table
     protected HashMap<String, SymbolTableEntry> m_entries;
     public int m_level;
     private boolean m_usesSystemElements;
