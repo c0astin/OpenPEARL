@@ -8,14 +8,14 @@ package imc.types;
  *
  */
 
-public class Association  {
-	ModuleEntrySystemPart username;
-	
-	public Association(ModuleEntrySystemPart username) {
-		this.username = username;
-	}
+public class Association {
+    ModuleEntrySystemPart username;
 
-	public ModuleEntrySystemPart getUsername() {
-		return username;
-	}
+    public Association(ModuleEntrySystemPart username) {
+        this.username = username;
+    }
+
+    public ModuleEntrySystemPart getUsername() {
+        return username;
+    }
 }
