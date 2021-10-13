@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2012-2016 Marcel Schaible
+ * *  Copyright (c) 2012-2021 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -650,5 +650,4 @@ public class SymbolTable {
     private boolean m_usesSystemElements;
     private static Vector<SymbolTableEntry> m_loopsAndBlocks = new Vector<SymbolTableEntry>();
     private static Vector<SymbolTableEntry> m_systemPartNames = new Vector<SymbolTableEntry>();
-
 }

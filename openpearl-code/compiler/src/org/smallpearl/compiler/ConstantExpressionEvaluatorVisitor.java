@@ -33,6 +33,12 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.smallpearl.compiler.SymbolTable.*;
 
+/**
+ * @author Marcel Schaible
+ * @version 1
+ *     <p><b>Description</b>
+ */
+
 public class ConstantExpressionEvaluatorVisitor extends SmallPearlBaseVisitor<Void>
         implements SmallPearlVisitor<Void> {
 

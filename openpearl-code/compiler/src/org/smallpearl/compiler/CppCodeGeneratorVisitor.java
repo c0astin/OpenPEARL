@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- *  Copyright (c) 2012-2017 Marcel Schaible
+ * *  Copyright (c) 2012-2021 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,12 @@ import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
 import java.util.*;
+
+/**
+ * @author Marcel Schaible
+ * @version 1
+ *     <p><b>Description</b>
+ */
 
 public class CppCodeGeneratorVisitor extends SmallPearlBaseVisitor<ST>
 implements SmallPearlVisitor<ST> {

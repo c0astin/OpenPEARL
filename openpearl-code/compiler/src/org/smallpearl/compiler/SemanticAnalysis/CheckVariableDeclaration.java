@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- *  Copyright (c) 2012-2017 Marcel Schaible
+ * *  Copyright (c) 2012-2021 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -72,6 +72,12 @@ import java.util.List;
  *    <li>we should not extend the initializer to the size of the variable to safe space in the C++-code - 
  *       especially if CHAR-Variables become initialized like x CHAR(10) INIT (' '); 
  *    </ol>
+ */
+
+/**
+ * @author Marcel Schaible
+ * @version 1
+ *     <p><b>Description</b>
  */
 public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
         implements SmallPearlVisitor<Void> {

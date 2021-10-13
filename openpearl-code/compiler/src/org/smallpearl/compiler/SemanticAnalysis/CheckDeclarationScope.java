@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- *  Copyright (c) 2012-2017 Marcel Schaible
+ * *  Copyright (c) 2012-2021 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,12 @@ import org.smallpearl.compiler.SmallPearlParser.BoltDenotationContext;
 import org.smallpearl.compiler.Exception.DeclarationScopeException;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
+
+/**
+ * @author Marcel Schaible
+ * @version 1
+ *     <p><b>Description</b>
+ */
 
 public class CheckDeclarationScope extends SmallPearlBaseVisitor<Void>
         implements SmallPearlVisitor<Void> {

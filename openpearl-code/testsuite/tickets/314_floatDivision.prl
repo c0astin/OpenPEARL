@@ -9,7 +9,7 @@ PROBLEM;
   
 paritaet: TASK MAIN;   
 
-  DCL (a,b) FIXED INIT(3,4);
+  DCL (a,b) FIXED(15) INIT(3,4);
   DCL f FLOAT; 
   OPEN stdOut;
   f:= a/b;
