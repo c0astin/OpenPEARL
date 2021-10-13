@@ -2261,16 +2261,19 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
             // setup SPC/DCL and GLOBAL information
             if (m_isInSpecification) {
                 newEntry.setIsSpecified();
-            }
-            if (m_isGlobal) {
-                if (m_globalName != null) {
-                    if (m_isInSpecification) {
+                newEntry.setGlobalAttribute(m_currentModuleName);
+                if (m_isGlobal) {
+                    if (m_globalName != null) {
                         newEntry.setGlobalAttribute(m_globalName);
-                    } else {
+                    } 
+                }
+            } else {
+                if (m_isGlobal) {
+                    if (m_globalName != null) {
                         ErrorStack.add(ctx, "GLOBAL", "no nameOfModule allowed in DCL");
+                    } else {
+                        newEntry.setGlobalAttribute(m_currentModuleName);
                     }
-                } else {
-                    newEntry.setGlobalAttribute(m_currentModuleName);
                 }
             }
             m_currentSymbolTable.enter(newEntry);
