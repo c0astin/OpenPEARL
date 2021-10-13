@@ -41,6 +41,7 @@ SystemPart(decls) ::= <<
 \<system>
  <decls: {decl|<decl>}>
 \</system>
+
 >>
 
 ProblemPart(decls) ::= <<
@@ -50,8 +51,8 @@ ProblemPart(decls) ::= <<
 >>
 
 
-SystemElementDefinition(lineno,col,username,decl) ::= <<
-\<username name="<username>"  line="<lineno>" col="<col>" >
+SystemElementDefinition(lineno,col,username,decl, namespace) ::= <<
+\<username name="<username>"  line="<lineno>" col="<col>" <if(namespace)>global="<namespace>"<endif> >
   <decl>
 \</username>
 
@@ -71,7 +72,6 @@ SystemDescription(sysname,parameters,association) ::= <<
   <if(parameters)><parameters><endif>
   <if(association)><association><endif>
 \</sysname>
-
 >>
 
 
@@ -111,13 +111,20 @@ Type_Fixed(name) ::= <<
 >>
 
 
-Specification(lineno,col,name,type) ::= <<
-\<spc type="<type>" name="<name>" line="<lineno>" col="<col>" />
+Specification(lineno,col,name,type,fromNamespace) ::= <<
+\<spc type="<type>" name="<name>" line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif> />
 
 >>
 
-DationSpecification(lineno,col,name,attributes,datalist) ::= <<
-\<spc type="dation" name="<name>" line="<lineno>" col="<col>" >
+Declaration(lineno,col,name,type,global) ::= <<
+\<dcl type="<type>" name="<name>" line="<lineno>" col="<col>" <if(global)>global="<global>"<endif> />
+
+>>
+
+
+
+DationSpecification(lineno,col,name,attributes,datalist,fromNamespace) ::= <<
+\<spc type="dation" name="<name>" line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif> >
   <if(attributes)><attributes><endif>
   <if(datalist)><datalist><endif>
 \</spc>
@@ -144,6 +151,7 @@ TfuUsage(decls) ::= <<
 \<tfuusage>
   <decls: {decl|<decl>}>
 \</tfuusage>
+
 >>
 
 TfuInUserDation(lineno, col, userdation, systemdation, tfusize) ::= <<

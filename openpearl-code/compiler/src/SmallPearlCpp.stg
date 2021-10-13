@@ -38,11 +38,11 @@ Prologue( src,
           ConstantPoolList,
           StructureForwardDeclarationList,
           StructureDeclarationList) ::= <<
-#include \<PearlIncludes.h>
 
 
 
-const char* filename = (char*) "<src>";
+
+static const char* filename = (char*) "<src>";
 
 <if(headerfiles)> <headerfiles:headerfile(); separator="\n"> <endif>
 <if(namespaces)> <namespaces:using_namespace(); separator="\n"> <endif>
@@ -96,6 +96,9 @@ using namespace <name>;<\n>
 /************************* MODULE *************************/
 
 module(src,name,prologue,SystemPart,ProblemPart,cpp_inlines) ::= <<
+#include \<PearlIncludes.h>
+
+namespace <name> {
 <if(prologue)>
 /////////////////////////////////////////////////////////////////////////////
 // PROLOGUE
@@ -118,6 +121,8 @@ module(src,name,prologue,SystemPart,ProblemPart,cpp_inlines) ::= <<
 <if(ProblemPart)>
 <ProblemPart>
 <endif>
+
+}
 >>
 
 SystemPart(cpp_inlines) ::= <<

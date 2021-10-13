@@ -722,7 +722,8 @@ resultType :
 ////////////////////////////////////////////////////////////////////////////////
 
 taskDeclaration :
-    nameOfModuleTaskProc ':' 'TASK' priority? task_main? ';' taskBody 'END' ';' cpp_inline?
+    nameOfModuleTaskProc ':' 'TASK' priority? task_main? globalAttribute? ';'
+        taskBody 'END' ';' cpp_inline?
     ;
 
 taskDenotation :
