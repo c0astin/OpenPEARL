@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<module file="demo1.prl" name="demo1">
+<module file="demo1.p90.prl" name="demo1">
 <system>
 
 <username name="rpiBi3" line="400" col="1" >
@@ -116,22 +116,22 @@
 
 <problem>
    <spc type="signal" name="sig1" line="19" col="1" />
-   <spc type="interrupt" name="int1" line="20" col="1"  />
-   <spc type="dation" name="bit1" line="25" col="1" >
+   <spc type="interrupt" name="int1" line="20" col="1" />
+   <spc type="dation" name="bit1" line="25" col="1"  >
       <attributes> IN,SYSTEM </attributes>
       <data>BIT(2)</data>
    </spc>
-   <spc type="dation" name="disc" line="21" col="1" >
+   <spc type="dation" name="disc" line="21" col="1"  >
       <attributes> OUT,SYSTEM </attributes>
       <data>ALL</data>
    </spc>
-   <spc type="dation" name="stdOut" line="22" col="1" >
+   <spc type="dation" name="stdOut" line="22" col="1"  >
       <attributes> OUT, SYSTEM </attributes>
       <data>ALPHIC</data>
    </spc>
-   <dcl type="FIXED(15)" name="f15" line="77" col="1" />
+   <dcl type="FIXED(15)" name="f15" line="77" col="1"  />
 
-   <dcl type="TASK" name="t1" line="123" col="1" />
+   <dcl type="TASK" name="t1" line="123" col="1"  />
    <dcl type="SEMA" name="s1" line="123" col="1" />
 
    <dcl type="PROC" name="funktion1" line="111" col="1" >

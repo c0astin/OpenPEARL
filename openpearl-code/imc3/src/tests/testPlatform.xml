@@ -10,6 +10,10 @@
                <VALUES>1,2,3,15,16,17</VALUES>
             </FIXED>
          </parameters>
+        <checks>
+        <check instances="oncePerSet" set="UnixSignal($signalNumber)" />
+       </checks>
+
       </interrupt>
 
       <dation name="Disc">
@@ -34,7 +38,7 @@
          </attributes>
          <DATA>ALPHIC</DATA>
          <checks>
-           <check instances="1"/>
+           <check instances="oncePerSet" set="StdIn"/>
          </checks>
       </dation>
 
@@ -49,7 +53,7 @@
             <associationType name="AlphicOutProvider" />
          </associationProvider>
          <checks>
-           <check instances ="1"/>
+           <check instances="oncePerSet" set="StdOut"/>
          </checks>
       </dation>
 
@@ -151,7 +155,7 @@
     </parameters>
     <needAssociation name="AlphicOutProvider"/>
     <checks>
-       <check instances ="1"/>
+       <check instances ="oncePerSet" set="Log" />
     </checks>
   </configuration>
 

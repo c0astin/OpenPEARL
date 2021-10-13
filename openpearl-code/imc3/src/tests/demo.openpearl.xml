@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<module file="demo.prl" name="abc">
+<module file="demo.openpearl.prl" name="demo">
 <system>
 
 <username name="sig1" line="9" col="1">
    <sysname name="FixedRangeSignal"/>
-</username>
-
-<username name="int1" line="10" col="1">
-  <sysname name="UnixSignal">
-    <parameters>
-      <FIXED>15</FIXED>
-    </parameters>
-  </sysname>
 </username>
 
 <username name="disc" line="12" col="1">
