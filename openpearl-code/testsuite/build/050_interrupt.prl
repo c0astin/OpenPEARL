@@ -21,8 +21,8 @@ DCL con DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdOut);
 
 !SPC ctrlc INTERRUPT;
 ! extern pearlrt::Interrupt * _ctrlc ;
-SPC int1 INTERRUPT;
-SPC int2 INTERRUPT;
+SPC int1 INTERRUPT GLOBAL;
+SPC int2 INTERRUPT GLOBAL;
 ! extern pearlrt::Interrupt * _int1 ;
 
 DCL t2_run BIT INIT('0'B1);

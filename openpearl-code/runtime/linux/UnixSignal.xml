@@ -5,6 +5,6 @@
          </FIXED>
       </parameters>
       <checks>
-        <check oncePerSet="UnixSignal($signalNumber)" />
+        <check instances="oncePerSet" set="UnixSignal($signalNumber)" />
       </checks>
    </interrupt>

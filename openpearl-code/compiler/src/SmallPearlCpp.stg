@@ -98,7 +98,7 @@ using namespace <name>;<\n>
 module(src,name,prologue,SystemPart,ProblemPart,cpp_inlines) ::= <<
 #include \<PearlIncludes.h>
 
-namespace <name> {
+namespace ns_<name> {
 <if(prologue)>
 /////////////////////////////////////////////////////////////////////////////
 // PROLOGUE

@@ -439,13 +439,10 @@ in a conventient way in there task-specification file
 \param ismain 1, if the task is of type MAIN,<br> 0,else
 */
 #define DCLTASK(x, prio, ismain) 			\
-namespace pearlrt {					\
    static void x ## _entry (pearlrt::Task * me) ;	\
    static void x ## _body (pearlrt::Task * me) ;        \
-}							\
-pearlrt::Task x ( pearlrt::x ## _entry, ((char*)#x)+1,  \
+pearlrt::Task x ( x ## _entry, ((char*)#x)+1,  \
                        prio, ismain);	                \
-namespace pearlrt {					\
 static void x ## _entry (pearlrt::Task * me) { 		\
       me->entry();  					\
       try {						\
@@ -462,9 +459,8 @@ static void x ## _entry (pearlrt::Task * me) { 		\
       }							\
       me->terminate(me);  				\
    } 							\
-}							\
 							\
-static void pearlrt::x ## _body (pearlrt::Task * me)
+static void x ## _body (::pearlrt::Task * me)
 
 #if 0
 #define DCLTASKGLOBAL(x, prio, ismain,ns) 		\

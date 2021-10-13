@@ -256,6 +256,9 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
             interruptSpecification.add("lineno", v.getCtx().start.getLine());
             interruptSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
             interruptSpecification.add("name", v.getName());
+            if (m_useNamespaceForGlobals) {
+                interruptSpecification.add("fromNamespace", v.getGlobalAttribute());
+            }
             problemPart.add("decls", interruptSpecification);
         }
     }

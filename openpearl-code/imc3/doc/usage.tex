@@ -6,17 +6,26 @@ The inter module checker is invoked with
 imc -b <target> -o <output> pearlModules...
 \end{verbatim}
 
-The option -b is  recommended. The given parameter defines the
+The list of pearl modules is passed without extension. Pathnames are 
+possible.
+
+\section{Options}
+\begin{description}
+\item[-b] The option -b is  recommended. The given parameter defines the
 platform definition XML file, which is expected ether in the current 
 working directory (first)
 or in installation directory of OpenPEARL.
+\item [-o] defaults to system.cc in the current working directory. This is
+  the name of the source file for the system part.
+\item[-std=OpenPEARL] is default. Multiple system parts are allowed and the 
+    module name defines the namespace.
+\item[-std=PEARL90] allows only one system part. The module name is only used 
+  for documentation. The C++ code goes into the namespace \texttt{pearlApp}.
+\item[-I ] defines the installation path of the platform definition files
+\item[--verbose] enables more messages 
+\item[--help] prints a help message with all supported options.
+\end{description}
 
-The option -o defaults to system.cc in the current working directory.
-
-The option --help prints a help message with all supported options.
-
-The list of pearl modules is passed without extension. Pathnames are 
-possible.
 
 
 

@@ -137,6 +137,10 @@ public class CodeGenerator {
 
     }
 
+    private static String addNsPrefix(String namespace) {
+        return "ns_"+namespace;
+    }
+    
     private static void instantiate(List<Module> modules, int priority) {
         boolean nameSpaceSet = false;
 
@@ -157,7 +161,7 @@ public class CodeGenerator {
                 PlatformSystemElement n = Platform.getInstance().getSystemElement(sysname);
                 if (n.getPriority() == priority) {
                     if (!nameSpaceSet) {
-                        prototypes.append("namespace " + nameSpace + " {\n");
+                        prototypes.append("namespace " + addNsPrefix(nameSpace) + " {\n");
                         nameSpaceSet = true;
                     }
                     doAllPrerequisites(se, 10); // max depth of recursion is 10
@@ -223,7 +227,7 @@ public class CodeGenerator {
             functionBody.append("\t  // " + module.getSourceFileName() + ":" + se.getLine() + "\n");
             functionBody.append("\t  static pearlrt::" + se.getNameOfSystemelement() + " "
                     /* + nameSpacePrefix */ + "s" + userName + parameterList(se) + ";\n");
-            functionBody.append("\t  " + nameSpacePrefix + "d" + userName + "= &" + /* nameSpacePrefix + */ "s"
+            functionBody.append("\t  " + addNsPrefix(nameSpacePrefix) + "d" + userName + "= &" + /* nameSpacePrefix + */ "s"
                     + userName + ";\n\n");
 
         } else if (pse.getType().equals(Platform.CONNECTION)) {
@@ -241,14 +245,14 @@ public class CodeGenerator {
             functionBody.append("\t  // " + module.getSourceFileName() + ":" + se.getLine() + "\n");
             functionBody.append("\t  static pearlrt::" + se.getNameOfSystemelement() + " "
                     /* + nameSpacePrefix */ + "sys" + userName + parameterList(se) + ";\n");
-            functionBody.append("\t  " + nameSpacePrefix + userName + "= (pearlrt::Interrupt*) &"
+            functionBody.append("\t  " + addNsPrefix(nameSpacePrefix) + userName + "= (pearlrt::Interrupt*) &"
                     /* + nameSpacePrefix */ + "sys" + userName + ";\n");
         } else if (pse.getType().equals(Platform.SIGNAL)) {
             prototypes.append("\tpearlrt::Signal *" + " " /* + nameSpacePrefix*/
                     + "generalized" + userName + ";" + locationComment(se));
             functionBody.append("\t  // " + module.getSourceFileName() + ":" + se.getLine() + "\n");
             functionBody.append("\t  pearlrt:: " +se.getNameOfSystemelement() + userName + ";\n" );
-            functionBody.append("\t  "+ nameSpacePrefix + "generalized" + userName + "= & "
+            functionBody.append("\t  "+ addNsPrefix(nameSpacePrefix) + "generalized" + userName + "= & "
                     /* + nameSpacePrefix*/ + userName + ";\n\n");
         } else {
             Log.error("unsupported type: " + pse.getType());
