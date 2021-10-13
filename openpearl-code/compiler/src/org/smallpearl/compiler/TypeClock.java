@@ -35,7 +35,7 @@ import org.stringtemplate.v4.STGroup;
 
 public class TypeClock extends TypeDefinition {
 
-    TypeClock() {
+    public TypeClock() {
         super("CLOCK");
 
     }
