@@ -18,6 +18,7 @@ main: TASK MAIN;
       d3      DURATION INIT(1 HRS 10 MIN 45 SEC);
   DCL c1      CLOCK INIT(12:10:56);
   DCL c2      CLOCK INIT(22:30:00);
+  DCL f       FIXED INIT(3);
 
   OPEN stdOut;
 
@@ -47,32 +48,54 @@ main: TASK MAIN;
   ! DURATION AND CLOCKS
   ! ==========================================
 
+  x := 3.0;
+
   d1 := d2 / i15; ! DURATION := DURATION / FIXED
-  PUT '(1) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
+  PUT '(01) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
 
   d1 := d2 / 2.0; ! DURATION := DURATION / FLOAT
-  PUT '(2) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
+  PUT '(02) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
 
   x  := d2 / d3;  ! DURATION := DURATION / DURATION
-  PUT '(3) x               =>',x TO stdOut BY A,E(13,6), SKIP;
+  PUT '(03) x               =>',x TO stdOut BY A,E(13,6), SKIP;
 
   d1 := d2 + d2;  ! DURATION := DURATION + DURATION
-  PUT '(4) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
+  PUT '(04) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
 
   c1 := d2 + c1;  ! DURATION := DURATION + CLOCK
-  PUT '(5) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
+  PUT '(05) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
 
   c1 := c2 + d2;  ! CLOCK := CLOCK + DURATION
-  PUT '(6) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
+  PUT '(06) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
 
   d1 := d2 - d2;  ! DURATION := DURATION - DURATION
-  PUT '(7) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
+  PUT '(07) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
 
   c1 := c2 - d2;  ! CLOCK := CLOCK - DURATION
-  PUT '(8) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
+  PUT '(08) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
 
   c1 := c2 - d3;  ! CLOCK := CLOCK - CLOCK
-  PUT '(9) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
+  PUT '(09) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
+
+  d2 := 1 HRS 30 MIN 45 SEC;
+
+  d1 := f * d2;
+  PUT '(10) d1              =>',d1 TO stdOut BY A,D(30), SKIP;
+
+  d1 := d2 * f;
+  PUT '(11) d1              =>',d1 TO stdOut BY A,D(30), SKIP;
+
+  d1 := d2 / f;
+  PUT '(12) d1              =>',d1 TO stdOut BY A,D(30), SKIP;
+
+  d1 := x * d2;
+  PUT '(11) d1              =>',d1 TO stdOut BY A,D(30), SKIP;
+
+  d1 := d2 * x;
+  PUT '(12) d1              =>',d1 TO stdOut BY A,D(30), SKIP;
+
+  d1 := d2 / x;
+  PUT '(13) d1              =>',d1 TO stdOut BY A,D(30), SKIP;
 
   CLOSE stdOut;
 
