@@ -1,22 +1,80 @@
 MODULE(expressions);
 
-PROBLEM;	
-  
-main: TASK MAIN;   
-  DCL (x,y) FLOAT;
+SYSTEM;
+  so: StdOut;	! Terminal Ausgabe bei OpenPEARL
 
+PROBLEM;	
+  SPC so DATION OUT SYSTEM ALPHIC;
+
+  DCL stdOut DATION OUT ALPHIC DIM(*,80) FORWARD CREATED (so);
+
+  DCL (testPassed, testFailed) FIXED INIT(0,0);
+
+main: TASK MAIN;
+  DCL (x,y)   FLOAT;
+  DCL i15     FIXED(15) INIT(1),
+      d1      DURATION INIT(5 MIN 30 SEC),
+      d2      DURATION INIT(10 SEC),
+      d3      DURATION INIT(1 HRS 10 MIN 45 SEC);
+  DCL c1      CLOCK INIT(12:10:56);
+  DCL c2      CLOCK INIT(22:30:00);
+
+  OPEN stdOut;
+
+  y := 2.0;
   x = - SQRT y;
+  PUT '- SQRT y        => ',x TO stdOut BY A,E(13,6), SKIP;
+
   x = - (SQRT y);
-  x = - (SQRT y);		
+  PUT '- (SQRT y)      => ',x TO stdOut BY A,E(13,6), SKIP;
 
   x = + SQRT y;
+  PUT '+ SQRT y        => ',x TO stdOut BY A,E(13,6), SKIP;
+
   x = + (SQRT y);
-  x = + (SQRT y);		
+  PUT '+ (SQRT y)      => ',x TO stdOut BY A,E(13,6), SKIP;
 
-  x = - SIN y; 
+  x = - SIN y;
+  PUT '- SIN y         => ',x TO stdOut BY A,E(13,6), SKIP;
+
   x = -(SIN y);
+  PUT '- (SIN y)       => ',x TO stdOut BY A,E(13,6), SKIP;
 
-  x = - SIN (- SIN y); 
+  x = - SIN (- SIN y);
+  PUT '- SIN (- SIN y) => ',x TO stdOut BY A,E(13,6), SKIP;
+
+  ! ==========================================
+  ! DURATION AND CLOCKS
+  ! ==========================================
+
+  d1 := d2 / i15; ! DURATION := DURATION / FIXED
+  PUT '(1) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
+
+  d1 := d2 / 2.0; ! DURATION := DURATION / FLOAT
+  PUT '(2) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
+
+  x  := d2 / d3;  ! DURATION := DURATION / DURATION
+  PUT '(3) x               =>',x TO stdOut BY A,E(13,6), SKIP;
+
+  d1 := d2 + d2;  ! DURATION := DURATION + DURATION
+  PUT '(4) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
+
+  c1 := d2 + c1;  ! DURATION := DURATION + CLOCK
+  PUT '(5) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
+
+  c1 := c2 + d2;  ! CLOCK := CLOCK + DURATION
+  PUT '(6) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
+
+  d1 := d2 - d2;  ! DURATION := DURATION - DURATION
+  PUT '(7) d1              =>',d1 TO stdOut BY A,D(20), SKIP;
+
+  c1 := c2 - d2;  ! CLOCK := CLOCK - DURATION
+  PUT '(8) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
+
+  c1 := c2 - d3;  ! CLOCK := CLOCK - CLOCK
+  PUT '(9) c1              =>',c1 TO stdOut BY A,T(20), SKIP;
+
+  CLOSE stdOut;
 
 END;
 

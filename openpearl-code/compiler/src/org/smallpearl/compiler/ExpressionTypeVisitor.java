@@ -875,6 +875,10 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                 res = new ASTAttribute(new TypeDuration(), isReadOnly);
 
                 Log.debug("ExpressionTypeVisitor: DivideExpression: rule#7");
+            } else if (type1 instanceof TypeDuration && type2 instanceof TypeFixed) {
+                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+
+                Log.debug("ExpressionTypeVisitor: DivideExpression: rule#6");
             } else if (type1 instanceof TypeDuration && type2 instanceof TypeDuration) {
                 res = new ASTAttribute(new TypeFloat(23), isReadOnly);
 
