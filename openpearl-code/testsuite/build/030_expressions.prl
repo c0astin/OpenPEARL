@@ -97,6 +97,10 @@ main: TASK MAIN;
   d1 := d2 / x;
   PUT '(13) d1              =>',d1 TO stdOut BY A,D(30), SKIP;
 
+  IF d1 < 0.00001 SEC THEN
+    ;
+  FIN;
+
   CLOSE stdOut;
 
 END;
