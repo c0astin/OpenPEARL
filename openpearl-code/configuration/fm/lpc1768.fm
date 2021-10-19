@@ -1,5 +1,5 @@
 config LPC1768
-        boolean  "Select the runtime sytem for the Landtiger board"
+        boolean  "Select the runtime sytem for the Landtiger board (outdated)"
 	default n
 	help
 	This port targets the LPC1768 Landtiger board. Target specific 
