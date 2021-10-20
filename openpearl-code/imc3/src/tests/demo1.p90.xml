@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module file="demo1.p90.prl" name="demo1">
 <system>
+<username name="int1" line="10" col="1">
+  <sysname name="UnixSignal">
+    <parameters>
+      <FIXED>15</FIXED>
+    </parameters>
+  </sysname>
+</username>
 
 <username name="rpiBi3" line="400" col="1" >
   <sysname name="RPiDigitalIn">
@@ -80,13 +87,6 @@
    <sysname name="FixedRangeSignal"/>
 </username>
 
-<username name="int1" line="10" col="1" >
-  <sysname name="UnixSignal">
-    <parameters>
-      <FIXED>15</FIXED>
-    </parameters>
-  </sysname>
-</username>
 
 <username name="disc" line="12" col="1" >
   <sysname name="Disc">

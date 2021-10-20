@@ -150,7 +150,7 @@ clean:
 	@rm -f $(GTEST_OBJS)
 	@rm -f $(GTEST_OBJS1)
 	@rm -f $(GTEST_OBJS2)
-	@rm -f cc_bin.inc run_bin.inc
+	@rm -f cc_o.inc o_bin.inc run_bin.inc 
 	@rm -f .depend pearl.h
 	@rm -f $(PLIB_OBJS) $(OBJ)
 	@rm -f $(addsuffix .diff,$(CHECK_FILES))
@@ -247,7 +247,7 @@ removeSignalsHhHcc:
 	rm -f ../common/Signals.hh ../common/Signals.hcc
 
 phony += install
-install: patch removeSignalsHhHcc OpenPEARLProject esp32.xml cc_bin run_bin
+install: patch removeSignalsHhHcc OpenPEARLProject esp32.xml cc_o o_bin run_bin
 	echo [install]
 	ar d OpenPEARLProject/build/esp-idf/main/libmain.a testprog.cc.obj system.cc.obj
 	(cd OpenPEARLProject; ./cp.cmd `pwd`)
@@ -256,24 +256,45 @@ install: patch removeSignalsHhHcc OpenPEARLProject esp32.xml cc_bin run_bin
 	cp esp32.xml $(CONFIG_INSTALL_Target)/lib
 
 
-phony += cc_bin
-cc_bin:
+phony += cc_o
+cc_o:
 	@echo "[create] $@"
-	@echo "# auto generated " > cc_bin.inc
+	@echo "# auto generated " > cc_o.inc
+	#
+	@echo '$(CXX) -g -DTARGET=3 -std=c++11 -I /usr/local/include \' >> cc_o.inc
+	@echo '	$(LINK_PARAMETERS_1) \' >> cc_o.inc 
+	@echo '	$(LINK_PARAMETERS_2) \' >> cc_o.inc 
+	@echo ' -c $$outputPrlCC -o $$outputCcO >>$$fn.out 2>>$fn.log' >> cc_o.inc
+
+phony += o_bin
+o_bin:
+	@echo "[create] $@"
+	@echo "# auto generated " > o_bin.inc
 	#
 	@echo '$(CXX) -g -DTARGET=3 -std=c++11 -I /usr/local/include \
  		$(LINK_PARAMETERS_1) \
-		  $$fn.cc $$SYSTEM -o $$fn.elf\
-		$(LINK_PARAMETERS_2)' >> cc_bin.inc
-	@echo 'python  $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 elf2image --flash_mode "dio" --flash_freq "40m" --flash_size "2MB"  -o $$fn.bin $$fn.elf' >> cc_bin.inc
-	@echo 'size $$fn.elf' >> cc_bin.inc
+		  $$objects -o $$target.elf\
+		$(LINK_PARAMETERS_2)' >> o_bin.inc
+	@echo 'python  $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 elf2image --flash_mode "dio" --flash_freq "40m" --flash_size "2MB"  -o $$target.bin $$target.elf' >> o_bin.inc
+	@echo 'size $$target' >> o_bin.inc
 
 phony += run_bin
 run_bin:
 	@echo "[create] $@"
 	@echo "# auto generated " > run_bin.inc
-	@echo 'python $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 --port $$INTERFACE --baud 115200 --before default_reset --after hard_reset write_flash -u --flash_mode dio --flash_freq 40m --flash_size detect  0x10000 $$fn.bin' >>run_bin.inc
-	@echo 'python -m serial.tools.miniterm --rts 0 --dtr 0 --eol CR --raw $$INTERFACE 115200' >>run_bin.inc
+	@echo 'python $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py\' >> run_bin.inc
+	@echo ' --chip esp32 --port $$INTERFACE --baud 115200 \' >> run_bin.inc
+	@echo ' --before default_reset --after hard_reset write_flash \' >> run_bin.inc
+	@echo ' -u --flash_mode dio --flash_freq 40m --flash_size detect \' >> run_bin.inc
+	@echo ' 0x10000 $$target.bin' >>run_bin.inc
+	@echo 'rc=$?' >> run_bin.inc
+	@echo 'if [ $rc -ne 0 ] ; then ' >> run_bin.inc
+	@echo '   echo "linking terminated with errors' >> run_bin.inc
+	@echo '   exit $rc' >> run_bin.inc
+	@echo 'fi' >> run_bin.inc
+
+	@echo 'python -m serial.tools.miniterm --rts 0 --dtr 0 --eol CR \' >> run_bin.inc
+	@echo '  --raw $$INTERFACE 115200' >>run_bin.inc
 
 phony += monitor
 monitor:

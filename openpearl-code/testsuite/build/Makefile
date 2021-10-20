@@ -34,6 +34,7 @@ DONOTBUILDESP32= 030_signals 031_signalsInduce  \
 #	022_mixedDcl \ not int repo yet
 
 DONOTRUN=000_empty \
+	022_mixedDcl \
 	450_struct_dcl \
         703_userdation_dcl \
 	704_dation_open \

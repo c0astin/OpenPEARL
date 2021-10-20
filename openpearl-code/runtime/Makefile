@@ -101,7 +101,7 @@ targets.inc:
 	echo plattforms=\"$(targets)\" >>targets.inc
 
 .PHONY: install
-install: cc_bin.inc run_bin.inc targets.inc
+install: cc_o.inc o_bin.inc run_bin.inc targets.inc
 	@echo "[install] runtime "
 	@(cd $(IC_DIR); make;)
 	@cat LICENSE.BSD >$(INSTALL_PEARLINCLUDES)
@@ -128,27 +128,51 @@ ifeq ($(CONFIG_ESP32),y)
 endif
 
 
-.PHONY: cc_bin.inc
-cc_bin.inc:
+.PHONY: cc_o.inc
+cc_o.inc:
 	@echo "[create] $@ "
-	@echo "# auto generated " > cc_bin.inc
+	@echo "# auto generated " > cc_o.inc
 ifeq ($(CONFIG_LINUX),y) 
-	@echo 'if [ "$$PLATTFORM" = "linux" ] ; then' >> cc_bin.inc
-	@echo '#include  "runtime/linux/cc_bin.inc"' >>cc_bin.inc
-	@echo 'rc=$$?' >>cc_bin.inc
-	@echo 'fi' >>cc_bin.inc
+	@echo 'if [ "$$PLATTFORM" = "linux" ] ; then' >> cc_o.inc
+	@echo '#include  "runtime/linux/cc_o.inc"' >>cc_o.inc
+	@echo 'rc=$$?' >>cc_o.inc
+	@echo 'fi' >>cc_o.inc
 endif
 ifeq ($(CONFIG_LPC1768),y) 
-	@echo 'if [ "$$PLATTFORM" = "lpc1768" ] ; then' >>cc_bin.inc
-	@echo '#include  "runtime/lpc1768/cc_bin.inc" ' >>cc_bin.inc
-	@echo 'rc=$$?' >>cc_bin.inc
-	@echo 'fi' >>cc_bin.inc
+	@echo 'if [ "$$PLATTFORM" = "lpc1768" ] ; then' >>cc_o.inc
+	@echo '#include  "runtime/lpc1768/cc_o.inc" ' >>cc_o.inc
+	@echo 'rc=$$?' >>cc_o.inc
+	@echo 'fi' >>cc_o.inc
 endif
 ifeq ($(CONFIG_ESP32),y) 
-	@echo 'if [ "$$PLATTFORM" = "esp32" ] ; then' >>cc_bin.inc
-	@echo '#include  "runtime/esp32/cc_bin.inc" ' >>cc_bin.inc
-	@echo 'rc=$$?' >>cc_bin.inc
-	@echo 'fi' >>cc_bin.inc
+	@echo 'if [ "$$PLATTFORM" = "esp32" ] ; then' >>cc_o.inc
+	@echo '#include  "runtime/esp32/cc_o.inc" ' >>cc_o.inc
+	@echo 'rc=$$?' >>cc_o.inc
+	@echo 'fi' >>cc_o.inc
+endif
+	@echo "# auto generated end" >> cc_o.inc
+
+.PHONY: o_bin.inc
+o_bin.inc:
+	@echo "[create] $@ "
+	@echo "# auto generated " > o_bin.inc
+ifeq ($(CONFIG_LINUX),y) 
+	@echo 'if [ "$$PLATTFORM" = "linux" ] ; then' >> o_bin.inc
+	@echo '#include  "runtime/linux/o_bin.inc"' >>o_bin.inc
+	@echo 'rc=$$?' >>o_bin.inc
+	@echo 'fi' >>o_bin.inc
+endif
+ifeq ($(CONFIG_LPC1768),y) 
+	@echo 'if [ "$$PLATTFORM" = "lpc1768" ] ; then' >>o_bin.inc
+	@echo '#include  "runtime/lpc1768/o_bin.inc" ' >>o_bin.inc
+	@echo 'rc=$$?' >>o_bin.inc
+	@echo 'fi' >>o_bin.inc
+endif
+ifeq ($(CONFIG_ESP32),y) 
+	@echo 'if [ "$$PLATTFORM" = "esp32" ] ; then' >>o_bin.inc
+	@echo '#include  "runtime/esp32/o_bin.inc" ' >>o_bin.inc
+	@echo 'rc=$$?' >>o_bin.inc
+	@echo 'fi' >>o_bin.inc
 endif
 
 .PHONY: run_bin.inc
@@ -187,6 +211,6 @@ clean:
 	@(cd $(IC_DIR); make clean;)
 	@(cd doc; make clean;)
 	@$(foreach tgt, $(targets), (cd $(tgt); make clean;);)
-	@rm -f cc_bin.inc run_bin.inc targets.inc
+	@rm -f cc_o.inc o_bin.inc run_bin.inc targets.inc
 	@echo "runtime/clean done"
 

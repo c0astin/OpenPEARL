@@ -5,8 +5,8 @@ Demonstration application 'Hello World'
 MODULE(mhello);
 
 SYSTEM;
-!   stdout: StdOut;
-   stdout: Console;
+   stdout: StdOut;
+!   stdout: Console;
 
 PROBLEM;
     SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;

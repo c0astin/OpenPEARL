@@ -1,0 +1,10 @@
+MODULE(t324);
+PROBLEM;
+start: TASK MAIN;
+END;
+
+main: TASK MAIN;
+END;
+
+MODEND;
+

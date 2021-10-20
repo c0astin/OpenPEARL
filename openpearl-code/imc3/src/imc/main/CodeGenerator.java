@@ -219,6 +219,8 @@ public class CodeGenerator {
         String nameSpacePrefix = "";
         if (useNamespace) {
             nameSpacePrefix = module.getModuleName() + "::";
+        } else {
+            nameSpacePrefix = "pearlApp::";
         }
 
         if (pse.getType().equals(Platform.DATION)) {

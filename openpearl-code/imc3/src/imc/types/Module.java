@@ -212,12 +212,12 @@ public class Module {
                     String global = moduleName;
                     if (useNameSpace && n.getAttributes().getNamedItem("global") == null) {
                         Log.setLocation(sourceFileName, line,  col);
-                        Log.error("file "+sourceFileName + " compiled not witd std=OpenPEARL");
+                        Log.error("file "+sourceFileName + " compiled not with std=OpenPEARL");
                         return;
                     }
                     if ((!useNameSpace) && n.getAttributes().getNamedItem("global") != null) {
                         Log.setLocation(sourceFileName, line,  col);
-                        Log.error("file "+sourceFileName + " compiled not witd std=PEARL90");
+                        Log.error("file "+sourceFileName + " compiled not with std=PEARL90");
                         return;
                     }
                     

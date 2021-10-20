@@ -16,7 +16,7 @@ for test in $TESTS
 do
 	nooftests=$(($nooftests + 1))
 
-	prl -c -b $TARGET $test.prl >$test.out 2>&1
+	prl -cc -b $TARGET $test.prl >$test.out 2>&1
 	rc=$?
      
         base=`basename $test .prl`

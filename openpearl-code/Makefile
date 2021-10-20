@@ -53,18 +53,21 @@ else
 	   $(error You must be root to execute this command)
 endif
 
-install: prl configuration/include/autoconf.h  flashinterface.inc 
+prl:
+	runtime/includeComposer/ic  <prl.inc >prl
+
+install: configuration/include/autoconf.h  flashinterface.inc 
 	(cd runtime; make clean; )
 	(cd imc3; make clean; )
 	(cd imc3; make install; )
 	(cd runtime; make install; )
 	(cd compiler/src; make clean; )
 	(cd compiler/src; make install; )
+	runtime/includeComposer/ic  <prl.inc >prl
 ifeq ($(CONFIG_DOC_PREPORT),y)
 	(cd language_report; make clean; )
 	(cd language_report; make final; )
 endif
-	runtime/includeComposer/ic  <prl.inc >prl
 	# is created by includeComposer but not needed here
 	@rm -f sysincs.h
 	@cp prl $(CONFIG_INSTALL_Target)/bin
