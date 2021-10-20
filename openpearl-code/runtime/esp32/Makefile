@@ -289,7 +289,7 @@ run_bin:
 	@echo ' 0x10000 $$target.bin' >>run_bin.inc
 	@echo 'rc=$?' >> run_bin.inc
 	@echo 'if [ $rc -ne 0 ] ; then ' >> run_bin.inc
-	@echo '   echo "linking terminated with errors' >> run_bin.inc
+	@echo '   echo "linking terminated with errors" ' >> run_bin.inc
 	@echo '   exit $rc' >> run_bin.inc
 	@echo 'fi' >> run_bin.inc
 
