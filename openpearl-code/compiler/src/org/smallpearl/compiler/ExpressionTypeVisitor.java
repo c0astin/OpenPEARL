@@ -784,9 +784,10 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
 
             if (op1.getType() instanceof TypeFixed && op2.getType() instanceof TypeDuration) {
                 res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
-
                 Log.debug("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#6");
-
+            } else if (op1.getType() instanceof TypeDuration && op2.getType() instanceof TypeFixed) {
+                res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
+                Log.debug("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#6");
             } else if (op1.getType() instanceof TypeFloat
                     && op2.getType() instanceof TypeDuration) {
                 res = new ASTAttribute(new TypeDuration(), op1.isReadOnly() && op2.isReadOnly());
@@ -875,6 +876,10 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                 res = new ASTAttribute(new TypeDuration(), isReadOnly);
 
                 Log.debug("ExpressionTypeVisitor: DivideExpression: rule#7");
+            } else if (type1 instanceof TypeDuration && type2 instanceof TypeFixed) {
+                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+
+                Log.debug("ExpressionTypeVisitor: DivideExpression: rule#6");
             } else if (type1 instanceof TypeDuration && type2 instanceof TypeDuration) {
                 res = new ASTAttribute(new TypeFloat(23), isReadOnly);
 

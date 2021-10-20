@@ -161,6 +161,7 @@ public class ConstantDurationValue extends ConstantValue {
     public String toString() {
         String name = "CONST_" + getBaseType().toUpperCase();
         double value = this.getValue();
+        String sec;
 
         if ( m_sign == -1 ) {
             name += "_N";
@@ -169,7 +170,12 @@ public class ConstantDurationValue extends ConstantValue {
             name += "_P";
         }
 
-        name += "_" + m_hours + "_" + m_minutes + "_" + m_seconds;
+        sec = String.valueOf(m_seconds);
+        sec = sec.replaceAll("\\.", "_");
+        sec = sec.replaceAll("\\-", "N");
+        sec = sec.replaceAll("\\+", "P");
+
+        name += "_" + m_hours + "_" + m_minutes + "_" + sec;
         return name.replaceAll("\\.", "_");
     }
 
