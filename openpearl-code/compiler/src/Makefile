@@ -82,6 +82,7 @@ javac:
 	cd $(OUTPUT_DIR) && jar cf  smallpearl_compiler.jar \
 				    org/smallpearl/compiler/*.class \
 	                            org/smallpearl/compiler/SymbolTable/*.class \
+	                            org/smallpearl/compiler/ControlFlowGraph/*.class \
 	                            org/smallpearl/compiler/SemanticAnalysis/*.class \
 	                            org/smallpearl/compiler/Exception/*.class \
 	                            org/smallpearl/compiler/Graph/*.class \
