@@ -29,41 +29,42 @@
 
 package org.smallpearl.compiler;
 
-public class ConstantFixedValue extends ConstantValue {
+public class ConstantFixedValue extends ConstantValue 
+       implements Comparable<ConstantFixedValue> {
     private long m_value;
     private int m_precision;
 
-    ConstantFixedValue(Integer value) {
+    public ConstantFixedValue(Integer value) {
         m_value = value.longValue();
         m_precision = calcPrecision();
     }
 
-    ConstantFixedValue(Integer value, Integer precision) {
+    public ConstantFixedValue(Integer value, Integer precision) {
         m_value = value.longValue();
         m_precision = precision;
     }
 
-    ConstantFixedValue(Integer value, int precision) {
+    public ConstantFixedValue(Integer value, int precision) {
         m_value = value.longValue();
         m_precision = precision;
     }
 
-    ConstantFixedValue(Long value) {
+    public ConstantFixedValue(Long value) {
         m_value = value;
         m_precision = calcPrecision();
     }
 
-    ConstantFixedValue(Long value, Integer precision) {
+    public ConstantFixedValue(Long value, Integer precision) {
         m_value = value;
         m_precision = precision;
     }
 
-    ConstantFixedValue(Long value, int precision) {
+    public ConstantFixedValue(Long value, int precision) {
         m_value = value;
         m_precision = precision;
     }
 
-    ConstantFixedValue(long value, int precision) {
+    public ConstantFixedValue(long value, int precision) {
         m_value = value;
         m_precision = precision;
     }
@@ -106,4 +107,10 @@ public class ConstantFixedValue extends ConstantValue {
         name += "_" + value + "_" + m_precision;
         return name;
     }
+
+    @Override
+    public int compareTo(ConstantFixedValue other) {
+        return Long.compare(m_value, other.m_value);
+    }
+
 }

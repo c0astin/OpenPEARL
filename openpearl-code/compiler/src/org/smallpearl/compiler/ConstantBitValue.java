@@ -29,32 +29,18 @@
 
 package org.smallpearl.compiler;
 
-public class ConstantBitValue extends ConstantValue {
+public class ConstantBitValue extends ConstantValue 
+       implements Comparable<ConstantBitValue> {
     private long m_value;
     private int m_no;
     private int m_noOfBits;
 
 
-    ConstantBitValue(long value, int noOfBits) {
+    public ConstantBitValue(long value, int noOfBits) {
         m_noOfBits = noOfBits;
         m_value = value;
     }
 
-/*
-    ConstantBitValue(String str) {
-        if( str.startsWith("'")) {
-            str = str.substring(1, str.length());
-        }
-
-        if( str.endsWith("'")) {
-            str = str.substring(0, str.length() - 1);
-        }
-
-        m_noOfBits = str.length();
-        m_value =  str;
-        m_no = -1;
-    }
-*/
 
     public void setNo(int no) { m_no = no; }
 
@@ -150,4 +136,10 @@ public class ConstantBitValue extends ConstantValue {
 
         return bitStringConstant;
     }
+
+    @Override
+    public int compareTo(ConstantBitValue other) {
+        return Long.compare(m_value, other.m_value);
+    }
+
 }

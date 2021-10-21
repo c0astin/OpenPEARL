@@ -30,22 +30,23 @@
 package org.smallpearl.compiler;
 
 import org.antlr.v4.runtime.*;
+import org.smallpearl.compiler.ControlFlowGraph.ControlFlowGraph;
+import org.smallpearl.compiler.ControlFlowGraph.ControlFlowGraphGenerate;
+import org.smallpearl.compiler.ControlFlowGraph.ControlFlowGraphNode;
+import org.smallpearl.compiler.SemanticAnalysis.CheckUnreachableStatements;
 import org.stringtemplate.v4.*;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.io.PrintWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
 
-import static org.smallpearl.compiler.Log.LEVEL_INFO;
-import static org.smallpearl.compiler.Log.LEVEL_NONE;
-import static org.smallpearl.compiler.Log.LEVEL_WARN;
-import static org.smallpearl.compiler.Log.LEVEL_DEBUG;
-import static org.smallpearl.compiler.Log.LEVEL_ERROR;
+import static org.smallpearl.compiler.Log.*;
 
 public class Compiler {
     static String version = "v0.8.9.41";
@@ -71,6 +72,7 @@ public class Compiler {
     static boolean dumpConstantPool = false;
     static boolean debug = false;
     static boolean debugSTG = false;
+    static boolean debugCFG = false;
     static boolean stacktrace = false;
     static boolean imc = true;
     static boolean printSysInfo = false;
@@ -90,8 +92,6 @@ public class Compiler {
         }
 
         long startTime = System.nanoTime();
-
-        Runtime runtime = Runtime.getRuntime();
 
         ConstantPool constantPool = new ConstantPool();
         SymbolTableVisitor symbolTableVisitor = new SymbolTableVisitor(verbose, constantPool);
@@ -126,7 +126,7 @@ public class Compiler {
                 parser.addParseListener(new TESTLANGEventListener());
                 // Start parsing
                 parser.testlangFile();
-                */
+                 */
 
                 lexer = new SmallPearlLexer(new ANTLRFileStream(m_sourceFilename));
             } catch (IOException ex) {
@@ -219,6 +219,60 @@ public class Compiler {
                     SemanticCheck semanticCheck = new SemanticCheck(lexer.getSourceName(), verbose,
                             debug, tree, symbolTableVisitor, expressionTypeVisitor, ast);
                 }
+                if(ErrorStack.getTotalErrorCount() <= 0) {
+                    // Generating a ControlFlowGraph for every module, procedure, task
+                    ControlFlowGraphGenerate cfgGenerate = new ControlFlowGraphGenerate(lexer.getSourceName(), verbose, debug, symbolTableVisitor, expressionTypeVisitor, ast);
+                    cfgGenerate.visit(tree);
+                    List<ControlFlowGraph> cfgs = cfgGenerate.getControlFlowGraphs();
+                    if (false) {
+                        // this does not work properly yet for all testcases in testsuite/build
+                        // Creating List of all procedures
+                        Map<String, ParserRuleContext> procedureMap = new HashMap<>();
+                        procedureMap.put("NOW", null); // add predefined procedures
+                        procedureMap.put("DATE", null);
+                        cfgs.forEach(cfg -> {
+                            ControlFlowGraphNode node = cfg.getEntryNode();
+                            if(node.getCtx() instanceof SmallPearlParser.ProcedureDeclarationContext) {
+                                SmallPearlParser.ProcedureDeclarationContext procCtx = (SmallPearlParser.ProcedureDeclarationContext) node.getCtx();
+                                procedureMap.put(procCtx.nameOfModuleTaskProc().ID().toString(), procCtx);
+                            }
+                        });
+
+                        // Finding the ControlFlowGraph of the Module
+                        ControlFlowGraph moduleGraph = null;
+                        for(ControlFlowGraph cfg : cfgs) {
+                            if(cfg.getName().contains("Module: ")) {
+                                moduleGraph = cfg;
+                                break;
+                            }
+                        }
+                        // Generating a Stack for the Module
+                        if(moduleGraph != null) {
+                            moduleGraph.createVariableStack(procedureMap, null);
+                        }
+
+
+                        // The Variable Stack of the Module is passed to all other ControlFlowGraphs,
+                        // since the Variables can be accessed from Procedures and Tasks
+                        ControlFlowGraph finalModuleGraph = moduleGraph;
+                        cfgs.forEach(cfg -> {
+                            if(cfg != finalModuleGraph) {
+                                if(finalModuleGraph != null)
+                                    cfg.createVariableStack(procedureMap, finalModuleGraph.getEndNode().getOutputNodes().iterator().next().getVariableStack());
+                                else
+                                    cfg.createVariableStack(procedureMap, null);
+                            }
+                        });
+                    }
+                    // outputs a .dot file, when compiler option is turned on, which can be turned into a picture of the ControlFlowGraph with GraphViz
+                    if(debugCFG) {
+                        outputCFG(cfgs);
+                    }
+
+                    // Checks the ControlFlowGraphs for unreachable nodes
+                    new CheckUnreachableStatements(cfgs).check();
+                }
+
                 if (ErrorStack.getTotalErrorCount() <= 0 && imc) {
                     SystemPartExport(lexer.getSourceName(), tree, symbolTableVisitor, ast, useNamespaceForGlobals);
                 }
@@ -286,7 +340,7 @@ public class Compiler {
                 lines += "Total execution time: "
                         + String.format("%d.%d sec", TimeUnit.NANOSECONDS.toSeconds(difference),
                                 TimeUnit.NANOSECONDS.toMillis(difference)
-                                        - TimeUnit.NANOSECONDS.toSeconds(difference) * 1000);
+                                - TimeUnit.NANOSECONDS.toSeconds(difference) * 1000);
 
                 SystemInformation sysinfo = new SystemInformation();
                 lines += "\n" + sysinfo.Info();
@@ -331,6 +385,7 @@ public class Compiler {
                 + "  -std=PEARL90                use PEARL90 behavior                  \n"
                 + "  --coloured                  mark errors with colour               \n"
                 + "  --output <filename>         Filename of the generated code        \n"
+                + "  --debugcfg                  Outputs a .dot File with a cfg        \n" 
                 + "  infile ...                                                        \n");
     }
 
@@ -419,6 +474,8 @@ public class Compiler {
                 }
                 warninglevel = Integer.parseInt(args[i]);
                 i++;
+            } else if (arg.equals("--debugcfg")) {
+                debugCFG = true;
             } else {
                 System.out.println("Unknown command line argument:" + arg);
                 return false;
@@ -537,10 +594,10 @@ public class Compiler {
         if (filename != null) {
             int posOfExtension = filename.lastIndexOf('.');
             if (posOfExtension == -1) {
-               System.err.println("no extension for input file given");
-               System.exit(-2);
+                System.err.println("no extension for input file given");
+                System.exit(-2);
             }
-            
+
             basename = filename.substring(0, filename.lastIndexOf('.'));
         }
 
@@ -552,5 +609,36 @@ public class Compiler {
     public static String getSourceFilename() {
         return m_sourceFilename;
     }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static void outputCFG(List<ControlFlowGraph> cfgs) {
+        int uniqueId = 0;
+        Map<ControlFlowGraphNode, Integer> nodeIdMap = new HashMap<>();
+        try {
+            FileWriter writer = new FileWriter(m_sourceFilename.substring(0, m_sourceFilename.lastIndexOf(".")) + "_cfg.dot");
+            writer.write("digraph G {\n");
+            for (ControlFlowGraph cfg : cfgs) {
+                writer.write("\tsubgraph cluster" + (uniqueId++) + " {\n");
+                writer.write("\t\tlabel = \"" + cfg.getName() + "\"\n");
+                for(ControlFlowGraphNode controlFlowGraphNode : cfg.getGraph()) {
+                    nodeIdMap.put(controlFlowGraphNode, uniqueId);
+                    //controlFlowGraphNode.setVariableStack(null);
+                    if(controlFlowGraphNode.getVariableStack() != null)
+                        writer.write("\t\tnode" + (uniqueId++) + " [ label=\"" + controlFlowGraphNode.getStatement() + "\nStack:\n" + controlFlowGraphNode.getVariableStack().toString() + "\" ]\n");
+                    else
+                        writer.write("\t\tnode" + (uniqueId++) + " [ label=\"" + controlFlowGraphNode.getStatement() + "\" ]\n");
+                }
+                for(ControlFlowGraphNode controlFlowGraphNode : cfg.getGraph()) {
+                    for(ControlFlowGraphNode inputControlFlowGraphNode : controlFlowGraphNode.getInputNodes()) {
+                        writer.write("\t\tnode" + nodeIdMap.get(controlFlowGraphNode) + " -> node" +  nodeIdMap.get(inputControlFlowGraphNode) + "\n");
+                    }
+                }
+                writer.write("\t}\n");
+            }
+            writer.write("}");
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

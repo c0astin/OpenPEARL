@@ -29,36 +29,21 @@
 
 package org.smallpearl.compiler;
 
-public class ConstantDurationValue extends ConstantValue {
+public class ConstantDurationValue extends ConstantValue
+       implements Comparable<ConstantDurationValue> {
     private long m_hours ;
     private int m_minutes;
     private double m_seconds;
     private int m_sign = 1;
 
-// never  used 2020-03-06 (rm) 
-//    ConstantDurationValue(long hours, int minutes, int seconds) {
-//        m_hours = hours;
-//        m_minutes = minutes;
-//        m_seconds = seconds;
-//        checkValue();     // check range
-//    }
-//
-//    ConstantDurationValue(long hours, int minutes, int seconds, int sign) {
-//        m_hours = hours;
-//        m_minutes = minutes;
-//        m_seconds = seconds;
-//        m_sign = sign;
-//        checkValue();     // check range
-//    }
-//
-    ConstantDurationValue(long hours, int minutes, double seconds) {
+    public ConstantDurationValue(long hours, int minutes, double seconds) {
         m_hours = hours;
         m_minutes = minutes;
         m_seconds = seconds;
         checkValue();     // check range
     }
 
-    ConstantDurationValue(long hours, int minutes, double seconds, int sign) {
+    public ConstantDurationValue(long hours, int minutes, double seconds, int sign) {
         m_hours = hours;
         m_minutes = minutes;
         m_seconds = seconds;
@@ -202,6 +187,24 @@ public class ConstantDurationValue extends ConstantValue {
                this.m_seconds == other.m_seconds;
 
     }
+
+    @Override
+    public int compareTo(ConstantDurationValue other) {
+        int signDiff = Integer.compare(m_sign, other.m_sign);
+        if(signDiff != 0) return signDiff;
+
+        int hDiff = Long.compare(m_hours, other.m_hours);
+        if(hDiff != 0) return hDiff;
+
+        int mDiff = Integer.compare(m_minutes, other.m_minutes);
+        if(mDiff != 0) return mDiff;
+
+        int sDiff = Double.compare(m_seconds, other.m_seconds);
+        if(sDiff != 0) return mDiff;
+
+        return 0;
+    }
+
 }
 
 

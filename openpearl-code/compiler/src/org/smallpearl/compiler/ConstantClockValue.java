@@ -29,18 +29,19 @@
 
 package org.smallpearl.compiler;
 
-public class ConstantClockValue extends ConstantValue {
+public class ConstantClockValue extends ConstantValue 
+       implements Comparable<ConstantClockValue> {
     private int m_hours = 0;
     private int m_minutes = 0;
     private double m_seconds = 0.0;
 
-    ConstantClockValue(int hours, int minutes, int seconds) {
+    public ConstantClockValue(int hours, int minutes, int seconds) {
         m_hours = hours;
         m_minutes = minutes;
         m_seconds = seconds;
     }
 
-    ConstantClockValue(int hours, int minutes, double seconds) {
+    public ConstantClockValue(int hours, int minutes, double seconds) {
         m_hours = hours;
         m_minutes = minutes;
         m_seconds = seconds;
@@ -69,6 +70,19 @@ public class ConstantClockValue extends ConstantValue {
         return name.replaceAll("\\.", "_");
     }
 
+    public int getHours() {
+        return m_hours;
+    }
+
+    public int getMinutes() {
+        return m_minutes;
+    }
+
+    public double getSeconds() {
+        return m_seconds;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         // self check
@@ -88,6 +102,22 @@ public class ConstantClockValue extends ConstantValue {
                 this.m_minutes == other.m_minutes &&
                 this.m_seconds == other.m_seconds;
     }
+
+    @Override
+    public int compareTo(ConstantClockValue other) {
+
+        int hDiff = Long.compare(m_hours, other.m_hours);
+        if(hDiff != 0) return hDiff;
+
+        int mDiff = Integer.compare(m_minutes, other.m_minutes);
+        if(mDiff != 0) return mDiff;
+
+        int sDiff = Double.compare(m_seconds, other.m_seconds);
+        if(sDiff != 0) return mDiff;
+
+        return 0;
+    }
+
 }
 
 

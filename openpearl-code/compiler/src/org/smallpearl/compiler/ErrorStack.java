@@ -32,7 +32,6 @@ package org.smallpearl.compiler;
 import java.io.*;
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.smallpearl.compiler.SmallPearlParser.Label_statementContext;
 import org.smallpearl.compiler.Exception.*;
 
 /**

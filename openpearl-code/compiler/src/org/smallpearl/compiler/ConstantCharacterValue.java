@@ -33,7 +33,8 @@ import org.smallpearl.compiler.Exception.InternalCompilerErrorException;
 
 import java.io.UnsupportedEncodingException;
 
-public class ConstantCharacterValue  extends ConstantValue {
+public class ConstantCharacterValue  extends ConstantValue 
+       implements Comparable<ConstantCharacterValue> {
     private String m_value;
     private String m_uuid;
     private int length;
@@ -41,7 +42,7 @@ public class ConstantCharacterValue  extends ConstantValue {
      * 
      * @param str as written in the PEARL-Application including escaped control characters
      */
-    ConstantCharacterValue(String str) {
+    public ConstantCharacterValue(String str) {
         str = CommonUtils.removeQuotes(str);
         m_value = CommonUtils.compressPearlString(str);
         length = CommonUtils.getStringLength(m_value);
@@ -89,5 +90,10 @@ public class ConstantCharacterValue  extends ConstantValue {
         }
 
         return res;
+    }
+
+    @Override
+    public int compareTo(ConstantCharacterValue other) {
+        return m_value.compareTo(other.m_value);
     }
 }

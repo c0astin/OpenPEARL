@@ -29,16 +29,17 @@
 
 package org.smallpearl.compiler;
 
-public class ConstantFloatValue extends ConstantValue {
+public class ConstantFloatValue extends ConstantValue 
+       implements Comparable<ConstantFloatValue> {
     private Double   m_value;
     private Integer  m_precision;
 
-    ConstantFloatValue(Float value, Integer precision) {
+    public ConstantFloatValue(Float value, Integer precision) {
         m_value = value.doubleValue();
         m_precision = precision;
     }
 
-    ConstantFloatValue(Double value, Integer precision) {
+    public ConstantFloatValue(Double value, Integer precision) {
         m_value = value;
         m_precision = precision;
     }
@@ -94,6 +95,11 @@ public class ConstantFloatValue extends ConstantValue {
         return this.m_value == other.m_value &&
                 this.m_precision == other.m_precision;
 
+    }
+
+    @Override
+    public int compareTo(ConstantFloatValue other) {
+        return m_value.compareTo(other.m_value);
     }
 
 }
