@@ -29,22 +29,10 @@
 
 package org.smallpearl.compiler.SemanticAnalysis;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RuleContext;
 import org.smallpearl.compiler.*;
-import org.smallpearl.compiler.SmallPearlParser.Block_statementContext;
-import org.smallpearl.compiler.SmallPearlParser.LoopStatementContext;
-import org.smallpearl.compiler.SmallPearlParser.LoopStatement_byContext;
-import org.smallpearl.compiler.SymbolTable.BlockEntry;
 import org.smallpearl.compiler.SymbolTable.LabelEntry;
-import org.smallpearl.compiler.SymbolTable.LoopEntry;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
-import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Stack;
 
 /**
  * check the GOTO and EXIT statements 
