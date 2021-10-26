@@ -34,7 +34,7 @@ import imc.types.ModuleEntrySystemPart;
 import imc.types.Platform;
 import imc.types.PlatformSystemElement;
 import imc.utilities.Log;
-
+import imc.utilities.NodeUtils;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -42,6 +42,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import org.w3c.dom.Node;
 
 
 
@@ -224,12 +225,20 @@ public class CodeGenerator {
         }
 
         if (pse.getType().equals(Platform.DATION)) {
-            prototypes.append("\tpearlrt::Device *  d" + userName + ";" + locationComment(se));
+            Node nodeSe = Platform.getInstance().getNodeOfSystemname(s);
+            Node attribute = NodeUtils.getChildByName(nodeSe, "attributes");
+            String attributes = attribute.getTextContent();
+            if (attributes.contains("BASIC")) {
+                prototypes.append("\tpearlrt::SystemDationB * " + userName + ";" + locationComment(se));
+            } else {
+                prototypes.append("\tpearlrt::SystemDationNB *  " + userName + ";" + locationComment(se));
+            }
+            
 
             functionBody.append("\t  // " + module.getSourceFileName() + ":" + se.getLine() + "\n");
             functionBody.append("\t  static pearlrt::" + se.getNameOfSystemelement() + " "
                     /* + nameSpacePrefix */ + "s" + userName + parameterList(se) + ";\n");
-            functionBody.append("\t  " + addNsPrefix(nameSpacePrefix) + "d" + userName + "= &" + /* nameSpacePrefix + */ "s"
+            functionBody.append("\t  " + addNsPrefix(nameSpacePrefix) + userName + "= &" + /* nameSpacePrefix + */ "s"
                     + userName + ";\n\n");
 
         } else if (pse.getType().equals(Platform.CONNECTION)) {

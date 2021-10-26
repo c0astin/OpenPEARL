@@ -44,6 +44,8 @@ Prologue( src,
 
 static const char* filename = (char*) "<src>";
 
+
+
 <if(headerfiles)> <headerfiles:headerfile(); separator="\n"> <endif>
 <if(namespaces)> <namespaces:using_namespace(); separator="\n"> <endif>
 
@@ -310,23 +312,23 @@ ProblemPart(ScalarVariableDeclarations,
 
 
 /*********************** VARIABLE DECLARATION ***********************/
-// does not work for local variables
-//<if(isGlobal)><else>static <endif>
-//
-variable_declaration(name,type,init,isGlobal,global,inv,no_decoration) ::= <%
+// renamed variable_declaration to variable_denotation and
+// used for declaration and  specification
+variable_denotation(name,type,init,isGlobal,global,inv) ::= <%
 
-<if(inv)>const  <endif><type>  <if(no_decoration)><name><else><variable(name)><endif>
+<if(inv)>const  <endif><type>  <name> 
 <if(init)>(<variable_init(init)>)<endif>
 ;
 
 %>
 
+/* obsolete rm 2021-10-24
 variable_specification(name,type,global,inv,no_decoration) ::= <<
 
 extern <if(inv)>const  <endif><type>  <if(no_decoration)><name><else><variable(name)><endif>;
 
 >>
-
+*/
 
 variable(name) ::= <<
 <user_variable(name)>
@@ -1064,21 +1066,47 @@ me->setLocation(<lineno>, "<src>");
 %>
 
 /*******************************************************************************/
+localVariable(variable) ::= <<
+<variable>
+>>
 
+globalVariable(variable) ::= <<
+/* public */ <variable>
+>>
+
+staticVariable(variable) ::= <<
+static <variable> 
+>>
+
+externVariable(variable, fromNs, currentNs) ::= <<
+<if(fromNs)>
+}
+namespace ns_<fromNs> {
+   extern <variable>
+}
+namespace ns_<currentNs> {
+<else>
+extern <variable>
+<endif>
+>>
+   
 
 ScalarVariableDeclaration(variable_denotations,cpp) ::= <<
 <variable_denotations>
 <if(cpp)><cpp_inline(cpp)><endif>
 >>
 
+/* necessary ?
 variable_denotation(decl) ::= <%
 <decl>
 %>
+*/
 
+/* unused
 VariableDeclaration(name,TypeAttribute,InitElement,global,inv) ::= <%
 <if(inv)>const  <endif><TypeAttribute>  <variable(name)><if(InitElement)>(<InitElement>)<endif><if(global)>  (GLOBAL)<endif>; <\n>
 %>
-
+*/
 
 
 GlobalAttribute() ::= <<
@@ -1411,16 +1439,16 @@ DationSpecificationInitialisiers(spec) ::= <<
 >>
 
 
-SpecificationUserDation(name,TypeDation,global) ::= <<
-extern pearlrt::<TypeDation> <user_variable(name)>;
+SpecificationUserDation(name,TypeDation) ::= <<
+pearlrt::<TypeDation> * <name>;
 
 >>
 
-SpecificationSystemDation(name,TypeDation,global) ::= <<
-extern pearlrt::Device *d_<name>;
-static pearlrt::<TypeDation> *_<name>;
+SpecificationSystemDation(name,TypeDation) ::= <<
+ pearlrt::<TypeDation> * _<name>; 
 
 >>
+
 
 
 DationDeclarations(decl) ::= <<
@@ -1441,13 +1469,15 @@ DationInitialisierSpecs(spec) ::= <<
 <spec>
 >>
 
-
+/* obsolete : assignment moved into SpecificationSystemDation
 InitPointerToSpcSystemDation(name,TypeDation,global) ::= <<
-<user_variable(name)> = static_cast\<pearlrt::<TypeDation>*>(d_<name>); <\n>
+<name> = static_cast\<pearlrt::<TypeDation>*>(d_<name>); <\n>
 >>
+*/
 
 DationDeclaration(name,Dation) ::= <<
 pearlrt::<Dation> *_<name>;
+
 >>
 
 DationDeclarationInitialiers(decl) ::= <<
@@ -1457,7 +1487,7 @@ DationDeclarationInitialiers(decl) ::= <<
 DationDeclarationInitialiser(name,Dation,TypeDation,Id, Typology, tfu) ::= <<
 <if(Typology)><Typology><endif>
 <if(tfu)>static pearlrt::TFURecord\<<tfu>\>  tfu_<name>;<endif>
-static pearlrt::<Dation> d_<name>(_<Id>, <TypeDation><if(tfu)>, &tfu_<name><endif>);
+static pearlrt::<Dation> d_<name>(<Id>, <TypeDation><if(tfu)>, &tfu_<name><endif>);
 _<name> = &d_<name>;
 
 <\n>
@@ -1543,8 +1573,8 @@ user_procedure(name) ::= <%
 %>
 
 
-user_variable(name) ::= <%
-    _<name>
+user_variable(name,fromNs) ::= <%
+	<if(fromNs)>ns_<fromNs>::<endif>_<name>
 %>
 
 

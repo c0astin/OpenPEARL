@@ -39,7 +39,7 @@ public class PlatformSystemElement {
     private Node node;
 
     /**
-     * instanciation priority 1 is best; 255 is default
+     * instantiation priority 1 is best; 255 is default
      */
     int priority;
 

@@ -12,12 +12,14 @@ import org.w3c.dom.Node;
 public class SpcDclProblemPart {
     private String userName;
     private String type;
+
     private Node locationInDomTree;
     private int line;
     private int col;
 
     private String dationAttributes;
     private String dationType;
+    private String dationSubType; // kind of SystemDationNB* or SystemDationB*
 
     private String procParameters;
     private String procReturns;
@@ -82,6 +84,14 @@ public class SpcDclProblemPart {
 
     public void setDationType(String dationType) {
         this.dationType = dationType;
+    }
+
+    public String getDationSubType() {
+        return dationSubType;
+    }
+
+    public void setDationSubType(String dationType) {
+        this.dationSubType = dationType;
     }
 
     public String getProcParameters() {

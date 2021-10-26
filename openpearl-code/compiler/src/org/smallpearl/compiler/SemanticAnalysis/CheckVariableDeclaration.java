@@ -108,22 +108,13 @@ public class CheckVariableDeclaration extends SmallPearlBaseVisitor<Void>
         List<VariableEntry> listOfVariables = m_symboltable.getAllVariableDeclarations();
         for (VariableEntry v : listOfVariables) {
             
-            //if (v.getInitializer()!= null) {
-                System.out.println(v.getName() + " "+ v.getType());
+            if (v.getInitializer()!= null) {
+                if (m_debug) {
+                    System.out.println("CheckVariableDeclaration::ctor: check initializer missing for " + v.getName() + " "+ v.getType());
+                }
             //    checkInitializer(v);
-            //}
+            }
         }
-        System.out.println("for(int i=0; ...");
-        for (int i=0; i<listOfVariables.size(); i++) {
-            VariableEntry v = listOfVariables.get(i);
-        
-            
-            //if (v.getInitializer()!= null) {
-                System.out.println(v.getName() + " "+ v.getType());
-            //    checkInitializer(v);
-            //}
-        }
-
     }
     
     private TypeDefinition getFirstStructureComponentElement (TypeStructure ts){

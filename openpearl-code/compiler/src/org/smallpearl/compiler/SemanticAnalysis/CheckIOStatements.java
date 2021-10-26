@@ -104,7 +104,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
         for (int i=0; i<entries.size(); i++) {
            VariableEntry ve = entries.get(i); 
            TypeDation td = (TypeDation)(ve.getType());
-           System.out.println(ve.toString(1));
+          // System.out.println(ve.toString(1));
                if (ve.isSpecified() ) {
                    if (td.isSystemDation()) {
                        checkSystemDationSpecification(ve,td);
@@ -121,7 +121,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
     }
 
     private void checkSystemDationSpecification(VariableEntry ve, TypeDation d) {
-        System.out.println("SysSPC: "+ve.getName());
+      //  System.out.println("SysSPC: "+ve.getName());
 //        TypeDation d = (TypeDation) (((VariableEntry) se).getType());
         ErrorStack.enter(ve.getCtx());
         if (d.hasTypology() == true) {
@@ -136,7 +136,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
     private void checkUserDation(VariableEntry ve, TypeDation d, boolean isDecl) {
         ErrorStack.enter(ve.getCtx(),"DationDCL");
         if (isDecl) {
-            System.out.println("UserDCL: "+ve.getName());
+           // System.out.println("UserDCL: "+ve.getName());
             if (d.isSystemDation()) {
                 ErrorStack.add("SYSTEM dations may not be declared");
                 return;
@@ -144,7 +144,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
             
  
         } else {
-            System.out.println("UserSPC: "+ve.getName());
+//            System.out.println("UserSPC: "+ve.getName());
         }
         // userdation must be 
         // of type ALPHIC                      -> DationPG
@@ -179,7 +179,7 @@ public class CheckIOStatements extends SmallPearlBaseVisitor<Void>
         }
 
         if (isDecl) {
-        SymbolTableEntry sys = this.m_currentSymbolTable.lookup(d.getCreatedOn());;
+        SymbolTableEntry sys = this.m_currentSymbolTable.lookup(d.getCreatedOn().getName());;
 
         if (sys == null) {
 

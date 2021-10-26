@@ -1650,7 +1650,17 @@ public class SymbolTableVisitor extends SmallPearlBaseVisitor<Void>
 
         // get CREATED parameter if we are in a declaration, must no given in specification
         if (ctx.ID() != null) {
-            d.setCreatedOn(ctx.ID().getText());
+            SymbolTableEntry createdOn = m_currentSymbolTable.lookup(ctx.ID().getText());
+            d.setCreatedOn(null);
+            if (createdOn instanceof VariableEntry) {
+                if (((VariableEntry)createdOn).getType() instanceof TypeDation) {
+                   d.setCreatedOn((VariableEntry)createdOn);
+                }
+            }
+            if (d.getCreatedOn()==null) {
+                ErrorStack.add(ctx,"CREATED",ctx.ID().getText()+" is not of type dation");
+            }
+            
         }
         for (int i = 0; i < m_identifierDenotationContext.identifier().size(); i++) {
             String s = m_identifierDenotationContext.identifier(i).getText();

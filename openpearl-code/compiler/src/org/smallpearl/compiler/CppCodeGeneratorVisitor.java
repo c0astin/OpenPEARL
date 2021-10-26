@@ -82,8 +82,6 @@ implements SmallPearlVisitor<ST> {
         BIT, CHAR, FIXED
     }
 
-    public static final double pi = java.lang.Math.PI;
-
     public CppCodeGeneratorVisitor(String sourceFileName, String filename, int verbose,
             boolean debug, SymbolTableVisitor symbolTableVisitor,
             ExpressionTypeVisitor expressionTypeVisitor,
@@ -502,24 +500,23 @@ implements SmallPearlVisitor<ST> {
         return st;
     }
 
-
-  
-    @Override
-    public ST visitVariableDeclaration(VariableDeclarationContext ctx) {
-        ST scalarVariableDeclaration = m_group.getInstanceOf("ScalarVariableDeclaration");
-        if (ctx != null) {
-            for (int i = 0; i < ctx.variableDenotation().size(); i++) {
-                scalarVariableDeclaration.add("variable_denotations",
-                        visitVariableDenotation(ctx.variableDenotation().get(i)));
-            }
-
-            //            if (ctx.cpp_inline() != null) {
-            //                scalarVariableDeclaration.add("cpp", visitCpp_inline(ctx.cpp_inline()));
-            //            }
-        }
-        return scalarVariableDeclaration;
-
-    }
+// not longer in use (rm 202-20-24) 
+//    @Override
+//    public ST visitVariableDeclaration(VariableDeclarationContext ctx) {
+//        ST scalarVariableDeclaration = m_group.getInstanceOf("ScalarVariableDeclaration");
+//        if (ctx != null) {
+//            for (int i = 0; i < ctx.variableDenotation().size(); i++) {
+//                scalarVariableDeclaration.add("variable_denotations",
+//                        visitVariableDenotation(ctx.variableDenotation().get(i)));
+//            }
+//
+//            //            if (ctx.cpp_inline() != null) {
+//            //                scalarVariableDeclaration.add("cpp", visitCpp_inline(ctx.cpp_inline()));
+//            //            }
+//        }
+//        return scalarVariableDeclaration;
+//
+//    }
  
     private ST generateSpecification(InterruptEntry ve) {
         ST st = m_group.getInstanceOf("InterruptSpecifications");
@@ -534,54 +531,67 @@ implements SmallPearlVisitor<ST> {
         //System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         TypeDefinition t = ve.getType();
 
+        ST scope = getScope(ve);
         if (t instanceof TypeDation) {
+            ST specifyDation = null;
+            ST initializer = null;
             TypeDation td = (TypeDation)t;
             if (td.isSystemDation() && td.isBasic()) {
-                ST specifyDation = m_group.getInstanceOf("SpecificationSystemDation");
+                specifyDation = m_group.getInstanceOf("SpecificationSystemDation");
                 specifyDation.add("name", ve.getName());
                 specifyDation.add("TypeDation", "SystemDationB");
-                dationSpecifications.add("decl", specifyDation);
-                ST initializer = m_group.getInstanceOf("InitPointerToSpcSystemDation");
-                initializer.add("name", ve.getName());
-                initializer.add("TypeDation", "SystemDationB");
-                m_dationSpecificationInitializers.add("spec", initializer);     
+             
+                
+               // initializer = m_group.getInstanceOf("InitPointerToSpcSystemDation");
+               // initializer.add("name", getUserVariable(ve));
+               // initializer.add("TypeDation", "SystemDationB");
             } else if (td.isSystemDation() && !td.isBasic()) {
-                ST specifyDation = m_group.getInstanceOf("SpecificationSystemDation");
+                specifyDation = m_group.getInstanceOf("SpecificationSystemDation");
                 specifyDation.add("name", ve.getName());
                 specifyDation.add("TypeDation", "SystemDationNB");
-                dationSpecifications.add("decl", specifyDation);
-                ST initializer = m_group.getInstanceOf("InitPointerToSpcSystemDation");
-                initializer.add("name", ve.getName());
-                initializer.add("TypeDation", "SystemDationNB");
-                m_dationSpecificationInitializers.add("spec", initializer);
+                
+                //initializer = m_group.getInstanceOf("InitPointerToSpcSystemDation");
+                //initializer.add("name", ve.getName());
+                // initializer.add("TypeDation", "SystemDationNB");
+              
             } else if (td.isBasic()) {
-                ST specifyDation = m_group.getInstanceOf("SpecificationUserDation");
-                specifyDation.add("name", ve.getName());
+                specifyDation = m_group.getInstanceOf("SpecificationUserDation");
+                specifyDation.add("name", getUserVariableWithoutNamespace(ve.getName()));
                 specifyDation.add("TypeDation", "DationTS");
-
-                dationSpecifications.add("decl", specifyDation);
-
             } else if (td.isAlphic()) {
-                ST specifyDation = m_group.getInstanceOf("SpecificationUserDation");
-                specifyDation.add("name", ve.getName());
+                specifyDation = m_group.getInstanceOf("SpecificationUserDation");
+                specifyDation.add("name", getUserVariableWithoutNamespace(ve.getName()));
                 specifyDation.add("TypeDation", "DationPG");
-                dationSpecifications.add("decl", specifyDation);
-
+            
             } else if (td.getTypeOfTransmissionAsType() != null) {
-                ST specifyDation = m_group.getInstanceOf("SpecificationUserDation");
-                specifyDation.add("name", ve.getName());
+                specifyDation = m_group.getInstanceOf("SpecificationUserDation");
+                specifyDation.add("name", getUserVariableWithoutNamespace(ve.getName()));
                 specifyDation.add("TypeDation", "DationRW");
-                dationSpecifications.add("decl", specifyDation);
-            }                
+            }
+            
+            // initializer are only required for locally defined dations
+            // imported dations are initialized in the defining module 
+            if (ve.isSpecified() && !ve.getGlobalAttribute().equals(m_module.getName())) {
+                initializer = null;
+            }
+//            if (initializer != null) {
+//                m_dationSpecificationInitializers.add("spec", initializer);
+//            }
+
+
+            scope.add("variable", specifyDation);
+            dationSpecifications.add("decl", scope);
 
         } else if (isSimpleType(t)) {
-            ST specifyVariable=m_group.getInstanceOf("variable_specification");
-            specifyVariable.add("name",ve.getName());
+            // scopeXXX adds the extern/static/ ...
+            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
+            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
             specifyVariable.add("type",getSimpleType(t));
             if (ve.getGlobalAttribute()!= null) {
                 specifyVariable.add("global",ve.getGlobalAttribute());
             }
-            dationSpecifications.add("decl",  specifyVariable);
+            scope.add("variable", specifyVariable);
+            dationSpecifications.add("decl",  scope);
         } else {
             ErrorStack.add(ve.getCtx(),"CppCodeGenerator:generateSpecification @865","missing alternative");
         }
@@ -589,13 +599,38 @@ implements SmallPearlVisitor<ST> {
         return dationSpecifications;
 
     }
+    
+    private ST getScope(VariableEntry ve) {
+        ST scope = null;
+        if (ve.getLevel() == 1) {
+            if (ve.getGlobalAttribute() != null) {
+                scope = m_group.getInstanceOf("globalVariable");
+            } else {
+                scope = m_group.getInstanceOf("staticVariable");
+            }
+            if (ve.isSpecified()) {
+               scope = m_group.getInstanceOf("externVariable");
+               if (!ve.getGlobalAttribute().equals(m_module.getName())) {
+                   // namespace switch only required of namespace changes to another module
+                   scope.add("fromNs", ve.getGlobalAttribute());
+                   scope.add("currentNs",m_module.getName());
+               }
+            }
+        }
+        if (ve.getLevel() > 1) {
+            scope = m_group.getInstanceOf("localVariable");
+        }
+        return scope;
+    }
+    
     private ST generateVariableDeclaration(VariableEntry ve) {
 
-        ST variableDeclaration = m_group.getInstanceOf("variable_declaration");
+        ST variableDeclaration = m_group.getInstanceOf("variable_denotation");
         ST semaDeclarations = m_group.getInstanceOf("SemaDeclaraction");
         ST scalarVariableDeclaration = m_group.getInstanceOf("ScalarVariableDeclaration");
         ST DationDeclarations = m_group.getInstanceOf("DationDeclarations");
         ST st = null;
+
 
         if (ve instanceof FormalParameter) {
             // formal parameters are in the same scope, but they are defined in the 
@@ -603,6 +638,10 @@ implements SmallPearlVisitor<ST> {
             return null;
         }
         //  System.out.println("genVarDecl:"+ ve.getName()+" "+ ve.getType());
+        
+        // derive the scope form the SymbolTableEntry
+        ST scope = getScope(ve);
+
 
         if (ve.getType() instanceof TypeArray) {
             st = m_group.getInstanceOf("ArrayVariableDeclaration");
@@ -637,8 +676,8 @@ implements SmallPearlVisitor<ST> {
             //return visitStructVariableDenotation(ctx);
         } else if (isSimpleType(ve)) {
 
-            st = m_group.getInstanceOf("variable_declaration");
-            st.add("name", ve.getName());
+            st = m_group.getInstanceOf("variable_denotation");
+            st.add("name", getUserVariableWithoutNamespace(ve.getName()));
             st.add("type",
                     visitTypeAttribute(ve.getType()));//ctx.problemPartDataAttribute().typeAttribute()));
             if (ve.getInitializer() != null) {
@@ -646,8 +685,9 @@ implements SmallPearlVisitor<ST> {
             }
 
             st.add("inv", ve.getAssigmentProtection());
-            scalarVariableDeclaration.add("variable_denotations", st);
-
+            scope.add("variable", st);
+            scalarVariableDeclaration.add("variable_denotations", scope);
+            
 
         } else if (ve.getType() instanceof TypeSemaphore) {
             ST sema_decl = m_group.getInstanceOf("sema_declaration");
@@ -678,8 +718,8 @@ implements SmallPearlVisitor<ST> {
             m_dationDeclarationInitializers.add("decl",dation_decl);
             //dationDeclarations.add("decl",  dation_decl);
         } else if (ve.getType() instanceof TypeReference) {
-            st = m_group.getInstanceOf("variable_declaration");
-            st.add("name", ve.getName());
+            st = m_group.getInstanceOf("variable_denotation");
+            st.add("name", getUserVariableWithoutNamespace(ve.getName()));
 
 
             TypeReference tr = ((TypeReference)ve.getType());
@@ -1390,7 +1430,7 @@ implements SmallPearlVisitor<ST> {
         ASTAttribute attr = m_ast.lookup(ctx);
         SymbolTableEntry se = attr.getSymbolTableEntry();
         if (se != null) {
-            stmt.add("taskName", getUserVariable(se.getName()));
+            stmt.add("taskName", getUserVariableWithoutNamespace(se.getName()));
         }
         return stmt;
     }
@@ -1401,7 +1441,7 @@ implements SmallPearlVisitor<ST> {
         ASTAttribute attr = m_ast.lookup(ctx);
         SymbolTableEntry se = attr.getSymbolTableEntry();
         if (se != null) {
-            stmt.add("taskName", getUserVariable(se.getName()));
+            stmt.add("taskName", getUserVariableWithoutNamespace(se.getName()));
         }
         return stmt;
     }
@@ -1415,7 +1455,7 @@ implements SmallPearlVisitor<ST> {
         stmt.add("srcLine", ctx.start.getLine());
         stmt.add("srcColumn", ctx.start.getCharPositionInLine());
         m_tempVariableList.add(m_group.getInstanceOf("TempVariableList"));
-        m_tempVariableNbr.add(new Integer(0));
+        m_tempVariableNbr.add(Integer.valueOf(0));
 
         if (ctx != null) {
             if (ctx.label_statement() != null) {
@@ -1957,7 +1997,7 @@ implements SmallPearlVisitor<ST> {
 
             if (attr.isFunctionCall() || (ctx.listOfExpression() != null
                     && ctx.listOfExpression().expression().size() > 0)) {
-                functionCall.add("callee", getUserVariable(ctx.ID().getText()));
+                functionCall.add("callee", getUserVariableWithoutNamespace(ctx.ID().getText()));
 
                 if (ctx.listOfExpression() != null
                         && ctx.listOfExpression().expression().size() > 0) {
@@ -1968,7 +2008,7 @@ implements SmallPearlVisitor<ST> {
                 expression.add("functionCall", functionCall);
             } else {
                 // only name of a procedure
-                expression.add("id", getUserVariable(ctx.ID().getText()));
+                expression.add("id", getUserVariableWithoutNamespace(ctx.ID().getText()));
             }
         } else if (entry instanceof VariableEntry) {
             VariableEntry variable = (VariableEntry) entry;
@@ -1990,10 +2030,10 @@ implements SmallPearlVisitor<ST> {
             } else if (variable.getType() instanceof TypeStructure) {
                 expression.add("id", generateLHS(ctx, m_currentSymbolTable));
             } else {
-                expression.add("id", getUserVariable(ctx.ID().getText()));
+                expression.add("id", getUserVariable(variable)); //getUserVariable(ctx.ID().getText()));
             }
         } else {
-            expression.add("id", getUserVariable(ctx.ID().getText()));
+            expression.add("id", getUserVariableWithoutNamespace(ctx.ID().getText()));
         }
         return expression;
     }
@@ -3251,12 +3291,12 @@ implements SmallPearlVisitor<ST> {
                                 // expression, which needs a temporary variable to store the result
                                 // since we pass a pointer to the formatting routines
                                 ST variable_declaration =
-                                        m_group.getInstanceOf("variable_declaration");
+                                        m_group.getInstanceOf("variable_denotation");
                                 variable_declaration.add("name", "tempVar" + i);
                                 variable_declaration.add("type", t);
                                 variable_declaration.add("init",
                                         visitAndDereference(ctx.ioListElement(i).expression()));
-                                variable_declaration.add("no_decoration", 1);
+                                //variable_declaration.add("no_decoration", 1);
                                 dataList.add("data_variable", variable_declaration);
                                 dataList.add("data_index", i);
 
@@ -3620,7 +3660,7 @@ implements SmallPearlVisitor<ST> {
                     ST fmt = m_group.getInstanceOf("iojob_position_sop");
                     for (int i = 0; i < ap.positionSOP().ID().size(); i++) {
                         fmt.add("expression" + (i + 1),
-                                getUserVariable(ap.positionSOP().ID(i).getText()));
+                                getUserVariableWithoutNamespace(ap.positionSOP().ID(i).getText()));
                         SymbolTableEntry se =
                                 m_currentSymbolTable.lookup(ap.positionSOP().ID(i).getText());
                         if (se instanceof VariableEntry) {
@@ -3688,9 +3728,25 @@ implements SmallPearlVisitor<ST> {
         formatList.add("formats", loopStart);
     }
 
-    private ST getUserVariable(String user_variable) {
+    private ST getUserVariableWithoutNamespace(String user_variable) {
         ST st = m_group.getInstanceOf("user_variable");
         st.add("name", user_variable);
+        return st;
+    }
+
+    /*
+     * get username with namespace if the symbol comes from another module
+     */
+    private ST getUserVariable(SymbolTableEntry user_variable) {
+        ST st = m_group.getInstanceOf("user_variable");
+        st.add("name", user_variable.getName());
+        if (user_variable.isSpecified()) {
+            String fromModule = user_variable.getGlobalAttribute();
+            if (!fromModule.equals(m_module.getName())) {
+               st.add("fromNs", fromModule);
+            }
+        }
+        
         return st;
     }
 
@@ -4245,13 +4301,6 @@ implements SmallPearlVisitor<ST> {
 
     private ST visitDationDenotation(VariableEntry ve) {
 
-        //        ParserRuleContext denotationCtx = ctx;
-        //        // locate symboltable entry via first dationName
-        //        while (!(denotationCtx.parent instanceof VariableDenotationContext)) {
-        //            denotationCtx = (ParserRuleContext)(denotationCtx.parent);
-        //        }
-        //        denotationCtx = (ParserRuleContext)(denotationCtx.parent);
-
         String name = ve.getName();
         TypeDation td = (TypeDation)(ve.getType());
         int tfuRecord = -1;
@@ -4302,15 +4351,16 @@ implements SmallPearlVisitor<ST> {
         if (td.hasTypology()) {
             typeDation.add("Dim", ve.getName());
         }
-
-        m_dationDeclarations.add("decl", v);
+        ST scope = getScope(ve);
+        scope.add("variable", v);
+        m_dationDeclarations.add("decl", scope);
 
         ST dationInitialiser = m_group.getInstanceOf("DationDeclarationInitialiser");
         // name,Dation,TypeDation,Id,Typology, tfu
-        dationInitialiser.add("name", ve.getName());
+        dationInitialiser.add("name",  ve.getName());
         dationInitialiser.add("Dation", getDationClass(td));
         dationInitialiser.add("TypeDation", typeDation);
-        dationInitialiser.add("Id", td.getCreatedOn());
+        dationInitialiser.add("Id", getUserVariable(td.getCreatedOn()));
         dationInitialiser.add("Typology", typology);
         if (tfuRecord > 0) {
             dationInitialiser.add("tfu", tfuRecord);
@@ -4802,7 +4852,7 @@ implements SmallPearlVisitor<ST> {
             if (ve.getLoopControlVariable()) continue;  
             //System.out.println("BODY: "+ve.getName()+": " + ve.getType()+" "+ve.isSpecified());
             if (ve.isSpecified()) {
-                // no specifications allowd - identifications are no treated yet
+                // no specifications allowed - identifications are no treated yet
             } else {
                 st.add("declarations", generateVariableDeclaration(ve));
             }
@@ -4947,7 +4997,7 @@ implements SmallPearlVisitor<ST> {
         //String s = ctx.name().getText();
 
         ST stmt = m_group.getInstanceOf("iojob_convertTo_statement");
-        stmt.add("char_string", getUserVariable(ctx.name().getText()));
+        stmt.add("char_string", getUserVariableWithoutNamespace(ctx.name().getText()));
 
 
         // this flag is set to true if at least one non static format parameter is detected
@@ -5205,7 +5255,7 @@ implements SmallPearlVisitor<ST> {
                             // FunctionCall(callee,ListOfActualParameters)
                             ST functionCall = m_group.getInstanceOf("FunctionCall");
                             ST deref = m_group.getInstanceOf("CONT");
-                            deref.add("operand", getUserVariable(ve.getName()));
+                            deref.add("operand", getUserVariable(ve));//getUserVariable(ve.getName()));
                             functionCall.add("callee", deref);
                             functionCall.add("ListOfActualParameters",
                                     visitListOfExpression(n.listOfExpression()));
@@ -5228,7 +5278,7 @@ implements SmallPearlVisitor<ST> {
         int index = m_tempVariableNbr.lastElement();
 
         m_tempVariableNbr.remove(m_tempVariableNbr.size() - 1);
-        m_tempVariableNbr.add(new Integer(index + 1));
+        m_tempVariableNbr.add(Integer.valueOf(index + 1));
         return "tmp_" + index;
     }
 

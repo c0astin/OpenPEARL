@@ -116,18 +116,28 @@ Specification(lineno,col,name,type,fromNamespace) ::= <<
 
 >>
 
-Declaration(lineno,col,name,type,global) ::= <<
-\<dcl type="<type>" name="<name>" line="<lineno>" col="<col>" <if(global)>global="<global>"<endif> />
+Declaration(lineno,col,name,type,fromNamespace) ::= <<
+\<dcl type="<type>" name="<name>" line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif> />
 
 >>
 
 
 
-DationSpecification(lineno,col,name,attributes,datalist,fromNamespace) ::= <<
+DationSpecification(lineno,col,name,attributes,isBasic,datalist,fromNamespace) ::= <<
 \<spc type="dation" name="<name>" line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif> >
+  \<subtype><if(isBasic)>pearlrt::SystemDationB*<else>pearlrt::SystemDationNB*<endif>\</subtype>
   <if(attributes)><attributes><endif>
   <if(datalist)><datalist><endif>
 \</spc>
+
+>>
+
+DationDeclaration(lineno,col,name,attributes,isBasic,datalist,fromNamespace) ::= <<
+\<dcl type="dation" name="<name>" line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif>  >
+  \<subtype><if(isBasic)>pearlrt::SystemDationB*<else>pearlrt::SystemDationNB*<endif>\</subtype>
+  <if(attributes)><attributes><endif>
+  <if(datalist)><datalist><endif>
+\</dcl>
 
 >>
 

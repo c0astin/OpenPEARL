@@ -229,19 +229,28 @@ public class Module {
                     Log.setLocation(sourceFileName, line, col);
 
                     String dationData = null, dationAttributes = null, procParameters = null,
-                            procReturns = null;
+                            procReturns = null, subType=null;
 
                     if (type.equals(Platform.DATION)) {
                         // parse type and attributes of dation and set them in the dictionary
+                        
                         for (int j = 0; j < n.getChildNodes().getLength(); j++) {
                             Node m = n.getChildNodes().item(j);
                             if (m.getNodeType() != Node.ELEMENT_NODE)
                                 continue;
+                            if (m.getNodeName().equals("subtype")) {
+                                //dationData = m.getNodeValue();
+                                subType = m.getTextContent();
+                            }
                             if (m.getNodeName().equals("data")) {
-                                dationData = m.getNodeValue();
+                                //dationData = m.getNodeValue();
+                                dationData = m.getTextContent();
+                                dationData = dationData.replaceAll("\\s","");
                             }
                             if (m.getNodeName().equals("attributes")) {
-                                dationAttributes = m.getNodeValue();
+                                //dationAttributes = m.getNodeValue();
+                                dationAttributes = m.getTextContent();
+                                dationAttributes = dationAttributes.replaceAll("\\s","");
                             }
 
                         }
@@ -267,6 +276,7 @@ public class Module {
                         dclProblemPart.add(dcl);
                         dcl.setDationAttributes(dationAttributes);
                         dcl.setDationType(dationData);
+                        dcl.setDationSubType(subType);
                         dcl.setProcParameters(procParameters);
                         dcl.setProcReturns(procReturns);
                         Log.info("DCL found in module '" + moduleName + "' type= '" + type + "' '" + userName
@@ -275,6 +285,7 @@ public class Module {
                         SpcProblemPart spc = new SpcProblemPart(userName, line, col, type, n, this, global);
                         spcProblemPart.add(spc);
                         spc.setDationAttributes(dationAttributes);
+                        spc.setDationSubType(subType);
                         spc.setDationType(dationData);
                         spc.setProcParameters(procParameters);
                         spc.setProcReturns(procReturns);

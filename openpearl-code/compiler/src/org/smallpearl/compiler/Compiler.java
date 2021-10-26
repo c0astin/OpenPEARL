@@ -224,7 +224,7 @@ public class Compiler {
                     ControlFlowGraphGenerate cfgGenerate = new ControlFlowGraphGenerate(lexer.getSourceName(), verbose, debug, symbolTableVisitor, expressionTypeVisitor, ast);
                     cfgGenerate.visit(tree);
                     List<ControlFlowGraph> cfgs = cfgGenerate.getControlFlowGraphs();
-                    if (false) {
+                    if (true) {
                         // this does not work properly yet for all testcases in testsuite/build
                         // Creating List of all procedures
                         Map<String, ParserRuleContext> procedureMap = new HashMap<>();

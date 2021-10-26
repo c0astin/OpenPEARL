@@ -224,6 +224,11 @@ public class CheckSpcDcl {
             return;
         }
         if (spc.getType().equals(Platform.DATION)) {
+//            System.out.println("spc="+spc);
+//            System.out.println("dcl="+dcl);
+//            System.out.println("spc.getDationType()="+spc.getDationType());
+//            System.out.println("dcl.getDationType()="+dcl.getDationType());
+            
             if (!spc.getDationType().equals(dcl.getDationType())) {
                 Log.error("mismatch in type of transfer data of '" + spc.getUserName()
                 + "' expected in SPC: " + spc.getDationType() + "'");

@@ -29,6 +29,7 @@
 
 package org.smallpearl.compiler;
 
+import org.smallpearl.compiler.SymbolTable.VariableEntry;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
@@ -65,7 +66,7 @@ public class TypeDation extends TypeDefinition {
 	private int m_dimension2;
 	private int m_dimension3;
 	private boolean m_tfu;
-	private String m_created_on;
+	private VariableEntry m_created_on;
 	private boolean m_hasSourceSinkAttribute;
 	
 	
@@ -97,42 +98,54 @@ public class TypeDation extends TypeDefinition {
         m_created_on=null;
     }
 
-    public String toString() {
-    	String s=this.getName()+" ";
-    	//if (m_isDeclaration) s+= " (DCL) ";
-    	//else s += " (SPC) ";
-    	if (m_in) s += "IN";
-    	if (m_out) s += "OUT";
-    	if (m_systemDation) s+= " SYSTEM";
-    	//else s+= " (userdation)";
-    	if (m_alphic) s+=" ALPHIC";
-    	if (m_basic) s+=" BASIC";
-    	if (m_typeOfTransmission!= null) {
-    		s+=" "+m_typeOfTransmission;
-    	}
-    	if (m_hasAccessAttributes) {
-    	  if (m_direct) s+= " DIRECT";
-    	  if (m_forward) s+= " FORWARD";
-    	  if (m_forback) s+= " FORBACK";
+    public String getTypeAsString() {
+        String s=" ";
+        if (m_in) s += "IN";
+        if (m_out) s += "OUT";
+        if (m_systemDation) s+= " SYSTEM";
+        //else s+= " (userdation)";
+
+        if (m_hasAccessAttributes) {
+          if (m_direct) s+= " DIRECT";
+          if (m_forward) s+= " FORWARD";
+          if (m_forback) s+= " FORBACK";
           if (m_cyclic) s+= " CYCLIC";
             else s+= " NOCYCL";
           if (m_stream) s+= " STREAM";
-            else s+=" NOSTREAM";    	  
-    	}
-    	if (m_hasTypology) {
-    	  s += " DIM(";
-    	  if (m_dimension1>0) s+=m_dimension1;
-    	  if (m_dimension1==0) s+= '*'; 
-    	  if (m_dimension2>0) s+= ","+m_dimension2;
-          if (m_dimension2==0) s+= ",*";
-    	  if (m_dimension3>0) s+= "," +m_dimension3;
+            else s+=" NOSTREAM";          
+        }
+        if (m_hasTypology) {
+          s += " DIM(";
+          if (m_dimension1>0) s+=m_dimension1;
+          if (m_dimension1==-1) s+= '*'; 
+          if (m_dimension2>0) s+= ","+m_dimension2;
+          if (m_dimension2==-1) s+= ",*";
+          if (m_dimension3>0) s+= "," +m_dimension3;
           if (m_dimension3==0) s+= ",*";
-    	  if (m_dimension1>= 0) s+= ")";
-    	  if (m_tfu) s+= " TFU";
-    	}
+          s+= ")";
+          if (m_tfu) s+= " TFU";
+        }
+        return s;
+    }
+    
+    public String getDataAsString() {
+        String s="";
+        if (m_alphic) s+=" ALPHIC";
+        if (m_typeOfTransmission!= null) {
+                s+=" "+m_typeOfTransmission;
+        }
+        return s;
+    }
+    
+    public String toString() {
+    	String s=this.getName()+" ";
+        if (m_basic) s+=" BASIC";
+    	s += getDataAsString();
+    	s += getTypeAsString();
+
     	
     	if (m_global != null) s+= " GLOBAL("+m_global+")";	
-    	if (m_created_on != null) s+= " CREATED("+m_created_on+")";
+    	if (m_created_on != null) s+= " CREATED("+m_created_on.getName()+")";
         return s;
     }
     
@@ -267,11 +280,11 @@ public class TypeDation extends TypeDefinition {
 	public String getGlobal() {
 		return m_global;
 	}
-	public void setCreatedOn(String c) {
+	public void setCreatedOn(VariableEntry c) {
 	   this.m_created_on = c;
 	}
 	
-	public String getCreatedOn() {
+	public VariableEntry getCreatedOn() {
 		return m_created_on;
 	}
 	public void setGlobal(String moduleName) {

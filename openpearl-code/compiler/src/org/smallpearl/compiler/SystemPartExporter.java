@@ -179,7 +179,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
         // we may have
         SymbolTableEntry se =
                 m_currentSymbolTable.lookupSystemPartName(ctx.systemPartName().ID().toString());
-        // the symbol table visitor enshures that this entry is a system name
+        // the symbol table visitor grants that this entry is a system name
         decl.add("sysname", se.getName()); ///ctx.systemPartName().ID().toString());
 
         if (ctx.systemElementParameters() != null) {
@@ -264,103 +264,98 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
     }
 
     private void exportProblemPartSpcAndDcl() {
-        // export dation specifications and declaractions
-        
+        // export specifications and declaractions of GLOBAL symbols
+
         LinkedList<VariableEntry> l = m_currentSymbolTable.getVariableDeclarations();
 
         for (VariableEntry v : l) {
             if (v.getType() instanceof TypeDation) {
+                ST dation = null;
                 TypeDation t = (TypeDation) v.getType();
                 if (!t.isSystemDation()) {
+                    // user dation
                     treatTfuStuff(v);
+                    if (t.getGlobal()!=null) {
+                      dation = treatDationSpcDclCommonStuff(v);
+                    }
+                 
                 } else {
-
-                    ST dationSpecification = group.getInstanceOf("DationSpecification");
-
-                    dationSpecification.add("lineno", v.getCtx().start.getLine());
-                    dationSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
-                    dationSpecification.add("name", v.getName());
-                    if (m_useNamespaceForGlobals) {
-                        dationSpecification.add("fromNamespace", v.getGlobalAttribute());
-                    }
-
-                    TypeDation td = (TypeDation) (v.getType());
-
-                    ST datalist = group.getInstanceOf("DataList");
-                    ST attributes = group.getInstanceOf("Attributes");
-                    if (td.isAlphic()) {
-                        ST data = group.getInstanceOf("Data");
-                        data.add("name", "ALPHIC");
-                        datalist.add("data", data);
-                    } else if (td.isBasic()) {
-                        ST attribute = group.getInstanceOf("Attribute");
-                        attribute.add("name", "BASIC");
-                        attributes.add("attributes", attribute);
-                    }
-                    if (td.isSystemDation()) {
-                        ST attribute = group.getInstanceOf("Attribute");
-                        attribute.add("name", "SYSTEM");
-                        attributes.add("attributes", attribute);
-                    }
-
-                    if (td.getTypeOfTransmission() != null) {
-                        ST data = group.getInstanceOf("Data");
-                        data.add("name", td.getTypeOfTransmission());
-                        datalist.add("data", data);
-                    }
-                    if (td.isIn() && td.isOut()) {
-                        ST attribute = group.getInstanceOf("Attribute");
-                        attribute.add("name", "INOUT");
-                        attributes.add("attributes", attribute);
-                    } else if (td.isIn() && !td.isOut()) {
-                        ST attribute = group.getInstanceOf("Attribute");
-                        attribute.add("name", "IN");
-                        attributes.add("attributes", attribute);
-                    } else if (!td.isIn() && td.isOut()) {
-                        ST attribute = group.getInstanceOf("Attribute");
-                        attribute.add("name", "OUT");
-                        attributes.add("attributes", attribute);
-                    }
-
-
-                    dationSpecification.add("datalist", datalist);
-                    dationSpecification.add("attributes", attributes);
-
-                    problemPart.add("decls", dationSpecification);
+                    // system dation
+                    dation = treatDationSpcDclCommonStuff(v);
                 }
+                problemPart.add("decls", dation);
             } else {
+                // other types than dation: DCL or SPC
+                ST st = null;
                 if (v.isSpecified()) {
-                    ST st = group.getInstanceOf("Specification");
-                    st.add("lineno", v.getSourceLineNo());
-                    st.add("col",v.getCharPositionInLine());
-                    st.add("name", v.getName());
-                    st.add("type", v.getType());
-                    if (m_useNamespaceForGlobals) {
-                       st.add("fromNamespace", v.getGlobalAttribute());
-                    }
-                    problemPart.add("decls",  st);
+                    st = group.getInstanceOf("Specification");
                 } else {
                     if (v.getGlobalAttribute()!= null) {
                         //Declaration(lineno,col,name,type,global) ::= <<
-                        ST st = group.getInstanceOf("Declaration");
-                        st.add("lineno", v.getSourceLineNo());
-                        st.add("col",v.getCharPositionInLine());
-                        st.add("name", v.getName());
-                        st.add("type", v.getType());
-                        if (m_useNamespaceForGlobals) {
-                           st.add("global", v.getGlobalAttribute());
-                        }
-                        problemPart.add("decls",  st);
-                    }
+                        st = group.getInstanceOf("Declaration");
+                    } 
                 }
-                    
                 
+                // st is null, if DCL without global -> skip this for the IMC
+                if (st == null) continue;
+                st.add("lineno", v.getSourceLineNo());
+                st.add("col",v.getCharPositionInLine());
+                st.add("name", v.getName());
+                st.add("type", v.getType());
+                if (m_useNamespaceForGlobals && v.getGlobalAttribute() != null) {
+                    st.add("fromNamespace", v.getGlobalAttribute());
+                }
+                problemPart.add("decls",  st);
+
+
+
             }
         }
 
         return;
     }
 
+    private ST treatDationSpcDclCommonStuff(VariableEntry v) {
+        // system dation
+        
+        ST dation = null;
+        if (v.isSpecified()) {
+            dation = group.getInstanceOf("DationSpecification");
+        } else {
+            dation = group.getInstanceOf("DationDeclaration");
+        }
+
+        dation.add("lineno", v.getCtx().start.getLine());
+        dation.add("col", v.getCtx().start.getCharPositionInLine() + 1);
+        dation.add("name", v.getName());
+        if (m_useNamespaceForGlobals ) {
+            dation.add("fromNamespace", v.getGlobalAttribute());
+        }
+
+        TypeDation td = (TypeDation) (v.getType());
+        dation.add("isBasic", td.isBasic());
+        ST datalist = group.getInstanceOf("DataList");
+        ST attributes = group.getInstanceOf("Attributes");
+        
+
+        ST data = group.getInstanceOf("Data");
+        data.add("name", td.getDataAsString());
+        datalist.add("data", data);
+
+        dation.add("datalist", datalist);
+
+        // add attributes: td.getTypeAsString delivers attributes as space separated list
+        String attr = td.getTypeAsString();
+        String attrs[] = attr.split(" ");
+        for (String a : attrs) {
+            ST attribute = group.getInstanceOf("Attribute");
+            attribute.add("name", a);
+            attributes.add("attributes", attribute);
+        }
+        dation.add("attributes", attributes);
+        return dation;
+    }
+    
     private void treatTfuStuff(VariableEntry v) {
         TypeDation d = (TypeDation) v.getType();
 
@@ -368,10 +363,12 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
         tfuInUserDation.add("lineno", v.getSourceLineNo());
         tfuInUserDation.add("col", v.getCharPositionInLine() + 1);
 
-        tfuUsage.add("decls", tfuInUserDation);
         tfuInUserDation.add("userdation", v.getName());
-        tfuInUserDation.add("systemdation", d.getCreatedOn());
-        if (d.hasTfu()) {
+        
+        if (d.hasTfu() ) {
+            if (d.getCreatedOn() != null) {
+               tfuInUserDation.add("systemdation", d.getCreatedOn().getName());
+            }
             // already checked, that the last dimension is const > 0
             // get last defined dimension
             int recordLength = d.getDimension3();
@@ -393,6 +390,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
                 }
             }
             tfuInUserDation.add("tfusize", recordLength);
+            tfuUsage.add("decls", tfuInUserDation);
         }
     }
 
