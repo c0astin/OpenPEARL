@@ -505,7 +505,6 @@ public class CheckRealTimeStatements extends SmallPearlBaseVisitor<Void>
 
     }
 
-
     private void checkDurationValue(ExpressionContext ctx, String prefix) {
         ASTAttribute attr = m_ast.lookup(ctx);
         TypeDefinition t = getEffectiveType(ctx);
@@ -537,7 +536,6 @@ public class CheckRealTimeStatements extends SmallPearlBaseVisitor<Void>
                     + m_type.toString() + "'");
         }
     }
-
 
     private TypeDefinition getEffectiveType(ParserRuleContext ctx) {
 

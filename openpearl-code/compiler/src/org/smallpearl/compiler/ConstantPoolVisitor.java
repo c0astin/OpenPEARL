@@ -143,16 +143,10 @@ public class ConstantPoolVisitor extends SmallPearlBaseVisitor<Void>
         }
 
         if (!found) {
-            if (value instanceof ConstantBitValue) {
-                constantBitNo = constantBitNo + 1;
-                ((ConstantBitValue) (value)).setNo(constantBitNo);
-            }
-
             m_constantPool.add(value);
         }
 
         return null;
-
     }
 
     @Override

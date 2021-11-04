@@ -137,16 +137,7 @@ public class ConstantPool {
         }
 
         if (!found) {
-            if ( value instanceof ConstantBitValue) {
-                constantBitNo = constantBitNo + 1;
-                ((ConstantBitValue) (value)).setNo(constantBitNo);
-            }
-
             constantPool.add(value);
-        } else {
-            if ( value instanceof ConstantBitValue) {
-                ((ConstantBitValue) (value)).setNo(constantBitNo);
-            }
         }
 
         return retValue;
