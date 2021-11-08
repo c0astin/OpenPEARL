@@ -1,0 +1,8 @@
+MODULE(m1);
+
+PROBLEM;
+LENGTH FIXED(64);
+/*$    ^
+error: illegal precision: not in range [0,63]
+*/
+MODEND;

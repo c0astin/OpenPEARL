@@ -1,0 +1,10 @@
+MODULE(m);
+
+PROBLEM;
+
+DCL f FIXED(15) INIT();
+/*$                 ^
+ERROR : Syntax error :mismatched input '()' expecting '('
+*/
+MODEND;
+

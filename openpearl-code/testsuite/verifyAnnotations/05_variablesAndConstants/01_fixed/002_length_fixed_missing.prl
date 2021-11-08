@@ -1,0 +1,9 @@
+MODULE(m1);
+
+PROBLEM;
+LENGTH FIXED ();
+/*$          ^
+ERROR : Syntax error :mismatched input '()' expecting '('
+*/
+MODEND;
+

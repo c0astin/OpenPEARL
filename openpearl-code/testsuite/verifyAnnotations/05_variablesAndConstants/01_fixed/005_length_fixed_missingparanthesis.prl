@@ -1,0 +1,12 @@
+MODULE(m1);
+
+PROBLEM;
+LENGTH FIXED 15;
+/*$          ^
+ERROR : Syntax error :missing '(' at '15'
+*/
+/*$            ^
+ERROR : Syntax error :missing ')' at ';'
+*/
+MODEND;
+

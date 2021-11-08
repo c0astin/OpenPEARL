@@ -1,0 +1,10 @@
+MODULE(m);
+
+PROBLEM;
+
+DCL f FIXED(-1);
+/*$         ^
+ERROR : Syntax error :extraneous input '-' expecting IntegerConstant
+*/  
+MODEND;
+

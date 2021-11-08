@@ -1,0 +1,14 @@
+MODULE(m1);
+
+PROBLEM;
+
+a: TASK;
+  DCL f FIXED(63);
+  f := 1(64);
+/*$    ^
+error: assignment:illegal precision: not in range [0,63]
+*/
+END;
+
+MODEND;
+

@@ -1,0 +1,10 @@
+MODULE(m);
+
+PROBLEM;
+
+DCL f FIXED(64);
+/*$         ^
+error: illegal precision: not in range [0,63]
+*/
+MODEND;
+

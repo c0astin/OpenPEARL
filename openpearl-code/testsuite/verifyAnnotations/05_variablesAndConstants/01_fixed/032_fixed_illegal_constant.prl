@@ -1,0 +1,14 @@
+MODULE(m1);
+
+PROBLEM;
+
+a: TASK;
+  DCL f FIXED(63);
+  f := 123a45;   ! mark of error should be at 'a'
+/*$       ^
+ERROR : Syntax error :extraneous input 'a45' expecting ';'
+*/
+END;
+
+MODEND;
+

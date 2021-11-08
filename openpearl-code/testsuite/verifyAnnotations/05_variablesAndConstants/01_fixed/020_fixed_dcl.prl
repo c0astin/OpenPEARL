@@ -1,0 +1,17 @@
+MODULE(m);
+PROBLEM;
+   DCL f INV FIXED;
+/*$    ^
+error: DCL: INV needs INIT
+*/
+
+   DCL g FIXED;
+/*$    ^
+note: previous declaration: was here
+*/
+   
+   DCL g FIXED;
+/*$    ^
+error: duplicate declaration: g
+*/
+MODEND;

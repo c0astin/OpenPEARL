@@ -1,0 +1,11 @@
+MODULE(si);
+PROBLEM;
+   DCL str1 STRUCT [(a,b) FIXED ] INIT('x',1 SEC);
+/*$                                    ^
+error: type mismatch in INIT: FIXED(31) := CHAR(1)
+*/
+/*$                                        ^
+error: type mismatch in INIT: FIXED(31) := DURATION
+*/
+MODEND;
+

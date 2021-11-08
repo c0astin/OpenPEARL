@@ -1,0 +1,16 @@
+MODULE(si);
+
+PROBLEM;
+
+DCL str1 STRUCT [ (a,b,c) FIXED] INIT(1,2);
+/*$ ^
+error: INIT: 1 initializers missing
+*/
+
+DCL (str2,str3) STRUCT [ (a,b,c) FIXED] INIT(1,2,3,4,5);
+/*$ ^
+error: INIT: 1 initializers missing
+*/
+
+MODEND;
+

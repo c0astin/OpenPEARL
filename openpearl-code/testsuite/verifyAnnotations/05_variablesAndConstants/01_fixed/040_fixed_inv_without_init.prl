@@ -1,0 +1,12 @@
+MODULE(m1);
+PROBLEM;
+
+a: TASK;
+  ! INV without INIT is ridiculous in declaraction
+  DCL f INV FIXED;
+/*$   ^
+error: DCL: INV needs INIT
+*/      
+END;
+
+MODEND;

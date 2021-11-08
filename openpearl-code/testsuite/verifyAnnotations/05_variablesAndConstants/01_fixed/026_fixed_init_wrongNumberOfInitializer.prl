@@ -1,0 +1,14 @@
+MODULE(m);
+
+PROBLEM;
+
+DCL f FIXED(15) INIT(1,2);
+/*$                    ^
+error: INIT: too many initializers
+*/
+DCL (g,h) FIXED(15) INIT(1);
+/*$    ^
+error: INIT: 1 initializers missing
+*/
+MODEND;
+
