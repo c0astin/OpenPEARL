@@ -27,12 +27,12 @@ PROBLEM;
 !! created_on must exist and must be of type dation
    DCL stdout0 DATION  OUT   ALPHIC FORWARD CREATED(f);
 /*$    ^
-error: DationDCL: f is not of type DATION
+error: DationDCL: 'f' is not of type DATION
 */
 
    DCL stdout1 DATION  IN    CHAR   FORWARD CREATED(s0);
 /*$    ^
-error: DationDCL: system dation s0 is not defined
+error: DationDCL: system dation 's0' is not defined
 */
 
 
