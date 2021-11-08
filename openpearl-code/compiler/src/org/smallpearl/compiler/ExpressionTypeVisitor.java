@@ -3434,14 +3434,12 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
                                             .fixedNumberPrecision()
                                             .IntegerConstant()
                                             .toString());
-                    if (precision < Defaults.FIXED_MIN_LENGTH
-                            || precision > Defaults.FIXED_MAX_LENGTH) {
-                        CommonErrorMessages.wrongFixedPrecission(ctx.fixedConstant());
-                    }
                 }
-                if (precision > Defaults.FIXED_MAX_LENGTH) {
+                if (precision < Defaults.FIXED_MIN_LENGTH
+                         || precision > Defaults.FIXED_MAX_LENGTH) {
                     CommonErrorMessages.wrongFixedPrecission(ctx.fixedConstant());
                 }
+             
                 expressionResult = new ASTAttribute(new TypeFixed(precision), true);
                 ConstantFixedValue cfv = new ConstantFixedValue(value * sign, precision);
                 ConstantValue cv =

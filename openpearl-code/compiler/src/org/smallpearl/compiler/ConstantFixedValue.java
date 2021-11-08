@@ -113,4 +113,9 @@ public class ConstantFixedValue extends ConstantValue
         return Long.compare(m_value, other.m_value);
     }
 
+    @Override
+    public TypeDefinition getType() {
+        return new TypeFixed(m_precision);
+    }
+
 }

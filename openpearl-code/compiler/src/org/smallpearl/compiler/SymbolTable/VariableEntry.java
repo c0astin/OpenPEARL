@@ -80,7 +80,14 @@ public class VariableEntry extends SymbolTableEntry {
         this.m_initializer = null;
     }
 
-    
+    /**
+     * 
+     * @param name
+     * @param type
+     * @param hasAssigmentProtection
+     * @param ctx
+     * @param init
+     */
     public VariableEntry(String name, TypeDefinition type, Boolean hasAssigmentProtection, ParserRuleContext ctx, Initializer init)
     {
         super(name);

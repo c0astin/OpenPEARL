@@ -142,4 +142,11 @@ public class ConstantBitValue extends ConstantValue
         return Long.compare(m_value, other.m_value);
     }
 
+
+    @Override
+    public TypeDefinition getType() {
+        // TODO Auto-generated method stub
+        return new TypeBit(m_noOfBits);
+    }
+
 }

@@ -30,4 +30,5 @@
 package org.smallpearl.compiler;
 
 public abstract class ConstantValue {
+    public abstract TypeDefinition getType();
 }

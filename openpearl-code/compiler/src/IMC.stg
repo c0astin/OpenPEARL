@@ -29,9 +29,9 @@
 
 group openpearl;
 
-Module(sourcefile,name,SystemPart,ProblemPart) ::= <<
+Module(sourcefile,name,standard,SystemPart,ProblemPart) ::= <<
 \<?xml version="1.0" encoding="UTF-8" ?>
-\<module name="<name>"  file="<sourcefile>">
+\<module name="<name>"  file="<sourcefile>" standard="<standard>" >
 <if(SystemPart)><SystemPart><endif>
 <if(ProblemPart)><ProblemPart><endif>
 \</module>
@@ -123,18 +123,16 @@ Declaration(lineno,col,name,type,fromNamespace) ::= <<
 
 
 
-DationSpecification(lineno,col,name,attributes,isBasic,datalist,fromNamespace) ::= <<
+DationSpecification(lineno,col,name,attributes,datalist,fromNamespace) ::= <<
 \<spc type="dation" name="<name>" line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif> >
-  \<subtype><if(isBasic)>pearlrt::SystemDationB*<else>pearlrt::SystemDationNB*<endif>\</subtype>
   <if(attributes)><attributes><endif>
   <if(datalist)><datalist><endif>
 \</spc>
 
 >>
 
-DationDeclaration(lineno,col,name,attributes,isBasic,datalist,fromNamespace) ::= <<
+DationDeclaration(lineno,col,name,attributes,datalist,fromNamespace) ::= <<
 \<dcl type="dation" name="<name>" line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif>  >
-  \<subtype><if(isBasic)>pearlrt::SystemDationB*<else>pearlrt::SystemDationNB*<endif>\</subtype>
   <if(attributes)><attributes><endif>
   <if(datalist)><datalist><endif>
 \</dcl>

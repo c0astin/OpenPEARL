@@ -118,6 +118,11 @@ public class ConstantClockValue extends ConstantValue
         return 0;
     }
 
+    @Override
+    public TypeDefinition getType() {
+        return new TypeClock();
+    }
+
 }
 
 

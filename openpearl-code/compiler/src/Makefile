@@ -111,11 +111,11 @@ install: gen javac prl_cc.inc
 
 .PHONY: prl_cc.inc
 prl_cc.inc:
-	echo "##### auto genrated  start " > ../prl_cc.inc
+	echo "##### auto generated  start " > ../prl_cc.inc
 	echo 'java -cp $(CONFIG_INSTALL_Target)/bin/smallpearl_compiler.jar:$(CONFIG_COMPILER_ANTLR)  org/smallpearl/compiler/Compiler \' >> ../prl_cc.inc
 	echo '   $$standard  $$fn.prl \' >> ../prl_cc.inc
 	echo '   --output $$outputPrlCC' >> ../prl_cc.inc
-	echo "##### auto genrated end " >> ../prl_cc.inc
+	echo "##### auto generated end " >> ../prl_cc.inc
 
 ###############################################################################
 

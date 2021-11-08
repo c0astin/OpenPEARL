@@ -43,4 +43,9 @@ public class ConstantNILReference extends ConstantValue {
         String name = "CONST_Reference_NIL";
         return name;
     }
+
+    @Override
+    public TypeDefinition getType() {
+        return new TypeReference(null);  // basetype is null
+    }
 }

@@ -96,4 +96,9 @@ public class ConstantCharacterValue  extends ConstantValue
     public int compareTo(ConstantCharacterValue other) {
         return m_value.compareTo(other.m_value);
     }
+
+    @Override
+    public TypeDefinition getType() {
+        return new TypeChar(length);
+    }
 }

@@ -205,6 +205,11 @@ public class ConstantDurationValue extends ConstantValue
         return 0;
     }
 
+    @Override
+    public TypeDefinition getType() {
+        return new TypeDuration();
+    }
+
 }
 
 

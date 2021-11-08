@@ -142,6 +142,7 @@ implements SmallPearlVisitor<ST> {
         ST prologue = m_group.getInstanceOf("Prologue");
 
         prologue.add("src", this.m_sourceFileName);
+        prologue.add("name",this.m_module.getName());
 
         ST taskspec = m_group.getInstanceOf("TaskSpecifier");
 
@@ -532,7 +533,22 @@ implements SmallPearlVisitor<ST> {
         TypeDefinition t = ve.getType();
 
         ST scope = getScope(ve);
-        if (t instanceof TypeDation) {
+        if (ve.getType() instanceof TypeArray) {
+        
+        } else if (ve.getType() instanceof TypeStructure) {
+            TypeDefinition td= ve.getType();
+            ST st = m_group.getInstanceOf("variable_denotation");
+            st.add("name", getUserVariableWithoutNamespace(ve.getName()));
+            st.add("type",
+                    visitTypeAttribute(ve.getType()));
+            st.add("inv", ve.getAssigmentProtection());
+            scope.add("variable", st);
+            dationSpecifications.add("decl", scope);
+            //return visitStructVariableDenotation(ctx)
+        
+        } else if (ve.getType() instanceof TypeSemaphore) {
+        } else if (ve.getType() instanceof TypeBolt) {
+        } else if (t instanceof TypeDation) {
             ST specifyDation = null;
             ST initializer = null;
             TypeDation td = (TypeDation)t;
@@ -587,9 +603,9 @@ implements SmallPearlVisitor<ST> {
             ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
             specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
             specifyVariable.add("type",getSimpleType(t));
-            if (ve.getGlobalAttribute()!= null) {
-                specifyVariable.add("global",ve.getGlobalAttribute());
-            }
+//            if (ve.getGlobalAttribute()!= null) {
+//                specifyVariable.add("global",ve.getGlobalAttribute());
+//            }
             scope.add("variable", specifyVariable);
             dationSpecifications.add("decl",  scope);
         } else {
@@ -657,23 +673,24 @@ implements SmallPearlVisitor<ST> {
             }
             st.add("assignmentProtection", ve.getAssigmentProtection());
             st.add("totalNoOfElements", ((TypeArray) ve.getType()).getTotalNoOfElements());
-            st.add("initElements", getArrayInitialisationAttribute(ve));
+            st.add("initElements", getStructOrArrayInitializer(ve));
             return st; // only one id for arrays
         } else if (ve.getType() instanceof TypeStructure) {
             TypeDefinition td= ve.getType();
-            st = m_group.getInstanceOf("StructureVariableDeclaration");
-            st.add("name", ve.getName());
+            st = m_group.getInstanceOf("variable_denotation");
+            st.add("name", getUserVariableWithoutNamespace(ve.getName()));
             st.add("type",
                     visitTypeAttribute(ve.getType()));
-            //st.add("init", getInitialiser(i, ve));
+            
             if (ve.getInitializer()!= null) {
-                st.add("initElements", getArrayInitialisationAttribute(ve));
+                st.add("init", getStructOrArrayInitializer(ve));
                 // Log.warn("CppCodeGenerator@889: STRUCT+INIT incomplete");
             }
 
             st.add("inv", ve.getAssigmentProtection());
-            scalarVariableDeclaration.add("variable_denotations", st);
-            //return visitStructVariableDenotation(ctx);
+            scope.add("variable", st);
+            scalarVariableDeclaration.add("variable_denotations", scope);
+          
         } else if (isSimpleType(ve)) {
 
             st = m_group.getInstanceOf("variable_denotation");
@@ -856,51 +873,87 @@ implements SmallPearlVisitor<ST> {
         return st;
     }
 
-
-    private ST getArrayInitialisationAttribute(VariableEntry variableEntry) {
-        ST st = m_group.getInstanceOf("ArrayInitalisations");
-
-        ArrayList<ST> initElementList = new ArrayList<ST>();
-        int noOfElements = 0;
-        int noOfArrayElements = -1; 
-        try {
-            noOfArrayElements = ((TypeArray) variableEntry.getType()).getTotalNoOfElements();
-        } catch (ClassCastException e) {};
-        try {
-            noOfArrayElements = ((TypeStructure) variableEntry.getType()).getTotalNoOfElements();
-        } catch (ClassCastException e) {};
-        if (noOfArrayElements < 0) {
-            ErrorStack.addInternal("CppCodeGenerator@1086: nether Array nor Struct");
-        }
-        ArrayOrStructureInitializer initializer = (ArrayOrStructureInitializer)(variableEntry.getInitializer());
+    private ST getStructOrArrayInitializer(VariableEntry variableEntry) {
 
 
+        boolean fillWithLast = false;
         ST lastInitValue = null;
-        if (initializer== null) {
+        ArrayList<ST> initElementList = new ArrayList<ST>();
+        ST st = null;
 
-            return null;
-        }
-        int nbrOfInitializers = initializer.getInitElementList().size();
+        if (variableEntry.getInitializer() != null) { 
+            st =  m_group.getInstanceOf("structOrArrayInit");
 
-        for (int i = 0; i < nbrOfInitializers; i++) {
-            ParserRuleContext initCtx =
-                    initializer.getInitElementList().get(i).getContext();
-            ASTAttribute attr = m_ast.lookup(initCtx);
-            ST stValue = null;
-            stValue = m_group.getInstanceOf("expression");
-            stValue.add("code", attr.m_constant);
-            lastInitValue = stValue;
-            noOfElements++;
-            initElementList.add(stValue);
-        }
-        while (noOfElements < noOfArrayElements) {
-            noOfElements++;
-            initElementList.add(lastInitValue);
+            if (variableEntry.getType() instanceof TypeArray) {
+                fillWithLast = true;
+            }
 
+            ArrayOrStructureInitializer init = (ArrayOrStructureInitializer)(variableEntry.getInitializer());
+            ArrayList<Initializer> initList = init.getInitElementList();
+            for (int i=0; i<initList.size(); i++) {
+                ST stValue = m_group.getInstanceOf("expression");
+                stValue.add("code", ((SimpleInitializer)(initList.get(i))).getConstant() );
+                lastInitValue = stValue;
+                initElementList.add(stValue);
+            }
+            if (fillWithLast) {
+                // arrays may require repetition of the last init-value
+                int remainingInitializers = ((TypeArray)(variableEntry.getType())).getTotalNoOfElements();
+                remainingInitializers -= initList.size();
+                for (int i=0; i< remainingInitializers; i++) {
+                    initElementList.add(lastInitValue);
+                }
+            }
+
+            st.add("initElements", initElementList);
         }
-        st.add("initElements", initElementList);
         return st;
     }
+
+//    private ST getArrayInitialisationAttribute(VariableEntry variableEntry) {
+//        ST st = m_group.getInstanceOf("ArrayInitalisations");
+//
+//        ArrayList<ST> initElementList = new ArrayList<ST>();
+//        int noOfElements = 0;
+//        int noOfArrayElements = -1; 
+//        try {
+//            noOfArrayElements = ((TypeArray) variableEntry.getType()).getTotalNoOfElements();
+//        } catch (ClassCastException e) {};
+//        try {
+//            noOfArrayElements = ((TypeStructure) variableEntry.getType()).getTotalNoOfElements();
+//        } catch (ClassCastException e) {};
+//        if (noOfArrayElements < 0) {
+//            ErrorStack.addInternal("CppCodeGenerator@1086: nether Array nor Struct");
+//        }
+//        ArrayOrStructureInitializer initializer = (ArrayOrStructureInitializer)(variableEntry.getInitializer());
+//
+//
+//        ST lastInitValue = null;
+//        if (initializer== null) {
+//
+//            return null;
+//        }
+//        int nbrOfInitializers = initializer.getInitElementList().size();
+//
+//        for (int i = 0; i < nbrOfInitializers; i++) {
+//            ParserRuleContext initCtx =
+//                    initializer.getInitElementList().get(i).getContext();
+//            ASTAttribute attr = m_ast.lookup(initCtx);
+//            ST stValue = null;
+//            stValue = m_group.getInstanceOf("expression");
+//            stValue.add("code", attr.m_constant);
+//            lastInitValue = stValue;
+//            noOfElements++;
+//            initElementList.add(stValue);
+//        }
+//        while (noOfElements < noOfArrayElements) {
+//            noOfElements++;
+//            initElementList.add(lastInitValue);
+//
+//        }
+//        st.add("initElements", initElementList);
+//        return st;
+//    }
 
   
 
@@ -2028,7 +2081,18 @@ implements SmallPearlVisitor<ST> {
 
                 expression.add("id", generateLHS(ctx, m_currentSymbolTable));
             } else if (variable.getType() instanceof TypeStructure) {
-                expression.add("id", generateLHS(ctx, m_currentSymbolTable));
+                ST temp = generateLHS(ctx, m_currentSymbolTable);
+                if (variable.isSpecified()) {
+                    String fromModule = variable.getGlobalAttribute();
+                    if (!fromModule.equals(m_module.getName())) {
+                        ST fromns=m_group.getInstanceOf("fromNamespace");
+                        fromns.add("fromNs", fromModule);
+                        fromns.add("name",temp);
+                        expression.add("id", fromns);
+                    }
+                }    else {    
+                   expression.add("id", temp);
+                }
             } else {
                 expression.add("id", getUserVariable(variable)); //getUserVariable(ctx.ID().getText()));
             }
@@ -3294,8 +3358,13 @@ implements SmallPearlVisitor<ST> {
                                         m_group.getInstanceOf("variable_denotation");
                                 variable_declaration.add("name", "tempVar" + i);
                                 variable_declaration.add("type", t);
-                                variable_declaration.add("init",
-                                        visitAndDereference(ctx.ioListElement(i).expression()));
+                            
+                                ST stValue = m_group.getInstanceOf("expression");
+                                stValue.add("code", visitAndDereference(ctx.ioListElement(i).expression()));
+                                ST stInit = m_group.getInstanceOf("variable_init");
+                                stInit.add("value",stValue);
+                                variable_declaration.add("init",stInit);
+                                        //visitAndDereference(ctx.ioListElement(i).expression()));
                                 //variable_declaration.add("no_decoration", 1);
                                 dataList.add("data_variable", variable_declaration);
                                 dataList.add("data_index", i);
@@ -3743,7 +3812,10 @@ implements SmallPearlVisitor<ST> {
         if (user_variable.isSpecified()) {
             String fromModule = user_variable.getGlobalAttribute();
             if (!fromModule.equals(m_module.getName())) {
-               st.add("fromNs", fromModule);
+                ST fromns=m_group.getInstanceOf("fromNamespace");
+                fromns.add("fromNs", fromModule);
+                fromns.add("name",st);
+                return fromns;
             }
         }
         

@@ -102,4 +102,9 @@ public class ConstantFloatValue extends ConstantValue
         return m_value.compareTo(other.m_value);
     }
 
+    @Override
+    public TypeDefinition getType() {
+        return new TypeFloat(m_precision);
+    }
+
 }

@@ -31,6 +31,8 @@ package org.smallpearl.compiler.SymbolTable;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.smallpearl.compiler.*;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -277,7 +279,7 @@ public class SymbolTable {
                 listOfTaskEntries.add(taskEntry);
             }
         }
-
+         
         return listOfTaskEntries;
     }
 
@@ -285,18 +287,18 @@ public class SymbolTable {
         LinkedList<VariableEntry> listOfVariableDeclarationsEntries =
                 new LinkedList<VariableEntry>();
         
-        for (Iterator<SymbolTableEntry> it = m_currentSymbolTable.m_entries.values().iterator(); it.hasNext();) {
+        for (Iterator<SymbolTableEntry> it = scope.m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry ste = it.next();
             if (ste instanceof VariableEntry) {
                 listOfVariableDeclarationsEntries.add((VariableEntry)ste);
             } else if (ste instanceof TaskEntry) {
-                listOfVariableDeclarationsEntries.addAll(getAllArrayDeclarations(((TaskEntry)ste).scope));
+                listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(((TaskEntry)ste).scope));
             } else if (ste instanceof LoopEntry) {
-                listOfVariableDeclarationsEntries.addAll(getAllArrayDeclarations(((LoopEntry)ste).scope));
+                listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(((LoopEntry)ste).scope));
             } else if (ste instanceof BlockEntry) {
-                listOfVariableDeclarationsEntries.addAll(getAllArrayDeclarations(((BlockEntry)ste).scope));
+                listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(((BlockEntry)ste).scope));
             } else if (ste instanceof ProcedureEntry) {
-                listOfVariableDeclarationsEntries.addAll(getAllArrayDeclarations(((ProcedureEntry)ste).scope));
+                listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(((ProcedureEntry)ste).scope));
             } 
             
         }
@@ -305,6 +307,7 @@ public class SymbolTable {
     }
   
     public LinkedList<VariableEntry> getAllVariableDeclarations() {
+        SymbolTable saveSymbolTable = m_currentSymbolTable;
         m_currentSymbolTable = this;
         LinkedList<VariableEntry> listOfVariableDeclarationsEntries =
                 new LinkedList<VariableEntry>();
@@ -317,10 +320,27 @@ public class SymbolTable {
                 m_currentSymbolTable = parent;
             }
         }
+        m_currentSymbolTable = saveSymbolTable;
+        Collections.sort( listOfVariableDeclarationsEntries, new SortByContext());        
         return listOfVariableDeclarationsEntries;
     }
     
-
+    class SortByContext implements Comparator<VariableEntry> {
+        @Override
+        public int compare(VariableEntry arg0, VariableEntry arg1) {
+            int result =0;
+            if (arg0.getCtx() == null || arg1.getCtx() == null) {
+                ErrorStack.addInternal(null, "SymbolTable::SortbyContext","context is null");
+                return 0;
+            }
+            result = arg0.getCtx().start.getLine() - arg1.getCtx().start.getLine();
+            if (result == 0) {
+                result = arg0.getCtx().start.getCharPositionInLine() - arg1.getCtx().start.getCharPositionInLine();
+            }
+            return result;
+        }
+        
+    }
     public LinkedList<VariableEntry> getVariableDeclarations() {
         LinkedList<VariableEntry> listOfVariableDeclarationsEntries =
                 new LinkedList<VariableEntry>();

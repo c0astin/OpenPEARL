@@ -32,6 +32,7 @@ group smallpearl;
 /****************************************************************************/
 
 Prologue( src,
+          name,
           headerfiles,
           namespaces,
           taskSpecifierList,
@@ -62,8 +63,11 @@ static const char* filename = (char*) "<src>";
 /////////////////////////////////////////////////////////////////////////////
 <taskSpecifierList>
 <endif>
+}
 
 <if(StructureForwardDeclarationList)>
+
+
 /////////////////////////////////////////////////////////////////////////////
 // STRUCTURE FORWARD DECLARATIONS
 /////////////////////////////////////////////////////////////////////////////
@@ -76,6 +80,8 @@ static const char* filename = (char*) "<src>";
 /////////////////////////////////////////////////////////////////////////////
 <StructureDeclarationList>
 <endif>
+
+namespace ns_<name> {
 
 >>
 
@@ -314,29 +320,26 @@ ProblemPart(ScalarVariableDeclarations,
 /*********************** VARIABLE DECLARATION ***********************/
 // renamed variable_declaration to variable_denotation and
 // used for declaration and  specification
-variable_denotation(name,type,init,isGlobal,global,inv) ::= <%
+variable_denotation(name,type,init,inv) ::= <%
 
 <if(inv)>const  <endif><type>  <name> 
-<if(init)>(<variable_init(init)>)<endif>
+<if(init)><init><endif>
 ;
 
 %>
-
-/* obsolete rm 2021-10-24
-variable_specification(name,type,global,inv,no_decoration) ::= <<
-
-extern <if(inv)>const  <endif><type>  <if(no_decoration)><name><else><variable(name)><endif>;
-
->>
-*/
 
 variable(name) ::= <<
 <user_variable(name)>
 >>
 
 variable_init(value) ::= <<
-<value>
+(<value>)
 >>
+
+structOrArrayInit(initElements) ::= <<
+ = <StructOrArrayInitalisations(initElements)>
+>>
+
 
 /*********************** TYPE DEFINITION ***********************/
 
@@ -1573,10 +1576,13 @@ user_procedure(name) ::= <%
 %>
 
 
-user_variable(name,fromNs) ::= <%
-	<if(fromNs)>ns_<fromNs>::<endif>_<name>
+user_variable(name) ::= <%
+	_<name>
 %>
 
+fromNamespace(name,fromNs) ::= <%
+	<if(fromNs)>ns_<fromNs>::<endif><name>
+%>
 
 user_label(name) ::= <%
     _<name>
@@ -1828,7 +1834,7 @@ ArrayVariableDeclarations(declarations) ::= <<
 >>
 
 ArrayVariableDeclaration(name,type,assignmentProtection,totalNoOfElements,initElements) ::= <%
-<type> data_<name>[<totalNoOfElements>]<if(initElements)> = <initElements><endif>;<\n>
+<type> data_<name>[<totalNoOfElements>]<if(initElements)> <initElements><endif>;<\n>
 %>
 
 ArrayDescriptors(descriptors) ::= <<
@@ -1876,7 +1882,7 @@ ArrayIndex(index) ::= <<
 >>
 
 
-ArrayInitalisations(initElements)::= <%{<initElements: {initElement|<initElement>} ; separator=",">}
+StructOrArrayInitalisations(initElements)::= <%{<initElements: {initElement|<initElement>} ; separator=",">}
 %>
 
 ArrayLWB(descriptor,index) ::= <%
@@ -2027,9 +2033,11 @@ struct <name> {<\n>
 };<\n>
 %>
 
+/* deprecated
 StructureVariableDeclaration(name,inv,type,initElements) ::= <%
 <if(inv)> const <endif><type>  <user_variable(name)> <if(initElements)> = <initElements><endif>;<\n>
 %>
+*/
 
 StructComponentDeclaration(name,TypeAttribute) ::= <<
    <TypeAttribute> <name>;<\n>

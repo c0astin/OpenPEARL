@@ -71,7 +71,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
     private ST problemPart = null;
     private ST tfuUsage = null;
     private boolean m_useNamespaceForGlobals;
-    private String m_thisNamespace;
+
 
 
     public SystemPartExporter(String sourceFileName, int verbose, boolean debug,
@@ -106,10 +106,11 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
         module.add("sourcefile", m_sourceFileName);
         module.add("name", ctx.nameOfModuleTaskProc().ID().getText());
         if (m_useNamespaceForGlobals) {
-            m_thisNamespace = ctx.nameOfModuleTaskProc().ID().getText();
+            module.add("standard", "-std=OpenPEARL");
         } else {
-            m_thisNamespace = "pearlApp";
+            module.add("standard", "-std=PEARL90");
         }
+
         org.smallpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry =
                 m_currentSymbolTable.lookupLocal(ctx.nameOfModuleTaskProc().ID().getText());
         m_currentSymbolTable = ((ModuleEntry) symbolTableEntry).scope;
@@ -149,7 +150,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
     @Override
     public ST visitSystemElementDefinition(SmallPearlParser.SystemElementDefinitionContext ctx) {
         ST decl = group.getInstanceOf("SystemElementDefinition");
-        
+
         decl.add("username", ctx.systemPartName().getText());
         decl.add("lineno", ctx.start.getLine());
         decl.add("col", ctx.start.getCharPositionInLine() + 1);
@@ -258,7 +259,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
             interruptSpecification.add("name", v.getName());
             if (m_useNamespaceForGlobals) {
                 interruptSpecification.add("fromNamespace", v.getGlobalAttribute());
-            }
+            } 
             problemPart.add("decls", interruptSpecification);
         }
     }
@@ -275,10 +276,10 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
                 if (!t.isSystemDation()) {
                     // user dation
                     treatTfuStuff(v);
-                    if (t.getGlobal()!=null) {
-                      dation = treatDationSpcDclCommonStuff(v);
-                    }
-                 
+                    //if (t.getGlobal()!=null) {
+                        dation = treatDationSpcDclCommonStuff(v);
+                    //}
+
                 } else {
                     // system dation
                     dation = treatDationSpcDclCommonStuff(v);
@@ -295,14 +296,18 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
                         st = group.getInstanceOf("Declaration");
                     } 
                 }
-                
+
                 // st is null, if DCL without global -> skip this for the IMC
                 if (st == null) continue;
                 st.add("lineno", v.getSourceLineNo());
                 st.add("col",v.getCharPositionInLine());
                 st.add("name", v.getName());
-                st.add("type", v.getType());
-                if (m_useNamespaceForGlobals && v.getGlobalAttribute() != null) {
+                if (v.getType() instanceof TypeStructure) {
+                    st.add("type",((TypeStructure)(v.getType())).getName());
+                } else {
+                    st.add("type", v.getType());
+                }
+                if (v.getGlobalAttribute() != null) {
                     st.add("fromNamespace", v.getGlobalAttribute());
                 }
                 problemPart.add("decls",  st);
@@ -317,10 +322,13 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
 
     private ST treatDationSpcDclCommonStuff(VariableEntry v) {
         // system dation
-        
+        Boolean isSystemDation = false;
+        Boolean isSpecification = false;
+
         ST dation = null;
         if (v.isSpecified()) {
             dation = group.getInstanceOf("DationSpecification");
+            isSpecification = true;
         } else {
             dation = group.getInstanceOf("DationDeclaration");
         }
@@ -328,70 +336,144 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
         dation.add("lineno", v.getCtx().start.getLine());
         dation.add("col", v.getCtx().start.getCharPositionInLine() + 1);
         dation.add("name", v.getName());
-        if (m_useNamespaceForGlobals ) {
+        if (v.getGlobalAttribute()!= null) {
             dation.add("fromNamespace", v.getGlobalAttribute());
-        }
+         }
+
 
         TypeDation td = (TypeDation) (v.getType());
-        dation.add("isBasic", td.isBasic());
         ST datalist = group.getInstanceOf("DataList");
         ST attributes = group.getInstanceOf("Attributes");
-        
+        if (td.isBasic()) {
+            ST attribute = group.getInstanceOf("Attribute");
+            attribute.add("name", "BASIC");
+            attributes.add("attributes", attribute);
+        }
+
 
         ST data = group.getInstanceOf("Data");
         data.add("name", td.getDataAsString());
         datalist.add("data", data);
-
         dation.add("datalist", datalist);
 
-        // add attributes: td.getTypeAsString delivers attributes as space separated list
-        String attr = td.getTypeAsString();
-        String attrs[] = attr.split(" ");
-        for (String a : attrs) {
+        if (td.isIn() && td.isOut()) {
             ST attribute = group.getInstanceOf("Attribute");
-            attribute.add("name", a);
+            attribute.add("name", "INOUT");
             attributes.add("attributes", attribute);
+        } else if (td.isIn()) {
+            ST attribute = group.getInstanceOf("Attribute");
+            attribute.add("name", "IN");
+            attributes.add("attributes", attribute);
+        } else if (td.isOut()) {
+            ST attribute = group.getInstanceOf("Attribute");
+            attribute.add("name", "OUT");
+            attributes.add("attributes", attribute);
+        }
+        if (td.isSystemDation()) {
+            ST attribute = group.getInstanceOf("Attribute");
+            attribute.add("name", "SYSTEM");
+            attributes.add("attributes", attribute);
+            isSystemDation = true;
+        }
+        if (td.isDirect()) {
+            ST attribute = group.getInstanceOf("Attribute");
+            attribute.add("name", "DIRECT");
+            attributes.add("attributes", attribute);
+        }
+        if (td.isForward()) {
+            ST attribute = group.getInstanceOf("Attribute");
+            attribute.add("name", "FORWARD");
+            attributes.add("attributes", attribute);
+        }
+        
+        if (!isSystemDation) {
+            // these attributes are only expected by the IMC for user dations
+            if (td.isCyclic()) {
+                ST attribute = group.getInstanceOf("Attribute");
+                attribute.add("name", "CYCLIC");
+                attributes.add("attributes", attribute);
+            } else {
+                ST attribute = group.getInstanceOf("Attribute");
+                attribute.add("name", "NOCYCL");
+                attributes.add("attributes", attribute);
+            }
+            
+            if (td.isStream()) {
+                ST attribute = group.getInstanceOf("Attribute");
+                attribute.add("name", "STREAM");
+                attributes.add("attributes", attribute);
+            } else {
+                ST attribute = group.getInstanceOf("Attribute");
+                attribute.add("name", "NOSTREAM");
+                attributes.add("attributes", attribute);
+            }
+
+            if (td.hasTypology()) {
+                String dim = "DIM(";
+                if (td.getDimension1()>0) dim+=td.getDimension1();
+                if (td.getDimension1()==-1) dim+= '*'; 
+                if (td.getDimension2()>0) dim+= ","+td.getDimension2();
+                if (td.getDimension2()==-1) dim+= ",*";
+                if (td.getDimension3()>0) dim+= "," +td.getDimension3();
+                if (td.getDimension3()==0) dim+= ",*";
+                dim+= ")";
+                ST attribute = group.getInstanceOf("Attribute");
+                attribute.add("name", dim);
+                attributes.add("attributes", attribute);
+                if (td.hasTfu()) {
+                   attribute = group.getInstanceOf("Attribute");
+                   attribute.add("name", "TFU");
+                   attributes.add("attributes", attribute);
+                }
+            }
+            
         }
         dation.add("attributes", attributes);
         return dation;
     }
-    
+
     private void treatTfuStuff(VariableEntry v) {
         TypeDation d = (TypeDation) v.getType();
+
+        if ((! d.isSystemDation()) && d.getCreatedOn() == null) {
+            // SPC of user dation -- imc should check in defining module
+            return;
+        }
 
         ST tfuInUserDation = group.getInstanceOf("TfuInUserDation");
         tfuInUserDation.add("lineno", v.getSourceLineNo());
         tfuInUserDation.add("col", v.getCharPositionInLine() + 1);
 
         tfuInUserDation.add("userdation", v.getName());
-        
-        if (d.hasTfu() ) {
-            if (d.getCreatedOn() != null) {
-               tfuInUserDation.add("systemdation", d.getCreatedOn().getName());
-            }
-            // already checked, that the last dimension is const > 0
-            // get last defined dimension
-            int recordLength = d.getDimension3();
-            if (recordLength < 0)
-                recordLength = d.getDimension2();
-            if (recordLength < 0)
-                recordLength = d.getDimension1();
 
-            // detect element size if not ALPHIC or ALL
-            if (d.getTypeOfTransmission() != null) {
-                if (!d.getTypeOfTransmission().contentEquals("ALL")) {
-                    recordLength *= d.getTypeOfTransmissionAsType().getSize();
-                }
-                // getSize returns -1, if the size is unknown to the compiler
-                // the test od sufficient record size must be done at runtime
-                // indicate this which recordLength=0
-                if (recordLength < 0) {
-                    recordLength = 0;
-                }
-            }
-            tfuInUserDation.add("tfusize", recordLength);
-            tfuUsage.add("decls", tfuInUserDation);
+        if (d.getCreatedOn() != null) {
+            tfuInUserDation.add("systemdation", d.getCreatedOn().getName());
         }
+        // already checked, that the last dimension is const > 0
+        // get last defined dimension
+        int recordLength = d.getDimension3();
+        if (recordLength < 0)
+            recordLength = d.getDimension2();
+        if (recordLength < 0)
+            recordLength = d.getDimension1();
+
+        // detect element size if not ALPHIC or ALL
+        if (d.getTypeOfTransmission() != null) {
+            if (!d.getTypeOfTransmission().contentEquals("ALL")) {
+                recordLength *= d.getTypeOfTransmissionAsType().getSize();
+            }
+            // getSize returns -1, if the size is unknown to the compiler
+            // the test od sufficient record size must be done at runtime
+            // indicate this which recordLength=0
+            if (recordLength < 0) {
+                recordLength = 0;
+            }
+        }
+        if (d.hasTfu() ) {
+            tfuInUserDation.add("tfusize", recordLength);
+        }
+
+        tfuUsage.add("decls", tfuInUserDation);
     }
 
 }
