@@ -32,36 +32,26 @@ package org.smallpearl.compiler;
 public class ConstantBitValue extends ConstantValue 
        implements Comparable<ConstantBitValue> {
     private long m_value;
-    private int m_no;
     private int m_noOfBits;
-
 
     public ConstantBitValue(long value, int noOfBits) {
         m_noOfBits = noOfBits;
         m_value = value;
     }
 
-
-    public void setNo(int no) { m_no = no; }
-
     public int getLength() { return m_noOfBits; }
-
     public long getLongValue() {
         return m_value;
     }
-
     public String getValue() {
         return formatBitStringConstant(m_value,m_noOfBits);
     }
-
     public String getBaseType() {
         return "BitString";
     }
 
     public String toString() {
-//        String name = "CONSTANT_" + getBaseType().toUpperCase();
-//        name += "_" + m_value.length() + "_" + canonicalize(m_value);
-        String name = "CONST_BITSTRING_" + m_no;
+        String name = "CONST_BITSTRING_" +  m_noOfBits + "_" + canonicalize(Long.toHexString(m_value));
         return name;
     }
 
@@ -142,10 +132,8 @@ public class ConstantBitValue extends ConstantValue
         return Long.compare(m_value, other.m_value);
     }
 
-
     @Override
     public TypeDefinition getType() {
-        // TODO Auto-generated method stub
         return new TypeBit(m_noOfBits);
     }
 

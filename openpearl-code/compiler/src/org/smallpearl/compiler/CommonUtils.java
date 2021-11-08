@@ -1131,8 +1131,8 @@ public class CommonUtils {
             }
         }
 
-
         ConstantDurationValue c = null;
+
         try {
             c = new ConstantDurationValue(hours, minutes, seconds, sign);
         } catch (ArithmeticException e) {
