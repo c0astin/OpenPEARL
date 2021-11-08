@@ -6,32 +6,9 @@ SYSTEM;
 ! denotes the maximum number of simultaneous open files
 disc: Disc('/tmp/' ,10);
 
-/* expected C++ code  
-__cpp__(
-     ' // system decl'
-     'static pearlrt::Disc s_disc("/tmp/", 10);'
-     'pearlrt::Device * d_disc = & s_disc;'
-);
-*/
-
-/* expected c++ code from SPC in problem part
-__cpp__(
-     ' // problem  decl in system part'
-    'extern pearlrt::Device *d_disc;'
-    'static pearlrt::SystemDationNB *_disc = '
-    '      static_cast<pearlrt::SystemDationNB*>(d_disc);'
-);
-  */
-
 PROBLEM;
    SPC disc DATION INOUT SYSTEM ALL;
-/*__cpp__(
-     ' // problem  decl in problem part'
-    'extern pearlrt::Device *d_disc;'
-    'static pearlrt::SystemDationNB *_disc = '
-    '      static_cast<pearlrt::SystemDationNB*>(d_disc);'
-);
-*/ 
+
 ! different dimensions
    DCL tableAlphicForward3 DATION OUT ALPHIC DIM(10,10,10) FORWARD
              CREATED(disc);
@@ -69,9 +46,9 @@ PROBLEM;
              CREATED(disc);
 
 ! different types
-!   DCL tableAlphic DATION OUT ALPHIC DIM(10,10,10)
-!		 DIRECT CYCLIC STREAM 
-!             CREATED(disc);
+   DCL tableAll DATION OUT ALL DIM(10,10,10)
+		 DIRECT CYCLIC STREAM 
+              CREATED(disc);
    DCL tableFIXED15 DATION OUT FIXED(15) DIM(10,10,10)
 		 DIRECT CYCLIC 
              CREATED(disc);
