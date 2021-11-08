@@ -34,6 +34,7 @@ import org.smallpearl.compiler.ConstantFixedValue;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 public class BitOperations {
 
@@ -251,10 +252,20 @@ public class BitOperations {
                     fromResult = otherFrom;
                     toResult = to;
                 }
+
+
+                int fromMaxLength = 0;
+                if(range.getFrom().getLength() > fromMaxLength) fromMaxLength = range.getFrom().getLength();
+                if(range.getTo().getLength() > fromMaxLength) fromMaxLength = range.getTo().getLength();
+
+                int toMaxLength = 0;
+                if(other.getFrom().getLength() > toMaxLength) toMaxLength = other.getFrom().getLength();
+                if(other.getTo().getLength() > toMaxLength) toMaxLength = other.getTo().getLength();
+
                 if (fromResult != null) {
                     result.add(new VariableValueRange<>(
-                            new ConstantBitValue(fromResult, 64),
-                            new ConstantBitValue(toResult, 64)
+                            new ConstantBitValue(fromResult, fromMaxLength),
+                            new ConstantBitValue(toResult, toMaxLength)
                     ));
                 }
             });
@@ -375,9 +386,7 @@ public class BitOperations {
     private static boolean hasTrue(Set<VariableValueRange<ConstantBitValue>> ranges) {
         boolean hasTrue = false;
         for(VariableValueRange<ConstantBitValue> range : ranges) {
-            if (range.getFrom().getLength() != 1 || range.getTo().getLength() != 1)
-                throw new IllegalArgumentException("range has more then one bit");
-            else if(range.getFrom().getLongValue() > 0L || range.getTo().getLongValue() > 0L) hasTrue = true;
+            if(range.getFrom().getLongValue() > 0L || range.getTo().getLongValue() > 0L) hasTrue = true;
         }
         return hasTrue;
     }
@@ -386,9 +395,7 @@ public class BitOperations {
         boolean hasFalse = false;
         if(ranges.size() == 0) return true;
         for(VariableValueRange<ConstantBitValue> range : ranges) {
-            if (range.getFrom().getLength() != 1 || range.getTo().getLength() != 1)
-                throw new IllegalArgumentException("range has more then one bit");
-            else if(range.getFrom().getLongValue() == 0L || range.getTo().getLongValue() == 0L) hasFalse = true;
+            if(range.getFrom().getLongValue() == 0L || range.getTo().getLongValue() == 0L) hasFalse = true;
         }
         return hasFalse;
     }
@@ -411,6 +418,74 @@ public class BitOperations {
             ));
             if(to == Long.MAX_VALUE) return result;
             current = to + 1;
+        }
+        result.add(new VariableValueRange<>(
+                new ConstantBitValue(current, 64),
+                new ConstantBitValue(Long.MAX_VALUE, 64)
+        ));
+        return result;
+    }
+
+    public static Set<VariableValueRange<ConstantBitValue>> h_less(Set<VariableValueRange<ConstantBitValue>> ranges) {
+        Set<Long> values = ranges.stream().map(range -> range.getTo().getLongValue()).collect(Collectors.toSet());
+        Set<Integer> amountBit = ranges.stream().map(range -> range.getTo().getLength()).collect(Collectors.toSet());
+
+        long largest = FixedOperations.getLargest(values);
+        int largestAmountBit = FixedOperations.getLargest(amountBit);
+        return new HashSet<>(Collections.singletonList(new VariableValueRange<>(
+                new ConstantBitValue(0, largestAmountBit),
+                new ConstantBitValue(largest-1, largestAmountBit)
+        )));
+    }
+
+    public static Set<VariableValueRange<ConstantBitValue>> h_greater(Set<VariableValueRange<ConstantBitValue>> ranges) {
+        Set<Long> values = ranges.stream().map(range -> range.getFrom().getLongValue()).collect(Collectors.toSet());
+
+        long smallest = FixedOperations.getSmallest(values);
+        return new HashSet<>(Collections.singletonList(new VariableValueRange<>(
+                new ConstantBitValue(smallest+1, 64),
+                new ConstantBitValue(Long.MAX_VALUE, 64)
+        )));
+    }
+
+    public static Set<VariableValueRange<ConstantBitValue>> h_lessEqual(Set<VariableValueRange<ConstantBitValue>> ranges) {
+        Set<Long> values = ranges.stream().map(range -> range.getTo().getLongValue()).collect(Collectors.toSet());
+        Set<Integer> amountBit = ranges.stream().map(range -> range.getTo().getLength()).collect(Collectors.toSet());
+
+        long largest = FixedOperations.getLargest(values);
+        int largestAmountBit = FixedOperations.getLargest(amountBit);
+        return new HashSet<>(Collections.singletonList(new VariableValueRange<>(
+                new ConstantBitValue(0, largestAmountBit),
+                new ConstantBitValue(largest, largestAmountBit)
+        )));
+    }
+
+    public static Set<VariableValueRange<ConstantBitValue>> h_greaterEqual(Set<VariableValueRange<ConstantBitValue>> ranges) {
+        Set<Long> values = ranges.stream().map(range -> range.getFrom().getLongValue()).collect(Collectors.toSet());
+
+        long smallest = FixedOperations.getSmallest(values);
+        return new HashSet<>(Collections.singletonList(new VariableValueRange<>(
+                new ConstantBitValue(smallest, 64),
+                new ConstantBitValue(Long.MAX_VALUE, 64)
+        )));
+    }
+
+    public static Set<VariableValueRange<ConstantBitValue>> h_notEqual(Set<VariableValueRange<ConstantBitValue>> ranges) {
+        Set<VariableValueRange<ConstantBitValue>> result = new HashSet<>();
+        List<VariableValueRange<ConstantBitValue>> sortedList = new ArrayList<>(removeDuplicate(ranges));
+        sortedList.sort(Comparator.comparing(VariableValueRange::getFrom));
+        long current = 0;
+        for(VariableValueRange<ConstantBitValue> range : sortedList) {
+            if(current == range.getFrom().getLongValue()) {
+                current = range.getTo().getLongValue() + 1;
+                continue;
+            };
+            result.add(new VariableValueRange<>(
+                    new ConstantBitValue(current, 64),
+                    new ConstantBitValue(range.getFrom().getLongValue() - 1, 64)
+            ));
+            if(range.getTo().getLongValue() == Long.MAX_VALUE) return result;
+            current = range.getTo().getLongValue() + 1;
         }
         result.add(new VariableValueRange<>(
                 new ConstantBitValue(current, 64),

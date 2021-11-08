@@ -108,18 +108,12 @@ public class FloatVariableValue extends VariableValue<ConstantFloatValue> implem
 
     @Override
     public Operations negate() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations abs() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
@@ -168,265 +162,168 @@ public class FloatVariableValue extends VariableValue<ConstantFloatValue> implem
 
     @Override
     public Operations round() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations sqrt() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations sin() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations cos() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations e_exp() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations ln() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations tan() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations atan() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations tanh() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeof() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeofMax() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeofLength() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations add(Operations other) {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations sub(Operations other) {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations mul(Operations other) {
-        if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new DurationVariableValue(new VariableValueRange<>(
-                    new ConstantDurationValue(0L, 0, 0.),
-                    new ConstantDurationValue(3600, 60, 60.0)
-            ));
+        if(other instanceof FixedVariableValue) {
+            return new FixedVariableValue(FixedVariableValue.defaultValue());
         }
-        else {
-            return new FloatVariableValue(new VariableValueRange<>(
-                    new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                    new ConstantFloatValue(Double.MAX_VALUE, 52)
-            ));
+        else if(other instanceof FloatVariableValue){
+            return new FloatVariableValue(FloatVariableValue.defaultValue());
         }
+        else throw new NotImplementedException();
     }
 
     @Override
     public Operations div(Operations other) {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations exp(Operations other) {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations fit(Operations other) {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MIN_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations less(Operations other) {
-        return new BitVariableValue(
-                Arrays.asList(
-                        new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                        new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                ));
+        return new BitVariableValue(BitVariableValue.defaultBoolValue());
     }
 
     @Override
     public Operations greater(Operations other) {
-        return new BitVariableValue(
-                Arrays.asList(
-                        new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                        new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                ));
+        return new BitVariableValue(BitVariableValue.defaultBoolValue());
     }
 
     @Override
     public Operations lessEqual(Operations other) {
-        return new BitVariableValue(
-                Arrays.asList(
-                        new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                        new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                ));
+        return new BitVariableValue(BitVariableValue.defaultBoolValue());
     }
 
     @Override
     public Operations greaterEqual(Operations other) {
-        return new BitVariableValue(
-                Arrays.asList(
-                        new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                        new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                ));
+        return new BitVariableValue(BitVariableValue.defaultBoolValue());
     }
 
     @Override
     public Operations equal(Operations other) {
-        return new BitVariableValue(
-                Arrays.asList(
-                        new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                        new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                ));
+        return new BitVariableValue(BitVariableValue.defaultBoolValue());
     }
 
     @Override
     public Operations notEqual(Operations other) {
-        return new BitVariableValue(
-                Arrays.asList(
-                        new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                        new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                ));
+        return new BitVariableValue(BitVariableValue.defaultBoolValue());
     }
 
     @Override
     public Operations h_less() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations h_greater() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations h_lessEqual() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations h_greaterEqual() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations h_notEqual() {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations h_and(Operations other) {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override
     public Operations h_or(Operations other) {
-        return new FloatVariableValue(new VariableValueRange<>(
-                new ConstantFloatValue(-Double.MAX_VALUE, 52),
-                new ConstantFloatValue(Double.MAX_VALUE, 52)
-        ));
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_xor(Operations other) {
+        return new FloatVariableValue(FloatVariableValue.defaultValue());
     }
 
     @Override

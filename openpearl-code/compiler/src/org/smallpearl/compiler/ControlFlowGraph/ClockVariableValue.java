@@ -88,36 +88,23 @@ public class ClockVariableValue extends VariableValue<ConstantClockValue> implem
 
     @Override
     public Operations sizeof() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeofMax() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeofLength() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations add(Operations other) {
         if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new ClockVariableValue(new VariableValueRange<>(
-                    new ConstantClockValue(0, 0, 0.),
-                    new ConstantClockValue(Integer.MAX_VALUE, Integer.MAX_VALUE, Double.MAX_VALUE)
-            ));
+            return new ClockVariableValue(ClockVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -125,18 +112,10 @@ public class ClockVariableValue extends VariableValue<ConstantClockValue> implem
     @Override
     public Operations sub(Operations other) {
         if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new ClockVariableValue(new VariableValueRange<>(
-                    new ConstantClockValue(0, 0, 0.),
-                    new ConstantClockValue(Integer.MAX_VALUE, Integer.MAX_VALUE, Double.MAX_VALUE)
-            ));
+            return new ClockVariableValue(ClockVariableValue.defaultValue());
         }
         else if(other instanceof ClockVariableValue) {
-            ClockVariableValue o = (ClockVariableValue) other;
-            return new ClockVariableValue(new VariableValueRange<>(
-                    new ConstantClockValue(0, 0, 0.),
-                    new ConstantClockValue(Integer.MAX_VALUE, Integer.MAX_VALUE, Double.MAX_VALUE)
-            ));
+            return new DurationVariableValue(DurationVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -144,12 +123,7 @@ public class ClockVariableValue extends VariableValue<ConstantClockValue> implem
     @Override
     public Operations less(Operations other) {
         if(other instanceof ClockVariableValue) {
-            ClockVariableValue o = (ClockVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -157,12 +131,7 @@ public class ClockVariableValue extends VariableValue<ConstantClockValue> implem
     @Override
     public Operations greater(Operations other) {
         if(other instanceof ClockVariableValue) {
-            ClockVariableValue o = (ClockVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -170,12 +139,7 @@ public class ClockVariableValue extends VariableValue<ConstantClockValue> implem
     @Override
     public Operations lessEqual(Operations other) {
         if(other instanceof ClockVariableValue) {
-            ClockVariableValue o = (ClockVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -183,12 +147,7 @@ public class ClockVariableValue extends VariableValue<ConstantClockValue> implem
     @Override
     public Operations greaterEqual(Operations other) {
         if(other instanceof ClockVariableValue) {
-            ClockVariableValue o = (ClockVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -196,12 +155,7 @@ public class ClockVariableValue extends VariableValue<ConstantClockValue> implem
     @Override
     public Operations equal(Operations other) {
         if(other instanceof ClockVariableValue) {
-            ClockVariableValue o = (ClockVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -209,12 +163,7 @@ public class ClockVariableValue extends VariableValue<ConstantClockValue> implem
     @Override
     public Operations notEqual(Operations other) {
         if(other instanceof ClockVariableValue) {
-            ClockVariableValue o = (ClockVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -232,17 +181,41 @@ public class ClockVariableValue extends VariableValue<ConstantClockValue> implem
 
     @Override
     public Operations h_and(Operations other) {
-        return new ClockVariableValue(new VariableValueRange<>(
-                new ConstantClockValue(0, 0, 0.),
-                new ConstantClockValue(Integer.MAX_VALUE, Integer.MAX_VALUE, Double.MAX_VALUE)
-        ));
+        return new ClockVariableValue(ClockVariableValue.defaultValue());
     }
 
     @Override
     public Operations h_or(Operations other) {
-        return new ClockVariableValue(new VariableValueRange<>(
-                new ConstantClockValue(0, 0, 0.),
-                new ConstantClockValue(Integer.MAX_VALUE, Integer.MAX_VALUE, Double.MAX_VALUE)
-        ));
+        return new ClockVariableValue(ClockVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_xor(Operations other) {
+        return new ClockVariableValue(ClockVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_less() {
+        return new ClockVariableValue(ClockVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_greater() {
+        return new ClockVariableValue(ClockVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_lessEqual() {
+        return new ClockVariableValue(ClockVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_greaterEqual() {
+        return new ClockVariableValue(ClockVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_notEqual() {
+        return new ClockVariableValue(ClockVariableValue.defaultValue());
     }
 }

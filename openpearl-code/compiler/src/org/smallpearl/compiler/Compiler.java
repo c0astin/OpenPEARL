@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.*;
 import org.smallpearl.compiler.ControlFlowGraph.ControlFlowGraph;
 import org.smallpearl.compiler.ControlFlowGraph.ControlFlowGraphGenerate;
 import org.smallpearl.compiler.ControlFlowGraph.ControlFlowGraphNode;
+import org.smallpearl.compiler.ControlFlowGraph.NotImplementedException;
 import org.smallpearl.compiler.SemanticAnalysis.CheckUnreachableStatements;
 import org.stringtemplate.v4.*;
 
@@ -233,11 +234,13 @@ public class Compiler {
                         procedureMap.put("NOW", null); // add predefined procedures
                         procedureMap.put("DATE", null);
                         cfgs.forEach(cfg -> {
+                      
                             ControlFlowGraphNode node = cfg.getEntryNode();
                             if(node.getCtx() instanceof SmallPearlParser.ProcedureDeclarationContext) {
                                 SmallPearlParser.ProcedureDeclarationContext procCtx = (SmallPearlParser.ProcedureDeclarationContext) node.getCtx();
                                 procedureMap.put(procCtx.nameOfModuleTaskProc().ID().toString(), procCtx);
                             }
+
                         });
 
                         // Finding the ControlFlowGraph of the Module
@@ -258,11 +261,15 @@ public class Compiler {
                         // since the Variables can be accessed from Procedures and Tasks
                         ControlFlowGraph finalModuleGraph = moduleGraph;
                         cfgs.forEach(cfg -> {
+                            try {
                             if(cfg != finalModuleGraph) {
                                 if(finalModuleGraph != null)
                                     cfg.createVariableStack(procedureMap, finalModuleGraph.getEndNode().getOutputNodes().iterator().next().getVariableStack());
                                 else
                                     cfg.createVariableStack(procedureMap, null);
+                            }
+                            } catch (NotImplementedException e) {
+                                System.err.println("CFD creation aborted");
                             }
                         });
                     }

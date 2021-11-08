@@ -28,7 +28,7 @@
  */
 package org.smallpearl.compiler.ControlFlowGraph;
 
-import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.*;//ParserRuleContext;
 import org.smallpearl.compiler.*;
 
 import java.util.*;
@@ -121,41 +121,43 @@ public class ControlFlowGraph {
                     List<SmallPearlParser.FormalParameterContext> parameterList = parametersCtx.formalParameter();
                     if(parameterList != null) {
                         parameterList.forEach(parameter -> {
-                            String variableName = parameter.identifier().iterator().next().getText();
-                            SmallPearlParser.ParameterTypeContext type = parameter.parameterType();
-                            if(type != null) {
-                                SmallPearlParser.SimpleTypeContext simpleType = type.simpleType();
-                                if(simpleType != null) {
-                                    SmallPearlParser.TypeIntegerContext integer = simpleType.typeInteger();
-                                    SmallPearlParser.TypeFloatingPointNumberContext floating = simpleType.typeFloatingPointNumber();
-                                    SmallPearlParser.TypeClockContext clock = simpleType.typeClock();
-                                    SmallPearlParser.TypeDurationContext duration = simpleType.typeDuration();
-                                    SmallPearlParser.TypeCharacterStringContext string = simpleType.typeCharacterString();
-                                    SmallPearlParser.TypeBitStringContext bitString = simpleType.typeBitString();
+                            parameter.identifier().forEach(identifierContext -> {
+                                String variableName = identifierContext.getText();
+                                SmallPearlParser.ParameterTypeContext type = parameter.parameterType();
+                                if(type != null) {
+                                    SmallPearlParser.SimpleTypeContext simpleType = type.simpleType();
+                                    if(simpleType != null) {
+                                        SmallPearlParser.TypeIntegerContext integer = simpleType.typeInteger();
+                                        SmallPearlParser.TypeFloatingPointNumberContext floating = simpleType.typeFloatingPointNumber();
+                                        SmallPearlParser.TypeClockContext clock = simpleType.typeClock();
+                                        SmallPearlParser.TypeDurationContext duration = simpleType.typeDuration();
+                                        SmallPearlParser.TypeCharacterStringContext string = simpleType.typeCharacterString();
+                                        SmallPearlParser.TypeBitStringContext bitString = simpleType.typeBitString();
 
-                                    if(integer != null) {
-                                        entryStack.addVariable(variableName, entryNode.getDepth(), new FixedVariableValue(FixedVariableValue.defaultValue()));
-                                    }
-                                    else if(floating != null) {
-                                        entryStack.addVariable(variableName, entryNode.getDepth(), new FloatVariableValue(FloatVariableValue.defaultValue()));
-                                    }
-                                    else if(duration != null) {
-                                        entryStack.addVariable(variableName, entryNode.getDepth(), new DurationVariableValue(DurationVariableValue.defaultValue()));
-                                    }
-                                    else if(string != null) {
-                                        entryStack.addVariable(variableName, entryNode.getDepth(), new CharVariableValue());
-                                    }
-                                    else if(bitString != null) {
-                                        entryStack.addVariable(variableName, entryNode.getDepth(), new BitVariableValue(BitVariableValue.defaultValue()));
-                                    }
-                                    //else if(time != null) {
-                                    //    SmallPearlParser.TypeClockContext clock = time.type_clock();
+                                        if(integer != null) {
+                                            entryStack.addVariable(variableName, entryNode.getDepth(), new FixedVariableValue(FixedVariableValue.defaultValue()));
+                                        }
+                                        else if(floating != null) {
+                                            entryStack.addVariable(variableName, entryNode.getDepth(), new FloatVariableValue(FloatVariableValue.defaultValue()));
+                                        }
+                                        else if(duration != null) {
+                                            entryStack.addVariable(variableName, entryNode.getDepth(), new DurationVariableValue(DurationVariableValue.defaultValue()));
+                                        }
+                                        else if(string != null) {
+                                            entryStack.addVariable(variableName, entryNode.getDepth(), new CharVariableValue());
+                                        }
+                                        else if(bitString != null) {
+                                            entryStack.addVariable(variableName, entryNode.getDepth(), new BitVariableValue(BitVariableValue.defaultValue()));
+                                        }
+                                        //else if(time != null) {
+                                        //    SmallPearlParser.TypeClockContext clock = time.type_clock();
                                         if(clock != null) {
                                             entryStack.addVariable(variableName, entryNode.getDepth(), new ClockVariableValue(ClockVariableValue.defaultValue()));
                                         }
-                                    //}
+                                        //}
+                                    }
                                 }
-                            }
+                            });
                         });
                     }
                 }
@@ -324,6 +326,8 @@ public class ControlFlowGraph {
         SmallPearlParser.ExpressionContext expression = ifCtx.expression();
 
         Map<String, Operations> possibleValues = OperationTree.createVariableValueMap(expression.getText(), currentNode.getVariableStack(), procedureMap);
+        //Check creating a operationTree of the expression has failed. Happens when the expression uses features, which are not yet supported
+        if(possibleValues == null) return;
 
         ControlFlowGraphVariableStack stack = currentNode.getVariableStack();
         possibleValues.forEach((name, value) -> {
@@ -378,14 +382,24 @@ public class ControlFlowGraph {
 
     private void ifCheck(SmallPearlParser.If_statementContext ifCtx, ControlFlowGraphNode currentNode, Map<String, ParserRuleContext> procedureMap) {
         SmallPearlParser.ExpressionContext expression = ifCtx.expression();
-        BitVariableValue result = (BitVariableValue) OperationTree.buildTree(expression.getText(), currentNode.getVariableStack(), procedureMap).calculate();
+        //Check creating a operationTree of the expression has failed. Happens when the expression uses features, which are not yet supported
+        OperationTree.OperationNode tree = OperationTree.buildTree(expression.getText(), currentNode.getVariableStack(), procedureMap);
+        if(tree == null) return;
+        BitVariableValue result = (BitVariableValue) tree.calculate();
+
         boolean neverTrue = true;
         boolean neverFalse = true;
-        for(VariableValueRange<ConstantBitValue> value : result.getValues()) {
-            if(value.getFrom().getLongValue() > 0L) neverTrue = false;
-            else neverFalse = false;
-            if(value.getTo().getLongValue() > 0L) neverTrue = false;
-            else neverFalse = false;
+        try {
+            for(VariableValueRange<ConstantBitValue> value : result.getValues()) {
+                if(value.getFrom().getLongValue() > 0L) neverTrue = false;
+                else neverFalse = false;
+                if(value.getTo().getLongValue() > 0L) neverTrue = false;
+                else neverFalse = false;
+            }
+        }
+        catch (Exception ex) {
+            int a = 0;
+            OperationTree.buildTree(expression.getText(), currentNode.getVariableStack(), procedureMap);
         }
         Set<ControlFlowGraphNode> toRemoveConnection = new HashSet<>();
         for(ControlFlowGraphNode inputNode : currentNode.getInputNodes()) {
@@ -562,11 +576,25 @@ public class ControlFlowGraph {
 
         FixedVariableValue from;
         FixedVariableValue to;
-        if(fromCtx == null) from = new FixedVariableValue(new ConstantFixedValue(1, 63));
-        else from = (FixedVariableValue) OperationTree.buildTree(fromCtx.expression().getText(), currentNode.getVariableStack(), procedureMap).calculate();
-        if(toCtx == null) to = new FixedVariableValue(new ConstantFixedValue(Long.MAX_VALUE, 63));
-        else to = (FixedVariableValue) OperationTree.buildTree(toCtx.expression().getText(), currentNode.getVariableStack(), procedureMap).calculate();
 
+        if(fromCtx == null) {
+            from = new FixedVariableValue(new ConstantFixedValue(1, 63));
+        }
+        else {
+            OperationTree.OperationNode tree = OperationTree.buildTree(fromCtx.expression().getText(), currentNode.getVariableStack(), procedureMap);
+            if(tree == null) return;
+            Operations result = tree.calculate();
+            from = (FixedVariableValue) result;
+        }
+        if(toCtx == null) {
+            to = new FixedVariableValue(new ConstantFixedValue(Long.MAX_VALUE, 63));
+        }
+        else {
+            OperationTree.OperationNode tree = OperationTree.buildTree(toCtx.expression().getText(), currentNode.getVariableStack(), procedureMap);
+            if(tree == null) return;
+            Operations result = tree.calculate();
+            to = (FixedVariableValue) result;
+        }
 
         String name = forCtx.ID().getText();
 
@@ -640,134 +668,166 @@ public class ControlFlowGraph {
             Map<String, ParserRuleContext> procedureMap) {
         if (ctx == null) return;
 
-        ctx.variableDenotation(). forEach(denotation -> {
+        ctx.variableDenotation().forEach(denotation -> {
+            if (denotation.dimensionAttribute() != null) {
+                return; // do not treat arrays 
+            }
             if (denotation.problemPartDataAttribute() != null) {
                 SmallPearlParser.TypeAttributeContext type = denotation.problemPartDataAttribute().typeAttribute();
                 SmallPearlParser.SimpleTypeContext simpleTypeContext = type.simpleType();
                 SmallPearlParser.TypeReferenceContext typeReferenceContext = type.typeReference();
 
-                String variableName = denotation.identifierDenotation().getText();
+                String fullSting = denotation.identifierDenotation().getText();
+                String[] variableNames = fullSting.replaceAll("\\(", "").replaceAll("\\)", "").split(",");
                 SmallPearlParser.ConstantExpressionContext initExpressionCtx  = getConstantExpression(denotation);
-                SmallPearlParser.ConstantContext initConstantCtx  = getConstant(denotation);
+                SmallPearlParser.ConstantContext initConstantCtx = getConstant(denotation);
 
-                if(simpleTypeContext != null) {
-                    SmallPearlParser.TypeIntegerContext intctx = simpleTypeContext.typeInteger();
-                    SmallPearlParser.TypeFloatingPointNumberContext floatctx = simpleTypeContext.typeFloatingPointNumber();
-                    SmallPearlParser.TypeBitStringContext bitctx = simpleTypeContext.typeBitString();
-                    SmallPearlParser.TypeCharacterStringContext charctx = simpleTypeContext.typeCharacterString();
-                    SmallPearlParser.TypeClockContext clockctx = simpleTypeContext.typeClock();
-                    SmallPearlParser.TypeDurationContext durationctx = simpleTypeContext.typeDuration();
+                for (String variableName : variableNames) {
+                    if(simpleTypeContext != null) {
+                        SmallPearlParser.TypeIntegerContext intctx = simpleTypeContext.typeInteger();
+                        SmallPearlParser.TypeFloatingPointNumberContext floatctx = simpleTypeContext.typeFloatingPointNumber();
+                        SmallPearlParser.TypeBitStringContext bitctx = simpleTypeContext.typeBitString();
+                        SmallPearlParser.TypeCharacterStringContext charctx = simpleTypeContext.typeCharacterString();
+                        SmallPearlParser.TypeClockContext clockctx = simpleTypeContext.typeClock();
+                        SmallPearlParser.TypeDurationContext durationctx = simpleTypeContext.typeDuration();
 
-                    if(intctx != null) {
-                        int precision = getPrecision(intctx);
-                        if(initExpressionCtx != null || initConstantCtx != null) {
-                            FixedVariableValue result;
-                            if(initExpressionCtx != null) {
-                                result = (FixedVariableValue) OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
+                        if(intctx != null) {
+                            int precision = getPrecision(intctx);
+                            if(initExpressionCtx != null || initConstantCtx != null) {
+                                FixedVariableValue result;
+                                OperationTree.OperationNode tree;
+                                if(initExpressionCtx != null) {
+                                    tree = OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                }
+                                else {
+                                    tree = OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                }
+                                if(tree == null) return;
+                                result = (FixedVariableValue) tree.calculate();
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
                             }
                             else {
-                                result = (FixedVariableValue) OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
+                                        new FixedVariableValue(FixedVariableValue.defaultValue()));
                             }
+                        }
+                        else if(floatctx != null) {
+                            if(initExpressionCtx != null || initConstantCtx != null) {
+                                FloatVariableValue result;
+                                if(initExpressionCtx != null) {
+                                    OperationTree.OperationNode tree = OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                    if(tree == null) return;
+                                    Operations tmp = tree.calculate();
+                                    if(tmp instanceof FixedVariableValue)
+                                        result = (FloatVariableValue) tmp.toFloat();
+                                    else
+                                        result = (FloatVariableValue) tree.calculate();
+                                }
+                                else {
+                                    OperationTree.OperationNode tree = OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                    if(tree == null) return;
+                                    Operations tmp = tree.calculate();
+                                    if(tmp instanceof FixedVariableValue)
+                                        result = (FloatVariableValue) tmp.toFloat();
+                                    else
+                                        result = (FloatVariableValue) tree.calculate();
+                                }
 
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
-                        }
-                        else {
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
-                                    new FixedVariableValue(FixedVariableValue.defaultValue()));
-                        }
-                    }
-                    else if(floatctx != null) {
-                        if(initExpressionCtx != null || initConstantCtx != null) {
-                            FloatVariableValue result;
-                            if(initExpressionCtx != null) {
-                                result = (FloatVariableValue) OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
                             }
                             else {
-                                Float value = Float.valueOf(initConstantCtx.floatingPointConstant().getText());
-                                result = new FloatVariableValue(new ConstantFloatValue(value, 52));
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
+                                        new FloatVariableValue(FloatVariableValue.defaultValue()));
                             }
+                        }
+                        else if(bitctx != null) {
+                            if(initExpressionCtx != null || initConstantCtx != null) {
+                                BitVariableValue result;
+                                OperationTree.OperationNode tree;
+                                if(initConstantCtx != null) {
+                                    tree = OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                }
+                                else {
+                                    tree = OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                }
+                                if(tree == null) return;
+                                result = (BitVariableValue) tree.calculate();
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
+                            }
+                            else {
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
+                                        new BitVariableValue(BitVariableValue.defaultValue()));
+                            }
+                        }
+                        else if(charctx != null) {
+                            if(initExpressionCtx != null || initConstantCtx != null) {
+                                CharVariableValue result;
+                                OperationTree.OperationNode tree;
+                                if(initConstantCtx != null) {
+                                    tree = OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                }
+                                else {
+                                    tree = OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                }
+                                if(tree == null) return;
+                                result = (CharVariableValue) tree.calculate();
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
+                            }
+                            else {
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
+                                        new CharVariableValue());
+                            }
+                        }
+                        else if(clockctx != null) {
+                            //                   SmallPearlParser.TypeClockContext clock = clockctx.typeClock();
+                            /////                    SmallPearlParser.Type_durationContext duration = timectx.typeDuration();
+                            //                    if(clock != null) {
+                            if(initExpressionCtx != null || initConstantCtx != null) {
+                                ClockVariableValue result;
+                                OperationTree.OperationNode tree;
+                                if(initConstantCtx != null) {
+                                    tree = OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                }
+                                else {
+                                    tree = OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                }
+                                if(tree == null) return;
+                                result = (ClockVariableValue) tree.calculate();
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
+                            }
+                            else {
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
+                                        new ClockVariableValue(ClockVariableValue.defaultValue()));
+                            }
+                        }
+                        else if(durationctx != null) {
+                            if(initExpressionCtx != null || initConstantCtx != null) {
+                                DurationVariableValue result;
+                                OperationTree.OperationNode tree;
+                                if(initConstantCtx != null) {
+                                    tree = OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                }
+                                else {
+                                    tree = OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap);
+                                }
+                                if(tree == null) return;
+                                result = (DurationVariableValue) tree.calculate();
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
+                            }
+                            else {
+                                currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
+                                        new DurationVariableValue(DurationVariableValue.defaultValue()));
+                            }
+                        }
+                    }
 
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
-                        }
-                        else {
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
-                                    new FloatVariableValue(FloatVariableValue.defaultValue()));
-                        }
-                    }
-                    else if(bitctx != null) {
-                        if(initExpressionCtx != null || initConstantCtx != null) {
-                            BitVariableValue result;
-                            if(initConstantCtx != null) {
-                                result = (BitVariableValue) OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
-                            }
-                            else {
-                                result = (BitVariableValue) OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
-                            }
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
-                        }
-                        else {
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
-                                    new BitVariableValue(BitVariableValue.defaultValue()));
-                        }
-                    }
-                    else if(charctx != null) {
-                        if(initExpressionCtx != null || initConstantCtx != null) {
-                            CharVariableValue result;
-                            if(initConstantCtx != null) {
-                                result = (CharVariableValue) OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
-                            }
-                            else {
-                                result = (CharVariableValue) OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
-                            }
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
-                        }
-                        else {
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
-                                    new CharVariableValue());
-                        }
-                    }
-                    else if(clockctx != null) {
-                        //                   SmallPearlParser.TypeClockContext clock = clockctx.typeClock();
-                        /////                    SmallPearlParser.Type_durationContext duration = timectx.typeDuration();
-                        //                    if(clock != null) {
-                        if(initExpressionCtx != null || initConstantCtx != null) {
-                            ClockVariableValue result;
-                            if(initConstantCtx != null) {
-                                result = (ClockVariableValue) OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
-                            }
-                            else {
-                                result = (ClockVariableValue) OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
-                            }
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
-                        }
-                        else {
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
-                                    new ClockVariableValue(ClockVariableValue.defaultValue()));
-                        }
-                    }
-                    else if(durationctx != null) {
-                        if(initExpressionCtx != null || initConstantCtx != null) {
-                            DurationVariableValue result;
-                            if(initConstantCtx != null) {
-                                result = (DurationVariableValue) OperationTree.buildTree(initConstantCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
-                            }
-                            else {
-                                result = (DurationVariableValue) OperationTree.buildTree(initExpressionCtx.getText(), currentNode.getVariableStack(), procedureMap).calculate();
-                            }
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(), result);
-                        }
-                        else {
-                            currentNode.getVariableStack().addVariable(variableName, currentNode.getDepth(),
-                                    new DurationVariableValue(DurationVariableValue.defaultValue()));
-                        }
+                    else if(typeReferenceContext != null) {
+                        //TODO add Reference Type
                     }
                 }
-
-                else if(typeReferenceContext != null) {
-                    //TODO add Reference Type
-                }
-            } else {
-                // Type sema. bolt, dation are without interrest here    
+            }
+            else {
+                // Type sema. bolt, dation are without interrest here
             }
         }
 
@@ -782,38 +842,36 @@ public class ControlFlowGraph {
         SmallPearlParser.ExpressionContext expressionContext = ctx.expression();
         ControlFlowGraphVariableStack stack = currentNode.getVariableStack();
         Operations variable = stack.getDeepestVariableByName(variableName);
+        OperationTree.OperationNode operationNode = OperationTree.buildTree(expressionContext.getText(), currentNode.getVariableStack(), procedureMap);
+        //Check creating a operationTree of the expression has failed. Happens when the expression uses features, which are not yet supported
+        if(operationNode == null) return;
         if(variable instanceof FixedVariableValue) {
-            OperationTree.OperationNode operationNode = OperationTree.buildTree(expressionContext.getText(), currentNode.getVariableStack(), procedureMap);
             if(isReachable(currentNode, currentNode, null, false) && !operationNode.isConstant()) {
                 stack.setVariable(variableName, new FixedVariableValue(FixedVariableValue.defaultValue()));
             }
             else {
-                FixedVariableValue result = (FixedVariableValue) operationNode.calculate().deepClone();
-                stack.setVariable(variableName, result);
+                Operations tmp = operationNode.calculate();
+                if(tmp instanceof  FloatVariableValue)
+                    stack.setVariable(variableName, tmp.entier());
+                else
+                    stack.setVariable(variableName, tmp);
             }
         }
         else if(variable instanceof FloatVariableValue) {
-            OperationTree.OperationNode operationNode = OperationTree.buildTree(expressionContext.getText(), currentNode.getVariableStack(), procedureMap);
             if(isReachable(currentNode, currentNode, null, false) && !operationNode.isConstant()) {
                 stack.setVariable(variableName, new FloatVariableValue(FloatVariableValue.defaultValue()));
             }
             else {
-                Operations result = operationNode.calculate();
-                if(result instanceof FixedVariableValue) {
-                    FixedVariableValue copy = (FixedVariableValue) result.deepClone();
-                    FloatVariableValue floatResult = new FloatVariableValue(copy.getValues().stream().map(value -> new VariableValueRange<>(
-                            new ConstantFloatValue((float) value.getFrom().getValue(), 52),
-                            new ConstantFloatValue((float) value.getTo().getValue(), 52)
-                    )).collect(Collectors.toSet()));
-                    stack.setVariable(variableName, floatResult);
+                Operations tmp = operationNode.calculate();
+                if(tmp instanceof FixedVariableValue) {
+                    stack.setVariable(variableName, tmp.toFloat());
                 }
                 else {
-                    stack.setVariable(variableName, (FloatVariableValue) result.deepClone());
+                    stack.setVariable(variableName, tmp);
                 }
             }
         }
         else if(variable instanceof CharVariableValue) {
-            OperationTree.OperationNode operationNode = OperationTree.buildTree(expressionContext.getText(), currentNode.getVariableStack(), procedureMap);
             if(isReachable(currentNode, currentNode, null, false) && !operationNode.isConstant()) {
                 stack.setVariable(variableName, new CharVariableValue());
             }
@@ -823,17 +881,20 @@ public class ControlFlowGraph {
             }
         }
         else if(variable instanceof BitVariableValue) {
-            OperationTree.OperationNode operationNode = OperationTree.buildTree(expressionContext.getText(), currentNode.getVariableStack(), procedureMap);
             if(isReachable(currentNode, currentNode, null, false) && !operationNode.isConstant()) {
                 stack.setVariable(variableName, new BitVariableValue(BitVariableValue.defaultValue()));
             }
             else {
-                BitVariableValue result = (BitVariableValue) operationNode.calculate().deepClone();
-                stack.setVariable(variableName, result);
+                try {
+                    BitVariableValue result = (BitVariableValue) operationNode.calculate().deepClone();
+                    stack.setVariable(variableName, result);
+                }
+                catch (Exception ex) {
+                    int a = 0;
+                }
             }
         }
         else if(variable instanceof DurationVariableValue) {
-            OperationTree.OperationNode operationNode = OperationTree.buildTree(expressionContext.getText(), currentNode.getVariableStack(), procedureMap);
             if(isReachable(currentNode, currentNode, null, false) && !operationNode.isConstant()) {
                 stack.setVariable(variableName, new DurationVariableValue(DurationVariableValue.defaultValue()));
             }
@@ -843,7 +904,6 @@ public class ControlFlowGraph {
             }
         }
         else if(variable instanceof ClockVariableValue) {
-            OperationTree.OperationNode operationNode = OperationTree.buildTree(expressionContext.getText(), currentNode.getVariableStack(), procedureMap);
             if(isReachable(currentNode, currentNode, null, false) && !operationNode.isConstant()) {
                 stack.setVariable(variableName, new ClockVariableValue(ClockVariableValue.defaultValue()));
             }

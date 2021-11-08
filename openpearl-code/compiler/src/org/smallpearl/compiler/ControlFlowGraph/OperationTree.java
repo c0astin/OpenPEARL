@@ -40,44 +40,45 @@ public class OperationTree {
 
     private static final HashMap<String, Integer> operationOrder = new HashMap<>();
     static {
-        operationOrder.put("(", -1);
+        operationOrder.put("(", 7);
 
-        operationOrder.put("**", 0);
-        operationOrder.put("FIT", 0);
-        operationOrder.put("LWB", 0);
-        operationOrder.put("UPB", 0);
+        operationOrder.put("**", 6);
+        operationOrder.put("FIT", 6);
+        operationOrder.put("LWB", 6);
+        operationOrder.put("UPB", 6);
 
-        operationOrder.put("*", 1);
-        operationOrder.put("/", 1);
-        operationOrder.put("><", 1);
-        operationOrder.put("//", 1);
-        operationOrder.put("REM", 1);
+        operationOrder.put("*", 5);
+        operationOrder.put("/", 5);
+        operationOrder.put("><", 5);
+        operationOrder.put("//", 5);
+        operationOrder.put("REM", 5);
 
-        operationOrder.put("+", 2);
-        operationOrder.put("-", 2);
-        operationOrder.put("<>", 2);
-        operationOrder.put("SHIFT", 2);
-        operationOrder.put("CSHIFT", 2);
+        operationOrder.put("+", 4);
+        operationOrder.put("-", 4);
+        operationOrder.put("<>", 4);
+        operationOrder.put("SHIFT", 4);
+        operationOrder.put("CSHIFT", 4);
 
         operationOrder.put("<", 3); operationOrder.put("LT", 3);
         operationOrder.put(">", 3); operationOrder.put("GT", 3);
         operationOrder.put("<=", 3); operationOrder.put("LE", 3);
         operationOrder.put(">=", 3); operationOrder.put("GE", 3);
 
-        operationOrder.put("==", 4); operationOrder.put("EQ", 4);
-        operationOrder.put("/=", 4); operationOrder.put("NE", 4);
-        operationOrder.put("IS", 4);
-        operationOrder.put("ISNT", 4);
+        operationOrder.put("==", 2); operationOrder.put("EQ", 2);
+        operationOrder.put("/=", 2); operationOrder.put("NE", 2);
+        operationOrder.put("IS", 2);
+        operationOrder.put("ISNT", 2);
 
-        operationOrder.put("AND", 5);
+        operationOrder.put("AND", 1);
 
-        operationOrder.put("OR", 6);
-        operationOrder.put("EXOR", 6);
+        operationOrder.put("OR", 0);
+        operationOrder.put("EXOR", 0);
     }
 
     // Returns an object, with which it is possible to get all the possible results
     public static OperationNode buildTree(String expression, ControlFlowGraphVariableStack variables, Map<String, ParserRuleContext> procedureMap) {
         Parser.Expression expressionResult = new Parser(expression).parseExpression(procedureMap, variables, true);
+        if(expressionResult == null) return null;
         Parser.Node node = createNodeFromExpression(expressionResult);
 
         return buildOperationNodeTree(node, variables, procedureMap, new HashMap<>());
@@ -86,6 +87,7 @@ public class OperationTree {
     // Returns a map, which all the possible Values, If the check returns true
     public static Map<String, Operations> createVariableValueMap(String expression, ControlFlowGraphVariableStack variables, Map<String, ParserRuleContext> procedureMap) {
         Parser.Expression expressionResult = new Parser(expression).parseExpression(procedureMap, variables, true);
+        if(expressionResult == null) return null;
         Parser.Node node = createNodeFromExpression(expressionResult);
 
         Map<String, Operations> currentVariableValues = new HashMap<>();
@@ -93,12 +95,88 @@ public class OperationTree {
         return currentVariableValues;
     }
 
+    private static class NodeAndExpression {
+        public Parser.Node node;
+        public Parser.Expression expression;
+
+        public NodeAndExpression(Parser.Node node, Parser.Expression expression) {
+            this.node = node;
+            this.expression = expression;
+        }
+    }
+
+    private static NodeAndExpression createNodeFromExpression3(NodeAndExpression currentNodeAndExpression, int min_precedence) {
+        Parser.Expression current = currentNodeAndExpression.expression;
+        if(current.getValue().getType() == Parser.Type.OPENBRACKET)
+            current = current.getNextExpression();
+        Parser.Node leftNode = currentNodeAndExpression.node;
+        if(currentNodeAndExpression.node == null)
+            leftNode = new Parser.Node(current.getValue().getValue(), current.getValue().getType());
+
+        if(current.getNextExpression() == null) return new NodeAndExpression(leftNode, current);
+
+        current = current.getNextExpression();
+
+        while (current.getValue().getType() == Parser.Type.DYADIC &&
+                operationOrder.get(current.getValue().getValue()) >= min_precedence) {
+            Parser.Node operatorNode = new Parser.Node(current.getValue().getValue(), current.getValue().getType());
+
+            current = current.getNextExpression();
+            NodeAndExpression rightNodeAndExpression;
+            if(current.getValue().getType() == Parser.Type.MONADIC) {
+                rightNodeAndExpression = createNodeFromExpression3(new NodeAndExpression(null, current), 0);
+                current = rightNodeAndExpression.expression;
+            }
+            else {
+                rightNodeAndExpression = new NodeAndExpression(
+                        new Parser.Node(current.getValue().getValue(), current.getValue().getType()),
+                        current);
+            }
+
+            current = current.getNextExpression();
+            if(current == null) {
+                operatorNode.pushChild(leftNode);
+                operatorNode.pushChild(rightNodeAndExpression.node);
+                return new NodeAndExpression(operatorNode, null);
+            }
+
+            while (current.getValue().getType() == Parser.Type.DYADIC &&
+                    operationOrder.get(current.getValue().getValue()) > operationOrder.get(operatorNode.getName())) {
+
+                rightNodeAndExpression = createNodeFromExpression3(new NodeAndExpression(rightNodeAndExpression.node, rightNodeAndExpression.expression), operationOrder.get(operatorNode.getName())+1);
+                current = rightNodeAndExpression.expression;
+            }
+            operatorNode.pushChild(leftNode);
+            operatorNode.pushChild(rightNodeAndExpression.node);
+            leftNode = operatorNode;
+        }
+        if(leftNode.getType() == Parser.Type.MONADIC) {
+            NodeAndExpression rightNodeAndExpression = createNodeFromExpression3(new NodeAndExpression(null, current), 7);
+            leftNode.pushChild(rightNodeAndExpression.node);
+            return new NodeAndExpression(leftNode, current);
+        }
+        return new NodeAndExpression(leftNode, current);
+    }
+
+    private static boolean hasOtherOperatorAndHasHigherPrecedence(Stack<Parser.Node> operators, String operatorName) {
+        if(operators.size() == 0)
+            return false;
+        Parser.Node node = operators.peek();
+        if(node.getType() == Parser.Type.OPENBRACKET)
+            return false;
+        if(node.getType() == Parser.Type.MONADIC)
+            return true;
+        if(operationOrder.get(node.getName()) >= operationOrder.get(operatorName))
+            return true;
+        else return false;
+    }
+
+    // Shunting yard alg
     // Creates a Node Tree, which is sorted,
     // so that all the commands in an expression can be executed in the right order
     private static Parser.Node createNodeFromExpression(Parser.Expression expression) {
         Queue<Parser.Node> outPutQueue = new LinkedList<>();
         Stack<Parser.Node> operators = new Stack<>();
-
 
         Parser.Expression current = expression;
         while (current != null) {
@@ -114,24 +192,24 @@ public class OperationTree {
             else if(type == Parser.Type.MONADIC) {
                 operators.push(new Parser.Node(string, type));
             }
-            else if(type == Parser.Type.DYADIC || type == Parser.Type.OPENBRACKET) {
-                while ((!operators.isEmpty() && operators.peek().getType() == Parser.Type.MONADIC )|| ((!operators.isEmpty())
-                        && ((operationOrder.get(operators.peek().getName()) < operationOrder.get(string)) ||
-                            (operationOrder.get(operators.peek().getName()).equals(operationOrder.get(string)) && operationOrder.get(string) != 0))
-                        && (operators.peek().getType() != Parser.Type.OPENBRACKET))) {
+            else if(type == Parser.Type.DYADIC) {
+                while (hasOtherOperatorAndHasHigherPrecedence(operators, string)) {
                     outPutQueue.add(operators.pop());
                 }
+                operators.push(new Parser.Node(string, type));
+            }
+            else if(type == Parser.Type.OPENBRACKET) {
                 operators.push(new Parser.Node(string, type));
             }
             else if(type == Parser.Type.CLOSEDBRACKED) {
                 while (operators.peek().getType() != Parser.Type.OPENBRACKET) {
                     outPutQueue.add(operators.pop());
                 }
-                if(operators.peek().getType() == Parser.Type.OPENBRACKET) {
-                    operators.pop();
+                operators.pop();
+                if(operators.size() != 0 && operators.peek().getType() == Parser.Type.MONADIC) {
+                    outPutQueue.add(operators.pop());
                 }
             }
-
             current = current.getNextExpression();
         }
         while (!operators.isEmpty()) {
@@ -252,7 +330,7 @@ public class OperationTree {
             }
 
             Operations rightCheckValue = allRightValues.get(identifier);
-            if(rightCheckValue != null) {
+            if(rightCheckValue != null && !rightCheckValue.hasNoValue()) {
                 if(value instanceof FixedVariableValue && rightCheckValue instanceof FloatVariableValue)
                     rightCheckValue = rightCheckValue.entier();
                 if(result.containsKey(identifier)) {
@@ -442,6 +520,7 @@ public class OperationTree {
         dyadicOperationMap.put("AND", Operations::and);
         dyadicOperationMap.put("OR", Operations::or);
         dyadicOperationMap.put("EXOR", Operations::exor);
+        dyadicOperationMap.put("SHIFT", Operations::shift);
         dyadicOperationMap.put("<>", Operations::cShift);
         dyadicOperationMap.put("CSHIFT", Operations::cShift);
         dyadicOperationMap.put("><", Operations::concat);
@@ -550,12 +629,13 @@ public class OperationTree {
             Map<String, Operations> currentVariableValuesCopy = new HashMap<>(currentVariableValues);
             OperationNode leftValue = buildOperationNodeTree(leftNode, variables, procedureMap, currentVariableValues);
             OperationNode rightValue;
-            if(node.getName().equals("OR") || node.getName().equals("XOR")) {
+            if(node.getName().equals("OR")) {
                 List<String> identifiers = getAllIdentifiers(leftNode);
-                Map<String, Operations> newValues = createVariableValueMap(leftNode, variables, procedureMap);
                 Map<String, Operations> correctValues = new HashMap<>();
                 for(String identifier : identifiers) {
-                    Operations value = newValues.get(identifier);
+                    Operations value = currentVariableValues.get(identifier);
+                    if(value == null)
+                        value = variables.getDeepestVariableByName(identifier);
                     if(currentVariableValuesCopy.get(identifier) != null) {
                         currentVariableValues.put(identifier, value.h_notEqual().h_and(currentVariableValuesCopy.get(identifier)));
                         correctValues.put(identifier, value.h_and(currentVariableValuesCopy.get(identifier)));
@@ -613,7 +693,7 @@ public class OperationTree {
                 }
 
             }
-            else if(node.getName().equals("AND")) {
+            else if(node.getName().equals("AND") || node.getName().equals("XOR")) {
                 rightValue = buildOperationNodeTree(rightNode, variables, procedureMap, currentVariableValues);
             }
             else if(comparisonOperatorsMap.containsKey(node.getName())) {
@@ -643,32 +723,17 @@ public class OperationTree {
                     SmallPearlParser.ResultTypeContext resultType = resultAttr.resultType();
                     if (resultType != null) {
                         String typeString = resultType.getText();
-                        if (typeString.equals("FIXED")) {
-                            return new OperationNode(new FixedVariableValue(new VariableValueRange<>(
-                                    new ConstantFixedValue(Long.MIN_VALUE),
-                                    new ConstantFixedValue(Long.MAX_VALUE)
-                            )));
-                        } else if (typeString.equals("FLOAT")) {
-                            return new OperationNode(new FloatVariableValue(new VariableValueRange<>(
-                                    new ConstantFloatValue(Float.MIN_VALUE, 52),
-                                    new ConstantFloatValue(Float.MAX_VALUE, 52)
-                            )));
-                        } else if (typeString.equals("BIT")) {
-                            return new OperationNode(new BitVariableValue(new VariableValueRange<>(
-                                    new ConstantBitValue(Long.MIN_VALUE, 63),
-                                    new ConstantBitValue(Long.MAX_VALUE, 63)
-                            )));
-                        } else if (typeString.equals("DURATION")) {
-                            return new OperationNode(new DurationVariableValue(new VariableValueRange<>(
-                                    new ConstantDurationValue(0L, 0, 0.),
-                                    new ConstantDurationValue(3600, 60, 60.0)
-                            )));
-                        } else if (typeString.equals("CLOCK")) {
-                            return new OperationNode(new ClockVariableValue(new VariableValueRange<>(
-                                    new ConstantClockValue(0, 0, 0.),
-                                    new ConstantClockValue(Integer.MAX_VALUE, Integer.MAX_VALUE, Double.MAX_VALUE)
-                            )));
-                        } else if (typeString.equals("CHAR")) {
+                        if (typeString.contains("FIXED")) {
+                            return new OperationNode(new FixedVariableValue(FixedVariableValue.defaultValue()));
+                        } else if (typeString.contains("FLOAT")) {
+                            return new OperationNode(new FloatVariableValue(FloatVariableValue.defaultValue()));
+                        } else if (typeString.contains("BIT")) {
+                            return new OperationNode(new BitVariableValue(BitVariableValue.defaultValue()));
+                        } else if (typeString.contains("DURATION")) {
+                            return new OperationNode(new DurationVariableValue(DurationVariableValue.defaultValue()));
+                        } else if (typeString.contains("CLOCK")) {
+                            return new OperationNode(new ClockVariableValue(ClockVariableValue.defaultValue()));
+                        } else if (typeString.contains("CHAR")) {
                             return new OperationNode(new CharVariableValue());
                         }
                     }

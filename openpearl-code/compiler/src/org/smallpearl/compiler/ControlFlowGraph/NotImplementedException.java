@@ -32,6 +32,6 @@ import org.smallpearl.compiler.ErrorStack;
 
 public class NotImplementedException extends RuntimeException {
     public NotImplementedException() {
-       ErrorStack.addInternal("CFD: operation or data type not yet implemented");
+       ErrorStack.addInternal(null,null,"CFD: operation or data type not yet implemented");
     }
 }

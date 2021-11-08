@@ -248,11 +248,15 @@ public class ErrorStack {
      * @param msg the concrete error message
      */
     public static Void addInternal(ParserRuleContext ctx, String prefix, String msg) {
-        enter(ctx, prefix);
-        m_stack[m_sp].incLocalCount();
-        m_totalErrorCount++;
-        printMessage(msg + "\n\tplease send a bug report", "internal compiler error");
-        leave();
+        if (ctx != null) {
+           enter(ctx, prefix);
+           m_stack[m_sp].incLocalCount();
+           m_totalErrorCount++;
+           printMessage(msg + "\n\tplease send a bug report", "internal compiler error");
+           leave();
+        } else {
+            System.err.println("internal compiler error: "+msg + "\n\tplease send a bug report" );
+        }
         return null;
     }
 

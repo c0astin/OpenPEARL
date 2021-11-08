@@ -28,10 +28,7 @@
  */
 package org.smallpearl.compiler.ControlFlowGraph;
 
-import org.smallpearl.compiler.ConstantBitValue;
-import org.smallpearl.compiler.ConstantClockValue;
-import org.smallpearl.compiler.ConstantDurationValue;
-import org.smallpearl.compiler.ConstantFixedValue;
+import org.smallpearl.compiler.*;
 //import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
@@ -83,26 +80,17 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
 
     @Override
     public Operations sizeof() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeofMax() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeofLength() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
 
@@ -113,18 +101,12 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
 
     @Override
     public Operations negate() {
-        return new DurationVariableValue(new VariableValueRange<>(
-                new ConstantDurationValue(0L, 0, 0.),
-                new ConstantDurationValue(3600, 60, 60.0)
-        ));
+        return new DurationVariableValue(DurationVariableValue.defaultValue());
     }
 
     @Override
     public Operations abs() {
-        return new DurationVariableValue(new VariableValueRange<>(
-                new ConstantDurationValue(0L, 0, 0.),
-                new ConstantDurationValue(3600, 60, 60.0)
-        ));
+        return new DurationVariableValue(DurationVariableValue.defaultValue());
     }
 
     @Override
@@ -139,18 +121,10 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
     @Override
     public Operations add(Operations other) {
         if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new DurationVariableValue(new VariableValueRange<>(
-                    new ConstantDurationValue(0L, 0, 0.),
-                    new ConstantDurationValue(3600, 60, 60.0)
-            ));
+            return new DurationVariableValue(DurationVariableValue.defaultValue());
         }
         else if(other instanceof ClockVariableValue) {
-            ClockVariableValue o = (ClockVariableValue) other;
-            return new ClockVariableValue(new VariableValueRange<>(
-                    new ConstantClockValue(0, 0, 0.),
-                    new ConstantClockValue(Integer.MAX_VALUE, Integer.MAX_VALUE, Double.MAX_VALUE)
-            ));
+            return new ClockVariableValue(ClockVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -158,11 +132,7 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
     @Override
     public Operations sub(Operations other) {
         if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new DurationVariableValue(new VariableValueRange<>(
-                    new ConstantDurationValue(0L, 0, 0.),
-                    new ConstantDurationValue(3600, 60, 60.0)
-            ));
+            return new DurationVariableValue(DurationVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -170,18 +140,10 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
     @Override
     public Operations mul(Operations other) {
         if(other instanceof FixedVariableValue) {
-            FixedVariableValue o = (FixedVariableValue) other;
-            return new DurationVariableValue(new VariableValueRange<>(
-                    new ConstantDurationValue(0L, 0, 0.),
-                    new ConstantDurationValue(3600, 60, 60.0)
-            ));
+            return new DurationVariableValue(DurationVariableValue.defaultValue());
         }
         else if(other instanceof FloatVariableValue) {
-            FloatVariableValue o = (FloatVariableValue) other;
-            return new DurationVariableValue(new VariableValueRange<>(
-                    new ConstantDurationValue(0L, 0, 0.),
-                    new ConstantDurationValue(3600, 60, 60.0)
-            ));
+            return new DurationVariableValue(DurationVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -189,25 +151,13 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
     @Override
     public Operations div(Operations other) {
         if(other instanceof FixedVariableValue) {
-            FixedVariableValue o = (FixedVariableValue) other;
-            return new DurationVariableValue(new VariableValueRange<>(
-                    new ConstantDurationValue(0L, 0, 0.),
-                    new ConstantDurationValue(3600, 60, 60.0)
-            ));
+            return new DurationVariableValue(DurationVariableValue.defaultValue());
         }
         else if(other instanceof FloatVariableValue) {
-            FloatVariableValue o = (FloatVariableValue) other;
-            return new DurationVariableValue(new VariableValueRange<>(
-                    new ConstantDurationValue(0L, 0, 0.),
-                    new ConstantDurationValue(3600, 60, 60.0)
-            ));
+            return new DurationVariableValue(DurationVariableValue.defaultValue());
         }
         else if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new DurationVariableValue(new VariableValueRange<>(
-                    new ConstantDurationValue(0L, 0, 0.),
-                    new ConstantDurationValue(3600, 60, 60.0)
-            ));
+            return new FloatVariableValue(FloatVariableValue.defaultValue());
         }
         else throw new NotImplementedException();
     }
@@ -215,12 +165,7 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
     @Override
     public Operations less(Operations other) {
         if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultBoolValue());
         }
         else throw new NotImplementedException();
     }
@@ -228,12 +173,7 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
     @Override
     public Operations greater(Operations other) {
         if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultBoolValue());
         }
         else throw new NotImplementedException();
     }
@@ -241,12 +181,7 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
     @Override
     public Operations lessEqual(Operations other) {
         if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultBoolValue());
         }
         else throw new NotImplementedException();
     }
@@ -254,12 +189,7 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
     @Override
     public Operations greaterEqual(Operations other) {
         if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultBoolValue());
         }
         else throw new NotImplementedException();
     }
@@ -267,12 +197,7 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
     @Override
     public Operations equal(Operations other) {
         if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultBoolValue());
         }
         else throw new NotImplementedException();
     }
@@ -280,12 +205,7 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
     @Override
     public Operations notEqual(Operations other) {
         if(other instanceof DurationVariableValue) {
-            DurationVariableValue o = (DurationVariableValue) other;
-            return new BitVariableValue(
-                    Arrays.asList(
-                            new VariableValueRange<>(new ConstantBitValue(0L, 1)),
-                            new VariableValueRange<>(new ConstantBitValue(1L, 1))
-                    ));
+            return new BitVariableValue(BitVariableValue.defaultBoolValue());
         }
         else throw new NotImplementedException();
     }
@@ -303,17 +223,41 @@ public class DurationVariableValue extends VariableValue<ConstantDurationValue> 
 
     @Override
     public Operations h_and(Operations other) {
-        return new DurationVariableValue(new VariableValueRange<>(
-                new ConstantDurationValue(0L, 0, 0.),
-                new ConstantDurationValue(3600, 60, 60.0)
-        ));
+        return new DurationVariableValue(DurationVariableValue.defaultValue());
     }
 
     @Override
     public Operations h_or(Operations other) {
-        return new DurationVariableValue(new VariableValueRange<>(
-                new ConstantDurationValue(0L, 0, 0.),
-                new ConstantDurationValue(3600, 60, 60.0)
-        ));
+        return new DurationVariableValue(DurationVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_xor(Operations other) {
+        return new DurationVariableValue(DurationVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_less() {
+        return new DurationVariableValue(DurationVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_greater() {
+        return new DurationVariableValue(DurationVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_lessEqual() {
+        return new DurationVariableValue(DurationVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_greaterEqual() {
+        return new DurationVariableValue(DurationVariableValue.defaultValue());
+    }
+
+    @Override
+    public Operations h_notEqual() {
+        return new DurationVariableValue(DurationVariableValue.defaultValue());
     }
 }

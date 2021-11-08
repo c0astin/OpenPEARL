@@ -467,7 +467,7 @@ public class FixedOperations {
         return result;
     }
 
-    private static <T extends Comparable<T>> T getSmallest(Collection<T> values) {
+    public static <T extends Comparable<T>> T getSmallest(Collection<T> values) {
         Iterator<T> iterator = values.iterator();
         T smallest = iterator.next();
         while (iterator.hasNext()) {
@@ -478,7 +478,7 @@ public class FixedOperations {
         return smallest;
     }
 
-    private static <T extends Comparable<T>> T getLargest(Collection<T> values) {
+    public static <T extends Comparable<T>> T getLargest(Collection<T> values) {
         Iterator<T> iterator = values.iterator();
         T largest = iterator.next();
         while (iterator.hasNext()) {

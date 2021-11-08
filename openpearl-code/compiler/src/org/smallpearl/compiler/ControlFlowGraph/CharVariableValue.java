@@ -108,26 +108,17 @@ public class CharVariableValue extends VariableValue<ConstantCharacterValue> imp
 
     @Override
     public Operations sizeof() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeofMax() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeofLength() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
@@ -221,4 +212,25 @@ public class CharVariableValue extends VariableValue<ConstantCharacterValue> imp
         else
             return new CharVariableValue(result);
     }
+
+    @Override
+    public Operations h_less() {
+        return new CharVariableValue();
+    }
+
+    @Override
+    public Operations h_greater() {
+        return new CharVariableValue();
+    }
+
+    @Override
+    public Operations h_lessEqual() {
+        return new CharVariableValue();
+    }
+
+    @Override
+    public Operations h_greaterEqual() {
+        return new CharVariableValue();
+    }
+
 }

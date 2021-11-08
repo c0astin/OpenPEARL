@@ -48,6 +48,7 @@ public class Parser {
             Expression expression = parseExpression(procedureMap, variables, advanceClosedBracket);
             if(expression != null) {
                 openBracket.setNextExpression(expression);
+                expression.setLastExpression(openBracket);
                 Expression dyadic = parseDyadic();
                 if(dyadic != null) {
                     Expression other = parseExpression(procedureMap, variables, advanceClosedBracket);
@@ -56,7 +57,9 @@ public class Parser {
                         while (expressionEnd.nextExpression != null)
                             expressionEnd = expressionEnd.nextExpression;
                         expressionEnd.setNextExpression(dyadic);
+                        dyadic.setLastExpression(expressionEnd);
                         dyadic.setNextExpression(other);
+                        other.setLastExpression(dyadic);
                         return openBracket;
                     }
                     else return null;
@@ -75,6 +78,7 @@ public class Parser {
                         monadic.value.value = monadic.value.value + " " + suffix.value.value;
                     }
                     monadic.setNextExpression(expression);
+                    expression.setLastExpression(monadic);
                     Expression expressionEnd = expression;
                     while (expressionEnd.nextExpression != null)
                         expressionEnd = expressionEnd.nextExpression;
@@ -82,9 +86,11 @@ public class Parser {
                     Expression dyadic = parseDyadic();
                     if (dyadic != null) {
                         expressionEnd.setNextExpression(dyadic);
+                        dyadic.setLastExpression(expressionEnd);
                         Expression other = parseExpression(procedureMap, variables, advanceClosedBracket);
                         if (other != null) {
                             dyadic.setNextExpression(other);
+                            other.setLastExpression(dyadic);
                             return monadic;
                         }
                         else return null;
@@ -94,7 +100,7 @@ public class Parser {
                 else return null;
             }
             else {
-                Expression value = parseIdentifier(procedureMap, variables);
+                Expression value = null;
                 if(value == null)
                     value = parseClock();
                 if(value == null)
@@ -107,20 +113,45 @@ public class Parser {
                     value = parseFixed();
                 if(value == null)
                     value = parseFloat();
+                if(value == null)
+                    value = parseIdentifier(procedureMap, variables);
 
                 if(value != null) {
+                    Expression multiplicationOpenBracket = parseOpenBracket();
+                    if(multiplicationOpenBracket != null) {
+                        Expression multiplication = new Expression(new Expression.Value("*", Type.DYADIC));
+                        value.setNextExpression(multiplication);
+                        multiplication.setLastExpression(value);
+                        multiplication.setNextExpression(multiplicationOpenBracket);
+                        multiplicationOpenBracket.setLastExpression(multiplication);
+
+                        Expression expression = parseExpression(procedureMap, variables, false);
+                        multiplicationOpenBracket.setNextExpression(expression);
+                        expression.setLastExpression(multiplicationOpenBracket);
+
+                        Expression closedBracket = parseClosedBracket(true);
+                        if(closedBracket != null) {
+                            expression.setNextExpression(closedBracket);
+                            closedBracket.setLastExpression(expression);
+                            return value;
+                        }
+                        return null;
+                    }
                     Expression closedBracket = parseClosedBracket(advanceClosedBracket);
                     if(closedBracket != null) {
                         value.setNextExpression(closedBracket);
+                        closedBracket.setLastExpression(value);
                         return value;
                     }
 
                     Expression dyadic = parseDyadic();
                     if (dyadic != null) {
                         value.setNextExpression(dyadic);
+                        dyadic.setLastExpression(value);
                         Expression other = parseExpression(procedureMap, variables, advanceClosedBracket);
                         if (other != null) {
                             dyadic.setNextExpression(other);
+                            other.setLastExpression(dyadic);
                             return value;
                         }
                         else return null;
@@ -148,23 +179,22 @@ public class Parser {
             char c = program.charAt(position+i);
             if((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9' || c =='.' || c == '_')) {
                 result.append(c);
-                if(procedureMap.containsKey(result.toString())
-                        || variables.getVariableByName(result.toString()) != null) {
+                if(procedureMap != null && (procedureMap.containsKey(result.toString())
+                        || variables.getVariableByName(result.toString()) != null)) {
                     lastResult = new StringBuilder();
                     lastResult.append(result.toString());
                 }
             }
             else break;
         }
-        System.out.println( result.toString());
-        if(!procedureMap.containsKey(result.toString()) &&
-                variables.getVariableByName(result.toString()) == null) {
+        if(procedureMap != null && (!procedureMap.containsKey(result.toString()) &&
+                variables.getVariableByName(result.toString()) == null)) {
             result = lastResult;
         }
 
         if(result == null || result.length() == 0) return null;
         position += result.length();
-        if(procedureMap.containsKey(result.toString())) {
+        if(procedureMap != null && procedureMap.containsKey(result.toString())) {
             if(parseOpenBracket() != null) {
                 Expression outerNode = new Expression(new Expression.Value(result.toString(), Type.PROCEDURE));
                     /*
@@ -182,18 +212,19 @@ public class Parser {
                     Expression innerNode = parseExpression(procedureMap, variables, false);
                     if(innerNode != null) {
                         testInputAndAdvance(",", true);
-                        if(parseClosedBracket(true) != null)
-                            break;
+                        if(parseClosedBracket(true) != null) {
+                            return outerNode;
+                        }
                     }
                 }
-                return outerNode;
             }
             else {
                 return new Expression(new Expression.Value(result.toString(), Type.PROCEDURE));
             }
         }
-        else
+        else if (variables.getDeepestVariableByName(result.toString()) != null)
             return new Expression(new Expression.Value(result.toString(), Type.IDENTIFIER));
+        else return null;
     }
 
     private Expression parseFixed() {
@@ -300,6 +331,8 @@ public class Parser {
             }
             if(position+i == program.length()) break;
         }
+        if(hours == null && minutes == null && seconds == null)
+            return null;
         if(hours != null || minutes != null || seconds != null) {
             if(hours == null)
                 hours = 0L;
@@ -318,6 +351,7 @@ public class Parser {
         skipWhiteSpace();
         StringBuilder result = new StringBuilder();
         int i = 0;
+        if(position == program.length()) return null;
         if(program.charAt(position) != '\'') return null;
         i++;
 
@@ -351,6 +385,7 @@ public class Parser {
         skipWhiteSpace();
         StringBuilder result = new StringBuilder();
         int i = 0;
+        if(position == program.length()) return null;
         if(program.charAt(position) != '\'') return null;
         i++;
 
@@ -472,6 +507,7 @@ public class Parser {
     private Expression parseMonadic() {
         skipWhiteSpace();
 
+        if(position == program.length()) return null;
         int i = 0;
         char firstC = program.charAt(position+i);
         if(firstC == '+' || firstC == '-') {
@@ -536,6 +572,12 @@ public class Parser {
         private Value value;
         private Expression nextExpression;
 
+        public void setValue(Value value) {
+            this.value = value;
+        }
+
+        private Expression lastExpression;
+
         public static class Value {
             private String value;
             private Type type;
@@ -568,10 +610,11 @@ public class Parser {
         public Expression getNextExpression() {
             return nextExpression;
         }
-
         public void setNextExpression(Expression nextExpression) {
             this.nextExpression = nextExpression;
         }
+        public Expression getLastExpression() {return lastExpression;}
+        public void setLastExpression(Expression lastExpression) {this.lastExpression = lastExpression;}
     }
 
     public static class Node implements DeepCloneable {

@@ -77,6 +77,13 @@ public class BitVariableValue extends VariableValue<ConstantBitValue> implements
         );
     }
 
+    public static VariableValueRange<ConstantBitValue> defaultBoolValue() {
+        return new VariableValueRange<>(
+                new ConstantBitValue(0L, 1),
+                new ConstantBitValue(1L, 1)
+        );
+    }
+
     public BitVariableValue(Set<VariableValueRange<ConstantBitValue>> values) {
         super(values);
     }
@@ -190,26 +197,17 @@ public class BitVariableValue extends VariableValue<ConstantBitValue> implements
 
     @Override
     public Operations sizeof() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeofMax() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
     public Operations sizeofLength() {
-        return new FixedVariableValue(new VariableValueRange<>(
-                new ConstantFixedValue(Long.MIN_VALUE, 63),
-                new ConstantFixedValue(Long.MAX_VALUE, 63)
-        ));
+        return new FixedVariableValue(FixedVariableValue.defaultValue());
     }
 
     @Override
@@ -242,7 +240,33 @@ public class BitVariableValue extends VariableValue<ConstantBitValue> implements
     }
 
     @Override
-    public Operations h_notEqual() {
-        return new BitVariableValue(BitOperations.bitNotEqual(values));
+    public Operations h_xor(Operations other) {
+        return new BitVariableValue(BitVariableValue.defaultValue());
     }
+
+    @Override
+    public Operations h_notEqual() {
+        return new BitVariableValue(BitOperations.h_notEqual(values));
+    }
+
+    @Override
+    public Operations h_less() {
+        return new BitVariableValue(BitOperations.h_less(values));
+    }
+
+    @Override
+    public Operations h_greater() {
+        return new BitVariableValue(BitOperations.h_greater(values));
+    }
+
+    @Override
+    public Operations h_lessEqual() {
+        return new BitVariableValue(BitOperations.h_lessEqual(values));
+    }
+
+    @Override
+    public Operations h_greaterEqual() {
+        return new BitVariableValue(BitOperations.h_greaterEqual(values));
+    }
+
 }
