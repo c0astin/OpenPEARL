@@ -29,7 +29,6 @@
 
 package org.smallpearl.compiler;
 
-import org.smallpearl.compiler.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
