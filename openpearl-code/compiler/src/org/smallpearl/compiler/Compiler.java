@@ -73,6 +73,7 @@ public class Compiler {
     static boolean debug = false;
     static boolean debugSTG = false;
     static boolean debugCFG = false;
+    static boolean createCfg = false;
     static boolean stacktrace = false;
     static boolean imc = true;
     static boolean printSysInfo = false;
@@ -118,7 +119,7 @@ public class Compiler {
             Log.info("Start compiling of:" + m_sourceFilename);
             Log.debug("Performing syntax check");
 
-            try {
+            try { 
                 /* MS: Replacement for deprecated ANTLRFileStream:
                 CharStream codePointCharStream = CharStreams.fromFileName("myfile.testlang");
                 TESTLANGLexer lexer = new TESTLANGLexer(codePointCharStream);
@@ -129,6 +130,7 @@ public class Compiler {
                  */
 
                 lexer = new SmallPearlLexer(new ANTLRFileStream(m_sourceFilename));
+                //lexer = new SmallPearlLexer(CharStreams.fromFileName(m_sourceFilename));
             } catch (IOException ex) {
                 System.out.println("Error:" + ex.getMessage());
                 System.exit(-2);
@@ -224,7 +226,7 @@ public class Compiler {
                     ControlFlowGraphGenerate cfgGenerate = new ControlFlowGraphGenerate(lexer.getSourceName(), verbose, debug, symbolTableVisitor, expressionTypeVisitor, ast);
                     cfgGenerate.visit(tree);
                     List<ControlFlowGraph> cfgs = cfgGenerate.getControlFlowGraphs();
-                    if (false) {
+                    if (createCfg) {
                         // this does not work properly yet for all testcases in testsuite/build
                         // Creating List of all procedures
                         Map<String, ParserRuleContext> procedureMap = new HashMap<>();
@@ -282,7 +284,7 @@ public class Compiler {
                 }
             } catch (Exception ex) {
                 System.err.println(ex.getMessage());
-                ex.printStackTrace();
+                
                 if (debug) {
                     ex.printStackTrace();
                 }
@@ -385,7 +387,8 @@ public class Compiler {
                 + "  -std=PEARL90                use PEARL90 behavior                  \n"
                 + "  --coloured                  mark errors with colour               \n"
                 + "  --output <filename>         Filename of the generated code        \n"
-                + "  --debugcfg                  Outputs a .dot File with a cfg        \n" 
+                + "  --createCfg                 create control flow graph             \n"
+                + "  --debugCfg                  Outputs a .dot File with a cfg        \n" 
                 + "  infile ...                                                        \n");
     }
 
@@ -474,12 +477,18 @@ public class Compiler {
                 }
                 warninglevel = Integer.parseInt(args[i]);
                 i++;
-            } else if (arg.equals("--debugcfg")) {
+            } else if (arg.equals("--createCfg")) {
+                createCfg = true;
+            } else if (arg.equals("--debugCfg")) {
                 debugCFG = true;
             } else {
                 System.out.println("Unknown command line argument:" + arg);
                 return false;
             }
+        }
+        if (createCfg == false && debugCFG) {
+            System.out.println("--debugCfg requires --createCfg");
+            return false;
         }
 
         return true;
