@@ -101,6 +101,24 @@ public class Module {
         sourceFileName = m.getAttributes().getNamedItem("file").getTextContent();
         moduleName = m.getAttributes().getNamedItem("name").getTextContent();
 
+        Node std = m.getAttributes().getNamedItem("standard");
+        if (std != null) {
+            String standard= std.getTextContent();
+
+            if (useNameSpace && !standard.equals("-std=OpenPEARL")) { 
+                Log.setLocation(sourceFileName, line,  col);
+                Log.error("file "+sourceFileName + " compiled not with -std=OpenPEARL");
+                return;
+            }
+            if ((!useNameSpace) && !standard.equals("-std=PEARL90")) { 
+            }
+        } else {
+            Log.setLocation(sourceFileName, line,  col);
+            Log.error("file "+sourceFileName + " missing attribute 'standard' in module-tag");
+            return;
+
+        }
+
         systemElements = new ArrayList<ModuleEntrySystemPart>();
         readSystemPart();
 
@@ -209,22 +227,12 @@ public class Module {
                     // remove spaces at begin and end and replace multiple whitespaces by one space
                     type = type.trim().replaceAll("\\s+", " ");
 
-                    String global = moduleName;
-                    if (useNameSpace && n.getAttributes().getNamedItem("global") == null) {
-                        Log.setLocation(sourceFileName, line,  col);
-                        Log.error("file "+sourceFileName + " compiled not with std=OpenPEARL");
-                        return;
-                    }
-                    if ((!useNameSpace) && n.getAttributes().getNamedItem("global") != null) {
-                        Log.setLocation(sourceFileName, line,  col);
-                        Log.error("file "+sourceFileName + " compiled not with std=PEARL90");
-                        return;
-                    }
+                    String global = null; // moduleName;
                     
-                    global = "pearlApp"; // set namespace for pearl90
-                    if (n.getAttributes().getNamedItem("global") != null) {
+
+                   if (n.getAttributes().getNamedItem("global") != null) {
                         global = n.getAttributes().getNamedItem("global").getTextContent();
-                    }
+                   }
 
                     Log.setLocation(sourceFileName, line, col);
 
@@ -238,10 +246,7 @@ public class Module {
                             Node m = n.getChildNodes().item(j);
                             if (m.getNodeType() != Node.ELEMENT_NODE)
                                 continue;
-                            if (m.getNodeName().equals("subtype")) {
-                                //dationData = m.getNodeValue();
-                                subType = m.getTextContent();
-                            }
+
                             if (m.getNodeName().equals("data")) {
                                 //dationData = m.getNodeValue();
                                 dationData = m.getTextContent();

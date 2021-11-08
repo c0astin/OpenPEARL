@@ -17,6 +17,8 @@ The document has the root tag \verb|<module>|, which hat the attribute
 All system elements are in the xml-subtree \verb|<system>|.
 All problem part elements with attribute GLOBAL are located
 in the xml-subtree \verb|problem|.
+Locally defined  DATIONs are also exported in the xml-subree \verb|problem| 
+for compatibility tests with the system dation.
 
 \begin{XMLCode}
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -353,16 +355,18 @@ demo.prl:25:7: error: dation 'noTFU' must use TFU, which is required by 'Console
 
 
 \section{Multi-Module Support}
-The imc supports basic operation for multiple modules.
-The module name defines a kind of namespace for all global symbols.
+The imc supports the operation modes \verb|-std=PEARL90| and \verb|-std=OpenPEARL|.
 
-It is possible to ignore the module name with the command line parameter 
-\texttt{-noNameSpace}.
+\subsection{Standard PEARL90}
+In this standard only one system part is allowed and the module name is only
+for documentation use.
+The compiler must set the for \verb|GLOBAL| elements the value to the given name or to the empty string.
 
-The compiler does not provide the information for multiple modules.
+\subsection{Standard OpenPEARL}
+In this standard multiple system parts are allowed.
+The module name is required and defines the namespace of the objects defined in this module.
+The compiler must set the for defined \verb|GLOBAL| elements the value the module name.
 
-The spc-tag may have an attribute \texttt{GLOBAL} with the name of
-the module which should provide the symbol. The attribute \texttt{GLOBAL} 
-default for the module name for convenience to import system part elements
-in the same module.
-
+\subsection{Tests concerning Multi-Module}
+The compiler sets the selected standard in the module tag. 
+The IMC checks this element.
