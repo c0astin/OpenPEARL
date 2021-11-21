@@ -1,9 +1,0 @@
-MODULE(m1);
-
-PROBLEM;
-LENGTH FIXED (-1);
-/*$           ^
-ERROR : Syntax error :extraneous input '-' expecting IntegerConstant
-*/
-MODEND;
-
