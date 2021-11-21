@@ -21,24 +21,23 @@ To block a task the class must provided the methods {\em block} and
 The declaration of a PEARL bolt variable is done without preset value..
 
 \begin{PEARLCode}
-DCL b0 BOLT;
+DCL b0 BOLT GLOBAL;
 DCL b1 BOLT;
 DCL b2 BOLT;
-SPC b2 BOLT;
+SPC b3 BOLT;
 \end{PEARLCode}
 
-The class {\em Bolt} provides two macros for definition and 
-specification of a bolt variable.
+The class {\em Bolt} provides  a ctor for definition 
+of a bolt variable.
 \begin{description}
-\item[DCLBOLT] takes 1 parameter: the bolt's name.
-\item[SPCBOLT] takes 1 parameter:  the bolt's name.
+\item[pearlrt::Bolt] takes 1 parameter: the bolt's name.
 \end{description}
 
 \begin{CppCode}
-DCLBOLT(b0);
-DCLBOLT(b1);
-DCLBOLT(b2);
-SPCBOLT(b2);
+pearlrt::Bolt _b0("_b0");
+static pearlrt::Bolt _b1("_b1");
+static pearlrt::Bolt _b2("_b2");
+extern pearlrt::Bolt _b3;
 \end{CppCode}
 
 \section{Operations}

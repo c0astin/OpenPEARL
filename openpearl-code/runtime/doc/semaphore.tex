@@ -29,23 +29,22 @@ To block a task the class must provided the methods {\em block} and
 The declaration of a PEARL semaphore is always done with a preset value.
 
 \begin{PEARLCode}
-DCL s0 SEMAPHORE PRESET(0);
+DCL s0 SEMAPHORE PRESET(0) GLOBAL;
 DCL s1 SEMAPHORE PRESET(1);
 DCL s2 SEMAPHORE PRESET(2);
 \end{PEARLCode}
 
-The class {\em Semaphore} provides two macros for definition and 
-specification of a semaphore variable.
+The class {\em Semaphore} provides a ctor for definition 
+of a semaphore variable.
 \begin{description}
-\item[DCLSEMA] takes 2 parameters; the semaphore's name and the preset value.
-\item[SPCSEMA] takes only  the semphore's name as parameter.
+\item[Semaphore] takes 2 parameters; the semaphore's name and the preset value.
 \end{description}
 
 \begin{CppCode}
-DCLSEMA(s0,0);
-DCLSEMA(s1,1);
-DCLSEMA(s2,2);
-SPCSEMA(s2);
+pearlrt::Semaphore _s0("_s0",0);
+static pearlrt::Semaphore _s1("_s1",1);
+static pearlrt::Semaphore _s2("_s2",0);
+extern pearlrt::Semaphore _s2; // import
 \end{CppCode}
 
 \section{Operations}
