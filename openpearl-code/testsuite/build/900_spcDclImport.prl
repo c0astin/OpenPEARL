@@ -1,0 +1,17 @@
+MODULE(spcDclImport);
+
+PROBLEM;
+   SPC int1 INTERRUPT GLOBAL(spcDclExport);
+   SPC sema1 SEMA GLOBAL(spcDclExport);
+   SPC so DATION OUT SYSTEM ALPHIC GLOBAL(spcDclExport);
+   SPC stdout DATION OUT ALPHIC DIM(*,80) FORWARD GLOBAL(spcDclExport);
+
+   SPC export FIXED  GLOBAL(spcDclExport);
+   SPC struct STRUCT [(c,d) FIXED ] GLOBAL(spcDclExport);
+
+tImport: TASK MAIN;
+   AFTER 1 SEC RESUME;
+   PUT 'importing export:', export TO stdout BY A,F(3),SKIP;
+   PUT 'importing struct(c,c):', struct.c,struct.d TO stdout BY A,2F(3),SKIP;
+END;
+MODEND;

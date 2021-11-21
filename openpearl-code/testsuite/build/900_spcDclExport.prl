@@ -1,0 +1,24 @@
+MODULE(spcDclExport);
+
+SYSTEM;
+   so: StdOut;
+   int1: UnixSignal(3);
+PROBLEM;
+   SPC so DATION OUT SYSTEM ALPHIC;
+   SPC int1 INTERRUPT;
+   DCL semaLokal SEMA PRESET(1);
+   DCL sema1 SEMA GLOBAL PRESET(1);
+   DCL semaArray(5) SEMA GLOBAL PRESET(1,2,3,4,5);
+   DCL bolt BOLT GLOBAL;
+   DCL boltLokal BOLT ;
+   DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD GLOBAL CREATED(so);
+
+   DCL export FIXED GLOBAL INIT(42);
+   DCL struct STRUCT [ (a,b) FIXED] GLOBAL INIT(1,2);
+t: TASK MAIN;
+   OPEN stdout;
+   struct.a = 3;
+   PUT 'export:', export TO stdout BY A,F(3),SKIP;
+   PUT 'struct.(a,b)', struct.a, struct.b TO stdout BY A,2F(4),SKIP;
+END;
+MODEND;
