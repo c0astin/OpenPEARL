@@ -1,4 +1,15 @@
 #!/bin/bash
+# parameters actioa platform tests
+# action 0: build all given tests without error result
+#        1: build or run successful with error return code
+#           if at least one test fails 
+#        2: does not build/run
+# platform is a platform name like linux
+# test is the prefix number of the test files
+# e.g.
+# ./run-compile.sh 0 linux 023 024
+# try to build 023*.prl  and 024*.prl to targert 023 and 024
+
 PARAM=$1
 shift
 TARGET=$1
@@ -11,21 +22,27 @@ failed=0
 
 printf "\nTarget: %s\n" $TARGET
 printf "===========================\n"
-printf "%-40s :    prl->c++      prl->bin\n" "program"
+printf "%-10s :    prl->c++      prl->bin\n" "program"
 for test in $TESTS
 do
 	nooftests=$(($nooftests + 1))
+        files=`ls $test*.prl`
+        printf "%-10s : %s" "$test " 
+	for f in $files ;  do
+           printf "%s " "$f"
+        done
+        printf "\n"
 
-	prl -cc -b $TARGET $test.prl >$test.out 2>&1
+	prl -cc -b $TARGET $test*.prl  >$test.out 2>&1
 	rc=$?
      
         base=`basename $test .prl`
-	prl -b $TARGET $base.cc  1> /dev/null 2>&1
+	prl -b $TARGET $test*.cc  -o $test 1> /dev/null 2>&1
 	rcbin=$?
 
 	if [ $rc -eq 0 ]
 	then
-  		printf "%-40s :     PASSED    " "$test"
+  		printf "%-10s :     PASSED     " " " 
                 if [ $rcbin -eq 0 ]
                 then
 		   passed=$(($passed + 1))
@@ -36,7 +53,7 @@ do
                 fi
 	else
 		failed=$(($failed + 1))
-  		printf "%-40s : *** FAILED ***\n" "$test"
+  		printf "%-10s : *** FAILED ***\n" " "
 	fi
 done
 
