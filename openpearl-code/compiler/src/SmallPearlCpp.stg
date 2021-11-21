@@ -250,12 +250,7 @@ ProblemPart(ScalarVariableDeclarations,
 <SemaDeclarations>
 <endif>
 
-<if(semaphoreArrays)>
-/////////////////////////////////////////////////////////////////////////////
-// CONSTANT SEMAPHORE ARRAYS
-/////////////////////////////////////////////////////////////////////////////
-<semaphoreArrays>
-<endif>
+
 
 <if(BoltDeclarations)>
 /////////////////////////////////////////////////////////////////////////////
@@ -264,12 +259,7 @@ ProblemPart(ScalarVariableDeclarations,
 <BoltDeclarations>
 <endif>
 
-<if(boltArrays)>
-/////////////////////////////////////////////////////////////////////////////
-// CONSTANT BOLT ARRAYS
-/////////////////////////////////////////////////////////////////////////////
-<boltArrays>
-<endif>
+
 
 <if(ArrayDescriptors)>
 /////////////////////////////////////////////////////////////////////////////
@@ -290,6 +280,20 @@ ProblemPart(ScalarVariableDeclarations,
 // STRUCTURE VARIABLES DECLARATIONS
 /////////////////////////////////////////////////////////////////////////////
 <StructVariableDeclarations>
+<endif>
+
+<if(semaphoreArrays)>
+/////////////////////////////////////////////////////////////////////////////
+// CONSTANT SEMAPHORE ARRAYS
+/////////////////////////////////////////////////////////////////////////////
+<semaphoreArrays>
+<endif>
+
+<if(boltArrays)>
+/////////////////////////////////////////////////////////////////////////////
+// CONSTANT BOLT ARRAYS
+/////////////////////////////////////////////////////////////////////////////
+<boltArrays>
 <endif>
 
 <if(cpp_inlines)>
@@ -1099,19 +1103,6 @@ ScalarVariableDeclaration(variable_denotations,cpp) ::= <<
 <if(cpp)><cpp_inline(cpp)><endif>
 >>
 
-/* necessary ?
-variable_denotation(decl) ::= <%
-<decl>
-%>
-*/
-
-/* unused
-VariableDeclaration(name,TypeAttribute,InitElement,global,inv) ::= <%
-<if(inv)>const  <endif><TypeAttribute>  <variable(name)><if(InitElement)>(<InitElement>)<endif><if(global)>  (GLOBAL)<endif>; <\n>
-%>
-*/
-
-
 GlobalAttribute() ::= <<
 *** GlobalAttribute ***
 >>
@@ -1198,9 +1189,15 @@ TaskCoordinationStatement(statement) ::= <<
 >>
 
 /* --------------------- SEMAPHORE -------------------------- */
-sema_declaration(name,global,preset) ::= <<
-DCLSEMA(_<name>,<if(preset)><preset><else>0<endif>);
+/* DCLSEMA(_<name>,<if(preset)><preset><else>0<endif>); */
 
+sema_declaration(name,preset) ::= <<
+pearlrt::Semaphore <name> ( <if(preset)><preset><else>0<endif>,"<name>");
+
+>>
+
+sema_init(name,preset,idx) ::= <<
+pearlrt::Semaphore (<if(preset)><preset><else>0<endif>,"<name>(<idx>)")
 >>
 
 SemaDeclaration(decl) ::= <%
@@ -1237,8 +1234,12 @@ SemaRelease(names,nbrOfElements,array,localArrayname) ::= <<
 /* --------------------- BOLT -------------------------- */
 
 bolt_declaration(name,global) ::= <<
-DCLBOLT(_<name>);
+pearlrt::Bolt <name>("<name>");
 
+>>
+
+bolt_init(name,idx) ::= <<
+pearlrt::Bolt ("<name>(<idx>)")
 >>
 
 BoltDeclaration(decl) ::= <%

@@ -534,9 +534,8 @@ implements SmallPearlVisitor<ST> {
 
         ST scope = getScope(ve);
         if (ve.getType() instanceof TypeArray) {
-        
+            ErrorStack.addInternal(ve.getCtx(), "SPC","arrays not supported, yet");        
         } else if (ve.getType() instanceof TypeStructure) {
-            TypeDefinition td= ve.getType();
             ST st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
             st.add("type",
@@ -544,10 +543,15 @@ implements SmallPearlVisitor<ST> {
             st.add("inv", ve.getAssigmentProtection());
             scope.add("variable", st);
             dationSpecifications.add("decl", scope);
-            //return visitStructVariableDenotation(ctx)
-        
-        } else if (ve.getType() instanceof TypeSemaphore) {
-        } else if (ve.getType() instanceof TypeBolt) {
+      
+        } else if (ve.getType() instanceof TypeSemaphore ||
+                   ve.getType() instanceof TypeBolt) {
+            // scopeXXX adds the extern/static/ ...
+            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
+            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
+            specifyVariable.add("type",getSTforType(t));
+            scope.add("variable", specifyVariable);
+            dationSpecifications.add("decl",  scope);
         } else if (t instanceof TypeDation) {
             ST specifyDation = null;
             ST initializer = null;
@@ -590,10 +594,6 @@ implements SmallPearlVisitor<ST> {
             if (ve.isSpecified() && !ve.getGlobalAttribute().equals(m_module.getName())) {
                 initializer = null;
             }
-//            if (initializer != null) {
-//                m_dationSpecificationInitializers.add("spec", initializer);
-//            }
-
 
             scope.add("variable", specifyDation);
             dationSpecifications.add("decl", scope);
@@ -602,10 +602,7 @@ implements SmallPearlVisitor<ST> {
             // scopeXXX adds the extern/static/ ...
             ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
             specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-            specifyVariable.add("type",getSimpleType(t));
-//            if (ve.getGlobalAttribute()!= null) {
-//                specifyVariable.add("global",ve.getGlobalAttribute());
-//            }
+            specifyVariable.add("type",getSTforType(t));
             scope.add("variable", specifyVariable);
             dationSpecifications.add("decl",  scope);
         } else {
@@ -663,17 +660,15 @@ implements SmallPearlVisitor<ST> {
             st = m_group.getInstanceOf("ArrayVariableDeclaration");
             st.add("name", ve.getName());
             TypeDefinition t = ((TypeArray)(ve.getType())).getBaseType();
-            if (t instanceof TypeSemaphore) {
-                ErrorStack.addInternal(ve.getCtx(), "CppCodeGen", "Sema-Arrays not supported yet");
-            } else if (t instanceof TypeBolt) {
-                ErrorStack.addInternal(ve.getCtx(), "CppCodeGen", "Bolt-Arrays not supported yet");
-            } else {
-                st.add("type",visitTypeAttribute(t));
-                //visitTypeAttribute(ctx.problemPartDataAttribute().typeAttribute()));
-            }
+            st.add("type",visitTypeAttribute(t));
+          
             st.add("assignmentProtection", ve.getAssigmentProtection());
             st.add("totalNoOfElements", ((TypeArray) ve.getType()).getTotalNoOfElements());
-            st.add("initElements", getStructOrArrayInitializer(ve));
+            if (t instanceof TypeBolt) {
+              st.add("initElements", boltArrayInitializer(ve));   
+            } else {
+               st.add("initElements", getStructOrArrayInitializer(ve));
+            }
             return st; // only one id for arrays
         } else if (ve.getType() instanceof TypeStructure) {
             TypeDefinition td= ve.getType();
@@ -708,22 +703,24 @@ implements SmallPearlVisitor<ST> {
 
         } else if (ve.getType() instanceof TypeSemaphore) {
             ST sema_decl = m_group.getInstanceOf("sema_declaration");
-            sema_decl.add("name", ve.getName());
-            sema_decl.add("global", 1);
+            sema_decl.add("name", getUserVariableWithoutNamespace(ve.getName()));
             if (ve.getInitializer() != null) {
                 sema_decl.add("preset", getInitialiserForSema(ve.getInitializer()));
             }
 
-            scalarVariableDeclaration.add("variable_denotations", sema_decl);
+            scope.add("variable", sema_decl);
+
+            scalarVariableDeclaration.add("variable_denotations", scope);
 
 
         } else if (ve.getType() instanceof TypeBolt) {
 
             ST bolt_decl = m_group.getInstanceOf("bolt_declaration");
-            bolt_decl.add("name", ve.getName());
-            bolt_decl.add("global", 1);
+            bolt_decl.add("name",getUserVariableWithoutNamespace(ve.getName()));
 
-            scalarVariableDeclaration.add("variable_denotations", bolt_decl);
+            scope.add("variable", bolt_decl);
+
+            scalarVariableDeclaration.add("variable_denotations", scope);
 
 
         } else if (ve.getType() instanceof TypeDation) {
@@ -791,32 +788,6 @@ implements SmallPearlVisitor<ST> {
         return result;
     }
 
-    private ArrayList<String> getIdentifierDenotation(
-            SmallPearlParser.IdentifierDenotationContext ctx) {
-        ArrayList<String> identifierDenotationList = new ArrayList<String>();
-
-        if (ctx != null) {
-            for (int i = 0; i < ctx.identifier().size(); i++) {
-                identifierDenotationList.add(ctx.identifier(i).ID().toString());
-            }
-        }
-
-        return identifierDenotationList;
-    }
-
-    private ArrayList<Integer> getPreset(SmallPearlParser.PresetContext ctx) {
-        ArrayList<Integer> presetList = new ArrayList<Integer>();
-
-        if (ctx != null) {
-            for (int i = 0; i < ctx.initElement().size(); i++) {
-                ASTAttribute attr = m_ast.lookup(ctx.initElement(i));
-
-                presetList.add((Integer) (int) (attr.getConstantFixedValue().getValue()));
-            }
-        }
-
-        return presetList;
-    }
 
     private long getInitialiserForSema(Initializer init) {
         long result;
@@ -827,7 +798,6 @@ implements SmallPearlVisitor<ST> {
         } else {
             result = 0; // no preset --> init with 0
         }
-
 
         return result;
 
@@ -873,10 +843,28 @@ implements SmallPearlVisitor<ST> {
         return st;
     }
 
+    /*
+     * Bolts should be initializes with their name and array-index
+     */
+    private ST boltArrayInitializer(VariableEntry variableEntry) {
+        ArrayList<ST> initElementList = new ArrayList<ST>();
+        ST st = m_group.getInstanceOf("structOrArrayInit");
+
+        TypeArray ta = (TypeArray)(variableEntry.getType());
+        for (int i=0; i<ta.getTotalNoOfElements(); i++) {
+            ST stValue = m_group.getInstanceOf("bolt_init");
+            stValue.add("name", variableEntry.getName());
+            stValue.add("idx", i+1);
+            initElementList.add(stValue);
+        }
+        st.add("initElements", initElementList);
+
+        return st;
+    }
+
     private ST getStructOrArrayInitializer(VariableEntry variableEntry) {
-
-
         boolean fillWithLast = false;
+        TypeDefinition baseType=null;
         ST lastInitValue = null;
         ArrayList<ST> initElementList = new ArrayList<ST>();
         ST st = null;
@@ -886,15 +874,28 @@ implements SmallPearlVisitor<ST> {
 
             if (variableEntry.getType() instanceof TypeArray) {
                 fillWithLast = true;
+                baseType = ((TypeArray)variableEntry.getType()).getBaseType();
             }
 
             ArrayOrStructureInitializer init = (ArrayOrStructureInitializer)(variableEntry.getInitializer());
             ArrayList<Initializer> initList = init.getInitElementList();
             for (int i=0; i<initList.size(); i++) {
-                ST stValue = m_group.getInstanceOf("expression");
-                stValue.add("code", ((SimpleInitializer)(initList.get(i))).getConstant() );
+                // simple types have constants as initializers
+                // other types may differ
+                ST stValue = null;
+                if (baseType instanceof TypeSemaphore) {
+                    stValue = m_group.getInstanceOf("sema_init");
+                    stValue.add("name", variableEntry.getName());
+                    stValue.add("idx", i+1);
+                    long preset = ((ConstantFixedValue)(((SimpleInitializer)(initList.get(i))).getConstant())).getValue();
+                    stValue.add("preset", preset);
+                } else {
+                   stValue = m_group.getInstanceOf("expression");
+                   stValue.add("code", ((SimpleInitializer)(initList.get(i))).getConstant() );
+                }
                 lastInitValue = stValue;
                 initElementList.add(stValue);
+                
             }
             if (fillWithLast) {
                 // arrays may require repetition of the last init-value
@@ -910,52 +911,7 @@ implements SmallPearlVisitor<ST> {
         return st;
     }
 
-//    private ST getArrayInitialisationAttribute(VariableEntry variableEntry) {
-//        ST st = m_group.getInstanceOf("ArrayInitalisations");
-//
-//        ArrayList<ST> initElementList = new ArrayList<ST>();
-//        int noOfElements = 0;
-//        int noOfArrayElements = -1; 
-//        try {
-//            noOfArrayElements = ((TypeArray) variableEntry.getType()).getTotalNoOfElements();
-//        } catch (ClassCastException e) {};
-//        try {
-//            noOfArrayElements = ((TypeStructure) variableEntry.getType()).getTotalNoOfElements();
-//        } catch (ClassCastException e) {};
-//        if (noOfArrayElements < 0) {
-//            ErrorStack.addInternal("CppCodeGenerator@1086: nether Array nor Struct");
-//        }
-//        ArrayOrStructureInitializer initializer = (ArrayOrStructureInitializer)(variableEntry.getInitializer());
-//
-//
-//        ST lastInitValue = null;
-//        if (initializer== null) {
-//
-//            return null;
-//        }
-//        int nbrOfInitializers = initializer.getInitElementList().size();
-//
-//        for (int i = 0; i < nbrOfInitializers; i++) {
-//            ParserRuleContext initCtx =
-//                    initializer.getInitElementList().get(i).getContext();
-//            ASTAttribute attr = m_ast.lookup(initCtx);
-//            ST stValue = null;
-//            stValue = m_group.getInstanceOf("expression");
-//            stValue.add("code", attr.m_constant);
-//            lastInitValue = stValue;
-//            noOfElements++;
-//            initElementList.add(stValue);
-//        }
-//        while (noOfElements < noOfArrayElements) {
-//            noOfElements++;
-//            initElementList.add(lastInitValue);
-//
-//        }
-//        st.add("initElements", initElementList);
-//        return st;
-//    }
 
-  
 
     @Override
     public ST visitDurationConstant(SmallPearlParser.DurationConstantContext ctx) {
@@ -1108,6 +1064,32 @@ implements SmallPearlVisitor<ST> {
         return st;
     }
 
+    private String getSTName(VariableEntry v) {
+        String result=null;
+        // sequence of check matters!
+        if (isSimpleType(v.getType()) && v.isSpecified()==false) {
+            result = "ScalarVariableDeclaraction";
+        } else if (isSimpleType(v.getType()) && v.isSpecified()==true) {
+            result = "VariableSpecification";
+        } else if (v.getType() instanceof TypeSemaphore && v.isSpecified() == false) {
+            result="SemaDeclaration";
+        }
+        /* ProblemPart contains:
+          ScalarVariableDeclarations,
+            SemaDeclarations,
+            BoltDeclarations,
+            semaphoreArrays,boltArrays,
+            ArrayDescriptors, ArrayVariableDeclarations,TaskDeclarations,
+            DationSpecifications,DationDeclarations,
+            SystemDationInitializer,
+            StructVariableDeclarations,
+            ProcedureSpecifications,ProcedureDeclarations,
+            InterruptSpecifications,
+         */
+
+        
+        return result;
+    }
     @Override
     public ST visitProblem_part(SmallPearlParser.Problem_partContext ctx) {
         ST problem_part = m_group.getInstanceOf("ProblemPart");
@@ -2894,11 +2876,10 @@ implements SmallPearlVisitor<ST> {
     }
 
     /*
-     * if there is a REF or REF() in the list of names we must create
-     * a local array of names
+     * if there is a REF, REF() or indexed array element in the list of names 
+     * we must create a local array of names
      * else we can create the arrays at system build
      */
-
     private void treatListOfSemaOrBoltNames(LinkedList<LinkedList<String>> listOfSemaOrBoltArrays,
             ST stOfSemaOrBoltArrays, ST currentOperation, ST newSemaOrBoltArray,
             ListOfNamesContext ctx) {
@@ -2906,19 +2887,38 @@ implements SmallPearlVisitor<ST> {
         String nameOfArray = "";
 
         boolean listIsConstant = true;
-
-
+        
         for (int i = 0; i < ctx.name().size(); i++) {
+            String name = ctx.name(i).getText();
 
             ST sem = visitAndDereference(ctx.name(i));
 
             ASTAttribute attr = m_ast.lookup(ctx.name(i));
+            if (attr.getVariable().getType() instanceof TypeArray) {
+                // check array index
+                name=attr.getVariable().getName();
+                
+                TypeArray ta = (TypeArray)(attr.getVariable().getType());
+                int dimensions = ta.getNoOfDimensions();
+                for (int dim=0; dim<dimensions; dim++) {
+                    ASTAttribute indexAttr = m_ast.lookup(ctx.name(i).listOfExpression().expression(dim));
+                    if (indexAttr.getVariable() != null) {
+                        listIsConstant = false;
+                    } else {
+                        name += "_" + indexAttr.getConstantFixedValue().getValue();
+                    }
+                }
+                if (listIsConstant) {
+                    
+                }
+            }
             if (attr.getType() instanceof TypeReference) {
                 listIsConstant = false;
             }
             newSemaOrBoltArray.add("element", sem);
 
-            listOfNames.add(ctx.name(i).getText());
+            //listOfNames.add(ctx.name(i).getText());
+            listOfNames.add(name);
         }
 
 
@@ -4554,15 +4554,14 @@ implements SmallPearlVisitor<ST> {
             //                    (SmallPearlParser.TypeOfTransmissionDataSimpleTypeContext) ctx;
             //            st.add("type", visitSimpleType(c.simpleType()));
         } else {
-            st.add("type", getSimpleType(td.getTypeOfTransmissionAsType()));
+            st.add("type", getSTforType(td.getTypeOfTransmissionAsType()));
         }
 
         return st;
     }
 
-    private ST getSimpleType(TypeDefinition t) {
+    private ST getSTforType(TypeDefinition t) {
         ST st= null;
-
 
         if (t instanceof TypeFixed) {
             st =  m_group.getInstanceOf("TypeInteger");
@@ -4580,6 +4579,12 @@ implements SmallPearlVisitor<ST> {
         } else if (t instanceof  TypeChar) {
             st =  m_group.getInstanceOf("TypeCharacterString");
             st.add("size", ((TypeChar)(t)).getPrecision());
+        } else if (t instanceof TypeSemaphore) {
+            st = m_group.getInstanceOf("sema_type");
+        } else if (t instanceof TypeBolt) {
+            st = m_group.getInstanceOf("bolt_type");
+        } else {
+            System.err.println("CppCodeGen: missing alternative@4591");
         }
 
 

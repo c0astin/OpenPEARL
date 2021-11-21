@@ -300,7 +300,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
                 // st is null, if DCL without global -> skip this for the IMC
                 if (st == null) continue;
                 st.add("lineno", v.getSourceLineNo());
-                st.add("col",v.getCharPositionInLine());
+                st.add("col",v.getCharPositionInLine()+1);
                 st.add("name", v.getName());
                 if (v.getType() instanceof TypeStructure) {
                     st.add("type",((TypeStructure)(v.getType())).getName());

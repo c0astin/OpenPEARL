@@ -493,7 +493,13 @@ implements SmallPearlVisitor<Void> {
                 m_type = new TypeArray();
                 //                ((TypeArray) m_type).setBaseType(baseType);
                 visitDimensionAttribute(ctx.dimensionAttribute());
-
+                ParserRuleContext c = ((TypeArray)m_type).getDimensions().get(0).getCtx();
+                if (c != null && m_isInSpecification) {
+                    ErrorStack.add(ctx.dimensionAttribute(), "SPC", "need virtual dimension list");
+                }
+                if (c == null && ! m_isInSpecification) {
+                    ErrorStack.add(ctx.dimensionAttribute(), "DCL", "need real dimension list");
+                }
                 addArrayDescriptor(
                         new ArrayDescriptor(
                                 ((TypeArray) m_type).getNoOfDimensions(),
@@ -894,6 +900,9 @@ implements SmallPearlVisitor<Void> {
 
     @Override
     public Void visitSemaDenotation(SemaDenotationContext ctx) {
+        int nbrOfInitializersPerName = 1;
+        boolean isArray = false;
+        
         m_isGlobal = false;
         m_globalName = null;
 
@@ -901,15 +910,21 @@ implements SmallPearlVisitor<Void> {
         if (ctx.preset() != null) {
             initElements = ctx.preset().initElement();
         }
-
-        m_type = new TypeSemaphore();
+        if (m_type != null && m_type instanceof TypeArray) {
+            nbrOfInitializersPerName = ((TypeArray)m_type).getTotalNoOfElements();
+            ((TypeArray)m_type).setBaseType(new TypeSemaphore());
+            isArray = true;
+        } else {
+           m_type = new TypeSemaphore();
+        }
+        
         visitChildren(ctx);
 
         if (initElements != null) {
             if (m_isInSpecification) {
                 ErrorStack.add(ctx, "SPC", "no PRESET allowed");
             } else {
-                if (m_identifierDenotationContext.identifier().size() < initElements.size()) {
+                if (m_identifierDenotationContext.identifier().size()*nbrOfInitializersPerName < initElements.size()) {
                     ErrorStack.add(ctx, "DCL", "too many PRESETs");
                 }
             }
@@ -917,34 +932,56 @@ implements SmallPearlVisitor<Void> {
 
         SimpleInitializer init = null;
         int nextInitializerIndex = 0;
+        ArrayList<Initializer> arrayInit = new ArrayList<Initializer>();
+ 
         for (int i = 0; i < m_identifierDenotationContext.identifier().size(); i++) {
             if (initElements != null) {
-                if (i < initElements.size()) {
-                    ConstantValue constant =
-                            getInitElement(
-                                    nextInitializerIndex,
-                                    initElements.get(nextInitializerIndex));
-                    if (constant == null) {
-                        ErrorStack.add(m_identifierDenotationContext.identifier(i),
-                                "PRESET","could not evaluate initializer");   
+                for (int j=0; j<nbrOfInitializersPerName; j++) {
+                    if (i < initElements.size()) {
+                        ConstantValue constant =
+                                getInitElement(
+                                        nextInitializerIndex,
+                                        initElements.get(nextInitializerIndex));
+                        if (constant == null) {
+                            ErrorStack.add(m_identifierDenotationContext.identifier(i),
+                                    "PRESET","could not evaluate initializer");   
+                        }
+
+                        init =
+                                new SimpleInitializer(
+                                        initElements.get(nextInitializerIndex), constant);
+                        nextInitializerIndex++;
+                    } else {
+                        // use last initializer
                     }
-                    init =
-                            new SimpleInitializer(
-                                    initElements.get(nextInitializerIndex), constant);
-                    nextInitializerIndex++;
-                } else {
-                    // use last initializer
+                    if (isArray) {
+                        arrayInit.add(init);
+                    }
                 }
+
             }
             String s = m_identifierDenotationContext.identifier(i).getText();
-            VariableEntry ve =
+            VariableEntry ve = null;
+            if (!isArray) {
+            ve =
                     new VariableEntry(
                             s,
                             m_type,
                             m_hasAllocationProtection,
                             m_identifierDenotationContext.identifier(i),
                             init);
-
+            } else {
+                ArrayOrStructureInitializer aInit = new ArrayOrStructureInitializer(ctx.preset(), arrayInit);
+                
+               ve =
+                        new VariableEntry(
+                                s,
+                                m_type,
+                                m_hasAllocationProtection,
+                                m_identifierDenotationContext.identifier(i),
+                                aInit);
+                
+            }
             // spc/dcl and global attribute is treated in checkDoubleDefinitionAndEnterToSymbolTable
             checkDoubleDefinitionAndEnterToSymbolTable(
                     ve, m_identifierDenotationContext.identifier(i));
@@ -1470,6 +1507,28 @@ implements SmallPearlVisitor<Void> {
     //    }
 
     @Override
+    public Void visitVirtualDimensionList(SmallPearlParser.VirtualDimensionListContext ctx) {
+        int nbrDimensions;
+        if (ctx != null) {
+
+            // get the number of array dimensions
+            // we count the ',' symbols and add 1,since 0 ',' is dimension 1
+            nbrDimensions = 1;
+            if (ctx.commas() != null) {
+                nbrDimensions += ctx.commas().getChildCount();
+            }
+            TypeArray array = new TypeArray();
+            //array.setBaseType(m_type);
+            for (int i = 0; i < nbrDimensions; i++) {
+                // the real dimensions limits are passed via array descriptor
+                array.addDimension(new ArrayDimension());
+            }
+            m_type = array;
+        }
+        return null;
+    }
+    
+    @Override
     public Void visitBoundaryDenotation(SmallPearlParser.BoundaryDenotationContext ctx) {
 
         if (ctx.constantFixedExpression().size() == 1) {
@@ -1629,15 +1688,25 @@ implements SmallPearlVisitor<Void> {
     @Override
     public Void visitBoltDenotation(SmallPearlParser.BoltDenotationContext ctx) {
         Log.debug("SymbolTableVisitor:visitBoltDenotation:ctx" + CommonUtils.printContext(ctx));
+        boolean isArray = false;
         m_isGlobal = false;
         m_globalName = null;
 
+        if (m_type != null && m_type instanceof TypeArray) {
+            ((TypeArray)m_type).setBaseType(new TypeBolt());
+            isArray = true;
+        } else {
+           m_type = new TypeBolt();
+        }
+        
+       
         visitChildren(ctx);
 
-        m_type = new TypeBolt();
+ 
         for (int i = 0; i < m_identifierDenotationContext.identifier().size(); i++) {
             String s = m_identifierDenotationContext.identifier(i).getText();
-            VariableEntry ve = new VariableEntry(s, m_type, m_hasAllocationProtection, ctx);
+            VariableEntry ve = new VariableEntry(s, m_type, m_hasAllocationProtection, 
+                    m_identifierDenotationContext.identifier(i));
 
             // spc/dcl and global attribute is treated in checkDoubleDefinitionAndEnterToSymbolTable
             checkDoubleDefinitionAndEnterToSymbolTable(
