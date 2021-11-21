@@ -20,7 +20,7 @@ HELP=
 INPUT=
 imcInputFiles=
 objects=
-target=a.out
+target=
 standard="-std=OpenPEARL"
 
 while [ "$1" != "" ] ; do
@@ -75,7 +75,7 @@ then
    echo "     * If only one input file (.prl, .cc or .o) is given, the name of binary output"
    echo "       is derived from the input file."
    echo "     * If more input files are given the name of the binary output is defines by "
-   echo "       the -o option, whcih defaults to a.out"a 
+   echo "       the -o option, which defaults to a.out "
    echo "   Example: "
    echo "     prl x.prl -c   : compile "
    echo "     prl x.prl      : compile and link"
@@ -113,9 +113,17 @@ if [[ "$nbr" -eq "0" ]] ; then
    echo "no input files"
    exit 1
 elif [[ "$nbr" -eq "1" ]] ; then
-  t=${INPUT%.*}
+  if [[ "$target" -eq "" ]] ; then
+     # replace default output
+     t=${INPUT%.*}
 #echo "t=" $t
-  target=${t// /}
+     target=${t// /}
+  fi
+else
+  if [[ "$target" -eq "" ]] ; then
+     # set default output
+     target="a.out"
+  fi
 #  echo "target= " $target
 fi
 
