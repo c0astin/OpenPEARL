@@ -48,10 +48,10 @@ running, suspended or waiting for a semaphore
 #include <stdio.h>
 using namespace std;
 
-DCLSEMA(_s1, 0);
-DCLSEMA(_s2, 10);
-DCLSEMA(_boltBlockerGoon, 0);
-DCLBOLT(_bolt);
+pearlrt::Semaphore _s1(0,"_s1");
+pearlrt::Semaphore _s2(10,"_s2");
+pearlrt::Semaphore _boltBlockerGoon(0,"_boltBlockerGoon");
+pearlrt::Bolt _bolt("_bolt");
 
 SPCTASK(START);
 //SPCTASK(T1SemaBlocked);

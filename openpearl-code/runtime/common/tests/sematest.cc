@@ -108,10 +108,10 @@ using namespace std;
 
 //SPCSEMA(_s1);
 //SPCSEMA(_s2);
-DCLSEMA(_s1, 10);
-DCLSEMA(_s2, 1);
-DCLSEMA(_s3, 5);
-DCLSEMA(_overflow, (unsigned int) - 2); // exeeds at 2nd release
+pearlrt::Semaphore _s1(10,"_s1");
+pearlrt::Semaphore _s2(1,"_s2");
+pearlrt::Semaphore _S3(5,"_s3");
+pearlrt::Semaphore _overflow((unsigned int) - 2, "_overflow"); // exeeds at 2nd release
 
 SPCTASK(_MAIN);
 SPCTASK(_T1);
@@ -125,12 +125,12 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
    int i, fail;
 
    buffer[bp++] = 1;
-   //printf("Task T1 started\n");
+   printf("Task T1 started\n");
    {
       pearlrt::Semaphore* s[2] = {&_s1, &_s2};
       pearlrt::Semaphore::request(me, 2, s);
       buffer[bp++] = 1;
-      //   printf("T1\n");
+         printf("T1\n");
       pearlrt::Semaphore::request(me, 2, s);
       buffer[bp++] = 1;
    }
@@ -174,7 +174,7 @@ DCLTASK(_T2, pearlrt::Prio(20), pearlrt::BitString<1>(1)) {
    buffer[bp++] = 2;
    me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5,0));
    {
-      //   printf("t2\n");
+         printf("t2\n");
       pearlrt::Semaphore* s[2] = {&_s1};
       pearlrt::Semaphore::release(me, 1, s);
    }
@@ -183,14 +183,14 @@ DCLTASK(_T2, pearlrt::Prio(20), pearlrt::BitString<1>(1)) {
    me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5,0));
    {
       buffer[bp++] = 2;
-      //   printf("t2\n");
+         printf("t2\n");
       pearlrt::Semaphore* s[2] = {&_s2};
       pearlrt::Semaphore::release(me, 1, s);
    }
    me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5,0));
    {
       buffer[bp++] = 2;
-      //  printf("t2\n");
+        printf("t2\n");
       pearlrt::Semaphore* s[2] = {&_s2};
       pearlrt::Semaphore::release(me, 1, s);
    }
@@ -203,7 +203,7 @@ DCLTASK(_T3, pearlrt::Prio(15), pearlrt::BitString<1>(1)) {
       pearlrt::Semaphore* s[2] = {&_s2};
       pearlrt::Semaphore::request(me, 1, s);
       buffer[bp++] = 3;
-      // printf("t3\n");
+       printf("t3\n");
    }
 }
 

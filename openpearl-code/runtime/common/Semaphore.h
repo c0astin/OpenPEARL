@@ -195,37 +195,6 @@ namespace pearlrt {
    };
 }
 
-/**
-Macro to import a semaphore
-
-\param  x the name of the semaphore
-\param fromModule module, where the semaphore is defined
-\param inModule module, this module's name
-*/
-#define SPCSEMA(x,fromModule,inModule) 	\
-}   						\
-namespace pearl_ ## fromNameSpace {		\
-   extern pearlrt::Semaphore x;			\
-}						\
-namespace pearl_ ## inNameSpace {
-
-/**
-Macro to define a semaphore
-
-\param x the name of the semaphore
-\param preset the preset value
-*/
-#define DCLSEMA(x,preset) \
-static  pearlrt::Semaphore x(preset,#x)
-
-/**
-Macro to define a global semaphore
-
-\param x the name of the semaphore
-\param preset the preset value
-*/
-#define DCLSEMAGLOBAL(x,preset) \
-   pearlrt::Semaphore x(preset,#x)
 
 #endif
 
