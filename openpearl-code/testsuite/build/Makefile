@@ -19,45 +19,45 @@
 
 include ../../configuration/.config
  
-DONOTBUILD= 030_signals 031_signalsInduce  \
-	120_length \
-	851_ref_deref \
-	900_spcDeclExport 900_spcDclImport
+DONOTBUILD= 030 031  \
+	120 \
+	851 
 
 # on ESP32 we have no Disc
-DONOTBUILDESP32= 030_signals 031_signalsInduce  \
-	120_length \
-	224_bit_slice 410_charSelection\
-	700_dation_rw 701_dation_pg 703_userdation_dcl \
-	704_dation_open 705_dation_close 707_dation_pg_formats 710_rst \
-	851_ref_deref \
-	900_spcDeclExport 900_spcDclImport
+DONOTBUILDESP32= 030 031  \
+	120 \
+	224 410\
+	700 701 703 \
+	704 705 707 710 \
+	851 \
+	900
 
 #	022_mixedDcl \ not int repo yet
 
-DONOTRUN=000_empty \
-	022_mixedDcl \
-	450_struct_dcl \
-        703_userdation_dcl \
-	704_dation_open \
-	705_dation_close 
+DONOTRUN=000 \
+	022 \
+	450 \
+        703 \
+	704 \
+	705 
 
 ####################################################
 ##### do not change beyond this line  ##############
 .SUFFIXES:
 
-TESTS=$(shell ls *.prl)
-BINS=$(TESTS:%.prl=%)
+SHELL=/bin/bash
+
+TESTS=$(shell ../getTestNumbers.sh *.prl)
 
 ifeq ($(CONFIG_LINUX),y) 
-BUILD=$(filter-out $(DONOTBUILD),$(BINS)) 
+BUILD=$(filter-out $(DONOTBUILD),$(TESTS)) 
 endif
 
 ifeq ($(CONFIG_ESP32),y) 
-BUILDESP32=$(filter-out $(DONOTBUILDESP32),$(BINS)) 
+BUILDESP32=$(filter-out $(DONOTBUILDESP32),$(TESTS)) 
 endif
 
-RUN=$(filter-out $(DONOTRUN) $(DONOTBUILD) ,$(BINS)) 
+RUN=$(filter-out $(DONOTRUN) $(DONOTBUILD) ,$(TESTS)) 
 
 .PHONY: help all run build clean allbuild allrun redo
 all:	allbuild allrun
@@ -82,10 +82,10 @@ allbuild:
 	@echo "try to build test programs"
 	@echo "--------------------------"
 ifeq ($(CONFIG_LINUX),y) 
-	@../run-compile.sh 0 linux $(BINS) 
+	@../run-compile.sh 0 linux $(TESTS) 
 endif
 ifeq ($(CONFIG_ESP32),y) 
-	@../run-compile.sh 0 esp32 $(BINS) 
+	@../run-compile.sh 0 esp32 $(TESTS) 
 endif
 
 build:
@@ -129,8 +129,8 @@ doesnotrun:
 	@../runtest.sh 2 $(DONOTRUN)
 
 clean:
-	rm -f $(BINS)
-	rm -f *.cc *.out *.xml *.log *.o *.elf *.bin
+	find . -maxdepth 1 -type f -executable -delete
+	rm -f *.cc *.out *.xml *.log *.o *.elf *.bin *.dot
 	rm -f pearl_log.txt 
 	rm -f system.cc 
 	rm -f .log
