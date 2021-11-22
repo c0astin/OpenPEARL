@@ -104,6 +104,10 @@ public class CheckAssignment extends SmallPearlBaseVisitor<Void>
         Log.debug("CheckAssignment:visitAssignment_statement:ctx.expression"
                 + CommonUtils.printContext(ctx.expression()));
 
+        if(lhsVariable.getAssigmentProtection()==true) {
+            ErrorStack.add(lhsAttr.getType().toString() + " INV variable not allowed on lhs");
+        }
+
         if (!(lhsType instanceof TypeStructure || lhsType instanceof TypeReference
                 || lhsType instanceof TypeVariableChar || isSimpleType(lhsType))) {
             ErrorStack.add(lhsAttr.getType().toString() + " not allowed on lhs");
