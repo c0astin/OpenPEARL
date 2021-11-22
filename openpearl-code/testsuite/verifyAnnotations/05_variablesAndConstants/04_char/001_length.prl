@@ -1,0 +1,15 @@
+MODULE(char);
+PROBLEM;
+LENGTH CHAR(1);
+
+LENGTH CHAR(65536);
+/*$         ^
+error: illegal length: not in range [1,32767]
+*/
+
+LENGTH CHAR(0);
+/*$         ^ 
+error: illegal length: not in range [1,32767]
+*/
+MODEND;
+   

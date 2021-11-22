@@ -1,0 +1,12 @@
+MODULE(char);
+PROBLEM;
+DCL c CHAR(1) INIT('ab');
+/*$                ^
+error: type mismatch in INIT: CHAR(1) := CHAR(2)
+*/
+DCL d2 CHAR(2) INIT('ä'); ! ok; ä takes two bytes
+DCL d CHAR(1) INIT('ä'); ! ä takes 2 bytes!
+/*$                ^
+error: type mismatch in INIT: CHAR(1) := CHAR(2)
+*/
+MODEND;
