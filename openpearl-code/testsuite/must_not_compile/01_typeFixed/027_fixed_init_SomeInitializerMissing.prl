@@ -1,8 +1,0 @@
-MODULE(m);
-
-PROBLEM;
-
-DCL (f,f1) FIXED(15) INIT(1);
-
-MODEND;
-
