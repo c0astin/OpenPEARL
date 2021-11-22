@@ -21,7 +21,7 @@ p: PROC;
    DCL dur DURATION;
    DCL bit1 BIT(1);
    DCL rt REF TASK;
-  ! DCL rc REF CHAR();
+   DCL rc REF CHAR();
    DCL rc1 REF CHAR(1);
    DCL rd REF DATION OUT ALPHIC ;
 
@@ -73,9 +73,8 @@ error: assignment: type mismatch: FIXED(15) := REF TASK
 error: assignment: type mismatch: FIXED(15) := REF CHAR(1)
 */     
 
-/*     
    f1 := rc;
-/* $
+/*$
    ^
 error: assignment: type mismatch: FIXED(15) := REF CHAR()
 */     
