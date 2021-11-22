@@ -102,10 +102,6 @@ public class TypeDation extends TypeDefinition {
 
     public String getTypeAsString() {
         String s=" ";
-        if (m_in) s += "IN";
-        if (m_out) s += "OUT";
-        if (m_systemDation) s+= " SYSTEM";
-        //else s+= " (userdation)";
 
         if (m_hasAccessAttributes) {
             if (m_direct) s+= " DIRECT";
@@ -141,6 +137,9 @@ public class TypeDation extends TypeDefinition {
 
     public String toString() {
         String s=this.getName()+" ";
+        if (m_in) s += "IN";
+        if (m_out) s += "OUT";
+        if (m_systemDation) s+= " SYSTEM";
         if (m_basic) s+=" BASIC";
         s += " ";
         s += getDataAsString();
