@@ -164,9 +164,8 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void>
 
     @Override
     public Void visitProcedureDeclaration(SmallPearlParser.ProcedureDeclarationContext ctx) {
-        if (m_verbose > 0) {
-            System.out.println("SymbolTableVisitor: visitProcedureDeclaration");
-        }
+        Log.debug("Semantic: CheckProcedureDeclaration: visitProcedureDeclaration");
+
         ErrorStack.enter(ctx, "PROC");
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -184,7 +183,6 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void>
         if (procedureEntry.getFormalParameters() != null
                 && procedureEntry.getFormalParameters().size() > 0) {
             /* check formal parameters of this procedure */
-
 
             for (FormalParameter formalParameter : procedureEntry.getFormalParameters()) {
                 checkFormalParameter(formalParameter);
@@ -224,9 +222,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void>
 
     @Override
     public Void visitCallStatement(SmallPearlParser.CallStatementContext ctx) {
-        if (m_debug) {
-            System.out.println("Semantic: Check ProcedureCall: visitCallStatement");
-        }
+        Log.debug("Semantic: CheckProcedureDeclarations: visitCallStatement");
 
         ErrorStack.enter(ctx, "CALL");
         String procName = ctx.ID().getText();
@@ -236,8 +232,7 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void>
 
         if (entry != null) {
             if (entry instanceof ProcedureEntry) {
-                if (m_debug)
-                    System.out.println("Semantic: Check ProcedureCall: found call in expression");
+                Log.debug("Semantic: Check ProcedureCall: found call in expression");
                 proc = (ProcedureEntry) entry;
                 TypeDefinition resultType = proc.getResultType();
 
@@ -443,7 +438,12 @@ public class CheckProcedureDeclaration extends SmallPearlBaseVisitor<Void>
                     // this will be used by the CppCodeGeneratorVisitor to instanciate
                     // a temporary variable
                     ((TypeVariableChar) attr.getType()).setBaseType(formalBaseType);
-
+                } else if (formalBaseType instanceof TypeFloat && actualType instanceof TypeFixed) {
+                    // check if an implicit cast is allowed:
+                    if(actualType.getPrecision() > formalBaseType.getPrecision()) {
+                        ErrorStack.add("actual argument does not fit into formal parameter: expected " + formalBaseType.toString()
+                                + "  -- got " + actualType.toString());
+                    }
                 } else if (!formalBaseType.getName().equals(actualType.getName())) {
                     ErrorStack.add("type mismatch: expected " + formalBaseType.toString()
                             + "  -- got " + actualType.toString());
