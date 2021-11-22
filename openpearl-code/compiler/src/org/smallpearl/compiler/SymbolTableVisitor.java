@@ -1128,7 +1128,7 @@ implements SmallPearlVisitor<Void> {
     @Override
     public Void visitTypeRefChar(SmallPearlParser.TypeRefCharContext ctx) {
         Log.debug("SymbolTableVisitor:visitTypeRefChar:ctx" + CommonUtils.printContext(ctx));
-        m_type = new TypeChar();
+        m_type = new TypeRefChar();
         return null;
     }
 
