@@ -1590,9 +1590,8 @@ implements SmallPearlVisitor<Void> {
                                     ctx.label_statement(i).ID().getText(), ctx.label_statement(i));
 
                     if (!m_currentSymbolTable.enter(entry)) {
-                        System.out.println(
-                                "ERR: Double definition of "
-                                        + ctx.label_statement(i).ID().getText());
+                        ErrorStack.add(
+                                ctx, "DECLARATION", "duplicate name '" + entry.getName() + "' in scope");
                     }
                 }
             }
