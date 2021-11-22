@@ -1,0 +1,19 @@
+
+MODULE(m1);
+
+PROBLEM;
+
+q: PROC (f FIXED IDENT);
+   f := f +1 ;
+END;
+
+a: TASK;
+   DCL h INV FIXED INIT(1);
+   CALL q(h);
+/*$       ^
+error: CALL:param: pass INV data as non INV parameter
+*/ 
+END;
+
+
+MODEND;
