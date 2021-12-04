@@ -10,3 +10,8 @@ RUN apt-get install -qqy --no-install-recommends \
         dirmngr gnupg2 lbzip2 wget xz-utils libtinfo5 g++ && \
     rm -rf /var/lib/apt/lists/*	   	    	      
 
+RUN useradd -m -s /bin/sh openpearl
+WORKDIR /home/openpearl
+RUN git clone https://git.code.sf.net/p/openpearl/code openpearl-code
+
+
