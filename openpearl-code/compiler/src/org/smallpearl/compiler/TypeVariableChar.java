@@ -67,6 +67,11 @@ public class TypeVariableChar extends TypeDefinition {
         return this.getName() + " " + this.m_baseType;
     }
 
+    public String toString4IMC() {
+        ErrorStack.addInternal(null, "TypeVariableChar", "toString4IMC nit implemented");
+        return null;
+    }
+    
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof TypeVariableChar)) {

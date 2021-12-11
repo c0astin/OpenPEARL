@@ -53,9 +53,20 @@ public class ArrayDimension  {
     }
     
     public String toString() {
-        return Integer.toString(this.m_lowerBoundary) + ":" + Integer.toString(this.m_upperBoundary);
+        if (m_ctx != null) {
+            // real dimension list
+            return Integer.toString(this.m_lowerBoundary) + ":" + Integer.toString(this.m_upperBoundary);
+        } else {
+            // virtual dimension list - suppress 0:0 output
+            return "";
+        }
     }
-
+    
+    public String toString4IMC() {
+        // IMC does not need concrete array limits 
+        return "";
+    }
+ 
     public int getNoOfElements() {
         return m_upperBoundary - m_lowerBoundary + 1;
     }
@@ -74,4 +85,6 @@ public class ArrayDimension  {
         // Custom equality check here.
         return this.m_lowerBoundary == that.m_lowerBoundary && this.m_upperBoundary == that.m_upperBoundary;
     }
+
+
 }

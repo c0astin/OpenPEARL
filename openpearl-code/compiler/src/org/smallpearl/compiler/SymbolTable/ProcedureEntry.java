@@ -30,6 +30,7 @@
 package org.smallpearl.compiler.SymbolTable;
 
 import org.smallpearl.compiler.SmallPearlParser;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.smallpearl.compiler.ASTAttribute;
 import org.smallpearl.compiler.TypeDefinition;
 import java.util.LinkedList;
@@ -38,18 +39,20 @@ public class ProcedureEntry extends SymbolTableEntry {
 
     private LinkedList<FormalParameter> m_formalParameters;
     private ASTAttribute m_resultType;
+    private TypeDefinition m_type;
 
     public ProcedureEntry() {
         this.m_formalParameters = null;
     }
 
-    public ProcedureEntry(String name, LinkedList<FormalParameter> formalParameters,
+    public ProcedureEntry(String name, TypeDefinition type, LinkedList<FormalParameter> formalParameters,
             ASTAttribute resultType, String globalId,
-            SmallPearlParser.ProcedureDeclarationContext ctx, SymbolTable scope) {
+            ParserRuleContext ctx, SymbolTable scope) {
         super(name);
         this.m_formalParameters = formalParameters;
-        this.m_ctx = ctx.nameOfModuleTaskProc();
+        this.m_ctx = ctx;//.nameOfModuleTaskProc();
         this.scope = scope;
+        this.m_type = type;
         this.m_resultType = resultType;
     }
 
@@ -95,5 +98,9 @@ public class ProcedureEntry extends SymbolTableEntry {
 
     public LinkedList<FormalParameter> getFormalParameters() {
         return m_formalParameters;
+    }
+    
+    public TypeDefinition getType() {
+        return m_type;
     }
 }

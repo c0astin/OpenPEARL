@@ -62,6 +62,22 @@ public class TypeStructure extends TypeDefinition {
 
         return line + " ] ";
     }
+    
+    public String toString4IMC() {
+        String line = super.getName() + " [ ";
+
+        for (int i = 0; i < m_listOfComponents.size(); i++) {
+            String prefix = " ";
+            if ( i > 0 ) {
+                prefix = ",";
+            }
+
+            line += prefix + m_listOfComponents.get(i).toString4IMC();
+        }
+
+        return line + " ] ";
+    }
+
 
     public int getTotalNoOfElements() {
         int nbr = 0;
@@ -221,6 +237,18 @@ public class TypeStructure extends TypeDefinition {
         ST st = group.getInstanceOf("StructureType");
         st.add("type", getStructureName());
         return st;
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof TypeStructure)) {
+            return false;
+        }
+
+        TypeStructure that = (TypeStructure) other;
+
+        // Custom equality check here.
+        return this.getStructureName().equals(that.getStructureName());
     }
 
 }

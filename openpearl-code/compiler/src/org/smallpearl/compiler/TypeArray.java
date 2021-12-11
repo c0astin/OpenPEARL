@@ -32,6 +32,8 @@ package org.smallpearl.compiler;
 import java.util.ArrayList;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 public class TypeArray extends TypeDefinition {
     private TypeDefinition m_baseType;
@@ -100,6 +102,16 @@ public class TypeArray extends TypeDefinition {
         return this.getName() + " " + this.m_dimensions + " " + this.m_baseType;
     }
 
+    public String toString4IMC() {
+        String result="(";
+        for (int i=0; i< m_dimensions.size(); i++) {
+            if (i>0) result += ",";
+            result += m_dimensions.get(i).toString4IMC();
+        }
+        
+        result += ") " + m_baseType.toString4IMC();
+        return result;
+    }
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof TypeArray)) {
@@ -110,5 +122,10 @@ public class TypeArray extends TypeDefinition {
 
         // Custom equality check here.
         return this.m_baseType.equals(that.getBaseType());
+    }
+    public ST toST(STGroup group) {
+        ST st = group.getInstanceOf("ArrayType");
+        st.add("type",m_baseType.toST(group));
+        return st;
     }
 }

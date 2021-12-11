@@ -150,6 +150,11 @@ public class TypeDation extends TypeDefinition {
         else if (m_createdOnAsString!= null) s+= " CREATED("+m_createdOnAsString+")";
         return s;
     }
+    
+    public String toString4IMC() {
+        ErrorStack.addInternal(null, "TypeDation", "toString4IMC() not implemented");
+        return null;
+    }
 
     public boolean isIn() {
         return m_in;

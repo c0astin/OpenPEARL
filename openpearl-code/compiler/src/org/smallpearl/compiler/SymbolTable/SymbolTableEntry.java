@@ -112,6 +112,7 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
             return indentString(level) + Integer.toString(level) + ": ";
         }
     }
+        
     public int getSourceLineNo() {
       return m_ctx.getStart().getLine();
   }

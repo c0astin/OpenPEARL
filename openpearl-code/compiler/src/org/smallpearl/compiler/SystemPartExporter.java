@@ -31,8 +31,10 @@ package org.smallpearl.compiler;
 
 import org.smallpearl.compiler.SymbolTable.InterruptEntry;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
+import org.smallpearl.compiler.SymbolTable.ProcedureEntry;
 import org.smallpearl.compiler.SymbolTable.SymbolTable;
 import org.smallpearl.compiler.SymbolTable.SymbolTableEntry;
+import org.smallpearl.compiler.SymbolTable.TaskEntry;
 import org.smallpearl.compiler.SymbolTable.VariableEntry;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
@@ -302,21 +304,66 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
                 st.add("lineno", v.getSourceLineNo());
                 st.add("col",v.getCharPositionInLine()+1);
                 st.add("name", v.getName());
-                if (v.getType() instanceof TypeStructure) {
-                    st.add("type",((TypeStructure)(v.getType())).getName());
-                } else {
-                    st.add("type", v.getType());
-                }
+               // if (v.getType() instanceof TypeStructure) {
+                //    st.add("type",((TypeStructure)(v.getType())).getName());
+                //} else {
+                    st.add("type", v.getType().toString4IMC());
+                //}
                 if (v.getGlobalAttribute() != null) {
                     st.add("fromNamespace", v.getGlobalAttribute());
                 }
                 problemPart.add("decls",  st);
-
-
-
             }
         }
+        
+ 
+        LinkedList<TaskEntry> tl = m_currentSymbolTable.getTaskDeclarationsAndSpecifications();
+        for (TaskEntry v : tl) {
+        ST st = null;
+        if (v.isSpecified()) {
+            st = group.getInstanceOf("Specification");
+        } else {
+            if (v.getGlobalAttribute()!= null) {
+                //Declaration(lineno,col,name,type,global) ::= <<
+                st = group.getInstanceOf("Declaration");
+            } 
+        }
 
+        // st is null, if DCL without global -> skip this for the IMC
+        if (st == null) continue;
+        st.add("lineno", v.getSourceLineNo());
+        st.add("col",v.getCharPositionInLine()+1);
+        st.add("name", v.getName());
+        st.add("type", "TASK");
+        if (v.getGlobalAttribute() != null) {
+            st.add("fromNamespace", v.getGlobalAttribute());
+        }
+        problemPart.add("decls",  st);
+    }
+
+        LinkedList<ProcedureEntry> pl = m_currentSymbolTable.getProcedureDeclarationsAndSpecifications();
+        for (ProcedureEntry v : pl) {
+        ST st = null;
+        if (v.isSpecified()) {
+            st = group.getInstanceOf("Specification");
+        } else {
+            if (v.getGlobalAttribute()!= null) {
+                //Declaration(lineno,col,name,type,global) ::= <<
+                st = group.getInstanceOf("Declaration");
+            } 
+        }
+
+        // st is still null, if DCL without global -> skip this for the IMC
+        if (st == null) continue;
+        st.add("lineno", v.getSourceLineNo());
+        st.add("col",v.getCharPositionInLine()+1);
+        st.add("name", v.getName());
+        st.add("type", v.getType().toString4IMC());
+        if (v.getGlobalAttribute() != null) {
+            st.add("fromNamespace", v.getGlobalAttribute());
+        }
+        problemPart.add("decls",  st);
+    }
         return;
     }
 

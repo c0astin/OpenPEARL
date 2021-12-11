@@ -255,7 +255,7 @@ public class ErrorStack {
            printMessage(msg + "\n\tplease send a bug report", "internal compiler error");
            leave();
         } else {
-            System.err.println("internal compiler error: "+msg + "\n\tplease send a bug report" );
+            System.err.println("internal compiler error: "+prefix+": "+msg + "\n\tplease send a bug report" );
         }
         return null;
     }

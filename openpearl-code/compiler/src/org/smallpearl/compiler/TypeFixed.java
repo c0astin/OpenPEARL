@@ -59,6 +59,10 @@ public class TypeFixed extends TypeDefinition {
         return this.getName() + "(" + this.m_precision + ")";
     }
 
+    public String toString4IMC() {
+        return toString();
+    }
+    
     public ST toST(STGroup group) {
         ST st = group.getInstanceOf("fixed_type");
         st.add("size", m_precision);

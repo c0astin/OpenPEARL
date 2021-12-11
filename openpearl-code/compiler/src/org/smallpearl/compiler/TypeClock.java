@@ -44,6 +44,9 @@ public class TypeClock extends TypeDefinition {
         return this.getName();
     }
 
+    public String toString4IMC() {
+        return toString();
+    }
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof TypeClock)) {

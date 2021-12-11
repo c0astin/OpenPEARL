@@ -41,4 +41,9 @@ public class StructureComponent {
     public String toString() {
         return m_id + " " +  m_type + " " + m_index + " " + m_alias;
     }
+    
+    public String toString4IMC() {
+        return m_type.toString4IMC();
+    }
+
 }

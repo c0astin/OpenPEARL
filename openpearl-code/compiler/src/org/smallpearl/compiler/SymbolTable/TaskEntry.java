@@ -36,7 +36,6 @@ import org.smallpearl.compiler.SmallPearlParser;
 public class TaskEntry extends SymbolTableEntry {
 
     private Boolean m_isMain;
-    private Boolean m_isGlobal;
     private SmallPearlParser.PriorityContext m_priority;
 
     public TaskEntry() {}
@@ -52,13 +51,13 @@ public class TaskEntry extends SymbolTableEntry {
     }
 
     public TaskEntry(String name, SmallPearlParser.PriorityContext priority, Boolean isMain,
-            Boolean isGlobal, SmallPearlParser.TaskDeclarationContext ctx, SymbolTable scope) {
+             SmallPearlParser.TaskDeclarationContext ctx, SymbolTable scope) {
         super(name);
 
         m_priority = priority;
         m_isMain = isMain;
         Log.warn("TaskEntry@64: global treatment still incomplete");
-        m_isGlobal = isGlobal;
+        
 
         this.m_ctx = ctx.nameOfModuleTaskProc();
         this.scope = scope;

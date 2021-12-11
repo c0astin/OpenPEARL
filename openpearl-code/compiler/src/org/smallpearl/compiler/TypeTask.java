@@ -40,6 +40,10 @@ public class TypeTask extends TypeDefinition {
     public String toString() {
         return this.getName();
     }
+    
+    public String toString4IMC() {
+        return this.getName();
+    }
 
     @Override
     public boolean equals(Object other) {

@@ -146,14 +146,33 @@ implements SmallPearlVisitor<ST> {
 
         ST taskspec = m_group.getInstanceOf("TaskSpecifier");
 
-        LinkedList<TaskEntry> taskEntries = this.m_module.scope.getTaskDeclarations();
+        // generate task forward specifications
+        LinkedList<TaskEntry> taskEntries = this.m_module.scope.getTaskDeclarationsAndSpecifications();
+        
+        
         ArrayList<String> listOfTaskNames = new ArrayList<String>();
 
         for (int i = 0; i < taskEntries.size(); i++) {
-            listOfTaskNames.add(taskEntries.get(i).getName());
+            ST task = m_group.getInstanceOf("TaskSpecifierEntry");
+            TaskEntry te = taskEntries.get(i);
+            task.add("taskname", te.getName());
+            ST scope = null;
+            // we need 'extern' if we are in the same namespace
+            // and 
+             scope = m_group.getInstanceOf("externVariable");
+             if (te.getGlobalAttribute()!= null && !te.getGlobalAttribute().equals(m_module.getName())) {
+                 // namespace switch only required of namespace changes to another module
+                 scope.add("fromNs", te.getGlobalAttribute());
+                 scope.add("currentNs",m_module.getName());
+            }
+            
+            scope.add("variable", task);
+            taskspec.add("taskname", scope);
+
+//            listOfTaskNames.add(taskEntries.get(i).getName());
         }
 
-        taskspec.add("taskname", listOfTaskNames);
+   //     taskspec.add("taskname", listOfTaskNames);
         prologue.add("taskSpecifierList", taskspec);
         prologue.add("ConstantPoolList", generateConstantPool());
 
@@ -484,6 +503,8 @@ implements SmallPearlVisitor<ST> {
     @Override
     public ST visitTypeReference(SmallPearlParser.TypeReferenceContext ctx) {
         // must become more sophisticated! (2020-04-07 rm)
+System.out.println("CppCg@487 called");
+//System.exit(-1);
         ST st;
         ST baseType = visitChildren(ctx);
         if (ctx.virtualDimensionList() == null) {
@@ -522,9 +543,49 @@ implements SmallPearlVisitor<ST> {
     private ST generateSpecification(InterruptEntry ve) {
         ST st = m_group.getInstanceOf("InterruptSpecifications");
         ST spec = m_group.getInstanceOf("InterruptSpecification");
+        ST scope = getScope(ve);
+        
         spec.add("id", ve.getName());
-        st.add("specs", spec);
+        scope.add("variable", spec);
+        st.add("specs", scope);
         return st;
+     
+    }
+    
+    private ST generateSpecification(ProcedureEntry ve) {
+        ST st = m_group.getInstanceOf("ProcedureSpecifications");
+        ST spec = m_group.getInstanceOf("ProcedureSpecification");
+        ST scope = getScope(ve);
+        /*
+         * ProcedureSpecification(id,listOfFormalParameters,body,resultAttribute,globalAttribute) ::= <<
+         */
+
+        spec.add("id", ve.getName());
+
+        if (ve.getResultType() != null) {
+            spec.add("resultAttribute", visitTypeAttribute(ve.getResultType()));
+        }
+        if (ve.getFormalParameters() != null) {
+            ST formalParams = m_group.getInstanceOf("ListOfFormalParameters");
+            for (int i=0; i<ve.getFormalParameters().size(); i++) {
+                FormalParameter f = ve.getFormalParameters().get(i);
+                ST fp = m_group.getInstanceOf("FormalParameter");
+                //FormalParameter(id,type,assignmentProtection,passIdentical,isArray) ::= <%
+                TypeDefinition td = f.getType();
+                fp.add("type", visitTypeAttribute(f.getType()));
+                fp.add("assignmentProtection", f.getAssigmentProtection());
+                fp.add("passIdentical", f.passIdentical);
+                //fp.add("isArray",f.
+                formalParams.add("FormalParameters",fp);
+            }
+            if (ve.getFormalParameters().size() > 0) {
+               spec.add("listOfFormalParameters",  formalParams);
+            }
+        }
+        scope.add("variable", spec);
+        st.add("specs", scope);
+        return st;
+     
     }
 
     private ST generateSpecification(VariableEntry ve) {
@@ -534,7 +595,13 @@ implements SmallPearlVisitor<ST> {
 
         ST scope = getScope(ve);
         if (ve.getType() instanceof TypeArray) {
-            ErrorStack.addInternal(ve.getCtx(), "SPC","arrays not supported, yet");        
+            //ErrorStack.addInternal(ve.getCtx(), "SPC","arrays not supported, yet");    
+            TypeDefinition baseType = ((TypeArray)(ve.getType())).getBaseType();
+            ST st = m_group.getInstanceOf("ArrayVariableSpecification");
+            st.add("name", ve.getName());
+            st.add("type",visitTypeAttribute(baseType));//(((TypeArray)(ve.getType())).getBaseType()));
+            scope.add("variable", st);
+            dationSpecifications.add("decl", scope);
         } else if (ve.getType() instanceof TypeStructure) {
             ST st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
@@ -613,7 +680,7 @@ implements SmallPearlVisitor<ST> {
 
     }
     
-    private ST getScope(VariableEntry ve) {
+    private ST getScope(SymbolTableEntry ve) {
         ST scope = null;
         if (ve.getLevel() == 1) {
             if (ve.getGlobalAttribute() != null) {
@@ -657,19 +724,38 @@ implements SmallPearlVisitor<ST> {
 
 
         if (ve.getType() instanceof TypeArray) {
+            TypeDefinition t = ((TypeArray)(ve.getType())).getBaseType();
+            ST storage = m_group.getInstanceOf("ArrayStorageDeclaration");
+            storage.add("name", ve.getName());
+            storage.add("type",visitTypeAttribute(t));
+            storage.add("assignmentProtection", ve.getAssigmentProtection());
+            storage.add("totalNoOfElements", ((TypeArray) ve.getType()).getTotalNoOfElements());
+            if (t instanceof TypeBolt) {
+                storage.add("initElements", boltArrayInitializer(ve));   
+            } else {
+                storage.add("initElements", getStructOrArrayInitializer(ve));
+            }    
+            
+            if (ve.getLevel() == 1) {
+                scope = m_group.getInstanceOf("staticVariable");
+            } else {
+                scope = m_group.getInstanceOf("localVariable"); 
+            }
+           
+
+            scope.add("variable", storage);
+            scalarVariableDeclaration.add("variable_denotations", scope);
+            
             st = m_group.getInstanceOf("ArrayVariableDeclaration");
             st.add("name", ve.getName());
-            TypeDefinition t = ((TypeArray)(ve.getType())).getBaseType();
             st.add("type",visitTypeAttribute(t));
-          
-            st.add("assignmentProtection", ve.getAssigmentProtection());
-            st.add("totalNoOfElements", ((TypeArray) ve.getType()).getTotalNoOfElements());
-            if (t instanceof TypeBolt) {
-              st.add("initElements", boltArrayInitializer(ve));   
-            } else {
-               st.add("initElements", getStructOrArrayInitializer(ve));
-            }
-            return st; // only one id for arrays
+            st.add("descriptor", getArrayDescriptor(ve));
+            st.add("storage", "data_"+ve.getName());
+
+            scope = getScope(ve);
+            scope.add("variable", st);
+            scalarVariableDeclaration.add("variable_denotations", scope);
+
         } else if (ve.getType() instanceof TypeStructure) {
             TypeDefinition td= ve.getType();
             st = m_group.getInstanceOf("variable_denotation");
@@ -1106,6 +1192,7 @@ implements SmallPearlVisitor<ST> {
                 problem_part.add("ScalarVariableDeclarations", generateVariableDeclaration(ve));
             }
         }
+        
         // get variable entries from SymbolTable and create code for their definition
         LinkedList<InterruptEntry> intEntries = m_currentSymbolTable.getInterruptSpecifications();
 
@@ -1115,6 +1202,17 @@ implements SmallPearlVisitor<ST> {
             problem_part.add("InterruptSpecifications", generateSpecification(ve));
 
         }
+        
+        // get variable entries from SymbolTable and create code for their definition
+        LinkedList<ProcedureEntry> procEntries = m_currentSymbolTable.getProcedureSpecificationsAndDeclarations();
+
+        for (int i=0; i<procEntries.size(); i++) {
+            ProcedureEntry ve = procEntries.get(i);
+
+            problem_part.add("ProcedureSpecifications", generateSpecification(ve));
+
+        }
+                
 
 
         if (ctx != null) {
@@ -1134,25 +1232,10 @@ implements SmallPearlVisitor<ST> {
                             (SmallPearlParser.ProcedureDeclarationContext) c);
 
                     problem_part.add("ProcedureDeclarations", procedureDeclaration);
-                    ST spc = m_group.getInstanceOf("ProcedureSpecification");
-                    spc.add("id", procedureDeclaration.getAttribute("id"));
-                    Object obj = procedureDeclaration.getAttribute("listOfFormalParameters");
-                    if (obj != null) {
-                        spc.add("listOfFormalParameters", obj);
-                    }
-                    obj = procedureDeclaration.getAttribute("resultAttribute");
-                    if (obj != null) {
-                        spc.add("resultAttribute", obj);
-                    }
-                    obj = procedureDeclaration.getAttribute("globalAttribute");
-                    if (obj != null) {
-                        spc.add("globalAttribute", obj);
-                    }
 
-                    problem_part.add("ProcedureSpecifications", spc);
                 } else if (c instanceof SmallPearlParser.InterruptDenotationContext) {
-                    problem_part.add("InterruptSpecifications", visitInterruptDenotation(
-                            (SmallPearlParser.InterruptDenotationContext) c));
+                    //problem_part.add("InterruptSpecifications", visitInterruptDenotation(
+                    //        (SmallPearlParser.InterruptDenotationContext) c));
                 }
             }
         }
@@ -1291,6 +1374,7 @@ implements SmallPearlVisitor<ST> {
         taskdecl.add("name", ctx.nameOfModuleTaskProc().ID());
         taskdecl.add("priority", priority);
         taskdecl.add("main", main);
+
 
         if (ctx != null) {
             for (ParseTree c : ctx.children) {
@@ -2023,64 +2107,78 @@ implements SmallPearlVisitor<ST> {
 
     @Override
     public ST visitName(SmallPearlParser.NameContext ctx) {
+        String fromModule = null;
+        
         ST expression = m_group.getInstanceOf("expression");
+        ST stOfName = null;
         ASTAttribute attr = m_ast.lookup(ctx);
         SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
-
+        if (entry.isSpecified()) {
+            fromModule = entry.getGlobalAttribute();
+            if (fromModule.equals(m_module.getName())) {
+                fromModule=null;
+            }
+        }
+        
         if (entry instanceof org.smallpearl.compiler.SymbolTable.ProcedureEntry) {
-            ST functionCall = m_group.getInstanceOf("FunctionCall");
-
+            stOfName = m_group.getInstanceOf("FunctionCall");
+            stOfName.add("fromns",fromModule);
+            
             if (attr.isFunctionCall() || (ctx.listOfExpression() != null
                     && ctx.listOfExpression().expression().size() > 0)) {
-                functionCall.add("callee", getUserVariableWithoutNamespace(ctx.ID().getText()));
+                stOfName.add("callee", getUserVariableWithoutNamespace(ctx.ID().getText()));
+ 
 
                 if (ctx.listOfExpression() != null
                         && ctx.listOfExpression().expression().size() > 0) {
 
-                    functionCall.add("ListOfActualParameters",
+                    stOfName.add("ListOfActualParameters",
                             getActualParameters(ctx.listOfExpression().expression()));
                 }
-                expression.add("functionCall", functionCall);
+              //  expression.add("functionCall", functionCall);
             } else {
                 // only name of a procedure
-                expression.add("id", getUserVariableWithoutNamespace(ctx.ID().getText()));
+                stOfName =  getUserVariableWithoutNamespace(ctx.ID().getText());
+                //expression.add("id", getUserVariableWithoutNamespace(ctx.ID().getText()));
             }
         } else if (entry instanceof VariableEntry) {
             VariableEntry variable = (VariableEntry) entry;
-
+            // note
+            // ST stNameSpace=null; if same namespace; else "fromNamespace"
+            // inside the alternative set ST stOfExpression = null;
             if (attr.isFunctionCall()) {
                 // code for dereference an function call missing!
                 // code: bit15 = refFunctionWithBitResult;
                 ErrorStack.addInternal("typeXX := refFunctionReturningTypeXX not implemented yet");
-            } else if (variable.getType() instanceof TypeArray) {
-                ST array = m_group.getInstanceOf("ArrayLHS");
-
-                ParserRuleContext c = variable.getCtx();
-
-                if (c instanceof FormalParameterContext) {
-                    array.add("descriptor", "ad_" + variable.getName());
-                }
-
-                expression.add("id", generateLHS(ctx, m_currentSymbolTable));
+            } else if (variable.getType() instanceof TypeArray && ctx.listOfExpression() != null) {
+                stOfName = generateLHS(ctx, m_currentSymbolTable);
+               // expression.add("id", generateLHS(ctx, m_currentSymbolTable));
             } else if (variable.getType() instanceof TypeStructure) {
-                ST temp = generateLHS(ctx, m_currentSymbolTable);
-                if (variable.isSpecified()) {
-                    String fromModule = variable.getGlobalAttribute();
-                    if (!fromModule.equals(m_module.getName())) {
-                        ST fromns=m_group.getInstanceOf("fromNamespace");
-                        fromns.add("fromNs", fromModule);
-                        fromns.add("name",temp);
-                        expression.add("id", fromns);
-                    }
-                }    else {    
-                   expression.add("id", temp);
-                }
+                stOfName = generateLHS(ctx, m_currentSymbolTable);
+//                if (variable.isSpecified()) {
+//                    String fromModule = variable.getGlobalAttribute();
+//                    if (!fromModule.equals(m_module.getName())) {
+//                        ST fromns=m_group.getInstanceOf("fromNamespace");
+//                        fromns.add("fromNs", fromModule);
+//                        fromns.add("name",temp);
+//                        expression.add("id", fromns);
+//                    }
+//                }    else {    
+//                   expression.add("id", temp);
+//                }
             } else {
-                expression.add("id", getUserVariable(variable)); //getUserVariable(ctx.ID().getText()));
+                stOfName =  getUserVariable(variable);
+                //expression.add("id", getUserVariable(variable)); //getUserVariable(ctx.ID().getText()));
             }
+            
+            // add namespace here for all alternatives ??????
         } else {
-            expression.add("id", getUserVariableWithoutNamespace(ctx.ID().getText()));
+            stOfName =  getUserVariableWithoutNamespace(ctx.ID().getText());
+           // expression.add("id", getUserVariableWithoutNamespace(ctx.ID().getText()));
         }
+       
+        expression.add("id", stOfName);
+       
         return expression;
     }
 
@@ -2497,40 +2595,25 @@ implements SmallPearlVisitor<ST> {
 
         return literal;
     }
+    
 
     @Override
     public ST visitLwbDyadicExpression(SmallPearlParser.LwbDyadicExpressionContext ctx) {
-        ST st = m_group.getInstanceOf("ArrayLWB");
-
-        if (ctx.expression(1) instanceof SmallPearlParser.BaseExpressionContext) {
-            SmallPearlParser.BaseExpressionContext expr =
-                    (SmallPearlParser.BaseExpressionContext) ctx.expression(1);
-            if (expr.primaryExpression().name().ID() != null) {
-                String id = expr.primaryExpression().name().ID().toString();
-                SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
-                if (entry != null) {
-                    if (entry instanceof VariableEntry) {
-                        VariableEntry var = (VariableEntry) entry;
-
-                        if (var.getType() instanceof TypeArray) {
-                            st.add("descriptor", getArrayDescriptor(var));
-                            st.add("index", visitAndDereference(ctx.expression(0)).render());
-                        } else {
-                            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                                    ctx.start.getCharPositionInLine());
-                        }
-                    } else {
-                        throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                                ctx.start.getCharPositionInLine());
-                    }
-                } else {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-                            ctx.start.getCharPositionInLine());
-                }
-            } else {
-                throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                        ctx.start.getCharPositionInLine());
-            }
+        ST st = null;
+        
+        ASTAttribute attr1 = m_ast.lookup(ctx.expression(1));
+        VariableEntry entry = attr1.getVariable();
+        
+        if (entry.getType() instanceof TypeArray) {
+            st = m_group.getInstanceOf("ArrayLWB");
+            st.add("name", entry.getName());
+            st.add("index", visitAndDereference(ctx.expression(0)).render());
+        } else if (entry.getType() instanceof TypeStructure) {
+            st = m_group.getInstanceOf("ArrayInStructLWB");
+            st.add("descriptor", getArrayDescriptor((TypeArray)(attr1.getType())));
+            st.add("index", visitAndDereference(ctx.expression(0)).render());
+        } else {
+            ErrorStack.addInternal(ctx, "CppCodeGenerator LWB Dyadic", "unexpected type "+attr1.getVariable().getType() );
         }
 
         return st;
@@ -2538,37 +2621,21 @@ implements SmallPearlVisitor<ST> {
 
     @Override
     public ST visitLwbMonadicExpression(SmallPearlParser.LwbMonadicExpressionContext ctx) {
-        ST st = m_group.getInstanceOf("ArrayLWB");
-
-        if (ctx.expression() instanceof SmallPearlParser.BaseExpressionContext) {
-            SmallPearlParser.BaseExpressionContext expr =
-                    (SmallPearlParser.BaseExpressionContext) ctx.expression();
-            if (expr.primaryExpression().name().ID() != null) {
-                String id = expr.primaryExpression().name().ID().toString();
-                SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
-                if (entry != null) {
-                    if (entry instanceof VariableEntry) {
-                        VariableEntry var = (VariableEntry) entry;
-
-                        if (var.getType() instanceof TypeArray) {
-                            st.add("descriptor", getArrayDescriptor(var));
-                            st.add("index", 1);
-                        } else {
-                            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                                    ctx.start.getCharPositionInLine());
-                        }
-                    } else {
-                        throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                                ctx.start.getCharPositionInLine());
-                    }
-                } else {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-                            ctx.start.getCharPositionInLine());
-                }
-            } else {
-                throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                        ctx.start.getCharPositionInLine());
-            }
+        ST st = null;
+        
+        ASTAttribute attr1 = m_ast.lookup(ctx.expression());
+        VariableEntry entry = attr1.getVariable();
+        
+        if (entry.getType() instanceof TypeArray) {
+            st = m_group.getInstanceOf("ArrayLWB");
+            st.add("name", entry.getName());
+            st.add("index", 1);
+        } else if (entry.getType() instanceof TypeStructure) {
+            st = m_group.getInstanceOf("ArrayInStructLWB");
+            st.add("descriptor", getArrayDescriptor((TypeArray)(attr1.getType())));
+            st.add("index", 1);
+        } else {
+            ErrorStack.addInternal(ctx, "CppCodeGenerator LWB monadic", "unexpected type "+attr1.getVariable().getType() );
         }
 
         return st;
@@ -2576,37 +2643,21 @@ implements SmallPearlVisitor<ST> {
 
     @Override
     public ST visitUpbDyadicExpression(SmallPearlParser.UpbDyadicExpressionContext ctx) {
-        ST st = m_group.getInstanceOf("ArrayUPB");
-
-        if (ctx.expression(1) instanceof SmallPearlParser.BaseExpressionContext) {
-            SmallPearlParser.BaseExpressionContext expr =
-                    (SmallPearlParser.BaseExpressionContext) ctx.expression(1);
-            if (expr.primaryExpression().name().ID() != null) {
-                String id = expr.primaryExpression().name().ID().toString();
-                SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
-                if (entry != null) {
-                    if (entry instanceof VariableEntry) {
-                        VariableEntry var = (VariableEntry) entry;
-
-                        if (var.getType() instanceof TypeArray) {
-                            st.add("descriptor", getArrayDescriptor(var));
-                            st.add("index", visitAndDereference(ctx.expression(0)).render());
-                        } else {
-                            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                                    ctx.start.getCharPositionInLine());
-                        }
-                    } else {
-                        throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                                ctx.start.getCharPositionInLine());
-                    }
-                } else {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-                            ctx.start.getCharPositionInLine());
-                }
-            } else {
-                throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                        ctx.start.getCharPositionInLine());
-            }
+        ST st = null;
+        
+        ASTAttribute attr1 = m_ast.lookup(ctx.expression(1));
+        VariableEntry entry = attr1.getVariable();
+        
+        if (entry.getType() instanceof TypeArray) {
+            st = m_group.getInstanceOf("ArrayUPB");
+            st.add("name", entry.getName());
+            st.add("index", visitAndDereference(ctx.expression(0)).render());
+        } else if (entry.getType() instanceof TypeStructure) {
+            st = m_group.getInstanceOf("ArrayInStructUPB");
+            st.add("descriptor", getArrayDescriptor((TypeArray)(attr1.getType())));
+            st.add("index", visitAndDereference(ctx.expression(0)).render());
+        } else {
+            ErrorStack.addInternal(ctx, "CppCodeGenerator UPB Dyadic", "unexpected type "+attr1.getVariable().getType() );
         }
 
         return st;
@@ -2614,39 +2665,23 @@ implements SmallPearlVisitor<ST> {
 
     @Override
     public ST visitUpbMonadicExpression(SmallPearlParser.UpbMonadicExpressionContext ctx) {
-        ST st = m_group.getInstanceOf("ArrayUPB");
-
-        if (ctx.expression() instanceof SmallPearlParser.BaseExpressionContext) {
-            SmallPearlParser.BaseExpressionContext expr =
-                    (SmallPearlParser.BaseExpressionContext) ctx.expression();
-            if (expr.primaryExpression().name().ID() != null) {
-                String id = expr.primaryExpression().name().ID().toString();
-                SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
-                if (entry != null) {
-                    if (entry instanceof VariableEntry) {
-                        VariableEntry var = (VariableEntry) entry;
-
-                        if (var.getType() instanceof TypeArray) {
-                            st.add("descriptor", getArrayDescriptor(var));
-                            st.add("index", 1);
-                        } else {
-                            throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                                    ctx.start.getCharPositionInLine());
-                        }
-                    } else {
-                        throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                                ctx.start.getCharPositionInLine());
-                    }
-                } else {
-                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-                            ctx.start.getCharPositionInLine());
-                }
-            } else {
-                throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(),
-                        ctx.start.getCharPositionInLine());
-            }
+        ST st = null;
+        
+        ASTAttribute attr1 = m_ast.lookup(ctx.expression());
+        VariableEntry entry = attr1.getVariable();
+        
+        if (entry.getType() instanceof TypeArray) {
+            st = m_group.getInstanceOf("ArrayUPB");
+            st.add("name", entry.getName());
+            st.add("index", 1);
+        } else if (entry.getType() instanceof TypeStructure) {
+            st = m_group.getInstanceOf("ArrayInStructUPB");
+            st.add("descriptor", getArrayDescriptor((TypeArray)(attr1.getType())));
+            st.add("index", 1);
+        } else {
+            ErrorStack.addInternal(ctx, "CppCodeGenerator UPB Dyadic", "unexpected type "+attr1.getVariable().getType() );
         }
-
+       
         return st;
     }
 
@@ -2894,6 +2929,9 @@ implements SmallPearlVisitor<ST> {
             ST sem = visitAndDereference(ctx.name(i));
 
             ASTAttribute attr = m_ast.lookup(ctx.name(i));
+            if (attr.getVariable().isSpecified()) {
+                listIsConstant = false;
+            }
             if (attr.getVariable().getType() instanceof TypeArray) {
                 // check array index
                 name=attr.getVariable().getName();
@@ -3378,12 +3416,15 @@ implements SmallPearlVisitor<ST> {
                         dataList.add("dataelement", data);
                     }
                 } else if (ctx.ioListElement(i).arraySlice() != null) {
+                 
                     ArraySliceContext slice = ctx.ioListElement(i).arraySlice();
                     ASTAttribute attr = m_ast.lookup(slice);
                     // we need
                     //  + the base type of the array
                     //  + the address of the name(startIndex)
                     //  + number of elements
+                       ASTAttribute a = m_ast.lookup(slice.name());
+
                     TypeArraySlice tas = (TypeArraySlice) (attr.getType());
                     TypeArray ta = (TypeArray) (tas.getBaseType());
                     TypeDefinition t = ta.getBaseType();
@@ -3391,18 +3432,8 @@ implements SmallPearlVisitor<ST> {
                     ST data = getIojobDataItem(t);
 
                     ST firstElement = m_group.getInstanceOf("ArrayLHS");
+                    firstElement.add("name", a.getVariable().getName());
 
-                    ParserRuleContext c = slice.name();
-                    if (c instanceof FormalParameterContext) {
-                        firstElement.add("descriptor", "ad_" + slice.name().ID());
-                    } else {
-                        ArrayDescriptor array_descriptor =
-                                new ArrayDescriptor(ta.getNoOfDimensions(), ta.getDimensions());
-                        firstElement.add("descriptor", array_descriptor.getName());
-                    }
-                    firstElement.add("name", slice.name().ID());
-
-                    // if no indices are given, the complete array is accessed
                     firstElement.add("indices",
                             getIndices(slice.startIndex().listOfExpression().expression()));
 
@@ -3812,7 +3843,7 @@ implements SmallPearlVisitor<ST> {
         if (user_variable.isSpecified()) {
             String fromModule = user_variable.getGlobalAttribute();
             if (!fromModule.equals(m_module.getName())) {
-                ST fromns=m_group.getInstanceOf("fromNamespace");
+                ST fromns = m_group.getInstanceOf("fromNamespace");
                 fromns.add("fromNs", fromModule);
                 fromns.add("name",st);
                 return fromns;
@@ -3887,7 +3918,13 @@ implements SmallPearlVisitor<ST> {
     public ST visitCallStatement(SmallPearlParser.CallStatementContext ctx) {
         ST stmt = m_group.getInstanceOf("CallStatement");
 
+        SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID().toString());
+        String fromns = se.getGlobalAttribute();
         stmt.add("callee", ctx.ID());
+        if (fromns != null && fromns.equals(m_module.getName())) {
+            fromns = null;
+        }
+        stmt.add("fromns",fromns);
         if (ctx.listOfActualParameters() != null) {
             stmt.add("ListOfActualParameters",
                     visitListOfActualParameters(ctx.listOfActualParameters()));
@@ -3913,11 +3950,10 @@ implements SmallPearlVisitor<ST> {
      * add an expression result to the actual parameter list for
      * a functionCall or a procedureCall
      * <p>
-     * In case of the given expression is an array, we must add
-     * an array descriptor and the array data
-     * The array descriptor is derived from the variable entry of the expression.
-     * If the array is already a formal parameter, we pass the formal array descriptor.
-     * If is is an array variable, the descriptor is derived from the arraqy diemnsions
+     * In case of the given expression is an array inside a struct, we must create
+     * a local array-object with descriptor and array data
+     * Segments/slices of arrays are not mentioned in the language report as valid
+     * procedure actual arguments  
      *
      * @param stmt       the ST context which holds all parameters
      * @param expression the current parameter
@@ -3928,31 +3964,42 @@ implements SmallPearlVisitor<ST> {
         ASTAttribute attr = null;
 
         attr = m_ast.lookup(expression);
-        if (attr != null) {
-            if (attr.getType() instanceof TypeArray) {
-                treatArray = true;
+        se = attr.getSymbolTableEntry();
+//        if (attr != null) {
+//            if (attr.getType() instanceof TypeArray) {
+//                treatArray = true;
+//            }
+//            if (attr.getVariable() != null) {
+//                String var = attr.getVariable().getName();
+//                se = m_currentSymbolTable.lookup(var);
+//            }
+//        }
+
+
+        if (attr.getType() instanceof TypeArray ) {
+            if (((VariableEntry)se).getType() instanceof TypeArray) {
+                ST param = m_group.getInstanceOf("ActualParameters");
+                param.add("ActualParameter", visitAndDereference(expression));
+                stmt.add("ActualParameter", param);
+            } else  if (((VariableEntry)se).getType() instanceof TypeStructure) {
+              // need temporary Array-object
+              // ArrayVariableDeclaration(name,type,descriptor) 
+                String tempVarName = nextTempVarName();
+                
+                ST temp = m_group.getInstanceOf("ArrayVariableDeclaration");
+                temp.add("name",  tempVarName);
+                temp.add("type", visitTypeAttribute(((TypeArray)(attr.getType())).getBaseType()));
+                temp.add("descriptor", getArrayDescriptor(attr.getType()));
+                temp.add("storage",visitAndDereference(expression));
+                temp.add("no_decoration", 1);
+                m_tempVariableList.lastElement().add("variable", temp);
+                
+                ST param = m_group.getInstanceOf("ActualParameters");
+                param.add("ActualParameter", tempVarName);
+                stmt.add("ActualParameter", param);
+              
             }
-            if (attr.getVariable() != null) {
-                String var = attr.getVariable().getName();
-                se = m_currentSymbolTable.lookup(var);
-            }
-        }
-
-
-        if (treatArray) {
-            ST param = m_group.getInstanceOf("ActualParameters");
-            /*
-            ArrayDescriptor array_descriptor = new ArrayDescriptor(
-            		ta.getNoOfDimensions(),
-            		ta.getDimensions());
-            param.add("ActualParameter",array_descriptor.getName());
-             */
-            param.add("ActualParameter", getArrayDescriptor((VariableEntry) se));
-
-            stmt.add("ActualParameter", param);
-            param = m_group.getInstanceOf("ActualParameters");
-            param.add("ActualParameter", "data_" + attr.getVariable().getName());
-            stmt.add("ActualParameter", param);
+            
         } else {
             // scalar type
             if (attr.getType() instanceof TypeVariableChar) {
@@ -4798,7 +4845,10 @@ implements SmallPearlVisitor<ST> {
         st.add("body", visit(ctx.procedureBody()));
 
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-        return st;
+        
+        ST scope = getScope(se);
+        scope.add("variable", st);
+        return scope;
     }
 
     private ST getResultAttributte(ProcedureEntry pe) {
@@ -4843,6 +4893,7 @@ implements SmallPearlVisitor<ST> {
 
                     if (ve.getType() instanceof TypeArray) {
                         treatArray = true;
+
                     } else if (ve.getType() instanceof TypeStructure) {
                         treatStructure = true;
                         typeName = ((TypeStructure) ve.getType()).getStructureName();
@@ -4850,9 +4901,7 @@ implements SmallPearlVisitor<ST> {
                 }
 
                 if (treatArray) {
-                    param.add("isArrayDescriptor", "");
-                    String s = param.toString();
-                    param.add("isArray", "");
+                  param.add("isArray", "");
                 }
                 param.add("id", ctx.identifier(i).ID());
 
@@ -5222,7 +5271,17 @@ implements SmallPearlVisitor<ST> {
         }
         return s;
     }
-
+    
+    private String getArrayDescriptor(TypeDefinition t) {
+       String s = null;
+       if (t instanceof TypeArray) {
+           TypeArray type = (TypeArray) t;
+           ArrayDescriptor array_descriptor =
+                   new ArrayDescriptor(type.getNoOfDimensions(), type.getDimensions());
+           s = array_descriptor.getName();
+       }
+       return s;
+    }
 
     private ST visitStructVariableDenotation(
             SmallPearlParser.VariableDenotationContext ctx) {
@@ -5371,8 +5430,16 @@ implements SmallPearlVisitor<ST> {
         TypeDefinition type = null;
         TypeStructure struct = null;
         ST lhs = m_group.getInstanceOf("LHS");
+        String fromns = null;
 
         SymbolTableEntry symbolTableEntry = symbolTable.lookup(ctx.ID().toString());
+        
+        if (symbolTableEntry.isSpecified()) {
+            fromns = symbolTableEntry.getGlobalAttribute();
+            if (fromns.equals(m_module.getName())) {
+                fromns = null;
+            }
+        }
 
         if (symbolTableEntry instanceof VariableEntry) {
             SmallPearlParser.NameContext lctx = ctx.name();
@@ -5382,17 +5449,9 @@ implements SmallPearlVisitor<ST> {
             if (type instanceof TypeArray) {
                 ST arrayLHS = m_group.getInstanceOf("ArrayLHS");
                 TypeArray arrayType = (TypeArray) type;
-
-                if (arrayType.hasDimensions()) {
-                    ArrayDescriptor array_descriptor = new ArrayDescriptor(
-                            arrayType.getNoOfDimensions(), arrayType.getDimensions());
-
-                    arrayLHS.add("descriptor", array_descriptor.getName());
-                    arrayLHS.add("name", var.getName());
-                } else {
-                    arrayLHS.add("descriptor", "ad_" + var.getName());
-                    arrayLHS.add("name", var.getName());
-                }
+                
+                arrayLHS.add("name", var.getName());
+                arrayLHS.add("fromns", fromns);
 
                 // if no indices are given, the complete array is accessed
                 if (ctx.listOfExpression() != null) {
@@ -5409,7 +5468,7 @@ implements SmallPearlVisitor<ST> {
                 type = ((TypeReference) type).getBaseType();
             } else if (type instanceof TypeStructure) {
                 struct = (TypeStructure) type;
-                lhs.add("expr", generateStructLHS(ctx, var, struct));
+                lhs.add("expr", generateStructLHS(ctx, var, fromns, struct));
             }
 
             lctx = ctx.name();
@@ -5497,15 +5556,16 @@ implements SmallPearlVisitor<ST> {
      *
      * @param ctx NameContext
      * @param var VariableEntry
-     * @parama type Type of Structure
+     * @param type Type of Structure
      * @return StructLHS
      */
     private ST generateStructLHS(SmallPearlParser.NameContext ctx, VariableEntry var,
-            TypeStructure type) {
+            String fromns, TypeStructure type) {
         ST structLHS = m_group.getInstanceOf("StructureLHS");
         TypeStructure struct = type;
 
         structLHS.add("name", ctx.ID().getText());
+        structLHS.add("fromns", fromns);
 
         return structLHS;
     }

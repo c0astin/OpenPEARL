@@ -37,6 +37,10 @@ public class TypeSignal extends TypeDefinition {
     public String toString() {
         return this.getName();
     }
+    
+    public String toString4IMC() {
+       return toString();
+    }
 
     @Override
     public boolean equals(Object other) {

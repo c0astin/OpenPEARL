@@ -8,4 +8,13 @@ public class TypeRefChar extends TypeDefinition {
          */
         super("CHAR()");
     }
+    
+    public String toString() {
+        return getName();
+    }
+    
+    public String toString4IMC() {
+        return getName();
+    }
+    
 }

@@ -58,6 +58,10 @@ public class TypeReference extends TypeDefinition {
     public String toString() {
         return this.getName() + " " + this.m_baseType;
     }
+    
+    public String toString4IMC() {
+        return this.getName() + " " + this.m_baseType.toString4IMC();
+    }
 
     @Override
     public boolean equals(Object other) {

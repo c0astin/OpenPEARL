@@ -268,9 +268,8 @@ public class SymbolTable {
         return output;
     }
   
-    public LinkedList<TaskEntry> getTaskDeclarations() {
+    public LinkedList<TaskEntry> getTaskDeclarationsAndSpecifications() {
         LinkedList<TaskEntry> listOfTaskEntries = new LinkedList<TaskEntry>();
-        SymbolTableEntry e;
 
         for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
@@ -282,6 +281,19 @@ public class SymbolTable {
          
         return listOfTaskEntries;
     }
+    public LinkedList<ProcedureEntry> getProcedureDeclarationsAndSpecifications() {
+        LinkedList<ProcedureEntry> listOfProcedureEntries = new LinkedList<ProcedureEntry>();
+
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
+            SymbolTableEntry symbolTableEntry = it.next();
+            if (symbolTableEntry instanceof ProcedureEntry) {
+                ProcedureEntry entry = (ProcedureEntry) symbolTableEntry;
+                listOfProcedureEntries.add(entry);
+            }
+        }
+         
+        return listOfProcedureEntries;
+    }
 
     private  LinkedList<VariableEntry> getAllVariableDeclarations(SymbolTable scope) {
         LinkedList<VariableEntry> listOfVariableDeclarationsEntries =
@@ -292,13 +304,19 @@ public class SymbolTable {
             if (ste instanceof VariableEntry) {
                 listOfVariableDeclarationsEntries.add((VariableEntry)ste);
             } else if (ste instanceof TaskEntry) {
-                listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(((TaskEntry)ste).scope));
+                // ignore task specifications
+                if (((TaskEntry)ste).scope != null) {
+                   listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(((TaskEntry)ste).scope));
+                }
             } else if (ste instanceof LoopEntry) {
                 listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(((LoopEntry)ste).scope));
             } else if (ste instanceof BlockEntry) {
                 listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(((BlockEntry)ste).scope));
             } else if (ste instanceof ProcedureEntry) {
-                listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(((ProcedureEntry)ste).scope));
+                // ignore procedure specifications
+                if (((ProcedureEntry)ste).scope != null) {
+                   listOfVariableDeclarationsEntries.addAll(getAllVariableDeclarations(((ProcedureEntry)ste).scope));
+                }
             } 
             
         }
@@ -385,8 +403,7 @@ public class SymbolTable {
 
     public LinkedList<SemaphoreEntry> getSemaphoreDeclarations() {
         LinkedList<SemaphoreEntry> listOfSemaEntries = new LinkedList<SemaphoreEntry>();
-        SymbolTableEntry e;
-
+   
         for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof SemaphoreEntry) {
@@ -401,8 +418,7 @@ public class SymbolTable {
     
     public LinkedList<BoltEntry> getBoltDeclarations() {
         LinkedList<BoltEntry> listOfBoltEntries = new LinkedList<BoltEntry>();
-        SymbolTableEntry e;
-
+   
         for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof BoltEntry) {
@@ -416,12 +432,26 @@ public class SymbolTable {
     public LinkedList<InterruptEntry> getInterruptSpecifications() {
         LinkedList<InterruptEntry> listOfVariableDeclarationsEntries =
                 new LinkedList<InterruptEntry>();
-        SymbolTableEntry e;
-
+   
         for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
             if (symbolTableEntry instanceof InterruptEntry) {
                 InterruptEntry variableEntry = (InterruptEntry) symbolTableEntry;
+                listOfVariableDeclarationsEntries.add(variableEntry);
+            }
+        }
+
+        return listOfVariableDeclarationsEntries;
+    }
+    
+    public LinkedList<ProcedureEntry> getProcedureSpecificationsAndDeclarations() {
+        LinkedList<ProcedureEntry> listOfVariableDeclarationsEntries =
+                new LinkedList<ProcedureEntry>();
+    
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
+            SymbolTableEntry symbolTableEntry = it.next();
+            if (symbolTableEntry instanceof ProcedureEntry) {
+                ProcedureEntry variableEntry = (ProcedureEntry) symbolTableEntry;
                 listOfVariableDeclarationsEntries.add(variableEntry);
             }
         }
@@ -489,12 +519,15 @@ public class SymbolTable {
                         structures.put(result.getStructureName(), result);
                     }
                 }
-
-                getStructureDeclarationsForSymboltable(((ProcedureEntry) symbolTableEntry).scope,
-                        structures);
+                if (((ProcedureEntry)symbolTableEntry).scope != null ) {
+                    getStructureDeclarationsForSymboltable(((ProcedureEntry) symbolTableEntry).scope,
+                            structures);
+                }
             } else if (symbolTableEntry instanceof TaskEntry) {
-                getStructureDeclarationsForSymboltable(((TaskEntry) symbolTableEntry).scope,
-                        structures);
+                if (((TaskEntry)symbolTableEntry).scope != null ) {
+                    getStructureDeclarationsForSymboltable(((TaskEntry) symbolTableEntry).scope,
+                            structures);
+                }
             } else if (symbolTableEntry instanceof BlockEntry) {
                 getStructureDeclarationsForSymboltable(((BlockEntry) symbolTableEntry).scope,
                         structures);

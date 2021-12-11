@@ -91,6 +91,13 @@ public class TypeArraySlice extends TypeDefinition {
       return result;
     }
 
+    public String toString4IMC() {
+        ErrorStack.addInternal(null, "TypeArraySlice", "toString4IMC is not implemented");
+        String result = "ArraySlice not completed";
+        return result;
+      }
+
+
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof TypeArraySlice)) {

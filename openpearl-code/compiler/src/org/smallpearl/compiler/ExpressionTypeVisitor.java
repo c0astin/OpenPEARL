@@ -30,7 +30,9 @@
 package org.smallpearl.compiler;
 
 import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
+import org.smallpearl.compiler.SmallPearlParser.FormalParameterContext;
 import org.smallpearl.compiler.SmallPearlParser.NameContext;
+import org.smallpearl.compiler.SmallPearlParser.ProcedureDenotationContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.smallpearl.compiler.Exception.*;
@@ -3300,6 +3302,20 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
     @Override
     public Void visitIdentifier(SmallPearlParser.IdentifierContext ctx) {
         String s = ctx.getText();
+        // check if ctx is a formal parameter in a procedure specification
+        ParserRuleContext c = ctx;
+        while (c!= null && c instanceof ProcedureDenotationContext) {
+            c = c.getParent();
+        }
+        if (c!= null) {
+            // we are in a procedure denotation --> lets check if we have a formal parameter
+            while (c!= null && c instanceof FormalParameterContext) {
+                c = c.getParent();
+            }
+            if (c != null) {
+                return null;
+            }
+        }
         SymbolTableEntry se = m_currentSymbolTable.lookup(s);
         TypeDefinition type = null;
         if (se instanceof VariableEntry) {
@@ -3315,6 +3331,8 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
             m_ast.put(ctx, attr);
         } else if (se instanceof InterruptEntry) {
             // currently no action needed for interrupt
+        } else if (se instanceof ProcedureEntry) {
+            
         } else if (se == null) {
             ErrorStack.addInternal(ctx, "ExpressionTypeVisitor", "no entry found for " + s);
         } else {

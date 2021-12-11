@@ -57,6 +57,10 @@ public class TypeChar extends TypeDefinition {
         return this.getName() + "(" + this.m_size + ")";
     }
 
+    public String toString4IMC() {
+        return toString();
+    }
+    
     public ST toST(STGroup group) {
         ST st = group.getInstanceOf("char_type");
         st.add("size", m_size);

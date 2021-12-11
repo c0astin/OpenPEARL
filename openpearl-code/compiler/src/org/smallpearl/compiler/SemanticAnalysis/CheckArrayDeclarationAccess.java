@@ -3,7 +3,7 @@ package org.smallpearl.compiler.SemanticAnalysis;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.smallpearl.compiler.*;
 import org.smallpearl.compiler.SmallPearlParser.ExpressionContext;
 import org.smallpearl.compiler.Exception.*;
@@ -110,41 +110,80 @@ public class CheckArrayDeclarationAccess extends SmallPearlBaseVisitor<Void>
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;
     }
+    
+    @Override
+    public Void  visitUpbMonadicExpression(SmallPearlParser.UpbMonadicExpressionContext ctx) {
+        ASTAttribute attr1 = m_ast.lookup(ctx.expression());
+                
 
-//    @Override
-//    public Void visitArrayDenotation(SmallPearlParser.ArrayDenotationContext ctx) {
-//
-//        if (ctx != null) {
-//
-//            for (int i = 0; i < ctx.ID().size(); i++) {
-//
-//                String s = ctx.ID().get(i).toString();
-//                SymbolTableEntry se = m_currentSymbolTable.lookup(s);
-//                if (!(se instanceof VariableEntry)) {
-//                    throw new InternalError("expected variable entry");
-//                }
-//                VariableEntry ve = (VariableEntry) se;
-//                if (!(ve.getType() instanceof TypeArray)) {
-//                    throw new InternalError("expected variable entry with TypeArray");
-//                }
-//
-//                TypeArray ta = (TypeArray) ve.getType();
-//                ArrayList<ArrayDimension> dims = ta.getDimensions();
-//
-//                for (i = 0; i < ta.getNoOfDimensions(); i++) {
-//                    ErrorStack.enter(dims.get(i).getCtx(), "array boundary");
-//                    if (dims.get(i).getLowerBoundary() > dims.get(i).getUpperBoundary()) {
-//                        ErrorStack.add("lower boundary must not exceed upper boundary");
-//                    }
-//                    ErrorStack.leave();
-//                }
-//
-//            }
-//        }
-//
-//
-//        return null;
-//    }
+        if (attr1.getType() instanceof TypeArray) {
+            
+
+        } else {
+            ErrorStack.add(ctx,"UPB","must be applied on ARRAY");
+        }
+        return null;
+    }
+    
+    @Override
+    public Void  visitUpbDyadicExpression(SmallPearlParser.UpbDyadicExpressionContext ctx) {
+        ASTAttribute attr1 = m_ast.lookup(ctx.expression(1));
+        ASTAttribute attr0 = m_ast.lookup(ctx.expression(0));
+        
+        
+        if (attr1.getType() instanceof TypeArray) {
+            if (!(attr0.getType() instanceof TypeFixed)) {
+                ErrorStack.add(ctx,"UPB", 
+                        "type mismatch: array index must be of type FIXED -- got "+attr0.getType());
+            } else {
+                long index = attr0.getConstantFixedValue().getValue();
+                int dim = ((TypeArray)(attr1.getType())).getNoOfDimensions();
+                if (index < 1 || index > dim) {
+                   ErrorStack.add(ctx,"UPB","array index out of range [1,"+dim+"]"); 
+                }
+            }
+        } else {
+            ErrorStack.add(ctx,"UPB","must be applied on ARRAY");
+        }
+        return null;
+    }
+    
+    @Override
+    public Void  visitLwbMonadicExpression(SmallPearlParser.LwbMonadicExpressionContext ctx) {
+        ASTAttribute attr1 = m_ast.lookup(ctx.expression());
+                
+        
+        if (attr1.getType() instanceof TypeArray) {
+            
+        } else {
+            ErrorStack.add(ctx,"LWB","must be applied on ARRAY");
+        }
+        return null;
+    }
+    
+    @Override
+    public Void  visitLwbDyadicExpression(SmallPearlParser.LwbDyadicExpressionContext ctx) {
+        ASTAttribute attr1 = m_ast.lookup(ctx.expression(1));
+        ASTAttribute attr0 = m_ast.lookup(ctx.expression(0));
+        
+ 
+        if (attr1.getType() instanceof TypeArray) {
+            if (!(attr0.getType() instanceof TypeFixed)) {
+                ErrorStack.add(ctx,"LWB", 
+                        "type mismatch: array index must be of type FIXED -- got "+attr0.getType());
+            } else {
+                long index = attr0.getConstantFixedValue().getValue();
+                int dim = ((TypeArray)(attr1.getType())).getNoOfDimensions();
+                if (index < 1 || index > dim) {
+                   ErrorStack.add(ctx,"LWB","array index out of range [1,"+dim+"]"); 
+                }
+            }
+        } else {
+            ErrorStack.add(ctx,"LWB","must be applied on ARRAY");
+        }
+        return null;
+    }
+
 
 
     @Override
@@ -252,27 +291,28 @@ public class CheckArrayDeclarationAccess extends SmallPearlBaseVisitor<Void>
             ErrorStack.enter(expression.get(d));
 
             if (m_ast.lookupType(expression.get(d)) instanceof TypeFixed) {
+                TypeFixed tf = (TypeFixed)(m_ast.lookupType(expression.get(d)));
+                int prec = tf.getPrecision().intValue();
+                if (prec > 31) {
+                    ErrorStack.add("type too large "+tf+" > FIXED(31)");
+                }
                 if (checkIndexValue) {
 
                     ASTAttribute attr = m_ast.lookup(expression.get(d));
                     if (attr.isReadOnly()) {
                         if (attr.getConstantFixedValue() != null) {
                             long val = attr.getConstantFixedValue().getValue();
-
                             if (val < ta.getDimensions().get(d).getLowerBoundary()
                                     || val > ta.getDimensions().get(d).getUpperBoundary()) {
                                 ErrorStack.add("index out of range ["
                                         + ta.getDimensions().get(d).getLowerBoundary() + ":"
                                         + ta.getDimensions().get(d).getUpperBoundary() + "]");
                             }
+
                         }
                     }
                 }
-                TypeFixed tf = (TypeFixed) (m_ast.lookupType(expression.get(d)));
-                int precision = tf.getPrecision().intValue();
-                if (precision > 31) {
-                    ErrorStack.add("type for index must not exceed FIXED(31)");
-                }
+
             } else {
                 ErrorStack.add("index must be of type FIXED" + " -- got "
                         + m_ast.lookupType(expression.get(d)).toString());

@@ -79,7 +79,9 @@ public abstract class TypeDefinition {
       s += this.getName();
         return s;
     }
-
+    
+    abstract public String toString4IMC();
+    
     public ST toST(STGroup group) {
         return null;
     }
