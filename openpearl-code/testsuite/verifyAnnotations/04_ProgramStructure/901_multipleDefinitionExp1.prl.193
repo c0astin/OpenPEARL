@@ -1,0 +1,6 @@
+MODULE(multdefExp1);
+
+PROBLEM;
+   DCL f FIXED GLOBAL;
+
+MODEND;
