@@ -215,117 +215,15 @@ public class CheckSpcDcl {
         }
     }
 
-    private int getNumber(String s) {
-    	int result=0;
-    	for (int i=0; i<s.length(); i++) {
-    		char c = s.charAt(i);
-    		if (Character.isDigit(c)) {
-    			result *= 10;
-    			result += c-'0';
-    		} else {
-    			break;
-    		}
-    	}
-    	return result;
-    }
-    
-    private int getSizeOfNumber(String s) {
-    	int result=0;
-    	for (int i=0; i<s.length(); i++) {
-    		char c = s.charAt(i);
-    		if (Character.isDigit(c)) {
-    			result ++;
-    		} else {
-    			break;
-    		}
-    	}
-    	return result;
-    }
-    private String decodeStructType(String s) {
-    	String result = "";
-    	int len;
-    	String ref;
-    	for (int currentPos = 0; currentPos< s.length();) {
-    		ref = "";
-    		if (Character.isLowerCase(s.charAt(currentPos))) {
-    			ref = " REF ";
-    		}
-    		switch (Character.toUpperCase(s.charAt(currentPos))) {
-    		case 'A':  // FIXED
-    			len = getNumber(s.substring(1));
-    			currentPos += 1 + getSizeOfNumber(s.substring(1));
-    			result += ref+" FIXED("+len+")" ;
-    			break;
-    		case 'B':  // Float
-    			len = getNumber(s.substring(1));
-    			currentPos += 1 + getSizeOfNumber(s.substring(1));
-    			result += ref+" FLOAT("+len+")" ;
-    			break;
-    		case 'C':  // BIT
-    			len = getNumber(s.substring(1));
-    			currentPos += 1 + getSizeOfNumber(s.substring(1));
-    			result += ref+" BIT("+len+")" ;
-    			break;
-    		case 'D':  // CHAR
-    			len = getNumber(s.substring(1));
-    			currentPos += 1 + getSizeOfNumber(s.substring(1));
-    			result += ref+" CHAR("+len+")" ;
-    			break;
-    		case 'E':  // Clock
-    			//len = getNumber(s.substring(1));
-    			currentPos += 1;
-    			result += ref+" CLOCK" ;
-    			break;
-    		case 'F':  // Duration
-    			//len = getNumber(s.substring(1));
-    			currentPos += 1;
-    			result += ref+" DURATION" ;
-    			break;
-    		case 'G':  // Task
-    			//len = getNumber(s.substring(1));
-    			currentPos += 1;
-    			result += ref+" TASK" ;
-    			break;
-    		case 'H':  // PROC
-    			//len = getNumber(s.substring(1));
-    			currentPos += 1;
-    			result += ref+" PROC" ;
-    			break;
-    		case 'I':  // SEMA
-    			//len = getNumber(s.substring(1));
-    			currentPos += 1;
-    			result += ref+" SEMA" ;
-    			break;
-    		case 'J':  // BOLT
-    			//len = getNumber(s.substring(1));
-    			currentPos += 1;
-    			result += ref+" BOLT" ;
-    			break;
-
-    		
-    		
-    		case 'S':  //STRUCT
-    			len = getNumber(s.substring(1));
-    			int start = 1+getSizeOfNumber(s.substring(1));
-    			int end = start+len;
-    			currentPos += 1+len+ getSizeOfNumber(s.substring(1));
-    			result += "STRUCT [ " + decodeStructType(s.substring(start,end)) + " ] ";
-    			break;
-
-    		}
-    	}
-    	return result;
-    }
-
     private void checkType(SpcProblemPart spc, DclProblemPart dcl) {
         if (!spc.getType().equals(dcl.getType())) {
             Log.setLocation(spc.getModule().getSourceFileName(), spc.getLine(), spc.getCol());
             
 
             Log.error("type mismatch: expected in SPC: of '" + spc.getUserName() + "' as type '"
-                    + decodeStructType(spc.getType()) + "'");
+                    +spc.getType() + "'");
             Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
-                    "found in DCL :'" + decodeStructType(dcl.getType()) + "'");
+                    "found in DCL :'" + dcl.getType() + "'");
             return;
         }
         if (spc.getType().equals(Platform.DATION)) {
