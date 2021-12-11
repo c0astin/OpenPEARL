@@ -139,9 +139,9 @@ using namespace pearlrt;
 extern void rr_test(Task * me);
 
 
-SPCTASK(TASK1);
-SPCTASK(TASK2);
-SPCTASK(TASK3);
+extern pearlrt::Task taskTASK1;
+extern pearlrt::Task taskTASK2;
+extern pearlrt::Task taskTASK3;
 
  
 //execute function for working thread 1
@@ -159,7 +159,7 @@ DCLTASK(TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    rc.clear();
    PutClock::toT(c,15,6,sink);
    printf("%s: activate TASK2\n", rc.getCstring());
-   TASK2.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(10)); //  priority
+   taskTASK2.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(10)); //  priority
 
    end = Clock::now() + Duration(10,0);
 
@@ -179,12 +179,12 @@ DCLTASK(TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    rc.clear();
    PutClock::toT(c,15,6,sink);
    printf("%s:  Task1: preventing TASK3\n",rc.getCstring());
-   TASK3.prevent(me);
+   taskTASK3.prevent(me);
    c = Clock::now();
    rc.clear();
    PutClock::toT(c,15,6,sink);
    printf("%s: Task1: terminate Task2\n", rc.getCstring());
-   TASK2.terminate(me);
+   taskTASK2.terminate(me);
  
    /*--- test of round-robin-timeslice within tasks of same priority ---*/
    c = Clock::now();
@@ -210,7 +210,7 @@ DCLTASK(TASK2,pearlrt::Prio(4),pearlrt::BitString<1>(0)) {
    RefCharSink sink(rc);
    
    /* do something*/
-   TASK3.activate(me, pearlrt::Task::PRIO | Task::AFTER | Task::ALL ,
+   taskTASK3.activate(me, pearlrt::Task::PRIO | Task::AFTER | Task::ALL ,
                         pearlrt::Prio(3),  // prio
 			Clock(0.0),  // at
 			Duration(5,0),  // after

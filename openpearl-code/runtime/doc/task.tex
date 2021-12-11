@@ -172,20 +172,40 @@ documentation from doxygen.
 
 
 \section{Specification and Declaration}
-\begin{description}
-\item[SPCTASK] makes the forward declararion of the task object.
-    The compiler must add the forward declaraction of all tasks
-    used in the module before the first declaration, since C++
-    variables have a scope from the line of declaration until 
-    the end of the block, which contains the declaration.
-    The macro has the tasks name as parameter.
-\item[DCLTASK] defines the task itself. The DCLTASK macro is followed
+\subsection{Specification and Forwarddeclarations}
+Each task results in an object of type \verb|pearlrt::Task|.
+The task objects a stored with global scope with the prefix \verb|task_|
+in the current namespace.
+The global scope is needed, since there is no possibility in C++
+to make a forward declaration of a static object.
+
+\begin{PEARLCode}
+SPC t1 TASK GLOBAL(otherModule);
+t2: TASK;
+  ...
+END;
+\end{PEARLCode}
+
+Resulting specifications in the prologue:
+
+\begin{CppCode}
+} // close current namespace
+namespace ns_otherModule {
+   extern pearlrt::Task task_t1;
+}
+namespace ns_<currentModule> {
+
+extern pearlrt::Task task_t2;
+\end{CppCode}
+
+\subsection{Declaration}
+The macro \verb|DCLTASK| defines a task.
+    The DCLTASK macro is followed
     by a block of statements, which define the tasks content.
     The macro has the tasks name, priority and main-attribute as
     parameter. 
     Priority and isMain-attribute are wrapped by the compiler 
     into \verb|Prio|- and \verb|BitString<1>|-type.
-\end{description}
 
 The implementation of task handling is platform specific.
 Each platform specific implementation need:
@@ -201,14 +221,6 @@ Each platform specific implementation need:
 \item a mechanism which enshures the task termination at the end of
    the task body
 \end{enumerate}
-
-\paragraph{Notes}\ \\
-\begin{itemize}
-\item The macros SPCTASK and DCLTASK are currently sufficient only for
-    PEARL programs with one module. When multi-module programs
-    are supported by the compiler, the GLOBAL-attribute should be 
-    passed additionally to both macros.
-\end{itemize}
 
 \section{me-Pointer}
 The DCLTASK-macro must define an object with the name of the
@@ -252,8 +264,10 @@ the PEARL source file.
 
 \begin{CppCode}
 const char* filename =  "api.prl";
-SPCTASK(t1);
-SPCTASK(t2);
+
+// note: no namespace stuff used here for clearance
+extern pearlrt::Task task_t1;
+extern pearlrt::Task task_t2;
 
 DCLTASK(t1,10,1) {
    me->setLocation(10,filename);

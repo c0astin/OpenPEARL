@@ -61,8 +61,8 @@ static pearlrt::Pipe myPipe("/tmp/pipe1", 10, "CAN OPEN1");
 static pearlrt::StdOut stdOut;
 static pearlrt::Fixed<31>  x(42);
 
-SPCTASK(READER);
-SPCTASK(CONROL);
+extern pearlrt::Task task_READER;
+extern pearlrt::Task task_CONTROL;
 /**
 the READER task
 */

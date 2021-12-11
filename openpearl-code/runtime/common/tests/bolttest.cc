@@ -72,16 +72,14 @@ END;
 #include <stdio.h>
 using namespace std;
 
-//SPCBOLT(_s1);
-//SPCBOLT(_s2);
 pearlrt::Bolt _s1("_s1");
 pearlrt::Bolt _s2("_s2");
 
-SPCTASK(_T1);
-SPCTASK(_T2);
-SPCTASK(_T3);
-SPCTASK(_R1);
-SPCTASK(_R2);
+extern pearlrt::Task task_T1;
+extern pearlrt::Task task_T2;
+extern pearlrt::Task task_T3;
+extern pearlrt::Task task_R1;
+extern pearlrt::Task task_R2;
 
 pearlrt::Fixed<15> n;
 
@@ -120,8 +118,8 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
    // test multiple enter
    n = 0;
    *buffer = 0;
-   _T2.activate(me);
-   _T3.activate(me);
+   task_T2.activate(me);
+   task_T3.activate(me);
   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(1,0),0);
    if (n.x == 2) {
       printf("*** multiple enter is ok\n");
@@ -139,8 +137,8 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
    // test multiple reserve
    n = 0;
    *buffer = 0;
-   _R1.activate(me);
-   _R2.activate(me);
+   task_R1.activate(me);
+   task_R2.activate(me);
   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(1,0),0);
    if (n.x == 1) {
       printf("*** multiple reserve is ok\n");
@@ -159,9 +157,9 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
    printf("test reserve priority \n");
    n = 0;
    *buffer = 0;
-   _R1.activate(me);
-   _T2.activate(me);
-   _R2.activate(me);
+   task_R1.activate(me);
+   task_T2.activate(me);
+   task_R2.activate(me);
   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5,0),0);
    if (strcmp(buffer,"R1 R2 T2 ") == 0) {
       printf("*** reserve has priority is ok\n");

@@ -40,7 +40,7 @@ Only this file mus be included.
 
 #include "TaskCommon.h"
 #include "Task.h"
-#include "GenericTask.h"
+//#include "GenericTask.h"
 #include "TaskTimer.h"
 #include "TaskTimerCommon.h"
 #include "TaskMonitor.h"

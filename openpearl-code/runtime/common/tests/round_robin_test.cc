@@ -163,8 +163,8 @@ End(Semas)
 #include "PearlIncludes.h"
 using namespace pearlrt;
 
-SPCTASK(RR1);
-SPCTASK(RR2);
+extern pearlrt::Task taskRR1;
+extern pearlrt::Task taskRR2;
 
 static volatile int stop_rr_test = 0;
 static volatile int common_x = 0;
@@ -238,12 +238,12 @@ void rr_test(Task * me) {
 Log::info("rrtest: called");
    printf("RR1 and RR2 start in 2s running 10s\n");
    end = Clock::now() + Duration(2,0);
-   RR1.activate(me, pearlrt::Task::PRIO | Task::AT ,
+   taskRR1.activate(me, pearlrt::Task::PRIO | Task::AT ,
                         pearlrt::Prio(3), 
 			end,  // at
 			Duration(), Duration(),Clock(), Duration());
 Log::info("rrtest: RR1 scheduled");
-   RR2.activate(me, pearlrt::Task::PRIO | Task::AT ,
+   taskRR2.activate(me, pearlrt::Task::PRIO | Task::AT ,
                         pearlrt::Prio(3), 
 			end,  // at
 			Duration(), Duration(),Clock(), Duration());

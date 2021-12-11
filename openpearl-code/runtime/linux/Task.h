@@ -68,10 +68,8 @@ namespace pearlrt {
    All tasks use the same mutex from TaskCommon to enshure thread safety.
 
    The user code of each task is capsulated in a function [task name]_body.
-   This body code is called from a wrapper function named [task name]_entry.
-   This wrapper function, which is realized in task.h by a C-define,
-   enshures the existence of the exeption handler and the propper
-   initialization for thread cancellation.
+   The body becomes invoked by a taskFunction in Task.cc to enshure the
+   presence of a signal handler and default TERMINATE
 
    Task suspending is solved by reading from a pipe (pipeResume),
    continuation is solved by writing a 'c' to the pipe.
@@ -104,13 +102,13 @@ namespace pearlrt {
       /**
       pointer to a task function defined for easier coding
       */
-      typedef void (*TaskEntry)(Task *);
+//      typedef void (*TaskEntry)(Task *);
 
       void scheduleCallback(void);
+
+      void (*body)(Task * me); //< C function containing the code
+
    private:
-
-      void (*entryPoint)(Task * me); //< C function containing the code
-
 #if 0
       /** Semaphor for completion of suspend call (inits by default to 0)   */
       CSema suspendDone;
@@ -120,7 +118,7 @@ namespace pearlrt {
       CSema continueDone;
       int continueWaiters;
 
-      /** Semaphor for completion of terminate call
+      /** Semaphores for completion of terminate call
            (inits by default to 0)   */
       CSema terminateDone;
       int terminateWaiters;
@@ -206,7 +204,7 @@ namespace pearlrt {
       <li> register the task in the TaskList object
       </ol>
 
-      \param entry a pointer to the task body function
+      \param body a pointer to the task body function
       \param n a pointer to the task name
       \param prio the priority (in PEARL meaning)
       \param isMain 1, if the task should be started automatically
@@ -214,7 +212,7 @@ namespace pearlrt {
 
       \throws InternalTaskSignal if system ressources are not available
       */
-      Task(void (*entry)(Task*), char * n, Prio prio,
+      Task(void (*body)(Task*), char * n, Prio prio,
            BitString<1> isMain);
 
       void suspendRunning();
@@ -235,7 +233,7 @@ namespace pearlrt {
       /**
           Perform the dynamic part of task initialising
 
-          This method is called automatically in the DCLTASK macro
+          This method is called automatically in the taskFunction()
       */
       void entry();
 
@@ -279,7 +277,7 @@ namespace pearlrt {
 
          \return the function pointer of the posix thread function
       */
-      TaskEntry getEntry();
+//      TaskEntry getEntry();
 
       /**
          switch to normal scheduling
@@ -412,6 +410,7 @@ namespace pearlrt {
 
 }
 
+#if 0
 /**
 C++ code for the forward declaration of a task
 
@@ -419,10 +418,6 @@ C++ code for the forward declaration of a task
 */
 #define   SPCTASK(t) \
 extern pearlrt::Task t;
-
-#if 0
-#define   SPCTASKGLOBAL(t,ns) \
-extern pearlrt::Task #ns::t;
 #endif
 
 /**
@@ -438,63 +433,13 @@ in a conventient way in there task-specification file
 \param prio the tasks priority (must be set to 255 if not given)
 \param ismain 1, if the task is of type MAIN,<br> 0,else
 */
-#define DCLTASK(x, prio, ismain) 			\
-   static void x ## _entry (pearlrt::Task * me) ;	\
+							
+#define DCLTASK(x, prio, ismain)			\
    static void x ## _body (pearlrt::Task * me) ;        \
-pearlrt::Task x ( x ## _entry, ((char*)#x)+1,  \
+          pearlrt::Task task ## x ( x ## _body, ((char*)#x)+1,  \
                        prio, ismain);	                \
-static void x ## _entry (pearlrt::Task * me) { 		\
-      me->entry();  					\
-      try {						\
-         x ## _body (me);	 			\
-      } catch (pearlrt::Signal & p) {			\
-         char line[256];                                \
-         printf("++++++++++++++++++++++++++++++\n");	\
-         sprintf(line,"%s:%d Task: %s   terminated due to: %s",\
-             me->getLocationFile(), me->getLocationLine(), \
-             me->getName(), p.which());			\
-         printf("%s\n",line);				\
-         pearlrt::Log::error(line);			\
-         printf("++++++++++++++++++++++++++++++\n");	\
-      }							\
-      me->terminate(me);  				\
-   } 							\
-							\
-static void x ## _body (::pearlrt::Task * me)
+static void x ## _body (pearlrt::Task * me)  \
 
-#if 0
-#define DCLTASKGLOBAL(x, prio, ismain,ns) 		\
-}							\
-namespace pearlrt {					\
-   static void x ## _entry (pearlrt::Task * me) ;	\
-   static void x ## _body (pearlrt::Task * me) ;	\
-}							\
-namespace #x {						\
-pearlrt::Task x ( pearlrt::x ## _entry, (char*)#x, 	\
-                       prio, ismain);			\
-}							\
-namespace pearlrt {					\
-static void x ## _entry (pearlrt::Task * me) { 		\
-      me->entry();  					\
-      try {						\
-         x ## _body (me);	 			\
-      } catch (pearlrt::Signal & p) {			\
-         char line[256];                                \
-         printf("++++++++++++++++++++++++++++++\n");	\
-         sprintf(line,"%s:%d Task: %s   terminated due to: (%d) %s",\
-             me->getLocationFile(), me->getLocationLine(), \
-             me->getName(), p.whichRST(), p.which());			\
-         printf("%s\n",line);				\
-         pearlrt::Log::error(line);			\
-         printf("++++++++++++++++++++++++++++++\n");	\
-      }							\
-      me->terminate(me);  				\
-   } 							\
-}							\
-							\
-namespace #x {						\
-static void pearlrt::x ## _body (pearlrt::Task * me)
-#endif
 
 /**
 @}

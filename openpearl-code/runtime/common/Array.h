@@ -52,6 +52,7 @@ the number of dimensions. There is no limit for array dimensions.
 #include "Signals.h"
 #include "Log.h"
 
+namespace pearlrt {
 
 // some preprocessor definitions
 
@@ -76,10 +77,8 @@ the number of dimensions. There is no limit for array dimensions.
 */
 #define DCLARRAY(name,dimensions,limits) \
    pearlrt::ArrayDescriptor<dimensions> a_##name = { dimensions, limits }; \
-   pearlrt::Array b_##name((pearlrt::ArrayDescriptor<0>*)&a_##name); \
-   pearlrt::Array * name = &(b_##name);
+//   pearlrt::Array name((pearlrt::ArrayDescriptor<0>*)&a_##name, data_##name ); 
 
-namespace pearlrt {
 
    /**
      The array descriptor.
@@ -106,30 +105,6 @@ namespace pearlrt {
          /** number of elements in all subsequent dimensions  */
          int size;
       } lim[DIM]; /**< limits for all dimensions */
-   };
-
-   /**
-      The array type itself.
-
-      This type contains only the reference to the array descriptor
-      and the array access methods
-   */
-   class Array {
-   private:
-      ArrayDescriptor<0>* descriptor;
-      Array() {};
-   public:
-      /**
-         The ctor for an array. This initializes the array descriptor.
-
-         The real number of dimensions is stored in the ArrayDescriptor
-         itself. Thats why it is possible to use a generic pointer to
-         a 'zero'-dimensional array descriptor
-
-         \param descr the array descriptor, which is assoiated with this array
-
-      */
-      Array(ArrayDescriptor<0> * descr) : descriptor(descr) {}
 
       /**
       calculate the offset of the specified element in the data section
@@ -141,7 +116,25 @@ namespace pearlrt {
 
       \returns index of the specified element in the linearized data section
       */
-      size_t offset(Fixed<31> i, ...);
+      size_t offset(Fixed<31> i, ...) {
+        size_t result;
+        va_list args;
+        va_start(args,i);
+        result = ((ArrayDescriptor<0>*)this)->_offset(i,args);
+        return (result);
+      }
+
+      /**
+      calculate the offset of the specified element in the data section
+
+      \param i the first index
+
+      \throws IndexOutOfBoundsSignal if a  current index  value is out
+           of the limiting bounds
+
+      \returns index of the specified element in the linearized data section
+      */
+      size_t _offset(Fixed<31> i, va_list args);
 
       /**
        upper bound of given index
@@ -162,6 +155,55 @@ namespace pearlrt {
        \returns lower bound if this array index
       */
       Fixed<31> lwb(Fixed<31> x);
+   };
+
+   /**
+      The array type itself.
+
+      This type contains only the reference to the array descriptor
+      and the array access methods
+   */
+   template <class C>
+   class Array {
+   private:
+      ArrayDescriptor<0>* descriptor;
+      C * data;
+      Array() {};
+   public:
+      /**
+         The ctor for an array. This initializes the array descriptor.
+
+         The real number of dimensions is stored in the ArrayDescriptor
+         itself. Thats why it is possible to use a generic pointer to
+         a 'zero'-dimensional array descriptor
+
+         \param descr the array descriptor, which is assoiated with this array
+         \param d pointer to the data area of the array
+
+      */
+      Array(ArrayDescriptor<0> * descr, C* d) : descriptor(descr), data(d) {}
+
+
+      /**
+        return pointer to the selected array element
+        \param i the index list
+        \return a pointer to the array element
+      */
+      C* getPtr(Fixed<31> i, ...) {
+        va_list args;
+        va_start(args,i);
+        C* result = data+descriptor->_offset(i,args);
+        va_end(args);
+        return (result);
+      }
+      
+      ArrayDescriptor<0> * getDescriptor() {
+          return descriptor;
+      }
+
+      
+
+
 
    };
 

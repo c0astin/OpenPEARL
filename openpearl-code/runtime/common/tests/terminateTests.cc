@@ -53,14 +53,14 @@ pearlrt::Semaphore _s2(10,"_s2");
 pearlrt::Semaphore _boltBlockerGoon(0,"_boltBlockerGoon");
 pearlrt::Bolt _bolt("_bolt");
 
-SPCTASK(START);
+extern pearlrt::Task taskSTART;
 //SPCTASK(T1SemaBlocked);
-SPCTASK(T2SemaBlocked);
-SPCTASK(T2BoltBlocked);
-SPCTASK(T2BoltBlocker);
+extern pearlrt::Task taskT2SemaBlocked;
+extern pearlrt::Task taskT2BoltBlocked;
+extern pearlrt::Task taskT2BoltBlocker;
 
-SPCTASK(T2running);
-SPCTASK(T2suspended);
+extern pearlrt::Task taskT2running;
+extern pearlrt::Task taskT2suspended;
 
 void t1SemaBlocked(pearlrt::Task* me) ;
 void t1BoltBlocked(pearlrt::Task* me) ;
@@ -87,21 +87,21 @@ void t1SemaBlocked(pearlrt::Task* me) {
    for (int i = 0; i < 10; i++) {
       printf("test #%d\n", i);
       me->setLocation(__LINE__, __FILE__);
-      T2SemaBlocked.activate(me);
+      taskT2SemaBlocked.activate(me);
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
                  pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
-      ts = T2SemaBlocked.getTaskState();
+      ts = taskT2SemaBlocked.getTaskState();
 
       if (ts != pearlrt::TaskCommon::BLOCKED) {
          printf("run as root? \n*** wrong task state (%d) (BLOCKED expected)\n", ts);
       }
 
       me->setLocation(__LINE__, __FILE__);
-      T2SemaBlocked.terminate(me);
+      taskT2SemaBlocked.terminate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2SemaBlocked.getTaskState();
+      ts = taskT2SemaBlocked.getTaskState();
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
                  pearlrt::Clock(), pearlrt::Duration(0,100000));
@@ -119,18 +119,18 @@ void t1SemaBlocked(pearlrt::Task* me) {
    for (int i = 0; i < 10; i++) {
       printf("test #%d\n", i);
       me->setLocation(__LINE__, __FILE__);
-      T2SemaBlocked.activate(me);
+      taskT2SemaBlocked.activate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2SemaBlocked.getTaskState();
+      ts = taskT2SemaBlocked.getTaskState();
 
       if (ts != pearlrt::TaskCommon::BLOCKED) {
          printf("run as root?\n*** wrong task state (%d) (BLOCKED expected)\n", ts);
       }
 
       me->setLocation(__LINE__, __FILE__);
-      T2SemaBlocked.terminate(me);
+      taskT2SemaBlocked.terminate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2SemaBlocked.getTaskState();
+      ts = taskT2SemaBlocked.getTaskState();
       me->setLocation(__LINE__, __FILE__);
 
       if (ts != pearlrt::TaskCommon::TERMINATED) {
@@ -161,28 +161,28 @@ void t1BoltBlocked(pearlrt::Task* me) {
    me->setLocation(__LINE__, __FILE__);
 
    pearlrt::Log::info("****** t1BoltBlocked  -- do 10 slow terminates **********");
-   T2BoltBlocker.activate(me);
+   taskT2BoltBlocker.activate(me);
     me->resume(pearlrt::Task::AFTER,
                  pearlrt::Clock(), pearlrt::Duration(0,200000));
 
    for (int i = 0; i < 10; i++) {
       printf("test #%d\n", i);
       me->setLocation(__LINE__, __FILE__);
-      T2BoltBlocked.activate(me);
+      taskT2BoltBlocked.activate(me);
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
                  pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
-      ts = T2BoltBlocked.getTaskState();
+      ts = taskT2BoltBlocked.getTaskState();
 
       if (ts != pearlrt::TaskCommon::BLOCKED) {
          printf("run as root? \n*** wrong task state (%d) (BLOCKED expected)\n", ts);
       }
 
       me->setLocation(__LINE__, __FILE__);
-      T2BoltBlocked.terminate(me);
+      taskT2BoltBlocked.terminate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2BoltBlocked.getTaskState();
+      ts = taskT2BoltBlocked.getTaskState();
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
                  pearlrt::Clock(), pearlrt::Duration(0,100000));
@@ -200,18 +200,18 @@ void t1BoltBlocked(pearlrt::Task* me) {
    for (int i = 0; i < 10; i++) {
       printf("test #%d\n", i);
       me->setLocation(__LINE__, __FILE__);
-      T2BoltBlocked.activate(me);
+      taskT2BoltBlocked.activate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2BoltBlocked.getTaskState();
+      ts = taskT2BoltBlocked.getTaskState();
 
       if (ts != pearlrt::TaskCommon::BLOCKED) {
          printf("run as root?\n*** wrong task state (%d) (BLOCKED expected)\n", ts);
       }
 
       me->setLocation(__LINE__, __FILE__);
-      T2BoltBlocked.terminate(me);
+      taskT2BoltBlocked.terminate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2BoltBlocked.getTaskState();
+      ts = taskT2BoltBlocked.getTaskState();
       me->setLocation(__LINE__, __FILE__);
 
       if (ts != pearlrt::TaskCommon::TERMINATED) {
@@ -254,7 +254,7 @@ void terminated(pearlrt::Task * me) {
    pearlrt::Log::info("****** t1terminated  **********");
    me->setLocation(__LINE__, __FILE__);
    try {
-      T2running.terminate(me);
+      taskT2running.terminate(me);
    } catch (pearlrt::TaskTerminatedSignal s) {
       printf("ok - got TerminatedSignal\n");
       ok = true;
@@ -273,21 +273,21 @@ void running(pearlrt::Task * me) {
    for (int i = 0; i < 10; i++) {
       printf("test #%d\n", i);
       me->setLocation(__LINE__, __FILE__);
-      T2running.activate(me);
+      taskT2running.activate(me);
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
                  pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
-      ts = T2running.getTaskState();
+      ts = taskT2running.getTaskState();
 
       if (ts != pearlrt::TaskCommon::RUNNING) {
          printf("run as root? \n*** wrong task state (%d) (RUNNING expected)\n", ts);
       }
 
       me->setLocation(__LINE__, __FILE__);
-      T2running.terminate(me);
+      taskT2running.terminate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2running.getTaskState();
+      ts = taskT2running.getTaskState();
       me->setLocation(__LINE__, __FILE__);
 //      me->resume(pearlrt::Task::AFTER,
 //                 pearlrt::Clock(), pearlrt::Duration(0,100000));
@@ -302,18 +302,18 @@ void running(pearlrt::Task * me) {
    for (int i = 0; i < 10; i++) {
       printf("test #%d\n", i);
       me->setLocation(__LINE__, __FILE__);
-      T2running.activate(me);
+      taskT2running.activate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2running.getTaskState();
+      ts = taskT2running.getTaskState();
 
       if (ts != pearlrt::TaskCommon::RUNNING) {
          printf("run as root? \n*** wrong task state (%d) (RUNNING expected)\n", ts);
       }
 
       me->setLocation(__LINE__, __FILE__);
-      T2running.terminate(me);
+      taskT2running.terminate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2running.getTaskState();
+      ts = taskT2running.getTaskState();
       me->setLocation(__LINE__, __FILE__);
 
       if (ts != pearlrt::TaskCommon::TERMINATED) {
@@ -338,21 +338,21 @@ void suspended(pearlrt::Task * me) {
    for (int i = 0; i < 10; i++) {
       printf("test #%d\n", i);
       me->setLocation(__LINE__, __FILE__);
-      T2suspended.activate(me);
+      taskT2suspended.activate(me);
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
                  pearlrt::Clock(), pearlrt::Duration(0,100000));
       me->setLocation(__LINE__, __FILE__);
-      ts = T2suspended.getTaskState();
+      ts = taskT2suspended.getTaskState();
 
       if (ts != pearlrt::TaskCommon::SUSPENDED) {
          printf("run as root? \n*** wrong task state (%d) (SUSPENDED expected)\n", ts);
       }
 
       me->setLocation(__LINE__, __FILE__);
-      T2suspended.terminate(me);
+      taskT2suspended.terminate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2suspended.getTaskState();
+      ts = taskT2suspended.getTaskState();
       me->setLocation(__LINE__, __FILE__);
       me->resume(pearlrt::Task::AFTER,
                  pearlrt::Clock(), pearlrt::Duration(0,100000));
@@ -367,18 +367,18 @@ void suspended(pearlrt::Task * me) {
    for (int i = 0; i < 10; i++) {
       printf("test #%d\n", i);
       me->setLocation(__LINE__, __FILE__);
-      T2suspended.activate(me);
+      taskT2suspended.activate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2suspended.getTaskState();
+      ts = taskT2suspended.getTaskState();
 
       if (ts != pearlrt::TaskCommon::SUSPENDED) {
          printf("run as root? \n*** wrong task state (%d) (RUNNING expected)\n", ts);
       }
 
       me->setLocation(__LINE__, __FILE__);
-      T2suspended.terminate(me);
+      taskT2suspended.terminate(me);
       me->setLocation(__LINE__, __FILE__);
-      ts = T2suspended.getTaskState();
+      ts = taskT2suspended.getTaskState();
       me->setLocation(__LINE__, __FILE__);
 
       if (ts != pearlrt::TaskCommon::TERMINATED) {

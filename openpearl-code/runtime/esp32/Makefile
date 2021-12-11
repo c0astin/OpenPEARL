@@ -276,7 +276,7 @@ o_bin:
 		  $$objects -o $$target.elf\
 		$(LINK_PARAMETERS_2)' >> o_bin.inc
 	@echo 'python  $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 elf2image --flash_mode "dio" --flash_freq "40m" --flash_size "2MB"  -o $$target.bin $$target.elf' >> o_bin.inc
-	@echo 'size $$target' >> o_bin.inc
+	@echo 'size $$target.elf' >> o_bin.inc
 
 phony += run_bin
 run_bin:

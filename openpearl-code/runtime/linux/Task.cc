@@ -79,13 +79,13 @@ namespace pearlrt {
    }
 
    // tasks are created statically - no mutex protection needed
-   Task::Task(void (*entry)(Task *),
+   Task::Task(void (*body)(Task *),
               char * n,                          
               Prio prio, BitString<1> isMain)
          : TaskCommon(n, prio, isMain) {
       int ret;
 
-      entryPoint = entry;   //set thread execute function
+      this->body = body;   // the task body
 
       schedActivateData.taskTimer = &activateTaskTimer;
       schedContinueData.taskTimer = &continueTaskTimer;
@@ -377,6 +377,24 @@ namespace pearlrt {
       DEBUG("%s: task activation completed", name);
    }
 
+static void* taskFunction (void* m) { 
+      Task * me = (Task*)m;         
+      me->entry();                                     
+      try {                                             
+         me->body(me);                               
+      } catch (pearlrt::Signal & p) {                   
+         char line[256];                                
+         printf("++++++++++++++++++++++++++++++\n");    
+         sprintf(line,"%s:%d Task: %s   terminated due to: %s",
+             me->getLocationFile(), me->getLocationLine(), 
+             me->getName(), p.which());                 
+         printf("%s\n",line);                           
+         pearlrt::Log::error(line);                     
+         printf("++++++++++++++++++++++++++++++\n");    
+      }                                                 
+      me->terminate(me);                                
+      return NULL;
+   }      
 
    void Task::directActivate(const Fixed<15>& prio) {
       int ret;
@@ -420,7 +438,8 @@ namespace pearlrt {
 
       //create the thread
       if (pthread_create(&threadPid, &attr,
-                         (void * (*)(void*))entryPoint,
+         //                (void * (*)(void*))body,
+			&taskFunction,
                          (void*)this) != 0) {
          Log::error("%s: could not create thread (%s))",
                     name, strerror(errno));
@@ -588,9 +607,9 @@ namespace pearlrt {
       return threadPid;
    }
 
-   Task::TaskEntry Task::getEntry() {
-      return entryPoint;
-   }
+//   Task::TaskEntry Task::getEntry() {
+//      return entryPoint;
+//   }
 
    Task* Task::currentTask(void) {
       return mySelf;

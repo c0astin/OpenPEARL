@@ -50,129 +50,127 @@ There are several unit tests using the google test framework.
 #include "Log.h"
 
 /**
-test creation
+test bounds1
 */
-TEST(ArrayTest, creation1) {
-//   pearlrt::Fixed<31> data_array1[100]; // arrayData Fixed(5,20);
-   DCLARRAY(array1, 2, LIMITS({{0,4,20},{0,19,1}}));
+TEST(ArrayTest, bounds1) {
+   pearlrt::Fixed<31> data_array1[100]; // arrayData Fixed(0:4,0:19);
+   pearlrt::ArrayDescriptor<2> ad_array1 = {2,LIMITS({{0,4,20},{0,19,1}})};
+   pearlrt::Array<pearlrt::Fixed<31>> array1((pearlrt::ArrayDescriptor<0>*)&ad_array1, data_array1);
 
-  
-   ASSERT_THROW(array1->lwb(pearlrt::Fixed<31>(0)), 
+   ASSERT_THROW(array1.getDescriptor()->lwb(pearlrt::Fixed<31>(0)),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
-   ASSERT_EQ(array1->lwb(pearlrt::Fixed<31>(1)).x, 0);
-   ASSERT_EQ(array1->lwb(pearlrt::Fixed<31>(2)).x, 0);
-   ASSERT_THROW(array1->lwb(pearlrt::Fixed<31>(3)), 
+   ASSERT_EQ(array1.getDescriptor()->lwb(pearlrt::Fixed<31>(1)).x, 0);
+   ASSERT_EQ(array1.getDescriptor()->lwb(pearlrt::Fixed<31>(2)).x, 0);
+   ASSERT_THROW(array1.getDescriptor()->lwb(pearlrt::Fixed<31>(3)),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
 
-   ASSERT_THROW(array1->upb(pearlrt::Fixed<31>(0)), 
+   ASSERT_THROW(array1.getDescriptor()->upb(pearlrt::Fixed<31>(0)),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
-   ASSERT_EQ(array1->upb(pearlrt::Fixed<31>(1)).x, 4);
-   ASSERT_EQ(array1->upb(pearlrt::Fixed<31>(2)).x, 19);
-   ASSERT_THROW(array1->upb(pearlrt::Fixed<31>(3)), 
+   ASSERT_EQ(array1.getDescriptor()->upb(pearlrt::Fixed<31>(1)).x, 4);
+   ASSERT_EQ(array1.getDescriptor()->upb(pearlrt::Fixed<31>(2)).x, 19);
+   ASSERT_THROW(array1.getDescriptor()->upb(pearlrt::Fixed<31>(3)),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
 
 }
 
-TEST(ArrayTest, creation2) {
-   DCLARRAY(array1, 2, LIMITS({{-4,4,20},{-10,9,1}}));
 
-   ASSERT_THROW(array1->lwb(pearlrt::Fixed<31>(0)), 
+TEST(ArrayTest, bounds) {
+   pearlrt::Fixed<31> data_array1[100]; // arrayData Fixed(-4:4,-10:9,20);
+   pearlrt::ArrayDescriptor<2> ad_array1 = {2,LIMITS({{-4,4,20},{-10,9,1}})};
+   pearlrt::Array<pearlrt::Fixed<31>> array1((pearlrt::ArrayDescriptor<0>*)&ad_array1, data_array1);
+
+
+   ASSERT_THROW(array1.getDescriptor()->lwb(pearlrt::Fixed<31>(0)),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
-   ASSERT_EQ(array1->lwb(pearlrt::Fixed<31>(1)).x, -4);
-   ASSERT_EQ(array1->lwb(pearlrt::Fixed<31>(2)).x, -10);
-   ASSERT_THROW(array1->lwb(pearlrt::Fixed<31>(3)), 
+   ASSERT_EQ(array1.getDescriptor()->lwb(pearlrt::Fixed<31>(1)).x, -4);
+   ASSERT_EQ(array1.getDescriptor()->lwb(pearlrt::Fixed<31>(2)).x, -10);
+   ASSERT_THROW(array1.getDescriptor()->lwb(pearlrt::Fixed<31>(3)),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
 
-   ASSERT_THROW(array1->upb(pearlrt::Fixed<31>(0)), 
+   ASSERT_THROW(array1.getDescriptor()->upb(pearlrt::Fixed<31>(0)),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
-   ASSERT_EQ(array1->upb(pearlrt::Fixed<31>(1)).x, 4);
-   ASSERT_EQ(array1->upb(pearlrt::Fixed<31>(2)).x, 9);
-   ASSERT_THROW(array1->upb(pearlrt::Fixed<31>(3)), 
+   ASSERT_EQ(array1.getDescriptor()->upb(pearlrt::Fixed<31>(1)).x, 4);
+   ASSERT_EQ(array1.getDescriptor()->upb(pearlrt::Fixed<31>(2)).x, 9);
+   ASSERT_THROW(array1.getDescriptor()->upb(pearlrt::Fixed<31>(3)),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
 }
 
 TEST(ArrayTest, readwrite) {
    pearlrt::Fixed<31> testvalue;
 
-   pearlrt::Fixed<31> data_array1[100]; // arrayData Fixed(5,20);
-   DCLARRAY(array1, 2, LIMITS({{0,4,20},{0,19,1}}));
+   pearlrt::Fixed<31> data_array1[100]; // arrayData Fixed(0:4,0:19);
+   pearlrt::ArrayDescriptor<2> ad_array1 = {2,LIMITS({{0,4,20},{0,19,1}})};
+   pearlrt::Array<pearlrt::Fixed<31>> array1((pearlrt::ArrayDescriptor<0>*)&ad_array1, data_array1);
+
 
    // read, and index exception tests
    ASSERT_NO_THROW(
-      testvalue=*(data_array1+
-                  array1->offset(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(0)))
+      testvalue=*(array1.getPtr(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(0)))
     );
    ASSERT_NO_THROW(
-      testvalue=*(data_array1+
-                  array1->offset(pearlrt::Fixed<31>(4),pearlrt::Fixed<31>(19)))
+      testvalue=*(array1.getPtr(pearlrt::Fixed<31>(4),pearlrt::Fixed<31>(19)))
     );
    ASSERT_THROW(
-      testvalue=*(data_array1+
-                  array1->offset(pearlrt::Fixed<31>(5),pearlrt::Fixed<31>(19))),
+      testvalue=*(array1.getPtr(pearlrt::Fixed<31>(5),pearlrt::Fixed<31>(19))),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
    ASSERT_THROW(
-      testvalue=*(data_array1+
-                  array1->offset(pearlrt::Fixed<31>(4),pearlrt::Fixed<31>(20))),
+      testvalue=*(array1.getPtr(pearlrt::Fixed<31>(4),pearlrt::Fixed<31>(20))),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
 
    ASSERT_THROW(
-      testvalue=*(data_array1+
-                  array1->offset(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(-1))),
+      testvalue=*(array1.getPtr(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(-1))),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
    ASSERT_THROW(
-      testvalue=*(data_array1+
-                  array1->offset(pearlrt::Fixed<31>(-1),pearlrt::Fixed<31>(0))),
+      testvalue=*(array1.getPtr(pearlrt::Fixed<31>(-1),pearlrt::Fixed<31>(0))),
                 pearlrt::ArrayIndexOutOfBoundsSignal);
 
    // write
    ASSERT_NO_THROW(
-      testvalue=*(data_array1+
-                  array1->offset(pearlrt::Fixed<31>(1),pearlrt::Fixed<31>(0)));
-      *(data_array1+
-        array1->offset(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(1)))
-         = testvalue;
+      testvalue=*(array1.getPtr(pearlrt::Fixed<31>(1),pearlrt::Fixed<31>(0)));
+      *(array1.getPtr(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(1))) = testvalue;
     );
 }
 
+
 TEST(ArrayTest, order) {
    pearlrt::Fixed<31> testvalue;
-
    pearlrt::Fixed<31> data_array1[100]; // arrayData Fixed(5,20);
-   DCLARRAY(array1, 2, LIMITS({{0,4,20},{0,19,1}}));
+   pearlrt::ArrayDescriptor<2> ad_array1 = {2,LIMITS({{0,4,20},{0,19,1}})};
+   pearlrt::Array<pearlrt::Fixed<31>> array1((pearlrt::ArrayDescriptor<0>*)&ad_array1, data_array1);
+
 
    // test pointer differences
    // last index runs first
    ASSERT_EQ(
-      (data_array1+array1->offset(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(1)))-
-      (data_array1+array1->offset(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(0))), 1);
+      (array1.getPtr(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(1)))-
+      (array1.getPtr(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(0))), 1);
    ASSERT_EQ(
-      (data_array1+array1->offset(pearlrt::Fixed<31>(4),pearlrt::Fixed<31>(0)))-
-      (data_array1+array1->offset(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(0))), 80);
+      (array1.getPtr(pearlrt::Fixed<31>(4),pearlrt::Fixed<31>(0)))-
+      (array1.getPtr(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(0))), 80);
    ASSERT_EQ(
-      (data_array1+array1->offset(pearlrt::Fixed<31>(4),pearlrt::Fixed<31>(19)))-
-      (data_array1+array1->offset(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(0))), 99);
+      (array1.getPtr(pearlrt::Fixed<31>(4),pearlrt::Fixed<31>(19)))-
+      (array1.getPtr(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(0))), 99);
 
 }
 
-void preset(pearlrt::Array * a, pearlrt::Fixed<31> * data) {
-   for (int i=a->lwb(pearlrt::Fixed<31>(1)).x; 
-             i<=a->upb(pearlrt::Fixed<31>(1)).x;i++) {
-   for (int j=a->lwb(pearlrt::Fixed<31>(2)).x; 
-             j<=a->upb(pearlrt::Fixed<31>(2)).x;j++) {
-      *(data+
-        a->offset(pearlrt::Fixed<31>(i),pearlrt::Fixed<31>(j)))=
+void preset(pearlrt::Array<pearlrt::Fixed<31>> * a) {
+   for (int i=a->getDescriptor()->lwb(pearlrt::Fixed<31>(1)).x;
+             i<=a->getDescriptor()->upb(pearlrt::Fixed<31>(1)).x;i++) {
+   for (int j=a->getDescriptor()->lwb(pearlrt::Fixed<31>(2)).x;
+             j<=a->getDescriptor()->upb(pearlrt::Fixed<31>(2)).x;j++) {
+      *(a->getPtr(pearlrt::Fixed<31>(i),pearlrt::Fixed<31>(j)))=
        pearlrt::Fixed<31>(100*i+j);
    }}
 }
 
-void dump(pearlrt::Array * a, pearlrt::Fixed<31> * data) {
-   // run fast running index in inner loop 
-   for (int i=a->lwb(pearlrt::Fixed<31>(1)).x; 
-             i<=a->upb(pearlrt::Fixed<31>(1)).x;i++) {
-   for (int j=a->lwb(pearlrt::Fixed<31>(2)).x; 
-             j<=a->upb(pearlrt::Fixed<31>(2)).x;j++) {
-      printf("%4d", (int)(data+
-        a->offset(pearlrt::Fixed<31>(i),pearlrt::Fixed<31>(j)))->get());
+void dump(pearlrt::Array<pearlrt::Fixed<31>> * a) {
+   // run fast running index in inner loop
+   for (int i=a->getDescriptor()->lwb(pearlrt::Fixed<31>(1)).x;
+             i<=a->getDescriptor()->upb(pearlrt::Fixed<31>(1)).x;i++) {
+   for (int j=a->getDescriptor()->lwb(pearlrt::Fixed<31>(2)).x;
+             j<=a->getDescriptor()->upb(pearlrt::Fixed<31>(2)).x;j++) {
+      printf("%04d ", (int)(
+        a->getPtr(pearlrt::Fixed<31>(i),pearlrt::Fixed<31>(j)))->get());
    }
    printf("\n");
    }
@@ -181,28 +179,45 @@ void dump(pearlrt::Array * a, pearlrt::Fixed<31> * data) {
 
 TEST(ArrayTest, functionpass) {
    pearlrt::Fixed<31> data_array1[100]; // arrayData Fixed(10,10);
-   DCLARRAY(array1, 2, LIMITS({{0,9,10},{0,9,1}}));
+   pearlrt::ArrayDescriptor<2> ad_array1 = {2,LIMITS({{0,9,10},{0,9,1}})};
+   pearlrt::Array<pearlrt::Fixed<31>> array1((pearlrt::ArrayDescriptor<0>*)&ad_array1, data_array1);
 
-   preset(array1,data_array1);
-   dump(array1,data_array1);
+   preset(&array1);
+   dump(&array1);
 }
 
 TEST(ArrayTest,withStructs){
+   /* DCL s(0:20) STRUCT [ d FIXED(31), data(0:9,0:9) FIXED(31) , d2 FIXED(31)];
+      DCL testValue FIXED(31);
+      testValue = s(2).d;
+      testValue = s(2).data(0,1);
+   */
    struct S {
-      int dummyData1;
-      pearlrt::Fixed<31> data_array1[100]; // arrayData Fixed(0:9,0:9);
-      int dummyData2;
+      int d;
+      pearlrt::Fixed<31> data_fixedArray[100]; // arrayData Fixed(0:9,0:9);
+      int d2;
    } data_structs[20];
-   DCLARRAY(structs, 1, LIMITS({{0,20,1}}));
-
-   DCLARRAY(structs_array1, 2, LIMITS({{0,9,10},{0,9,1}}));
+   pearlrt::ArrayDescriptor<1> ad_struct = {1,LIMITS({{0,20,1}})};
+   pearlrt::Array<struct S> arrayStructs((pearlrt::ArrayDescriptor<0>*)&ad_struct, data_structs);
+   pearlrt::ArrayDescriptor<2> ad_fixedArray = {2,LIMITS({{0,9,10},{0,9,1}})};
+   
    pearlrt::Fixed<31> testValue;
-   testValue = *(
-                 (  (*(data_structs+structs->offset(pearlrt::Fixed<31>(2)) )).data_array1+
-                             structs_array1->offset(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(1))
-                 )
-                );
+   //  testValue = s(2).d;
+   testValue = arrayStructs.getPtr(pearlrt::Fixed<31>(2))->d;
+
+  testValue =*( arrayStructs.getPtr(pearlrt::Fixed<31>(2))->data_fixedArray+
+        ad_fixedArray.offset(pearlrt::Fixed<31>(0), pearlrt::Fixed<31>(1)));
+
+#if 0
+   // testValue = s(2).data(0,1);
+   {
+       struct S * sel = arrayStructs.getPtr(pearlrt::Fixed<31>(2));
+       pearlrt::Array<pearlrt::Fixed<31>> fixedArray((pearlrt::ArrayDescriptor<0>*)&ad_fixedArray,sel->data_fixedArray);
+       testValue = *(fixedArray.getPtr(pearlrt::Fixed<31>(0),pearlrt::Fixed<31>(1)));
+   }
+#endif
 }
+
 /**
 \endcond
 */

@@ -1,4 +1,4 @@
-	/*
+/*
  [The "BSD license"]
  Copyright (c) 2013-2014 Florian Mahlecke
                2014-2019 Rainer Mueller
@@ -90,6 +90,8 @@ namespace pearlrt {
       /* the FreeRTOS stack */
       FakeStackType_t stack[STACK_SIZE];
 
+      void (*body)(Task * me); //< C function containing the code
+
    public:
       /**
       ctor for task object
@@ -99,7 +101,7 @@ namespace pearlrt {
       \param ismain '1'B1, if MAIN attribute is set at the tasks declaration
                       <br>'0'B1 else
       */
-      Task(char* n, Prio prio, BitString<1> ismain);
+      Task(void (*body)(Task *), char* n, Prio prio, BitString<1> ismain);
 
       /**
       do initializations, which must be done in main()
@@ -242,16 +244,6 @@ namespace pearlrt {
       static bool delayUs(uint64_t usecs);
 
       /**
-      the tasks body.
-
-      The content of the tasks body is created by the DCLTASK macro
-      and the subsequent statements after the DCLTASK macro
-
-      \param me pointer to the tasks object
-      */
-      virtual void task(Task * me) = 0;
-
-      /**
       the FreeRTOS thread code must be a void function with a void* as
       parameter.
       \param param pointer to the tasks object data
@@ -302,6 +294,27 @@ namespace pearlrt {
       FakeTaskHandle_t getFreeRTOSTaskHandle();
 #endif
    };
+
+/**
+create to C++  code for the task definition
+
+this macros also creates the task-body function with the
+default exception handler
+
+Target systems without standard output must redefine these macros
+in a conventient way in there task-specification file
+
+\param x the name of the task
+\param prio the tasks priority (must be set to 255 if not given)
+\param ismain 1, if the task is of type MAIN,<br> 0,else
+*/
+
+#define DCLTASK(x, prio, ismain)                        \
+   static void x ## _body (pearlrt::Task * me) ;        \
+          pearlrt::Task task ## x ( x ## _body, ((char*)#x)+1,  \
+                       prio, ismain);                   \
+static void x ## _body (pearlrt::Task * me)  
+
    /** @} */
 }
 

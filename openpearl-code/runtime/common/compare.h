@@ -35,7 +35,7 @@
 #include "Character.h"
 #include "CharSlice.h"
 #include "Ref.h"
-#include "RefArray.h"
+//#include "RefArray.h"
 
 /**
 \file
@@ -882,7 +882,7 @@ namespace pearlrt {
    /* IS: data and descriptor must match 			     */
    /* ISNT: data or descriptor does not match 			     */
    /* -------------------------------------------------------------- */
-
+#if 0
    /**
    compare equal operation
 
@@ -960,7 +960,7 @@ namespace pearlrt {
                             const Ref<char> & rhs) {
       return BitString<1>(lhs.data != NULL || lhs.descriptor != NULL);
    }    
-
+#endif
 
 }
 #endif

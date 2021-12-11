@@ -19,7 +19,7 @@ warning: BOLT 'bolt' is never used by SPC
    DCL export FIXED GLOBAL INIT(42);
    DCL struct STRUCT [ (a,b) FIXED] GLOBAL INIT(1,2);
 /*$    ^
-note: found in DCL :'STRUCT [  FIXED(31) FIXED(31) ] '
+note: found in DCL :'STRUCT [ FIXED(31),FIXED(31) ]'
 */
 t: TASK MAIN;
    OPEN stdout;
@@ -27,4 +27,15 @@ t: TASK MAIN;
    PUT 'export:', export TO stdout BY A,F(3),SKIP;
    PUT 'struct.(a,b)', struct.a, struct.b TO stdout BY A,2F(4),SKIP;
 END;
+
+pExport: PROC(a FIXED IDENT) RETURNS (STRUCT [ a FIXED, b(5) FLOAT ]) GLOBAL;
+/*$
+^
+note: found in DCL :'PROC ( FIXED(31) IDENT ) RETURNS ( STRUCT [ FIXED(31),() FLOAT(23) ] )'
+*/
+   DCL result STRUCT [ a FIXED , b(5) FLOAT ];
+   result.a=a;
+   RETURN(result);
+END;
+
 MODEND;

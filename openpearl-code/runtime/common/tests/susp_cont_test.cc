@@ -165,12 +165,12 @@ using namespace std;
 char fn[] = "SUSP_CONT_TEST.prl";
 
 
-SPCTASK(SUSPENDED_TASK);
-SPCTASK(CONTINUER);
-SPCTASK(SUSP_CONT_TEST);
-SPCTASK(C1);
-SPCTASK(C2);
-SPCTASK(COUNTER);
+extern pearlrt::Task taskSUSPENDED_TASK;
+extern pearlrt::Task taskCONTINUER;
+extern pearlrt::Task taskSUSP_CONT_TEST;
+extern pearlrt::Task taskC1;
+extern pearlrt::Task taskC2;
+extern pearlrt::Task taskCOUNTER;
 
 static Clock s;
 static Duration d;
@@ -180,9 +180,9 @@ static Fixed63 counter2((Fixed63::Fixed63_t)0LL);
 DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1)) 
 {
    me->setLocation(__LINE__,fn);
-   SUSPENDED_TASK.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(30));
+   taskSUSPENDED_TASK.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(30));
    me->setLocation(__LINE__,fn);
-   CONTINUER.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(31));
+   taskCONTINUER.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(31));
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
@@ -196,9 +196,9 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
   }
 
    me->setLocation(__LINE__,fn);
-   SUSPENDED_TASK.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(32));
+   taskSUSPENDED_TASK.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(32));
    me->setLocation(__LINE__,fn);
-   CONTINUER.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(31));
+   taskCONTINUER.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(31));
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
@@ -213,9 +213,9 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
    me->setLocation(__LINE__,fn);
    s = Clock::now();
    me->setLocation(__LINE__,fn);
-   C1.activate(me);
+   taskC1.activate(me);
    me->setLocation(__LINE__,fn);
-   C2.activate(me);
+   taskC2.activate(me);
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
@@ -229,14 +229,14 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
    Log::info("************************************************");
    Log::info("remote termination test (%d of 10)",i+1);
    me->setLocation(__LINE__,fn);
-   SUSPENDED_TASK.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(32));
+   taskSUSPENDED_TASK.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(32));
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
            Duration(1,0),
            0);
    me->setLocation(__LINE__,fn);
-   SUSPENDED_TASK.terminate(me);
+   taskSUSPENDED_TASK.terminate(me);
    printf("remote termination of self suspended works (%d of 10) \n",i+1);
    Log::info("remote termination test (%d of 10) -- done",i+1);
   } 
@@ -246,7 +246,7 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
    me->setLocation(__LINE__,fn);
    counter1 = Fixed63((Fixed63::Fixed63_t)0LL);
    me->setLocation(__LINE__,fn);
-   COUNTER.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(255));
+   taskCOUNTER.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(255));
    me->setLocation(__LINE__,fn);
    me->resume(Task::AFTER, 
            Clock(), 
@@ -257,7 +257,7 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
       printf("Task COUNTER did not start - fail\n");
    }
    me->setLocation(__LINE__,fn);
-   COUNTER.suspend(me);
+   taskCOUNTER.suspend(me);
    me->setLocation(__LINE__,fn);
    counter1 = Fixed63((Fixed63::Fixed63_t)0LL);
    me->setLocation(__LINE__,fn);
@@ -273,7 +273,7 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
    }
    me->setLocation(__LINE__,fn);
    printf(" terminate remote COUNTER\n");
-   COUNTER.terminate(me);
+   taskCOUNTER.terminate(me);
    
    printf("--- done --- \n");
 }
@@ -302,7 +302,7 @@ DCLTASK(CONTINUER,pearlrt::Prio(255),pearlrt::BitString<1>(0))
    s = Clock::now();
 printf("CONTINUER: continue SUSPENDED_TASK\n");
    me->setLocation(__LINE__,fn);
-   SUSPENDED_TASK.cont(me);
+   taskSUSPENDED_TASK.cont(me);
 printf("CONTINUER: continue SUSPENDED_TASK done\n");
 
    me->setLocation(__LINE__,fn);
@@ -357,7 +357,7 @@ Log::info("C2: 1 sec active");
    // test priority change and premption on the fly
    me->setLocation(__LINE__,fn);
 Log::info("C2: C1.cont 30");
-   C1.cont(me,pearlrt::Task::PRIO, pearlrt::Prio(30));
+   taskC1.cont(me,pearlrt::Task::PRIO, pearlrt::Prio(30));
    me->setLocation(__LINE__,fn);
    e = Clock::now() + Duration(3,0);
    me->setLocation(__LINE__,fn);

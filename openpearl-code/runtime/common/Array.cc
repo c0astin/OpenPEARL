@@ -43,53 +43,52 @@
 
 
 namespace pearlrt {
-
-   size_t Array::offset(Fixed<31> index, ...) {
+   template<>
+   size_t ArrayDescriptor<0>::_offset(Fixed<31> index, va_list args) {
       size_t offset = 0;
       int i;
-      va_list args;
-      va_start(args, index);
 
-      for (i = 0; i < descriptor->dim; i++) {
-         if (index.x < descriptor->lim[i].low) {
+      for (i = 0; i < dim; i++) {
+         if (index.x < lim[i].low) {
             Log::error("array index #%d out of bounds (%d) [%d,%d])",
                        i, (int)index.x,
-                       descriptor->lim[i].low, descriptor->lim[i].high);
+                       lim[i].low, lim[i].high);
             throw theArrayIndexOutOfBoundsSignal;
-         } else if (index.x > descriptor->lim[i].high) {
+         } else if (index.x > lim[i].high) {
             Log::error("array index #%d out of bounds (%d) [%d,%d])",
                        i, (int)index.x,
-                       descriptor->lim[i].low, descriptor->lim[i].high);
+                       lim[i].low, lim[i].high);
             throw theArrayIndexOutOfBoundsSignal;
          } else {
-            offset += (index.x - descriptor->lim[i].low) *
-                      descriptor->lim[i].size;
+            offset += (index.x - lim[i].low) *
+                      lim[i].size;
          }
 
          index = va_arg(args, Fixed<31>);
       }
 
-      va_end(args);
       return offset;
    }
 
-   Fixed<31> Array::lwb(Fixed<31> x) {
-      if (x.x > 0 && x.x <= descriptor->dim) {
-         return Fixed<31>(descriptor->lim[x.x - 1].low);
+   template<>
+   Fixed<31> ArrayDescriptor<0>::lwb(Fixed<31> x) {
+      if (x.x > 0 && x.x <= dim) {
+         return Fixed<31>(lim[x.x - 1].low);
       }
 
       Log::error("low: index %d out of range [1,%d]",
-                 (int)x.x, descriptor->dim);
+                 (int)x.x, dim);
       throw theArrayIndexOutOfBoundsSignal;
    }
 
-   Fixed<31> Array::upb(Fixed<31> x) {
-      if (x.x > 0 && x.x <= descriptor->dim) {
-         return Fixed<31>(descriptor->lim[x.x - 1].high);
+   template<>
+   Fixed<31> ArrayDescriptor<0>::upb(Fixed<31> x) {
+      if (x.x > 0 && x.x <= dim) {
+         return Fixed<31>(lim[x.x - 1].high);
       }
 
       Log::error("upb: index %d out of range [1,%d]",
-                 (int)x.x, descriptor->dim);
+                 (int)x.x, dim);
       throw theArrayIndexOutOfBoundsSignal;
    }
 }

@@ -78,10 +78,10 @@ MODEND.
 
 using namespace std;
 char*filename = (char*)"api.prl";
-SPCTASK(t1);
-SPCTASK(t2);
+extern pearlrt::Task task_t1;
+extern pearlrt::Task task_t2;
 
-DCLTASK(t1,pearlrt::Prio(10),pearlrt::BitString<1>(1)) {
+DCLTASK(_t1,pearlrt::Prio(10),pearlrt::BitString<1>(1)) {
    me->setLocation(10,filename);
    pearlrt::Duration d(5,0);
    me->setLocation(11,filename);
@@ -99,7 +99,7 @@ DCLTASK(t1,pearlrt::Prio(10),pearlrt::BitString<1>(1)) {
    printf("  -> 13 activations derived from the effective period of 25 sec\n");
    printf("  -> activation #2 will die due to div0 signal\n");
    me->setLocation(16,filename);
-   t2.activate(&t2, pearlrt::Task::PRIO |
+   task_t2.activate(&task_t2, pearlrt::Task::PRIO |
                pearlrt::Task::AFTER|pearlrt::Task::DURING|pearlrt::Task::ALL, 
 	       pearlrt::Prio(30),
                pearlrt::Clock(), d, pearlrt::Duration(2,0), // at, all 
@@ -107,7 +107,7 @@ DCLTASK(t1,pearlrt::Prio(10),pearlrt::BitString<1>(1)) {
 }
 
 int t2counter=0;
-DCLTASK(t2,pearlrt::Prio(20),pearlrt::BitString<1>(0)) {
+DCLTASK(_t2,pearlrt::Prio(20),pearlrt::BitString<1>(0)) {
    me->setLocation(17,filename);
    printf("t2 started %d\n", ++t2counter);
    me->setLocation(18,filename);

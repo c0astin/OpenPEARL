@@ -88,7 +88,7 @@ The  log file contains detailed information about the run.
 using namespace pearlrt;
 #define N  500
 static volatile int startcounter =0;
-SPCTASK(together);
+extern pearlrt::Task task_together;
 
 DCLTASK(together,pearlrt::Prio(4),pearlrt::BitString<1>(0)) {
    startcounter ++;
@@ -106,7 +106,7 @@ DCLTASK(startup,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    for (i=0; i<N; i++) {
       name=(char*)malloc(100);
       sprintf(name,"task#%d",i);
-      manyTasks[i] = new Task(together_entry,
+      manyTasks[i] = new Task(together_body,
 			name,pearlrt::Prio(6),
                         pearlrt::BitString<1>(0));
    } 

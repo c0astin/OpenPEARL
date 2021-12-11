@@ -9,8 +9,13 @@ PROBLEM;
    SPC export FIXED  GLOBAL(spcDclExport);
    SPC struct STRUCT [(c,d,e) FIXED ] GLOBAL(spcDclExport);
 /*$    ^
-error: type mismatch: expected in SPC: of 'struct' as type 'STRUCT [  FIXED(31) FIXED(31) FIXED(31) ] '
+error: type mismatch: expected in SPC: of 'struct' as type 'STRUCT [ FIXED(31),FIXED(31),FIXED(31) ]'
 */
+   SPC pExport PROC (a FIXED IDENT) RETURNS (STRUCT [b(5) FLOAT]) GLOBAL(spcDclExport);
+/*$    ^
+error: type mismatch: expected in SPC: of 'pExport' as type 'PROC ( FIXED(31) IDENT ) RETURNS ( STRUCT [ () FLOAT(23) ] )'
+*/
+
 tImport: TASK MAIN;
    AFTER 1 SEC RESUME;
    PUT 'importing export:', export TO stdout BY A,F(3),SKIP;

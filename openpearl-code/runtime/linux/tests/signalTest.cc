@@ -17,7 +17,7 @@ extern pearlrt::Signal *generalized_overfl;
 extern pearlrt::Signal *generalized_div0;
 extern pearlrt::Signal *generalized_arith;
 
-SPCTASK(TASK1);
+extern pearlrt::Task task_TASK1;
 
 void _x(pearlrt::Task * me, pearlrt::Fixed<15> p) {
    pearlrt::Fixed<15> _k;

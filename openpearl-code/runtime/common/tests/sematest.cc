@@ -113,10 +113,10 @@ pearlrt::Semaphore _s2(1,"_s2");
 pearlrt::Semaphore _S3(5,"_s3");
 pearlrt::Semaphore _overflow((unsigned int) - 2, "_overflow"); // exeeds at 2nd release
 
-SPCTASK(_MAIN);
-SPCTASK(_T1);
-SPCTASK(_T2);
-SPCTASK(_T3);
+extern pearlrt::Task task_MAIN;
+extern pearlrt::Task task_T1;
+extern pearlrt::Task task_T2;
+extern pearlrt::Task task_T3;
 
 int buffer[100];
 int expected[10] = {1, 1, 3, 2, 2, 3, 2, 1};
@@ -179,7 +179,7 @@ DCLTASK(_T2, pearlrt::Prio(20), pearlrt::BitString<1>(1)) {
       pearlrt::Semaphore::release(me, 1, s);
    }
    // change prio of t3 -> is must run before t1
-   _T3.cont(me, pearlrt::Task::PRIO, pearlrt::Prio(5));
+   task_T3.cont(me, pearlrt::Task::PRIO, pearlrt::Prio(5));
    me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5,0));
    {
       buffer[bp++] = 2;

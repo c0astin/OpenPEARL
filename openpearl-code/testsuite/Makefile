@@ -1,6 +1,6 @@
 .PHONY: all build run clean
 
-all: build run
+all: build 
 
 build:
 	(cd build; make redo)

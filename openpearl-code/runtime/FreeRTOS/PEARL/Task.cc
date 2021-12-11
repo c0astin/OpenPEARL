@@ -78,8 +78,10 @@ namespace pearlrt {
     * @param[in]	ismain PEARL90 isMain flag
     **********************************************************************/
 
-   Task::Task(char* n, Prio prio, BitString<1> ismain) :
+   Task::Task(void (*body)(Task*), char* n, Prio prio, BitString<1> ismain) :
       TaskCommon(n+1, prio, ismain) {
+
+      this->body = body;   // the task body
 
       schedActivateData.taskTimer = &activateTimer;
       schedContinueData.taskTimer = &continueTimer;
@@ -179,7 +181,7 @@ namespace pearlrt {
       DEBUG("%s: starts", me->getName());
 
       try {
-         me->task(me);
+         me->body(me);
       } catch (Signal & p) {
          {
             int f = uxTaskGetStackHighWaterMark(NULL);

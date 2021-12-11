@@ -71,7 +71,7 @@ MODEND.
 #include <iostream>
 using namespace std;
 
-SPCTASK(TASK1);
+extern pearlrt::Task task_TASK1;
 
 static pearlrt::SampleBasicDation s_dat;
 pearlrt::Device * d_dat = (pearlrt::Device*)&s_dat;
