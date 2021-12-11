@@ -94,6 +94,26 @@ then
    SystemKnown=1
 fi
 
+grep "PRETTY_NAME=\"Ubuntu 20.04.3 LTS\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Ubuntu 20.04.1 LTS"
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" openjdk-8-jdk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" i2c-tools libi2c-dev"
+   AptPackageList+=" zlib1g-dev"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive-full"
+   fi
+   SystemKnown=1
+fi
+
+
 grep "PRETTY_NAME=\"Ubuntu 19.10\"" /etc/os-release >/dev/null
 rc=$?
 if [ $rc -eq 0 ]
