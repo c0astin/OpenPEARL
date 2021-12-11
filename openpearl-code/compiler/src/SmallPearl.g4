@@ -620,7 +620,7 @@ listOfFormalParameters :
 ////////////////////////////////////////////////////////////////////////////////
 
 formalParameter :
-    ( identifier | '(' identifier ( ',' identifier)* ')' ) virtualDimensionList? assignmentProtection? parameterType passIdentical?
+    ( identifier | '(' identifier ( ',' identifier)* ')' )? virtualDimensionList? assignmentProtection? parameterType passIdentical?
     ;
 
 identifier:
