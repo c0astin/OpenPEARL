@@ -26,12 +26,10 @@ do
       fi
    done
    if [[ "$allExpectationsOk" -eq "1" ]] ; then
-      # if more sources are possible, we must think about a new
-      # calling mechanism with all required input files
-      # precompiled -  or not
       prl $1*.prl 2> $1.err 1>/dev/null
-   #   echo "prl $1 done"
-      $path/errorParser $files <$1.err 1>/dev/null
+     # echo "prl " $1*.prl "done"
+     # echo "start errorParser $files"
+      $path/errorParser $files <$1.err 1>>$1.log
       rc=$?
    #   echo "errorParser $1 done"
       if [ $rc -ne 0 ] ; then
@@ -41,15 +39,16 @@ do
       else 
          printf "%-40s :  all expected errors detected\n" $1 
          passed=$(($passed +1))
+         #echo "clean files"
+         rm -f system.cc $1.err $1.exp $1 $1.out $1.log
+         for f in $files ; do
+            basename=${f%.*}
+            rm -f $basename $basename.cc $basename.exp  $basename.err\
+		 $basename.xml $basename.log $basename.out
+         done
       fi
     fi
-    #echo "clean files"
-    rm -f system.cc $1.err $1.exp $1 $1.out
-    for f in $files ; do
-       basename=${f%.*}
-       rm -f $basename $basename.cc $basename.exp  $basename.err $basename.xml $basename.log $basename.out
-    done
-
+    # output files for failed tests remain 
    shift
 #   echo "next file:" $1
 done

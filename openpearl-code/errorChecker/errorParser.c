@@ -50,7 +50,7 @@ Error treatment
 
 #define LINELENGTH 1024
 #define SOURCELEN 128
-#define DEBUG 0
+#define DEBUG 1
 
 static int errorCount;
 
@@ -241,6 +241,7 @@ static struct ExpectationFile* readExpectationIfNotLoadedYet() {
         fprintf(stderr,"could not open %s (%s)\n", fileName, strerror(errno));
         exit(1);
     }
+    expFile->first = NULL;
     expFile->next = firstExpectationFile;
     firstExpectationFile = expFile;
 
@@ -270,12 +271,13 @@ static struct ExpectationFile* readExpectationIfNotLoadedYet() {
        exp->col = atoi(pos2+1);
        
        strcpy(exp->message,pos1+1);
+       exp->next=expFile->first;
+       expFile->first = exp;
 #if DEBUG == 1
        printf("read expectation line=%d col=%d\n", exp->line, exp->col);
        printf("  msg >%s<\n", exp->message);
+       printf("  next = %p head@ %p\n\n" ,exp->next,expFile->first);
 #endif                
-       exp->next=expFile->first;
-       expFile->first = exp;
 
     } while (! feof(fdExp));
 
@@ -286,25 +288,41 @@ static struct ExpectationFile* readExpectationIfNotLoadedYet() {
 static void searchExpectationAndMarkUsed( struct ExpectationFile * expFile) {
    struct Expectation *exp;
    int found = 0;
-printf("searchAndMark start\n");
+//printf("searchAndMark start\n");
    // first pass - search exact match (line,col, message)
+#if DEBUG == 1
+   printf("-------- dump expectations \n");
    for (exp=expFile->first; exp!= NULL && found == 0; exp=exp->next) {
+     printf("exp@ %p l,c=%d:%d next=%p msg>%s<\n",
+           exp, exp->line, exp->col, exp->next, exp->message); 
+   }
+printf("----------- \n\n");
+#endif
+   for (exp=expFile->first; exp!= NULL && found == 0; exp=exp->next) {
+//printf("check %d,%d exp %p\n", currentMessage.line, currentMessage.col, exp);
        if (exp->line == currentMessage.line &&
            exp->col == currentMessage.col) {
+//printf("%d.%d: fits\n", exp->line, exp->col);
+//printf("Expected: %s\n",  exp->message);
+//printf("Current: %s\n",   currentMessage.message);
          if (strcmp(exp->message,currentMessage.message) == 0) {
             exp->useCount ++;
 	    printf("%s:%d:%d: expectation fulfilled\n", 
                 expFile->source, exp->line,exp->col);
            found = 1;
+         } else {
+//printf("** message differs\n");
          }
+//printf("exp now: %p next %p\n", exp, exp->next);
        } 
+//printf("-----\n");
    }
-printf("searchAndMark @1\n");
+//printf("searchAndMark @1\n");
   
    if (found) {
       return;
    }
-printf("searchAndMark @2\n");
+//printf("searchAndMark @2\n");
 
    found = 0;
    // second pass - (line,col) must match 
@@ -325,7 +343,7 @@ printf("searchAndMark @2\n");
                  currentMessage.col, currentMessage.message);
              errorCount ++;
    }
-printf("searchAndMark @3\n");
+//printf("searchAndMark @3\n");
 }
 
 static void scanExpectations() {
@@ -373,11 +391,11 @@ int main(int narg, char*argv[]) {
 
    do {
      if (!nextLinePresent) {
-printf("read line\n");
+//printf("read line\n");
       clearLine(line);
       result = fgets(line,LINELENGTH,stdin);
      }
-printf("result=%d\n line=>%s<\n",result,line);
+//printf("result=%d\n line=>%s<\n",result,line);
 
       if (result) {
          if (line[strlen(line)-1] != '\n') {
@@ -385,16 +403,16 @@ printf("result=%d\n line=>%s<\n",result,line);
             exit(-1);
          }
          line[strlen(line)-1] = '\0';
-printf("parseError>%s<\n",line);
+//printf("parseError>%s<\n",line);
          nextLinePresent = parseError(line);
-printf("nextLinePreset=%d\n",nextLinePresent);
+//printf("nextLinePreset=%d\n",nextLinePresent);
          expFile = readExpectationIfNotLoadedYet();
-printf("expFile=%d\n",expFile);
+//printf("expFile=%d\n",expFile);
          searchExpectationAndMarkUsed(expFile);
        }
     } while (nextLinePresent == 1 || !feof(stdin));
 
-printf("@scan\n");
+//printf("@scan\n");
     scanExpectations();
 
     if (errorCount) {

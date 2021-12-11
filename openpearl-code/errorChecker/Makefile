@@ -4,10 +4,10 @@ CFLAGS += -g
 all: $(TARGETS)
 
 genExpectations: genExpectations.c config.h
-	gcc genExpectations.c -o genExpectations
+	gcc $(CFLAGS) genExpectations.c -o genExpectations
 
 errorParser: errorParser.c config.h
-	gcc errorParser.c -o errorParser
+	gcc $(CFLAGS) errorParser.c -o errorParser
 
 clean:
 	rm -f $(TARGETS)
