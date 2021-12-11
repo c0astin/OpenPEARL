@@ -1,0 +1,15 @@
+MODULE(m);
+
+PROBLEM;
+  DCL refTask REF TASK;
+
+temp : TASK;
+END;
+
+t1: TASK MAIN;
+  refTask = TASK(temp);
+  refTask = TASK;
+END;
+MODEND;
+
+  

@@ -1,0 +1,14 @@
+MODULE(mAnd);
+PROBLEM;
+
+DCL (a,b,c) BIT(1) INIT ('1'B1, '1'B1, '0'B1);
+
+t: TASK MAIN;
+   IF a AND b AND c THEN
+      __cpp__("printf(\"failed\");");
+   ELSE
+      __cpp__("printf(\"success\");");
+   FIN;
+END;
+MODEND;
+

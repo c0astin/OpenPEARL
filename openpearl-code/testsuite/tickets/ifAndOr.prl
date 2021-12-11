@@ -1,0 +1,16 @@
+MODULE(ifAndOr);
+
+PROBLEM;
+
+p: PROC;
+   DCL a FIXED;
+   IF a < 10 AND a > -10 THEN
+      ;
+   FIN;
+
+   IF a < 10 OR a > -10 THEN
+      ;
+   FIN;
+
+END;
+MODEND;

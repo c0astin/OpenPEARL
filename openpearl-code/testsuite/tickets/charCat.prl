@@ -1,0 +1,26 @@
+MODULE (m);
+
+PROBLEM;
+ DCL pre CHAR(4);
+
+log: PROC(m CHAR(60));
+    DCL dummy CHAR(60);
+    dummy = m;
+END;
+
+
+t: TASK;
+  log('abc');
+  log('abc' CAT 'def');
+END;
+
+p: PROC(prefix CHAR(4));
+   DCL m CHAR(60);
+   m = '123' CAT pre;
+   log('123' CAT pre);
+   log('123' CAT prefix);
+   log(prefix CAT '123');
+END;
+
+MODEND;
+

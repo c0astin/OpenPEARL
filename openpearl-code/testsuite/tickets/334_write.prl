@@ -1,0 +1,28 @@
+MODULE(dationrw);
+SYSTEM;
+disc: Disc('/tmp/' ,10);
+stdout: StdOut;
+
+PROBLEM;
+   SPC disc DATION INOUT SYSTEM ALL;
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+   DCL stdOut DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+DCL table DATION INOUT FIXED DIM(10,10) DIRECT NOCYCL NOSTREAM CREATED(disc);
+
+ticket334: TASK MAIN;
+     DCL f FIXED;
+     OPEN table BY ANY,IDF('file1.txt');
+     FOR i TO 10 REPEAT
+       FOR j TO 10 REPEAT
+          f = (10*i) + j;
+          WRITE f TO table BY POS(i,j);
+          !WRITE (10*i)+j TO table BY POS(i,j);
+       END;
+     END;
+     CLOSE table;
+END;
+
+MODEND;
+
+
