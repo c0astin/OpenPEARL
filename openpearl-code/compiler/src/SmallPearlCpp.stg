@@ -142,8 +142,16 @@ SystemPart(cpp_inlines) ::= <<
 /*********************** TASKSPECIFIERS ***********************/
 
 TaskSpecifier(taskname) ::= <<
-<taskname: {task|SPCTASK(_<task>);}; separator="\n">
+<taskname: {task|<task>}; separator="\n">
 >>
+
+TaskSpecifierEntry(taskname) ::= <<
+<task_type()> task<user_variable(taskname)>;
+>>
+
+TaskName(name) ::= <%
+task<name>
+%>	
 
 /*********************** CONSTANT POOL ***********************/
 
@@ -199,6 +207,13 @@ ProblemPart(ScalarVariableDeclarations,
 /////////////////////////////////////////////////////////////////////////////
 // PROBLEM PART
 /////////////////////////////////////////////////////////////////////////////
+
+<if(ArrayDescriptors)>
+/////////////////////////////////////////////////////////////////////////////
+// ARRAY DESCRIPTORS
+/////////////////////////////////////////////////////////////////////////////
+<ArrayDescriptors>
+<endif>
 
 <if(InterruptSpecifications)>
 /////////////////////////////////////////////////////////////////////////////
@@ -261,12 +276,6 @@ ProblemPart(ScalarVariableDeclarations,
 
 
 
-<if(ArrayDescriptors)>
-/////////////////////////////////////////////////////////////////////////////
-// ARRAY DESCRIPTORS
-/////////////////////////////////////////////////////////////////////////////
-<ArrayDescriptors>
-<endif>
 
 <if(ArrayVariableDeclarations)>
 /////////////////////////////////////////////////////////////////////////////
@@ -387,9 +396,11 @@ TypeReferenceSimpleType(BaseType) ::= <<
 pearlrt::Ref \< <BaseType> > 
 >>
 
+/* obsolete
 array_specification_type(BaseType) ::= <<
 pearlrt::RefArray\< <BaseType> >
 >>
+*/
 
 task_type() ::= <%
 pearlrt::Task
@@ -507,7 +518,7 @@ task_control_statement(code) ::= <<
 >>
 
 task_start(task,Condition,startCondition,priority,at,after,all,until,during,when) ::= <<
-    <task>.activate( me,
+    <TaskName(task)>.activate( me,
 	     <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
 	    /* prio   */  pearlrt::Prio(<priority>),
 	    /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
@@ -521,7 +532,7 @@ task_start(task,Condition,startCondition,priority,at,after,all,until,during,when
 
 task_terminate(task) ::= <%
 	<if(task)>
-		<task>.terminate(me);
+		<TaskName(task)>.terminate(me);
 	<else>
 		me->terminate(me);
 	<endif>
@@ -539,7 +550,7 @@ TaskResume(Condition,at,after,when) ::= <<
 
 task_prevent(task) ::= <<
 	<if(task)>
-		<task>.prevent(me);
+		<TaskName(task)>.prevent(me);
 	<else>
 		me->prevent(me);
 	<endif>
@@ -547,7 +558,7 @@ task_prevent(task) ::= <<
 
 task_suspend(task) ::= <<
 	<if(task)>
-		<task>.suspend(me);
+		<TaskName(task)>.suspend(me);
 	<else>
 		me->suspend(me);
 	<endif>
@@ -555,7 +566,7 @@ task_suspend(task) ::= <<
 
 TaskContinuation(task,Condition,priority,at,after,when) ::= <<
 <if(task)>
-    <task>.cont( me,
+    <TaskName(task)>.cont( me,
                   <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
            /* prio   */  pearlrt::Prio(<priority>),
            /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
@@ -574,11 +585,11 @@ TaskContinuation(task,Condition,priority,at,after,when) ::= <<
 >>
 
 taskAddress(taskName) ::= <%
-<if(taskName)><taskName><else>me<endif>
+<if(taskName)><TaskName(taskName)><else>me<endif>
 %>
 
 taskPrio(taskName) ::= <%
-<if(taskName)>(<taskName>.getPrio())<else>(me->getPrio())<endif>
+<if(taskName)>(<TaskName(taskName)>.getPrio())<else>(me->getPrio())<endif>
 %>
 
 expression(code,id,bitstring,operator,functionCall) ::= <%
@@ -639,8 +650,8 @@ ReferenceExpression(code,id,bitstring,operator,functionCall) ::= <%
 %>
 
 
-FunctionCall(callee,ListOfActualParameters) ::= <%
-	<callee>( me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>)
+FunctionCall(callee,fromns,ListOfActualParameters) ::= <%
+	<if(fromns)>ns_<fromns><endif><callee>( me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>)
 %>
 
 literal(integer,float,string,time,duration,bitstring,nil) ::= <%
@@ -1032,8 +1043,8 @@ iojob_duration_format(element,fieldwidth,decimalPositions,direction) ::= <<
 
 /******************************** CALL Statement *********************************/
 
-CallStatement(callee, ListOfActualParameters) ::= <<
-<user_procedure(callee)>(me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>);
+CallStatement(callee, fromns, ListOfActualParameters) ::= <<
+<if(fromns)>ns_<fromns>::<endif><user_procedure(callee)>(me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>);
 >>
 
 
@@ -1703,6 +1714,11 @@ Body(declarations,statements) ::= <<
 
 /* --------------------- PROCEDURES -------------------------- */
 
+ProcedureSpecifications(specs) ::= <%
+<specs: {spec|<spec>}>
+%>
+
+
 TypeProcedure(listOfFormalParameters, resultAttribute) ::= <%
 <if(resultAttribute)><resultAttribute><else>void<endif> 
 (pearlrt::Task* me<if(listOfFormalParameters)>, <listOfFormalParameters><endif> )
@@ -1710,8 +1726,8 @@ TypeProcedure(listOfFormalParameters, resultAttribute) ::= <%
 
 
 ProcedureSpecification(id,listOfFormalParameters,body,resultAttribute,globalAttribute) ::= <<
-<if(resultAttribute)><resultAttribute><else>void<endif>
-<user_procedure(id)>(pearlrt::Task *me<if(listOfFormalParameters)>, <listOfFormalParameters><endif>);
+<if(resultAttribute)><resultAttribute><else>void<endif> <user_procedure(id)>(pearlrt::Task *me<if(listOfFormalParameters)>, <listOfFormalParameters><endif>);
+
 
 >>
 
@@ -1737,14 +1753,11 @@ FormalParameters(FormalParameter) ::= <%
 <FormalParameter: {param|<param>} ; separator=", ">
 %>
 
-FormalParameter(id,type,assignmentProtection,passIdentical,isArray,isArrayDescriptor) ::= <%
-<if(isArrayDescriptor)>pearlrt::Array* ad<user_argument(id)>, <endif>
-<if(isArray)>
-  <if(assignmentProtection)>const <endif><type>  * data<user_argument(id)>
-<else>
-   <if(assignmentProtection)>const <endif><type>  <if(passIdentical)>&<endif> <user_argument(id)>
-<endif>
-
+FormalParameter(id,type,assignmentProtection,passIdentical,isArray) ::= <%
+  <if(assignmentProtection)>const <endif>
+  <if(isArray)>pearlrt::Array \< <type> > <else><type><endif>
+  <if(passIdentical)>&<endif> 
+  <if(id)><user_argument(id)><endif>
 %>
 
 ParameterType(type) ::= <%
@@ -1834,8 +1847,23 @@ ArrayVariableDeclarations(declarations) ::= <<
 <declarations: {declaration|<declaration>}>
 >>
 
-ArrayVariableDeclaration(name,type,assignmentProtection,totalNoOfElements,initElements) ::= <%
+
+ArrayStorageDeclaration(name,type,assignmentProtection,totalNoOfElements,initElements) ::= <%
 <type> data_<name>[<totalNoOfElements>]<if(initElements)> <initElements><endif>;<\n>
+%>
+
+ArrayType(type) ::= <%
+pearlrt::Array\< <type> >
+%>
+
+ArrayVariableDeclaration(name,type,descriptor,storage,no_decoration) ::= <%
+pearlrt::Array\< <type> > 
+<if(no_decoration)><name><else><user_variable(name)><endif>
+((pearlrt::ArrayDescriptor\<0> *)&<descriptor>, <storage>);<\n>
+%>
+
+ArrayVariableSpecification(name,type) ::= <%
+pearlrt::Array\< <type> > <user_variable(name)>;<\n>
 %>
 
 ArrayDescriptors(descriptors) ::= <<
@@ -1843,7 +1871,7 @@ ArrayDescriptors(descriptors) ::= <<
 >>
 
 ArrayDescriptor(name,dimensions,limits) ::= <%
-DCLARRAY(<name>, <dimensions>, <limits>);
+static pearlrt::ArrayDescriptor\< <dimensions> > <name> = {<dimensions>,<limits>};
 %>
 
 ArrayDimensions(dimensions) ::= <%
@@ -1862,8 +1890,12 @@ ArrayLimit(lowerBoundary,upperBoundary,noOfElemenstOnNextSubArray) ::= <%
 {<lowerBoundary>,<upperBoundary>,<noOfElemenstOnNextSubArray>}
 %>
 
-ArrayLHS(name,descriptor,indices,element) ::= <%
-(*(data_<name> + <descriptor>->offset(<indices>)))
+ArrayLHS(name,fromns,indices) ::= <%
+<if(indices)>
+(*(<if(fromns)>ns_<fromns>::<endif><user_variable(name)>.getPtr(<indices>)))
+<else>
+<if(fromns)><fromns>::<endif><user_variable(name)>
+<endif>
 %>
 
 ArrayRHS(name,descriptor,indices,element) ::= <%
@@ -1871,7 +1903,11 @@ ArrayRHS(name,descriptor,indices,element) ::= <%
 %>
 
 ArrayLHSInStructure(name,descriptor,indices,element) ::= <%
-(*(<name> + <descriptor>->offset(<indices>)))
+<if(indices)>
+(*(<name> + (<descriptor>.offset(<indices>))))
+<else>
+<name>
+<endif>
 %>
 
 ArrayIndices(indices) ::= <<
@@ -1886,14 +1922,21 @@ ArrayIndex(index) ::= <<
 StructOrArrayInitalisations(initElements)::= <%{<initElements: {initElement|<initElement>} ; separator=",">}
 %>
 
-ArrayLWB(descriptor,index) ::= <%
-<descriptor>->lwb(<index>)
+ArrayLWB(name,index) ::= <%
+<user_variable(name)>.getDescriptor()->lwb(<index>)
 %>
 
-ArrayUPB(descriptor,index) ::= <%
-<descriptor>->upb(<index>)
+ArrayUPB(name,index) ::= <%
+<user_variable(name)>.getDescriptor()->upb(<index>)
 %>
 
+ArrayInStructUPB(descriptor,index) ::= <%
+	(<descriptor>.upb(<index>))
+%>	
+
+ArrayInStructLWB(descriptor,index) ::= <%
+	(<descriptor>.lwb(<index>)
+%>	
 LHS(expr) ::= <%
 <expr: {e|<e>} ; separator=".">
 %>
@@ -2006,7 +2049,7 @@ InterruptSpecifications(specs) ::= <%
 %>
 
 InterruptSpecification(id) ::= <%
-extern pearlrt::Interrupt *<user_variable(id)>;<\n>
+pearlrt::Interrupt *<user_variable(id)>;<\n>
 %>
 
 EnableStatement(id) ::= <%
@@ -2078,8 +2121,8 @@ StructureComponent(component) ::= <%
 <component>
 %>
 
-StructureLHS(name,components) ::= <%
-<user_variable(name)><components>
+StructureLHS(name,fromns,components) ::= <%
+<if(fromns)>ns_<fromns>::<endif><user_variable(name)><components>
 %>
 
 /* explode a name definition: */
