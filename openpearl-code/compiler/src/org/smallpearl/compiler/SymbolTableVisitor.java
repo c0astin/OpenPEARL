@@ -249,15 +249,22 @@ implements SmallPearlVisitor<Void> {
         if (ctx.priority() != null) {
             priority = ctx.priority();
         }
+        
+        visitGlobalAttribute(ctx.globalAttribute());
+        
+        m_isInSpecification = false;
 
+        
         TaskEntry taskEntry =
                 new TaskEntry(
                         ctx.nameOfModuleTaskProc().ID().getText(),
                         priority,
                         isMain,
-                        isGlobal,
                         ctx,
                         this.m_currentSymbolTable);
+        checkDoubleDefinitionAndEnterToSymbolTable(taskEntry, ctx);
+           
+            
         this.m_currentSymbolTable = this.m_currentSymbolTable.newLevel(taskEntry);
         this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
 
@@ -275,19 +282,31 @@ implements SmallPearlVisitor<Void> {
 
         Log.debug(
                 "SymbolTableVisitor:visitProcedureDeclaration:ctx" + CommonUtils.printContext(ctx));
+        
+        if (ctx.globalAttribute() != null) {
+           visit(ctx.globalAttribute());   
+        }
+
         TypeProcedureContext tpc = ctx.typeProcedure();
         for (ParseTree c : tpc.children) {
             if (c instanceof SmallPearlParser.ResultAttributeContext) {
                 resultType =
                         new ASTAttribute(
                                 getResultAttribute((SmallPearlParser.ResultAttributeContext) c));
-            } else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
-                globalId = ctx.nameOfModuleTaskProc().getText();
+           
             } else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
                 formalParameters =
                         getListOfFormalParameters(
                                 (SmallPearlParser.ListOfFormalParametersContext) c);
             }
+        }
+        
+        
+        // create type of the procedure
+        if (resultType != null) {
+            m_type = new TypeProcedure(formalParameters, resultType.getType());
+        } else {
+            m_type = new TypeProcedure(formalParameters, null);
         }
         //
         //        if (ctx.globalAttribute() != null) {
@@ -306,15 +325,19 @@ implements SmallPearlVisitor<Void> {
                         "procedure definition ", s, ctx.nameOfModuleTaskProc(), entry.getCtx());
             }
         }
+        
 
         ProcedureEntry procedureEntry =
                 new ProcedureEntry(
-                        ctx.nameOfModuleTaskProc().getText(),
+                        ctx.nameOfModuleTaskProc().getText(),m_type,
                         formalParameters,
                         resultType,
                         globalId,
                         ctx,
                         this.m_currentSymbolTable);
+        if (m_isGlobal) {
+            procedureEntry.setGlobalAttribute(m_currentModuleName);
+        }
         this.m_currentSymbolTable = this.m_currentSymbolTable.newLevel(procedureEntry);
 
         /* Enter formal parameter into the local symbol table of this procedure */
@@ -360,6 +383,14 @@ implements SmallPearlVisitor<Void> {
 
         if (ctx != null) {
             for (int i = 0; i < ctx.formalParameter().size(); i++) {
+                if (m_isInSpecification && 
+                        ctx.formalParameter(i).identifier()!= null && 
+                        ctx.formalParameter(i).identifier().size()>1) {
+                  ErrorStack.add(ctx.formalParameter(i),"SPC","no identifier list allowed");
+                }
+                if ((!m_isInSpecification && ctx.formalParameter(i).identifier() == null)) {
+                    ErrorStack.add(ctx.formalParameter(i),"DCL","identifier(s) required");
+                }
                 getFormalParameter(listOfFormalParameters, ctx.formalParameter(i));
             }
         }
@@ -490,7 +521,11 @@ implements SmallPearlVisitor<Void> {
 
             if (ctx.dimensionAttribute() != null) {
                 // TypeDefinition baseType = m_type;
-                m_type = new TypeArray();
+                if (ctx.dimensionAttribute().virtualDimensionList() != null) {
+                    m_type = new TypeArraySpecification();
+                } else {
+                   m_type = new TypeArray();
+                }
                 //                ((TypeArray) m_type).setBaseType(baseType);
                 visitDimensionAttribute(ctx.dimensionAttribute());
                 ParserRuleContext c = ((TypeArray)m_type).getDimensions().get(0).getCtx();
@@ -500,10 +535,13 @@ implements SmallPearlVisitor<Void> {
                 if (c == null && ! m_isInSpecification) {
                     ErrorStack.add(ctx.dimensionAttribute(), "DCL", "need real dimension list");
                 }
-                addArrayDescriptor(
+                if ( c!= null) {
+                    // do not add virtual dimension lists to the array descriptors
+                   addArrayDescriptor(
                         new ArrayDescriptor(
                                 ((TypeArray) m_type).getNoOfDimensions(),
                                 ((TypeArray) m_type).getDimensions()));
+                }
             }
 
             if (ctx.problemPartDataAttribute() != null) {
@@ -995,6 +1033,8 @@ implements SmallPearlVisitor<Void> {
     }
 
     public Void visitGlobalAttribute(SmallPearlParser.GlobalAttributeContext ctx) {
+        m_isGlobal = false;
+        m_globalName = null;
         if (ctx != null) {
             m_isGlobal = true;
             m_globalName = null;
@@ -2228,14 +2268,48 @@ implements SmallPearlVisitor<Void> {
         }
 
         visitChildren(ctx);
+        
+        LinkedList<FormalParameter> formalParameters = null;
+        ASTAttribute resultType = null;
+//
+//        Log.debug(
+//                "SymbolTableVisitor:visitProcedureDeclaration:ctx" + CommonUtils.printContext(ctx));
+//        TypeProcedureContext tpc = ctx.typeProcedure();
+//        for (ParseTree c : tpc.children) {
+//            if (c instanceof SmallPearlParser.ResultAttributeContext) {
+//                resultType =
+//                        new ASTAttribute(
+//                                getResultAttribute((SmallPearlParser.ResultAttributeContext) c));
+//            } else if (c instanceof SmallPearlParser.GlobalAttributeContext) {
+//                globalId = ctx.nameOfModuleTaskProc().getText();
+//            } else if (c instanceof SmallPearlParser.ListOfFormalParametersContext) {
+//                formalParameters =
+//                        getListOfFormalParameters(
+//                                (SmallPearlParser.ListOfFormalParametersContext) c);
+//            }
+//        }
+//        //
+        formalParameters =
+                getListOfFormalParameters(ctx.typeProcedure().listOfFormalParameters());
+        if (ctx.typeProcedure().resultAttribute() != null) {
+           resultType =     new ASTAttribute(   getResultAttribute(ctx.typeProcedure().resultAttribute()));
+           m_type = new TypeProcedure(formalParameters, getResultAttribute(ctx.typeProcedure().resultAttribute()));
+        } else {
+            m_type = new TypeProcedure(formalParameters, null);
+        }
 
+       // visit(ctx.typeProcedure().resultAttribute());
+       // if (ctx.globalAttribute() != null) {
+        //  String globalId = ctx.globalAttribute().ID().getText();
+        //}
+                      
         for (int i = 0; i < ctx.identifierDenotation().identifier().size(); i++) {
             String iName = ctx.identifierDenotation().identifier(i).ID().toString();
             Log.warn("SymbolTableVisitor@1924: visitProcedureDenotation still incomplete");
-            //            ProcedureEntry ie = new
-            // ProcedureEntry(iName,ctx.identifierDenotation().identifier(i));
-            //            checkDoubleDefinitionAndEnterToSymbolTable(ie,
-            // ctx.identifierDenotation().identifier(i));
+            
+            //set scope to null to inhibit the creation of a new scope
+            ProcedureEntry ie = new ProcedureEntry(iName,m_type, formalParameters, resultType,m_globalName,ctx,null);
+            checkDoubleDefinitionAndEnterToSymbolTable(ie, ctx.identifierDenotation().identifier(i));
         }
         return null;
     }
