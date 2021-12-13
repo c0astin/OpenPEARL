@@ -83,7 +83,8 @@ public class Compiler {
     static int warninglevel = 255;
     static int lineWidth = 80;
     static boolean coloured = false;
-    static boolean useNamespaceForGlobals = true;
+    static boolean stdPearl90 = false;
+    static boolean stdOpenPEARL = true;
 
     public static void main(String[] args) {
         int i;
@@ -283,11 +284,11 @@ public class Compiler {
                 }
 
                 if (ErrorStack.getTotalErrorCount() <= 0 && imc) {
-                    SystemPartExport(lexer.getSourceName(), tree, symbolTableVisitor, ast, useNamespaceForGlobals);
+                    SystemPartExport(lexer.getSourceName(), tree, symbolTableVisitor, ast, stdOpenPEARL);
                 }
                 if (ErrorStack.getTotalErrorCount() <= 0) {
                     CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor,
-                            expressionTypeVisitor, constantExpressionVisitor, ast, useNamespaceForGlobals);
+                            expressionTypeVisitor, constantExpressionVisitor, ast, stdOpenPEARL);
                 }
             } catch (Exception ex) {
                 System.err.println(ex.getMessage());
@@ -430,9 +431,11 @@ public class Compiler {
             } else if (arg.equals("--noconstantfolding")) {
                 constantfolding = false;
             } else if (arg.equals("-std=OpenPEARL")) {
-                useNamespaceForGlobals = true;
+                stdOpenPEARL = true;
+                stdPearl90 = false;
             } else if (arg.equals("-std=PEARL90")) {
-                useNamespaceForGlobals = false;
+                stdOpenPEARL = false;
+                stdPearl90 = true;
             } else if (arg.equals("--diagnostics")) {
                 diagnostics = true;
             } else if (arg.equals("--dumpDFA")) {
@@ -657,4 +660,12 @@ public class Compiler {
             e.printStackTrace();
         }
     }
+
+    public static boolean isStdOpenPEARL() {
+        return stdOpenPEARL;
+    }
+    public static boolean isStdPEARL90() {
+        return stdPearl90;
+    }
+    
 }

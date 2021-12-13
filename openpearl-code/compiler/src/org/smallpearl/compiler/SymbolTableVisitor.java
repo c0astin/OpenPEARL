@@ -723,7 +723,8 @@ implements SmallPearlVisitor<Void> {
         String sCtx = ctx.getText();
         m_isGlobal = false;
         m_globalName = null;
-
+        
+        
         TypeDefinition safeType = m_type;
 
         if (ctx.initialisationAttribute() != null) {
@@ -740,7 +741,7 @@ implements SmallPearlVisitor<Void> {
         if (initElements != null && m_isInSpecification) {
             ErrorStack.add(ctx, "SPC", "no INIT allowed");
         }
-
+        
         // treatment of initialisiers, eg
         // DCL (x,y) FIXED INIT(1,2),
         //     (arrA,arrb)(2) FIXED INIT(1,2,3),
@@ -933,6 +934,8 @@ implements SmallPearlVisitor<Void> {
             checkDoubleDefinitionAndEnterToSymbolTable(
                     ve, m_identifierDenotationContext.identifier(i));
         }
+        
+
         return null;
     }
 
@@ -944,6 +947,7 @@ implements SmallPearlVisitor<Void> {
         m_isGlobal = false;
         m_globalName = null;
 
+        
         List<InitElementContext> initElements = null;
         if (ctx.preset() != null) {
             initElements = ctx.preset().initElement();
@@ -1024,6 +1028,7 @@ implements SmallPearlVisitor<Void> {
             checkDoubleDefinitionAndEnterToSymbolTable(
                     ve, m_identifierDenotationContext.identifier(i));
         }
+
         return null;
     }
 
@@ -1730,7 +1735,7 @@ implements SmallPearlVisitor<Void> {
         boolean isArray = false;
         m_isGlobal = false;
         m_globalName = null;
-
+        
         if (m_type != null && m_type instanceof TypeArray) {
             ((TypeArray)m_type).setBaseType(new TypeBolt());
             isArray = true;
@@ -1751,6 +1756,7 @@ implements SmallPearlVisitor<Void> {
             checkDoubleDefinitionAndEnterToSymbolTable(
                     ve, m_identifierDenotationContext.identifier(i));
         }
+
         return null;
     }
 
@@ -1770,18 +1776,18 @@ implements SmallPearlVisitor<Void> {
         }
 
         if (m_isInSpecification) {
-            ErrorStack.enter(ctx, "DationSPC");
+            ErrorStack.enter(ctx, "SPC");
         } else {
-            ErrorStack.enter(ctx, "DationDCL");
+            ErrorStack.enter(ctx, "DCL");
         }
 
         visitTypeDation(ctx.typeDation());
         visitGlobalAttribute(ctx.globalAttribute());
-        if (m_isInSpecification && ctx.globalAttribute() == null) {
-            // special case: system dation from the system part of this module
-            m_isGlobal = true;
-            m_globalName = m_currentModuleName;
-        }
+//        if (m_isInSpecification && ctx.globalAttribute() == null) {
+//            // special case: system dation from the system part of this module
+//            m_isGlobal = true;
+//            m_globalName = m_currentModuleName;
+//        }
 
         TypeDation d = (TypeDation) m_type;
         d.setIsDeclaration(!m_isInSpecification);
@@ -1796,6 +1802,9 @@ implements SmallPearlVisitor<Void> {
              */
             d.setCreatedOnAsString(ctx.ID().toString());
         }
+        
+        ErrorStack.leave();
+        
         for (int i = 0; i < m_identifierDenotationContext.identifier().size(); i++) {
             String s = m_identifierDenotationContext.identifier(i).getText();
             VariableEntry ve =
@@ -1810,7 +1819,7 @@ implements SmallPearlVisitor<Void> {
                     ve, m_identifierDenotationContext.identifier(i));
         }
 
-        ErrorStack.leave();
+
         return null;
     }
 
@@ -2265,7 +2274,7 @@ implements SmallPearlVisitor<Void> {
         if (m_verbose > 0) {
             System.out.println("SymbolTableVisitor:visitProcedureDenotation");
         }
-
+        
         visitChildren(ctx);
         
         LinkedList<FormalParameter> formalParameters = null;
@@ -2301,7 +2310,9 @@ implements SmallPearlVisitor<Void> {
        // if (ctx.globalAttribute() != null) {
         //  String globalId = ctx.globalAttribute().ID().getText();
         //}
-                      
+              
+
+        
         for (int i = 0; i < ctx.identifierDenotation().identifier().size(); i++) {
             String iName = ctx.identifierDenotation().identifier(i).ID().toString();
             Log.warn("SymbolTableVisitor@1924: visitProcedureDenotation still incomplete");
@@ -2310,6 +2321,7 @@ implements SmallPearlVisitor<Void> {
             ProcedureEntry ie = new ProcedureEntry(iName,m_type, formalParameters, resultType,m_globalName,ctx,null);
             checkDoubleDefinitionAndEnterToSymbolTable(ie, ctx.identifierDenotation().identifier(i));
         }
+
         return null;
     }
 
@@ -2458,11 +2470,20 @@ implements SmallPearlVisitor<Void> {
             // setup SPC/DCL and GLOBAL information
             if (m_isInSpecification) {
                 newEntry.setIsSpecified();
-                newEntry.setGlobalAttribute(m_currentModuleName);
-                if (m_isGlobal) {
-                    if (m_globalName != null) {
-                        newEntry.setGlobalAttribute(m_globalName);
-                    } 
+                // check: m_isGlobal may be false if symbol is username in system part
+                //        m_globalName my be null, in PEARL90Mode
+                //                                 in OpenPEARL: warning defaulted to 'm_currentModuleName'
+                if (m_isGlobal == false &&  m_currentSymbolTable.lookupSystemPartName(s) != null) {
+                    newEntry.setGlobalAttribute(m_currentModuleName);
+                } else if (m_isGlobal == true && m_globalName == null) {
+                    newEntry.setGlobalAttribute(m_currentModuleName);
+                    if (Compiler.isStdOpenPEARL()) {
+                        ErrorStack.warn(ctx,"SPC", "import module name defaulted to '"+m_currentModuleName+"'");
+                    }
+                } else if (m_isGlobal == true && m_globalName != null) {
+                    newEntry.setGlobalAttribute(m_globalName);
+                } else {
+                    ErrorStack.add(ctx,"SPC","GLOBAL attribute required for import from other module");
                 }
             } else {
                 if (m_isGlobal) {
@@ -2476,4 +2497,6 @@ implements SmallPearlVisitor<Void> {
             m_currentSymbolTable.enter(newEntry);
         }
     }
+
+
 }

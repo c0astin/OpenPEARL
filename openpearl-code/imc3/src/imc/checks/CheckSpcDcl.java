@@ -79,19 +79,11 @@ public class CheckSpcDcl {
                 for (Module m1 : modules) {
                     int indexInSystemPart = isDefinedInSystemPart(m1, spc.getGlobal(), userName);
                     if (indexInSystemPart >= 0) {
-                        if (dclFound) {
-                            if (useNameSpace) {
-                                Log.error(
-                                        "multiple definition of '" + userName + " GLOBAL(" + spc.getGlobal() + ")");
-                            } else {
-                                Log.error("multiple definition of '" + userName);
-                            }
-                        }
                         dclFound = true;
                         Log.info(userName + " found in systempart of " + m1.getSourceFileName());
                         m1.getSystemElements().get(indexInSystemPart).setIsUsed();
 
-                        checkType(spc, m1.getSystemElements().get(indexInSystemPart));
+                        checkType(spc, m1, indexInSystemPart);
 
                     } else {
                         Log.info(userName + "  is not in system part of " + m1.getSourceFileName());
@@ -106,17 +98,6 @@ public class CheckSpcDcl {
                         continue;
                     int indexInProblemPart = isDefinedInProblemPart(m1, spc.getGlobal(), userName);
                     if (indexInProblemPart >= 0) {
-                        if (dclFound) {
-                            if (useNameSpace) {
-                                Log.error("multiple declaration of '" + userName + "' GLOBAL('" + spc.getGlobal()
-                                + "');");
-                            } else {
-                                Log.error("multiple declaration of '" + userName + ";");
-                            }
-                            Log.note(m1.getSourceFileName(),
-                                    m1.getDclProblemPart().get(indexInProblemPart).getLine(),
-                                    m1.getDclProblemPart().get(indexInProblemPart).getCol(), "previous definition: ");
-                        }
                         m1.getDclProblemPart().get(indexInProblemPart).setUsedBySpc();
                         dclFound = true;
                         Log.info(userName + " index in problempart " + indexInProblemPart + " of module "
@@ -137,6 +118,118 @@ public class CheckSpcDcl {
 
     }
 
+    public void duplicateDefinitions() {
+        Log.info("duplicateDefinitions check started ...");
+        boolean firstNamePrinted;
+        // check problem part elements
+        for (int i=0; i< modules.size(); i++) {
+        	Module m=modules.get(i);
+        	// check system names from current module
+        	
+            List<ModuleEntrySystemPart> mseList = m.getSystemElements();
+            for (int sysIndex = 0; sysIndex < mseList.size(); sysIndex++) {
+               	firstNamePrinted=false;
+          
+                if (mseList.get(sysIndex).getUserName() == null)
+                    continue; // configurations have no username
+                if (mseList.get(sysIndex).isDuplicateDefined()) continue;
+                String userName = mseList.get(sysIndex).getUserName();
+            	for (int j=i+1; j<modules.size(); j++) {
+            		Module n = modules.get(j);
+            		
+                    // check if userName is defined in other system part
+                    int indexInModeleN = isDefinedInSystemPart(n, n.getModuleName(), userName);
+            		String inModule="";
+    				if (useNameSpace) {
+    					inModule = "in module '"+m.getModuleName()+"' ";
+    				}
+
+                    if (indexInModeleN >= 0 ) {
+                    	if (!firstNamePrinted) {
+                    		firstNamePrinted = true;
+                    		Log.setLocation(m.getSourceFileName(), mseList.get(sysIndex).getLine(), mseList.get(sysIndex).getCol());
+    						Log.error("'" + mseList.get(sysIndex).getUserName() + "' " + inModule + "multiple defined as SYSTEM element");
+    						mseList.get(sysIndex).setDuplicateDefined();
+                    	}
+                		Log.setLocation(n.getSourceFileName(), n.getSystemElements().get(indexInModeleN).getLine(),
+                				n.getSystemElements().get(indexInModeleN).getCol());
+						Log.note("other definition " + inModule + "as SYSTEM element");
+						n.getSystemElements().get(indexInModeleN).setDuplicateDefined();
+                    }
+                    // check if userName is defined in other problem part
+                    List<DclProblemPart> dclList = n.getDclProblemPart();
+                    indexInModeleN = isDefinedInProblemPart(n, n.getModuleName(), userName);
+                    
+                    if (indexInModeleN >= 0 ) {
+                    	if (dclList.get(indexInModeleN).isDuplicateDefined()) continue;
+                    	if (!firstNamePrinted) {
+                    		firstNamePrinted = true;
+                    		Log.setLocation(m.getSourceFileName(), mseList.get(sysIndex).getLine(), mseList.get(sysIndex).getCol());
+    						Log.error("'" + mseList.get(sysIndex).getUserName() + "' " + inModule + "multiple defined as SYSTEM element");
+    						mseList.get(sysIndex).setDuplicateDefined();
+                    	}
+                		Log.setLocation(n.getSourceFileName(), dclList.get(indexInModeleN).getLine(),
+                				dclList.get(indexInModeleN).getCol());
+						Log.note("other definition " + inModule + " with type "+ dclList.get(indexInModeleN).getType());
+						dclList.get(indexInModeleN).setDuplicateDefined();
+						firstNamePrinted = true;                    	
+                    }
+
+            	}
+            }
+            
+            for (DclProblemPart dcl : m.getDclProblemPart()) {
+               	
+               	if (dcl.isDuplicateDefined()) continue;
+               	firstNamePrinted=false;
+                String userName = dcl.getUserName();
+                
+            	for (int j=i+1; j<modules.size(); j++) {
+            		Module n = modules.get(j);
+            		
+                    // check if userName is defined in other system part
+                    int indexInModeleN = isDefinedInSystemPart(n, n.getModuleName(), userName);
+            		String inModule="";
+    				if (useNameSpace) {
+    					inModule = "in module '"+m.getModuleName()+"' ";
+    				}
+
+                    if (indexInModeleN >= 0 ) {
+        
+                    	if (!firstNamePrinted) {
+                    		firstNamePrinted = true;
+                    		Log.setLocation(m.getSourceFileName(), dcl.getLine(), dcl.getCol());
+    						Log.error("'" + dcl.getUserName() + "' " + inModule + "multiple defined with type "+ dcl.getType());
+    						dcl.setDuplicateDefined();
+                    	}
+                		Log.setLocation(n.getSourceFileName(), n.getSystemElements().get(indexInModeleN).getLine(),
+                				n.getSystemElements().get(indexInModeleN).getCol());
+                		Log.note("other definition " + inModule + "as SYSTEM element");
+                		n.getSystemElements().get(indexInModeleN).setDuplicateDefined();
+                    }
+                    // check if userName is defined in other problem part
+                    List<DclProblemPart> dclList = n.getDclProblemPart();
+                    indexInModeleN = isDefinedInProblemPart(n, n.getModuleName(), userName);
+                    if (indexInModeleN >= 0 ) {
+                    	if (!firstNamePrinted) {
+                    		firstNamePrinted = true;
+                    		Log.setLocation(m.getSourceFileName(), dcl.getLine(), dcl.getCol());
+    						Log.error("'" + dcl.getUserName() + "' " + inModule + "multiple defined with type "+ dcl.getType());
+    						dcl.setDuplicateDefined();
+                    	}
+                		Log.setLocation(n.getSourceFileName(), dclList.get(indexInModeleN).getLine(),
+                				dclList.get(indexInModeleN).getCol());
+						Log.note("other definition " + inModule + "with type "+ dclList.get(indexInModeleN).getType());
+						dclList.get(indexInModeleN).setDuplicateDefined();
+						
+						firstNamePrinted = true;                    	
+                    }
+
+            	}
+            }
+        }
+   
+    }
 
     public void dclHasSpc() {
         Log.info("SpcHasOneDcl started ...");
@@ -153,31 +246,6 @@ public class CheckSpcDcl {
 
     }
     
-    /**
-     * check if global="..." is not set in -NoNameSpace mode  
-     */
-//    public void namespaceOk(boolean useNameSpace) {
-//        boolean globalAttributefound = false;
-//        
-//        Log.info("namespaceOk started ...");
-//        
-//        // check problem part elements
-//        for (Module m : modules) {
-//            for (SpcProblemPart spc : m.getSpcProblemPart()) {
-//                if (spc.getGlobal()!= null) {
-//                    Log.setLocation(m.getSourceFileName(),spc.getLine(),spc.getCol());
-//                    Log.error(spc.getUserName()+" has global!");
-//                    globalAttributefound = true;
-//                    break;
-//                }
-//            }
-//            if (globalAttributefound && useNameSpace==false) {
-//                Log.setLocation(m.getSourceFileName(), 0, 0);
-//                Log.error(m.getSourceFileName()+" compiled with wrong '-std=' option");
-//            }
-//        }
-//
-//    }
 
     public void warnUnusedDcl() {
         Log.info("warnUnusedDcl started ...");
@@ -276,17 +344,27 @@ public class CheckSpcDcl {
 
     }
 
-    private void checkType(SpcProblemPart spc, ModuleEntrySystemPart moduleEntrySystemPart) {
+    private void checkType(SpcProblemPart spc, Module m1, int  indexInSystemPart) {
+    	ModuleEntrySystemPart moduleEntrySystemPart = m1.getSystemElements().get(indexInSystemPart);
         Log.setLocation(currentModule.getSourceFileName(), spc.getLine(), spc.getCol());
+		
+        String inModule="";
 
+		
         PlatformSystemElement pse =
                 Platform.getInstance().getSystemElement(moduleEntrySystemPart.getNameOfSystemelement());
 
         if (!spc.getType().equals(pse.getType())) {
+    		if (useNameSpace) {
+    			inModule = "in module '"+spc.getGlobal()+"' ";
+    		}
 
-            Log.error("type mismatch: expected type '" + spc.getType() + "' found '" + pse.getType()
-            + "' in system part of " + currentModule.getSourceFileName() + ":"
-            + moduleEntrySystemPart.getLine());
+            Log.error("'"+spc.getUserName() + "' " + inModule + " specified as " + spc.getType());
+            Log.setLocation( m1.getSourceFileName(), moduleEntrySystemPart.getLine(), moduleEntrySystemPart.getCol());
+    		if (useNameSpace) {
+    			inModule = "in module '"+m1.getModuleName()+"' ";
+    		}
+            Log.note("definition in SYSTEM part as '" + pse.getType()+"'");
             return;
         }
         if (spc.getType().equals(Platform.DATION)) {

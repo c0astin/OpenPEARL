@@ -1,7 +1,7 @@
 MODULE(format);
 
 PROBLEM;
-SPC pipe DATION OUT SYSTEM ALPHIC;
+SPC pipe DATION OUT SYSTEM ALPHIC GLOBAL(otherModule);
 DCL pipe_out DATION OUT ALPHIC DIM(*,80)
              FORWARD NOCYCL  STREAM 
              CREATED(pipe);

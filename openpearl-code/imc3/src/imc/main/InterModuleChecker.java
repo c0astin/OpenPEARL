@@ -146,6 +146,7 @@ public class InterModuleChecker {
 
         CheckSpcDcl cSpcDcl = new CheckSpcDcl(modules, useNameSpace);
     //    cSpcDcl.namespaceOk(useNameSpace);
+        cSpcDcl.duplicateDefinitions();
         cSpcDcl.spcHasOneDcl();
         cSpcDcl.dclHasSpc();
         Log.exitIfErrors();

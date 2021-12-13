@@ -174,10 +174,12 @@ documentation from doxygen.
 \section{Specification and Declaration}
 \subsection{Specification and Forwarddeclarations}
 Each task results in an object of type \verb|pearlrt::Task|.
+We need a forward declaration of task objects in the C++-code. This is 
+possible with an \verb|extern| specification, which does not violate a later
+definition of the same object.
 The task objects a stored with global scope with the prefix \verb|task_|
-in the current namespace.
-The global scope is needed, since there is no possibility in C++
-to make a forward declaration of a static object.
+in the current namespace. 
+This disables PEARL application code to define other objects with confilcting types.
 
 \begin{PEARLCode}
 SPC t1 TASK GLOBAL(otherModule);

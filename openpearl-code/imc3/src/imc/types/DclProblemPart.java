@@ -14,6 +14,11 @@ public class DclProblemPart extends SpcDclProblemPart {
      * flag to detect unuser global definitions
      */
     private boolean isUsedBySpc;
+    
+    /**
+     * flag to reduce multiple "duplicate definition" messages
+     */
+    private boolean isDuplicateDefined;
 
     /**
      * represent a declaration in the problem part of a module
@@ -39,5 +44,14 @@ public class DclProblemPart extends SpcDclProblemPart {
     public void setUsedBySpc() {
         this.isUsedBySpc = true;
     }
+    
+	public boolean isDuplicateDefined() {
+		return isDuplicateDefined;
+	}
+
+	public void setDuplicateDefined() {
+		this.isDuplicateDefined = true;
+		setUsedBySpc();  // mark as used to avoid warnings
+	}
 
 }

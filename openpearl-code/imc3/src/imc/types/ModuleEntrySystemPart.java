@@ -55,6 +55,12 @@ public class ModuleEntrySystemPart {
      * flag to detect unused system part elements
      */
     private boolean isUsedBySpc;
+    
+    
+    /**
+     * flag to reduce multiple "duplicate definition" messages
+     */
+    private boolean isDuplicateDefined;
 
     private String prefix;
 
@@ -62,6 +68,7 @@ public class ModuleEntrySystemPart {
         parameters = new ArrayList<Parameter>();
         codeGenerated = false;
         isUsedBySpc = false;
+        isDuplicateDefined = false;
         prefix = "_";
     }
 
@@ -180,5 +187,16 @@ public class ModuleEntrySystemPart {
     public String getPrefix() {
         return prefix;
     }
+
+
+	public boolean isDuplicateDefined() {
+		return isDuplicateDefined;
+	}
+
+
+	public void setDuplicateDefined() {
+		this.isDuplicateDefined = true;
+		setIsUsed();  // mark as used to avoid warnings
+	}
 
 }
