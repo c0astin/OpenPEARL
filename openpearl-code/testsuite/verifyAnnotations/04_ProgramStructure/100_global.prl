@@ -1,0 +1,32 @@
+MODULE (global);
+SYSTEM;
+  sbd1 : SampleBasicDation;
+  sbd2 : SampleBasicDation;
+PROBLEM;
+  SPC sbd1 DATION INOUT SYSTEM FIXED(15);
+  SPC sbd2 DATION INOUT SYSTEM FIXED(15) GLOBAL;
+/*$   ^
+warning: SPC: import module name defaulted to 'global'
+*/
+
+  SPC sbd3 DATION INOUT SYSTEM FIXED(15);
+/*$   ^
+error: SPC: GLOBAL attribute required for import from other module
+*/
+
+  SPC sbd4 DATION INOUT SYSTEM FIXED(15) GLOBAL;
+/*$   ^
+warning: SPC: import module name defaulted to 'global'
+*/
+
+  SPC f1 FIXED; 
+/*$   ^
+error: SPC: GLOBAL attribute required for import from other module
+*/
+
+  SPC f2 FIXED GLOBAL;
+/*$   ^
+warning: SPC: import module name defaulted to 'global'
+*/
+
+MODEND;

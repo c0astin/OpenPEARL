@@ -1,0 +1,24 @@
+MODULE(multdefExp1);
+SYSTEM;
+  sbd : SampleBasicDation;
+/*$
+  ^
+error: 'sbd' in module 'multdefExp1' multiple defined as SYSTEM element
+*/
+/*$
+  ^
+note: definition in SYSTEM part as 'DATION'
+*/
+
+  i1: UnixSignal(1);
+/*$
+  ^
+error: 'i1' in module 'multdefExp1' multiple defined as SYSTEM element
+*/
+
+PROBLEM;
+   DCL f FIXED GLOBAL;
+/*$    ^
+error: 'f' in module 'multdefExp1' multiple defined with type FIXED(31)
+*/
+MODEND;

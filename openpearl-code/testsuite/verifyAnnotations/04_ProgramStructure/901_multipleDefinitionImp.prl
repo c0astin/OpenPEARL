@@ -1,0 +1,14 @@
+MODULE(multdefImp);
+SYSTEM;
+PROBLEM;
+   SPC f FIXED GLOBAL(multdefExp1);
+   DCL i1 STRUCT [ a FIXED, b(10,12) FLOAT] GLOBAL;
+/*$    ^
+note: other definition in module 'multdefExp1'  with type STRUCT [ FIXED(31),(,) FLOAT(23) ]
+*/
+
+   SPC sbd FLOAT GLOBAL(multdefExp1);
+/*$    ^
+error: 'sbd' in module 'multdefExp1'  specified as FLOAT(23)
+*/
+MODEND;

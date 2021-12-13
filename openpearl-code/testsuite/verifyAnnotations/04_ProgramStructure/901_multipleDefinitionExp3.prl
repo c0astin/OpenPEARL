@@ -1,0 +1,19 @@
+MODULE(multdefExp3);
+SYSTEM;
+  sbd : SampleBasicDation;
+/*$
+  ^
+note: other definition in module 'multdefExp1' as SYSTEM element
+*/
+
+  i1: UnixSignal(2);
+/*$
+  ^
+note: other definition in module 'multdefExp1' as SYSTEM element
+*/
+PROBLEM;
+   DCL f FIXED GLOBAL;
+/*$    ^
+note: other definition in module 'multdefExp1' with type FIXED(31)
+*/
+MODEND;

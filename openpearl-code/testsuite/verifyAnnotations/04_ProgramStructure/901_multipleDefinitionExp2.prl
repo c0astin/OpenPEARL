@@ -1,0 +1,18 @@
+MODULE(multdefExp1);
+
+PROBLEM;
+   DCL f FIXED GLOBAL;
+/*$    ^
+note: other definition in module 'multdefExp1' with type FIXED(31)
+*/
+
+   DCL i1 FLOAT GLOBAL;
+/*$    ^
+note: other definition in module 'multdefExp1'  with type FLOAT(23)
+*/
+
+   DCL sbd FLOAT GLOBAL;
+/*$    ^
+note: other definition in module 'multdefExp1'  with type FLOAT(23)
+*/
+MODEND;

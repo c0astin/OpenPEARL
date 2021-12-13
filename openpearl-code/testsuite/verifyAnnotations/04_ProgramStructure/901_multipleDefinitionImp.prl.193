@@ -1,6 +1,0 @@
-MODULE(multdefImp);
-
-PROBLEM;
-   SPC f FIXED GLOBAL(multdefExp1);
-
-MODEND;
