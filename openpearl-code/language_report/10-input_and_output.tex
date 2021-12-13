@@ -213,6 +213,8 @@ the Problem Part}   % 10.2
 
 \subsection{System Data Stations}   % 10.2.1
 \index{DATION@\textbf{DATION}!System Data Station}
+System dation are defined in the system part. They are specified 
+in the problem part.
 
 Before using system defined data stations, they must be specified in the
 problem part, defining their associated user names. 
@@ -244,6 +246,7 @@ SPC termin  DATION IN    SYSTEM ALPHIC,
 \end{lstlisting}
 %%%\end{accepted}
 
+System dations may require  \code{Typology} as well as \code{AccessAttribute}.
 
 \subsection{User Defined Data Stations}    % 10.2.2
 
@@ -251,10 +254,12 @@ By a dation declaration, a logical, so-called user defined data station
 (or user dation) is created on a physical device (system dation). The
 allocation to a device is determined by the 
 \code{CREATED} \index{CREATED@\textbf{CREATED}} attribute.
+The attributes of the system dation must not conflict with the attributes
+of the user defined data station.
 
 All input/output statements described in the following refer to user
-dations --- the direct declaration of system dations leads to run time
-errors.
+dations --- the direct declaration of system dations is forbidden in OpenPEARL.
+
 
 \begin{grammarframe}
 \input{DationDeclaration.bnf}
@@ -579,6 +584,18 @@ The characteristics of the system dation must fit to the specification:
       more artificial dimensions may be specified
 \end{itemize}
 %%%\end{accepted}
+
+The import of a user dation differs to the declaration in the following points:
+\begin{itemize}
+\item instead of a \code{TypologyDeclaration} the \code{TypologySpecification} must be used
+\item \code{CREATED} must not be used
+\end{itemize}
+
+Example with the declaration of \code{table} above:
+\begin{lstlisting}
+  ! assume table is defined in module tableDef
+  SPC table DATION IN FLOAT DIM(,) DIRECT GLOBAL(tableDef);
+\end{lstlisting}
 
 \section{Opening and Closing of Data Stations (OPEN, CLOSE)}   % 10.3
 \label{sec_dation_open_close}
