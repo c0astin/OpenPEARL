@@ -17,9 +17,9 @@
 ##############################################################################
 
 FROM ubuntu
-
 RUN apt-get -qq update 
 RUN DEBIAN_FRONTEND="noninteractive" TZ="Europe/Berlin" apt-get install -y tzdata
+
 # Install dependencies
 RUN apt-get install -qqy --no-install-recommends \
         ca-certificates vim \
@@ -29,11 +29,22 @@ RUN apt-get install -qqy --no-install-recommends \
     rm -rf /var/lib/apt/lists/*	   	    	      
 #
 RUN apt-get -qq update 
+
+# add a non-root user 
 RUN useradd -m -s /usr/bin/bash openpearl
+
+# clone the openpearl git repository
+WORKDIR /home/openpearl
 RUN git clone https://git.code.sf.net/p/openpearl/code openpearl-code
+
+# install the missing packages
 WORKDIR /home/openpearl/openpearl-code/openpearl-code
 RUN ./installPackages dev
+
+# fix permissions
 RUN cd /home/openpearl ; chown -R openpearl:openpearl openpearl-code
+
+# change to  non-root user and perform the rest of the installation
 RUN su - openpearl
 COPY .config /home/openpearl/openpearl-code/openpearl-code/configuration
 WORKDIR /home/openpearl/openpearl-code/openpearl-code
