@@ -30,13 +30,11 @@ RUN apt-get install -qqy --no-install-recommends \
 #
 RUN apt-get -qq update 
 RUN useradd -m -s /usr/bin/bash openpearl
-WORKDIR /home/openpearl
-RUN git clone https://git.code.sf.net/p/openpearl/code openpearl-code
 WORKDIR /home/openpearl/openpearl-code/openpearl-code
-RUN mkdir configuration
-COPY .config /home/openpearl/openpearl-code/openpearl-code/configuration
 RUN ./installPackages dev
 RUN su - openpearl
+RUN git clone https://git.code.sf.net/p/openpearl/code openpearl-code
+COPY .config /home/openpearl/openpearl-code/openpearl-code/configuration
 WORKDIR /home/openpearl/openpearl-code/openpearl-code
 RUN make prepare
 RUN make install
