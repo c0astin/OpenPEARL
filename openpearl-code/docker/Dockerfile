@@ -58,8 +58,5 @@ WORKDIR /home/openpearl/openpearl-code/openpearl-code
 RUN make prepare
 RUN make install
 
-# test
-RUN cd testsuite/build ; prl 220_philosophers.prl ; ./220_philosophers
-
 
 
