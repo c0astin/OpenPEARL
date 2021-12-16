@@ -1,6 +1,6 @@
 ###############################################################################
 ## [The "BSD license"]
-## Copyright (c) 2012-2013 Marcel Schaible
+## Copyright (c) 2012-2021 Marcel Schaible
 ## All rights reserved.
 ##
 ## Redistribution and use in source and binary forms, with or without
@@ -75,7 +75,7 @@ gen ./check_cmds.sh $(ANTLR_GENERATED_FILES) : SmallPearl.g4
 
 javac:
 	test -d $(OUTPUT_DIR) || mkdir $(OUTPUT_DIR)
-	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_DIR) -encoding ISO-8859-1  $(JAVAC_FLAGS) org/smallpearl/compiler/Compiler.java
+	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_DIR) $(JAVAC_FLAGS) org/smallpearl/compiler/Compiler.java
 	rm -f smallpearl_compiler.jar
 	cp SmallPearlCpp.stg $(OUTPUT_DIR)
 	cp IMC.stg $(OUTPUT_DIR)
@@ -92,7 +92,7 @@ javac:
 
 test:
 	../regression.sh
-    
+
 ###############################################################################
 
 prepare:
