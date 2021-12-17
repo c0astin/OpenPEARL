@@ -1,0 +1,10 @@
+MODULE(m);
+SYSTEM;
+  so: StdOut;
+  
+PROBLEM;
+  SPC so DATION OUT ALPHIC;
+/*$   ^
+error: 'so' is defined in SYSTEM part; required attribute SYSTEM missing
+*/
+MODEND;

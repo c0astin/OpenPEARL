@@ -1,0 +1,124 @@
+MODULE(arraySliceTest);
+/*
+array slices are treated in the compiler independent of the
+base type of the arry. Thus we can do the tests upon FIXED-Arrays
+without loosing test coverage
+
+PEARL90 allows array slices in READ, WRITE, PUT and GET.
+They are forbidden in CONVERT, TAKE and SEND in PEARL90.
+
+OpenPEARL accepts array slices also for CONVERT, TAKE and SEND.
+
+*/
+PROBLEM;
+   SPC con DATION INOUT ALPHIC DIM(*,80) FORWARD GLOBAL(otherModule);
+   SPC dataFile DATION INOUT FIXED DIM(*,80) FORWARD GLOBAL(otherModule);
+   SPC ioDevice DATION INOUT BASIC FIXED GLOBAL(otherModule);
+   DCL array1(10,20) FIXED;
+   DCL string CHAR(10);
+
+checkSliceLimits:PROC;
+   DCL (start, end) FIXED INIT(1,1);
+
+   ! happy day
+   CONVERT array1(5,2:3) TO string BY F(6);
+
+   ! no check at compile time
+   CONVERT array1(5,start:end) TO string BY F(6);
+
+   ! start index too low
+   CONVERT array1(5,0:3) TO string BY F(6);
+/*$                 ^
+error: CONVERT TO: array slice violates array boundary
+*/
+
+   ! end index too high
+   CONVERT array1(5,2:21) TO string BY F(6);
+/*$                   ^
+error: CONVERT TO: array slice violates array boundary
+*/
+
+   
+END;
+
+checkStatments: PROC;
+	   PUT array1(5,0:20) TO con BY F(6);
+/*$                     ^
+error: PUT: array slice violates array boundary
+*/
+
+   PUT array1(5,2:21) TO con BY F(6);
+/*$               ^
+error: PUT: array slice violates array boundary
+*/
+
+   GET array1(5,0:20) FROM con BY F(6);
+/*$             ^
+error: GET: array slice violates array boundary
+*/
+
+   GET array1(5,2:21) FROM con BY F(6);
+/*$               ^
+error: GET: array slice violates array boundary
+*/
+
+/* CONVERT TO is already checked in checkSliceLimits */
+
+   CONVERT array1(5,0:20) FROM string BY F(6);
+/*$                 ^
+error: CONVERT FROM: array slice violates array boundary
+*/
+
+   CONVERT array1(5,2:21) FROM string BY F(6);
+/*$                   ^
+error: CONVERT FROM: array slice violates array boundary
+*/
+
+   
+   
+   WRITE array1(5,0:20) TO dataFile;
+/*$               ^
+error: WRITE: array slice violates array boundary
+*/
+
+   WRITE array1(5,2:21) TO dataFile;
+/*$                 ^
+error: WRITE: array slice violates array boundary
+*/
+
+   READ array1(5,0:20) FROM dataFile;
+/*$              ^
+error: READ: array slice violates array boundary
+*/
+
+   READ array1(5,2:21) FROM dataFile;
+/*$                ^
+error: READ: array slice violates array boundary
+*/
+
+   
+   SEND array1(5,0:20) TO ioDevice;
+/*$              ^
+error: SEND: array slice violates array boundary
+*/
+
+   SEND array1(5,2:21) TO ioDevice;
+/*$                ^
+error: SEND: array slice violates array boundary
+*/
+
+   TAKE array1(5,0:20) FROM ioDevice;
+/*$              ^
+error: TAKE: array slice violates array boundary
+*/
+
+   TAKE array1(5,2:21) FROM ioDevice;
+/*$                ^
+error: TAKE: array slice violates array boundary
+*/
+
+   
+END;
+MODEND;
+
+

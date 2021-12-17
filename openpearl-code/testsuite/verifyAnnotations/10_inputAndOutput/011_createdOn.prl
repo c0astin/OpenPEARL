@@ -1,0 +1,12 @@
+MODULE(m);
+PROBLEM;
+  SPC so DATION OUT ALPHIC GLOBAL;
+/*$   ^
+warning: SPC: import module name defaulted to 'm'
+*/
+
+  DCL stdout1 DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+/*$   ^
+error: DationDCL: 'so' is not of type SYSTEM DATION
+*/
+MODEND;
