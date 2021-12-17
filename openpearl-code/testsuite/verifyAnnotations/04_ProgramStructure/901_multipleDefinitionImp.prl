@@ -4,7 +4,7 @@ PROBLEM;
    SPC f FIXED GLOBAL(multdefExp1);
    DCL i1 STRUCT [ a FIXED, b(10,12) FLOAT] GLOBAL;
 /*$    ^
-note: other definition in module 'multdefExp1'  with type STRUCT [ FIXED(31),(,) FLOAT(23) ]
+note: other definition in module 'multdefExp1'  with type STRUCT [ FIXED(31),(1:10,1:12) FLOAT(23) ]
 */
 
    SPC sbd FLOAT GLOBAL(multdefExp1);

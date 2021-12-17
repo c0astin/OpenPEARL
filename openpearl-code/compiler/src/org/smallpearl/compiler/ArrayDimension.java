@@ -62,9 +62,12 @@ public class ArrayDimension  {
         }
     }
     
-    public String toString4IMC() {
-        // IMC does not need concrete array limits 
-        return "";
+    public String toString4IMC(boolean isInStructure) {
+        if (isInStructure) {
+            return toString();
+        } else {
+           return "";
+        }
     }
  
     public int getNoOfElements() {

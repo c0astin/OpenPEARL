@@ -298,7 +298,9 @@ public class Compiler {
                 }
 
                 if (verbose > 0) {
-                    System.err.println("Compilation aborted.");
+                    // keep System.err clean from debug messages. They
+                    // disturb the errorChecker
+                    System.out.println("Compilation aborted.");
                 }
 
                 if (dumpSymbolTable) {
@@ -320,7 +322,9 @@ public class Compiler {
                 System.out.println("compilation aborted with errors");
 
                 if (verbose > 0) {
-                    System.err.println("Compilation aborted.");
+                    // keep System.err clean from debug messages. They
+                    // disturb the errorChecker
+                    System.out.println("Compilation aborted.");
                 }
 
                 if (dumpSymbolTable) {
@@ -407,6 +411,9 @@ public class Compiler {
 
         while (i < args.length) {
             String arg = args[i];
+            if(verbose > 0) {
+               System.out.println("command line arguments arg("+i+")="+arg);
+            }
             i++;
             if (arg.charAt(0) != '-') { // input file name
                 inputFiles.add(arg);
@@ -447,6 +454,8 @@ public class Compiler {
             } else if (arg.equals("--debug")) {
                 debug = true;
                 Log.set(LEVEL_DEBUG);
+            } else if (arg.equals("--verbose")) {
+                verbose ++;
             } else if (arg.equals("--debugSTG")) {
                 debugSTG = true;
             } else if (arg.equals("--stacktrace")) {

@@ -56,7 +56,7 @@ error: DationDCL: non BASIC user dation needs typology (DIM)
 ! ************* check type of user dation versus type of SPC of system dation
 
    DCL typeOk1 DATION OUT BASIC FIXED(15) CREATED(sbd);
-   DCL typeOk2 DATION OUT ALPHIC DIM(*) FORWARD CREATED(stdout);
+   DCL typeOk2 DATION OUT ALPHIC DIM(*) FORWARD CREATED(so);
    DCL typeOk3 DATION OUT ALPHIC DIM(*) FORWARD CREATED(disc);
    DCL typeOk4 DATION OUT FIXED(15) DIM(*) FORWARD CREATED(disc);
    DCL typeOk5 DATION OUT FIXED(15) DIM(*) DIRECT CREATED(disc);
@@ -76,7 +76,7 @@ error: DationDCL: attempt to create a 'ALL' dation upon a BASIC system dation
 error: DationDCL: attempt to create ALPHIC dation upon BASIC system dation
 */
 
-   DCL typeFail4 DATION OUT ALL DIM(*) FORWARD CREATED(stdout);
+   DCL typeFail4 DATION OUT ALL DIM(*) FORWARD CREATED(so);
 /*$    ^
 error: DationDCL: attempt to create a 'ALL' dation upon an ALPHIC system dation
 */
@@ -87,23 +87,23 @@ error: DationDCL: attempt to create a BASIC dation upon non BASIC system dation
 */
 
 ! ************** check direction
-   DCL dirOk1 DATION OUT ALPHIC DIM(*) FORWARD CREATED(stdout);
-   DCL dirFail1 DATION IN ALPHIC DIM(*) FORWARD CREATED(stdout);
+   DCL dirOk1 DATION OUT ALPHIC DIM(*) FORWARD CREATED(so);
+   DCL dirFail1 DATION IN ALPHIC DIM(*) FORWARD CREATED(so);
 /*$    ^
 error: DationDCL: system dation does not provide direction IN
 */
 
-   DCL dirFail2 DATION INOUT ALPHIC DIM(*) FORWARD CREATED(stdout);
+   DCL dirFail2 DATION INOUT ALPHIC DIM(*) FORWARD CREATED(so);
 /*$    ^
 error: DationDCL: system dation does not provide direction IN
 */
 
-   DCL dirFail3 DATION OUT ALPHIC DIM(*) FORWARD CREATED(stdin);
+   DCL dirFail3 DATION OUT ALPHIC DIM(*) FORWARD CREATED(si);
 /*$    ^
 error: DationDCL: system dation does not provide direction OUT
 */
 
-   DCL dirFail4 DATION INOUT ALPHIC DIM(*) FORWARD CREATED(stdin);
+   DCL dirFail4 DATION INOUT ALPHIC DIM(*) FORWARD CREATED(si);
 /*$    ^
 error: DationDCL: system dation does not provide direction OUT
 */

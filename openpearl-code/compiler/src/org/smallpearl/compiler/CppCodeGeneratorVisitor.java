@@ -142,7 +142,11 @@ implements SmallPearlVisitor<ST> {
         ST prologue = m_group.getInstanceOf("Prologue");
 
         prologue.add("src", this.m_sourceFileName);
-        prologue.add("name",this.m_module.getName());
+        if (m_useNamespaceForGlobals) {
+           prologue.add("name",this.m_module.getName());
+        } else {
+            prologue.add("name","pearlApp");
+        }
 
         ST taskspec = m_group.getInstanceOf("TaskSpecifier");
 
@@ -163,7 +167,11 @@ implements SmallPearlVisitor<ST> {
              if (te.getGlobalAttribute()!= null && !te.getGlobalAttribute().equals(m_module.getName())) {
                  // namespace switch only required of namespace changes to another module
                  scope.add("fromNs", te.getGlobalAttribute());
-                 scope.add("currentNs",m_module.getName());
+                 if (m_useNamespaceForGlobals) {
+                    scope.add("currentNs",m_module.getName());
+                 } else {
+                     scope.add("currentNs","pearlApp");
+                 }
             }
             
             scope.add("variable", task);
@@ -693,7 +701,11 @@ System.out.println("CppCg@487 called");
                if (!ve.getGlobalAttribute().equals(m_module.getName())) {
                    // namespace switch only required of namespace changes to another module
                    scope.add("fromNs", ve.getGlobalAttribute());
-                   scope.add("currentNs",m_module.getName());
+                   if (m_useNamespaceForGlobals) {
+                      scope.add("currentNs",m_module.getName());
+                   } else {
+                       scope.add("currentNs", "pearlApp");
+                   }
                }
             }
         }
@@ -3423,12 +3435,15 @@ System.out.println("CppCg@487 called");
                     //  + the base type of the array
                     //  + the address of the name(startIndex)
                     //  + number of elements
-                       ASTAttribute a = m_ast.lookup(slice.name());
+                    ASTAttribute a = m_ast.lookup(slice.name());
 
                     TypeArraySlice tas = (TypeArraySlice) (attr.getType());
                     TypeArray ta = (TypeArray) (tas.getBaseType());
                     TypeDefinition t = ta.getBaseType();
 
+                    
+
+                    
                     ST data = getIojobDataItem(t);
 
                     ST firstElement = m_group.getInstanceOf("ArrayLHS");
@@ -3457,6 +3472,37 @@ System.out.println("CppCg@487 called");
                         data.add("nbr_of_elements", nbr);
                     }
                     dataList.add("dataelement", data);
+                    
+                    // test access for last slice element
+                    // note first element is automatically checked when accessing the 
+                    // data
+                    String tempVarName = nextTempVarName();
+                    ST temp = m_group.getInstanceOf("variable_denotation");
+
+                    ST lastElement = m_group.getInstanceOf("ArrayLHS");
+                    lastElement.add("name", a.getVariable().getName());
+
+                    // get complete index of last element in array slice
+                    // use the first size-1 element from startindex and add the end index
+                    ST indices = m_group.getInstanceOf("ArrayIndices");
+                    for (int indexOfExpression = 0; indexOfExpression < lastElementInList; indexOfExpression++) {
+                        ST stIndex = m_group.getInstanceOf("ArrayIndex");
+                        stIndex.add("index", visitAndDereference(slice.startIndex().listOfExpression()
+                               .expression(indexOfExpression)));
+                        indices.add("indices", stIndex);
+                    }
+                    ST stIndex = m_group.getInstanceOf("ArrayIndex");
+                    stIndex.add("index", visitAndDereference(slice.endIndex().expression()));
+                    indices.add("indices", stIndex);
+                    lastElement.add("indices", indices);
+
+                    temp.add("name",  tempVarName);
+                    temp.add("type", visitTypeAttribute(t));
+                    temp.add("init",lastElement);
+                    m_tempVariableList.lastElement().add("variable", temp);
+
+                    // -- end of test
+                    
                 }
             }
             return dataList;

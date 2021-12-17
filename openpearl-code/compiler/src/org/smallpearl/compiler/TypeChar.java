@@ -57,7 +57,7 @@ public class TypeChar extends TypeDefinition {
         return this.getName() + "(" + this.m_size + ")";
     }
 
-    public String toString4IMC() {
+    public String toString4IMC(boolean isInStructure) {
         return toString();
     }
     

@@ -35,6 +35,7 @@ import java.util.List;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.smallpearl.compiler.*;
+import org.smallpearl.compiler.Compiler;
 import org.smallpearl.compiler.SmallPearlParser.*;
 import org.smallpearl.compiler.Exception.*;
 import org.smallpearl.compiler.SymbolTable.ModuleEntry;
@@ -67,8 +68,7 @@ implements SmallPearlVisitor<Void> {
     private boolean m_directionInput;
     private TypeDation m_typeDation;
     private boolean abortCheck; // flag to abort a check after a severe error was detected
-    private boolean m_isInSpecification = false;
-
+    
     public CheckIOStatements(String sourceFileName, int verbose, boolean debug,
             SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
             AST ast) {
@@ -192,6 +192,13 @@ implements SmallPearlVisitor<Void> {
                 ErrorStack.leave();
                 return ;
             } else {
+                TypeDation td = ((TypeDation)((VariableEntry)sys).getType());
+                if (!td.isSystemDation() ) {
+                    ErrorStack.add("'" + d.getCreatedOnAsString() + "' is not of type SYSTEM DATION");
+                    ErrorStack.leave();
+                    return ;
+                }
+                
                 d.setCreatedOn((VariableEntry)sys);
                 TypeDation sd = (TypeDation) (((VariableEntry) sys).getType());
 
@@ -312,16 +319,13 @@ implements SmallPearlVisitor<Void> {
 
     @Override
     public Void visitVariableDeclaration(SmallPearlParser.VariableDeclarationContext ctx) {
-        m_isInSpecification = false;
         visitChildren(ctx);
         return null;
     }
 
     @Override
     public Void visitSpecification(SmallPearlParser.SpecificationContext ctx) {
-        m_isInSpecification = true;
         visitChildren(ctx);
-        m_isInSpecification = false;
         return null;
     }
     @Override
@@ -593,6 +597,7 @@ implements SmallPearlVisitor<Void> {
             }
 
             checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
+            checkArraySliceForTakeSendConvert(ctx.ioDataList(),false);
         }
         ErrorStack.leave();
         return null;
@@ -624,6 +629,7 @@ implements SmallPearlVisitor<Void> {
             enshureDataForInput(ctx.ioDataList());
 
             checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
+            checkArraySliceForTakeSendConvert(ctx.ioDataList(),false);
 
             visitChildren(ctx);
         }
@@ -651,6 +657,7 @@ implements SmallPearlVisitor<Void> {
         visitChildren(ctx);
 
         checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
+        checkArraySliceForTakeSendConvert(ctx.ioDataList(),true);
         if (ctx.ioDataList() == null || ctx.ioDataList().ioListElement().size() < 1) {
             ErrorStack.add("need at least one expression");
         }
@@ -702,6 +709,7 @@ implements SmallPearlVisitor<Void> {
         enshureDataForInput(ctx.ioDataList());
 
         checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
+        checkArraySliceForTakeSendConvert(ctx.ioDataList(),true);
         if (ctx.ioDataList() == null || ctx.ioDataList().ioListElement().size() < 1) {
             ErrorStack.add("need at least one expression");
         }
@@ -732,6 +740,8 @@ implements SmallPearlVisitor<Void> {
 
             checkWriteReadFormat(ctx.listOfFormatPositions());
             checkReadWriteTakeSendDataTypes(ctx.ioDataList());
+            checkArraySliceForTakeSendConvert(ctx.ioDataList(),false);
+            
 
             visitChildren(ctx);
         }
@@ -763,6 +773,7 @@ implements SmallPearlVisitor<Void> {
             // check if absolute positions follow relative positions
             checkWriteReadFormat(ctx.listOfFormatPositions());
             checkReadWriteTakeSendDataTypes(ctx.ioDataList());
+            checkArraySliceForTakeSendConvert(ctx.ioDataList(),false);
 
             // TODO: (rm) check type of transfer data is missing!!
 
@@ -790,14 +801,50 @@ implements SmallPearlVisitor<Void> {
                             ErrorStack.leave();
                         }
                     }
-                    //          } else if (ioDataList.ioListElement(i).arraySlice()!=null) {
-                    //            ErrorStack.addInternal("arraySlice stuff missing");
                 }
             }
         }
 
     }
+    
+    private void checkArraySliceForTakeSendConvert(IoDataListContext ioDataList, boolean forbiddenInPearl90) {
+        if (ioDataList != null) {
+            for (int i = 0; i < ioDataList.ioListElement().size(); i++) {
+                if (ioDataList.ioListElement(i).arraySlice() != null) {
+                    ASTAttribute attr = m_ast.lookup(ioDataList.ioListElement(i).arraySlice()); 
+                    TypeArraySlice tas = (TypeArraySlice)(attr.getType());
+                    TypeArray ta = (TypeArray)(tas.getBaseType());
+                    ArrayDimension last = ta.getDimensions().get(ta.getNoOfDimensions()-1);
 
+                    if (tas.getStartIndex() != null) {
+                        long start = tas.getStartIndex().getValue();                        
+                        if (start < last.getLowerBoundary() || start > last.getUpperBoundary()) {
+                            int indexCount = ioDataList.ioListElement(i).arraySlice().startIndex().listOfExpression().expression().size();
+                            ErrorStack.enter(ioDataList.ioListElement(i).arraySlice().startIndex().listOfExpression().expression(indexCount-1));
+                            ErrorStack.add("array slice violates array boundary");
+                            ErrorStack.leave();
+                        }
+                    }
+                    if (tas.getEndIndex() != null) {
+                        long end = tas.getEndIndex().getValue();                        
+                        if (end < last.getLowerBoundary() || end > last.getUpperBoundary()) {
+                            ErrorStack.enter(ioDataList.ioListElement(i).arraySlice().endIndex());
+                            ErrorStack.add("array slice violates array boundary");
+                            ErrorStack.leave();
+                        }
+                    }
+
+                    if (Compiler.isStdPEARL90() && forbiddenInPearl90) {
+                        ErrorStack.enter(ioDataList.ioListElement(i).arraySlice());
+                        ErrorStack.warn("array slice not allowed in PEARL90");
+                        ErrorStack.leave();
+                    }
+                }
+            }
+        }
+
+    }
+    
     // enshure that no formats and no absolute positions occur after relative positions
     /**
      * @param d
@@ -871,7 +918,7 @@ implements SmallPearlVisitor<Void> {
 
             enshureDataForInput(ctx.ioDataList());
             checkReadWriteTakeSendDataTypes(ctx.ioDataList());
-
+            checkArraySliceForTakeSendConvert(ctx.ioDataList(),true);
 
             visitChildren(ctx);
         }
@@ -906,6 +953,7 @@ implements SmallPearlVisitor<Void> {
             }
 
             checkReadWriteTakeSendDataTypes(ctx.ioDataList());
+            checkArraySliceForTakeSendConvert(ctx.ioDataList(),true);
 
             visitChildren(ctx);
         }
@@ -2225,37 +2273,6 @@ implements SmallPearlVisitor<Void> {
         return;
     }
 
-    private Void CheckPrecision(String id, ParserRuleContext ctx) {
-
-        SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
-        VariableEntry var = null;
-
-
-        ErrorStack.enter(ctx, "RST");
-
-        if (entry != null && entry instanceof VariableEntry) {
-            // it would be got to set a new error environment to the 
-            // context of the 'entry'
-            var = (VariableEntry) entry;
-
-            if (var.getType() instanceof TypeFixed) {
-                TypeFixed type = (TypeFixed) var.getType();
-                if (type.getPrecision() < 15) {
-                    ErrorStack.add(
-                            "must be at least FIXED(15) -- got FIXED(" + type.getPrecision() + ")");
-                }
-            } else {
-                ErrorStack.add("variable must be FIXED");
-            }
-        } else {
-            ErrorStack.add(id + " is not defined");
-        }
-
-        ErrorStack.leave();
-
-        return null;
-    }
-
     private Void CheckFixedVariable(String id, ParserRuleContext ctx) {
 
         SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
@@ -2362,145 +2379,9 @@ implements SmallPearlVisitor<Void> {
         }
     }
 
-    //	/**
-    //	 * check if the given name is defined and of type CHAR
-    //	 * return the element from thesymbol table
-    //	 * or return null
-    //	 * 
-    //	 * @param convertString
-    //	 * @return null, if no symbol was found, or symbol is not of typeChar<br>
-    //	 *    reference to the TypeChar for further analysis
-    //	 */
-    //	private TypeChar  enshureCharacterString(String convertString) {
-    //		SymbolTableEntry se = m_currentSymbolTable.lookup(convertString);
-    //		if (se == null) {
-    //			ErrorStack.add("'" + convertString+"' is not defined");
-    //		} else if ( (se instanceof VariableEntry) ) {
-    //			if (((VariableEntry)se).getType() instanceof TypeChar) {
-    //				// maybe we need further details about the variable 
-    //				// like INV
-    //				TypeChar c = (TypeChar)((VariableEntry)se).getType();
-    //				return c;
-    //			}
-    //		} else {
-    //			ErrorStack.add("'"+ convertString + "' must be CHAR -- has type "+ (((VariableEntry)se).getType().toString()));
-    //		}
-    //		return null;
-    //	}
+ 
 
-    private TypeDation lookupDation(String userDation) {
-        SymbolTableEntry se = m_currentSymbolTable.lookup(userDation);
-        if (se == null) {
-            ErrorStack.add("'" + userDation + "' is not defined");
-        } else if ((se instanceof VariableEntry)) {
-            if (((VariableEntry) se).getType() instanceof TypeDation) {
-                TypeDation sd = (TypeDation) (((VariableEntry) se).getType());
-                if (sd.isSystemDation()) {
-                    ErrorStack.add("need user dation");
-                }
-                return sd;
-            } else if (((VariableEntry) se).getType() instanceof TypeChar) {
-                // lets simulate user dation for CONVERT
-                TypeChar c = (TypeChar) ((VariableEntry) se).getType();
-                TypeDation sd = new TypeDation();
-                sd.setDimension1(c.getSize());
-                sd.setAlphic(true);
-                sd.setDirect(true);
-                return sd;
-            } else {
-                ErrorStack.add("'" + userDation + "' must be DATION -- has type "
-                        + (((VariableEntry) se).getType().toString()));
-            }
-        }
-        return null;
-    }
-
-
-    //	private TypeDation lookupDation(NameContext ctx) {
-    //		String userDation = "";
-    //		boolean isConvert = false;
-    //
-    //		// walk grammar up to put,get,read,write,take,send,convert_statement
-    //		RuleContext p= (RuleContext)ctx;
-    //		while ( p != null ) {
-    //			p=p.parent;
-    //			if (p instanceof SmallPearlParser.PutStatementContext) {
-    //				SmallPearlParser.PutStatementContext stmnt = (SmallPearlParser.PutStatementContext) p;
-    //				ASTAttribute attr = m_ast.lookup(stmnt.dationName());
-    //				ASTAttribute a1 =  m_ast.lookup(stmnt.dationName().name());
-    //				userDation = stmnt.dationName().name().toString();
-    //				p=null;
-    //			}
-    //			if (p instanceof SmallPearlParser.GetStatementContext) {
-    //				SmallPearlParser.GetStatementContext stmnt = (SmallPearlParser.GetStatementContext) p;
-    //				userDation = stmnt.dationName().name().toString();
-    //				p=null;
-    //			}
-    //			if (p instanceof SmallPearlParser.ConvertToStatementContext) {
-    //				SmallPearlParser.ConvertToStatementContext stmnt = (SmallPearlParser.ConvertToStatementContext) p;
-    //				userDation = stmnt.name().getText();  // name of the string
-    //				isConvert = true;
-    //				p=null;
-    //			}
-    //			if (p instanceof SmallPearlParser.ConvertFromStatementContext) {
-    //				SmallPearlParser.ConvertFromStatementContext stmnt = (SmallPearlParser.ConvertFromStatementContext) p;
-    //				userDation = stmnt.expression().getText();   // name of the string
-    //				isConvert = true;
-    //				p=null;
-    //			}
-    //			if (p instanceof SmallPearlParser.ReadStatementContext) {
-    //				SmallPearlParser.ReadStatementContext stmnt = (SmallPearlParser.ReadStatementContext) p;
-    //				userDation = stmnt.dationName().name().toString();
-    //				p=null;
-    //			}
-    //			if (p instanceof SmallPearlParser.WriteStatementContext) {
-    //				SmallPearlParser.WriteStatementContext stmnt = (SmallPearlParser.WriteStatementContext) p;
-    //				userDation = stmnt.dationName().name().toString();
-    //				p=null;
-    //			}
-    //			if (p instanceof SmallPearlParser.TakeStatementContext) {
-    //				SmallPearlParser.TakeStatementContext stmnt = (SmallPearlParser.TakeStatementContext) p;
-    //				userDation = stmnt.dationName().name().toString();
-    //				p=null;
-    //			}
-    //			if (p instanceof SmallPearlParser.SendStatementContext) {
-    //				SmallPearlParser.SendStatementContext stmnt = (SmallPearlParser.SendStatementContext) p;
-    //				userDation = stmnt.dationName().name().toString();
-    //				p=null;
-    //			}
-    //		}
-    //
-    //		if (userDation == null) {
-    //			ErrorStack.add("no userdation found");
-    //		} else {
-    //			TypeDation sd = lookupDation(userDation);
-    //			return sd;
-    //		}
-    //		return null;
-    //	}
-    //
-    //	private String lookupTypeOfExpressionOrConstant(ExpressionContext ctx) {
-    //
-    //		ASTAttribute attr = m_ast.lookup(ctx);
-    //		boolean isArray = false;
-    //
-    //		if (attr != null) {
-    //			String s = attr.getType().toString();
-    //
-    //			if (attr.isReadOnly()) {
-    //			} else {
-    //				VariableEntry ve = attr.getVariable();
-    //
-    //				if (ve != null && ve.getType() instanceof TypeArray) {
-    //					isArray = true;
-    //					s = ve.getType().toString();
-    //				}
-    //			}
-    //			return s;
-    //		}
-    //		return null;
-    //	}
-
+   
     /**
      * parse a FactorFormatPositionContext and deliver a List of formats/positions
      *

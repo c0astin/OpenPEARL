@@ -5,6 +5,7 @@ all: build
 build:
 	(cd build; make redo)
 	(cd verifyAnnotations; make)
+	(cd verifyAnnotationsPEARL90; make)
 
 run:
 	(cd run; make all)

@@ -2,6 +2,7 @@
 #SUBDIRS =  04_ProgramStructure 10_inputAndOutput
 SUBDIRS =  $(sort $(wildcard */.))
 ERRORCHECKER = ../../errorChecker/errorParser ../../errorChecker/genExpectations
+export PRLFLAGS=-std=OpenPEARL
 
 all: $(ERRORCHECKER) $(SUBDIRS)
 

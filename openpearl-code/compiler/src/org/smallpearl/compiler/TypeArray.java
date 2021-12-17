@@ -102,14 +102,14 @@ public class TypeArray extends TypeDefinition {
         return this.getName() + " " + this.m_dimensions + " " + this.m_baseType;
     }
 
-    public String toString4IMC() {
+    public String toString4IMC(boolean isInStructure) {
         String result="(";
         for (int i=0; i< m_dimensions.size(); i++) {
-            if (i>0) result += ",";
-            result += m_dimensions.get(i).toString4IMC();
+               if (i>0) result += ",";
+               result += m_dimensions.get(i).toString4IMC(isInStructure);
         }
         
-        result += ") " + m_baseType.toString4IMC();
+        result += ") " + m_baseType.toString4IMC(isInStructure);
         return result;
     }
     @Override

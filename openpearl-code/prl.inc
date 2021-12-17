@@ -22,6 +22,12 @@ imcInputFiles=
 objects=
 target=
 standard="-std=OpenPEARL"
+if [[ $PRLFLAGS =~ "-std=PEARL90" ]]; then
+   standard="-std=PEARL90"
+fi
+if [[ $PRLFLAGS =~ "-std=OpenPEARL" ]]; then
+   standard="-std=OpenPEARL"
+fi
 
 while [ "$1" != "" ] ; do
     #echo "input: " $INPUT
@@ -189,7 +195,7 @@ rm -f $target.out $target.log
             intermediateFiles+=" $fn.log $fn.out"
 
             if [ $rc -ne 0 ] ; then
-              echo "terminate due to errors in stage 1"
+              echo "terminate due to errors in stage 1" 1>>$fn.log
               exit $rc
             fi
             inp_ext="cc"
@@ -259,7 +265,7 @@ rm -f $target.out $target.log
        rc=$?
        if [ $rc -ne 0 ]
        then
-          echo "terminate due to errors in stage 1b (imc)"
+          echo "terminate due to errors in stage 1b (imc)" 1>>$fn.log
           exit $rc
        fi
        intermediateFiles+=" system.cc"

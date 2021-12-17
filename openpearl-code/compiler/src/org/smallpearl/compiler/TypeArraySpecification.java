@@ -81,7 +81,7 @@ public class TypeArraySpecification extends TypeDefinition {
       return s;
     }
     
-    public String toString4IMC() {
+    public String toString4IMC(boolean isInStructure) {
         ErrorStack.addInternal(null, "TypeArraySpecification", "toString4IMC nit implemented");
         return null;
     }

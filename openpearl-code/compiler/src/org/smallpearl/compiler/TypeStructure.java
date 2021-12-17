@@ -63,7 +63,7 @@ public class TypeStructure extends TypeDefinition {
         return line + " ] ";
     }
     
-    public String toString4IMC() {
+    public String toString4IMC(boolean isInStructure) {
         String line = super.getName() + " [ ";
 
         for (int i = 0; i < m_listOfComponents.size(); i++) {
@@ -72,7 +72,7 @@ public class TypeStructure extends TypeDefinition {
                 prefix = ",";
             }
 
-            line += prefix + m_listOfComponents.get(i).toString4IMC();
+            line += prefix + m_listOfComponents.get(i).toString4IMC(true);
         }
 
         return line + " ] ";

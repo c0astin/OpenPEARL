@@ -42,7 +42,7 @@ public class TypeBolt extends TypeDefinition {
         return this.getName() ;
     }
     
-    public String toString4IMC() {
+    public String toString4IMC(boolean inInStructure) {
         return toString();
     }
 

@@ -13,7 +13,7 @@ error: type mismatch: expected in SPC: of 'struct' as type 'STRUCT [ FIXED(31),F
 */
    SPC pExport PROC (a FIXED IDENT) RETURNS (STRUCT [b(5) FLOAT]) GLOBAL(spcDclExport);
 /*$    ^
-error: type mismatch: expected in SPC: of 'pExport' as type 'PROC ( FIXED(31) IDENT ) RETURNS ( STRUCT [ () FLOAT(23) ] )'
+error: type mismatch: expected in SPC: of 'pExport' as type 'PROC ( FIXED(31) IDENT ) RETURNS ( STRUCT [ (1:5) FLOAT(23) ] )'
 */
 
 tImport: TASK MAIN;

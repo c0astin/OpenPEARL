@@ -59,10 +59,18 @@ public class TypeArraySlice extends TypeDefinition {
       this.startIndex = startIndex;
     }
 
+    public ConstantFixedValue getStartIndex() {
+        return startIndex;
+     }
+    
     public void setEndIndex(ConstantFixedValue endIndex) {
       this.endIndex = endIndex;
     }
-    
+
+    public ConstantFixedValue getEndIndex() {
+        return endIndex;
+     }
+
     public boolean hasConstantSize() {
       return startIndex != null && endIndex != null;
     }
@@ -91,7 +99,7 @@ public class TypeArraySlice extends TypeDefinition {
       return result;
     }
 
-    public String toString4IMC() {
+    public String toString4IMC(boolean isInStructure) {
         ErrorStack.addInternal(null, "TypeArraySlice", "toString4IMC is not implemented");
         String result = "ArraySlice not completed";
         return result;

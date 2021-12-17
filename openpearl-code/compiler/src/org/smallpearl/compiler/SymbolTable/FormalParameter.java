@@ -49,8 +49,8 @@ public class FormalParameter extends VariableEntry {
         return (super.getAssigmentProtection() ? " INV " : " " ) + super.getType() +(passIdentical ? " IDENT" : "");
     }
 
-    public String toString4IMC() {
-        return (super.getAssigmentProtection() ? " INV " : " " ) + super.getType().toString4IMC() +(passIdentical ? " IDENT" : "");
+    public String toString4IMC(boolean isInStructure) {
+        return (super.getAssigmentProtection() ? " INV " : " " ) + super.getType().toString4IMC(isInStructure) +(passIdentical ? " IDENT" : "");
     }
     
     /* other methods inherited from parent class */

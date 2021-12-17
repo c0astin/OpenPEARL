@@ -13,7 +13,7 @@ public class TypeRefChar extends TypeDefinition {
         return getName();
     }
     
-    public String toString4IMC() {
+    public String toString4IMC(boolean isInStructure) {
         return getName();
     }
     

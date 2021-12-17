@@ -417,7 +417,11 @@ public class CheckSpcDcl {
 
             String attributesInSpc = NodeUtils.getChildByName(dationInSpc, "attributes").getTextContent();
             // System.out.println("SPC attr:" + attributesInSpc);
-
+            // check if SYSTEM is given
+            if (! attributesInSpc.contains("SYSTEM")) {
+            	Log.error("'" + spc.getUserName()+"' is defined in SYSTEM part; required attribute SYSTEM missing");
+            	return;
+            }
             String attributesInPlatform =
                     NodeUtils.getChildByName(inPlatform, "attributes").getTextContent();
             // System.out.println("DCL attr:" + attributesInDevice);

@@ -41,7 +41,7 @@ public class TypeTask extends TypeDefinition {
         return this.getName();
     }
     
-    public String toString4IMC() {
+    public String toString4IMC(boolean isInStructure) {
         return this.getName();
     }
 

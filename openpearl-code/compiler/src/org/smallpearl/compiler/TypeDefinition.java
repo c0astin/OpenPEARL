@@ -80,7 +80,7 @@ public abstract class TypeDefinition {
         return s;
     }
     
-    abstract public String toString4IMC();
+    abstract public String toString4IMC(boolean isInStructure);
     
     public ST toST(STGroup group) {
         return null;

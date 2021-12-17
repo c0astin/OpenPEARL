@@ -31,7 +31,7 @@ END;
 pExport: PROC(a FIXED IDENT) RETURNS (STRUCT [ a FIXED, b(5) FLOAT ]) GLOBAL;
 /*$
 ^
-note: found in DCL :'PROC ( FIXED(31) IDENT ) RETURNS ( STRUCT [ FIXED(31),() FLOAT(23) ] )'
+note: found in DCL :'PROC ( FIXED(31) IDENT ) RETURNS ( STRUCT [ FIXED(31),(1:5) FLOAT(23) ] )'
 */
    DCL result STRUCT [ a FIXED , b(5) FLOAT ];
    result.a=a;

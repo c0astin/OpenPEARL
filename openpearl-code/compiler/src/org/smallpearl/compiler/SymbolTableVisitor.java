@@ -786,7 +786,7 @@ implements SmallPearlVisitor<Void> {
                 }
             } else if (m_type instanceof TypeReference) {
                 // need NameInitializer
-                ErrorStack.addInternal("SymbolTableVisitor@708: NameInitializer missing");
+                ErrorStack.addInternal(m_identifierDenotationContext,"","SymbolTableVisitor@708: NameInitializer missing");
             } else {
                 // need SimpleInitializer
                 if (nbrOfInitializer < nbrOfVariables) {
@@ -884,7 +884,7 @@ implements SmallPearlVisitor<Void> {
                     }
                 } else if (m_type instanceof TypeReference) {
                     // need NameInitializer
-                    ErrorStack.addInternal("SymbolTableVisitor@708: NameInitializer missing");
+                    ErrorStack.addInternal(m_identifierDenotationContext,"","SymbolTableVisitor@708: NameInitializer missing");
                 } else {
                     // need SimpleInitializer
                     if (nextInitializerIndex < initElements.size()) {

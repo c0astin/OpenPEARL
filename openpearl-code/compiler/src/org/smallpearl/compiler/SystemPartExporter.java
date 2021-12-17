@@ -307,7 +307,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
                // if (v.getType() instanceof TypeStructure) {
                 //    st.add("type",((TypeStructure)(v.getType())).getName());
                 //} else {
-                    st.add("type", v.getType().toString4IMC());
+                    st.add("type", v.getType().toString4IMC(false));
                 //}
                 if (v.getGlobalAttribute() != null) {
                     st.add("fromNamespace", v.getGlobalAttribute());
@@ -358,7 +358,7 @@ public class SystemPartExporter extends SmallPearlBaseVisitor<ST> implements Sma
         st.add("lineno", v.getSourceLineNo());
         st.add("col",v.getCharPositionInLine()+1);
         st.add("name", v.getName());
-        st.add("type", v.getType().toString4IMC());
+        st.add("type", v.getType().toString4IMC(false));
         if (v.getGlobalAttribute() != null) {
             st.add("fromNamespace", v.getGlobalAttribute());
         }
