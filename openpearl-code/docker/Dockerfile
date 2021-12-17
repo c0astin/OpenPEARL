@@ -22,13 +22,20 @@ RUN DEBIAN_FRONTEND="noninteractive" TZ="Europe/Berlin" apt-get install -y tzdat
 
 # Install dependencies
 RUN apt-get install -qqy --no-install-recommends \
-        ca-certificates vim \
+        ca-certificates vim locales \
         autoconf automake cmake dpkg-dev file git make patch \
         libc-dev libc++-dev libgcc-10-dev libstdc++-10-dev  \
         dirmngr gnupg2 lbzip2 wget xz-utils libtinfo5 g++ && \
     rm -rf /var/lib/apt/lists/*	   	    	      
 #
 RUN apt-get -qq update 
+
+
+# configure locale
+RUN touch /usr/share/locale/locale.alias 
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+RUN locale-gen
 
 # add a non-root user 
 RUN useradd -m -s /usr/bin/bash openpearl
@@ -50,5 +57,9 @@ COPY .config /home/openpearl/openpearl-code/openpearl-code/configuration
 WORKDIR /home/openpearl/openpearl-code/openpearl-code
 RUN make prepare
 RUN make install
+
+# test
+RUN cd testsuite/build ; prl 220_philosophers.prl ; ./220_philosophers
+
 
 
