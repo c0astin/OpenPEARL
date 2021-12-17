@@ -158,7 +158,7 @@ printf("***line =%d col=%d pos=%p\n",currentMessage.line, currentMessage.col,pos
    clearLine(line);
    pos = fgets(line,LINELENGTH,stdin);
 #if DEBUG == 1
-   printf("next line: >%s<\n pos=%d\n",line,pos);
+   printf("next line: >%s<\n",line);
 #endif
 
    if (pos) {
