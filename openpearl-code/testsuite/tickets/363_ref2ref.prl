@@ -1,0 +1,14 @@
+MODULE(ref2ref);
+
+PROBLEM;
+
+   DCL data STRUCT [ next REF STRUCT [ a FIXED ] ];
+ix: PROC;
+   DCL f FIXED;
+   DCL rs REF STRUCT [ a FIXED ];
+   rs = data.next;
+   f = rs.a;
+   f = data.next.a;
+END;
+MODEND;
+ 
