@@ -1,6 +1,6 @@
 /*
  [A "BSD license"]
- Copyright (c) 2012-2017 Rainer Mueller
+ Copyright (c) 2012-2021 Rainer Mueller
  Copyright (c) 2013-2014 Holger Koelle
  All rights reserved.
 
@@ -152,6 +152,7 @@ namespace pearlrt {
       void dationOpen(int p,
                       Character<S> * idf,
                       Fixed<R> * rst) {
+         mutexUserDation.lock();
          try {
             if (p & RST) {
                if (! rst) {
@@ -185,11 +186,19 @@ namespace pearlrt {
             internalDationOpen(p, &rc);
          } catch (Signal & s) {
             if (rst) {
-               *rst = s.whichRST();
+               try {
+                  // may cause a fixed range signal
+                  *rst = s.whichRST();
+               } catch (Signal & s) {
+                  mutexUserDation.unlock();
+                  throw;
+               }
             } else {
+               mutexUserDation.unlock();
                throw;
             }
          }
+         mutexUserDation.unlock();
       }
 
    private:
@@ -209,6 +218,7 @@ namespace pearlrt {
       template<int S> void dationClose(const int  p, Fixed<S> * rst) {
          Fixed<S>* intRst = NULL;
 
+         mutexUserDation.lock();
          try {
             if (p & RST) {
                if (! rst) {
@@ -223,11 +233,18 @@ namespace pearlrt {
             internalDationClose(p);
          } catch (Signal &  s) {
             if (intRst != NULL) {
-               *intRst = (Fixed<31>)s.whichRST();
+               try {
+                  *intRst = (Fixed<31>)s.whichRST();
+               } catch (Signal & s) {
+                  mutexUserDation.unlock();
+                  throw;
+               }
             } else {
+               mutexUserDation.unlock();
                throw;
             }
          }
+         mutexUserDation.unlock();
       }
 
       /**
