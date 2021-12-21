@@ -795,7 +795,7 @@ implements SmallPearlVisitor<Void> {
                     if (attr != null) {
                         if (!attr.getType().equals(m_typeDation.getTypeOfTransmissionAsType())) {
                             ErrorStack.enter(ioDataList.ioListElement(i).expression());
-                            ErrorStack.add("type mismatch: allowed: "
+                            ErrorStack.add("type mismatch: required: "
                                     + m_typeDation.getTypeOfTransmission() + " got "
                                     + attr.getType().toString());
                             ErrorStack.leave();

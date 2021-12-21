@@ -1332,17 +1332,17 @@ public class CommonUtils {
                     "CommunUtils.getTypeDefinitionForReferenceType: missing alternative STRUCT");
         } else if (typeReference.typeDation() != null) {
             type = new TypeDation();
-        } else if (typeReference.typeReferenceSemaType() != null) {
+        } else if (typeReference.typeSema() != null) {
             type = new TypeSemaphore();
-        } else if (typeReference.typeReferenceBoltType() != null) {
+        } else if (typeReference.typeBolt() != null) {
             type = new TypeBolt();
             //      } else if (typeReference.typeProcedure() != null) {
             // typeProcedure not defined yet
-        } else if (typeReference.typeReferenceTaskType() != null) {
+        } else if (typeReference.typeTask() != null) {
             type = new TypeTask();
-        } else if (typeReference.typeReferenceInterruptType() != null) {
+        } else if (typeReference.typeInterrupt() != null) {
             type = new TypeInterrupt();
-        } else if (typeReference.typeReferenceSignalType() != null) {
+        } else if (typeReference.typeSignal() != null) {
             type = new TypeSignal();
         } else if (typeReference.typeRefChar() != null) {
             //        type = new TypeRefChar();

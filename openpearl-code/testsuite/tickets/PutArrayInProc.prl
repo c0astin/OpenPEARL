@@ -5,11 +5,12 @@ SYSTEM;
 PROBLEM;
   SPC so DATION OUT SYSTEM ALPHIC;
   DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
-
+  SPC y(,) FIXED GLOBAL (xx);
 t: TASK MAIN;
    DCL f(2,4) FIXED INIT(1,2,3);
    OPEN stdout;
    PUT f TO stdout BY 4F(5),SKIP;
+   PUT y TO stdout BY 4F(5),SKIP;
    CALL p(f);
    CLOSE stdout;
 END;
@@ -17,6 +18,7 @@ END;
 p: PROC(x(,) FIXED IDENT);
    PUT 'dim: ',1 LWB x, 1 UPB x, 2 LWB x, 2 UPB x TO stdout BY A,4F(5),SKIP;
    PUT x TO stdout BY 4F(6), SKIP;
+   PUT y TO stdout BY 4F(6), SKIP;
 END;
 MODEND;
 

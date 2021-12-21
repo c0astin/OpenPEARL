@@ -226,12 +226,16 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
 
         if (ctx.expression() != null) {
             ASTAttribute tsk = m_ast.lookup(ctx.expression());
+            TypeDefinition t = tsk.getType();
             se = tsk.getSymbolTableEntry();
-            if (!(se instanceof TaskEntry)) {
+            if (t instanceof TypeReference) {
+                t = ((TypeReference)t).getBaseType();
+            }
+            if (!(t instanceof TypeTask)) {
                 ErrorStack.add(
                         ctx.expression(),
                         "TASK",
-                        "need task -- got " + se.getClass().getSimpleName());
+                        "need TASK -- got " + t);
             }
         }
         ASTAttribute expressionResult = new ASTAttribute(type, se);
@@ -250,12 +254,16 @@ public class ExpressionTypeVisitor extends SmallPearlBaseVisitor<Void>
 
         if (ctx.expression() != null) {
             ASTAttribute tsk = m_ast.lookup(ctx.expression());
+            TypeDefinition t = tsk.getType();
+            if (t instanceof TypeReference) {
+                t = ((TypeReference)t).getBaseType();
+            }
             se = tsk.getSymbolTableEntry();
-            if (!(se instanceof TaskEntry)) {
+            if (!(t instanceof TypeTask)) {
                 ErrorStack.add(
                         ctx.expression(),
                         "PRIO",
-                        "need task -- got " + se.getClass().getSimpleName());
+                        "requires TASK -- got " + t);
             }
         }
         ASTAttribute expressionResult = new ASTAttribute(type, se);

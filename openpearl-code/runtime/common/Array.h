@@ -196,15 +196,33 @@ namespace pearlrt {
         va_end(args);
         return (result);
       }
-      
+     
+      /**
+      retrieve the array descriptor 
+
+      \returns the array descriptor of the array
+      */ 
       ArrayDescriptor<0> * getDescriptor() {
           return descriptor;
       }
 
-      
+     /**
+     retrieve the pointer to the storage of the array
 
+     \returns the starting address of the array data
+     */
+     void* getDataPtr() {
+         return data;
+     }
 
-
+     /**
+     calculate to total number of elements of the array
+     \returns the total number of elements of thearray
+     */
+     size_t getTotalNbrOfElements() {
+         return descriptor->lim[0].size*
+                (descriptor->lim[0].high - descriptor->lim[0].low + 1);
+     }
    };
 
 }

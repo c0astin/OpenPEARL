@@ -15,9 +15,9 @@ ticket334: TASK MAIN;
      OPEN table BY ANY,IDF('file1.txt');
      FOR i TO 10 REPEAT
        FOR j TO 10 REPEAT
-          f = (10*i) + j;
-          WRITE f TO table BY POS(i,j);
-          !WRITE (10*i)+j TO table BY POS(i,j);
+          !f = (10*i) + j;
+          !WRITE f TO table BY POS(i,j);
+          WRITE (10*i)+j TO table BY POS(i,j);
        END;
      END;
      CLOSE table;

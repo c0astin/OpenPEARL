@@ -1278,9 +1278,9 @@ implements SmallPearlVisitor<Void> {
     }
 
     @Override
-    public Void visitTypeReferenceTaskType(SmallPearlParser.TypeReferenceTaskTypeContext ctx) {
+    public Void visitTypeTask(SmallPearlParser.TypeTaskContext ctx) {
         Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceTaskType:ctx"
+                "SymbolTableVisitor:visitTypeTask:ctx"
                         + CommonUtils.printContext(ctx));
 
         m_type = new TypeTask();
@@ -1288,9 +1288,9 @@ implements SmallPearlVisitor<Void> {
     }
 
     @Override
-    public Void visitTypeReferenceSemaType(SmallPearlParser.TypeReferenceSemaTypeContext ctx) {
+    public Void visitTypeSema(SmallPearlParser.TypeSemaContext ctx) {
         Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceSemaType:ctx"
+                "SymbolTableVisitor:visitTypeSema:ctx"
                         + CommonUtils.printContext(ctx));
 
         m_type = new TypeSemaphore();
@@ -1298,9 +1298,9 @@ implements SmallPearlVisitor<Void> {
     }
 
     @Override
-    public Void visitTypeReferenceBoltType(SmallPearlParser.TypeReferenceBoltTypeContext ctx) {
+    public Void visitTypeBolt(SmallPearlParser.TypeBoltContext ctx) {
         Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceBoltType:ctx"
+                "SymbolTableVisitor:visitTypeBolt:ctx"
                         + CommonUtils.printContext(ctx));
 
         m_type = new TypeBolt();
@@ -1329,22 +1329,24 @@ implements SmallPearlVisitor<Void> {
         return null;
     }
 
+/*    
     @Override
-    public Void visitTypeReferenceProcedureType(
-            SmallPearlParser.TypeReferenceProcedureTypeContext ctx) {
+    public Void visitTypeProcedure(
+            SmallPearlParser.TypeProcedureContext ctx) {
         Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceProcedureType:ctx"
+                "SymbolTableVisitor:visitTypeProcedure:ctx"
                         + CommonUtils.printContext(ctx));
 
         m_type = new TypeProcedure();
         return null;
     }
-
+*/
+    
     @Override
-    public Void visitTypeReferenceInterruptType(
-            SmallPearlParser.TypeReferenceInterruptTypeContext ctx) {
+    public Void visitTypeInterrupt(
+            SmallPearlParser.TypeInterruptContext ctx) {
         Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceInterruptType:ctx"
+                "SymbolTableVisitor:visitTypeInterrupt:ctx"
                         + CommonUtils.printContext(ctx));
 
         m_type = new TypeInterrupt();
@@ -1352,9 +1354,9 @@ implements SmallPearlVisitor<Void> {
     }
 
     @Override
-    public Void visitTypeReferenceSignalType(SmallPearlParser.TypeReferenceSignalTypeContext ctx) {
+    public Void visitTypeSignal(SmallPearlParser.TypeSignalContext ctx) {
         Log.debug(
-                "SymbolTableVisitor:visitTypeReferenceSignalType:ctx"
+                "SymbolTableVisitor:visitTypeSignal:ctx"
                         + CommonUtils.printContext(ctx));
 
         m_type = new TypeSignal();

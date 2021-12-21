@@ -492,12 +492,12 @@ typeReference :
 	| typeStructure 
 	| typeDation
 	| typeProcedure		
-	| typeReferenceTaskType				//<< should become renamed to typeTask as well as taskType -> typeTask
-	| typeReferenceSemaType
-	| typeReferenceBoltType
-	| typeReferenceInterruptType		// << should become renamed to interruptType
-	| typeReferenceSignalType			// << should become renamed to signalType
-	| typeRefChar						// should stay typeRefChar; since type_char is in simpleType
+	| typeTask				
+	| typeSema
+	| typeBolt
+	| typeInterrupt		   
+	| typeSignal			
+	| typeRefChar						
 	)
 	;
 
@@ -523,7 +523,7 @@ typeReferences
 typeReferenceSimpleType
     : assignmentProtection? simpleType
     ;
-*/
+
 
 typeReferenceStructuredType
     :
@@ -532,28 +532,31 @@ typeReferenceStructuredType
 typeReferenceDationType
     :
     ;
+*/
 
-typeReferenceSemaType
+typeSema
     : 'SEMA'
     ;
 
-typeReferenceBoltType
+typeBolt
     : 'BOLT'
     ;
 
-typeReferenceProcedureType
+/* already defines without globalAttribute 
+typeProcedure
     : ('PROCEDURE' | 'PROC' )  listOfFormalParameters? resultAttribute? globalAttribute?
     ;
+*/
 
-typeReferenceTaskType
+typeTask
     : 'TASK'
     ;
 
-typeReferenceInterruptType
+typeInterrupt
     : ( 'INTERRUPT' | 'IRPT' )
     ;
 
-typeReferenceSignalType
+typeSignal
     : 'SIGNAL'
     ;
 
@@ -663,9 +666,16 @@ parameterType :
     | typeDation
     | typeReference
     | typeStructure
+    | typeRealTimeObject
     ;
 
-
+typeRealTimeObject :
+      typeSema
+    | typeBolt
+    | typeInterrupt
+    | typeSignal
+    ;
+    
 ////////////////////////////////////////////////////////////////////////////////
 // DisableStatement ::=
 //   DISABLE Name§Interrupt;

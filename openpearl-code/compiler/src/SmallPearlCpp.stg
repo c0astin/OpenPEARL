@@ -419,6 +419,10 @@ interrupt_type() ::= <%
 pearlrt::Interrupt*
 %>
 
+signal_type() ::= <%
+ SIGNAL not available, yet
+%>
+ 
 dation_type(isAlphic, isType, isBasic) ::= <%
 <if(isAlphic)>pearlrt::DationPG
 <else>
@@ -518,7 +522,7 @@ task_control_statement(code) ::= <<
 >>
 
 task_start(task,Condition,startCondition,priority,at,after,all,until,during,when) ::= <<
-    <TaskName(task)>.activate( me,
+    <task>.activate( me,
 	     <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
 	    /* prio   */  pearlrt::Prio(<priority>),
 	    /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
@@ -532,7 +536,7 @@ task_start(task,Condition,startCondition,priority,at,after,all,until,during,when
 
 task_terminate(task) ::= <%
 	<if(task)>
-		<TaskName(task)>.terminate(me);
+		<task>.terminate(me);
 	<else>
 		me->terminate(me);
 	<endif>
@@ -550,7 +554,7 @@ TaskResume(Condition,at,after,when) ::= <<
 
 task_prevent(task) ::= <<
 	<if(task)>
-		<TaskName(task)>.prevent(me);
+		<task>.prevent(me);
 	<else>
 		me->prevent(me);
 	<endif>
@@ -558,7 +562,7 @@ task_prevent(task) ::= <<
 
 task_suspend(task) ::= <<
 	<if(task)>
-		<TaskName(task)>.suspend(me);
+		<task>.suspend(me);
 	<else>
 		me->suspend(me);
 	<endif>
@@ -566,7 +570,7 @@ task_suspend(task) ::= <<
 
 TaskContinuation(task,Condition,priority,at,after,when) ::= <<
 <if(task)>
-    <TaskName(task)>.cont( me,
+    <task>.cont( me,
                   <if(Condition)><Condition:{cond|pearlrt::Task::<cond>}; separator=" | "><else>0<endif>,
            /* prio   */  pearlrt::Prio(<priority>),
            /* at     */  <if(at)><at><else>pearlrt::Clock()<endif>,
@@ -589,7 +593,7 @@ taskAddress(taskName) ::= <%
 %>
 
 taskPrio(taskName) ::= <%
-<if(taskName)>(<TaskName(taskName)>.getPrio())<else>(me->getPrio())<endif>
+<if(taskName)>(<taskName>.getPrio())<else>(me->getPrio())<endif>
 %>
 
 expression(code,id,bitstring,operator,functionCall) ::= <%
@@ -841,16 +845,20 @@ variable is the address of the data storage
 type     is the type of the data
 nbr_of_elements is the number of (array-)elements to be transmitted
 lbw,upb   defines a variable character selection limits .CHAR(lwb,upb)
+isArray  marks taht a complete array shoul be transmitted
 */
-iojob_data_item(variable,type,size,nbr_of_elements,lwb,upb) ::= <<
+iojob_data_item(variable,type,size,nbr_of_elements,lwb,upb,isArray) ::= <<
 {
    .dataType={pearlrt::IODataEntry::<type>,<size>},
-   .dataPtr={.outData=&<variable>},
-   <if(lwb)>
-   .param1={.numberOfElements = <nbr_of_elements>},
-   .param2={.charSliceLimits={<lwb>,<upb>}}
+   <if(isArray)>
+   .dataPtr={.outData=<variable>.getDataPtr()},
+   .param1={.numberOfElements = <variable>.getTotalNbrOfElements()}
    <else>
-   .param1={.numberOfElements = <nbr_of_elements>}
+   .dataPtr={.outData=&<variable>},
+   .param1={.numberOfElements = <nbr_of_elements>},
+   <endif>
+   <if(lwb)>
+   .param2={.charSliceLimits={<lwb>,<upb>}}
    <endif>
 }
 >>

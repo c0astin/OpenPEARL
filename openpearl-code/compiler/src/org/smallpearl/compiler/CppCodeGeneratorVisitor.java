@@ -81,6 +81,7 @@ implements SmallPearlVisitor<ST> {
     public enum Type {
         BIT, CHAR, FIXED
     }
+    private LinkedList<FormalParameter> m_formalParameters;
 
     public CppCodeGeneratorVisitor(String sourceFileName, String filename, int verbose,
             boolean debug, SymbolTableVisitor symbolTableVisitor,
@@ -1561,18 +1562,41 @@ System.out.println("CppCg@487 called");
         ASTAttribute attr = m_ast.lookup(ctx);
         SymbolTableEntry se = attr.getSymbolTableEntry();
         if (se != null) {
+           
             stmt.add("taskName", getUserVariableWithoutNamespace(se.getName()));
         }
         return stmt;
     }
 
+    /*
+     *     private void setTaskNameToST(ST st, NameContext ctx) {
+        if (ctx != null) {
+            ASTAttribute attr = m_ast.lookup(ctx);
+            ST tsk = visitAndDereference(ctx);
+            if (attr.getSymbolTableEntry() instanceof FormalParameter) {
+                st.add("task", tsk);
+            } else {
+                ST taskName = m_group.getInstanceOf("TaskName");
+                taskName.add("name",tsk);
+                st.add("task", taskName);
+            }
+        }
+    }
+    
+     */
     @Override
     public ST visitPrioFunction(SmallPearlParser.PrioFunctionContext ctx) {
         ST stmt = m_group.getInstanceOf("taskPrio");
         ASTAttribute attr = m_ast.lookup(ctx);
         SymbolTableEntry se = attr.getSymbolTableEntry();
-        if (se != null) {
-            stmt.add("taskName", getUserVariableWithoutNamespace(se.getName()));
+        if (se instanceof TaskEntry) {
+            ST tsk = m_group.getInstanceOf("TaskName");
+            ST un = m_group.getInstanceOf("user_variable");
+            un.add("name", se.getName());
+            tsk.add("name",  un);
+            stmt.add("taskName",tsk);
+        } else {
+            stmt.add("taskName", visitAndDereference(ctx.expression()));
         }
         return stmt;
     }
@@ -2135,9 +2159,13 @@ System.out.println("CppCg@487 called");
         if (entry instanceof org.smallpearl.compiler.SymbolTable.ProcedureEntry) {
             stOfName = m_group.getInstanceOf("FunctionCall");
             stOfName.add("fromns",fromModule);
+
+           
             
             if (attr.isFunctionCall() || (ctx.listOfExpression() != null
                     && ctx.listOfExpression().expression().size() > 0)) {
+ 
+                m_formalParameters = ((ProcedureEntry)(attr.getSymbolTableEntry())).getFormalParameters(); 
                 stOfName.add("callee", getUserVariableWithoutNamespace(ctx.ID().getText()));
  
 
@@ -2752,7 +2780,7 @@ System.out.println("CppCg@487 called");
     public ST visitTaskStart(SmallPearlParser.TaskStartContext ctx) {
         ST st = m_group.getInstanceOf("task_start");
 
-        st.add("task", visitAndDereference(ctx.name())); //ctx.ID().toString());
+        setTaskNameToST(st,ctx.name());
 
         startConditionToST(st, ctx.startCondition());
 
@@ -2788,7 +2816,7 @@ System.out.println("CppCg@487 called");
         ST stmt = m_group.getInstanceOf("task_terminate");
 
         if (ctx.name() != null) {
-            stmt.add("task", visitAndDereference(ctx.name()));
+            setTaskNameToST(stmt,ctx.name());
         }
 
         return stmt;
@@ -2799,7 +2827,7 @@ System.out.println("CppCg@487 called");
         ST stmt = m_group.getInstanceOf("task_suspend");
 
         if (ctx.name() != null) {
-            stmt.add("task", visitAndDereference(ctx.name()));
+            setTaskNameToST(stmt,ctx.name());
         }
 
         return stmt;
@@ -2809,8 +2837,9 @@ System.out.println("CppCg@487 called");
     public ST visitTaskContinuation(SmallPearlParser.TaskContinuationContext ctx) {
         ST stmt = m_group.getInstanceOf("TaskContinuation");
 
+        
         if (ctx.name() != null) {
-            stmt.add("task", visitAndDereference(ctx.name()));
+            setTaskNameToST(stmt,ctx.name());
         }
 
         startConditionToST(stmt, ctx.startCondition());
@@ -2833,6 +2862,20 @@ System.out.println("CppCg@487 called");
         return st;
     }
 
+    private void setTaskNameToST(ST st, NameContext ctx) {
+        if (ctx != null) {
+            ASTAttribute attr = m_ast.lookup(ctx);
+            ST tsk = visitAndDereference(ctx);
+            if (attr.getSymbolTableEntry() instanceof FormalParameter) {
+                st.add("task", tsk);
+            } else {
+                ST taskName = m_group.getInstanceOf("TaskName");
+                taskName.add("name",tsk);
+                st.add("task", taskName);
+            }
+        }
+    }
+    
     private void startConditionToST(ST st, StartConditionContext ctx) {
         if (ctx != null) {
 
@@ -2862,7 +2905,7 @@ System.out.println("CppCg@487 called");
         ST stmt = m_group.getInstanceOf("task_prevent");
 
         if (ctx.name() != null) {
-            stmt.add("task", visitAndDereference(ctx.name()));
+            setTaskNameToST(stmt,ctx.name());
         }
 
         return stmt;
@@ -2941,6 +2984,9 @@ System.out.println("CppCg@487 called");
             ST sem = visitAndDereference(ctx.name(i));
 
             ASTAttribute attr = m_ast.lookup(ctx.name(i));
+            if (attr.getSymbolTableEntry() instanceof FormalParameter) {
+                listIsConstant = false;
+            }
             if (attr.getVariable().isSpecified()) {
                 listIsConstant = false;
             }
@@ -3322,8 +3368,10 @@ System.out.println("CppCg@487 called");
                     if (attr.m_type instanceof TypeArray) {
                         TypeArray ta = (TypeArray) attr.m_type;
                         ST data = getIojobDataItem(ta.getBaseType());
-                        data.add("variable", "data_" + ctx.ioListElement(i).getText());
-                        data.add("nbr_of_elements", ta.getTotalNoOfElements());
+                        data.add("isArray", 1);
+                        VariableEntry ve = attr.getVariable();
+                        data.add("variable", visitAndDereference(ctx.ioListElement(i).expression()));
+                        //data.add("nbr_of_elements", ta.getTotalNoOfElements());
 
                         dataList.add("dataelement", data);
                         //} else if (attr.m_type instanceof TypeStruct) {
@@ -3965,6 +4013,8 @@ System.out.println("CppCg@487 called");
         ST stmt = m_group.getInstanceOf("CallStatement");
 
         SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID().toString());
+        m_formalParameters = ((ProcedureEntry)se).getFormalParameters();
+        
         String fromns = se.getGlobalAttribute();
         stmt.add("callee", ctx.ID());
         if (fromns != null && fromns.equals(m_module.getName())) {
@@ -3986,7 +4036,7 @@ System.out.println("CppCg@487 called");
         // let's see if we must pass an array
         if (ctx.expression() != null) {
             for (int i = 0; i < ctx.expression().size(); i++) {
-                addParameter2StOfProcParamList(stmt, ctx.expression(i));
+                addParameter2StOfProcParamList(stmt, ctx.expression(i),m_formalParameters.get(i));
             }
         }
         return stmt;
@@ -4004,7 +4054,7 @@ System.out.println("CppCg@487 called");
      * @param stmt       the ST context which holds all parameters
      * @param expression the current parameter
      */
-    private void addParameter2StOfProcParamList(ST stmt, ExpressionContext expression) {
+    private void addParameter2StOfProcParamList(ST stmt, ExpressionContext expression, FormalParameter formalParameter) {
         boolean treatArray = false;
         SymbolTableEntry se = null;
         ASTAttribute attr = null;
@@ -4064,7 +4114,11 @@ System.out.println("CppCg@487 called");
                 m_tempVariableList.lastElement().add("variable", temp);
             } else {
                 ST param = m_group.getInstanceOf("ActualParameters");
-                param.add("ActualParameter", visitAndDereference(expression));
+                if (formalParameter.getType() instanceof TypeReference) {
+                    param.add("ActualParameter", visit(expression)); 
+                } else {
+                   param.add("ActualParameter", visitAndDereference(expression));
+                }
                 stmt.add("ActualParameter", param);
             }
         }
@@ -4075,7 +4129,7 @@ System.out.println("CppCg@487 called");
 
         if (parameters != null) {
             for (int i = 0; i < parameters.size(); i++) {
-                addParameter2StOfProcParamList(stmt, parameters.get(i));
+                addParameter2StOfProcParamList(stmt, parameters.get(i),m_formalParameters.get(i));
             }
         }
 
@@ -4943,6 +4997,7 @@ System.out.println("CppCg@487 called");
                     } else if (ve.getType() instanceof TypeStructure) {
                         treatStructure = true;
                         typeName = ((TypeStructure) ve.getType()).getStructureName();
+
                     }
                 }
 
@@ -4983,6 +5038,18 @@ System.out.println("CppCg@487 called");
                 st.add("type", visitTypeReference(ctx.typeReference()));
             } else if (c instanceof SmallPearlParser.TypeStructureContext) {
                 st.add("type", visitTypeStructure(ctx.typeStructure()));
+            } else if (c instanceof SmallPearlParser.TypeRealTimeObjectContext) {
+                TypeRealTimeObjectContext rto = (TypeRealTimeObjectContext)c;
+                if (rto.typeBolt() != null) {
+                    st.add("type", visitTypeBolt(rto.typeBolt()));
+                } else if (rto.typeSema() != null) {
+                   st.add("type", visitTypeSema(rto.typeSema()));
+                } else if (rto.typeInterrupt() != null) {
+                   st.add("type", visitTypeInterrupt(rto.typeInterrupt()));
+// remove until SIGNAL implementation starts                
+//            } else if (c instanceof SmallPearlParser.TypeSignalContext) {
+//                st.add("type", visitTypeSignal((TypeSignalContext)c));
+                }
             } else {
                 System.err.println("CppCodeGen:visitParameterType: untreated type "
                         + c.getClass().getCanonicalName());
@@ -4991,7 +5058,36 @@ System.out.println("CppCg@487 called");
 
         return st;
     }
+   
+    @Override
+    public ST visitTypeTask(SmallPearlParser.TypeTaskContext ctx) {
+        ST st = m_group.getInstanceOf("task_type");
+        return st;
+    }
+    
+    @Override
+    public ST visitTypeBolt(SmallPearlParser.TypeBoltContext ctx) {
+        ST st = m_group.getInstanceOf("bolt_type");
+        return st;
+    }
 
+    @Override
+    public ST visitTypeSema(SmallPearlParser.TypeSemaContext ctx) {
+        ST st = m_group.getInstanceOf("sema_type");
+        return st;
+    }
+    
+    @Override
+    public ST visitTypeInterrupt(SmallPearlParser.TypeInterruptContext ctx) {
+        ST st = m_group.getInstanceOf("interrupt_type");
+        return st;
+    }
+
+    @Override
+    public ST visitTypeSignal(SmallPearlParser.TypeSignalContext ctx) {
+        ST st = m_group.getInstanceOf("signal_type");
+        return st;
+    }
     @Override
     public ST visitProcedureBody(SmallPearlParser.ProcedureBodyContext ctx) {
         ST st = m_group.getInstanceOf("Body");
@@ -5555,6 +5651,11 @@ System.out.println("CppCg@487 called");
                     }
                 } else if (type instanceof TypeReference) {
                     type = ((TypeReference) type).getBaseType();
+                    if (!(type instanceof TypeStructure)) {
+                      lhs.add("expr", structureComponent.m_alias);
+                    } else {
+                        ErrorStack.addInternal(lctx, "CppCodeGen@5654","auto rereference of ref to struct not implemented");
+                    }
                 } else if (type instanceof TypeStructure) {
                     struct = (TypeStructure) type;
                     ST structLHS = m_group.getInstanceOf("StructureComponent");

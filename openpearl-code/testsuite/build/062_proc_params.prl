@@ -1,6 +1,68 @@
 MODULE(proc_062);
 
 PROBLEM;
+!! Ticket 348 RT-Objects as parameters
+
+rt_001: PROC (x SEMA IDENT );
+   RELEASE x;
+END;
+
+rt_001a: PROC (x() SEMA IDENT );
+   RELEASE x(1);
+END;
+
+rt_002: PROC (x BOLT IDENT) ;
+   FREE x;
+END;
+
+! TASKs may not be passed
+! rt_003: PROC (x  TASK IDENT);
+!    CONTINUE x;
+! END;
+
+
+rt_004: PROC (x  INTERRUPT IDENT);
+   ENABLE x;
+END;
+
+! removed until SIGNAL imlementation starts
+! rt_005: PROC (x  SIGNAL IDENT);
+!    INDUCE x;
+! END;
+
+reft_001: PROC (x()  REF SEMA IDENT);
+   RELEASE x(1);
+END;
+
+reft_002: PROC (x REF BOLT) ;
+   DCL yy STRUCT [ a REF TASK, b FIXED ];
+   DCL rt REF TASK;
+!   yy.b = 1;
+!   yy.b = yy.b + 1;
+   reft_003(yy.a);
+   proc_002(yy.b);
+   FREE x;
+END;
+
+reft_003: PROC (x REF TASK);
+   DCL f FIXED;
+   DCL rt REF TASK;
+   CONTINUE T1;
+   CONTINUE x;
+   f = PRIO (T1);
+   f = PRIO (x);
+   reft_003(x);
+   reft_003(rt);
+!   reft_003(T1);
+
+END;
+
+reft_004: PROC (x  REF INTERRUPT );
+   ENABLE x;
+END;
+
+
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Procedure Declaration without parameters and return value
