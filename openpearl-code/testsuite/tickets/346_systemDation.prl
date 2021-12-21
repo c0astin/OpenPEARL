@@ -1,0 +1,7 @@
+MODULE(xx);
+SYSTEM;
+    so: StdOut;   
+PROBLEM;
+   SPC so DATION OUT ALPHIC;  ! // without SYSTEM 
+    DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+MODEND;
