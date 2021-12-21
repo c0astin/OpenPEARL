@@ -1,0 +1,56 @@
+MODULE(philoRef);
+SYSTEM;
+   con: Console;
+
+PROBLEM;
+   SPC con DATION INOUT SYSTEM ALPHIC;
+   DCL console DATION INOUT ALPHIC DIM(*,80) TFU FORWARD NOSTREAM CREATED(con);
+
+   DCL forks(5) SEMA PRESET(1,1,1,1,1);
+  
+philo: PROC(nbr FIXED, fork1 SEMA IDENT, fork2 SEMA IDENT) ;
+    REPEAT
+        PUT 'philo#',nbr,' thinks ...' TO console BY X(nbr*4),A,F(3),A,SKIP;
+        AFTER 0.3 SEC * nbr  RESUME;
+
+        PUT 'philo#',nbr,' gets hungry ...' TO console BY X(nbr*4),A,F(3),A,SKIP;
+        REQUEST fork1,fork2;
+        PUT 'philo#',nbr,' is eating ...' TO console BY X(nbr*4),A,F(3),A,SKIP;
+        AFTER 1 SEC RESUME;
+        RELEASE fork1,fork2;
+    END;
+END;
+
+main: TASK MAIN;
+    OPEN console;
+    ACTIVATE p1;
+    ACTIVATE p2;
+    ACTIVATE p3;
+    ACTIVATE p4;
+    ACTIVATE p5;
+END;
+
+p1: TASK;
+   CALL philo(1,forks(1),forks(2));
+END;
+
+p2: TASK;
+   CALL philo(2,forks(2),forks(3));
+END;
+
+p3: TASK;
+   CALL philo(3,forks(3),forks(4));
+END;
+
+p4: TASK;
+   CALL philo(4,forks(4),forks(5));
+END;
+
+p5: TASK;
+   CALL philo(5,forks(5),forks(1));
+END;
+
+
+MODEND;
+
+
