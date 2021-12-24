@@ -1,0 +1,695 @@
+/*
+ * [The "BSD license"]
+ * *  Copyright (c) 2012-2021 Marcel Schaible
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. The name of the author may not be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+package org.openpearl.compiler.SemanticAnalysis;
+
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.openpearl.compiler.*;
+import org.openpearl.compiler.SymbolTable.ModuleEntry;
+import org.openpearl.compiler.SymbolTable.SemaphoreEntry;
+import org.openpearl.compiler.SymbolTable.SymbolTable;
+import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
+import org.openpearl.compiler.SymbolTable.VariableEntry;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ 
+ * @author Marcel Schaible
+ * @version 1
+ *   <p><b>Description</b>
+ * current state
+ * <ol>
+ * <li>symbol table contains all defined and specified symbols
+ * <li>SymbolTableVisitor checks only initializers for type FIXED
+ * <li>all initializers are in the symbol table
+ * <li>for each expression we have an ASTAttribute
+ * <li>initializers of type identifier must be INV
+ * </ol>
+ * 
+ * Check initialisers for
+ * <ol>
+ * <li> fitting type
+ * </ol>
+ * 
+ * principle of operation
+ * <ul>
+ * <li>at each task,proc,block,loop we fetch declarations from the symbol table
+ * <li>via the context information in the SymbolTableEntry we can check for initializers
+ * <li>via the ASTAttributes from the ExpressionTypeVisitor, the type compatibility becomes checked
+ * </ul>
+ *    
+ *    Problems:
+ *    <ol>
+ *    <li>for TypeStructure we need an iterator over all component elements, even with nested structures
+ *    <li>we should not extend the initializer to the size of the variable to safe space in the C++-code - 
+ *       especially if CHAR-Variables become initialized like x CHAR(10) INIT (' '); 
+ *    </ol>
+ */
+
+
+public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
+        implements OpenPearlVisitor<Void> {
+
+    private int m_verbose;
+    private boolean m_debug;
+    private SymbolTableVisitor m_symbolTableVisitor;
+    private SymbolTable m_symboltable;
+    private SymbolTable m_currentSymbolTable;
+    private AST m_ast;
+    private ArrayList<String> m_identifierDenotationList = null;
+
+    
+    public CheckVariableDeclaration(String sourceFileName, int verbose, boolean debug,
+            SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
+            AST ast) {
+
+        m_debug = debug;
+        m_verbose = verbose;
+        m_symbolTableVisitor = symbolTableVisitor;
+        m_symboltable = symbolTableVisitor.symbolTable;
+        m_currentSymbolTable = m_symboltable;
+        m_ast = ast;
+
+        if (m_verbose > 0) {
+            System.out.println("    Check Variable Declaration");
+        }
+        List<VariableEntry> listOfVariables = m_symboltable.getAllVariableDeclarations();
+        for (VariableEntry v : listOfVariables) {
+            
+            if (v.getInitializer() != null) {
+                checkInitializer(v);
+            }
+        }
+    }
+    
+    /* simple implementation without nested structure components and no arrays as structure components */
+    private int m_componentIndex;
+    private TypeStructure m_typeStructure;
+    
+    private TypeDefinition getFirstStructureComponentElement (TypeStructure ts){
+        m_componentIndex = 0;
+        m_typeStructure = ts;
+        TypeDefinition t = m_typeStructure.getStructureComponentByIndex(m_componentIndex).m_type;
+        m_componentIndex ++;
+        return t;
+    }
+    
+    private TypeDefinition getNextStructureComponentElement (){
+        if (m_componentIndex < m_typeStructure.getTotalNoOfElements()) {
+            TypeDefinition t = m_typeStructure.getStructureComponentByIndex(m_componentIndex).m_type;
+            m_componentIndex ++;
+            return t;
+        }
+        return null;
+    }
+    
+    private void checkInitializer(VariableEntry v) {
+        if (v.getType() instanceof TypeArray) {
+            TypeArray ta = (TypeArray)v.getType();
+            if (ta.getBaseType() instanceof TypeStructure) {
+                ErrorStack.addInternal(v.getCtx(), "INIT ARRAY", "STRUCT initializer not implemented yet");
+
+            } else if (isScalarType(ta.getBaseType())) {
+                TypeDefinition baseType = ta.getBaseType();    
+                ArrayOrStructureInitializer asi = (ArrayOrStructureInitializer)(v.getInitializer());
+                for (int i=0; i<asi.getInitElementList().size(); i++) {
+                    SimpleInitializer init = (SimpleInitializer)(asi.getInitElementList().get(i));
+                    checkTypes(baseType, init.getConstant(), init.getContext());
+                }
+            }
+        } else if (isScalarType(v.getType())) {
+            SimpleInitializer si = (SimpleInitializer )(v.getInitializer());
+            checkTypes(v.getType(), si.getConstant(),si.getContext());
+
+        } else if (v.getType() instanceof TypeStructure){
+            TypeDefinition t = getFirstStructureComponentElement((TypeStructure)(v.getType()));
+            int nextInitializer = 0;
+            ArrayOrStructureInitializer asi = (ArrayOrStructureInitializer)(v.getInitializer());
+            do {
+                SimpleInitializer init = (SimpleInitializer)(asi.getInitElementList().get(nextInitializer));
+                nextInitializer++;
+                checkTypes(t, init.getConstant(), init.getContext());
+                t=getNextStructureComponentElement();
+            } while (t!= null);
+
+
+        } else {
+            ErrorStack.addInternal(v.getCtx(),"CheckVariableDeclaration","missing alternative@137 for "+v.getType());
+        }
+
+    }
+    
+    /**
+     * 
+     * @param initializer is ether a simple initializer or a referenze initializer 
+     * @param baseType the base type of the variable
+     */
+    private void checkTypes(TypeDefinition typeOfVariable, ConstantValue initializer, ParserRuleContext ctx) {
+
+        if (isSimpleType(initializer.getType()) ) {
+             checkTypeCompatibility(typeOfVariable, initializer.getType(),ctx);
+        }
+            
+//        } else {
+//            ErrorStack.add(ctx, "CheckVariableDeclaration", "untreated type of initializer");
+//        }
+    }
+
+    private boolean checkTypeCompatibility(TypeDefinition typeOfVariable, TypeDefinition typeOfInitializer, ParserRuleContext ctxOfInitElement) {
+        
+        if (typeOfVariable instanceof TypeFixed && typeOfInitializer instanceof TypeFixed) {
+            if (((TypeFixed)typeOfVariable).getPrecision() < ((TypeFixed)typeOfInitializer).getPrecision()) {
+                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+            }
+        } else if (typeOfVariable instanceof TypeFloat && typeOfInitializer instanceof TypeFloat) {
+                if (((TypeFloat)typeOfVariable).getPrecision() < ((TypeFloat)typeOfInitializer).getPrecision()) {
+                    ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+                }
+        } else if (typeOfVariable instanceof TypeFloat && typeOfInitializer instanceof TypeFixed) {
+            if (((TypeFloat)typeOfVariable).getPrecision() < ((TypeFixed)typeOfInitializer).getPrecision()) {
+                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+            }
+        } else if (typeOfVariable instanceof TypeChar && typeOfInitializer instanceof TypeChar) {
+            if (((TypeChar)typeOfVariable).getPrecision() < ((TypeChar)typeOfInitializer).getPrecision()) {
+                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+            }
+        } else if (typeOfVariable instanceof TypeBit && typeOfInitializer instanceof TypeBit) {
+            if (((TypeBit)typeOfVariable).getPrecision() < ((TypeBit)typeOfInitializer).getPrecision()) {
+                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+            }
+        } else if (typeOfVariable instanceof TypeSemaphore) {
+           if (!(typeOfInitializer instanceof TypeFixed)) {  
+               ErrorStack.add(ctxOfInitElement,"type mismatch in PRESET",typeOfVariable +" with " + typeOfInitializer);
+           }
+        } else if (!typeOfVariable.equals(typeOfInitializer) ) {
+            ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+        } 
+        
+        return false;
+    }
+    
+//    private TypeDefinition getType(ConstantValue c) {
+//        if (c instanceof ConstantFixedValue) {
+//            return (new TypeFixed ( ((ConstantFixedValue)c).getPrecision()));
+//        }
+//        if (c instanceof ConstantFloatValue) {
+//            return (new TypeFloat ( ((ConstantFloatValue)c).getPrecision()));
+//        }
+//        if (c instanceof ConstantCharacterValue) {
+//            return (new TypeChar( ((ConstantCharacterValue)c).getLength()));
+//        }        
+//        if (c instanceof ConstantBitValue) {
+//            return (new TypeBit ( ((ConstantBitValue)c).getLength()));
+//        }
+//        if (c instanceof ConstantDurationValue) {
+//            return new TypeDuration();
+//        }
+//        if (c instanceof ConstantClockValue) {
+//            return new TypeClock();
+//        }
+//        ErrorStack.addInternal(null, "CheckVariableDeclaration", "untreated type of constant@143");
+//        return null;
+//    }
+    
+    private boolean isSimpleType(TypeDefinition t) {
+        if (t instanceof TypeFixed ||
+                t instanceof TypeFloat ||
+                t instanceof TypeChar ||
+                t instanceof TypeBit ||
+                t instanceof TypeDuration ||
+                t instanceof TypeClock ) {
+            return true;
+        }
+        return false;
+    }
+    
+    private boolean isScalarType(TypeDefinition t) {
+        if (t instanceof TypeFixed ||
+                t instanceof TypeFloat ||
+                t instanceof TypeChar ||
+                t instanceof TypeBit ||
+                t instanceof TypeDuration ||
+                t instanceof TypeClock ||
+                t instanceof TypeSemaphore ||
+                t instanceof TypeBolt || 
+                t instanceof TypeReference) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Void visitModule(OpenPearlParser.ModuleContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Variable Declaration: visitModule");
+        }
+
+        org.openpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry =
+                m_currentSymbolTable.lookupLocal(ctx.nameOfModuleTaskProc().ID().getText());
+        m_currentSymbolTable = ((ModuleEntry) symbolTableEntry).scope;
+        visitChildren(ctx);
+        m_currentSymbolTable = m_currentSymbolTable.ascend();
+        return null;
+    }
+
+    @Override
+    public Void visitProcedureDeclaration(OpenPearlParser.ProcedureDeclarationContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Variable Declaration: visitProcedureDeclaration");
+        }
+
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+        return null;
+    }
+
+    @Override
+    public Void visitProcedureBody(OpenPearlParser.ProcedureBodyContext ctx) {
+        if (ctx != null && ctx.children != null) {
+            for (ParseTree c : ctx.children) {
+                if (c instanceof OpenPearlParser.VariableDeclarationContext) {
+                    visitVariableDeclaration(
+                            (OpenPearlParser.VariableDeclarationContext) c);
+                } else if (c instanceof OpenPearlParser.StatementContext) {
+                    visitStatement((OpenPearlParser.StatementContext) c);
+//                } else if (c instanceof OpenPearlParser.DationDeclarationContext) {
+//                    OpenPearlParser.DationDeclarationContext declctx =
+//                            (OpenPearlParser.DationDeclarationContext) c;
+//                    throw new DationDeclarationNotAllowedHereException(declctx.getText(),
+//                            declctx.start.getLine(), declctx.start.getCharPositionInLine());
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitTaskDeclaration(OpenPearlParser.TaskDeclarationContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Variable Declaration: visitTaskDeclaration");
+        }
+
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        m_currentSymbolTable = m_currentSymbolTable.ascend();
+        return null;
+    }
+
+    @Override
+    public Void visitBlock_statement(OpenPearlParser.Block_statementContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Variable Declaration: visitBlock_statement");
+        }
+
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+        return null;
+    }
+
+    @Override
+    public Void visitLoopStatement(OpenPearlParser.LoopStatementContext ctx) {
+        if (m_debug) {
+            System.out.println("Semantic: Check Variable Declaration: visitLoopStatement");
+        }
+
+        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        visitChildren(ctx);
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+        return null;
+    }
+
+    @Override
+    public Void visitVariableDeclaration(
+            OpenPearlParser.VariableDeclarationContext ctx) {
+        if (ctx != null) {
+            for (int i = 0; i < ctx.variableDenotation().size(); i++) {
+                visitVariableDenotation(ctx.variableDenotation().get(i));
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitVariableDenotation(OpenPearlParser.VariableDenotationContext ctx) {
+        List<OpenPearlParser.InitElementContext> initElements = null;
+        m_identifierDenotationList = getIdentifierDenotation(ctx.identifierDenotation());
+
+        // all identifier have the same type --> first element to retrieve the initialiser-list
+        if (ctx.semaDenotation() != null) {
+            if (ctx.semaDenotation().preset() != null) {
+                initElements = ctx.semaDenotation().preset().initElement();
+            }
+        } else if (ctx.problemPartDataAttribute() != null) {
+            if (ctx.problemPartDataAttribute().initialisationAttribute() != null) {
+                initElements =
+                        ctx.problemPartDataAttribute().initialisationAttribute().initElement();
+            }
+        }
+        if (initElements == null) {
+            return null; // no initializer - nothing to do
+        }
+
+        // check required number of initializers and their type/value
+        int nextInitializer = 0;
+
+        int requiredNumberOfInitializers = 0;
+        for (String identifier : m_identifierDenotationList) {
+         
+            VariableEntry var = (VariableEntry) m_currentSymbolTable.lookup(identifier.toString());
+            if (nextInitializer >= initElements.size()) {
+                ErrorStack.add(var.getCtx(), "INIT", "no more initialisers");
+                return null;
+            }
+
+            TypeDefinition tVar = var.getType();
+            if (tVar instanceof TypeArray) {
+                requiredNumberOfInitializers = ((TypeArray) tVar).getTotalNoOfElements();
+
+                for (int i = 0; i < requiredNumberOfInitializers
+                        && nextInitializer < initElements.size(); i++) {
+                    ASTAttribute attr = m_ast.lookup(initElements.get(nextInitializer));
+                    checkTypes(initElements.get(nextInitializer), ((TypeArray) tVar).getBaseType(),
+                            attr.m_type);
+                    nextInitializer++;
+                }
+            } else if (tVar instanceof TypeStructure) {
+                TypeStructure ts = (TypeStructure)tVar;
+                requiredNumberOfInitializers = ts.getTotalNoOfElements();
+                if (requiredNumberOfInitializers > initElements.size()) {
+                    ErrorStack.add(ctx, "INIT", "all STRUCT members must have initialiser");
+                }
+                if (requiredNumberOfInitializers < initElements.size()) {
+                    ErrorStack.add(ctx, "INIT", "too many initialisers");
+                }
+                nextInitializer+=requiredNumberOfInitializers;
+            } else if (tVar instanceof TypeReference) {
+                //TODO: Check for valid reference
+                TypeReference ts = (TypeReference)tVar;
+                nextInitializer++;
+            } else {
+                // scalar type
+                requiredNumberOfInitializers = 1;
+                ASTAttribute attr = m_ast.lookup(initElements.get(nextInitializer));
+                if (!attr.isReadOnly()) {
+                    ErrorStack.add(initElements.get(nextInitializer),"INIT","must be INV");
+                }
+                checkTypes(initElements.get(nextInitializer), tVar, attr.m_type);
+                nextInitializer++;
+            }
+        }
+
+        if (nextInitializer < initElements.size()) {
+            ErrorStack.add(ctx, "INIT", "too many initialisiers");
+        }
+
+        // check type of initializers --> all identifiers have the same type 
+        // => use first identifier
+
+        String firstIdentifier = m_identifierDenotationList.get(0).toString();
+        SymbolTableEntry se = m_currentSymbolTable.lookup(firstIdentifier);
+
+        if (se instanceof SemaphoreEntry) {
+            for (OpenPearlParser.InitElementContext i : initElements) {
+                ASTAttribute attr = m_ast.lookup(i);
+                TypeDefinition t = attr.getType();
+                if (t instanceof TypeFixed) {
+                    if (attr.getConstantFixedValue().getValue() < 0) {
+                        ErrorStack.add(i, "SEMA PRESET", "must be >= 0");
+                    }
+                } else {
+                    ErrorStack.add(i, "SEMA PRESET", "must be FIXED");
+                }
+                //System.out.println(se.getName() + " . " + t);
+            }
+        } else if (se instanceof VariableEntry) {
+            OpenPearlParser.InitElementContext i = initElements.get(0);
+            ASTAttribute attr = m_ast.lookup(i);
+            if (attr.getConstant() == null) {
+                System.out.println("preset with other variable: " + se.getName());
+            }
+
+        }
+
+
+        //        
+        //        if (ctx != null) {
+        //            for (ParseTree c : ctx.children) {
+        //                if (c instanceof OpenPearlParser.IdentifierDenotationContext) {
+        //                    
+        //                } else if (c instanceof OpenPearlParser.AllocationProtectionContext) {
+        //                } else if (c instanceof OpenPearlParser.TypeAttributeContext) {
+        //                    visitTypeAttribute((OpenPearlParser.TypeAttributeContext) c);
+        //                } else if (c instanceof OpenPearlParser.GlobalAttributeContext) {
+        //                } else if (c instanceof OpenPearlParser.InitialisationAttributeContext) {
+        //                    getInitialisationAttribute((OpenPearlParser.InitialisationAttributeContext) c);
+        //                }
+        //            }
+        //
+        //            if (initElementList != null
+        //                    && identifierDenotationList.size() != initElementList.size()) {
+        //                throw new NumberOfInitializerMismatchException(ctx.getText(), ctx.start.getLine(),
+        //                        ctx.start.getCharPositionInLine());
+        //            }
+        //
+        //            // TODO: Check Type compability!
+        //            for (int i = 0; i < identifierDenotationList.size(); i++) {
+        //                if (initElementList != null) {
+        //                    ConstantValue value = initElementList.get(i);
+        //                }
+        //            }
+        //        }
+
+        return null;
+    }
+
+    private void checkTypes(ParserRuleContext initElementContext, TypeDefinition tVar,
+            TypeDefinition m_type) {
+        String error = "type mismatch in INIT";
+      //  System.out.println("check types "+tVar+" <-> "+m_type);
+        if (tVar instanceof TypeFixed) {
+            if (!(m_type instanceof TypeFixed) ) {
+                ErrorStack.add(initElementContext, error,tVar+" := "+m_type);
+            } else {
+                if (tVar.getPrecision()< m_type.getPrecision()) {
+                    ErrorStack.add(initElementContext, error,tVar+" := "+m_type);
+                }
+            }
+        } else if (tVar instanceof TypeFloat) {
+            if (m_type instanceof TypeFloat) {
+                if (tVar.getPrecision()< m_type.getPrecision()) {
+                    ErrorStack.add(initElementContext, error,tVar+" := "+m_type);
+                }
+            } else if (m_type instanceof TypeFixed) {
+                if (tVar.getPrecision()< m_type.getPrecision()) {
+                    ErrorStack.add(initElementContext, error,tVar+" := "+m_type);
+                }
+            }
+        } else if (tVar instanceof TypeBit) {
+            if (m_type instanceof TypeBit) {
+                if (tVar.getPrecision()< m_type.getPrecision()) {
+                    ErrorStack.add(initElementContext, error,tVar+" := "+m_type);
+                }
+            } else {
+                ErrorStack.add(initElementContext, error,tVar+" := "+m_type);
+            }
+        } else if (tVar instanceof TypeChar) {
+            if (m_type instanceof TypeChar) {
+                if (tVar.getPrecision()< m_type.getPrecision()) {
+                    ErrorStack.add(initElementContext, error,tVar+" := "+m_type);
+                }
+            } else {
+                ErrorStack.add(initElementContext, error, tVar+ " := "+m_type);
+            }
+            
+        } else if (tVar instanceof TypeClock) {
+            if (!(m_type instanceof TypeClock)) {
+                ErrorStack.add(initElementContext, error,tVar+ " := "+m_type);
+            }
+        } else if (tVar instanceof TypeDuration) {
+            if (!(m_type instanceof TypeDuration)) {
+                ErrorStack.add(initElementContext, error,tVar+ " := "+m_type);
+            }
+        } else if (tVar instanceof TypeSemaphore) {
+            if (!(m_type instanceof TypeFixed)) {
+                ErrorStack.add(initElementContext, error,"SEMA PRESET "+m_type);
+            }
+        }
+    }
+
+    private ArrayList<String> getIdentifierDenotation(
+            OpenPearlParser.IdentifierDenotationContext ctx) {
+        ArrayList<String> identifierDenotationList = new ArrayList<String>();
+
+        if (ctx != null) {
+            for (int i = 0; i < ctx.identifier().size(); i++) {
+                identifierDenotationList.add(ctx.identifier(i).ID().toString());
+            }
+        }
+
+        return identifierDenotationList;
+    }
+
+    private ArrayList<Integer> getPreset(OpenPearlParser.PresetContext ctx) {
+        ArrayList<Integer> presetList = new ArrayList<Integer>();
+
+        if (ctx != null) {
+            for (int i = 0; i < ctx.initElement().size(); i++) {
+                Integer preset = Integer
+                        .parseInt(ctx.initElement(i).getText());
+                presetList.add(preset);
+            }
+        }
+
+        return presetList;
+    }
+
+    private ArrayList<ConstantValue> getInitialisationAttribute(
+            OpenPearlParser.InitialisationAttributeContext ctx) {
+        ArrayList<ConstantValue> initList = new ArrayList<ConstantValue>();
+        if (ctx != null) {
+            for (int i = 0; i < ctx.initElement().size(); i++) {
+                // TODO: expression
+                //                initList.add(getInitElement(ctx.initElement(i).constant()));
+            }
+        }
+
+        return null;
+    }
+
+    private ConstantValue getInitElement(OpenPearlParser.ConstantContext ctx) {
+        if (ctx != null) {
+            if (ctx.fixedConstant() != null) {
+                Integer value;
+                Integer sign = 1;
+
+                value = Integer.parseInt(ctx.fixedConstant().IntegerConstant().getText());
+
+                if (ctx.getChildCount() > 1) {
+                    if (ctx.getChild(0).getText().equals("-")) {
+                        value = -value;
+                    }
+                }
+
+                if (Integer.toBinaryString(Math.abs(value)).length() < 31) {
+                    value.toString();
+                } else {
+                    // value.toString() + "LL";
+                }
+            } else if (ctx.durationConstant() != null) {
+                visitDurationConstant(ctx.durationConstant());
+            } else if (ctx.timeConstant() != null) {
+                visitTimeConstant(ctx.timeConstant());
+            } else if (ctx.floatingPointConstant() != null) {
+                Double value = 0.0;
+                Integer sign = 1;
+
+                value = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+
+                if (ctx.getChildCount() > 1) {
+                    if (ctx.getChild(0).getText().equals("-")) {
+                        value = -value;
+                    }
+                }
+
+                return null;
+            } else if (ctx.stringConstant() != null) {
+                String s = ctx.stringConstant().StringLiteral().toString();
+
+                if (s.startsWith("'")) {
+                    s = s.substring(1, s.length());
+                }
+
+                if (s.endsWith("'")) {
+                    s = s.substring(0, s.length() - 1);
+                }
+            } else if (ctx.bitStringConstant() != null) {
+                // constant.add("BitStringConstant", getBitStringConstant(ctx));
+            }
+        }
+
+        return null;
+    }
+
+//    @Override
+//    public Void visitArrayVariableDeclaration(
+//            OpenPearlParser.ArrayVariableDeclarationContext ctx) {
+//        if (m_verbose > 0) {
+//            System.out
+//                    .println("Semantic: Check Variable Declaration: visitArrayVariableDeclaration");
+//        }
+//
+//        if (ctx != null) {
+//            for (ParseTree c : ctx.children) {
+//                if (c instanceof OpenPearlParser.ArrayDenotationContext) {
+//                    visitArrayDenotation((OpenPearlParser.ArrayDenotationContext) c);
+//                }
+//            }
+//        }
+//
+//        return null;
+//    }
+
+//    @Override
+//    public Void visitArrayDenotation(OpenPearlParser.ArrayDenotationContext ctx) {
+//        for (int i = 0; i < ctx.ID().size(); i++) {
+//            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().get(i).toString());
+//
+//            if (entry == null || !(entry instanceof VariableEntry)) {
+//                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+//                        ctx.start.getCharPositionInLine());
+//            }
+//
+//            VariableEntry variableEntry = (VariableEntry) entry;
+//
+//            if (variableEntry.getType() instanceof TypeArray) {
+//                ArrayList<ST> initElementList = null;
+//
+//                if (variableEntry.getType() instanceof TypeArray) {
+//                    TypeArray type = (TypeArray) variableEntry.getType();
+//                } else {
+//                    throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
+//                            ctx.start.getCharPositionInLine());
+//                }
+//
+//                if (ctx.initialisationAttribute() != null) {
+//                }
+//
+//            }
+//        }
+//
+//        return null;
+//    }
+
+}

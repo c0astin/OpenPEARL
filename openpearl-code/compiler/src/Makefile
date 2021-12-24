@@ -31,14 +31,14 @@ include ../Makefile.inc
 include ../../configuration/.config
 
 ##
-## antlr generates out of SmallPearl.g4 the following files:
+## antlr generates out of OpenPearl.g4 the following files:
 ##
-ANTLR_GENERATED_FILES = SmallPearl.tokens          \
-                        SmallPearlBaseVisitor.java \
-                        SmallPearlLexer.java       \
-                        SmallPearlLexer.tokens     \
-                        SmallPearlParser.java      \
-                        SmallPearlVisitor.java
+ANTLR_GENERATED_FILES = OpenPearl.tokens          \
+                        OpenPearlBaseVisitor.java \
+                        OpenPearlLexer.java       \
+                        OpenPearlLexer.tokens     \
+                        OpenPearlParser.java      \
+                        OpenPearlVisitor.java
 
 ## ANTLR_FLAGS = -XdbgST
 ANTLR_FLAGS = 
@@ -68,25 +68,25 @@ all: gen javac install
 
 ###############################################################################
 
-gen ./check_cmds.sh $(ANTLR_GENERATED_FILES) : SmallPearl.g4 
-	java -jar $(CONFIG_COMPILER_ANTLR) -no-listener -visitor -package org.smallpearl.compiler -o org/smallpearl/compiler $(ANTLR_FLAGS) SmallPearl.g4
+gen ./check_cmds.sh $(ANTLR_GENERATED_FILES) : OpenPearl.g4 
+	java -jar $(CONFIG_COMPILER_ANTLR) -no-listener -visitor -package org.openpearl.compiler -o org/openpearl/compiler $(ANTLR_FLAGS) OpenPearl.g4
 
 ###############################################################################
 
 javac:
 	test -d $(OUTPUT_DIR) || mkdir $(OUTPUT_DIR)
-	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_DIR) $(JAVAC_FLAGS) org/smallpearl/compiler/Compiler.java
-	rm -f smallpearl_compiler.jar
-	cp SmallPearlCpp.stg $(OUTPUT_DIR)
+	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_DIR) $(JAVAC_FLAGS) org/openpearl/compiler/Compiler.java
+	rm -f openpearl_compiler.jar
+	cp OpenPearlCpp.stg $(OUTPUT_DIR)
 	cp IMC.stg $(OUTPUT_DIR)
-	cd $(OUTPUT_DIR) && jar cf  smallpearl_compiler.jar \
-				    org/smallpearl/compiler/*.class \
-	                            org/smallpearl/compiler/SymbolTable/*.class \
-	                            org/smallpearl/compiler/ControlFlowGraph/*.class \
-	                            org/smallpearl/compiler/SemanticAnalysis/*.class \
-	                            org/smallpearl/compiler/Exception/*.class \
-	                            org/smallpearl/compiler/Graph/*.class \
-				    SmallPearlCpp.stg IMC.stg
+	cd $(OUTPUT_DIR) && jar cf  openpearl_compiler.jar \
+				    org/openpearl/compiler/*.class \
+	                            org/openpearl/compiler/SymbolTable/*.class \
+	                            org/openpearl/compiler/ControlFlowGraph/*.class \
+	                            org/openpearl/compiler/SemanticAnalysis/*.class \
+	                            org/openpearl/compiler/Exception/*.class \
+	                            org/openpearl/compiler/Graph/*.class \
+				    OpenPearlCpp.stg IMC.stg
 
 ##############################################################################
 
@@ -96,13 +96,13 @@ test:
 ###############################################################################
 
 prepare:
-	touch $(CONFIG_INSTALL_Target)/bin/smallpearl_compiler.jar 
-	chmod 777 $(CONFIG_INSTALL_Target)/bin/smallpearl_compiler.jar 
+	touch $(CONFIG_INSTALL_Target)/bin/openpearl_compiler.jar 
+	chmod 777 $(CONFIG_INSTALL_Target)/bin/openpearl_compiler.jar 
 
 install: gen javac prl_cc.inc
 #	cp prl_c $(INSTALL_DIR)
 #	cp smallpearl_compiler.jar $(INSTALL_DIR)
-	cp $(OUTPUT_DIR)/smallpearl_compiler.jar $(CONFIG_INSTALL_Target)/bin
+	cp $(OUTPUT_DIR)/openpearl_compiler.jar $(CONFIG_INSTALL_Target)/bin
 	@echo 
 	@echo '========================================='
 	@echo '==             SUCCESS                 =='
@@ -112,7 +112,7 @@ install: gen javac prl_cc.inc
 .PHONY: prl_cc.inc
 prl_cc.inc:
 	echo "##### auto generated  start " > ../prl_cc.inc
-	echo 'java -cp $(CONFIG_INSTALL_Target)/bin/smallpearl_compiler.jar:$(CONFIG_COMPILER_ANTLR)  org/smallpearl/compiler/Compiler \' >> ../prl_cc.inc
+	echo 'java -cp $(CONFIG_INSTALL_Target)/bin/openpearl_compiler.jar:$(CONFIG_COMPILER_ANTLR)  org/openpearl/compiler/Compiler \' >> ../prl_cc.inc
 	echo '   $$standard $$PRLFLAGS $$fn.prl \' >> ../prl_cc.inc
 	echo '   --output $$outputPrlCC ' >> ../prl_cc.inc
 	echo "##### auto generated end " >> ../prl_cc.inc
@@ -120,17 +120,17 @@ prl_cc.inc:
 ###############################################################################
 
 clean:
-	$(RM) org/smallpearl/compiler/SmallPearl.tokens
-	$(RM) org/smallpearl/compiler/SmallPearlBaseVisitor.java
-	$(RM) org/smallpearl/compiler/SmallPearlLexer.java
-	$(RM) org/smallpearl/compiler/SmallPearlLexer.tokens
-	$(RM) org/smallpearl/compiler/SmallPearlParser.java
-	$(RM) org/smallpearl/compiler/SmallPearlVisitor.java
-	$(RM) $(OUTPUT_DIR)/org/smallpearl/compiler/*.class
-	$(RM) $(OUTPUT_DIR)/org/smallpearl/compiler/SymbolTable/*.class
-	$(RM) $(OUTPUT_DIR)/org/smallpearl/compiler/SemanticAnalysis/*.class
-	$(RM) $(OUTPUT_DIR)/org/smallpearl/compiler/AST/*.class
-	$(RM) $(OUTPUT_DIR)/org/smallpearl/compiler/Exception/*.class
+	$(RM) org/openpearl/compiler/OpenPearl.tokens
+	$(RM) org/openpearl/compiler/OpenPearlBaseVisitor.java
+	$(RM) org/openpearl/compiler/OpenPearlLexer.java
+	$(RM) org/openpearl/compiler/OpenPearlLexer.tokens
+	$(RM) org/openpearl/compiler/OpenPearlParser.java
+	$(RM) org/openpearl/compiler/OpenPearlVisitor.java
+	$(RM) $(OUTPUT_DIR)/org/openpearl/compiler/*.class
+	$(RM) $(OUTPUT_DIR)/org/openpearl/compiler/SymbolTable/*.class
+	$(RM) $(OUTPUT_DIR)/org/openpearl/compiler/SemanticAnalysis/*.class
+	$(RM) $(OUTPUT_DIR)/org/openpearl/compiler/AST/*.class
+	$(RM) $(OUTPUT_DIR)/org/openpearl/compiler/Exception/*.class
 	$(RM) $(OUTPUT_DIR)/*.jar
 	$(RM) $(OUTPUT_DIR)/*.stg
 	$(RM) ../prl_cc.inc
