@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 import static org.openpearl.compiler.Log.*;
 
 public class Compiler {
-    static String version = "v0.8.9.41";
+    static String version = "v0.8.9.42";
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();
@@ -373,7 +373,7 @@ public class Compiler {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static void printHelp() {
-        System.err.println("java org.smallpearl.compiler                             \n"
+        System.err.println("java org.openpearl.compiler                             \n"
                 + " Options:                                                           \n"
                 + "  --help                      Print this help message               \n"
                 + "  --version                   Print version information             \n"
