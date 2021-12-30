@@ -227,7 +227,7 @@ namespace pearlrt {
                               (StaticTask_t*)&uartSendTaskTCB);
    }
 
-   Esp32Uart* Esp32Uart::dationOpen(const char * idf,
+   Esp32Uart* Esp32Uart::dationOpen(const RefCharacter * idf,
                                     int openParam) {
 
       if (openParam & (Dation::IDF | Dation::CAN)) {

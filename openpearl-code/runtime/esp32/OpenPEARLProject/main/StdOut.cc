@@ -66,7 +66,7 @@ printf("ctor in StdOut\n");
       return cap;
    }
 
-   StdOut* StdOut::dationOpen(const char * idf, int openParams) {
+   StdOut* StdOut::dationOpen(const RefCharacter * idf, int openParams) {
       if (openParams & (Dation::IDF | Dation::CAN)) {
          Log::error("StdOut: does not support IDF and CAN");
          throw theDationParamSignal;

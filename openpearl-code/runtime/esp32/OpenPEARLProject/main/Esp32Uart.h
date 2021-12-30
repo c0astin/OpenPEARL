@@ -39,6 +39,7 @@
 #include "FullDuplexDationAbortNB.h"
 #include "Mutex.h"
 #include "CSema.h"
+#include "RefChar.h"
 
 namespace pearlrt {
 
@@ -188,7 +189,7 @@ namespace pearlrt {
       \param openParam must be 0, since no open params are supported here
       \returns pointer to this object as working object
       */
-      Esp32Uart* dationOpen(const char * idf, int openParam);
+      Esp32Uart* dationOpen(const RefCharacter * idf, int openParam);
 
       /**
       close the systen dation

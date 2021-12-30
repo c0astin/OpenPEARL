@@ -42,6 +42,7 @@
 #include "Mutex.h"
 #include "ConsoleCommon.h"
 #include "Esp32Uart.h"
+#include "RefChar.h"
 #include "FullDuplexDationAbortNB.h"
 
 namespace pearlrt {
@@ -171,7 +172,7 @@ namespace pearlrt {
       \throws OpenFailedSignal in case of errors
       \throws DationParamSignal in case of errors
       */
-      Console* dationOpen(const char * fileName, int openParams);
+      Console* dationOpen(const RefCharacter * fileName, int openParams);
 
       /**
        close method.

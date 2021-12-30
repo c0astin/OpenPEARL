@@ -247,7 +247,7 @@ removeSignalsHhHcc:
 	rm -f ../common/Signals.hh ../common/Signals.hcc
 
 phony += install
-install: patch removeSignalsHhHcc OpenPEARLProject esp32.xml cc_o o_bin run_bin
+install: patch removeSignalsHhHcc OpenPEARLProject esp32.xml cc_o.inc o_bin.inc run_bin
 	echo [install]
 	ar d OpenPEARLProject/build/esp-idf/main/libmain.a testprog.cc.obj system.cc.obj
 	(cd OpenPEARLProject; ./cp.cmd `pwd`)
@@ -256,8 +256,8 @@ install: patch removeSignalsHhHcc OpenPEARLProject esp32.xml cc_o o_bin run_bin
 	cp esp32.xml $(CONFIG_INSTALL_Target)/lib
 
 
-phony += cc_o
-cc_o:
+phony += cc_o.inc
+cc_o.inc:
 	@echo "[create] $@"
 	@echo "# auto generated " > cc_o.inc
 	#
@@ -266,8 +266,8 @@ cc_o:
 	@echo '	$(LINK_PARAMETERS_2) \' >> cc_o.inc 
 	@echo ' -c $$outputPrlCC -o $$outputCcO >>$$fn.out 2>>$fn.log' >> cc_o.inc
 
-phony += o_bin
-o_bin:
+phony += o_bin.inc
+o_bin.inc:
 	@echo "[create] $@"
 	@echo "# auto generated " > o_bin.inc
 	#
@@ -275,8 +275,15 @@ o_bin:
  		$(LINK_PARAMETERS_1) \
 		  $$objects -o $$target.elf\
 		$(LINK_PARAMETERS_2)' >> o_bin.inc
-	@echo 'python  $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 elf2image --flash_mode "dio" --flash_freq "40m" --flash_size "2MB"  -o $$target.bin $$target.elf' >> o_bin.inc
-	@echo 'size $$target.elf' >> o_bin.inc
+	@echo 'rc=$$?' >> o_bin.inc
+	@echo 'if [ $$rc -eq 0 ] ; then' >>o_bin.inc
+	@echo '   python  $(ESP_IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 elf2image --flash_mode "dio" --flash_freq "40m" --flash_size "2MB"  -o $$target.bin $$target.elf' >> o_bin.inc
+	@echo '   rc=$$?' >> o_bin.inc
+	@echo 'fi' >> o_bin.inc
+	@echo 'if [ $$rc -eq 0 ] ; then' >>o_bin.inc
+	@echo '   size $$target.elf' >> o_bin.inc
+	@echo '   rc=$$?' >> o_bin.inc
+	@echo 'fi' >> o_bin.inc
 
 phony += run_bin
 run_bin:
@@ -287,7 +294,7 @@ run_bin:
 	@echo ' --before default_reset --after hard_reset write_flash \' >> run_bin.inc
 	@echo ' -u --flash_mode dio --flash_freq 40m --flash_size detect \' >> run_bin.inc
 	@echo ' 0x10000 $$target.bin' >>run_bin.inc
-	@echo 'rc=$?' >> run_bin.inc
+	@echo 'rc=$$?' >> run_bin.inc
 	@echo 'if [ $rc -ne 0 ] ; then ' >> run_bin.inc
 	@echo '   echo "linking terminated with errors" ' >> run_bin.inc
 	@echo '   exit $rc' >> run_bin.inc
