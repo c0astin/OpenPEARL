@@ -63,6 +63,7 @@ namespace pearlrt {
       /* ctor is called before multitasking starts --> no mutex required */
       struct stat attribut;
       devicePath = (char*)dev;
+      pathLength = strlen(dev);
       mutex.name("Disc");
       capacity = nbrOfFiles;
 
@@ -175,8 +176,8 @@ namespace pearlrt {
       return cap;
    }
 
-   Disc::DiscFile *  Disc::dationOpen(const char * idfValue, int openParams) {
-      char fileName[40]; // autoamtic filename
+   Disc::DiscFile *  Disc::dationOpen(const RefCharacter * idfValue, int openParams) {
+      char fileName[40]; // automatic filename
       mutex.lock();
 
       if (usedCapacity >=  capacity) {
@@ -204,31 +205,28 @@ namespace pearlrt {
 
       // setup objects data
       Disc::DiscFile * o = object[f];
-      Character<256> completeFilename;
-      RefCharacter rc(completeFilename);
-      rc.clear();
-      rc.add(devicePath);
 
-      if (openParams & ANY && idfValue == 0) {
+      if (openParams & ANY && ((openParams & IDF)) == 0) {
          // create temp file name
          struct timeval tv;
          gettimeofday(&tv, NULL);
          sprintf(fileName, "AutoFile%ld.%06ld", time(NULL), tv.tv_usec);
-         rc.add(fileName);
+         RefCharacter rc(fileName);
+         o->dationOpen(&rc, openParams);
       } else {
-         rc.add(idfValue);
+         o->dationOpen(idfValue, openParams);
       }
 
-      o->dationOpen(rc.getCstring(), openParams);
       o->inUse = true;
       usedCapacity ++;
       mutex.unlock();
       return o;
    }
 
-   Disc::DiscFile* Disc::DiscFile::dationOpen(const char * fn,
+   Disc::DiscFile* Disc::DiscFile::dationOpen(const RefCharacter * fn,
          int openParams) {
       struct stat attribut;
+      char * fileName;
 
       // setup open mode
       //            IN      OUT      INOUT  precondition
@@ -239,7 +237,9 @@ namespace pearlrt {
 
       rcFn.setWork(completeFileName);
       rcFn.clear();
-      rcFn.add(fn);
+      rcFn.add(myDisc->devicePath);
+      rcFn.add(*fn);
+      fileName = rcFn.getCstring();
 
       // easy case: NEW+IN is ridiculous
       if ((openParams & (NEW | IN)) == (NEW | IN)) {
@@ -250,11 +250,11 @@ namespace pearlrt {
 
       const char * mode = 0;  // illegal combination as preset
 
-      FILE * fpTest = fopen(fn, "r");
+      FILE * fpTest = fopen(fileName, "r");
 
       if (fpTest == NULL) {
          if (openParams & OLD || openParams & IN) {
-            Log::error("Disc: not found: %s", fn);
+            Log::error("Disc: not found: %s", fileName);
             myDisc->mutex.unlock();
             throw theOpenFailedSignal;
          }
@@ -271,7 +271,7 @@ namespace pearlrt {
          fclose(fpTest);
 
          if (openParams & NEW) {
-            Log::error("Disc: exists: %s", fn);
+            Log::error("Disc: exists: %s", fileName);
             myDisc->mutex.unlock();
             throw theOpenFailedSignal;
          }
@@ -293,24 +293,25 @@ namespace pearlrt {
          throw theOpenFailedSignal;
       }
 
-      fp = fopen(fn, mode);
+      fp = fopen(fileName, mode);
 
       if (fp == 0) {
          Log::error("Disc: error opening file %s (%s)",
-                    fn, strerror(errno));
+                    fileName, strerror(errno));
          myDisc->mutex.unlock();
          throw theOpenFailedSignal;
       }
       
-      if (stat(fn, &attribut) == -1) {
+      if (stat(fileName, &attribut) == -1) {
          //can't get stat -> throw signal
-         Log::error("DiscFile: could not locate %s", fn);
+         Log::error("DiscFile: could not locate %s", fileName);
          throw theDationParamSignal;
       }
 
       cap = IDF | DIRECT | FORWARD;
       cap |= capabilitiesFromPermissions(attribut);
-      
+
+ 
       return this;
    }
 
@@ -477,4 +478,15 @@ namespace pearlrt {
       // do nothing
    }
 
+   /* attention: we return a reference of a static variable
+      This is ok, since the operation is exectuted while the
+      userdation is locked
+   */
+   RefCharacter* Disc::DiscFile::getIDFName() {
+      static RefCharacter rc;
+      rc = rcFn;
+      rc.data += myDisc->pathLength; 
+      rc.current -= myDisc->pathLength; 
+      return & rc;
+   }
 }

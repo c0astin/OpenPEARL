@@ -131,7 +131,7 @@ namespace pearlrt {
       \throws OpenFailedSignal in case of errors
       \throws DationParamSignal in case of errors
       */
-      StdIn* dationOpen(const char * fileName, int openParams);
+      StdIn* dationOpen(const RefCharacter * fileName, int openParams);
 
       /**
        close method.

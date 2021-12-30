@@ -724,47 +724,27 @@ Generally, the following rules hold:
 \begin{itemize}
 %%%\begin{added}
 \item The close parameters may not conflict --- e.g. ether \code{CAN} or \code{PRM} is allowed
+\item The close parameters may also not conflict with the parameters in the open statement
 %%%\end{added}
 \item Not every task executing an access to a data station must execute
 an \code{OPEN} or \code{CLOSE} statement.
-%%% removed: OPEN allowed only once
-%%%\item However, at least one open statement must be executed concerning
-%%%the access to a data station.
-%%% removed: OPEN allowed only once
-%%%\item The same number of close statements and open statements must
-%%%be executed to close the data station.
+\item However, at least one open statement must be executed concerning
+\item The same number of close statements and open statements must
+be executed to close the data station.
 %%%\begin{added}
-%%%\item The close statement which leads to the closing of the data station
-%%%defines the action concerning CAN and PRM.
+All close statements must have identical parameter setting.
 %%%\end{added}
-%%% added}
 \item The dation must be opened before any access to its data.
 
 \item Corresponding \code{OPEN} and \code{CLOSE} statements need not be executed by
 the same task.
 \item Upon lacking parameters, \code{PRM} is assumed, unless earlier
 executed close or open statements have made explicit settings.
-%%%\begin{added}
-%%%\item executing an OPEN statement on an already opened dation ignores the
-%%%IDF attribute. The attributes CAN or PRM must be identical 
-%%%in all concurrent OPEN statements. Otherwise an error message is produced
-%%%or the RST variable is set with the error number.
-
-%%%% removed: OPEN allowed only once 
-%%%\item
-%%%Executing the OPEN statement on an already opened dation need identical 
-%%%open parameters IDF, CAN and PRM. Otherwise an error message is produced
-%%%or the RST variable is set with the error number.
-%%%% added: OPEN allowed only once 
 \item
-Executing the \code{OPEN} statement on an already opened dation
-will cause an error message or the \code{RST} variable is set with the error
-number.
-\item
-Executing the \code{CLOSE} statement on an already closed dation
-will cause an error message or the RST variable is set with the error
-number.
-%%%\end{added}
+Executing the OPEN statement on an already opened dation need identical 
+open parameters IDF, CAN and PRM. Otherwise an error message is produced
+or the RST variable is set with the error number.
+\item In case of execution of more than one OPEN statement, 
 \end{itemize}
 
 Example:
@@ -902,8 +882,15 @@ A slice may be defined as range of the last index of an array.
 
 Upon entry with the read statement, the addressed data elements are
 read one after the other and correspondingly assigned to the variables
-in the variable list. The variables are assigned according to the
-general rules for assignments. If an element of the variable list is an
+in the variable list.
+%%% begin removed
+ The variables are assigned according to the
+general rules for assignments.
+%%% end removed
+%%% begin added
+The variables must match the ``TypeOfTransmissionData''.
+%%% end added
+ If an element of the variable list is an
 array, the addressed data are assigned by rows; if it is a structure, the
 data are assigned to the structure components in the order determined by
 the structure declaration.
@@ -942,6 +929,11 @@ position, and the error reaction valid at this moment (error assignment
 to an \code{RST} variable or system reaction) is executed.
 
 These statements analogously hold for the write statement.
+%%%begin added
+The only exception is the treatment of expressions - they are converted to 
+a longer precision of the ``TypeOfTransmission''.
+%%%end added
+
 
 The type of the variables in the variable list of the read statement
 must be compatible with the class attribute of the given data station;

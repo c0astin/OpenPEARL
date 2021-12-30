@@ -64,4 +64,8 @@ printf("SystemDation:: triggerWaitingTask called\n");
    void SystemDation::terminate(TaskCommon * ioPerformingTask) {
       ioPerformingTask->doAsyncTerminate();
    }
+
+   RefCharacter * SystemDation::getIDFName() {
+      return NULL;
+   }
 }

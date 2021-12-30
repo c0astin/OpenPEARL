@@ -79,9 +79,6 @@ namespace pearlrt {
       tfuBuffer.setSystemDation((SystemDationNB*)systemDation);
    }
 
-   void DationRW::internalClose() {
-   }
-
    void DationRW::dationRead(void * data, size_t size) {
       assertOpen();
 

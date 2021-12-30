@@ -161,11 +161,6 @@ namespace pearlrt {
       */
       void internalOpen();
 
-      /**
-        internal close function.
-      */
-      void internalClose();
-
       SystemDationNBSink  sink;
       SystemDationNBSource   source;
 

@@ -63,7 +63,7 @@ namespace pearlrt {
       // open system dation
       if (p & IDF) {
          // pass filename if specified by IDF
-         work = system->dationOpen(rc->getCstring(), dationParams);
+         work = system->dationOpen(rc, dationParams);
       } else {
          // no filename specified by IDF --> pass NULL as name
          work = system->dationOpen(NULL, dationParams);
@@ -80,9 +80,6 @@ namespace pearlrt {
    }
 
    void DationTS::internalOpen() {
-   }
-
-   void DationTS::internalClose() {
    }
 
    void DationTS::dationRead(void * data, size_t size) {

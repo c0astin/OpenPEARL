@@ -111,7 +111,7 @@ namespace pearlrt {
       return cap;
    }
 
-   Console* Console::dationOpen(const char * idf, int openParams) {
+   Console* Console::dationOpen(const RefCharacter * idf, int openParams) {
 
       if (openParams & (Dation::IDF | Dation::CAN)) {
          Log::error("Console: does not support IDF and CAN");

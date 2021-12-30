@@ -31,6 +31,7 @@
 #define LOGFILE_INCLUDED
 
 #include "SystemDationNB.h"
+#include "RefChar.h"
 #include "TaskCommon.h"
 
 /**
@@ -57,11 +58,11 @@ namespace pearlrt {
        \throws InternalDationSignal, if the file name is invalid, or
              provider is null
         */
- 	 LogFile(SystemDationNB * provider, char const* filename);
+ 	 LogFile(SystemDationNB * provider, char * filename);
 
 
       private:
-	char const * logFileName;  // just a pointer to the given filename
+	char * logFileName;  // just a pointer to the given filename
         SystemDationNB * provider;
 
       /** access capabilities */
@@ -99,7 +100,7 @@ public:
 
       \throws OpenFailedSignal in case of errors
       */
-      LogFile* dationOpen(const char * fileName, int openParams);
+      LogFile* dationOpen(const RefCharacter * fileName, int openParams);
 
       /**
        close method.

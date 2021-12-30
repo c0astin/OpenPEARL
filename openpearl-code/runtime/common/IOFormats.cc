@@ -53,6 +53,7 @@ namespace pearlrt {
       checkCapacity(w);
       RefCharacter rc;
       rc.setWork(s, len);
+      rc.clear();
       PutHelper::doPutChar(w.x, &rc, sink);
    }
 
@@ -63,6 +64,7 @@ namespace pearlrt {
 
       RefCharacter rc;
       rc.setWork(s, len);
+      rc.clear();
 
       helper.readCharacterByA(&rc);
    }

@@ -549,16 +549,6 @@ namespace pearlrt {
 
       virtual void internalOpen() = 0;
 
-      /**
-        internal close function. Close dev and delete it
-        (if closeParam CAN is set)
-
-        \note have to be implemented in system
-              specific Dation implementation
-
-      */
-      virtual void internalClose() = 0;
-
 
    private:
       /**

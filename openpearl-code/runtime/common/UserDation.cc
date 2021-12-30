@@ -50,24 +50,56 @@ namespace pearlrt {
    }
 
    void UserDation::internalDationClose(const int p) {
+      static Fixed<31> one(1);
+      int prmFlag = 0;
 
       assertOpen();
 
-      if (p & CLOSEMASK) {
-         if (!!(p & PRM) && !!(p & CAN)) {
-            Log::error("UserDation: ether CAN or PRM allowed");
-            throw theInternalDationSignal;
+      // if no CLOSE parameters are set, than check if there
+      // are some already set by previous OPEN or CLOSE statements
+      if ( (p & CLOSEMASK) == 0) {
+        if ( (dationParams & (OPENPRM | OPENCAN)) == 0) {
+           prmFlag |= PRM;   // set the default
+        }
+      } else {
+         // some bits in CLOSEMASK are set
+         // check if PRM and CAN are set
+         if (!!(p & PRM) &&  !!(p & CAN) ) {
+            Log::error("CLOSE: PRM and CAN are set");
+            throw theDationParamSignal;
          }
 
-         // superseed previous settings
+         // check if close parameters contradicts previous settings
+         // from open or prio close statement
+         if ( dationParams & (OPENPRM|OPENCAN)) {
+            // we have prior settings
+            if ((dationParams & OPENPRM) != (p & PRM) ||
+                (dationParams & OPENCAN) != (p & CAN) ) {
+                Log::error("CLOSE parameters differ from OPEN parameters");
+                throw theDationParamSignal;
+            }
+            if ((dationParams & PRM) != (p & PRM) ||
+                (dationParams & CAN) != (p & CAN) ) {
+                Log::error("CLOSE parameters differ from previous CLOSE parameters");
+                throw theDationParamSignal;
+            }
+ 
+         }
+
+         // update close parameters
          dationParams &= ~CLOSEMASK;
          dationParams |= p;
       }
 
-      // mark the dation to be closed, even if errors during
-      // closing the system dation occur
-      dationStatus = CLOSED;
-      closeSystemDation(dationParams);
+      counter = counter - one;
+      if (counter.x == 0) {
+         // last close detected --> close system dation and mark the
+         // userdation as closed, even if errors during
+         // closing the system dation occur
+         dationStatus = CLOSED;
+         closeSystemDation(dationParams | prmFlag);
+         dationParams &= ~(OPENMASK|CLOSEMASK);
+      }
    }
 
    void UserDation::restart(TaskCommon * me,
@@ -245,4 +277,35 @@ namespace pearlrt {
       return currentDirection;
    }
 
+   void UserDation::checkParametersAndIncrementCounter(int p,
+           RefCharacter * rc, SystemDation * parent) {
+      static Fixed<31> one(1);
+      bool parametersOk = true;
+
+      if (dationStatus == OPENED) {
+         // check if the current open parameters differ from the
+         // previous open parameters
+         // RST does not affect the dation behavior
+         int mask = OPENMASK & ~ RST;
+         if ((dationParams & mask) != (p & mask)) {
+             parametersOk = false;
+         }
+         if ((p & IDF) && parametersOk) {
+             RefCharacter *oldFilename = systemDation->getIDFName();
+             if (oldFilename->getCurrent() != rc->getCurrent()) {
+                parametersOk = false;
+             } else {
+                parametersOk = ! strncmp(oldFilename->data, rc->data, rc->max);
+             }
+         }
+         if (!parametersOk) {
+             Log::error((char*)"UserDationNB: Dation is already open and parameters differ");
+             throw theOpenFailedSignal;
+         }
+
+         // fine, the dation is opened again with the same parameters
+         counter = counter + one;
+      }
+
+   } 
 }

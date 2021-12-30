@@ -146,7 +146,15 @@ namespace pearlrt {
          /** dimension handling:
           do not ignore the end of an internal dimension limit
          */
-         NOSTREAM = 0x10000
+         NOSTREAM = 0x10000,
+
+         /** OPEN parameters PRM 
+         */
+         OPENPRM = 0x20000,
+
+         /** OPEN parameters CAN 
+         */
+         OPENCAN = 0x40000
       };
 
       /**
@@ -159,7 +167,7 @@ namespace pearlrt {
       mask to select the opening concerning bits from
       a parameter or capability value
       */
-      static const int OPENMASK = IDF | ANY | OLD | NEW | CAN | PRM;
+      static const int OPENMASK = IDF | ANY | OLD | NEW | OPENCAN | OPENPRM;
 
       /**
       mask to select the closing concerning bits from

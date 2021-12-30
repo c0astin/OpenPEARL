@@ -40,11 +40,27 @@ This class provides the operations of the data type ref char.
 #include "Log.h"
 
 namespace pearlrt {
+   void RefCharacter::dump() const {
+      printf("RefCharacter: max=%zu current=%zu data=",max,current);
+      for (size_t i=0; i<current; i++) {
+          if (data[i] >= ' ') printf("%c",data[i]);
+          else printf("(%02x)",data[i]);
+      }
+      printf("\n");
+   }
+
    RefCharacter::RefCharacter() {
       max = 0;
       current = 0;
       data = 0;
       charIsINV = false;
+   }
+
+   RefCharacter::RefCharacter(char * s) {
+      max = strlen(s);
+      current = max;
+      data = s;
+      charIsINV = true;
    }
 
    void RefCharacter::clear() {
@@ -54,7 +70,7 @@ namespace pearlrt {
    void RefCharacter::setWork(void * s, size_t len) {
        data=(char*)s;
        max = len;
-       current=0;
+       current=len;
    }
 
    char RefCharacter::getCharAt(size_t index) {

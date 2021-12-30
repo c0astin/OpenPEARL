@@ -109,9 +109,10 @@ TEST(Pipe, openClose) {
    // create+ delete file
    pearlrt::SystemDationNB* work=0;
    pearlrt::Pipe pipe(HOME, 10, "OPEN1 CAN");
+   pearlrt::RefCharacter rcFn((char*)"file1.tst");
    // should throw due to given IDF
    ASSERT_THROW(
-      pipe.dationOpen("file1.tst",
+      pipe.dationOpen(&rcFn,
                       pearlrt::Dation::ANY |
                       pearlrt::Dation::IDF |
                       pearlrt::Dation::OUT),

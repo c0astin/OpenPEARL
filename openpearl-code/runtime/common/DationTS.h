@@ -159,13 +159,6 @@ namespace pearlrt {
       */
       void internalOpen();
 
-      /**
-        internal close function. Close dev and delete it
-        (if closeParam CAN is set)
-
-      */
-      void internalClose();
-
    private:
       /**
        Implementation of the internal Open-interface.

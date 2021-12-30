@@ -67,8 +67,10 @@ namespace pearlrt {
       double timeValue;
       //                0123456789012345678901234567890123
       char logText[] = "illegal T-format field (at: xxxxx)";
+#define START_BRACE 22
       int setCharsAt = 28;
-      int charsToSet = 5;
+#define CHARS2SET 5
+      int charsToSet = CHARS2SET;
       bool errorWithLog = true;
 
       if (width <= 0) {
@@ -129,9 +131,12 @@ namespace pearlrt {
       while (width > 0) {
          width --;
          c1 = helper.readChar();
-
+         if (c1 < 0 && charsToSet == CHARS2SET) {
+           logText[START_BRACE] = '\0';  // no text
+         }
          if (errorWithLog) {
             if (charsToSet > 0) {
+               
                logText[setCharsAt++] = c1;
                charsToSet --;
             }

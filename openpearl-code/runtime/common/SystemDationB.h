@@ -33,6 +33,7 @@
 #include "Dation.h"
 #include "SystemDation.h"
 #include "Fixed.h"
+#include "RefChar.h"
 
 /**
 \file
@@ -82,7 +83,7 @@ public:
 
     \throws * may throw exceptions in case of problems in execution
     */
-    virtual SystemDationB* dationOpen(const char * idfValue,
+    virtual SystemDationB* dationOpen(const RefCharacter * idfValue,
                                        int openParam) = 0;
         /**
         dation close method

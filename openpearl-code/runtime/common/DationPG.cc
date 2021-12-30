@@ -138,22 +138,7 @@ namespace pearlrt {
 
    void DationPG::internalOpen() {
       tfuBuffer.setSystemDation((SystemDationNB*)systemDation);
-      /*
-            } else {
-               if (dationParams & (OUT | INOUT)) {
-                  sink.setSystemDationNB((SystemDationNB*)systemDation);
-               }
-
-               if (dationParams & (IN | INOUT)) {
-                  source.setSystemDationNB((SystemDationNB*)systemDation);
-               }
-            }
-            setupIOFormats(&sink, &source);
-      */
       setupIOFormats(&tfuBuffer, &tfuBuffer);
-   }
-
-   void DationPG::internalClose() {
    }
 
    void DationPG::checkCapacity(Fixed<31> n) {

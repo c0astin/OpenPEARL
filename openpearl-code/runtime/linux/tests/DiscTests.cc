@@ -77,7 +77,8 @@ TEST(Disc, openClose) {
    // create+ delete file
    pearlrt::SystemDationNB* work;
    pearlrt::Disc disc(HOME, 10);
-   work = disc.dationOpen("file1.tst",
+   pearlrt::RefCharacter rcFilename((char*)"file1.tst");
+   work = disc.dationOpen(&rcFilename,
                           pearlrt::Dation::ANY |
                           pearlrt::Dation::IDF |
                           pearlrt::Dation::OUT);
@@ -85,7 +86,7 @@ TEST(Disc, openClose) {
    // file + OLD IN CAN
    // file exists now
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::OLD |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::IN));
@@ -94,35 +95,35 @@ TEST(Disc, openClose) {
    // if this test failes, the close above did not delete the file
    // no file + OLD + IN
    ASSERT_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::OLD |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::IN),
       pearlrt::OpenFailedSignal);
    // no file + OLD + OUT --> IllParam
    ASSERT_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::OLD |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::OUT),
       pearlrt::OpenFailedSignal);
    // no file + OLD + INOUT --> OpenFailed
    ASSERT_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::OLD |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::INOUT),
       pearlrt::OpenFailedSignal);
    // no file + ANY + IN --> OpenFailed
    ASSERT_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::ANY |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::IN),
       pearlrt::OpenFailedSignal);
    // no file + ANY + INOUT --> ok
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::ANY |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::INOUT));
@@ -130,14 +131,14 @@ TEST(Disc, openClose) {
       work->dationClose(pearlrt::Dation::CAN));
    // no file + NEW + IN --> DationParamSignal
    ASSERT_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::NEW |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::IN),
       pearlrt::DationParamSignal);
    // no file + NEW + OUT --> ok
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::NEW |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::OUT));
@@ -145,7 +146,7 @@ TEST(Disc, openClose) {
       work->dationClose(pearlrt::Dation::CAN));
    // no file + NEW + INOUT --> ok
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::NEW |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::INOUT));
@@ -154,7 +155,7 @@ TEST(Disc, openClose) {
    // tests on existing file
    // create file for the following tests
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::NEW |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::INOUT));
@@ -162,7 +163,7 @@ TEST(Disc, openClose) {
       work->dationClose(pearlrt::Dation::PRM));
    // file + OLD + IN --> ok
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::OLD |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::IN));
@@ -170,56 +171,56 @@ TEST(Disc, openClose) {
       work->dationClose(pearlrt::Dation::PRM));
    // file + OLD + OUT --> ok
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::OLD |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::OUT));
    ASSERT_NO_THROW(work->dationClose(pearlrt::Dation::PRM));
    // file + OLD + INOUT --> ok
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::OLD |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::INOUT));
    ASSERT_NO_THROW(work->dationClose(pearlrt::Dation::PRM));
    // file + ANY + IN --> ok
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::ANY |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::IN));
    ASSERT_NO_THROW(work->dationClose(pearlrt::Dation::PRM));
    // file + ANY + OUT --> ok
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::ANY |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::OUT));
    ASSERT_NO_THROW(work->dationClose(pearlrt::Dation::PRM));
    // file + ANY + INOUT --> ok
    ASSERT_NO_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::ANY |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::INOUT));
    ASSERT_NO_THROW(work->dationClose(pearlrt::Dation::PRM));
    // file + NEW + IN --> DationParamSignal
    ASSERT_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::NEW |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::IN),
       pearlrt::DationParamSignal);
    // file + NEW + OUT --> OpenFailed
    ASSERT_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::NEW |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::OUT),
       pearlrt::OpenFailedSignal);
    // file + NEW + INOUT --> OpenFailed
    ASSERT_THROW(
-      work = disc.dationOpen("file1.tst",
+      work = disc.dationOpen(&rcFilename,
                              pearlrt::Dation::NEW |
                              pearlrt::Dation::IDF |
                              pearlrt::Dation::INOUT),
@@ -247,7 +248,8 @@ TEST(Disc, capacity) {
       sprintf(filename, "testfile.%d", count);
 
       try {
-         work[count] = disc.dationOpen(filename,
+         pearlrt::RefCharacter rcFilename(filename);
+         work[count] = disc.dationOpen(&rcFilename,
                                        pearlrt::Dation::ANY |
                                        pearlrt::Dation::IDF |
                                        pearlrt::Dation::OUT);
@@ -279,7 +281,8 @@ TEST(Disc, seek) {
    // create+ delete file
    pearlrt::SystemDationNB* work;
    pearlrt::Disc disc(HOME, 10);
-   work = disc.dationOpen("file1.tst",
+   pearlrt::RefCharacter rcFilename((char*)"file1.tst");
+   work = disc.dationOpen(&rcFilename,
                           pearlrt::Dation::ANY |
                           pearlrt::Dation::IDF |
                           pearlrt::Dation::OUT);

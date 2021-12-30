@@ -41,6 +41,7 @@ namespace pearlrt {
 
 */
 
+#include "Fixed.h"
 #include "Mutex.h"
 #include "Rst.h"
 #include "SystemDation.h"
@@ -115,6 +116,15 @@ namespace pearlrt {
       */
       bool isBusy;
 
+      /** counter for multiple OPEN/CLOSE statement calls
+
+        the dation is opened if the counter is 0. Subsequent OPEN calls just increment
+        the counter.
+
+        Note thate all Fixed-variables are initialized with 0
+      */
+      Fixed<31> counter;
+
    public:
       /**
       ctor presets the attributes
@@ -153,6 +163,7 @@ namespace pearlrt {
                       Character<S> * idf,
                       Fixed<R> * rst) {
          mutexUserDation.lock();
+        
          try {
             if (p & RST) {
                if (! rst) {
@@ -175,15 +186,13 @@ namespace pearlrt {
             }
 
             RefCharacter rc;
-            Character<64>  fileName;
-            rc.setWork(fileName);
-            rc.clear();
 
             if (p & Dation::IDF) {
-               rc.add(*idf);
+               rc.setWork(idf->get(),S);
             }
 
             internalDationOpen(p, &rc);
+
          } catch (Signal & s) {
             if (rst) {
                try {
@@ -219,6 +228,7 @@ namespace pearlrt {
          Fixed<S>* intRst = NULL;
 
          mutexUserDation.lock();
+
          try {
             if (p & RST) {
                if (! rst) {
@@ -230,6 +240,7 @@ namespace pearlrt {
                intRst  = rst;
             }
 
+            // check parameter and update counter and close dation if counter reaches 0
             internalDationClose(p);
          } catch (Signal &  s) {
             if (intRst != NULL) {
@@ -364,6 +375,15 @@ namespace pearlrt {
           This is either Dation::IN or Dation::OUT
       */
       DationParams getCurrentDirection();
+
+      /**
+      check new dation parameters with previous setting
+      if the dation is openend again
+
+      increments the counter of open opereations or throws an exception
+      */
+      void checkParametersAndIncrementCounter(int p, RefCharacter * rc,
+           SystemDation * parent);
    };
 }
 #endif

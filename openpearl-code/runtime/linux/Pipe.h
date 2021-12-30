@@ -1,7 +1,7 @@
 /*
  [The "BSD license"]
  Copyright (c) 2012-2013 Holger Koelle
- Copyright (c) 2014-2014 Rainer Mueller
+ Copyright (c) 2014-2021 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 
 #include "SystemDationNB.h"
 #include "Mutex.h"
+#include "RefChar.h"
 #include "Character.h"
 #include "RefChar.h"
 #include "InterruptableSystemDationNB.h"
@@ -115,7 +116,7 @@ namespace pearlrt {
          \throws OpenFailedSignal in case of errors
          \throws DationParamSignal in case of errors
          */
-         PipeFile* dationOpen(const char * fileName, int openParams);
+         PipeFile* dationOpen(const RefCharacter * fileName, int openParams);
 
          /**
           close method.
@@ -271,7 +272,7 @@ namespace pearlrt {
       \throws DationParamSignal in case of errors
       \throws DationParamSignal in case of errors
       */
-      PipeFile* dationOpen(const char * fileName, int openParams);
+      PipeFile* dationOpen(const RefCharacter * fileName, int openParams);
 
       /**
        close method.

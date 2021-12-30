@@ -37,6 +37,7 @@
 
 #include "SystemDationB.h"
 #include "Fixed.h"
+#include "RefChar.h"
 #include "Signals.h"
 
 #include <stdint.h>
@@ -87,7 +88,7 @@ namespace pearlrt {
       \throws DationParamSignal, if  illegal open parameters were specified
       \throws OpenFailedSignal, if  dation is not closed and rst is not given
       */
-      SystemDationB* dationOpen(const char* idf = 0, int openParam = 0);
+      SystemDationB* dationOpen(const RefCharacter* idf = 0, int openParam = 0);
 
       /**
       Close the sample basic dation

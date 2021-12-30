@@ -85,11 +85,11 @@ namespace pearlrt {
       class DiscFile : public InterruptableSystemDationNB {
       private:
          FILE * fp;
-         RefCharacter   rcFn;
-         Character<256> completeFileName;
          Disc * 	myDisc;
 	 int 		cap;
       public:
+         Character<256> completeFileName;
+         RefCharacter   rcFn; // the passed filename
          /**
             shows whether this pool element is in use
          */
@@ -121,7 +121,7 @@ namespace pearlrt {
 
          \throws OpenFailedSignal in case of errors
          */
-         DiscFile* dationOpen(const char * fileName, int openParams);
+         DiscFile* dationOpen(const RefCharacter * fileName, int openParams);
 
          /**
           close method.
@@ -195,6 +195,11 @@ namespace pearlrt {
                 (has no effect)
          */
          void translateNewLine(bool doNewLineTranslation);
+
+         /**
+         deliver the name of the file name
+         */
+         RefCharacter* getIDFName();
       };
 
    private:
@@ -222,6 +227,7 @@ namespace pearlrt {
       DiscFile**  object;
 
       char * devicePath; //< C-string of the directory
+      size_t pathLength;
    public:
 
       /**
@@ -271,7 +277,7 @@ namespace pearlrt {
       \throws DationParamSignal in case of errors
       \throws DationParamSignal in case of errors
       */
-      DiscFile* dationOpen(const char * fileName, int openParams);
+      DiscFile* dationOpen(const RefCharacter * fileName, int openParams);
 
       /**
        close method.
@@ -331,6 +337,8 @@ namespace pearlrt {
              (has no effect)
       */
       void translateNewLine(bool doNewLineTranslation);
+
+
 
    };
    /** @} */

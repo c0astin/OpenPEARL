@@ -293,7 +293,7 @@ namespace pearlrt {
       return 0;
    }
 
-   Pipe::PipeFile *  Pipe::dationOpen(const char * idfValue, int openParams) {
+   Pipe::PipeFile *  Pipe::dationOpen(const RefCharacter * idfValue, int openParams) {
       mutex.lock();
 
       if (usedCapacity >=  capacity) {
@@ -327,7 +327,7 @@ namespace pearlrt {
       return o;
    }
 
-   Pipe::PipeFile* Pipe::PipeFile::dationOpen(const char * fn,
+   Pipe::PipeFile* Pipe::PipeFile::dationOpen(const RefCharacter * fn,
          int openParams) {
       // setup open mode
       //            IN      OUT      INOUT  precondition

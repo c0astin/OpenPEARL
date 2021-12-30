@@ -45,7 +45,7 @@ namespace pearlrt {
       dationStatus = CLOSED;
    }
 
-   SystemDationB* SampleBasicDation::dationOpen(const char * idf, int params) {
+   SystemDationB* SampleBasicDation::dationOpen(const RefCharacter * idf, int params) {
       if (idf) {
          Log::error("SampleBasicDation: no IDF allowed");
          throw theDationParamSignal;

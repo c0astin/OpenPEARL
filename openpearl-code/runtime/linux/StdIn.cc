@@ -64,7 +64,7 @@ namespace pearlrt {
       return cap;
    }
 
-   StdIn* StdIn::dationOpen(const char * idf, int openParams) {
+   StdIn* StdIn::dationOpen(const RefCharacter * idf, int openParams) {
       if (openParams & (Dation::IDF | Dation::CAN)) {
          Log::error("StdIn: does not support IDF and CAN");
          throw theDationParamSignal;

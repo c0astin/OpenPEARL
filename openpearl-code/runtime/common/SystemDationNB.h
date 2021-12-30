@@ -33,7 +33,7 @@
 
 #include "SystemDation.h"
 #include "Fixed.h"
-//#include "TaskCommon.h"
+#include "RefChar.h"
 
 /**
 \file
@@ -80,7 +80,7 @@ namespace pearlrt {
 
       \throws * may throw exceptions in case of problems in execution
       */
-      virtual SystemDationNB* dationOpen(const char * idfValue,
+      virtual SystemDationNB* dationOpen(const RefCharacter * idfValue,
                                          int openParam) = 0;
 
       /**

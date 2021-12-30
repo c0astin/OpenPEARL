@@ -161,13 +161,6 @@ namespace pearlrt {
       void internalOpen();
 
       /**
-        internal close function. Close dev and delete it
-        (if closeParam CAN is set)
-
-      */
-      void internalClose();
-
-      /**
       fill a space with nil bytes
 
       \param n number of bytes to fill

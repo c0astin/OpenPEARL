@@ -89,9 +89,9 @@ TEST(StdStream, openClose) {
                           pearlrt::Dation::OLD |
                           pearlrt::Dation::OUT);
    work->dationClose(pearlrt::Dation::PRM);
-
+   pearlrt::RefCharacter rcF((char*) "x.x");
    ASSERT_THROW(
-      work = stdIn.dationOpen("x.x",
+      work = stdIn.dationOpen(&rcF,
                           pearlrt::Dation::OLD |
                           pearlrt::Dation::IDF |
                           pearlrt::Dation::IN),

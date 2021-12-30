@@ -139,6 +139,7 @@ namespace pearlrt {
          charIsINV = true;
       }
 
+
       /**
        setWork(rhs)
 
@@ -157,6 +158,11 @@ namespace pearlrt {
          current = 0; //max;
          data = &rhs.data[0];
       }
+
+      /** for testing purpose only */
+      RefCharacter(char * s);
+      void dump() const;
+
 
       /**
       set the CHAR-object to operate on.

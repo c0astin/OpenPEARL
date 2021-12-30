@@ -1,7 +1,7 @@
 /*
  [The "BSD license"]
  Copyright (c) 2012-2013 Holger Koelle
- Copyright (c) 2014-2014 Rainer Mueller
+ Copyright (c) 2014-2021 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 #define SYSTEMDATION_INCLUDED
 
 #include "Dation.h"
+#include "RefChar.h"
 
 #include <stdio.h>
 
@@ -49,7 +50,7 @@ namespace pearlrt {
 
    \brief dation interface for systemdations (BASIC, ALPHIC and TYPE)
 
-   The dationOpen API uses char* instead of PEARL strings.
+   The dationOpen API uses RefCharacter* instead of PEARL strings.
 
    Each system device must report its capabilities.
 
@@ -185,7 +186,16 @@ namespace pearlrt {
       */
       void terminate(TaskCommon * ioPerformingTask);
 
+      /**
+      retrieve the current IDF name of an opened dation 
 
+      For checks with multiple open statements on an userdation, there
+      should be a check if the current filename differs from the filename
+      of the first OPEN statement.
+
+      The default implementation returns NULL.
+      */
+      virtual RefCharacter *  getIDFName();
    };
 }
 #endif

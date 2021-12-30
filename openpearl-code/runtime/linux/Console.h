@@ -41,6 +41,7 @@
 #include "Dation.h"
 #include "SystemDationNB.h"
 #include "Mutex.h"
+#include "RefChar.h"
 #include "ConsoleCommon.h"
 #include "StdIn.h"
 #include "StdOut.h"
@@ -171,7 +172,7 @@ namespace pearlrt {
       \throws OpenFailedSignal in case of errors
       \throws DationParamSignal in case of errors
       */
-      Console* dationOpen(const char * fileName, int openParams);
+      Console* dationOpen(const RefCharacter * fileName, int openParams);
 
       /**
        close method.

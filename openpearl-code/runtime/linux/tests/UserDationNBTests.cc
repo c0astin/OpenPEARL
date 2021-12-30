@@ -1,7 +1,7 @@
 /*
  [The "BSD license"]
  Copyright (c) 2012-2014 Holger Koelle
- Copyright (c) 2014-2014 Rainer Mueller
+ Copyright (c) 2014-2021 Rainer Mueller
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -84,6 +84,65 @@ static pearlrt::Disc disc("/tmp/", 5);
 static pearlrt::Device* _disc = &disc;
 static pearlrt::Pipe myPipe("/tmp/pipe", 5, "ANY CAN OPEN1");
 static pearlrt::Device* _myPipe = &myPipe;
+
+/**
+test for multiple open/close on the same userdation
+* expect error message if open/close parameters duiffer (except RST)
+* expect error if too many close operations occur
+* expect error messages if too many (>2^31 -1) OPEN operations occur
+*/
+TEST(UserDationNB,MultipleOpenClose) {
+   pearlrt::Log::info("*** MultipleOpenClose start ***");
+   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Fixed<15> error;
+   extern pearlrt::Device* _disc;
+   pearlrt::SystemDationNB* disc_ =
+      static_cast<pearlrt::SystemDationNB*>(_disc);
+   pearlrt::DationDim1 dim(20);
+      pearlrt::DationRW logbuch(disc_,
+                                pearlrt::Dation::INOUT |
+                                pearlrt::Dation::FORWARD |
+                                pearlrt::Dation::STREAM |
+                                pearlrt::Dation::NOCYCL,
+                                &dim,
+                                pearlrt::Fixed<15>(1));
+
+   ASSERT_NO_THROW(
+      logbuch.dationOpen(
+         pearlrt::Dation::IDF | pearlrt::Dation::ANY | pearlrt::Dation::RST ,
+         &filename,&error));
+   ASSERT_NO_THROW(
+      logbuch.dationOpen(
+         pearlrt::Dation::IDF | pearlrt::Dation::ANY | pearlrt::Dation::RST ,
+         &filename,&error));
+   ASSERT_NO_THROW(
+   logbuch.dationClose(0, (pearlrt::Fixed<15>*)0));
+   ASSERT_NO_THROW(
+   logbuch.dationClose(0, (pearlrt::Fixed<15>*)0));
+   ASSERT_THROW(
+      logbuch.dationClose(0, (pearlrt::Fixed<15>*)0),
+      pearlrt::DationNotOpenSignal);
+
+// ---- check with automatic filename
+
+   ASSERT_NO_THROW(
+      logbuch.dationOpen(
+         pearlrt::Dation::ANY | pearlrt::Dation::RST ,
+         (pearlrt::Character<1>*)NULL,&error));
+   ASSERT_NO_THROW(
+      logbuch.dationOpen(
+         pearlrt::Dation::ANY | pearlrt::Dation::RST ,
+         (pearlrt::Character<1>*)NULL,&error));
+   ASSERT_NO_THROW(
+   logbuch.dationClose(0, (pearlrt::Fixed<15>*)0));
+   ASSERT_NO_THROW(
+   logbuch.dationClose(0, (pearlrt::Fixed<15>*)0));
+   ASSERT_THROW(
+      logbuch.dationClose(0, (pearlrt::Fixed<15>*)0),
+      pearlrt::DationNotOpenSignal);
+
+}
+
 
 /**
 Test exception creation for 1 dimensional objects (number <=0)
@@ -237,7 +296,7 @@ TEST(UserDationNB, OPEN) {
    pearlrt::Fixed<15> error;
    ASSERT_THROW(
       logbuch.dationOpen(
-         pearlrt::Dation::ANY ,
+         pearlrt::Dation::ANY,
          &filename,
          (pearlrt::Fixed<15>*)NULL),
       pearlrt::InternalDationSignal);
@@ -246,13 +305,15 @@ TEST(UserDationNB, OPEN) {
          pearlrt::Dation::ANY | pearlrt::Dation::RST ,
          &filename,&error));
    ASSERT_EQ(error.x, pearlrt::theInternalDationSignal.whichRST());
-   pearlrt::Log::info("*** idf +  no old/new/any  ***");
+
+   pearlrt::Log::error("*** idf +  no old/new/any  ***");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::IDF ,
          &filename,
          (pearlrt::Fixed<15>*)NULL));
-   logbuch.dationClose(0, (pearlrt::Fixed<15>*)0);
+
+   logbuch.dationClose(pearlrt::Dation::CAN, (pearlrt::Fixed<15>*)0);
 
    // should open file with system defaulted name
    pearlrt::Log::info("*** no idf +  no old/new/any --> system file name ***");
@@ -353,14 +414,10 @@ TEST(UserDationNB, OpenClose) {
          pearlrt::Dation::CAN,
          & filename,
          (pearlrt::Fixed<15>*)NULL));
+
+
    logbuch.dationClose(0,(pearlrt::Fixed<15>*)0);
-   ASSERT_THROW(
-      logbuch.dationOpen(
-         pearlrt::Dation::IDF |
-         pearlrt::Dation::OLD ,
-         & filename,
-         (pearlrt::Fixed<15>*)NULL),
-      pearlrt::OpenFailedSignal);
+
    pearlrt::Log::info("*** check if CAN superseeds in OPEN ***");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
@@ -369,14 +426,21 @@ TEST(UserDationNB, OpenClose) {
          pearlrt::Dation::PRM,
          & filename,
          (pearlrt::Fixed<15>*)NULL));
-   logbuch.dationClose(pearlrt::Dation::CAN,(pearlrt::Fixed<15>*)0);
-   ASSERT_THROW(
+   // dation opened with PRM, close tries to delete
+   ASSERT_THROW(logbuch.dationClose(pearlrt::Dation::CAN,(pearlrt::Fixed<15>*)0),
+      pearlrt::DationParamSignal);
+   // close dation to allow further tests
+   ASSERT_NO_THROW(logbuch.dationClose(0,(pearlrt::Fixed<15>*)0));
+   // ----- reopen with can and close it to remove file
+   ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::IDF |
+         pearlrt::Dation::CAN |
          pearlrt::Dation::OLD ,
          & filename,
-         (pearlrt::Fixed<15>*)NULL),
-      pearlrt::OpenFailedSignal);
+         (pearlrt::Fixed<15>*)NULL));
+   ASSERT_NO_THROW(logbuch.dationClose(0,(pearlrt::Fixed<15>*)0));
+   // --- file should no longer exist
    pearlrt::Log::info("*** check close params ***");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
@@ -388,8 +452,21 @@ TEST(UserDationNB, OpenClose) {
    ASSERT_THROW(
       logbuch.dationClose(pearlrt::Dation::CAN |
                           pearlrt::Dation::PRM, (pearlrt::Fixed<15>*)0),
-      pearlrt::InternalDationSignal);
-   logbuch.dationClose(pearlrt::Dation::CAN, (pearlrt::Fixed<15>*)0);
+      pearlrt::DationParamSignal);
+   ASSERT_THROW(
+   logbuch.dationClose(pearlrt::Dation::CAN, (pearlrt::Fixed<15>*)0),
+      pearlrt::DationParamSignal);
+     // close file and reopen with CAN abnd close again to remove the file
+   logbuch.dationClose(0, (pearlrt::Fixed<15>*)0),
+
+      logbuch.dationOpen(
+         pearlrt::Dation::IDF |
+         pearlrt::Dation::ANY |
+         pearlrt::Dation::CAN,
+         & filename,
+         (pearlrt::Fixed<15>*)NULL);
+   logbuch.dationClose(0, (pearlrt::Fixed<15>*)0);
+
    pearlrt::Log::info("*** OpenClose end ***");
 }
 

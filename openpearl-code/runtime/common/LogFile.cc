@@ -40,7 +40,7 @@
 
 namespace pearlrt {
 
-   LogFile::LogFile(SystemDationNB * _provider, const char * fileName) :
+   LogFile::LogFile(SystemDationNB * _provider, char * fileName) :
       SystemDationNB() {
 
       if (_provider == NULL) {
@@ -61,7 +61,7 @@ namespace pearlrt {
       return 0;  // dummy implementation, never called
    }
 
-   LogFile* LogFile::dationOpen(const char * idf, int openParams) {
+   LogFile* LogFile::dationOpen(const RefCharacter * idf, int openParams) {
 //printf("logfile op=%d  provider=%p\n", openParams, provider);
       if (openParams) {
          Log::warn("LogFile: openParams ignored");
@@ -69,11 +69,13 @@ namespace pearlrt {
 
 //printf(" delegate open \n");
       // remove file if it exists
-      provider = provider->dationOpen(logFileName,
+      RefCharacter rc;
+      rc.setWork(logFileName, strlen(logFileName));
+      provider = provider->dationOpen(&rc,
                             Dation::INOUT | Dation::IDF | Dation::ANY);
       provider->dationClose(Dation::CAN); // delete file
 
-      provider = provider->dationOpen(logFileName,
+      provider = provider->dationOpen(&rc,
                            Dation::OUT | Dation::IDF | Dation::NEW);
 //printf("logfile .... provider=%p\n",provider);
 
