@@ -683,16 +683,37 @@ static void* taskFunction (void* m) {
    cpu_set_t * Task::getCpuSet() {
        return cpuset;
    }
-  
+ 
+   static void i2_4d (int num, char text[5]) {
+#if CPU_SETSIZE > 9999 
+# error "i2_4d must be extended for larger CPU_SETSIZE" 
+#endif
+      static int digit[]={1000,100,10,1};
+      int pos=0;
+      for (size_t i=0; i<sizeof(digit)/sizeof(digit[0]); i++) {
+          text[pos] = num/digit[i] + '0';
+          num %= digit[i];
+          if (pos > 0) {
+             pos++;
+          } else if ( pos == 0 && text[pos] != '0') {
+              pos ++;
+          }
+      }
+      if (pos == 0) pos ++;
+      text[pos] = '\0';
+   }
+         
    void Task::getCpuSetAsText(cpu_set_t * set, char* setAsText, size_t size) {
         setAsText[0] = 0;
         if (set) {
-           char num[5]; // max cores in kernel are 1024 
-           for (int i=0; i<numberOfCores && i < 1024; i++) {
+           char num[5]; // max cores in kernel are CPU_SETSIZE (1024)
+                 i2_4d(1234,num);  // snprintf(num,sizeof(num),"%d,", i);
+           for (int i=0; i<numberOfCores && i < CPU_SETSIZE; i++) {
               if (CPU_ISSET_S(i,CPU_ALLOC_SIZE(numberOfCores),set)) {
-                 snprintf(num,sizeof(num),"%d,", i);
-                 if (strlen(setAsText)+strlen(num) < size) {
+                 i2_4d(i,num);  // snprintf(num,sizeof(num),"%d,", i);
+                 if (strlen(setAsText)+strlen(num) < size-1) {
                    strcat(setAsText,num);
+                   strcat(setAsText,",");
                  }
               }
            }
