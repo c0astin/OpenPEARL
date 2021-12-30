@@ -163,8 +163,8 @@ End(Semas)
 #include "PearlIncludes.h"
 using namespace pearlrt;
 
-extern pearlrt::Task taskRR1;
-extern pearlrt::Task taskRR2;
+extern pearlrt::Task task_RR1;
+extern pearlrt::Task task_RR2;
 
 static volatile int stop_rr_test = 0;
 static volatile int common_x = 0;
@@ -238,12 +238,12 @@ void rr_test(Task * me) {
 Log::info("rrtest: called");
    printf("RR1 and RR2 start in 2s running 10s\n");
    end = Clock::now() + Duration(2,0);
-   taskRR1.activate(me, pearlrt::Task::PRIO | Task::AT ,
+   task_RR1.activate(me, pearlrt::Task::PRIO | Task::AT ,
                         pearlrt::Prio(3), 
 			end,  // at
 			Duration(), Duration(),Clock(), Duration());
 Log::info("rrtest: RR1 scheduled");
-   taskRR2.activate(me, pearlrt::Task::PRIO | Task::AT ,
+   task_RR2.activate(me, pearlrt::Task::PRIO | Task::AT ,
                         pearlrt::Prio(3), 
 			end,  // at
 			Duration(), Duration(),Clock(), Duration());
@@ -256,11 +256,11 @@ Log::info("rrtest: RR1 scheduled");
 }   
 
 
-DCLTASK(RR1,pearlrt::Prio(6),pearlrt::BitString<1>(0)) {
+DCLTASK(_RR1,pearlrt::Prio(6),pearlrt::BitString<1>(0)) {
    rr_test_function(me,1);
 }
 
-DCLTASK(RR2,pearlrt::Prio(6),pearlrt::BitString<1>(0)) {
+DCLTASK(_RR2,pearlrt::Prio(6),pearlrt::BitString<1>(0)) {
    rr_test_function(me,2);
 }
 

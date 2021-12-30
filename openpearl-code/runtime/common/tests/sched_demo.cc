@@ -139,13 +139,13 @@ using namespace pearlrt;
 extern void rr_test(Task * me);
 
 
-extern pearlrt::Task taskTASK1;
-extern pearlrt::Task taskTASK2;
-extern pearlrt::Task taskTASK3;
+extern pearlrt::Task task_TASK1;
+extern pearlrt::Task task_TASK2;
+extern pearlrt::Task task_TASK3;
 
  
 //execute function for working thread 1
-DCLTASK(TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
+DCLTASK(_TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    Clock end;
    Clock c;
    Character<16> ttt;
@@ -159,7 +159,7 @@ DCLTASK(TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    rc.clear();
    PutClock::toT(c,15,6,sink);
    printf("%s: activate TASK2\n", rc.getCstring());
-   taskTASK2.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(10)); //  priority
+   task_TASK2.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(10)); //  priority
 
    end = Clock::now() + Duration(10,0);
 
@@ -179,12 +179,12 @@ DCLTASK(TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    rc.clear();
    PutClock::toT(c,15,6,sink);
    printf("%s:  Task1: preventing TASK3\n",rc.getCstring());
-   taskTASK3.prevent(me);
+   task_TASK3.prevent(me);
    c = Clock::now();
    rc.clear();
    PutClock::toT(c,15,6,sink);
    printf("%s: Task1: terminate Task2\n", rc.getCstring());
-   taskTASK2.terminate(me);
+   task_TASK2.terminate(me);
  
    /*--- test of round-robin-timeslice within tasks of same priority ---*/
    c = Clock::now();
@@ -202,7 +202,7 @@ DCLTASK(TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
 }
 
 //execute function for working thread 2
-DCLTASK(TASK2,pearlrt::Prio(4),pearlrt::BitString<1>(0)) {
+DCLTASK(_TASK2,pearlrt::Prio(4),pearlrt::BitString<1>(0)) {
    Character<16> ttt;
    RefCharacter rc;
    rc.setWork(ttt);
@@ -210,7 +210,7 @@ DCLTASK(TASK2,pearlrt::Prio(4),pearlrt::BitString<1>(0)) {
    RefCharSink sink(rc);
    
    /* do something*/
-   taskTASK3.activate(me, pearlrt::Task::PRIO | Task::AFTER | Task::ALL ,
+   task_TASK3.activate(me, pearlrt::Task::PRIO | Task::AFTER | Task::ALL ,
                         pearlrt::Prio(3),  // prio
 			Clock(0.0),  // at
 			Duration(5,0),  // after
@@ -236,7 +236,7 @@ DCLTASK(TASK2,pearlrt::Prio(4),pearlrt::BitString<1>(0)) {
 }
 
 //execute function for working thread 3
-DCLTASK(TASK3,pearlrt::Prio(6),pearlrt::BitString<1>(0)) {
+DCLTASK(_TASK3,pearlrt::Prio(6),pearlrt::BitString<1>(0)) {
    Character<16> ttt;
    RefCharacter rc;
    rc.setWork(ttt);
