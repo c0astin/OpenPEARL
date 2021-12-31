@@ -45,6 +45,52 @@ import java.util.regex.Pattern;
 
 public class CommonUtils {
 
+    public static boolean mayBeAssignedTo(TypeDefinition lhs, TypeDefinition rhs) {
+        boolean result = false;
+        
+        if (lhs.equals(rhs)) { 
+            result=true;
+        } else if (lhs instanceof TypeFixed) {
+            int lhsPrecision = ((TypeFixed)lhs).getPrecision(); 
+            if (rhs instanceof TypeFixed) {
+                int rhsPrecision = ((TypeFixed)rhs).getPrecision();
+                if (rhsPrecision< lhsPrecision) {
+                    result=true;
+                }
+            }
+        } else if (lhs instanceof TypeFloat) {
+            int lhsPrecision = ((TypeFloat)lhs).getPrecision(); 
+            if (rhs instanceof TypeFixed) {
+                int rhsPrecision = ((TypeFixed)rhs).getPrecision();
+                if (rhsPrecision< lhsPrecision) {
+                    result=true;
+                }
+            }
+            if (rhs instanceof TypeFloat) {
+                int rhsPrecision = ((TypeFloat)rhs).getPrecision();
+                if (rhsPrecision< lhsPrecision) {
+                    result=true;
+                }
+            }
+        } else if (lhs instanceof TypeChar) {
+            int lhsPrecision = ((TypeChar)lhs).getPrecision(); 
+            if (rhs instanceof TypeChar) {
+                int rhsPrecision = ((TypeChar)rhs).getPrecision();
+                if (rhsPrecision< lhsPrecision) {
+                    result=true;
+                }
+            }
+        } else if (lhs instanceof TypeBit) {
+            int lhsPrecision = ((TypeBit)lhs).getPrecision(); 
+            if (rhs instanceof TypeBit) {
+                int rhsPrecision = ((TypeBit)rhs).getPrecision();
+                if (rhsPrecision< lhsPrecision) {
+                    result=true;
+                }
+            }
+        }    
+        return result;
+    }
     public static Long convertBitStringToLong(String bitstring) {
         int base = 0;
         int bitsPerPosition = 0;

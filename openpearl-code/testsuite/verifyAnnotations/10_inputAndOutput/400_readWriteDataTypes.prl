@@ -1,0 +1,87 @@
+MODULE(xx);
+
+PROBLEM;
+SPC file DATION INOUT FIXED(15) DIM(*,80) DIRECT GLOBAL(other);
+SPC fileAll DATION INOUT ALL  DIM(*,80) DIRECT GLOBAL(other);
+
+   DCL f7 FIXED(7);
+   DCL f15 FIXED(15);
+   DCL f31 FIXED(31);
+
+   DCL fl FLOAT;
+   DCL d DURATION;
+   DCL clk CLOCK;
+   DCL c4 CHAR(4);
+   DCL b5 BIT(5);
+
+
+read: PROC;
+   READ f15 FROM file;
+   READ f7 FROM file;
+/*$     ^
+error: READ: type mismatch: required: FIXED(15) got FIXED(7)
+*/
+   READ f31 FROM file;
+/*$     ^
+error: READ: type mismatch: required: FIXED(15) got FIXED(31)
+*/
+   READ fl, d, clk, c4, b5 FROM file;
+/*$     ^
+error: READ: type mismatch: required: FIXED(15) got FLOAT(23)
+*/
+/*$         ^
+error: READ: type mismatch: required: FIXED(15) got DURATION
+*/
+/*$            ^
+error: READ: type mismatch: required: FIXED(15) got CLOCK
+*/
+/*$                 ^
+error: READ: type mismatch: required: FIXED(15) got CHAR(4)
+*/
+/*$                     ^
+error: READ: type mismatch: required: FIXED(15) got BIT(5)
+*/
+END;
+
+write: PROC;
+   WRITE f15 TO file;
+   WRITE 1+2 TO file;
+   WRITE f7 TO file;
+   WRITE f31 TO file;
+/*$      ^
+error: WRITE: type mismatch: required: FIXED(15) got FIXED(31)
+*/
+   WRITE fl, d, clk, c4, b5 TO file;
+/*$      ^
+error: WRITE: type mismatch: required: FIXED(15) got FLOAT(23)
+*/
+/*$          ^
+error: WRITE: type mismatch: required: FIXED(15) got DURATION
+*/
+/*$             ^
+error: WRITE: type mismatch: required: FIXED(15) got CLOCK
+*/
+/*$                  ^
+error: WRITE: type mismatch: required: FIXED(15) got CHAR(4)
+*/
+/*$                      ^
+error: WRITE: type mismatch: required: FIXED(15) got BIT(5)
+*/
+END;
+
+readAll: PROC;
+   READ f15 FROM fileAll;
+   READ f7 FROM fileAll;
+   READ f31 FROM fileAll;
+   READ fl, d, clk, c4, b5 FROM fileAll;
+END;
+
+writeAll: PROC;
+   WRITE f15 TO fileAll;
+   WRITE 1+2 TO fileAll;
+   WRITE f7 TO fileAll;
+   WRITE f31 TO fileAll;
+   WRITE fl, d, clk, c4, b5 TO fileAll;
+END;
+
+MODEND; 

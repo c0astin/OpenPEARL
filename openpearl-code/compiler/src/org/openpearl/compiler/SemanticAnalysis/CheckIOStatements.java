@@ -774,8 +774,6 @@ implements OpenPearlVisitor<Void> {
             checkReadWriteTakeSendDataTypes(ctx.ioDataList());
             checkArraySliceForTakeSendConvert(ctx.ioDataList(),false);
 
-            // TODO: (rm) check type of transfer data is missing!!
-
             visitChildren(ctx);
         }
         ErrorStack.leave();
@@ -792,7 +790,15 @@ implements OpenPearlVisitor<Void> {
                 if (ioDataList.ioListElement(i).expression() != null) {
                     ASTAttribute attr = m_ast.lookup(ioDataList.ioListElement(i).expression());
                     if (attr != null) {
-                        if (!attr.getType().equals(m_typeDation.getTypeOfTransmissionAsType())) {
+                        boolean typeMismatch = false;
+                        if (m_directionInput && (!attr.getType().equals(m_typeDation.getTypeOfTransmissionAsType()))) {
+                            typeMismatch=true;
+                        }
+                        if ((!m_directionInput) && (!CommonUtils.mayBeAssignedTo(m_typeDation.getTypeOfTransmissionAsType(),attr.getType()))) {
+                            typeMismatch=true;
+                        }
+                        
+                        if (typeMismatch) {
                             ErrorStack.enter(ioDataList.ioListElement(i).expression());
                             ErrorStack.add("type mismatch: required: "
                                     + m_typeDation.getTypeOfTransmission() + " got "
@@ -805,6 +811,8 @@ implements OpenPearlVisitor<Void> {
         }
 
     }
+
+
     
     private void checkArraySliceForTakeSendConvert(OpenPearlParser.IoDataListContext ioDataList, boolean forbiddenInPearl90) {
         if (ioDataList != null) {

@@ -77,6 +77,8 @@ implements OpenPearlVisitor<ST> {
     private ST m_dationSpecificationInitializers;
     private boolean m_useNamespaceForGlobals;
     private String m_thisNamespace;
+    private TypeDefinition m_typeOfTransmission;  // used for type expansion in WRITE and SEND
+    
     public enum Type {
         BIT, CHAR, FIXED
     }
@@ -3290,7 +3292,8 @@ System.out.println("CppCg@487 called");
         ST stmt = m_group.getInstanceOf("iojob_io_statement");
         stmt.add("command", "get");
         ErrorStack.enter(ctx, "GET");
-
+        m_typeOfTransmission=null;  // no type expansion here
+        
         stmt.add("dation", visitAndDereference(ctx.dationName().name()));
 
         addDataAndFormatListToST(stmt, ctx.listOfFormatPositions(), ctx.ioDataList());
@@ -3305,6 +3308,7 @@ System.out.println("CppCg@487 called");
         //ST stmt = m_group.getInstanceOf("put_statement");
         ST stmt = m_group.getInstanceOf("iojob_io_statement");
         ErrorStack.enter(ctx, "PUT");
+        m_typeOfTransmission=null;  // no type expansion here
 
         stmt.add("command", "put");
         stmt.add("dation", visitAndDereference(ctx.dationName().name()));
@@ -3323,8 +3327,7 @@ System.out.println("CppCg@487 called");
 
         boolean hasFormats = false;
 
-        // this should never occur, since this is checked in the semantic analysis
-        // in CheckIOStatements
+
         ST formatList = m_group.getInstanceOf("iojob_formatlist");
 
         // for PUT and GET set format LIST, if the format list is empty
@@ -3349,7 +3352,7 @@ System.out.println("CppCg@487 called");
             }
         }
 
-        // create list of datas
+        // create list of data elements
         ST dataList = getIojobDataList(dataCtx);
 
         stmt.add("datalist", dataList);
@@ -3384,9 +3387,14 @@ System.out.println("CppCg@487 called");
                         //       the 'type' and 'size' field with CHARSLICE and the size of the base type
                         //       the selection range must be passed in param2
                         //   TypeVariableChar need 'lwb' and 'upb'
-                        ST data = getIojobDataItem(attr.m_type);
+                        ST data;
+                        if (m_typeOfTransmission == null) {
+                           data = getIojobDataItem(attr.m_type);
+                        } else {
+                            data = getIojobDataItem(m_typeOfTransmission);
+                        }
                         OpenPearlParser.ExpressionContext e = ctx.ioListElement(i).expression();
-
+                        
                         if (attr.getType() instanceof TypeVariableChar) {
                             OpenPearlParser.CharSelectionContext ssc =
                                     (OpenPearlParser.CharSelectionContext) (e.getChild(0).getChild(0).getChild(0));
@@ -3398,11 +3406,35 @@ System.out.println("CppCg@487 called");
                                     visitAndDereference(ssc.charSelectionSlice().expression(1)));
 
                         } else if (attr.isReadOnly() || attr.getVariable() != null) {
-                            // constant or  variable with simple type
-                            //                            data.add("variable", getExpression(ctx.ioListElement(i).expression()));
-                            data.add("variable",
-                                    visitAndDereference(ctx.ioListElement(i).expression()));
-                            data.add("nbr_of_elements", "1");
+                            // check if we must extend to the larger type
+                            if (m_typeOfTransmission != null &&
+                                !attr.getType().equals(m_typeOfTransmission)) {
+                                // we must convert to m_typeOfTransmission
+                                ST variable_declaration =
+                                        m_group.getInstanceOf("variable_denotation");
+                                variable_declaration.add("name", "tempVar" + i);
+                                variable_declaration.add("type", m_typeOfTransmission.toST(m_group));
+                            
+                                ST stValue = m_group.getInstanceOf("expression");
+                                stValue.add("code", visitAndDereference(ctx.ioListElement(i).expression()));
+                                ST stInit = m_group.getInstanceOf("variable_init");
+                                stInit.add("value",stValue);
+                                variable_declaration.add("init",stInit);
+                                        //visitAndDereference(ctx.ioListElement(i).expression()));
+                                //variable_declaration.add("no_decoration", 1);
+                                dataList.add("data_variable", variable_declaration);
+                                dataList.add("data_index", i);
+
+                                data.add("variable", "tempVar" + i);
+                                data.add("nbr_of_elements", "1");
+
+                            } else {
+                               // constant or  variable with simple type
+                               //                            data.add("variable", getExpression(ctx.ioListElement(i).expression()));
+                               data.add("variable",
+                                      visitAndDereference(ctx.ioListElement(i).expression()));
+                               data.add("nbr_of_elements", "1");
+                            }
                         } else {
                             // it is an expression
                             // System.out.println("need temp variable for expression: "+ ctx.expression(i).getText());
@@ -3949,9 +3981,11 @@ System.out.println("CppCg@487 called");
     @Override
     public ST visitSendStatement(OpenPearlParser.SendStatementContext ctx) {
         ST st = m_group.getInstanceOf("iojob_io_statement");
-        ErrorStack.enter(ctx, "SEND");
-        st.add("command", "send");
 
+        st.add("command", "send");
+        ASTAttribute attr = m_ast.lookup(ctx.dationName().name());
+        m_typeOfTransmission=((TypeDation)(attr.getType())).getTypeOfTransmissionAsType();
+        ErrorStack.enter(ctx, "SEND");
         st.add("dation", visitAndDereference(ctx.dationName().name()));
 
         addDataAndFormatListToST(st, ctx.listOfFormatPositions(), ctx.ioDataList());
@@ -3964,6 +3998,7 @@ System.out.println("CppCg@487 called");
     public ST visitTakeStatement(OpenPearlParser.TakeStatementContext ctx) {
         ST st = m_group.getInstanceOf("iojob_io_statement");
         st.add("command", "take");
+        m_typeOfTransmission=null;  // no type expansion here
         ErrorStack.enter(ctx, "TAKE");
 
         st.add("dation", visitAndDereference(ctx.dationName().name()));
@@ -3978,7 +4013,7 @@ System.out.println("CppCg@487 called");
     public ST visitReadStatement(OpenPearlParser.ReadStatementContext ctx) {
         ST st = m_group.getInstanceOf("iojob_io_statement");
         st.add("command", "read");
-
+        m_typeOfTransmission=null;  // no type expansion here
         ErrorStack.enter(ctx, "READ");
 
         st.add("dation", visitAndDereference(ctx.dationName().name()));
@@ -3996,6 +4031,8 @@ System.out.println("CppCg@487 called");
         st.add("command", "write");
 
         ErrorStack.enter(ctx, "WRITE");
+        ASTAttribute attr = m_ast.lookup(ctx.dationName().name());
+        m_typeOfTransmission=((TypeDation)(attr.getType())).getTypeOfTransmissionAsType();
 
         st.add("dation", visitAndDereference(ctx.dationName().name()));
 

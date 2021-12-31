@@ -11,6 +11,57 @@ PROBLEM;
    DCL stdOut DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
 
 DCL tableAS DATION INOUT FIXED DIM(*) FORWARD CREATED(disc);
+DCL tableFloat DATION INOUT FLOAT DIM(*) FORWARD CREATED(disc);
+
+writeSmallerFloat: PROC(errors FIXED(15) IDENT);
+   DCL f7 FIXED(7);
+   DCL f FLOAT;
+   DCL fail BIT(1) INIT('0'B1);
+
+   OPEN tableFloat BY ANY,IDF('file1.txt');
+   FOR i TO 10 REPEAT
+      f7 = i;
+      WRITE f7 TO tableFloat;
+   END;
+   CLOSE tableFloat;
+   OPEN tableFloat BY OLD,IDF('file1.txt');
+   FOR i TO 10 REPEAT
+      READ f FROM tableFloat;
+      IF f /= i THEN
+         PUT 'writeSmallerFixed failed : read ', f,' expected ', i TO stdOut BY A,F(3),A,F(3),SKIP;
+         fail = '1'B1;
+      FIN;
+   END;
+   IF fail THEN 
+      errors = errors + 1;
+   FIN;
+   CLOSE tableFloat;
+END;
+
+writeSmallerFixed: PROC(errors FIXED(15) IDENT);
+   DCL f7 FIXED(7);
+   DCL f FIXED;
+   DCL fail BIT(1) INIT('0'B1);
+
+   OPEN tableAS BY ANY,IDF('file1.txt');
+   FOR i TO 10 REPEAT
+      f7 = i;
+      WRITE f7 TO tableAS;
+   END;
+   CLOSE tableAS;
+   OPEN tableAS BY OLD,IDF('file1.txt');
+   FOR i TO 10 REPEAT
+      READ f FROM tableAS;
+      IF f /= i THEN
+         PUT 'writeSmallerFixed failed : read ', f,' expected ', i TO stdOut BY A,F(3),A,F(3),SKIP;
+         fail = '1'B1;
+      FIN;
+   END;
+   IF fail THEN 
+      errors = errors + 1;
+   FIN;
+   CLOSE tableAS;
+END;
 
 writeArraySlice: PROC (errors FIXED(15) IDENT);
    DCL data(10) FIXED;
@@ -203,10 +254,12 @@ __cpp__("pearlrt::Control::setExitCode(1);");
      writeArraySlice(error);
      readArraySlice(error);
 
+     writeSmallerFixed(error);
+     writeSmallerFloat(error);
+
     IF error == 0 THEN
       PUT 'success' TO stdOut BY A, SKIP;
     FIN;
-
 END;
 MODEND;
 
