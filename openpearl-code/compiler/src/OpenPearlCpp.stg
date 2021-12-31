@@ -1383,8 +1383,8 @@ SIGN(operand) ::= <%
 <operand>.sign()
 %>
 
-SIZEOF(operand) ::= <%
-((pearlrt::Fixed\<31>)(sizeof(<operand>)))
+SIZEOF(operand,isArray) ::= <%
+((pearlrt::Fixed\<31>)(sizeof(<if(isArray)>data<endif><operand>)))
 %>
 
 REM(lhs,rhs) ::= <%

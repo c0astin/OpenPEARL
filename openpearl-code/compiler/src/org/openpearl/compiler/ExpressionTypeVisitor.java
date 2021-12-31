@@ -2263,7 +2263,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (ctx.name() != null) {
             SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.name().ID().getText());
             if (entry != null && entry instanceof VariableEntry) {
-                ASTAttribute nameAttr = new ASTAttribute(type);
+                ASTAttribute nameAttr = new ASTAttribute(((VariableEntry)entry).getType());
                 m_ast.put(ctx.name(), nameAttr);
             } else {
                 ErrorStack.add("'" + ctx.name().ID().getText() + "' is not defined ***");

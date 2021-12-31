@@ -4348,9 +4348,12 @@ System.out.println("CppCg@487 called");
     @Override
     public ST visitSizeofExpression(OpenPearlParser.SizeofExpressionContext ctx) {
         ST st = m_group.getInstanceOf("SIZEOF");
-        ASTAttribute attr = m_ast.lookup(ctx);
 
         if (ctx.name() != null) {
+            ASTAttribute attr = m_ast.lookup(ctx.name());
+            if (attr.getType() instanceof TypeArray) {
+               st.add("isArray", 1);
+            } 
             st.add("operand", visitName(ctx.name()));
         } else if (ctx.simpleType() != null) {
             String typeName = "";
