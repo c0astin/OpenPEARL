@@ -532,23 +532,6 @@ System.out.println("CppCg@487 called");
         return st;
     }
 
-// not longer in use (rm 202-20-24) 
-//    @Override
-//    public ST visitVariableDeclaration(VariableDeclarationContext ctx) {
-//        ST scalarVariableDeclaration = m_group.getInstanceOf("ScalarVariableDeclaration");
-//        if (ctx != null) {
-//            for (int i = 0; i < ctx.variableDenotation().size(); i++) {
-//                scalarVariableDeclaration.add("variable_denotations",
-//                        visitVariableDenotation(ctx.variableDenotation().get(i)));
-//            }
-//
-//            //            if (ctx.cpp_inline() != null) {
-//            //                scalarVariableDeclaration.add("cpp", visitCpp_inline(ctx.cpp_inline()));
-//            //            }
-//        }
-//        return scalarVariableDeclaration;
-//
-//    }
  
     private ST generateSpecification(InterruptEntry ve) {
         ST st = m_group.getInstanceOf("InterruptSpecifications");
@@ -581,7 +564,6 @@ System.out.println("CppCg@487 called");
                 FormalParameter f = ve.getFormalParameters().get(i);
                 ST fp = m_group.getInstanceOf("FormalParameter");
                 //FormalParameter(id,type,assignmentProtection,passIdentical,isArray) ::= <%
-                TypeDefinition td = f.getType();
                 fp.add("type", visitTypeAttribute(f.getType()));
                 fp.add("assignmentProtection", f.getAssigmentProtection());
                 fp.add("passIdentical", f.passIdentical);
@@ -842,6 +824,8 @@ System.out.println("CppCg@487 called");
                 TypeDefinition basetype = ((TypeReference)ve.getType()).getBaseType();
                 ref = m_group.getInstanceOf("TypeReferenceArray");
                 ref.add("basetype", basetype);
+            } else if (tr.getBaseType() instanceof TypeRefChar){
+                ref = m_group.getInstanceOf("TypeRefChar");
             } else {
                 ref = m_group.getInstanceOf("TypeReferenceSimpleType");
                 ref.add("BaseType", visitTypeAttribute(tr.getBaseType()));
@@ -4348,13 +4332,26 @@ System.out.println("CppCg@487 called");
     @Override
     public ST visitSizeofExpression(OpenPearlParser.SizeofExpressionContext ctx) {
         ST st = m_group.getInstanceOf("SIZEOF");
-
+        TypeDefinition type = null;
+ 
+//| op='SIZEOF' ( name | simpleType | typeStructure) ('MAX'|'LENGTH')?   # sizeofExpression     
+        
         if (ctx.name() != null) {
             ASTAttribute attr = m_ast.lookup(ctx.name());
-            if (attr.getType() instanceof TypeArray) {
-               st.add("isArray", 1);
-            } 
-            st.add("operand", visitName(ctx.name()));
+            if (ctx.refCharSizeofAttribute() != null) {
+               String s = ctx.refCharSizeofAttribute().getText();
+               // s is ether MAX or LENGTH
+               st.add(s, 1);
+            }
+            type = attr.getType();
+            if (type instanceof TypeArray) {
+                st.add("number",visitName(ctx.name()));
+                type = ((TypeArray)(type)).getBaseType();
+                st.add("operand",type.toST(m_group));
+
+            } else {
+                st.add("operand", visitName(ctx.name()));
+            }
         } else if (ctx.simpleType() != null) {
             String typeName = "";
             if (ctx.simpleType().typeInteger() != null) {
@@ -4368,7 +4365,7 @@ System.out.println("CppCg@487 called");
                 typeName = "pearlrt::Fixed<" + length + ">";
             } else if (ctx.simpleType().typeDuration() != null) {
                 typeName = "pearlrt::Duration";
-            } else if (ctx.simpleType().typeClock() != null) {
+           } else if (ctx.simpleType().typeClock() != null) {
                 typeName = "pearlrt::Clock";
             } else if (ctx.simpleType().typeFloatingPointNumber() != null) {
                 long length = Defaults.FLOAT_PRECISION;
@@ -4396,7 +4393,10 @@ System.out.println("CppCg@487 called");
             }
 
             st.add("operand", typeName);
-        }
+        } else if (ctx.typeStructure() != null) {
+            ErrorStack.addInternal(ctx.typeStructure(), "SIZEOF", "STRUCT [ ...] is not allowed");
+            return null;
+        } 
         //st.add("operand", visitAndDereference(ctx.getChild(1)));
         return st;
     }

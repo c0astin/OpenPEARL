@@ -2254,8 +2254,8 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
     public Void visitSizeofExpression(OpenPearlParser.SizeofExpressionContext ctx) {
         Log.debug(
                 "ExpressionTypeVisitor:visitSizeofExpression:ctx" + CommonUtils.printContext(ctx));
-
-        ErrorStack.enter(ctx.getParent()); // TODO: MS Wrong ctx ?!?
+        boolean isRefChar = false;
+        ErrorStack.enter(ctx); 
         TypeFixed type = new TypeFixed(Defaults.FIXED_LENGTH);
         ASTAttribute expressionResult = new ASTAttribute(type);
         expressionResult.setReadOnly(true);
@@ -2263,12 +2263,26 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (ctx.name() != null) {
             SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.name().ID().getText());
             if (entry != null && entry instanceof VariableEntry) {
-                ASTAttribute nameAttr = new ASTAttribute(((VariableEntry)entry).getType());
+                VariableEntry ve = (VariableEntry)entry;
+                ASTAttribute nameAttr = new ASTAttribute(ve.getType());
                 m_ast.put(ctx.name(), nameAttr);
+                if (ve.getType() instanceof TypeReference) {
+                    if (((TypeReference)ve.getType()).getBaseType() instanceof TypeRefChar) {
+                        isRefChar = true;
+                    }
+                }
             } else {
                 ErrorStack.add("'" + ctx.name().ID().getText() + "' is not defined ***");
             }
         }
+        if (ctx.refCharSizeofAttribute() != null) {
+            if (isRefChar) {
+                
+            } else {
+                ErrorStack.add("MAX/LENGTH may only be used on type REF CHAR()");
+            }
+        }
+        
 
         m_ast.put(ctx, expressionResult);
 
