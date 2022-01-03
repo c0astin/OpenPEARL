@@ -3,12 +3,12 @@ test for proper access to objects via REFs
 done: FIXED, array of REFs upon FIXED
     INTERRUPT
     TASK (only REF assignment ,REF compare , ACTIVATE via REF)
+    DATION (only REF assignment, REF compare, 
+            PUT TO referencedDation scalar and array of REF )
+    SEMA,BOLT (array of .. and array of REF ...)
 
 missing:
-    TASK-function 
     REF PROC
-    DATION 
-    SEMA,BOLT (array of .. and array of REF ...)
 
 */
 MODULE(ref_deref);
@@ -23,9 +23,8 @@ SPC stdout DATION OUT SYSTEM ALPHIC ;
 SPC irupt1 INTERRUPT;
 SPC irupt2 INTERRUPT;
 
-DCL so                 DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+DCL so                 DATION OUT ALPHIC DIM(*,80) TFU FORWARD NOSTREAM CREATED(stdout);
 
-DCL dationArray(4) REF DATION OUT ALPHIC DIM(*,80) FORWARD;
 DCL refArray(10) REF FIXED;
 
 DCL t1runs FIXED INIT(0);
@@ -47,6 +46,15 @@ maintask: TASK  PRIO 10 MAIN;
 
     CALL irupt;
     CALL printTestResult('irupt');
+
+    CALL dation;
+    CALL printTestResult('dation');
+
+    CALL sema;
+    CALL printTestResult('sema');
+
+    CALL bolt;
+    CALL printTestResult('bolt');
 
     IF NOT allTestsOk THEN
       __cpp__("   pearlrt::Control::setExitCode(1);       ");
@@ -204,17 +212,15 @@ task: PROC;
      fails := fails + 1;
    FIN;
 
-   /* this is not working yet (2020-10-29) rm
    testNbr := testNbr + 1;
    rt1 = TASK;
    rt2 := TASK(maintask);
-   IF rt1 /= rt2 THEN
+   IF rt1 IS rt2 THEN
      PUT 'fine: rt1 points to maintask' TO so BY A, SKIP;
    ELSE
      PUT 'test ',testNbr,': error: rt1 should point to maintask' TO so BY A,F(3),A, SKIP;
      fails := fails + 1;
    FIN;
-   */
 
 END;
 
@@ -379,6 +385,7 @@ DCL shutdown BIT(1) INIT('0'B);
 
 irupt: PROC;
    DCL rirupt REF INTERRUPT;
+   DCL ari(2) REF INTERRUPT;
 
    PUT 'irupt tests' TO so BY A, SKIP;
    ACTIVATE iruptTask;
@@ -400,7 +407,18 @@ irupt: PROC;
      PUT 'test ',testNbr,': error: REF irupt is not irupt1' TO so BY A,F(3),A, SKIP;
      fails := fails + 1;
    FIN; 
-   
+
+   testNbr := testNbr + 1;
+   ari(1) = irupt1;
+   IF ari(1) IS irupt1 THEN
+      PUT 'fine: ari(1) is irupt1' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: ari(1) is not irupt1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+  
+   TRIGGER ari(1);
+ 
    testNbr := testNbr + 1;
    iruptTaskDidRun := 0;
    ENABLE irupt1;
@@ -471,6 +489,108 @@ iruptTask: TASK PRIO 1;
       iruptTaskDidRun = iruptTaskDidRun + 1;
    END;
    PUT 'iruptTask end' TO so BY A, SKIP;
+END;
+
+
+dation: PROC;
+   DCL refDation REF DATION OUT ALPHIC DIM(*,80) TFU FORWARD NOSTREAM;
+   DCL dationArray(4) REF DATION OUT ALPHIC DIM(*,80) TFU FORWARD NOSTREAM;
+   PUT 'dation tests' TO so BY A, SKIP;
+
+   dationArray(1) = so;
+
+   testNbr := testNbr + 1;
+   refDation = so;
+   IF refDation IS so THEN
+      PUT 'fine: refDation is so' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: refDation is not so' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+  
+   testNbr := testNbr + 1;
+   dationArray(1) = so;
+   IF dationArray(1) IS so THEN
+      PUT 'fine: dationArray(1) is so' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: dationArray(1) is not so' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+  
+   testNbr := testNbr + 1;
+   PUT 'fine: PUT TO refDation' TO refDation BY A, SKIP;
+  
+   testNbr := testNbr + 1;
+   PUT 'fine: PUT TO dationArray(1)' TO dationArray(1) BY A, SKIP;
+END;
+
+DCL sema1 SEMA PRESET(1);
+
+sema: PROC;
+   DCL refSema REF SEMA;
+   DCL refSemaArray(4) REF SEMA;
+   PUT 'sematests' TO so BY A, SKIP;
+
+   refSemaArray(1) = sema1;
+
+   testNbr := testNbr + 1;
+   IF refSema IS NIL THEN
+      PUT 'fine: refSema is NIL' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: refSema is not NIL' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+
+   testNbr := testNbr + 1;
+   refSema         = sema1;
+   IF refSema IS sema1 THEN
+      PUT 'fine: refSema is sema1' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: refSema is not sema1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+
+   testNbr := testNbr + 1;
+   REQUEST refSema;
+   IF TRY sema1 EQ '0'B1 THEN
+      PUT 'fine: REQUEST refSema done' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: REQUEST refSema failed' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+   RELEASE refSema;
+END;
+
+DCL bolt1 BOLT;
+bolt: PROC;
+   DCL refBolt REF BOLT;
+
+   DCL refBoltArray(4) REF BOLT;
+   PUT 'bolttests' TO so BY A, SKIP;
+
+   refBoltArray(1) = bolt1;
+
+   testNbr := testNbr + 1;
+   IF refBolt IS NIL THEN
+      PUT 'fine: refBolt is NIL' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: refBolt is not NIL' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+
+   testNbr := testNbr + 1;
+   refBolt = bolt1;
+   IF refBolt IS bolt1 THEN
+      PUT 'fine: refBolt is bolt1' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: refBolt is not bolt1' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+
+   testNbr := testNbr + 1;
+   ENTER refBolt;
+   LEAVE bolt1;
+   PUT 'fine: ENTER refBolt is ok' TO so BY A, SKIP;
 END;
 
 MODEND;

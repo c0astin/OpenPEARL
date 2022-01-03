@@ -826,6 +826,9 @@ System.out.println("CppCg@487 called");
                 ref.add("basetype", basetype);
             } else if (tr.getBaseType() instanceof TypeRefChar){
                 ref = m_group.getInstanceOf("TypeRefChar");
+            } else if (tr.getBaseType() instanceof TypeDation){
+                ref = m_group.getInstanceOf("TypeReferenceDation");
+                ref.add("BaseType", visitTypeAttribute(tr.getBaseType()));
             } else {
                 ref = m_group.getInstanceOf("TypeReferenceSimpleType");
                 ref.add("BaseType", visitTypeAttribute(tr.getBaseType()));
@@ -1014,10 +1017,19 @@ System.out.println("CppCg@487 called");
 
 
   
+    // usually the method toST of the TypeDefinitiosn works fine
+    // except, if we have REF DATION, here we need a pointer
     private ST visitTypeAttribute(TypeDefinition type) {
-        ST st = m_group.getInstanceOf("TypeAttribute");
+       
         String s = type.toString();
-
+        if (type instanceof TypeReference) {
+            if (((TypeReference)type).getBaseType() instanceof TypeDation) {
+                ST st = m_group.getInstanceOf("TypeReferenceDation"); 
+                st.add("BaseType", ((TypeReference)type).getBaseType().toST(m_group));
+                return st;
+            }
+        }
+// TypeReferenceDation
         return type.toST(m_group);
     }
 
@@ -2174,29 +2186,25 @@ System.out.println("CppCg@487 called");
             if (attr.isFunctionCall()) {
                 // code for dereference an function call missing!
                 // code: bit15 = refFunctionWithBitResult;
-                ErrorStack.addInternal("typeXX := refFunctionReturningTypeXX not implemented yet");
+                ErrorStack.addInternal(ctx,"typeXX := refFunctionReturningTypeXX","not implemented yet");
+            } else if (variable.getType() instanceof TypeReference && ctx.name() != null) {
+
+                
+                stOfName = generateLHS(ctx, m_currentSymbolTable);
+               // ErrorStack.addInternal(ctx,"typeRef.xx", "not implemented yet");
             } else if (variable.getType() instanceof TypeArray && ctx.listOfExpression() != null) {
                 stOfName = generateLHS(ctx, m_currentSymbolTable);
                // expression.add("id", generateLHS(ctx, m_currentSymbolTable));
             } else if (variable.getType() instanceof TypeStructure) {
                 stOfName = generateLHS(ctx, m_currentSymbolTable);
-//                if (variable.isSpecified()) {
-//                    String fromModule = variable.getGlobalAttribute();
-//                    if (!fromModule.equals(m_module.getName())) {
-//                        ST fromns=m_group.getInstanceOf("fromNamespace");
-//                        fromns.add("fromNs", fromModule);
-//                        fromns.add("name",temp);
-//                        expression.add("id", fromns);
-//                    }
-//                }    else {    
-//                   expression.add("id", temp);
-//                }
             } else {
                 stOfName =  getUserVariable(variable);
                 //expression.add("id", getUserVariable(variable)); //getUserVariable(ctx.ID().getText()));
             }
+
+        } else if (entry instanceof TaskEntry) {
+            stOfName = getUserVariable(entry);
             
-            // add namespace here for all alternatives ??????
         } else {
             stOfName =  getUserVariableWithoutNamespace(ctx.ID().getText());
            // expression.add("id", getUserVariableWithoutNamespace(ctx.ID().getText()));
@@ -2850,14 +2858,18 @@ System.out.println("CppCg@487 called");
     private void setTaskNameToST(ST st, OpenPearlParser.NameContext ctx) {
         if (ctx != null) {
             ASTAttribute attr = m_ast.lookup(ctx);
+            
             ST tsk = visitAndDereference(ctx);
-            if (attr.getSymbolTableEntry() instanceof FormalParameter) {
-                st.add("task", tsk);
-            } else {
-                ST taskName = m_group.getInstanceOf("TaskName");
-                taskName.add("name",tsk);
-                st.add("task", taskName);
-            }
+            st.add("task", tsk);
+     
+//            if (attr.getSymbolTableEntry() instanceof FormalParameter ||
+//                    attr.getType() instanceof TypeReference) {
+//                st.add("task", tsk);
+//            } else {
+//                ST taskName = m_group.getInstanceOf("TaskName");
+//                taskName.add("name",tsk);
+//                st.add("task", taskName);
+//            }
         }
     }
     
@@ -3949,6 +3961,14 @@ System.out.println("CppCg@487 called");
     private ST getUserVariable(SymbolTableEntry user_variable) {
         ST st = m_group.getInstanceOf("user_variable");
         st.add("name", user_variable.getName());
+        
+        if (user_variable instanceof TaskEntry) {
+            ST stTask = m_group.getInstanceOf("TaskName");
+            stTask.add("name", st);
+            st = stTask;
+        } 
+        
+      
         if (user_variable.isSpecified()) {
             String fromModule = user_variable.getGlobalAttribute();
             if (!fromModule.equals(m_module.getName())) {
@@ -5604,7 +5624,7 @@ System.out.println("CppCg@487 called");
      * array and structures.
      *
      * @param ctx NameContext
-     * @param symbolTable Symboltable of the current scope
+     * @param symbolTable symbol table of the current scope
      * @return TypeDefinition of a given name
      */
     private ST generateLHS(OpenPearlParser.NameContext ctx, SymbolTable symbolTable) {
@@ -5627,6 +5647,14 @@ System.out.println("CppCg@487 called");
             VariableEntry var = (VariableEntry) symbolTableEntry;
             type = var.getType();
 
+            if (type instanceof TypeReference && ctx.name() != null) {
+                // deref
+                ST cont = m_group.getInstanceOf("CONT");
+                cont.add("operand", getUserVariable(var));
+                lhs.add("expr",cont);
+                type = ((TypeReference)type).getBaseType();
+                struct = (TypeStructure)type;
+            } else 
             if (type instanceof TypeArray) {
                 ST arrayLHS = m_group.getInstanceOf("ArrayLHS");
                 TypeArray arrayType = (TypeArray) type;
@@ -5645,8 +5673,7 @@ System.out.println("CppCg@487 called");
                 if (type instanceof TypeStructure) {
                     struct = (TypeStructure) type;
                 }
-            } else if (type instanceof TypeReference) {
-                type = ((TypeReference) type).getBaseType();
+
             } else if (type instanceof TypeStructure) {
                 struct = (TypeStructure) type;
                 lhs.add("expr", generateStructLHS(ctx, var, fromns, struct));
@@ -5693,7 +5720,17 @@ System.out.println("CppCg@487 called");
                     if (!(type instanceof TypeStructure)) {
                       lhs.add("expr", structureComponent.m_alias);
                     } else {
-                        ErrorStack.addInternal(lctx, "CppCodeGen@5654","auto rereference of ref to struct not implemented");
+                        if (lctx.name() == null) {
+                            lhs.add("expr", structureComponent.m_alias);
+                        } else {
+                            // we have a reference as component
+                            lhs.add("expr", structureComponent.m_alias);
+                            ST cont = m_group.getInstanceOf("CONT");
+                            cont.add("operand", lhs);
+                            lhs= m_group.getInstanceOf("LHS");
+                            lhs.add("expr", cont);
+                           //ErrorStack.addInternal(lctx, "CppCodeGen@5654","auto rereference of ref to struct not implemented");
+                        }
                     }
                 } else if (type instanceof TypeStructure) {
                     struct = (TypeStructure) type;

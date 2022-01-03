@@ -2708,6 +2708,8 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                 if (m_debug)
                     Log.debug(
                             "ExpressionTypeVisitor: visit\"+relation+\"RelationalExpression: rule#7");
+
+                    
             } else {
                 ErrorStack.add(
                         "type mismatch: '"
@@ -2847,6 +2849,15 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                         }
                     } else if ((type1 == null && type2 instanceof TypeArraySpecification)
                             || (type2 == null && type1 instanceof TypeArraySpecification)
+                            || type1.equals(type2)) {
+                        typeMismatch = false;
+                    
+                    } else if ((type1 == null && type2 instanceof TypeTask)
+                            || (type2 == null && type1 instanceof TypeTask)
+                            || type1.equals(type2)) {
+                        typeMismatch = false;
+                    } else if ((type1 == null && type2 instanceof TypeDation)
+                            || (type2 == null && type1 instanceof TypeDation)
                             || type1.equals(type2)) {
                         typeMismatch = false;
                     }
@@ -4219,6 +4230,9 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
     private Void reVisitName(OpenPearlParser.NameContext ctx) {
         Log.debug("ExpressionTypeVisitor:reVisitName:ctx" + CommonUtils.printContext(ctx));
         TypeDefinition currentType = m_type;
+        String ccc = ctx.getText();
+        Object o1 = ctx.listOfExpression();
+        Object o2 = ctx.name();
 
         /*
         if (ctx == null) {
@@ -4229,8 +4243,8 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         // do this only on intermediate elements
         // do not dereference of no listOfExpressions or no name is present
         if (m_type instanceof TypeReference
-                && m_autoDereference == true
-                && (ctx.listOfExpression() != null || ctx.name() != null)) {
+                && (m_autoDereference == true || (m_autoDereference == false && ctx != null))
+                && (ctx.listOfExpression() != null || ctx.name() != null || ctx != null)) {
             m_type = ((TypeReference) m_type).getBaseType();
             currentType = m_type;
         }

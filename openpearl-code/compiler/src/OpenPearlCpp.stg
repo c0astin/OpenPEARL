@@ -395,6 +395,11 @@ pearlrt::Duration
 TypeRefChar() ::= <<
 pearlrt::RefCharacter
 >>
+
+TypeReferenceDation(BaseType) ::= <<
+pearlrt::Ref \< <BaseType>* > 
+>>
+
 TypeReferenceSimpleType(BaseType) ::= <<
 pearlrt::Ref \< <BaseType> > 
 >>

@@ -80,7 +80,7 @@ public class CheckAssignment extends OpenPearlBaseVisitor<Void>
         lhsAttr = m_ast.lookup(ctx.name());
         ctxName = ctx.name();
 
-        lhsType = CommonUtils.getBaseTypeForName(ctxName, m_currentSymbolTable);
+        lhsType = lhsAttr.getType(); //  CommonUtils.getBaseTypeForName(ctxName, m_currentSymbolTable);
 
         id = ctxName.ID().getText();
 
