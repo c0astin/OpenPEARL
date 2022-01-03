@@ -2010,7 +2010,8 @@ expression:
     | op='ABS' expression                                   # absExpression
     | op='SIGN' expression                                  # signExpression
     | op='SIZEOF' ( name | simpleType | typeStructure)
-                  ('MAX'|'LENGTH')?                         # sizeofExpression
+//                  ('MAX'|'LENGTH')?                         
+                  refCharSizeofAttribute?					# sizeofExpression
     | op='NOT' expression                                   # notExpression
     | op='TOBIT' expression                                 # TOBITExpression
     | op='TOFIXED' expression                               # TOFIXEDExpression
@@ -2055,6 +2056,9 @@ expression:
     | expression unaryLiteralExpression                     # unarySignedLiteralExpression
     ;
 
+refCharSizeofAttribute
+    : ( 'MAX' | 'LENGTH')
+    ;
 ////////////////////////////////////////////////////////////////////////////////
 
 unaryLiteralExpression
