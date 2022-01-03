@@ -392,6 +392,9 @@ duration_type(init) ::= <<
 pearlrt::Duration
 >>
 
+TypeRefChar() ::= <<
+pearlrt::RefCharacter
+>>
 TypeReferenceSimpleType(BaseType) ::= <<
 pearlrt::Ref \< <BaseType> > 
 >>
@@ -1383,8 +1386,14 @@ SIGN(operand) ::= <%
 <operand>.sign()
 %>
 
-SIZEOF(operand,isArray) ::= <%
-((pearlrt::Fixed\<31>)(sizeof(<if(isArray)>data<endif><operand>)))
+SIZEOF(operand,number,MAX,LENGTH) ::= <%
+(<if(MAX)><operand>.getMax())
+<elseif(LENGTH)><operand>.getCurrent())
+<else>
+<if(number)>(pearlrt::Fixed\<31>)(<number>.getTotalNbrOfElements()) * <endif>	
+(pearlrt::Fixed\<31>)(sizeof(<operand>))
+)
+<endif>
 %>
 
 REM(lhs,rhs) ::= <%
