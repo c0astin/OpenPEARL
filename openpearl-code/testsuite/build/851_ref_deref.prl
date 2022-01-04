@@ -13,7 +13,7 @@ missing:
 */
 MODULE(ref_deref);
 SYSTEM;
-stdout: Console; !StdOut;
+stdout: StdOut; !Console throws EOF-Signal in Jenkins
 irupt1 : SoftInt(1);
 irupt2 : SoftInt(2);
 
