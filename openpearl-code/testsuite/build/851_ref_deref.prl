@@ -83,7 +83,8 @@ t2: TASK;
   t2runs = t2runs + 1;
 END;
 
-/*==========================================================================*/
+
+
 task: PROC;
    DCL (rt1,rt2) REF TASK;    
    DCL art(2) REF TASK;
@@ -224,7 +225,6 @@ task: PROC;
 
 END;
 
-/*=========================================================================*/
 fixedArrayRef: PROC;
    DCL f(10) FIXED;
    DCL rf(10) REF FIXED;
@@ -273,11 +273,10 @@ fixedArrayRef: PROC;
    FIN;
 END;
 
-/*==========================================================================*/
 fixed: PROC;
    DCL testNbr FIXED INIT(0);
    DCL (k1,k2)         FIXED,
-       (rk1,rk2) REF FIXED;     /* fixed reference variable */
+       (rk1,rk2) REF FIXED;    ! fixed reference variable 
 
    PUT 'PROC fixed' TO so BY A,SKIP;
 
@@ -490,7 +489,6 @@ iruptTask: TASK PRIO 1;
    END;
    PUT 'iruptTask end' TO so BY A, SKIP;
 END;
-
 
 dation: PROC;
    DCL refDation REF DATION OUT ALPHIC DIM(*,80) TFU FORWARD NOSTREAM;

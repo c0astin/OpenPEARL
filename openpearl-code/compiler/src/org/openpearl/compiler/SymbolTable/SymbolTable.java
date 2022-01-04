@@ -369,7 +369,7 @@ public class SymbolTable {
                 listOfVariableDeclarationsEntries.add(variableEntry);
             }
         }
-
+        Collections.sort( listOfVariableDeclarationsEntries, new SortByContext()); 
         return listOfVariableDeclarationsEntries;
     }
 

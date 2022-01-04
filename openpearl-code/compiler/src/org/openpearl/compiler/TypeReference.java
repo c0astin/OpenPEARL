@@ -82,7 +82,7 @@ public class TypeReference extends TypeDefinition {
         st.add("basetype", ((TypeArraySpecification)m_baseType).getBaseType().toST(group));
         return st;
       } else {
-        ST st = group.getInstanceOf("TypeReferenceSimpleType");
+        ST st = group.getInstanceOf("TypeReference");
         st.add("BaseType", m_baseType.toST(group));
         return st;
       }

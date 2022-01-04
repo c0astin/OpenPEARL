@@ -82,8 +82,12 @@ public class TypeArraySpecification extends TypeDefinition {
     }
     
     public String toString4IMC(boolean isInStructure) {
-        ErrorStack.addInternal(null, "TypeArraySpecification", "toString4IMC nit implemented");
-        return null;
+        String s = "(";
+        for (int i=0; i<m_dimensions-1; i++) {
+          s+=",";
+        }
+        s += ") "+this.getBaseType();
+        return s;
     }
     
     public ST toST(STGroup group) {

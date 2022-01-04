@@ -3331,20 +3331,22 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
     @Override
     public Void visitIdentifier(OpenPearlParser.IdentifierContext ctx) {
         String s = ctx.getText();
+      
+        // why is this necessary??
         // check if ctx is a formal parameter in a procedure specification
-        ParserRuleContext c = ctx;
-        while (c!= null && c instanceof ProcedureDenotationContext) {
-            c = c.getParent();
-        }
-        if (c!= null) {
-            // we are in a procedure denotation --> lets check if we have a formal parameter
-            while (c!= null && c instanceof FormalParameterContext) {
-                c = c.getParent();
-            }
-            if (c != null) {
-                return null;
-            }
-        }
+//        ParserRuleContext c = ctx;
+//        while (c!= null && c instanceof ProcedureDenotationContext) {
+//            c = c.getParent();
+//        }
+//        if (c!= null) {
+//            // we are in a procedure denotation --> lets check if we have a formal parameter
+//            while (c!= null && c instanceof FormalParameterContext) {
+//                c = c.getParent();
+//            }
+//            if (c != null) {
+//                return null;
+//            }
+//        }
         SymbolTableEntry se = m_currentSymbolTable.lookup(s);
         TypeDefinition type = null;
         if (se instanceof VariableEntry) {
@@ -3352,6 +3354,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             ASTAttribute attr = new ASTAttribute(type);
 
             if (((VariableEntry) se).getAssigmentProtection()) {
+                attr.setReadOnly(true);
                 Initializer i = ((VariableEntry) se).getInitializer();
                 if (i instanceof SimpleInitializer) {
                     attr.setConstant(((SimpleInitializer) i).getConstant());
@@ -3382,8 +3385,10 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         } else if (ctx.constantExpression() != null) {
             attr = m_ast.lookup(ctx.constantExpression());
         } else if (ctx.identifier() != null) {
-            // System.out.println("ID as initeleemnt: "+ctx.identifier().getText());
+            // System.out.println("ID as initelement: "+ctx.identifier().getText());
             attr = m_ast.lookup(ctx.identifier());
+        } else if (ctx.name() != null) {
+            attr = m_ast.lookup(ctx.name());
         }
         m_ast.put(ctx, attr);
         return null;
@@ -4312,8 +4317,9 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                 if (ctx.listOfExpression() != null) {
                     // array indices given -> m_type is baseType() and iterate on next levels
                     // see next if with ctx.name() != null
+                    TypeArray typeArray = (TypeArray) m_type;
                     visit(ctx.listOfExpression());
-                    m_type = ((TypeArray) m_type).getBaseType();
+                    m_type = typeArray.getBaseType();
                     // maybe we have also an name
                     if (ctx.name() != null) {
                         reVisitName(ctx.name());

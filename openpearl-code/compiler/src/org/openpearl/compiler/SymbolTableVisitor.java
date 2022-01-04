@@ -787,7 +787,9 @@ implements OpenPearlVisitor<Void> {
                 }
             } else if (m_type instanceof TypeReference) {
                 // need NameInitializer
-                ErrorStack.addInternal(m_identifierDenotationContext,"","SymbolTableVisitor@708: NameInitializer missing");
+                nbrOfInitializer = 1;
+
+                //ErrorStack.addInternal(m_identifierDenotationContext,"","SymbolTableVisitor@708: NameInitializer missing");
             } else {
                 // need SimpleInitializer
                 if (nbrOfInitializer < nbrOfVariables) {
@@ -884,8 +886,22 @@ implements OpenPearlVisitor<Void> {
                         init = new ArrayOrStructureInitializer(startCtx, ali);
                     }
                 } else if (m_type instanceof TypeReference) {
-                    // need NameInitializer
-                    ErrorStack.addInternal(m_identifierDenotationContext,"","SymbolTableVisitor@708: NameInitializer missing");
+                    // lookup the SymboltableEntry of the identifier
+                    // further checks of existance, type and struct components are done 
+                    // in CheckVariableDefinition
+                    if (initElements.get(nextInitializerIndex).identifier() != null) {
+                        String identifier = initElements.get(nextInitializerIndex).identifier().getText();
+                        SymbolTableEntry se = m_currentSymbolTable.lookup(identifier);
+                        init = new ReferenceInitializer( initElements.get(nextInitializerIndex).identifier(),se,m_currentSymbolTable);
+                    } else if (initElements.get(nextInitializerIndex).name() != null) {
+                        String identifier = initElements.get(nextInitializerIndex).name().ID().getText();
+                        SymbolTableEntry se = m_currentSymbolTable.lookup(identifier);
+                        init = new ReferenceInitializer( initElements.get(nextInitializerIndex).name(),se,m_currentSymbolTable);
+                    } else {
+                       ErrorStack.add(m_identifierDenotationContext.identifier(i),
+                            "INIT","need identifier for REF");
+                    }
+                    
                 } else {
                     // need SimpleInitializer
                     if (nextInitializerIndex < initElements.size()) {

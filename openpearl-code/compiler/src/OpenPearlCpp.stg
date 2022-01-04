@@ -400,7 +400,7 @@ TypeReferenceDation(BaseType) ::= <<
 pearlrt::Ref \< <BaseType>* > 
 >>
 
-TypeReferenceSimpleType(BaseType) ::= <<
+TypeReference(BaseType) ::= <<
 pearlrt::Ref \< <BaseType> > 
 >>
 

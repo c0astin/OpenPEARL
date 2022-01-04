@@ -33,6 +33,9 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.openpearl.compiler.OpenPearlParser.IdentificationContext;
+import org.openpearl.compiler.OpenPearlParser.IdentifierContext;
+import org.openpearl.compiler.OpenPearlParser.NameContext;
 import org.openpearl.compiler.Exception.*;
 import org.openpearl.compiler.SymbolTable.*;
 import org.openpearl.compiler.Graph.Graph;
@@ -810,28 +813,29 @@ System.out.println("CppCg@487 called");
             TypeDation td = (TypeDation)(ve.getType());
 
             ST dation_decl = visitDationDenotation(ve); //ctx.dationDenotation());
-            //st.add("decl", entry.getName());
+
             m_dationDeclarationInitializers.add("decl",dation_decl);
-            //dationDeclarations.add("decl",  dation_decl);
-        } else if (ve.getType() instanceof TypeReference) {
+          } else if (ve.getType() instanceof TypeReference) {
             st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
 
-
             TypeReference tr = ((TypeReference)ve.getType());
-            ST ref = null;
-            if (tr.getBaseType() instanceof TypeArray) {
-                TypeDefinition basetype = ((TypeReference)ve.getType()).getBaseType();
-                ref = m_group.getInstanceOf("TypeReferenceArray");
-                ref.add("basetype", basetype);
-            } else if (tr.getBaseType() instanceof TypeRefChar){
+            ST ref = m_group.getInstanceOf("TypeReference");
+            TypeDefinition baseType = tr.getBaseType();
+            if (baseType instanceof TypeArraySpecification) {
+                ST array = m_group.getInstanceOf("ArrayType"); // type
+                baseType = ((TypeReference)ve.getType()).getBaseType();
+                ref.add("BaseType",array);
+                baseType = ((TypeArraySpecification)baseType).getBaseType();
+                array.add("type", baseType.toST(m_group));
+            } else if (baseType instanceof TypeRefChar){
+                // replace previous init value of ref
                 ref = m_group.getInstanceOf("TypeRefChar");
-            } else if (tr.getBaseType() instanceof TypeDation){
+            } else if (baseType instanceof TypeDation){
                 ref = m_group.getInstanceOf("TypeReferenceDation");
-                ref.add("BaseType", visitTypeAttribute(tr.getBaseType()));
+                ref.add("BaseType", visitTypeAttribute(baseType));
             } else {
-                ref = m_group.getInstanceOf("TypeReferenceSimpleType");
-                ref.add("BaseType", visitTypeAttribute(tr.getBaseType()));
+                ref.add("BaseType", visitTypeAttribute(baseType));
             }
             st.add("type",ref);
 
@@ -841,8 +845,6 @@ System.out.println("CppCg@487 called");
 
             st.add("inv", ve.getAssigmentProtection());
             scalarVariableDeclaration.add("variable_denotations", st);
-
-
 
         } else {
             ErrorStack.addInternal(ve.getCtx(), "CppCodeGen:visitVariableDenotation",
@@ -892,10 +894,32 @@ System.out.println("CppCg@487 called");
 
     private ST getInitialiser(Initializer initializer) {
         ST st = m_group.getInstanceOf("variable_init");
-        ASTAttribute attr = m_ast.lookup(initializer.m_context);
-        ST stValue = m_group.getInstanceOf("expression");
-        stValue.add("code", attr.m_constant);
-        st.add("value", stValue); 
+        if (initializer instanceof SimpleInitializer) {
+           
+           ASTAttribute attr = m_ast.lookup(initializer.m_context);
+           ST stValue = m_group.getInstanceOf("expression");
+           stValue.add("code", attr.m_constant);
+           st.add("value", stValue);
+   
+        }
+        if (initializer instanceof ReferenceInitializer) {
+            ReferenceInitializer ri = (ReferenceInitializer)initializer;
+            ParserRuleContext c = ri.getContext();
+            if ( c instanceof OpenPearlParser.NameContext) {
+                NameContext nc = (NameContext)c;
+                
+                st.add("value", generateLHS(nc, ri.getSymbolTable()));
+         
+            } else if (c instanceof OpenPearlParser.IdentifierContext) {
+                IdentifierContext ic =(IdentifierContext)c;
+                st.add("value", getUserVariable(ri.getSymbolTableEntry()));
+                
+            } else {
+                ErrorStack.addInternal(c, "CppCodeGrenerator@909", "untreated type of context");
+            }
+          //  ST st = generateLHS(ri.getContext().name(), ri.getSymbolTable());
+           
+        }
         return st;
     }
 
@@ -1017,7 +1041,7 @@ System.out.println("CppCg@487 called");
 
 
   
-    // usually the method toST of the TypeDefinitiosn works fine
+    // usually the method toST of the TypeDefinition works fine
     // except, if we have REF DATION, here we need a pointer
     private ST visitTypeAttribute(TypeDefinition type) {
        
@@ -1027,7 +1051,7 @@ System.out.println("CppCg@487 called");
                 ST st = m_group.getInstanceOf("TypeReferenceDation"); 
                 st.add("BaseType", ((TypeReference)type).getBaseType().toST(m_group));
                 return st;
-            }
+            } 
         }
 // TypeReferenceDation
         return type.toST(m_group);
