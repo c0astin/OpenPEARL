@@ -521,7 +521,7 @@ System.out.println("CppCg@487 called");
         ST st;
         ST baseType = visitChildren(ctx);
         if (ctx.virtualDimensionList() == null) {
-            st = m_group.getInstanceOf("TypeReferenceSimpleType");
+            st = m_group.getInstanceOf("TypeReference");
             st.add("BaseType", baseType);
         } else {
             st = m_group.getInstanceOf("TypeReferenceArray");
@@ -5092,6 +5092,7 @@ System.out.println("CppCg@487 called");
                 if (treatStructure) {
                     param.add("type", typeName);
                 } else {
+                    
                     param.add("type", visitParameterType(ctx.parameterType()));
                 }
                 if (ctx.assignmentProtection() != null) {
