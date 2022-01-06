@@ -4559,27 +4559,27 @@ System.out.println("CppCg@487 called");
         ASTAttribute attrRhs = m_ast.lookup(ctx1);
 
         // lhs is Array
-        if (attrLhs.getType() instanceof TypeArray) {
-            ST ar = m_group.getInstanceOf("arrayReference");
-            TypeDefinition td = ((TypeArray) attrLhs.getType()).getBaseType();
-            ar.add("basetype", td.toST(m_group));
-            ar.add("descriptor", getArrayDescriptor(attrRhs.getVariable()));
-            ar.add("data", "data_" + attrLhs.getVariable().getName());
-            st.add("lhs", ar);
-        } else {
+//        if (attrLhs.getType() instanceof TypeArray) {
+//            ST ar = m_group.getInstanceOf("arrayReference");
+//            TypeDefinition td = ((TypeArray) attrLhs.getType()).getBaseType();
+//            ar.add("basetype", td.toST(m_group));
+//            ar.add("descriptor", getArrayDescriptor(attrRhs.getVariable()));
+//            ar.add("data", "data_" + attrLhs.getVariable().getName());
+//            st.add("lhs", ar);
+//        } else {
             st.add("lhs", visit(ctx0));
-        }
+//        }
         // rhs is Array
-        if (attrRhs.getType() instanceof TypeArray) {
-            ST ar = m_group.getInstanceOf("arrayReference");
-            TypeDefinition td = ((TypeArray) attrRhs.getType()).getBaseType();
-            ar.add("basetype", td.toST(m_group));
-            ar.add("descriptor", getArrayDescriptor(attrRhs.getVariable()));
-            ar.add("data", "data_" + attrRhs.getVariable().getName());
-            st.add("rhs", ar);
-        } else {
+//        if (attrRhs.getType() instanceof TypeArray) {
+//            ST ar = m_group.getInstanceOf("arrayReference");
+//            TypeDefinition td = ((TypeArray) attrRhs.getType()).getBaseType();
+//            ar.add("basetype", td.toST(m_group));
+//            ar.add("descriptor", getArrayDescriptor(attrRhs.getVariable()));
+//            ar.add("data", "data_" + attrRhs.getVariable().getName());
+//            st.add("rhs", ar);
+//        } else {
             st.add("rhs", visit(ctx1));
-        }
+//        }
 
 
         return;

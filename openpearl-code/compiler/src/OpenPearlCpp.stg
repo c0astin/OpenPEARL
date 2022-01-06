@@ -2152,16 +2152,6 @@ Name(id, name) ::= <%
 <user_variable(id)><if(name)>.<endif><name: {name|<name>}; separator=".">
 %>
 
-// for variable definition 
-TypeReferenceArray(basetype) ::= <%
-pearlrt::RefArray\< <basetype> >
-%>
-
-// for assignment
-arrayReference(basetype,descriptor,data) ::= <%
-pearlrt::RefArray\< <basetype> > (<descriptor>, <data>)
-%>
-
 // for read/write access
 RefArrayReadWrite(name,indices) ::= <%
 (*( <user_variable(name)>.getArrayData() +  <user_variable(name)>.getArrayDescriptor()->offset(<indices>)))

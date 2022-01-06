@@ -4,7 +4,6 @@
 
 CXX_COMMON_TESTS1 := \
 	ArrayTests.cc\
-	#RefArrayTests.cc\
 	BitTests.cc\
 	BitSliceTests.cc\
 	CharacterTests.cc\

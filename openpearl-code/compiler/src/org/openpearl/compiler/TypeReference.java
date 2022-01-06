@@ -76,16 +76,16 @@ public class TypeReference extends TypeDefinition {
     }
 
     public ST toST(STGroup group) {
-      if (m_baseType instanceof TypeArraySpecification) {
-        ST st = group.getInstanceOf("TypeReferenceArray");
-        
-        st.add("basetype", ((TypeArraySpecification)m_baseType).getBaseType().toST(group));
-        return st;
-      } else {
+//      if (m_baseType instanceof TypeArraySpecification) {
+//        ST st = group.getInstanceOf("TypeReferenceArray");
+//        
+//        st.add("basetype", ((TypeArraySpecification)m_baseType).getBaseType().toST(group));
+//        return st;
+//      } else {
         ST st = group.getInstanceOf("TypeReference");
         st.add("BaseType", m_baseType.toST(group));
         return st;
-      }
+//      }
     }
 
 }

@@ -218,6 +218,25 @@ TEST(ArrayTest,withStructs){
 #endif
 }
 
+TEST(ArrayTest,Compare) {
+   pearlrt::Fixed<31> testvalue;
+   pearlrt::Fixed<31> data_array1[100]; // arrayData Fixed(0:4,20);
+   pearlrt::ArrayDescriptor<2> ad_array1 = {2,LIMITS({{0,4,20},{0,19,1}})};
+   pearlrt::Array<pearlrt::Fixed<31>> array1((pearlrt::ArrayDescriptor<0>*)&ad_array1, data_array1);
+
+   pearlrt::ArrayDescriptor<2> ad_array1a = {2,LIMITS({{0,4,20},{0,19,1}})};
+   pearlrt::Array<pearlrt::Fixed<31>> array1a((pearlrt::ArrayDescriptor<0>*)&ad_array1a, data_array1);
+   pearlrt::Array<pearlrt::Fixed<31>> array1same((pearlrt::ArrayDescriptor<0>*)&ad_array1, data_array1);
+
+   pearlrt::Fixed<31> data_array2[100]; // arrayData Fixed(5,20);
+   pearlrt::ArrayDescriptor<2> ad_array2 = {2,LIMITS({{1,5,20},{0,19,1}})};
+   pearlrt::Array<pearlrt::Fixed<31>> array2((pearlrt::ArrayDescriptor<0>*)&ad_array2, data_array2);
+
+   ASSERT_TRUE( (array1==array1a).getBoolean()); // diferent AD with same values
+   ASSERT_TRUE( (array1==array1same).getBoolean());
+   ASSERT_FALSE( (array1==array2).getBoolean());
+
+}
 /**
 \endcond
 */

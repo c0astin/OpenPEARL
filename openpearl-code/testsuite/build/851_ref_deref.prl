@@ -226,12 +226,31 @@ task: PROC;
 END;
 
 fixedArrayRef: PROC;
-   DCL f(10) FIXED;
+   DCL (f,g)(10) FIXED;
    DCL rf(10) REF FIXED;
+   DCL rfa REF () FIXED INIT(f);
    DCL help REF FIXED;
    DCL ok BIT(1) INIT('1'B1);
 
    PUT 'PROC fixedArrayRef' TO so BY A,SKIP;
+
+   testNbr := testNbr + 1;
+   IF rfa IS f THEN
+     PUT 'fine: rfa points to f' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rfa should be f' TO so BY A,F(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
+   ! test if IS/ISNT checks the pointer and not the content
+   testNbr := testNbr + 1;
+   IF NOT (rfa IS g) THEN
+     PUT 'fine: rfa points not to g' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: rfa points to g' TO so BY A,F(3),A, SKIP;
+      fails = fails + 1;
+   FIN;
+
 
    testNbr := testNbr + 1;
    FOR i TO 10 REPEAT
@@ -275,7 +294,7 @@ END;
 
 fixed: PROC;
    DCL testNbr FIXED INIT(0);
-   DCL (k1,k2)         FIXED,
+   DCL (k1,k2)         FIXED INIT(1,2),
        (rk1,rk2) REF FIXED;    ! fixed reference variable 
 
    PUT 'PROC fixed' TO so BY A,SKIP;
@@ -298,11 +317,11 @@ fixed: PROC;
    FIN;
 
    testNbr := testNbr + 1;
-   rk1 := k1;
-   IF k1 IS rk1 THEN
-     PUT 'fine: rk1 is k1' TO so BY A, SKIP;
+   rk2 := k2;
+   IF NOT(rk1 IS rk2) THEN
+     PUT 'fine: rk2 is not rk1' TO so BY A, SKIP;
    ELSE
-     PUT 'test ',testNbr,': error: rk1 should be k1' TO so BY A,F(3),A, SKIP;
+     PUT 'test ',testNbr,': error: rk1 should not be rk2' TO so BY A,F(3),A, SKIP;
      fails := fails + 1;
    FIN;
 
@@ -370,6 +389,7 @@ fixed: PROC;
    testNbr := testNbr + 1;
    rk1 = k1;
    rk2 = k2;
+   k2=k1;
    IF rk1 ISNT rk2 THEN
      PUT 'fine: rk1 differs from rk2' TO so BY A, SKIP;
    ELSE

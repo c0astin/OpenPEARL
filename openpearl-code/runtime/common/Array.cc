@@ -43,6 +43,7 @@
 
 
 namespace pearlrt {
+
    template<>
    size_t ArrayDescriptor<0>::_offset(Fixed<31> index, va_list args) {
       size_t offset = 0;
@@ -91,5 +92,19 @@ namespace pearlrt {
                  (int)x.x, dim);
       throw theArrayIndexOutOfBoundsSignal;
    }
+   template<> template<>
+   bool ArrayDescriptor<0>::operator==(const ArrayDescriptor<0> & rhs) {
+      if (dim != rhs.dim) return false;
+      for (int i = 0; i < dim; i++) {
+         if (lim[i].low != rhs.lim[i].low) return false;
+         if (lim[i].high != rhs.lim[i].high) return false;
+      }
 
+      return true;
+   }
+
+   template<> template<>
+   bool ArrayDescriptor<0>::operator!=(const ArrayDescriptor<0> & rhs) {
+      return ! operator==(rhs);
+   }
 }

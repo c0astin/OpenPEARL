@@ -35,12 +35,11 @@
 #include "Character.h"
 #include "CharSlice.h"
 #include "Ref.h"
-//#include "RefArray.h"
 
 /**
 \file
 compare functions for data types Fixed, (Float, Character, Clock, Duration),
-Ref and RefArray
+Ref except Array<class C>
 
 The compare functions must return a BitString<1> value. This make lot
 of problems in the corresponding classes.
@@ -876,91 +875,6 @@ namespace pearlrt {
                             const Ref<char> & rhs) {
       return BitString<1>(lhs.x != (C*)(rhs.x));
    }    
-
-   /* -------------------------------------------------------------- */
-   /* RefArray<> comparisons (IS,ISNT)				     */
-   /* IS: data and descriptor must match 			     */
-   /* ISNT: data or descriptor does not match 			     */
-   /* -------------------------------------------------------------- */
-#if 0
-   /**
-   compare equal operation
-
-   \param lhs the first parameter of the comparison
-   \param rhs the second parameter of the comparison
-   \returns '1'B1, if both objects are identical
-   */
-   template <class C>
-   BitString<1> operator== (const RefArray<C> & lhs,
-                            const RefArray<C> & rhs) {
-      return BitString<1>(lhs.data == rhs.data && lhs.descriptor == rhs.descriptor);
-   }
-
-   /**
-   compare equal operation
-
-   \param lhs the first parameter of the comparison is NIL
-   \param rhs the second parameter of the comparison
-   \returns '1'B1, if both objects are identical
-   */
-   template <class C>
-   BitString<1> operator== (const Ref<char> & lhs,
-                            const RefArray<C> & rhs) {
-      return BitString<1>(rhs.data == NULL && rhs.descriptor == NULL);
-   }
-    
-   /**
-   compare equal operation
-
-   \param lhs the first parameter of the comparison
-   \param rhs the second parameter of the comparison is NIL
-   \returns '1'B1, if both objects are identical
-   */
-   template <class C>
-   BitString<1> operator== (const RefArray<C> & lhs,
-                            const Ref<char> & rhs) {
-      return BitString<1>(lhs.data == NULL && lhs.descriptor == NULL);
-   }    
-
-   /**
-   compare not equal operation
-
-   \param lhs the first parameter of the comparison
-   \param rhs the second parameter of the comparison
-   \returns '1'B1, if both objects are not identical
-   */
-   template <class C>
-   BitString<1> operator!= (const RefArray<C> & lhs,
-                            const RefArray<C> & rhs) {
-      return BitString<1>(lhs.data != rhs.data || lhs.descriptor != rhs.descriptor);
-   }    
-
-   /**
-   compare not equal operation
-
-   \param lhs the first parameter of the comparison, is NIL
-   \param rhs the second parameter of the comparison
-   \returns '1'B1, if both objects are not identical
-   */
-   template <class C>
-   BitString<1> operator!= (const Ref<char> & lhs,
-                            const RefArray<C> & rhs) {
-      return BitString<1>(rhs.data != NULL || rhs.descriptor != NULL);
-   } 
-
-   /**
-   compare not equal operation
-
-   \param lhs the first parameter of the comparison
-   \param rhs the second parameter of the comparison, is NIL
-   \returns '1'B1, if both pointer are not identical
-   */
-   template <class C>
-   BitString<1> operator!= (const RefArray<C> & lhs,
-                            const Ref<char> & rhs) {
-      return BitString<1>(lhs.data != NULL || lhs.descriptor != NULL);
-   }    
-#endif
 
 }
 #endif

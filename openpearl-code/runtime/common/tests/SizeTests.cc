@@ -73,9 +73,9 @@ sizeof(Task TCB) = 196
 
 #include "PearlIncludes.h"
 
-SPCTASK(t1);
+extern pearlrt::Task Task_t1;
 
-DCLTASK(t1, pearlrt::Prio(1), pearlrt::BitString<1>(0)) {
+DCLTASK(_t1, pearlrt::Prio(1), pearlrt::BitString<1>(0)) {
 }
 
 
@@ -146,7 +146,7 @@ TEST(SizeTests, Test) {
       printf("sizeof(PEARL Semaphore) = %d\n", (int)sizeof(s));
    }
    {
-      printf("sizeof(PEARL Task TCB) = %d\n", (int)sizeof(t1));
+      printf("sizeof(PEARL Task TCB) = %d\n", (int)sizeof(task_t1));
    }
 }
 

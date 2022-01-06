@@ -49,6 +49,7 @@ the number of dimensions. There is no limit for array dimensions.
 #include <stdint.h>
 
 #include "Fixed.h"
+#include "BitString.h"
 #include "Signals.h"
 #include "Log.h"
 
@@ -60,6 +61,7 @@ namespace pearlrt {
    wrapper macro to enable the passing of array initializer as one parameter
 */
 #define LIMITS(...) __VA_ARGS__
+
 
 /**
    declare an array with the identifier name the given number of dimensions
@@ -155,6 +157,11 @@ namespace pearlrt {
        \returns lower bound if this array index
       */
       Fixed<31> lwb(Fixed<31> x);
+
+      template <int D2>
+      bool operator==(const ArrayDescriptor<D2> & rhs);
+      template <int D2>
+      bool operator!=(const ArrayDescriptor<D2> & rhs);
    };
 
    /**
@@ -169,6 +176,7 @@ namespace pearlrt {
       ArrayDescriptor<0>* descriptor;
       C * data;
       Array() {};
+
    public:
       /**
          The ctor for an array. This initializes the array descriptor.
@@ -222,6 +230,19 @@ namespace pearlrt {
      size_t getTotalNbrOfElements() {
          return descriptor->lim[0].size*
                 (descriptor->lim[0].high - descriptor->lim[0].low + 1);
+     }
+
+     template <class D>
+     BitString<1> operator==(const Array<D>& rhs) {
+         if (data != rhs.data) return BitString<1>(0);
+         if (descriptor != rhs.descriptor) return BitString<1>(0);
+         if (*descriptor != *(rhs.descriptor)) return BitString<1>(0);
+         return BitString<1>(1);
+     }
+
+     template <class D>
+     BitString<1> operator!=(const Array<D>& rhs) {
+         return (operator==(rhs)).bitNot();
      }
    };
 

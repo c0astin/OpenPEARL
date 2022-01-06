@@ -115,7 +115,7 @@ HDR_COMMON = $(CXX_COMMON:%.cc=%.h) \
 	Device.h UserDation.h \
 	PutCharacter.h \
 	Float.h \
-	Ref.h  #RefArray.h
+	Ref.h 
 
 
 ifeq ($(CONFIG_CANSUPPORT),y)

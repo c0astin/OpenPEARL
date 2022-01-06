@@ -602,6 +602,9 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                 if (m_debug) System.out.println("ExpressionTypeVisitor: NotExpression: rule#1");
             } else {
                 ErrorStack.add("expected type BIT -- got type " + op.getType().toString());
+                // set default result type for easy continuation
+                res = new ASTAttribute( new TypeBit(1), op.isReadOnly());
+                m_ast.put(ctx, res);
                 //            throw new IllegalExpressionException(ctx.getText(),
                 // ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
@@ -3335,13 +3338,13 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         // we need no attributes for procedure specification parameters
         // check if ctx is a formal parameter in a procedure specification
         ParserRuleContext c = ctx;
-        while (c!= null && c instanceof ProcedureDenotationContext) {
+        while (c!= null && ! (c  instanceof ProcedureDenotationContext) ) {
             c = c.getParent();
         }
         if (c!= null) {
             // we are in a procedure denotation --> lets check if we have a formal parameter
             c = ctx;
-            while (c!= null && c instanceof FormalParameterContext) {
+            while (c!= null && !( c instanceof FormalParameterContext)) {
                 c = c.getParent();
             }
             if (c != null) {
