@@ -29,7 +29,6 @@
 
 include Makefile.inc
 
-
 DIRS	= src
 
 all : force_look
@@ -39,7 +38,7 @@ all : force_look
 .PHONY: prepare
 prepare:
 	cd src; $(MAKE) prepare
-	
+
 clean :
 	@$(ECHO) cleaning up in .
 	(for d in $(DIRS); do (cd $$d; $(MAKE) clean ); done)
