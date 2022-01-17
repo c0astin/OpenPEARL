@@ -139,11 +139,12 @@ public class TypeStructure extends TypeDefinition {
         if ( type instanceof TypeFloat)           return "B" + type.getPrecision().toString();
         if ( type instanceof TypeBit)             return "C" + type.getPrecision().toString();
         if ( type instanceof TypeChar)            return "D" + type.getPrecision().toString();
-        if ( type instanceof TypeClock)           return "E" + type.getPrecision().toString();
-        if ( type instanceof TypeDuration)        return "F" + type.getPrecision().toString();
-        if ( type instanceof TypeSemaphore)       return "I" + type.getPrecision().toString();
-        if ( type instanceof TypeBolt)            return "J" + type.getPrecision().toString();
-        if ( type instanceof TypeStructure)       return "S" + type.getPrecision().toString();
+        if ( type instanceof TypeClock)           return "E";
+        if ( type instanceof TypeDuration)        return "F";
+        if ( type instanceof TypeSemaphore)       return "I";
+        if ( type instanceof TypeBolt)            return "J";
+        if ( type instanceof TypeInterrupt)       return "K";
+        if ( type instanceof TypeStructure)       return "S";
 
         if ( type instanceof TypeArray ) {
             TypeArray typeArray = (TypeArray) type;
@@ -164,12 +165,13 @@ public class TypeStructure extends TypeDefinition {
             if ( reftype.getBaseType() instanceof TypeFloat)           return "b" + type.getPrecision().toString();
             if ( reftype.getBaseType() instanceof TypeBit)             return "c" + type.getPrecision().toString();
             if ( reftype.getBaseType() instanceof TypeChar)            return "d" + type.getPrecision().toString();
-            if ( reftype.getBaseType() instanceof TypeClock)           return "e" + type.getPrecision().toString();
-            if ( reftype.getBaseType() instanceof TypeDuration)        return "f" + type.getPrecision().toString();
+            if ( reftype.getBaseType() instanceof TypeClock)           return "e";
+            if ( reftype.getBaseType() instanceof TypeDuration)        return "f";
             if ( reftype.getBaseType() instanceof TypeTask)            return "g";
             if ( reftype.getBaseType() instanceof TypeProcedure)       return "h";
             if ( reftype.getBaseType() instanceof TypeSemaphore)       return "i";
             if ( reftype.getBaseType() instanceof TypeBolt)            return "j";
+            if ( reftype.getBaseType() instanceof TypeInterrupt)       return "k";
             if ( reftype.getBaseType() instanceof TypeStructure)       return "s";
         }
 

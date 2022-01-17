@@ -43,4 +43,8 @@ public class CommonErrorMessages {
         ErrorStack.add(ctx, "illegal length",
                 "not in range [" + Defaults.CHARACTER_LENGTH + "," + Defaults.CHARACTER_MAX_LENGTH + "]");
     }
+    
+    public static void typeMismatch(TypeDefinition lhsType, TypeDefinition rhsType) {
+        ErrorStack.add("type mismatch: expected: " + lhsType.toString4IMC(true) +" --- got "+ rhsType.toString4IMC(true));
+    }
 }

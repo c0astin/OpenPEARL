@@ -152,8 +152,8 @@ public class TypeDation extends TypeDefinition {
     }
     
     public String toString4IMC(boolean isInStructure) {
-        ErrorStack.addInternal(null, "TypeDation", "toString4IMC() not implemented");
-        return null;
+        
+        return toString();
     }
 
     public boolean isIn() {

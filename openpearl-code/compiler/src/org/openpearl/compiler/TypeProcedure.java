@@ -112,7 +112,8 @@ public class TypeProcedure extends TypeDefinition {
 //      parameters.add("FormalParameters", group.getInstanceOf("TypeReferenceTaskType"));
       if (m_formalParameters!= null) {
         for (int i=0; i<m_formalParameters.size(); i++) {
-          parameters.add("FormalParameters", m_formalParameters.get(i).getType().toST(group));
+          //parameters.add("FormalParameters", m_formalParameters.get(i).getType().toST(group));
+            parameters.add("FormalParameters", m_formalParameters.get(i).toST(group));
         }
   
         st.add("listOfFormalParameters", parameters);

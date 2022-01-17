@@ -32,6 +32,7 @@ package org.openpearl.compiler.SemanticAnalysis;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.openpearl.compiler.*;
+import org.openpearl.compiler.OpenPearlParser.Realtime_statementContext;
 import org.openpearl.compiler.SymbolTable.*;
 
 /**
@@ -140,17 +141,6 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
 
-        // taskDeclaration :
-        //ID ':' 'TASK' priority? task_main? ';' taskBody 'END' ';' cpp_inline?
-        //	    ;
-        // ID is already in the symbol table
-
-        // let's check priority
-        if (ctx.priority() != null) {
-            checkPriority(ctx.priority().expression());
-        }
-
-
         visitChildren(ctx);
         m_currentSymbolTable = m_currentSymbolTable.ascend();
 
@@ -159,38 +149,27 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     }
 
     @Override
-    public Void visitName(OpenPearlParser.NameContext ctx) {
-        // we must check if name is a literal --> task name
-        //                            variable -> task ref, REF() TASK
-
-        m_type = null;
-
-        if (ctx != null) {
-            ASTAttribute attr = m_ast.lookup(ctx);
-
-            //attr may be null for TRY operation
-            if (attr != null) {
-                m_type = attr.getType();
-
-                if (attr.getType() instanceof TypeReference) {
-                    // fine, we have the current variable in the ast attributes
-                    m_type = ((TypeReference) attr.getType()).getBaseType();
-                    if (m_type instanceof TypeArraySpecification) {
-                        m_type = ((TypeArraySpecification) m_type).getBaseType();
-                    }
-                }
-            }
+    public Void visitUnlabeled_statement(OpenPearlParser.Unlabeled_statementContext ctx) {
+        // look only for realtime statements
+        if (ctx.realtime_statement()!= null) {
+            visitChildren(ctx.realtime_statement());
+        } else if (ctx.interrupt_statement() != null) {
+            visitChildren(ctx.interrupt_statement());
         }
         return null;
     }
+    @Override
+    public Void visitAssignment_statement(OpenPearlParser.Assignment_statementContext ctx) {
+        // do not check lhs
+        visitChildren(ctx.expression());
+        return null;
+    }
+    
 
     private Void checkListOfNames(OpenPearlParser.ListOfNamesContext ctx,
             TypeDefinition expectedType) {
         for (int i = 0; i < ctx.name().size(); i++) {
-            visitName(ctx.name(i));
-            if (m_type != null) {
                 checkName(ctx.name(i), expectedType);
-            }
         }
 
         return null;
@@ -287,8 +266,8 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
         // visitChildren(ctx);
         // visitChildren() is not applicapable, since there may be more than one 
         // 'name' in the context
-
-        visitName(ctx.name());
+       
+        //visitName(ctx.name());
         checkName(ctx.name(), new TypeTask());
 
 
@@ -329,8 +308,9 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     @Override
     public Void visitTask_terminating(OpenPearlParser.Task_terminatingContext ctx) {
         ErrorStack.enter(ctx, "TERMINATE");
-        visitName(ctx.name());
-        if (m_type != null) {
+        if (ctx.name() != null) {
+       
+           //visitName(ctx.name());
             checkName(ctx.name(), new TypeTask());
         }
         ErrorStack.leave();
@@ -344,8 +324,8 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     @Override
     public Void visitTask_suspending(OpenPearlParser.Task_suspendingContext ctx) {
         ErrorStack.enter(ctx, "SUSPEND");
-        visitName(ctx.name());
-        if (m_type != null) {
+       
+        if (ctx.name() != null) {
             checkName(ctx.name(), new TypeTask());
         }
         ErrorStack.leave();
@@ -359,8 +339,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     @Override
     public Void visitTask_preventing(OpenPearlParser.Task_preventingContext ctx) {
         ErrorStack.enter(ctx, "PREVENT");
-        visitName(ctx.name());
-        if (m_type != null) {
+        if (ctx.name() != null) {
             checkName(ctx.name(), new TypeTask());
         }
         ErrorStack.leave();
@@ -385,16 +364,15 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     @Override
     public Void visitTaskContinuation(OpenPearlParser.TaskContinuationContext ctx) {
         ErrorStack.enter(ctx, "CONTINUE");
-        visitName(ctx.name());
-        if (m_type != null) {
+
+        if (ctx.name() != null) {
             checkName(ctx.name(), new TypeTask());
         }
 
         visitStartCondition(ctx.startCondition());
-        ErrorStack.leave();
-
         visitPriority(ctx.priority());
-
+        
+        ErrorStack.leave();
         return null;
     }
 
@@ -475,7 +453,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     private void checkPriority(OpenPearlParser.ExpressionContext ctx) {
         ErrorStack.enter(ctx);
         ASTAttribute attr = m_ast.lookup(ctx);
-        TypeDefinition t = m_ast.lookupType(ctx);
+        TypeDefinition t = getEffectiveType(ctx);
 
         if (t instanceof TypeFixed) {
             if (attr.isReadOnly()) {
@@ -493,12 +471,13 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     }
 
     private void checkClockValue(OpenPearlParser.ExpressionContext ctx, String prefix) {
-        TypeDefinition t = m_ast.lookupType(ctx);
+        ASTAttribute attr = m_ast.lookup(ctx);
+        TypeDefinition t = getEffectiveType(ctx);
 
 
         ErrorStack.enter(ctx, prefix);
         if (!(t instanceof TypeClock)) {
-            ErrorStack.add("must be of type CLOCK  -- but is of " + t.toString());
+            ErrorStack.add("must be of type CLOCK  -- but is of " + attr.getType().toString4IMC(false));
         }
         ErrorStack.leave();
 
@@ -510,7 +489,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
         ErrorStack.enter(ctx, prefix);
         if (!(t instanceof TypeDuration)) {
-            ErrorStack.add("must be of type DURATION  -- but is of " + t.toString());
+            ErrorStack.add("must be of type DURATION  -- but is of " + attr.getType().toString4IMC(false));
         } else {
             if (attr.isReadOnly()) {
                 ConstantDurationValue cd = attr.getConstantDurationValue();
@@ -524,15 +503,21 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
     private void checkInterrupt(OpenPearlParser.NameContext ctx, String prefix) {
         ErrorStack.enter(ctx, prefix);
-        visitName(ctx);
+        
+        //visitName(ctx);
         checkName(ctx, new TypeInterrupt());
         ErrorStack.leave();
     }
 
     private void checkName(OpenPearlParser.NameContext ctx, TypeDefinition expectedType) {
-        if (!m_type.equals(expectedType)) {
+        ASTAttribute attr = m_ast.lookup(ctx);
+        TypeDefinition t = getEffectiveType(ctx);
+            
+        
+        
+        if (!t.equals(expectedType)) {
             ErrorStack.add(ctx, null, "expected type '" + expectedType.toString() + "' -- got '"
-                    + m_type.toString() + "'");
+                    + attr.getType().toString4IMC(false) + "'");
         }
     }
 
@@ -540,30 +525,9 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
         ASTAttribute attr = m_ast.lookup(ctx);
         TypeDefinition t = attr.getType();
-
-        VariableEntry ve = attr.getVariable();
-        if (ve != null) {
-            if (ve.getType() instanceof TypeReference) {
-                t = ((TypeReference) t).getBaseType();
-                if (((TypeReference) (ve.getType()))
-                        .getBaseType() instanceof TypeArraySpecification) {
-                    if (ctx instanceof OpenPearlParser.BaseExpressionContext) {
-                        OpenPearlParser.BaseExpressionContext bc = (OpenPearlParser.BaseExpressionContext) ctx;
-                        if (bc.primaryExpression() != null
-                                && bc.primaryExpression().name() != null) {
-                            OpenPearlParser.NameContext n = bc.primaryExpression().name();
-                            if (n.listOfExpression() != null) {
-                                t = ((TypeArraySpecification) t).getBaseType();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-
         if (t instanceof TypeReference) {
-            t = ((TypeReference) t).getBaseType();
+            t = ((TypeReference)t).getBaseType();
+            attr.setNeedImplicitDereferencing(true);
         }
 
         return t;

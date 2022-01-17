@@ -72,6 +72,12 @@ public class TypeReference extends TypeDefinition {
         TypeReference that = (TypeReference) other;
 
         // Custom equality check here.
+        // attention: TypeReference with m_baseType =null is NIL
+        if (this.m_baseType == null) {
+            if (that.m_baseType == null) return true;
+            else return false;
+        }
+        
         return this.m_baseType.equals(that.getBaseType());
     }
 

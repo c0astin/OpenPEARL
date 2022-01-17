@@ -289,19 +289,16 @@ implements OpenPearlVisitor<Void> {
         }
 
         TypeProcedureContext tpc = ctx.typeProcedure();
-        for (ParseTree c : tpc.children) {
-            if (c instanceof ResultAttributeContext) {
-                resultType =
-                        new ASTAttribute(
-                                getResultAttribute((ResultAttributeContext) c));
-           
-            } else if (c instanceof ListOfFormalParametersContext) {
-                formalParameters =
-                        getListOfFormalParameters(
-                                (ListOfFormalParametersContext) c);
-            }
+        if (tpc.listOfFormalParameters()!= null) {
+            formalParameters =
+                    getListOfFormalParameters(tpc.listOfFormalParameters());
         }
-        
+        if (tpc.resultAttribute() != null) {
+            resultType =
+                    new ASTAttribute(
+                            getResultAttribute(tpc.resultAttribute())); 
+        }
+       
         
         // create type of the procedure
         if (resultType != null) {

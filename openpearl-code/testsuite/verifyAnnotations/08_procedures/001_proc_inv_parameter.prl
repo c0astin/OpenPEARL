@@ -11,7 +11,7 @@ a: TASK;
    DCL h INV FIXED INIT(1);
    CALL q(h);
 /*$       ^
-error: CALL:param: pass INV data as non INV parameter
+error: q:parameter: pass INV data as non INV IDENT parameter
 */ 
 END;
 

@@ -30,12 +30,16 @@
 package org.openpearl.compiler.SymbolTable;
 
 import org.openpearl.compiler.TypeDefinition;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 import org.openpearl.compiler.OpenPearlParser;
+import org.openpearl.compiler.TypeArray;
+import org.openpearl.compiler.TypeArraySpecification;
 
 public class FormalParameter extends VariableEntry {
 
     public  Boolean			passIdentical;
-    
+        
     public FormalParameter() {
     }
 
@@ -58,6 +62,17 @@ public class FormalParameter extends VariableEntry {
         return (super.getAssigmentProtection() ? " INV " : " " ) + super.getType().toString4IMC(isInStructure) +(passIdentical ? " IDENT" : "");
     }
     
+    public ST toST(STGroup group) {
+       ST st = group.getInstanceOf("FormalParameter");
+       // id,type,assignmentProtection,passIdentical,isArray
+       st.add("id",  super.getName());
+       st.add("type", super.getType().toST(group));
+       if (super.getType() instanceof TypeArraySpecification) st.add("isArray", "");
+       
+       if (super.getAssigmentProtection()) st.add("assignmentProtection","");
+       if (passIdentical)st.add("passIdentical","");
+       return st;
+    }
     /* other methods inherited from parent class */
    
 

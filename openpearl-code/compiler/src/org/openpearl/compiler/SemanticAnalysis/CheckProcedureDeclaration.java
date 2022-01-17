@@ -63,7 +63,7 @@ import org.openpearl.compiler.SymbolTable.VariableEntry;
  * 
  */
 public class CheckProcedureDeclaration extends OpenPearlBaseVisitor<Void>
-        implements OpenPearlVisitor<Void> {
+implements OpenPearlVisitor<Void> {
 
     private int m_verbose;
     private boolean m_debug;
@@ -107,13 +107,13 @@ public class CheckProcedureDeclaration extends OpenPearlBaseVisitor<Void>
         if (m_debug) {
             System.out.println( "Semantic: CheckProcedureDeclaration: visitProcedureDeclaration");
         }
-    
+
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
         visitChildren(ctx);
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;
     }
-    */
+     */
 
     @Override
     public Void visitTaskDeclaration(OpenPearlParser.TaskDeclarationContext ctx) {
@@ -212,51 +212,58 @@ public class CheckProcedureDeclaration extends OpenPearlBaseVisitor<Void>
     @Override
     public Void visitCallStatement(OpenPearlParser.CallStatementContext ctx) {
         Log.debug("Semantic: CheckProcedureDeclarations: visitCallStatement");
-
+        //System.out.println(ctx.getText());
         ErrorStack.enter(ctx, "CALL");
-        String procName = ctx.ID().getText();
+        ASTAttribute attr = m_ast.lookup(ctx.name());
+        SymbolTableEntry entry = attr.getSymbolTableEntry();
+        TypeProcedure tp=null;
+
+        if(attr.getType() instanceof TypeReference) {
+            attr.setNeedImplicitDereferencing(true);
+            tp = ((TypeProcedure)((TypeReference)attr.getType()).getBaseType());
+        } else {
+            tp = (TypeProcedure)((ProcedureEntry)entry).getType();
+        }
+        if (tp.getResultType() != null) {
+            ErrorStack.add("result discarded");
+        }
+        if (tp.getFormalParameters() == null) {
+            // we must mark procedure calls without formal parameters
+            // as procedure calls
+            attr.setIsFunctionCall(true);
+        }
+
+        String procName = entry.getName(); 
         ProcedureEntry proc = null;
 
-        SymbolTableEntry entry = m_currentSymbolTable.lookup(procName);
 
-        if (entry != null) {
-            if (entry instanceof ProcedureEntry) {
-                Log.debug("Semantic: Check ProcedureCall: found call in expression");
-                proc = (ProcedureEntry) entry;
-                TypeDefinition resultType = proc.getResultType();
+        if (entry instanceof ProcedureEntry) {
+            Log.debug("Semantic: Check ProcedureCall: found call in expression");
+            proc = (ProcedureEntry) entry;
+            TypeDefinition resultType = proc.getResultType();
 
-                if (resultType != null) {
-                    ErrorStack.add("result discarded");
+            if (resultType != null) {
+                ErrorStack.add("result discarded");
+            }
+        } else {
+            if (entry instanceof VariableEntry) {
+                if (((VariableEntry)entry).getType() instanceof TypeReference) {
+                    TypeReference tr = (TypeReference)((VariableEntry)entry).getType();
+                    attr.setNeedImplicitDereferencing(true);
+                    if (tr.getBaseType() instanceof TypeProcedure) {
+                        TypeDefinition resultType = ((TypeProcedure)(tr.getBaseType())).getResultType();
+                        if (resultType != null) {
+                            ErrorStack.add("result discarded");
+                        }
+                    }
                 }
             } else {
                 ErrorStack.add("'" + procName + "' is not of type PROC  -- is of type "
                         + CommonUtils.getTypeOf(entry));
             }
-        } else {
-            ErrorStack.add("'" + procName + "' is not defined");
         }
 
-        if (proc != null && ctx.listOfActualParameters() != null) {
 
-            int nbrActualParameters = ctx.listOfActualParameters().expression().size();
-            int nbrFormatParameters = proc.getFormalParameters().size();
-
-            if (nbrActualParameters != nbrFormatParameters) {
-                ErrorStack.add("number of parameters mismatch: expected " + nbrFormatParameters
-                        + " -- got " + nbrActualParameters);
-            } else {
-                // check each parameter type
-                for (int i = 0; i < nbrActualParameters; i++) {
-                    ErrorStack.enter(ctx.listOfActualParameters().expression(i), "param");
-                    checkParameter(proc, ctx.listOfActualParameters().expression(i),
-                            proc.getFormalParameters().get(i));
-                    ErrorStack.leave();
-                }
-            }
-
-            // really necessary?
-            //      visitListOfActualParameters(ctx.listOfActualParameters());
-        }
 
         ErrorStack.leave();
 
@@ -348,200 +355,50 @@ public class CheckProcedureDeclaration extends OpenPearlBaseVisitor<Void>
         return null;
     }
 
-    private void checkParameter(ProcedureEntry proc, OpenPearlParser.ExpressionContext expression,
-            FormalParameter formalParameter) {
-        // check types - must be equal if IDENT is set
-        //               formalParameter may be larger if IDENT ist NOT SET
-        // 
-        // check INV  on actual parameter enforces INV on formal parameter
-        // check IDENT must be set for array
+  
 
-        // analyse expression
-        TypeDefinition actualType = null;
-        boolean actualIsInv = false;
-        boolean actualIsArray = false;
-        int actualArrayDimensions = 0;
-        TypeDefinition formalBaseType = null;
-        TypeDefinition actualBaseType = null;
-
-        VariableEntry actualVariableEntry = null;
-        ASTAttribute attr = m_ast.lookup(expression);
-
-        if (attr != null) {
-            actualType = attr.getType();
-            actualIsInv = attr.isReadOnly();
-
-            actualVariableEntry = attr.getVariable();
-
-            if (actualType instanceof TypeArray) {
-                actualArrayDimensions = ((TypeArray) actualType).getNoOfDimensions();
-                actualBaseType = ((TypeArray) actualType).getBaseType();
-                actualIsArray = true;
-            }
-        }
-
-        if (formalParameter.passIdentical) {
-            // actual parameter must be LValue
-            if (actualVariableEntry == null) {
-                ErrorStack.add("only variables may be passed by IDENT");
-                return; // do no further checks on this parameter
-            } else {
-                if (actualIsInv && !formalParameter.getAssigmentProtection()) {
-                    ErrorStack.add("pass INV data as non INV parameter");
-                }
-            }
-        }
-
-        if (formalParameter.getType() instanceof TypeArray) {
-            formalBaseType = ((TypeArray) formalParameter.getType()).getBaseType();
-        } else {
-            formalBaseType = formalParameter.getType();
-        }
-
-        // compare array parameters
-        if (actualIsArray) {
-            if (formalParameter.getType() instanceof TypeArray) {
-                // both are arrays --> nbr of dimensions and baseTypes must fit 
-                TypeArray ta = ((TypeArray) formalParameter.getType());
-                if (actualArrayDimensions != ta.getNoOfDimensions()) {
-                    ErrorStack.add("dimension mismatch: expect " + ta.getNoOfDimensions()
-                            + " -- got " + actualArrayDimensions);
-                } else if (!actualBaseType.equals(ta.getBaseType())) {
-                    ErrorStack.add("type mismatch: expect ARRAY of "
-                            + ((TypeArray) formalParameter.getType()).getBaseType()
-                            + " -- got ARRAY of " + actualType.toString());
-                }
-            } else {
-                ErrorStack.add("expected scalar type");
-            }
-        } else {
-            if (formalParameter.getType() instanceof TypeArray) {
-                ErrorStack.add("expected array type");
-            } else {
-                // treat both scalar types
-
-                // easy stuff first -- check base types
-                // if they fit we must check length for FIXED,FLOAT,CHAR,BIT
-                if (formalBaseType instanceof TypeChar && actualType instanceof TypeVariableChar) {
-                    // this is ok -- mark the actual parameter in the AST Attribute
-                    // this will be used by the CppCodeGeneratorVisitor to instanciate
-                    // a temporary variable
-                    ((TypeVariableChar) attr.getType()).setBaseType(formalBaseType);
-                } else if (formalBaseType instanceof TypeFloat && actualType instanceof TypeFixed) {
-                    // check if an implicit cast is allowed:
-                    if(actualType.getPrecision() > formalBaseType.getPrecision()) {
-                        ErrorStack.add("actual argument does not fit into formal parameter: expected " + formalBaseType.toString()
-                                + "  -- got " + actualType.toString());
-                    }
-                } else if (!formalBaseType.getName().equals(actualType.getName())) {
-                    ErrorStack.add("type mismatch: expected " + formalBaseType.toString()
-                            + "  -- got " + actualType.toString());
-                } else if (formalParameter.getType() instanceof TypeFixed) {
-
-                    TypeFixed fp = (TypeFixed) formalParameter.getType();
-                    TypeFixed ap = (TypeFixed) actualType;
-
-                    if (formalParameter.passIdentical == false
-                            && fp.getPrecision().intValue() < ap.getPrecision().intValue()) {
-                        ErrorStack.add("type mismatch: expected (not larger than) "
-                                + formalParameter.toString() + " -- got " + actualType.toString());
-                    }
-                    if (formalParameter.passIdentical
-                            && fp.getPrecision().intValue() != ap.getPrecision().intValue()) {
-                        ErrorStack.add("type mismatch: expected " + formalParameter.toString()
-                                + " -- got " + actualType.toString());
-                    }
-                } else if (formalParameter.getType() instanceof TypeFloat
-                        && actualType instanceof TypeFixed) {
-                    // implicit FIXED->FLOAT conversion is ok if NOT IDENT
-                    TypeFloat fp = (TypeFloat) formalParameter.getType();
-                    TypeFixed ap = (TypeFixed) actualType;
-
-                    if (formalParameter.passIdentical == false
-                            && fp.getPrecision().intValue() < ap.getPrecision().intValue()) {
-                        ErrorStack.add("type mismatch: expected (not larger than) "
-                                + formalParameter.toString() + " -- got " + actualType.toString());
-                    }
-                    if (formalParameter.passIdentical) {
-                        ErrorStack.add("type mismatch: expected " + formalParameter.toString()
-                                + " -- got " + actualType.toString());
-                    }
-                } else if (formalParameter.getType() instanceof TypeBit) {
-
-                    TypeBit fp = (TypeBit) formalParameter.getType();
-                    TypeBit ap = (TypeBit) actualType;
-
-                    if (formalParameter.passIdentical == false
-                            && fp.getPrecision().intValue() < ap.getPrecision().intValue()) {
-                        ErrorStack.add("type mismatch: expected (not larger than) "
-                                + formalParameter.toString() + " -- got " + actualType.toString());
-                    }
-                    if (formalParameter.passIdentical
-                            && fp.getPrecision().intValue() != ap.getPrecision().intValue()) {
-                        ErrorStack.add("type mismatch: expected " + formalParameter.toString()
-                                + " -- got " + actualType.toString());
-                    }
-                } else if (formalParameter.getType() instanceof TypeChar) {
-
-                    TypeChar fp = (TypeChar) formalParameter.getType();
-                    TypeChar ap = (TypeChar) actualType;
-
-                    if (formalParameter.passIdentical == false && fp.getSize() < ap.getSize()) {
-                        ErrorStack.add("type mismatch: expected (not larger than) "
-                                + formalParameter.toString() + " -- got " + actualType.toString());
-                    }
-                    if (formalParameter.passIdentical && fp.getSize() != ap.getSize()) {
-                        ErrorStack.add("type mismatch: expected " + formalParameter.toString()
-                                + " -- got " + actualType.toString());
-                    }
-                }
-            }
-        }
-    }
-
-
-    @Override
-    public Void visitPrimaryExpression(OpenPearlParser.PrimaryExpressionContext ctx) {
-
-        if (ctx.name() != null && ctx.name().ID() != null) {
-            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
-
-            if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry) {
-                org.openpearl.compiler.SymbolTable.ProcedureEntry proc =
-                        (org.openpearl.compiler.SymbolTable.ProcedureEntry) (entry);
-
-                int nbrActualParameters = 0;
-                int nbrFormalParameters = 0;
-                if (ctx.name().listOfExpression() != null
-                        && ctx.name().listOfExpression().expression().size() > 0) {
-                    nbrActualParameters = ctx.name().listOfExpression().expression().size();
-                }
-                if (proc.getFormalParameters() != null) {
-                    nbrFormalParameters = proc.getFormalParameters().size();
-                }
-                /*
-                 * not useful for ref proc assignments
-                if (nbrActualParameters != nbrFormalParameters) {
-                	ErrorStack.enter(ctx);
-                	ErrorStack.add("number of parameters mismatch: given "+nbrActualParameters+" expected: "+nbrFormalParameters);
-                	ErrorStack.leave();
-                }
-                */
-                if (ctx.name().listOfExpression() != null
-                        && ctx.name().listOfExpression().expression().size() > 0) {
-                    int min = Math.min(nbrActualParameters, nbrFormalParameters);
-                    for (int i = 0; i < min; i++) {
-                        ErrorStack.enter(ctx.name().listOfExpression().expression(i), "param");
-                        checkParameter(proc, ctx.name().listOfExpression().expression(i),
-                                proc.getFormalParameters().get(i));
-                        ErrorStack.leave();
-                    }
-                }
-
-            }
-        }
-        return null;
-    }
+//    @Override
+//    public Void visitPrimaryExpression(OpenPearlParser.PrimaryExpressionContext ctx) {
+//
+//        if (ctx.name() != null && ctx.name().ID() != null) {
+//            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
+//
+//            if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry) {
+//                org.openpearl.compiler.SymbolTable.ProcedureEntry proc =
+//                        (org.openpearl.compiler.SymbolTable.ProcedureEntry) (entry);
+//
+//                int nbrActualParameters = 0;
+//                int nbrFormalParameters = 0;
+//                if (ctx.name().listOfExpression() != null
+//                        && ctx.name().listOfExpression().expression().size() > 0) {
+//                    nbrActualParameters = ctx.name().listOfExpression().expression().size();
+//                }
+//                if (proc.getFormalParameters() != null) {
+//                    nbrFormalParameters = proc.getFormalParameters().size();
+//                }
+//                /*
+//                 * not useful for ref proc assignments
+//                if (nbrActualParameters != nbrFormalParameters) {
+//                	ErrorStack.enter(ctx);
+//                	ErrorStack.add("number of parameters mismatch: given "+nbrActualParameters+" expected: "+nbrFormalParameters);
+//                	ErrorStack.leave();
+//                }
+//                 */
+//                if (ctx.name().listOfExpression() != null
+//                        && ctx.name().listOfExpression().expression().size() > 0) {
+//                    int min = Math.min(nbrActualParameters, nbrFormalParameters);
+//                    for (int i = 0; i < min; i++) {
+//                        ErrorStack.enter(ctx.name().listOfExpression().expression(i), "param");
+//                        checkParameter(proc, ctx.name().listOfExpression().expression(i),
+//                                proc.getFormalParameters().get(i));
+//                        ErrorStack.leave();
+//                    }
+//                }
+//
+//            }
+//        }
+//        return null;
+//    }
 
 
     private void checkFormalParameter(FormalParameter formalParameter) {

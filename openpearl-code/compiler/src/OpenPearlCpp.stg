@@ -597,7 +597,7 @@ TaskContinuation(task,Condition,priority,at,after,when) ::= <<
 >>
 
 taskAddress(taskName) ::= <%
-<if(taskName)><TaskName(taskName)><else>me<endif>
+<if(taskName)><taskName><else>*me<endif>
 %>
 
 taskPrio(taskName) ::= <%
@@ -1059,8 +1059,8 @@ iojob_duration_format(element,fieldwidth,decimalPositions,direction) ::= <<
 
 /******************************** CALL Statement *********************************/
 
-CallStatement(callee, fromns, ListOfActualParameters) ::= <<
-<if(fromns)>ns_<fromns>::<endif><user_procedure(callee)>(me<if(ListOfActualParameters)>, <ListOfActualParameters><endif>);
+CallStatement(callee) ::= <<
+<callee>;
 >>
 
 
@@ -1435,8 +1435,8 @@ pearlrt::toChar(<operand>)
 
 
 
-referenceOf(obj) ::= <%
-&(<obj>)
+referenceOf(type,obj) ::= <%
+pearlrt::Ref\< <type>> (<obj>)
 %>
 
 /* ---------------------  Semaphore Arrays -------------------------- */
@@ -1920,9 +1920,19 @@ ArrayLHS(name,fromns,indices) ::= <%
 <endif>
 %>
 
-ArrayRHS(name,descriptor,indices,element) ::= <%
-(*(data_<name> + <descriptor>->offset(<indices>)))
+ArrayElement(name,indices,nameIsReference) ::= <%
+<if(nameIsReference)>(*(name->getPtr(<indices>))<else>
+(*(<name>.getPtr(<indices>)))
+<endif>
 %>
+
+ArrayElementInStruct(name,descriptor,indices) ::= <%
+(*(<name> + <descriptor>.offset(<indices>)))
+%>
+
+//ArrayRHS(name,descriptor,indices,element) ::= <%
+//(*(data_<name> + <descriptor>->offset(<indices>)))
+//%>
 
 ArrayLHSInStructure(name,descriptor,indices,element) ::= <%
 <if(indices)>
@@ -1963,6 +1973,10 @@ LHS(expr) ::= <%
 <expr: {e|<e>} ; separator=".">
 %>
 
+addStructComponent(name,component,nameIsReference) ::= <%
+<name><if(nameIsReference)>-><else>.<endif><component>
+%>
+	
 /* --------------------------- CONVERT STATEMENT -------------------------------------------*/
 
 

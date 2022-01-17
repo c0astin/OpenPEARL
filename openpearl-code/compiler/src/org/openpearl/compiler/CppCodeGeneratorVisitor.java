@@ -1452,173 +1452,144 @@ System.out.println("CppCg@487 called");
     }
 
 
-    private ST getReferenceExpression(OpenPearlParser.ExpressionContext ctx) {
-        ST st = m_group.getInstanceOf("ReferenceExpression");
-
-        if (ctx != null) {
-            if (ctx instanceof OpenPearlParser.BaseExpressionContext) {
-                st.add("code", visitBaseExpression(((OpenPearlParser.BaseExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.AdditiveExpressionContext) {
-                st.add("code", visitAdditiveExpression(
-                        ((OpenPearlParser.AdditiveExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.SubtractiveExpressionContext) {
-                st.add("code", visitSubtractiveExpression(
-                        ((OpenPearlParser.SubtractiveExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.MultiplicativeExpressionContext) {
-                st.add("code", visitMultiplicativeExpression(
-                        (OpenPearlParser.MultiplicativeExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.DivideExpressionContext) {
-                st.add("code",
-                        visitDivideExpression((OpenPearlParser.DivideExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.DivideIntegerExpressionContext) {
-                st.add("code", visitDivideIntegerExpression(
-                        (OpenPearlParser.DivideIntegerExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.UnaryAdditiveExpressionContext) {
-                st.add("code", visitUnaryAdditiveExpression(
-                        (OpenPearlParser.UnaryAdditiveExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.UnarySubtractiveExpressionContext) {
-                st.add("code", visitUnarySubtractiveExpression(
-                        (OpenPearlParser.UnarySubtractiveExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.ExponentiationExpressionContext) {
-                st.add("code", visitExponentiationExpression(
-                        (OpenPearlParser.ExponentiationExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.LtRelationalExpressionContext) {
-                st.add("code", visitLtRelationalExpression(
-                        (OpenPearlParser.LtRelationalExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.GeRelationalExpressionContext) {
-                st.add("code", visitGeRelationalExpression(
-                        (OpenPearlParser.GeRelationalExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.NeRelationalExpressionContext) {
-                st.add("code", visitNeRelationalExpression(
-                        (OpenPearlParser.NeRelationalExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.EqRelationalExpressionContext) {
-                st.add("code", visitEqRelationalExpression(
-                        (OpenPearlParser.EqRelationalExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.GtRelationalExpressionContext) {
-                st.add("code", visitGtRelationalExpression(
-                        (OpenPearlParser.GtRelationalExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.LeRelationalExpressionContext) {
-                st.add("code", visitLeRelationalExpression(
-                        (OpenPearlParser.LeRelationalExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.IsRelationalExpressionContext) {
-                st.add("code", visitIsRelationalExpression(
-                        (OpenPearlParser.IsRelationalExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.IsntRelationalExpressionContext) {
-                st.add("code", visitIsntRelationalExpression(
-                        (OpenPearlParser.IsntRelationalExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.AtanExpressionContext) {
-                st.add("code", visitAtanExpression((OpenPearlParser.AtanExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.CosExpressionContext) {
-                st.add("code", visitCosExpression((OpenPearlParser.CosExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.ExpExpressionContext) {
-                st.add("code", visitExpExpression((OpenPearlParser.ExpExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.LnExpressionContext) {
-                st.add("code", visitLnExpression((OpenPearlParser.LnExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.SinExpressionContext) {
-                st.add("code", visitSinExpression((OpenPearlParser.SinExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.SqrtExpressionContext) {
-                st.add("code", visitSqrtExpression((OpenPearlParser.SqrtExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.TanExpressionContext) {
-                st.add("code", visitTanExpression((OpenPearlParser.TanExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.TanhExpressionContext) {
-                st.add("code", visitTanhExpression((OpenPearlParser.TanhExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.FitExpressionContext) {
-                st.add("code", visitFitExpression((OpenPearlParser.FitExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.ExponentiationExpressionContext) {
-                st.add("code", visitExponentiationExpression(
-                        (OpenPearlParser.ExponentiationExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.AbsExpressionContext) {
-                st.add("code", visitAbsExpression((OpenPearlParser.AbsExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.SizeofExpressionContext) {
-                st.add("code",
-                        visitSizeofExpression((OpenPearlParser.SizeofExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.EntierExpressionContext) {
-                st.add("code",
-                        visitEntierExpression((OpenPearlParser.EntierExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.RoundExpressionContext) {
-                st.add("code", visitRoundExpression((OpenPearlParser.RoundExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.SignExpressionContext) {
-                st.add("code", visitSignExpression((OpenPearlParser.SignExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.RemainderExpressionContext) {
-                st.add("code", visitRemainderExpression(
-                        (OpenPearlParser.RemainderExpressionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.NowFunctionContext) {
-                st.add("code", visitNowFunction((OpenPearlParser.NowFunctionContext) ctx));
-            } else if (ctx instanceof OpenPearlParser.AndExpressionContext) {
-                st.add("code", visitAndExpression(((OpenPearlParser.AndExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.OrExpressionContext) {
-                st.add("code", visitOrExpression(((OpenPearlParser.OrExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.ExorExpressionContext) {
-                st.add("code", visitExorExpression(((OpenPearlParser.ExorExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.CshiftExpressionContext) {
-                st.add("code",
-                        visitCshiftExpression(((OpenPearlParser.CshiftExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.ShiftExpressionContext) {
-                st.add("code",
-                        visitShiftExpression(((OpenPearlParser.ShiftExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.CatExpressionContext) {
-                st.add("code", visitCatExpression(((OpenPearlParser.CatExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.NotExpressionContext) {
-                st.add("code", visitNotExpression(((OpenPearlParser.NotExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.TOFIXEDExpressionContext) {
-                st.add("code",
-                        visitTOFIXEDExpression(((OpenPearlParser.TOFIXEDExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.TOFLOATExpressionContext) {
-                st.add("code",
-                        visitTOFLOATExpression(((OpenPearlParser.TOFLOATExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.TOBITExpressionContext) {
-                st.add("code",
-                        visitTOBITExpression(((OpenPearlParser.TOBITExpressionContext) ctx)));
-            } else if (ctx instanceof OpenPearlParser.TaskFunctionContext) {
-                st.add("code", visitTaskFunction(((OpenPearlParser.TaskFunctionContext) ctx)));
-            }
-        }
-
-        return st;
-    }
-
+//    private ST getReferenceExpression(OpenPearlParser.ExpressionContext ctx) {
+//        ST st = m_group.getInstanceOf("ReferenceExpression");
+//
+//        if (ctx != null) {
+//            if (ctx instanceof OpenPearlParser.BaseExpressionContext) {
+//                st.add("code", visitBaseExpression(((OpenPearlParser.BaseExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.AdditiveExpressionContext) {
+//                st.add("code", visitAdditiveExpression(
+//                        ((OpenPearlParser.AdditiveExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.SubtractiveExpressionContext) {
+//                st.add("code", visitSubtractiveExpression(
+//                        ((OpenPearlParser.SubtractiveExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.MultiplicativeExpressionContext) {
+//                st.add("code", visitMultiplicativeExpression(
+//                        (OpenPearlParser.MultiplicativeExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.DivideExpressionContext) {
+//                st.add("code",
+//                        visitDivideExpression((OpenPearlParser.DivideExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.DivideIntegerExpressionContext) {
+//                st.add("code", visitDivideIntegerExpression(
+//                        (OpenPearlParser.DivideIntegerExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.UnaryAdditiveExpressionContext) {
+//                st.add("code", visitUnaryAdditiveExpression(
+//                        (OpenPearlParser.UnaryAdditiveExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.UnarySubtractiveExpressionContext) {
+//                st.add("code", visitUnarySubtractiveExpression(
+//                        (OpenPearlParser.UnarySubtractiveExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.ExponentiationExpressionContext) {
+//                st.add("code", visitExponentiationExpression(
+//                        (OpenPearlParser.ExponentiationExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.LtRelationalExpressionContext) {
+//                st.add("code", visitLtRelationalExpression(
+//                        (OpenPearlParser.LtRelationalExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.GeRelationalExpressionContext) {
+//                st.add("code", visitGeRelationalExpression(
+//                        (OpenPearlParser.GeRelationalExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.NeRelationalExpressionContext) {
+//                st.add("code", visitNeRelationalExpression(
+//                        (OpenPearlParser.NeRelationalExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.EqRelationalExpressionContext) {
+//                st.add("code", visitEqRelationalExpression(
+//                        (OpenPearlParser.EqRelationalExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.GtRelationalExpressionContext) {
+//                st.add("code", visitGtRelationalExpression(
+//                        (OpenPearlParser.GtRelationalExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.LeRelationalExpressionContext) {
+//                st.add("code", visitLeRelationalExpression(
+//                        (OpenPearlParser.LeRelationalExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.IsRelationalExpressionContext) {
+//                st.add("code", visitIsRelationalExpression(
+//                        (OpenPearlParser.IsRelationalExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.IsntRelationalExpressionContext) {
+//                st.add("code", visitIsntRelationalExpression(
+//                        (OpenPearlParser.IsntRelationalExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.AtanExpressionContext) {
+//                st.add("code", visitAtanExpression((OpenPearlParser.AtanExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.CosExpressionContext) {
+//                st.add("code", visitCosExpression((OpenPearlParser.CosExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.ExpExpressionContext) {
+//                st.add("code", visitExpExpression((OpenPearlParser.ExpExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.LnExpressionContext) {
+//                st.add("code", visitLnExpression((OpenPearlParser.LnExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.SinExpressionContext) {
+//                st.add("code", visitSinExpression((OpenPearlParser.SinExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.SqrtExpressionContext) {
+//                st.add("code", visitSqrtExpression((OpenPearlParser.SqrtExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.TanExpressionContext) {
+//                st.add("code", visitTanExpression((OpenPearlParser.TanExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.TanhExpressionContext) {
+//                st.add("code", visitTanhExpression((OpenPearlParser.TanhExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.FitExpressionContext) {
+//                st.add("code", visitFitExpression((OpenPearlParser.FitExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.ExponentiationExpressionContext) {
+//                st.add("code", visitExponentiationExpression(
+//                        (OpenPearlParser.ExponentiationExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.AbsExpressionContext) {
+//                st.add("code", visitAbsExpression((OpenPearlParser.AbsExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.SizeofExpressionContext) {
+//                st.add("code",
+//                        visitSizeofExpression((OpenPearlParser.SizeofExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.EntierExpressionContext) {
+//                st.add("code",
+//                        visitEntierExpression((OpenPearlParser.EntierExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.RoundExpressionContext) {
+//                st.add("code", visitRoundExpression((OpenPearlParser.RoundExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.SignExpressionContext) {
+//                st.add("code", visitSignExpression((OpenPearlParser.SignExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.RemainderExpressionContext) {
+//                st.add("code", visitRemainderExpression(
+//                        (OpenPearlParser.RemainderExpressionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.NowFunctionContext) {
+//                st.add("code", visitNowFunction((OpenPearlParser.NowFunctionContext) ctx));
+//            } else if (ctx instanceof OpenPearlParser.AndExpressionContext) {
+//                st.add("code", visitAndExpression(((OpenPearlParser.AndExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.OrExpressionContext) {
+//                st.add("code", visitOrExpression(((OpenPearlParser.OrExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.ExorExpressionContext) {
+//                st.add("code", visitExorExpression(((OpenPearlParser.ExorExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.CshiftExpressionContext) {
+//                st.add("code",
+//                        visitCshiftExpression(((OpenPearlParser.CshiftExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.ShiftExpressionContext) {
+//                st.add("code",
+//                        visitShiftExpression(((OpenPearlParser.ShiftExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.CatExpressionContext) {
+//                st.add("code", visitCatExpression(((OpenPearlParser.CatExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.NotExpressionContext) {
+//                st.add("code", visitNotExpression(((OpenPearlParser.NotExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.TOFIXEDExpressionContext) {
+//                st.add("code",
+//                        visitTOFIXEDExpression(((OpenPearlParser.TOFIXEDExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.TOFLOATExpressionContext) {
+//                st.add("code",
+//                        visitTOFLOATExpression(((OpenPearlParser.TOFLOATExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.TOBITExpressionContext) {
+//                st.add("code",
+//                        visitTOBITExpression(((OpenPearlParser.TOBITExpressionContext) ctx)));
+//            } else if (ctx instanceof OpenPearlParser.TaskFunctionContext) {
+//                st.add("code", visitTaskFunction(((OpenPearlParser.TaskFunctionContext) ctx)));
+//            }
+//        }
+//
+//        return st;
+//    }
+    
     @Override
     public ST visitTaskFunction(OpenPearlParser.TaskFunctionContext ctx) {
         ST stmt = m_group.getInstanceOf("taskAddress");
-        ASTAttribute attr = m_ast.lookup(ctx);
-        SymbolTableEntry se = attr.getSymbolTableEntry();
-        if (se != null) {
-           
-            stmt.add("taskName", getUserVariableWithoutNamespace(se.getName()));
+        if (ctx.expression()!= null) {
+            stmt.add("taskName", visit(ctx.expression()));
         }
         return stmt;
     }
 
-    /*
-     *     private void setTaskNameToST(ST st, NameContext ctx) {
-        if (ctx != null) {
-            ASTAttribute attr = m_ast.lookup(ctx);
-            ST tsk = visitAndDereference(ctx);
-            if (attr.getSymbolTableEntry() instanceof FormalParameter) {
-                st.add("task", tsk);
-            } else {
-                ST taskName = m_group.getInstanceOf("TaskName");
-                taskName.add("name",tsk);
-                st.add("task", taskName);
-            }
-        }
-    }
-    
-     */
     @Override
     public ST visitPrioFunction(OpenPearlParser.PrioFunctionContext ctx) {
         ST stmt = m_group.getInstanceOf("taskPrio");
-        ASTAttribute attr = m_ast.lookup(ctx);
-        SymbolTableEntry se = attr.getSymbolTableEntry();
-        if (se instanceof TaskEntry) {
-            ST tsk = m_group.getInstanceOf("TaskName");
-            ST un = m_group.getInstanceOf("user_variable");
-            un.add("name", se.getName());
-            tsk.add("name",  un);
-            stmt.add("taskName",tsk);
-        } else {
-            stmt.add("taskName", visitAndDereference(ctx.expression()));
-        }
+        stmt.add("taskName", visit(ctx.expression()));
         return stmt;
     }
 
@@ -1729,7 +1700,8 @@ System.out.println("CppCg@487 called");
         ST stmt = m_group.getInstanceOf("if_statement");
 
         ST cast = m_group.getInstanceOf("CastBitToBoolean");
-        cast.add("name", visitAndDereference(ctx.expression()));
+        //cast.add("name", visitAndDereference(ctx.expression()));
+        cast.add("name", visit(ctx.expression()));
         stmt.add("rhs", cast);
 
         if (ctx.then_block() != null) {
@@ -2074,13 +2046,13 @@ System.out.println("CppCg@487 called");
             // we must convert the Char<s> into a CharSlice and set the rhs-slice
             // via .setSlice -> CharSlice(lhs).setSlice(<rhs>);
             stmt.add("id", visit(ctx.name()));
-            stmt.add("expr", visitAndDereference(ctx.expression()));
+            stmt.add("expr", visit(ctx.expression()));
         } else if (attrLhs.getType() instanceof TypeStructure) {
             ST st = m_group.getInstanceOf("assignment_statement");
             Log.debug("Structure on LHS");
             //            st.add("lhs", traverseNameForStruct(ctx.name(), attrLhs.getType()));
             st.add("lhs", generateLHS(ctx.name(), m_currentSymbolTable));
-            st.add("rhs", visitAndDereference(ctx.expression()));
+            st.add("rhs", visit(ctx.expression()));
             stmt = st;
         } else {
             if (derefLhs) {
@@ -2090,7 +2062,7 @@ System.out.println("CppCg@487 called");
             } else {
                 stmt.add("lhs", lhs);
             }
-            stmt.add("rhs", visitAndDereference(ctx.expression()));
+            stmt.add("rhs", visit(ctx.expression()));
         }
         ErrorStack.leave();
         return stmt;
@@ -2162,82 +2134,168 @@ System.out.println("CppCg@487 called");
         return expression;
     }
 
+    /*
+    name:  ID ( '(' listOfExpression ')' )? ( '.' name )?    ;
+     */
     @Override
     public ST visitName(OpenPearlParser.NameContext ctx) {
         String fromModule = null;
-        
-        ST expression = m_group.getInstanceOf("expression");
+        //System.out.println(ctx.getText());
+        TypeDefinition currentType= null;
         ST stOfName = null;
         ASTAttribute attr = m_ast.lookup(ctx);
         SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
+        boolean isStructComponent=false;  // required for different array access 
+
+        // vfromNamespace(name,fromNs) ::= <%   <if(fromNs)>ns_<fromNs>::<endif><name> %>
+        stOfName = m_group.getInstanceOf("user_variable");
+        stOfName.add("name", entry.getName());
         if (entry.isSpecified()) {
-            fromModule = entry.getGlobalAttribute();
-            if (fromModule.equals(m_module.getName())) {
-                fromModule=null;
-            }
+            if (!entry.getGlobalAttribute().equals(m_module.getName())) {
+                ST fromNs = m_group.getInstanceOf("fromNamespace");
+                fromNs.add("fromNs",entry.getGlobalAttribute());
+                fromNs.add("name", stOfName);
+                stOfName = fromNs;
+            } 
         }
-        
-        if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry) {
-            stOfName = m_group.getInstanceOf("FunctionCall");
-            stOfName.add("fromns",fromModule);
 
-           
-            
-            if (attr.isFunctionCall() || (ctx.listOfExpression() != null
-                    && ctx.listOfExpression().expression().size() > 0)) {
- 
-                m_formalParameters = ((ProcedureEntry)(attr.getSymbolTableEntry())).getFormalParameters(); 
-                stOfName.add("callee", getUserVariableWithoutNamespace(ctx.ID().getText()));
- 
-
-                if (ctx.listOfExpression() != null
-                        && ctx.listOfExpression().expression().size() > 0) {
-
-                    stOfName.add("ListOfActualParameters",
-                            getActualParameters(ctx.listOfExpression().expression()));
-                }
-              //  expression.add("functionCall", functionCall);
-            } else {
-                // only name of a procedure
-                stOfName =  getUserVariableWithoutNamespace(ctx.ID().getText());
-                //expression.add("id", getUserVariableWithoutNamespace(ctx.ID().getText()));
-            }
+        // first level 
+        if (entry instanceof TaskEntry) {
+            ST st = m_group.getInstanceOf("TaskName");
+            st.add("name", stOfName);
+            stOfName = st;
+        } else if (entry instanceof InterruptEntry) {
+           // nothing to do here 
+        } else if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry && ctx.listOfExpression()!= null) {
+            //System.out.println("FunctionCall in visitName  line="+ctx.getStart().getLine());
+//            ST st = m_group.getInstanceOf("FunctionCall");
+//            st.add("name", entry.getName());
+//            st.add("callee",stOfName);
+            //            stOfName = st;
+            currentType=((ProcedureEntry)entry).getType();
+        } else if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry && ctx.listOfExpression() == null) {
+            // just the name of a procedur
+            currentType=((ProcedureEntry)entry).getType();
         } else if (entry instanceof VariableEntry) {
-            VariableEntry variable = (VariableEntry) entry;
-            // note
-            // ST stNameSpace=null; if same namespace; else "fromNamespace"
-            // inside the alternative set ST stOfExpression = null;
-            if (attr.isFunctionCall()) {
-                // code for dereference an function call missing!
-                // code: bit15 = refFunctionWithBitResult;
-                ErrorStack.addInternal(ctx,"typeXX := refFunctionReturningTypeXX","not implemented yet");
-            } else if (variable.getType() instanceof TypeReference && ctx.name() != null) {
-
-                
-                stOfName = generateLHS(ctx, m_currentSymbolTable);
-               // ErrorStack.addInternal(ctx,"typeRef.xx", "not implemented yet");
-            } else if (variable.getType() instanceof TypeArray && ctx.listOfExpression() != null) {
-                stOfName = generateLHS(ctx, m_currentSymbolTable);
-               // expression.add("id", generateLHS(ctx, m_currentSymbolTable));
-            } else if (variable.getType() instanceof TypeStructure) {
-                stOfName = generateLHS(ctx, m_currentSymbolTable);
-            } else {
-                stOfName =  getUserVariable(variable);
-                //expression.add("id", getUserVariable(variable)); //getUserVariable(ctx.ID().getText()));
-            }
-
-        } else if (entry instanceof TaskEntry) {
-            stOfName = getUserVariable(entry);
-            
+            // simple variable treated in else of namespace check
+            currentType = ((VariableEntry)entry).getType();
         } else {
-            stOfName =  getUserVariableWithoutNamespace(ctx.ID().getText());
-           // expression.add("id", getUserVariableWithoutNamespace(ctx.ID().getText()));
+            ErrorStack.addInternal(ctx, "CppCodegen@2194", "missing treatment of "+ entry.getClass());
+            return null;
         }
-       
-        expression.add("id", stOfName);
-       
-        return expression;
+
+        boolean firstLoop = true;
+
+        do {
+            if (firstLoop) {
+                firstLoop = false;
+            } else {
+                ctx=ctx.name(); // goto next component
+            }
+            //attr = m_ast.lookup(ctx);
+            if ( ctx.listOfExpression()!=null) {
+
+                if (currentType instanceof TypeReference) {
+                    stOfName=dereference(stOfName);
+                    currentType = ((TypeReference)currentType).getBaseType();
+                }
+                if (currentType instanceof TypeProcedure) {
+                    ST st = m_group.getInstanceOf("FunctionCall");
+                    st.add("callee",stOfName);
+
+
+                    m_formalParameters = ((TypeProcedure)currentType).getFormalParameters(); 
+                    if (ctx.listOfExpression().expression().size() > 0) {
+
+                        st.add("ListOfActualParameters",
+                                getActualParameters(ctx.listOfExpression().expression()));
+                    }
+                    currentType = ((TypeProcedure)currentType).getResultType();
+                    stOfName = st;
+                } else {
+                    // must be array
+                    if (isStructComponent) {
+                        //ArrayElementInStruct(name,descriptor,indices) 
+                        ST st = m_group.getInstanceOf("ArrayElementInStruct");
+                        st.add("name", stOfName);
+                        st.add("descriptor", getArrayDescriptor(currentType));
+                        st.add("indices", getIndices(ctx.listOfExpression().expression()));
+                        stOfName = st;   
+                        
+                    } else {
+                        ST st = m_group.getInstanceOf("ArrayElement");
+                        st.add("name", stOfName);
+                        st.add("indices", getIndices(ctx.listOfExpression().expression()));
+                        stOfName = st;
+                    }
+                    currentType = ((TypeArray)currentType).getBaseType();
+                }
+            } 
+            if (ctx.name() != null) {
+                isStructComponent=false;
+                // we have a further .name() --> maybe we must deref and/or perform function call without parameters
+                // possible currentTypes: TypeStructure -> no nothing
+                //                        TypeReference with base Type TypeStructure  --> use -> operator
+                //                        TypeProcedure or REF TypeProcedure-> add function call 
+                if (currentType instanceof TypeReference) {
+                    if (((TypeReference)currentType).getBaseType() instanceof TypeProcedure) {
+                        stOfName=dereference(stOfName);
+                        currentType = ((TypeReference)currentType).getBaseType();
+                    } else if (((TypeReference)currentType).getBaseType() instanceof TypeStructure) {
+                        stOfName=dereference(stOfName);
+                        currentType = ((TypeReference)currentType).getBaseType();
+                    }
+                }
+                if (currentType instanceof TypeProcedure) {
+                    // add function call without parameters
+                    ST st = m_group.getInstanceOf("FunctionCall");
+                    st.add("callee",stOfName);
+                    currentType = ((TypeProcedure)currentType).getResultType();
+                    stOfName = st;
+                }
+                if (currentType instanceof TypeStructure) {
+                       // attr = m_ast.lookup(ctx.name());
+                        // the current type must be a type structure
+                        TypeStructure ts = (TypeStructure)currentType;
+                        String componentName = ctx.name().ID().getText();
+                        StructureComponent component = ts.lookup(componentName);
+                       // System.out.println(component.m_alias);
+                        ST st = m_group.getInstanceOf("addStructComponent");
+                        st.add("name", stOfName);
+                        st.add("component", component.m_alias);
+                       // if (attr!= null && attr.needImplicitDereferencing()) {
+                       //     st.add("nameIsReference", true);
+                       // }
+                        stOfName = st;
+                        currentType = component.m_type;
+                        isStructComponent = true;
+               
+                } else {
+                    ErrorStack.addInternal(ctx, "CppCodeGen@2273","STRUCT expected");
+                }
+            } else {
+                
+            }
+          } while (ctx.name() != null);    
+        if (attr.needImplicitDereferencing()) {
+            stOfName = dereference(stOfName);
+           //currentType = ((TypeReference)currentType).getBaseType();
+       }
+        if (attr.isFunctionCall()) {
+           ST st = m_group.getInstanceOf("FunctionCall");
+           st.add("callee",stOfName);
+            //currentType = ((TypeProcedure)currentType).getResultType();
+            stOfName = st; 
+        }
+        return stOfName;
     }
+
+    private ST dereference(ST st) {
+        ST deref =m_group.getInstanceOf("CONT");
+        deref.add("operand", st);
+        return deref; 
+    }
+
 
     @Override
     public ST visitCharSelection(OpenPearlParser.CharSelectionContext ctx) {
@@ -2763,6 +2821,7 @@ System.out.println("CppCg@487 called");
                 if (m_resultType instanceof TypeReference) {
                     ST ref = m_group.getInstanceOf("referenceOf");
                     ref.add("obj", visitAndDereference(ctx.expression()));
+                    ref.add("type", ((TypeReference)m_resultType).getBaseType().toST(m_group));
                     stmt.add("expression", ref);
                 } else {
                     stmt.add("expression", visitAndDereference(ctx.expression()));
@@ -2883,7 +2942,7 @@ System.out.println("CppCg@487 called");
         if (ctx != null) {
             ASTAttribute attr = m_ast.lookup(ctx);
             
-            ST tsk = visitAndDereference(ctx);
+            ST tsk = visit(ctx);
             st.add("task", tsk);
      
 //            if (attr.getSymbolTableEntry() instanceof FormalParameter ||
@@ -3002,7 +3061,7 @@ System.out.println("CppCg@487 called");
         for (int i = 0; i < ctx.name().size(); i++) {
             String name = ctx.name(i).getText();
 
-            ST sem = visitAndDereference(ctx.name(i));
+            ST sem = visit(ctx.name(i));
 
             ASTAttribute attr = m_ast.lookup(ctx.name(i));
             if (attr.getSymbolTableEntry() instanceof FormalParameter) {
@@ -4074,24 +4133,40 @@ System.out.println("CppCg@487 called");
 
     @Override
     public ST visitCallStatement(OpenPearlParser.CallStatementContext ctx) {
-        ST stmt = m_group.getInstanceOf("CallStatement");
+        ASTAttribute attr = m_ast.lookup(ctx);
+        ST stOfName = visitName(ctx.name());
+        ST call = m_group.getInstanceOf("CallStatement");
+        call.add("callee",  stOfName);
+        return call;
+    }    
+//        String fromns = se.getGlobalAttribute();
+//     
+//        if (fromns != null && fromns.equals(m_module.getName())) {
+//            fromns = null;
+//        }
+//        stmt.add("fromns",fromns);
+//        if (se instanceof ProcedureEntry) {
+//            m_formalParameters = ((ProcedureEntry)se).getFormalParameters();
+//            stmt.add("callee", getUserVariableWithoutNamespace(procName));
+//        } else if (se instanceof VariableEntry) {
+//            VariableEntry ve= (VariableEntry)se;
+//            TypeReference tr = (TypeReference)(ve.getType());
+//            TypeProcedure tp = (TypeProcedure)(tr.getBaseType());
+//            m_formalParameters = tp.getFormalParameters();
+//            ST cont = m_group.getInstanceOf("CONT");
+//            cont.add("operand", visit(ctx.name()));
+//            stmt.add("callee", cont);
+//            
+//        }
+//       
+// 
+//        if (ctx.listOfActualParameters() != null) {
+//            stmt.add("ListOfActualParameters",
+//                    visitListOfActualParameters(ctx.listOfActualParameters()));
+//        }
+//
+//        return stmt;
 
-        SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID().toString());
-        m_formalParameters = ((ProcedureEntry)se).getFormalParameters();
-        
-        String fromns = se.getGlobalAttribute();
-        stmt.add("callee", ctx.ID());
-        if (fromns != null && fromns.equals(m_module.getName())) {
-            fromns = null;
-        }
-        stmt.add("fromns",fromns);
-        if (ctx.listOfActualParameters() != null) {
-            stmt.add("ListOfActualParameters",
-                    visitListOfActualParameters(ctx.listOfActualParameters()));
-        }
-
-        return stmt;
-    }
 
     @Override
     public ST visitListOfActualParameters(OpenPearlParser.ListOfActualParametersContext ctx) {
@@ -4999,33 +5074,32 @@ System.out.println("CppCg@487 called");
         ST st = m_group.getInstanceOf("ProcedureDeclaration");
         st.add("id", ctx.nameOfModuleTaskProc().ID().getText());
 
-        SymbolTableEntry se =
+        ProcedureEntry se =(ProcedureEntry)
                 m_currentSymbolTable.lookup(ctx.nameOfModuleTaskProc().ID().toString());
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
 
         LinkedList<VariableEntry> entries = m_currentSymbolTable.getVariableDeclarations();
-
-
-        for (ParseTree c : ctx.typeProcedure().children) {
-            //if (c instanceof OpenPearlParser.ProcedureBodyContext) {
-            //    st.add("body",
-            //            visitProcedureBody((OpenPearlParser.ProcedureBodyContext) c));
-            //} else
-            if (c instanceof OpenPearlParser.ResultAttributeContext) {
-                st.add("resultAttribute", getResultAttributte((ProcedureEntry) se));
-
-            } else if (c instanceof OpenPearlParser.ListOfFormalParametersContext) {
-                st.add("listOfFormalParameters", visitListOfFormalParameters(
-                        (OpenPearlParser.ListOfFormalParametersContext) c));
-            }
+        if (se.getResultType() != null) {
+          st.add("resultAttribute", se.getResultType().toST(m_group));
+        }
+        m_resultType = se.getResultType(); // must be null is type void
+        List<FormalParameter> formalParameters = ((ProcedureEntry)se).getFormalParameters();
+        if (formalParameters != null) {
+           ST stFormalParams = m_group.getInstanceOf("FormalParameters");
+           for (int i=0; i<formalParameters.size(); i++) {
+              stFormalParams.add("FormalParameter", formalParameters.get(i).toST(m_group));
+           }
+           st.add("listOfFormalParameters", stFormalParams);
         }
 
+        
         if (ctx.globalAttribute() != null) {
             visit(ctx.globalAttribute());
         }
-
-        st.add("body", visit(ctx.procedureBody()));
+        if (ctx.procedureBody()!= null) {
+           st.add("body", visit(ctx.procedureBody()));
+        }
 
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         
@@ -5034,144 +5108,142 @@ System.out.println("CppCg@487 called");
         return scope;
     }
 
-    private ST getResultAttributte(ProcedureEntry pe) {
-        ST st = m_group.getInstanceOf("ResultAttribute");
-        st.add("type", pe.getResultType().toST(m_group));
-        m_resultType = pe.getResultType();
-        return st;
-    }
-
-
-    @Override
-    public ST visitListOfFormalParameters(OpenPearlParser.ListOfFormalParametersContext ctx) {
-        ST st = m_group.getInstanceOf("ListOfFormalParameters");
-
-        if (ctx != null) {
-            for (int i = 0; i < ctx.formalParameter().size(); i++) {
-                st.add("FormalParameters", visitFormalParameter(ctx.formalParameter(i)));
-            }
-        }
-
-        return st;
-    }
-
-    @Override
-    public ST visitFormalParameter(OpenPearlParser.FormalParameterContext ctx) {
-        ST st = m_group.getInstanceOf("FormalParameters");
-
-        if (ctx != null) {
-            for (int i = 0; i < ctx.identifier().size(); i++) {
-                boolean treatArray = false;
-                boolean treatStructure = false;
-                String typeName = "";
-
-                ST param = m_group.getInstanceOf("FormalParameter");
-
-                // test if we have an parameter of type array
-                SymbolTableEntry se =
-                        m_currentSymbolTable.lookup(ctx.identifier(i).ID().toString());
-
-                if (se instanceof VariableEntry) {
-                    VariableEntry ve = (VariableEntry) se;
-
-                    if (ve.getType() instanceof TypeArray) {
-                        treatArray = true;
-
-                    } else if (ve.getType() instanceof TypeStructure) {
-                        treatStructure = true;
-                        typeName = ((TypeStructure) ve.getType()).getStructureName();
-
-                    }
-                }
-
-                if (treatArray) {
-                  param.add("isArray", "");
-                }
-                param.add("id", ctx.identifier(i).ID());
-
-                if (treatStructure) {
-                    param.add("type", typeName);
-                } else {
-                    
-                    param.add("type", visitParameterType(ctx.parameterType()));
-                }
-                if (ctx.assignmentProtection() != null) {
-                    param.add("assignmentProtection", "");
-                }
-
-                if (ctx.passIdentical() != null) {
-                    param.add("passIdentical", "");
-                }
-
-                st.add("FormalParameter", param);
-
-            }
-        }
-
-        return st;
-    }
-
-    @Override
-    public ST visitParameterType(OpenPearlParser.ParameterTypeContext ctx) {
-        ST st = m_group.getInstanceOf("ParameterType");
-
-        for (ParseTree c : ctx.children) {
-            if (c instanceof OpenPearlParser.SimpleTypeContext) {
-                st.add("type", visitSimpleType(ctx.simpleType()));
-            } else if (c instanceof OpenPearlParser.TypeReferenceContext) {
-                st.add("type", visitTypeReference(ctx.typeReference()));
-            } else if (c instanceof OpenPearlParser.TypeStructureContext) {
-                st.add("type", visitTypeStructure(ctx.typeStructure()));
-            } else if (c instanceof OpenPearlParser.TypeRealTimeObjectContext) {
-                OpenPearlParser.TypeRealTimeObjectContext rto = (OpenPearlParser.TypeRealTimeObjectContext)c;
-                if (rto.typeBolt() != null) {
-                    st.add("type", visitTypeBolt(rto.typeBolt()));
-                } else if (rto.typeSema() != null) {
-                   st.add("type", visitTypeSema(rto.typeSema()));
-                } else if (rto.typeInterrupt() != null) {
-                   st.add("type", visitTypeInterrupt(rto.typeInterrupt()));
-// remove until SIGNAL implementation starts                
-//            } else if (c instanceof OpenPearlParser.TypeSignalContext) {
-//                st.add("type", visitTypeSignal((TypeSignalContext)c));
-                }
-            } else {
-                System.err.println("CppCodeGen:visitParameterType: untreated type "
-                        + c.getClass().getCanonicalName());
-            }
-        }
-
-        return st;
-    }
+// generate parameters from symbol table
+//    @Override
+//    public ST visitListOfFormalParameters(OpenPearlParser.ListOfFormalParametersContext ctx) {
+//        ST st = m_group.getInstanceOf("ListOfFormalParameters");
+//
+//        if (ctx != null) {
+//            for (int i = 0; i < ctx.formalParameter().size(); i++) {
+//                st.add("FormalParameters", visitFormalParameter(ctx.formalParameter(i)));
+//            }
+//        }
+//
+//        return st;
+//    }
+//
+//    @Override
+//    public ST visitFormalParameter(OpenPearlParser.FormalParameterContext ctx) {
+//        ST st = m_group.getInstanceOf("FormalParameters");
+//
+//        if (ctx != null) {
+//    
+//            for (int i = 0; i < ctx.identifier().size(); i++) {
+//                boolean treatArray = false;
+//                boolean treatStructure = false;
+//                String typeName = "";
+//
+//                ST param = m_group.getInstanceOf("FormalParameter");
+//
+//                // test if we have an parameter of type array
+//                SymbolTableEntry se =
+//                        m_currentSymbolTable.lookup(ctx.identifier(i).ID().toString());
+//
+//                if (se instanceof VariableEntry) {
+//                    VariableEntry ve = (VariableEntry) se;
+//
+//                    if (ve.getType() instanceof TypeArray) {
+//                        treatArray = true;
+//
+//                    } else if (ve.getType() instanceof TypeStructure) {
+//                        treatStructure = true;
+//                        typeName = ((TypeStructure) ve.getType()).getStructureName();
+//
+//                    }
+//                }
+//
+//                if (treatArray) {
+//                  param.add("isArray", "");
+//                }
+//                param.add("id", ctx.identifier(i).ID());
+//
+//                if (treatStructure) {
+//                    param.add("type", typeName);
+//                } else {
+//                    
+//                    param.add("type", visitParameterType(ctx.parameterType()));
+//                }
+//                if (ctx.assignmentProtection() != null) {
+//                    param.add("assignmentProtection", "");
+//                }
+//
+//                if (ctx.passIdentical() != null) {
+//                    param.add("passIdentical", "");
+//                }
+//
+//                st.add("FormalParameter", param);
+//
+//            }
+//        }
+//
+//        return st;
+//    }
+//
+//    @Override
+//    public ST visitParameterType(OpenPearlParser.ParameterTypeContext ctx) {
+//        ST st = m_group.getInstanceOf("ParameterType");
+//
+//        for (ParseTree c : ctx.children) {
+//            if (c instanceof OpenPearlParser.SimpleTypeContext) {
+//                st.add("type", visitSimpleType(ctx.simpleType()));
+//            } else if (c instanceof OpenPearlParser.TypeReferenceContext) {
+//                st.add("type", visitTypeReference(ctx.typeReference()));
+//            } else if (c instanceof OpenPearlParser.TypeStructureContext) {
+//                st.add("type", visitTypeStructure(ctx.typeStructure()));
+//            } else if (c instanceof OpenPearlParser.TypeRealTimeObjectContext) {
+//                OpenPearlParser.TypeRealTimeObjectContext rto = (OpenPearlParser.TypeRealTimeObjectContext)c;
+//                if (rto.typeBolt() != null) {
+//                    st.add("type", visitTypeBolt(rto.typeBolt()));
+//                } else if (rto.typeSema() != null) {
+//                   st.add("type", visitTypeSema(rto.typeSema()));
+//                } else if (rto.typeInterrupt() != null) {
+//                   st.add("type", visitTypeInterrupt(rto.typeInterrupt()));
+//// remove until SIGNAL implementation starts                
+////            } else if (c instanceof OpenPearlParser.TypeSignalContext) {
+////                st.add("type", visitTypeSignal((TypeSignalContext)c));
+//                }
+//            } else {
+//                System.err.println("CppCodeGen:visitParameterType: untreated type "
+//                        + c.getClass().getCanonicalName());
+//            }
+//        }
+//
+//        return st;
+//    }
    
-    @Override
-    public ST visitTypeTask(OpenPearlParser.TypeTaskContext ctx) {
-        ST st = m_group.getInstanceOf("task_type");
-        return st;
-    }
-    
-    @Override
-    public ST visitTypeBolt(OpenPearlParser.TypeBoltContext ctx) {
-        ST st = m_group.getInstanceOf("bolt_type");
-        return st;
-    }
-
-    @Override
-    public ST visitTypeSema(OpenPearlParser.TypeSemaContext ctx) {
-        ST st = m_group.getInstanceOf("sema_type");
-        return st;
-    }
-    
-    @Override
-    public ST visitTypeInterrupt(OpenPearlParser.TypeInterruptContext ctx) {
-        ST st = m_group.getInstanceOf("interrupt_type");
-        return st;
-    }
-
-    @Override
-    public ST visitTypeSignal(OpenPearlParser.TypeSignalContext ctx) {
-        ST st = m_group.getInstanceOf("signal_type");
-        return st;
-    }
+//    @Override
+//    public ST visitTypeTask(OpenPearlParser.TypeTaskContext ctx) {
+//        ST st = m_group.getInstanceOf("task_type");
+//        return st;
+//    }
+//    
+//    @Override
+//    public ST visitTypeBolt(OpenPearlParser.TypeBoltContext ctx) {
+//        ST st = m_group.getInstanceOf("bolt_type");
+//        System.out.println("visitTypeSema called");
+//        return st;
+//    }
+//
+//    @Override
+//    public ST visitTypeSema(OpenPearlParser.TypeSemaContext ctx) {
+//        ST st = m_group.getInstanceOf("sema_type");
+//        System.out.println("visitTypeSema called");
+//        return st;
+//    }
+//    
+//    @Override
+//    public ST visitTypeInterrupt(OpenPearlParser.TypeInterruptContext ctx) {
+//        ST st = m_group.getInstanceOf("interrupt_type");
+//        
+//System.out.println("visitTypeInterrpt called");
+//        return st;
+//    }
+//
+//    @Override
+//    public ST visitTypeSignal(OpenPearlParser.TypeSignalContext ctx) {
+//        ST st = m_group.getInstanceOf("signal_type");
+//        return st;
+//    }
     @Override
     public ST visitProcedureBody(OpenPearlParser.ProcedureBodyContext ctx) {
         ST st = m_group.getInstanceOf("Body");
@@ -5214,35 +5286,6 @@ System.out.println("CppCg@487 called");
     }
 
  
-    @Override
-    public ST visitResultAttribute(OpenPearlParser.ResultAttributeContext ctx) {
-        ST st = m_group.getInstanceOf("ResultAttribute");
-        st.add("resultType", visitResultType(ctx.resultType()));
-        ASTAttribute attr = m_ast.lookup(ctx);
-        if (attr != null) {
-            m_resultType = attr.getType();
-        }
-        return st;
-    }
-
-    @Override
-    public ST visitResultType(OpenPearlParser.ResultTypeContext ctx) {
-        ST st = m_group.getInstanceOf("ResultType");
-
-        for (ParseTree c : ctx.children) {
-            if (c instanceof OpenPearlParser.SimpleTypeContext) {
-                st.add("type", visitSimpleType(ctx.simpleType()));
-            } else if (c instanceof OpenPearlParser.TypeReferenceContext) {
-                st.add("type", visitTypeReference(ctx.typeReference()));
-            } else if (c instanceof OpenPearlParser.TypeStructureContext) {
-                st.add("type", visitTypeStructure(ctx.typeStructure()));
-            }
-        }
-
-        return st;
-    }
-
-
     @Override
     public ST visitTOFIXEDExpression(OpenPearlParser.TOFIXEDExpressionContext ctx) {
         TypeDefinition op = m_ast.lookupType(ctx.expression());
@@ -5588,6 +5631,8 @@ System.out.println("CppCg@487 called");
     private ST visitAndDereference(ParserRuleContext ctx) {
         String s = ctx.getText();
         ST st = visit(ctx);
+        if (st != null) return st;
+        
         ASTAttribute attr = m_ast.lookup(ctx);
         VariableEntry ve = attr.getVariable();
         if (ve != null) {
@@ -5614,6 +5659,7 @@ System.out.println("CppCg@487 called");
                     if (bc.primaryExpression() != null && bc.primaryExpression().name() != null) {
                         OpenPearlParser.NameContext n = bc.primaryExpression().name();
                         if (n.listOfExpression() != null) {
+                            System.out.println("FunctionCall in visitAndDereference line="+ctx.getStart().getLine());
                             // FunctionCall(callee,ListOfActualParameters)
                             ST functionCall = m_group.getInstanceOf("FunctionCall");
                             ST deref = m_group.getInstanceOf("CONT");

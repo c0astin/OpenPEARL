@@ -54,7 +54,7 @@ public class CommonUtils {
             int lhsPrecision = ((TypeFixed)lhs).getPrecision(); 
             if (rhs instanceof TypeFixed) {
                 int rhsPrecision = ((TypeFixed)rhs).getPrecision();
-                if (rhsPrecision< lhsPrecision) {
+                if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }
             }
@@ -62,13 +62,13 @@ public class CommonUtils {
             int lhsPrecision = ((TypeFloat)lhs).getPrecision(); 
             if (rhs instanceof TypeFixed) {
                 int rhsPrecision = ((TypeFixed)rhs).getPrecision();
-                if (rhsPrecision< lhsPrecision) {
+                if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }
             }
             if (rhs instanceof TypeFloat) {
                 int rhsPrecision = ((TypeFloat)rhs).getPrecision();
-                if (rhsPrecision< lhsPrecision) {
+                if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }
             }
@@ -76,15 +76,20 @@ public class CommonUtils {
             int lhsPrecision = ((TypeChar)lhs).getPrecision(); 
             if (rhs instanceof TypeChar) {
                 int rhsPrecision = ((TypeChar)rhs).getPrecision();
-                if (rhsPrecision< lhsPrecision) {
+                if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }
             }
+            if (rhs instanceof TypeVariableChar) {
+                // the check for correct size must be done at runtime
+               result=true;
+            }
+            
         } else if (lhs instanceof TypeBit) {
             int lhsPrecision = ((TypeBit)lhs).getPrecision(); 
             if (rhs instanceof TypeBit) {
                 int rhsPrecision = ((TypeBit)rhs).getPrecision();
-                if (rhsPrecision< lhsPrecision) {
+                if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }
             }

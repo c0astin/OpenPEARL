@@ -51,11 +51,17 @@ public class ASTAttribute {
     public ConstantSelection m_selection;
     private static final int bitReadOnly = 0x01;
     private static final int bitIsFunctionCall = 0x02;
+
     
     /** flag is set if the corresponding symbol table entry 
      * is generated automatically (like unnamed blocks or loops)
      */
-    private static final int bitIsInternal = 0x04;  
+    private static final int bitIsInternal = 0x04;
+    
+    /**
+     * flag is set, if an expression or name needs an implicit dereferencing 
+     */
+    private static final int needImplicitDereferencing = 0x08;
     
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
@@ -222,6 +228,11 @@ public class ASTAttribute {
       //this.m_variable = ve;
       m_entry = ve;
     }
+    
+    public void setType(TypeDefinition type) {
+        //this.m_variable = ve;
+        m_type = type;
+      }
 
     public void setIsFunctionCall(boolean newValue) {
       setFlag(bitIsFunctionCall, newValue);
@@ -239,6 +250,15 @@ public class ASTAttribute {
       return getFlag(bitIsInternal);
     }
 
+    
+    public boolean needImplicitDereferencing() {
+        return (getFlag(needImplicitDereferencing));
+    }
+    
+    public void setNeedImplicitDereferencing(boolean set ) {
+        setFlag(needImplicitDereferencing,set);
+    }
+    
     
     private boolean getFlag(int whichFlag) {
       return ((m_flags & whichFlag) == whichFlag);
@@ -268,4 +288,6 @@ public class ASTAttribute {
                 this.m_type instanceof TypeClock ||
                 this.m_type instanceof TypeVariableChar;
     }
+
+
 }

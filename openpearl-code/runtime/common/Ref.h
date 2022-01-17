@@ -92,12 +92,13 @@ namespace pearlrt {
 
       Ref(C& pValue) : x(&pValue) {}
 
-      /**
-      ctor for REF variable declaration with preset
-      \param pValue the variable which should by adressed
-                     by this REF
-      */
-      Ref(C* pValue) : x(pValue) {}
+      ///**
+      //ctor for REF variable declaration with preset
+      //\param pValue the variable which should by adressed
+      //               by this REF
+      //*/
+      // has ambiguous resolution with Ref(C&) 
+      // Ref(C* pValue) : x(pValue) {}
 
       /**
       dereferenciation of a REF variable

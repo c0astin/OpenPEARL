@@ -71,6 +71,7 @@ public class CheckAssignment extends OpenPearlBaseVisitor<Void>
     public Void visitAssignment_statement(OpenPearlParser.Assignment_statementContext ctx) {
         Log.debug("CheckAssignment:visitAssignment_statement:ctx" + CommonUtils.printContext(ctx));
         String id = null;
+       // System.out.println(ctx.getText());
 
         ErrorStack.enter(ctx, "assignment");
         ASTAttribute lhsAttr = null;
@@ -106,117 +107,235 @@ public class CheckAssignment extends OpenPearlBaseVisitor<Void>
             ErrorStack.add(lhsAttr.getType().toString() + " INV variable not allowed on lhs");
         }
 
+
         if (!(lhsType instanceof TypeStructure || lhsType instanceof TypeReference
                 || lhsType instanceof TypeVariableChar || isSimpleType(lhsType))) {
             ErrorStack.add(lhsAttr.getType().toString() + " not allowed on lhs");
-        } else {
-            TypeDefinition rhsType = m_ast.lookupType(ctx.expression());
-            ASTAttribute rhsAttr = m_ast.lookup(ctx.expression());
-            VariableEntry rhsVariable = rhsAttr.getVariable();
-            SymbolTableEntry rhsSymbol = rhsAttr.getSymbolTableEntry();
-
-            // problem with procedure call or procedure address
-            // if the ASTAttributes indicate TypeProcedure with parameters
-            // and no parameters are given, then we must treat the TypeProcedure, else
-            // we may easily use the result type
-            //
-            // the difficult situation is a procedure without parameters.
-            // in this case we must use the result type, if the left hand side is
-            // not of the REF PROC
-
-            if (rhsVariable == null && rhsSymbol != null) {
-                // we have no variable, but a symbol exists --> may be a procedure
-                if (rhsSymbol instanceof ProcedureEntry) {
-                    // let's have a look if we have actual parameters for procedure 
-
-                    ProcedureEntry pe = (ProcedureEntry) rhsAttr.getSymbolTableEntry();
-                    if (pe.getFormalParameters() != null) {
-                        // we must look in the context for parameters!
-                        // if it is not a nameContext with listOfExpression we get a 
-                        // nullPointerException - if not we have the result type
-                        try {
-                            OpenPearlParser.BaseExpressionContext bctx =
-                                    ((OpenPearlParser.BaseExpressionContext) (ctx.expression()));
-                            if (bctx.primaryExpression().name().listOfExpression() != null) {
-                                rhsType = pe.getResultType();
-                                rhsAttr.setIsFunctionCall(true);
-                            }
-                        } catch (NullPointerException e) {
-                        } ;
-
-                    } else {
-                        rhsType = rhsAttr.getType(); // work with complete type
-                    }
-                }
-            }
-
-            //      // treat second case; lhs is not REF PROC and rhs is PROC or REF PROC without formal parameters
-            //      if ( (! (lhsType instanceof TypeReference)) || 
-            //           ((!(((TypeReference)lhsType).getBaseType() instanceof TypeProcedure)))) {
-            //        if (rhsType instanceof TypeReference) {
-            //          rhsType = ((TypeReference)rhsType).getBaseType();
-            //        }
-            //        if (rhsType instanceof TypeProcedure && ((TypeProcedure)rhsType).getFormalParameters()==null) {
-            //          rhsType = ((TypeProcedure)rhsType).getResultType();
-            //          rhsAttr.setIsFunctionCall(true);
-            //        }
-            //      }
-
-            if (lhsType instanceof TypeReference && ctx.dereference() == null
-                    && rhsType instanceof TypeReference) {
-                // pointer assignment refVar1 := refVar2;
-                // base types must be identical
-                // rhs must live longer or equal to lhs!
-                checkLifeCycle(lhsVariable, rhsVariable);
-
-                lhsType = ((TypeReference) lhsType).getBaseType();
-                rhsType = ((TypeReference) rhsType).getBaseType();
-                if (rhsType != null) {
-                    checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, true); // match exactly
-                } else {
-                    // assignment of NIL to any reference is ok
-                }
-            } else if (lhsType instanceof TypeReference && ctx.dereference() != null
-                    && !(rhsType instanceof TypeReference)) {
-                // CONT refVar = expr
-                // types must match relaxed
-                lhsType = ((TypeReference) lhsType).getBaseType();
-                checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, false); // lhs may be larger
-            } else if (lhsType instanceof TypeReference && !(rhsType instanceof TypeReference)) {
-                // refVar = var; no expression allowed on rhs!
-                // need variable or TASK,SEMA,...INTERRUPT
-                if (isReferableType(rhsType) || rhsAttr.getVariable() != null) {
-                    lhsType = ((TypeReference) lhsType).getBaseType();
-                    checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, true); // match exactly
-                } else {
-                    ErrorStack.add(
-                            "reference must point to a variable or TASK,SEMA,BOLT,INTERRUPT or SIGNAL");
-                }
-                // rhs must live longer or equal to lhs!
-                checkLifeCycle(lhsVariable, rhsVariable);
-
-            } else if (!(lhsType instanceof TypeReference) && !(rhsType instanceof TypeReference)) {
-                // simple assignment var:= expr
-                if (rhsType instanceof TypeProcedure) {
-                    // the type procedure does not work
-                    // let's try with the result type
-                    // we mark this in the ASTAttribute, if the type does not fit
-                    // we abort the compilation after the semantic check anf the attempt does not bother 
-                    rhsAttr.setIsFunctionCall(true);
-                    rhsType = ((TypeProcedure) rhsType).getResultType();
-
-                }
-                checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, false); // lhs may be larger
-            } else if (!(lhsType instanceof TypeReference) && rhsType instanceof TypeReference) {
-                // assignment var:= refVar
-                // ok auto dereference
-                rhsType = ((TypeReference) rhsType).getBaseType();
-                checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, false); // lhs may be larger
-            } else {
-                ErrorStack.add("type mismatch: " + lhsAttr.getType().toString() + ":="
-                        + rhsAttr.getType().toString());
-            }
         }
+        
+        if (ErrorStack.getLocalCount()>0) {
+            ErrorStack.leave();
+            return null;
+        }
+        
+        
+        
+        TypeDefinition rhsType = m_ast.lookupType(ctx.expression());
+        ASTAttribute rhsAttr = m_ast.lookup(ctx.expression());
+        VariableEntry rhsVariable = rhsAttr.getVariable();
+        SymbolTableEntry rhsSymbol = rhsAttr.getSymbolTableEntry();
+        TypeDefinition resultType = null;
+
+        // check if we may have a function call (rhsType REF PROC RETURNS(...))
+        if (rhsType instanceof TypeReference && (((TypeReference)rhsType).getBaseType() instanceof TypeProcedure)) {
+            TypeProcedure tp= (TypeProcedure)(((TypeReference)rhsType).getBaseType());
+            resultType = tp.getResultType();
+
+        }
+        if (rhsType instanceof TypeProcedure) {
+            resultType = ((TypeProcedure)rhsType).getResultType();
+         }
+        // resultType is != null, if it may be a procedure call
+
+        // there are a lot of possible cases
+        // let's check valid assignments start with easy cases
+        // and continue with more complicated cases as long we have not found
+        // a valid assignment
+        boolean searchValidAssignment = true;
+        
+        //-- easiest case; simple variable assignment
+        if (searchValidAssignment && CommonUtils.mayBeAssignedTo(lhsType, rhsType)) {
+            searchValidAssignment=false;
+        }
+        
+        // Part 1: lhsType is NOT TypeReference
+        //-- lhs is not TypeReference; rhs is TypeReference with compatible baseType
+        if (searchValidAssignment && !(lhsType instanceof TypeReference) && (rhsType instanceof TypeReference) &&
+                CommonUtils.mayBeAssignedTo(lhsType, ((TypeReference)rhsType).getBaseType())) {
+            // implicit dereference required
+            rhsAttr.setNeedImplicitDereferencing(true);
+            searchValidAssignment=false;
+        }
+        
+        //-- lhs is not TypeReference; rhs may be PROC or REF PROC --> create function call
+        if (searchValidAssignment && !(lhsType instanceof TypeReference) && (rhsType instanceof TypeProcedure) &&
+                (CommonUtils.mayBeAssignedTo(lhsType, resultType) ||
+                 lhsType.equals(resultType)) ){
+            // function call on rhs
+            rhsAttr.setIsFunctionCall(true);
+            searchValidAssignment=false;
+        }
+        if (searchValidAssignment && !(lhsType instanceof TypeReference) && (rhsType instanceof TypeProcedure) &&
+            (resultType instanceof TypeReference && lhsType.equals(((TypeReference)resultType).getBaseType()))) {
+                
+            rhsAttr.setNeedImplicitDereferencing(true);
+            rhsAttr.setIsFunctionCall(true);
+            searchValidAssignment=false;
+        }
+
+        if (searchValidAssignment && !(lhsType instanceof TypeReference) && (rhsType instanceof TypeReference) &&
+                ((TypeReference)rhsType).getBaseType() instanceof TypeProcedure && 
+                CommonUtils.mayBeAssignedTo(lhsType, resultType)) {
+            // deref and function call on rhs
+            rhsAttr.setIsFunctionCall(true);
+            rhsAttr.setNeedImplicitDereferencing(true);
+            searchValidAssignment=false;
+        }
+        
+        // Part 2: lhsType IS TypeReference
+        // -- lhs is reference; rhs is a symbol; 
+        if (searchValidAssignment && lhsType instanceof TypeReference && (rhsAttr.getSymbolTableEntry() != null)) {
+           TypeDefinition lhsBase = ((TypeReference)lhsType).getBaseType();      
+           if (lhsBase.equals(rhsAttr.getType())) {
+               // pointer assignment from SymbolTableEntry
+               searchValidAssignment=false;   
+               checkLifeCycle(lhsVariable, rhsVariable);
+           }
+        }
+
+        // NIL assignment
+        if (searchValidAssignment && lhsType instanceof TypeReference && 
+                rhsType instanceof TypeReference && ((TypeReference)rhsType).getBaseType() == null ) {
+                // pointer assignment from pointer expression
+                searchValidAssignment=false;   
+         }
+        
+        // -- lhs is REF TASK; rhs is TASK ; special treatment since we have no symbol table entry here 
+        if (searchValidAssignment && lhsType instanceof TypeReference && ((TypeReference)lhsType).getBaseType() instanceof TypeTask &&
+                rhsType instanceof TypeTask) {
+            searchValidAssignment=false;
+         }
+        
+        // -- lhs is reference; rhs is real expression 
+        if (searchValidAssignment && lhsType instanceof TypeReference && 
+                (rhsAttr.getSymbolTableEntry() == null)) {
+            if (!lhsType.equals(rhsType)) {
+                // emit special error message
+                ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := expression of type "+ rhsType.toString4IMC(false));
+                
+            }
+            searchValidAssignment=false;
+         }
+        
+        // -- lhs is reference; rhs is a real expression 
+        if (searchValidAssignment && lhsType instanceof TypeReference && (rhsAttr.getSymbolTableEntry() == null)) {
+           TypeDefinition lhsBase = ((TypeReference)lhsType).getBaseType();      
+           if (lhsBase.equals(rhsAttr.getType())) {
+               // pointer assignment from SymbolTableEntry
+               searchValidAssignment=false;  
+               
+           }
+        }
+ 
+        
+        // maybe some cases are missing
+        if (searchValidAssignment == true) {
+            ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := "+ rhsType.toString4IMC(false));
+        }
+         
+
+//            // problem with procedure call or procedure address
+//            // if the ASTAttributes indicate TypeProcedure with parameters
+//            // and no parameters are given, then we must treat the TypeProcedure, else
+//            // we may easily use the result type
+//            //
+//            // the difficult situation is a procedure without parameters.
+//            // in this case we must use the result type, if the left hand side is
+//            // not of the REF PROC
+//
+//            if (rhsVariable == null && rhsSymbol != null) {
+//                // we have no variable, but a symbol exists --> may be a procedure
+//                if (rhsSymbol instanceof ProcedureEntry) {
+//                    // let's have a look if we have actual parameters for procedure 
+//
+//                    ProcedureEntry pe = (ProcedureEntry) rhsAttr.getSymbolTableEntry();
+//                    if (pe.getFormalParameters() != null) {
+//                        // we must look in the context for parameters!
+//                        // if it is not a nameContext with listOfExpression we get a 
+//                        // nullPointerException - if not we have the result type
+//                        try {
+//                            OpenPearlParser.BaseExpressionContext bctx =
+//                                    ((OpenPearlParser.BaseExpressionContext) (ctx.expression()));
+//                            if (bctx.primaryExpression().name().listOfExpression() != null) {
+//                                rhsType = pe.getResultType();
+//                                rhsAttr.setIsFunctionCall(true);
+//                            }
+//                        } catch (NullPointerException e) {
+//                        } ;
+//
+//                    } else {
+//                        rhsType = rhsAttr.getType(); // work with complete type
+//                    }
+//                }
+//            }
+//
+//            //      // treat second case; lhs is not REF PROC and rhs is PROC or REF PROC without formal parameters
+//            //      if ( (! (lhsType instanceof TypeReference)) || 
+//            //           ((!(((TypeReference)lhsType).getBaseType() instanceof TypeProcedure)))) {
+//            //        if (rhsType instanceof TypeReference) {
+//            //          rhsType = ((TypeReference)rhsType).getBaseType();
+//            //        }
+//            //        if (rhsType instanceof TypeProcedure && ((TypeProcedure)rhsType).getFormalParameters()==null) {
+//            //          rhsType = ((TypeProcedure)rhsType).getResultType();
+//            //          rhsAttr.setIsFunctionCall(true);
+//            //        }
+//            //      }
+//
+//            if (lhsType instanceof TypeReference && ctx.dereference() == null
+//                    && rhsType instanceof TypeReference) {
+//                // pointer assignment refVar1 := refVar2;
+//                // base types must be identical
+//                // rhs must live longer or equal to lhs!
+//                checkLifeCycle(lhsVariable, rhsVariable);
+//
+//                lhsType = ((TypeReference) lhsType).getBaseType();
+//                rhsType = ((TypeReference) rhsType).getBaseType();
+//                if (rhsType != null) {
+//                    checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, true); // match exactly
+//                } else {
+//                    // assignment of NIL to any reference is ok
+//                }
+//            } else if (lhsType instanceof TypeReference && ctx.dereference() != null
+//                    && !(rhsType instanceof TypeReference)) {
+//                // CONT refVar = expr
+//                // types must match relaxed
+//                lhsType = ((TypeReference) lhsType).getBaseType();
+//                checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, false); // lhs may be larger
+//            } else if (lhsType instanceof TypeReference && !(rhsType instanceof TypeReference)) {
+//                // refVar = var; no expression allowed on rhs!
+//                // need variable or TASK,SEMA,...INTERRUPT
+//                if (isReferableType(rhsType) || rhsAttr.getVariable() != null) {
+//                    lhsType = ((TypeReference) lhsType).getBaseType();
+//                    checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, true); // match exactly
+//                } else {
+//                    ErrorStack.add(
+//                            "reference must point to a variable or TASK,SEMA,BOLT,INTERRUPT or SIGNAL");
+//                }
+//                // rhs must live longer or equal to lhs!
+//                checkLifeCycle(lhsVariable, rhsVariable);
+//
+//            } else if (!(lhsType instanceof TypeReference) && !(rhsType instanceof TypeReference)) {
+//                // simple assignment var:= expr
+//                if (rhsType instanceof TypeProcedure) {
+//                    // the type procedure does not work
+//                    // let's try with the result type
+//                    // we mark this in the ASTAttribute, if the type does not fit
+//                    // we abort the compilation after the semantic check anf the attempt does not bother 
+//                    rhsAttr.setIsFunctionCall(true);
+//                    rhsType = ((TypeProcedure) rhsType).getResultType();
+//
+//                }
+//                checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, false); // lhs may be larger
+//            } else if (!(lhsType instanceof TypeReference) && rhsType instanceof TypeReference) {
+//                // assignment var:= refVar
+//                // ok auto dereference
+//                rhsType = ((TypeReference) rhsType).getBaseType();
+//                checkTypes(lhsType, lhsAttr, rhsType, rhsAttr, false); // lhs may be larger
+//            } else {
+//                ErrorStack.add("type mismatch: " + lhsAttr.getType().toString() + ":="
+//                        + rhsAttr.getType().toString());
+//            }
+        
 
         ErrorStack.leave();
         return null;

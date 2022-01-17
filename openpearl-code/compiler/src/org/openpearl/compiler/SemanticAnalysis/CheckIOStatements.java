@@ -554,6 +554,7 @@ implements OpenPearlVisitor<Void> {
         TypeDation td = null;
         if (t instanceof TypeReference) {
             t = ((TypeReference) t).getBaseType();
+            attr.setNeedImplicitDereferencing(true);
         }
         if (t instanceof TypeArraySpecification) {
             if (ctx.name().listOfExpression() != null) {
