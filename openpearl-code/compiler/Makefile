@@ -1,6 +1,6 @@
 ###############################################################################
 ## [The "BSD license"]
-## Copyright (c) 2012-2018 Marcel Schaible
+## Copyright (c) 2012-2022 Marcel Schaible
 ## All rights reserved.
 ##
 ## Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@ all : force_look
 .PHONY: prepare
 prepare:
 	cd src; $(MAKE) prepare
-	
+
 clean :
 	@$(ECHO) cleaning up in .
 	(for d in $(DIRS); do (cd $$d; $(MAKE) clean ); done)
