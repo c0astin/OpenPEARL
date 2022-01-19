@@ -33,7 +33,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
-import org.openpearl.compiler.OpenPearlParser.IdentificationContext;
 import org.openpearl.compiler.OpenPearlParser.IdentifierContext;
 import org.openpearl.compiler.OpenPearlParser.NameContext;
 import org.openpearl.compiler.Exception.*;
@@ -1045,15 +1044,17 @@ System.out.println("CppCg@487 called");
     // except, if we have REF DATION, here we need a pointer
     private ST visitTypeAttribute(TypeDefinition type) {
        
-        String s = type.toString();
         if (type instanceof TypeReference) {
             if (((TypeReference)type).getBaseType() instanceof TypeDation) {
                 ST st = m_group.getInstanceOf("TypeReferenceDation"); 
                 st.add("BaseType", ((TypeReference)type).getBaseType().toST(m_group));
                 return st;
-            } 
+            } else {
+                ST st = m_group.getInstanceOf("TypeReference");
+                st.add("BaseType", ((TypeReference)type).getBaseType().toST(m_group));
+                return st;
+            }
         }
-// TypeReferenceDation
         return type.toST(m_group);
     }
 
@@ -2139,10 +2140,11 @@ System.out.println("CppCg@487 called");
      */
     @Override
     public ST visitName(OpenPearlParser.NameContext ctx) {
-        String fromModule = null;
+        
         //System.out.println(ctx.getText());
         TypeDefinition currentType= null;
         ST stOfName = null;
+        ST stOfReference=null;
         ASTAttribute attr = m_ast.lookup(ctx);
         SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
         boolean isStructComponent=false;  // required for different array access 
@@ -2242,6 +2244,7 @@ System.out.println("CppCg@487 called");
                         stOfName=dereference(stOfName);
                         currentType = ((TypeReference)currentType).getBaseType();
                     } else if (((TypeReference)currentType).getBaseType() instanceof TypeStructure) {
+                        stOfReference = stOfName;
                         stOfName=dereference(stOfName);
                         currentType = ((TypeReference)currentType).getBaseType();
                     }
@@ -2261,7 +2264,12 @@ System.out.println("CppCg@487 called");
                         StructureComponent component = ts.lookup(componentName);
                        // System.out.println(component.m_alias);
                         ST st = m_group.getInstanceOf("addStructComponent");
-                        st.add("name", stOfName);
+                        if (stOfReference != null) {
+                            st.add("name", stOfReference);
+                            st.add("nameIsReference", true);
+                        } else {
+                            st.add("name", stOfName);
+                        }
                         st.add("component", component.m_alias);
                        // if (attr!= null && attr.needImplicitDereferencing()) {
                        //     st.add("nameIsReference", true);
@@ -2811,17 +2819,23 @@ System.out.println("CppCg@487 called");
                 stmt.add("char_size", m_resultType.getPrecision());
             }
 
+            
             if (attr.getType() instanceof TypeReference) {
                 if (m_resultType instanceof TypeReference) {
                     stmt.add("expression", visit(ctx.expression()));
-                } else {
-                    stmt.add("expression", visitAndDereference(ctx.expression()));
                 }
             } else {
+                // must make a reference to
                 if (m_resultType instanceof TypeReference) {
+                    //ST ref = visitTypeAttribute(m_resultType);
                     ST ref = m_group.getInstanceOf("referenceOf");
-                    ref.add("obj", visitAndDereference(ctx.expression()));
+                    ref.add("obj", visit(ctx.expression()));
                     ref.add("type", ((TypeReference)m_resultType).getBaseType().toST(m_group));
+                    if (((TypeReference)m_resultType).getBaseType() instanceof TypeDation) {
+                      ref.add("mkPointer", 1);
+                    } 
+                       
+                   
                     stmt.add("expression", ref);
                 } else {
                     stmt.add("expression", visitAndDereference(ctx.expression()));
@@ -5081,9 +5095,10 @@ System.out.println("CppCg@487 called");
 
         LinkedList<VariableEntry> entries = m_currentSymbolTable.getVariableDeclarations();
         if (se.getResultType() != null) {
-          st.add("resultAttribute", se.getResultType().toST(m_group));
+          st.add("resultAttribute", visitTypeAttribute(se.getResultType()));
+      
         }
-        m_resultType = se.getResultType(); // must be null is type void
+        m_resultType = se.getResultType(); // must be null is type void; resuired for visitName()
         List<FormalParameter> formalParameters = ((ProcedureEntry)se).getFormalParameters();
         if (formalParameters != null) {
            ST stFormalParams = m_group.getInstanceOf("FormalParameters");

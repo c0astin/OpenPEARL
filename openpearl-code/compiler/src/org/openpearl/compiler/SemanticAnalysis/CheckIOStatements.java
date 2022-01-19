@@ -36,6 +36,9 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.openpearl.compiler.*;
 import org.openpearl.compiler.Compiler;
+import org.openpearl.compiler.OpenPearlParser.ExpressionContext;
+import org.openpearl.compiler.OpenPearlParser.IoDataListContext;
+import org.openpearl.compiler.OpenPearlParser.IoListElementContext;
 import org.openpearl.compiler.Exception.*;
 import org.openpearl.compiler.SymbolTable.ModuleEntry;
 import org.openpearl.compiler.SymbolTable.SymbolTable;
@@ -552,15 +555,9 @@ implements OpenPearlVisitor<Void> {
         ASTAttribute attr = m_ast.lookup(ctx.name());
         TypeDefinition t = attr.getType();
         TypeDation td = null;
-        if (t instanceof TypeReference) {
-            t = ((TypeReference) t).getBaseType();
-            attr.setNeedImplicitDereferencing(true);
-        }
-        if (t instanceof TypeArraySpecification) {
-            if (ctx.name().listOfExpression() != null) {
-                t = ((TypeArraySpecification) t).getBaseType();
-            }
-        }
+        
+        t = ExpressionTypeVisitor.performImplicitDereferenceAndFunctioncall(attr);
+      
         if (t instanceof TypeDation) {
             td = (TypeDation) t;
             if (td.isSystemDation()) {
@@ -1093,7 +1090,7 @@ implements OpenPearlVisitor<Void> {
                         }
 
                         if (!fmtPos.isEmpty() && fmtPos.get(fmtPosIndex) instanceof OpenPearlParser.FormatContext) {
-                            if (!exprMatchFormat(fmtPos.get(fmtPosIndex), etc.td)) {
+                            if (!exprMatchFormat(fmtPos.get(fmtPosIndex), etc)) {
                                 ErrorStack.enter(etc.ctx, "expression type match format");
                                 ErrorStack.add("" + etc.td + " does not apply to format ");
 
@@ -1113,10 +1110,19 @@ implements OpenPearlVisitor<Void> {
 
     }
 
-    private boolean exprMatchFormat(ParserRuleContext formatCtx, TypeDefinition td) {
+    private boolean exprMatchFormat(ParserRuleContext formatCtx, IODataListElementWithCtx dataElementWithContext) {
         // LIST matches all types
         if (formatCtx.getChild(0) instanceof OpenPearlParser.ListFormatContext) {
             return true;
+        }
+        ASTAttribute attr = null;
+        
+        TypeDefinition td = dataElementWithContext.td;
+        IoListElementContext lctx = (IoListElementContext)(dataElementWithContext.ctx);
+        if (lctx.expression() != null) {
+            attr = m_ast.lookup(lctx.expression());
+        } else {
+            attr = m_ast.lookup(lctx.arraySlice());
         }
 
         // implicit dereference
@@ -1180,6 +1186,8 @@ implements OpenPearlVisitor<Void> {
             }
 
             if (attr != null) {
+                ExpressionTypeVisitor.performImplicitDereferenceAndFunctioncall(attr);
+
                 if (attr.getType() instanceof TypeArray) {
                     int nbrOfElements = ((TypeArray) (attr.getType())).getTotalNoOfElements();
                     etc.setType(((TypeArray) (attr.getType())).getBaseType());
@@ -1319,15 +1327,10 @@ implements OpenPearlVisitor<Void> {
         }
 
         ErrorStack.enter(ctx, "significance");
-
+        
         TypeDefinition type = m_ast.lookupType(ctx.expression());
         if (!(type instanceof TypeFixed)) {
             ErrorStack.add("type must be FIXED");
-            /*
-             * throw new TypeMismatchException(ctx.getText(),
-             * ctx.start.getLine(), ctx.start.getCharPositionInLine(),
-             * "type of significance must be integer");
-             */
         } else {
             if (ctx.expression() != null) {
                 // we have the attribute given
@@ -1372,7 +1375,7 @@ implements OpenPearlVisitor<Void> {
             // or not given
 
             ASTAttribute attr = m_ast.lookup(ctx.fieldWidth().expression());
-            // width is mandatory, which is definied in the grammar
+            // width is mandatory, which is defined in the grammar
             ConstantFixedValue cfv = getConstantValue(attr);
             if (cfv != null) {
                 width = cfv.getValue();

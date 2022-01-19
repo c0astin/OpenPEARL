@@ -235,7 +235,7 @@ namespace pearlrt {
      template <class D>
      BitString<1> operator==(const Array<D>& rhs) {
          if (data != rhs.data) return BitString<1>(0);
-         if (descriptor != rhs.descriptor) return BitString<1>(0);
+         if (descriptor == rhs.descriptor) return BitString<1>(1);
          if (*descriptor != *(rhs.descriptor)) return BitString<1>(0);
          return BitString<1>(1);
      }

@@ -404,11 +404,6 @@ TypeReference(BaseType) ::= <<
 pearlrt::Ref \< <BaseType> > 
 >>
 
-/* obsolete
-array_specification_type(BaseType) ::= <<
-pearlrt::RefArray\< <BaseType> >
->>
-*/
 
 task_type() ::= <%
 pearlrt::Task
@@ -1435,8 +1430,8 @@ pearlrt::toChar(<operand>)
 
 
 
-referenceOf(type,obj) ::= <%
-pearlrt::Ref\< <type>> (<obj>)
+referenceOf(type,obj,mkPointer) ::= <%
+pearlrt::Ref\< <type>  <if(mkPointer)>*<endif> > (<obj>)
 %>
 
 /* ---------------------  Semaphore Arrays -------------------------- */

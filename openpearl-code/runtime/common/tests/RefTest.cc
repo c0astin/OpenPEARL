@@ -3,7 +3,7 @@
 
 pearlrt::Fixed<15> _f(15);
 pearlrt::Ref< pearlrt::Fixed<15> > _rf;
-pearlrt::Ref< pearlrt::Fixed<15> > _rf1(&_f);
+pearlrt::Ref< pearlrt::Fixed<15> > _rf1(_f);
 
 DCLTASK(t1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
 
@@ -29,7 +29,7 @@ DCLTASK(t1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
     }
 
     me->setLocation(__LINE__,__FILE__);
-    _rf = &g;  // assign the pointer
+    _rf = g;  // assign the pointer
     me->setLocation(__LINE__,__FILE__);
     _f = *_rf;
     if (_f.x != 42) {

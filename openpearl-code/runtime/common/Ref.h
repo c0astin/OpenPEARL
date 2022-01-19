@@ -120,6 +120,27 @@ namespace pearlrt {
       }
 
       /**
+      dereferenciation of a REF variable with ->
+
+      This may be used in expressions and as target of assignments
+
+      \returns the object as reference type of C++.
+
+      \throws   RefNotInitializedSignal if the reference is not
+                           initialized
+      */ 
+      C& operator->() {
+         if (x) {
+            return *x;
+         }
+
+         Log::error("Ref::use of uninitialized reference");
+         throw theRefNotInitializedSignal;
+      }
+
+      
+      
+      /**
       set new reference
 
       \param rhs the new object to point to
