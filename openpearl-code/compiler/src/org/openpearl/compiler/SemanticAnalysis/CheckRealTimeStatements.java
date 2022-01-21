@@ -456,7 +456,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
         TypeDefinition t = getEffectiveType(ctx);
 
         if (t instanceof TypeFixed) {
-            if (attr.isReadOnly()) {
+            if (attr.isConstant()) {
                 long p = attr.getConstantFixedValue().getValue();
                 if (p < Defaults.BEST_PRIORITY || p > Defaults.LOWEST_PRIORITY) {
                     ErrorStack.add("must be in [" + Defaults.BEST_PRIORITY + ","
@@ -491,7 +491,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
         if (!(t instanceof TypeDuration)) {
             ErrorStack.add("must be of type DURATION  -- but is of " + attr.getType().toString4IMC(false));
         } else {
-            if (attr.isReadOnly()) {
+            if (attr.isConstant()) {
                 ConstantDurationValue cd = attr.getConstantDurationValue();
                 if (cd.getValue() <= 0) {
                     ErrorStack.add("must be > 0");

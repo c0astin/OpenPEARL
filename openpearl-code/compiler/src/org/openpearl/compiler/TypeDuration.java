@@ -39,9 +39,9 @@ public class TypeDuration extends TypeDefinition {
         super("DURATION");
     }
 
-    public String toString() {
-        return this.getName();
-    }
+//    public String toString() {
+//        return this.getName();
+//    }
 
     public String toString4IMC(boolean isInStructure) {
         return toString();

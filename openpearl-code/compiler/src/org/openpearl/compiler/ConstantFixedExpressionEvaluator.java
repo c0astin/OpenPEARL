@@ -214,7 +214,7 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
 
             if ( entry instanceof VariableEntry ) {
                 VariableEntry variableEntry = (VariableEntry)entry;
-                if ( !variableEntry.getAssigmentProtection() ) {
+                if ( !variableEntry.getType().hasAssignmentProtection() ) {
                   ErrorStack.enter(ctx);
                   ErrorStack.add("constant expected");
                   ErrorStack.leave();

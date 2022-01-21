@@ -162,7 +162,7 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
                         ErrorStack.add(ri.getContext(),"type mismatch in REF INIT",
                                 "REF "+baseTypeOfVariable.toString4IMC(true)  +" := " + attr.getType().toString4IMC(true));
                     }
-                    if (attr.isReadOnly() && v.getAssigmentProtection() == false) {
+                    if (attr.isConstant() && v.getType().hasAssignmentProtection() == false) {
                         ErrorStack.add(ri.getContext(),"type mismatch in REF INIT",
                                 "REF "+baseTypeOfVariable.toString4IMC(true)  +" := INV " + attr.getType().toString4IMC(true));
                     }

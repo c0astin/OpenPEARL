@@ -38,9 +38,9 @@ public class TypeBolt extends TypeDefinition {
         super("BOLT");
     }
 
-    public String toString() {
-        return this.getName() ;
-    }
+//    public String toString() {
+//        return super.toString();
+//    }
     
     public String toString4IMC(boolean inInStructure) {
         return toString();

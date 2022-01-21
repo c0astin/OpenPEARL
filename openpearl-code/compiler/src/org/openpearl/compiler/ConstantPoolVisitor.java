@@ -686,7 +686,7 @@ public class ConstantPoolVisitor extends OpenPearlBaseVisitor<Void>
 
         attr = m_ast.lookup(ctx);
 
-        if (attr != null && attr.isReadOnly() && attr.getType() instanceof TypeFixed) {
+        if (attr != null && attr.isConstant() && attr.getType() instanceof TypeFixed) {
             ConstantFixedValue value = attr.getConstantFixedValue();
 
             if (value != null) {

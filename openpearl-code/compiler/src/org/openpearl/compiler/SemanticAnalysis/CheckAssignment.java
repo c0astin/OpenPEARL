@@ -103,8 +103,9 @@ public class CheckAssignment extends OpenPearlBaseVisitor<Void>
 
         if(lhsVariable.getLoopControlVariable()==true) {
             ErrorStack.add("loop variable not allowed on lhs");
-        } else if(lhsVariable.getAssigmentProtection()==true) {
-            ErrorStack.add(lhsAttr.getType().toString() + " INV variable not allowed on lhs");
+        //} else if(lhsVariable.getAssigmentProtection()==true) {
+        } else if(lhsType.hasAssignmentProtection()==true) {    
+            ErrorStack.add(lhsAttr.getType().toString() + " variable not allowed on lhs");
         }
 
 

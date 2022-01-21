@@ -667,7 +667,7 @@ implements OpenPearlVisitor<Void> {
                 ErrorStack.add("destination must be of type CHAR");
             }
 
-            if (attr.isReadOnly()) {
+            if (attr.isConstant()) {
                 ErrorStack.add("destination is not writable");
             }
         }
@@ -2224,7 +2224,7 @@ implements OpenPearlVisitor<Void> {
 
     private ConstantFixedValue getConstantValue(ASTAttribute formatAttribute) {
         //System.out.println("formatAttribute=" + formatAttribute);
-        if (formatAttribute.isReadOnly()) {
+        if (formatAttribute.isConstant()) {
             if (formatAttribute.getType() instanceof TypeFixed) {
                 ConstantFixedValue cfv = (ConstantFixedValue) formatAttribute.getConstant();
                 cfv = (ConstantFixedValue) formatAttribute.getConstantFixedValue();
@@ -2384,7 +2384,7 @@ implements OpenPearlVisitor<Void> {
         if (se == null) {
             ErrorStack.add("'" + var + "' is not defined");
         } else if ((se instanceof VariableEntry)) {
-            if (((VariableEntry) se).getAssigmentProtection()) {
+            if (((VariableEntry) se).getType().hasAssignmentProtection()) {
                 ErrorStack.add("'" + var + "' is INV");
             }
         }
@@ -2486,7 +2486,7 @@ implements OpenPearlVisitor<Void> {
                 ASTAttribute attr = m_ast.lookup(factor.expression());
                 if (attr.m_constant != null) {
                     value = attr.getConstantFixedValue().getValue();
-                } else if (attr.isReadOnly() && attr.getVariable() != null) {
+                } else if (attr.isConstant() && attr.getVariable() != null) {
                     ErrorStack.enter(factor);
 
                     VariableEntry ve = attr.getVariable();

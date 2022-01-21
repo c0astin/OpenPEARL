@@ -37,9 +37,9 @@ public class TypeInterrupt extends TypeDefinition {
         super("INTERRUPT");
     }
 
-    public String toString() {
-        return this.getName();
-    }
+//    public String toString() {
+//        return this.getName();
+//    }
 
     public String toString4IMC(boolean isInStructure) {
         return toString();

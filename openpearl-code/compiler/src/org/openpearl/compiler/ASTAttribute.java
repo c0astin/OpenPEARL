@@ -43,13 +43,12 @@ import org.openpearl.compiler.SymbolTable.VariableEntry;
  */
 public class ASTAttribute {
     public TypeDefinition  m_type;
-    //public boolean m_readonly;
     private int m_flags=0;
- //   public VariableEntry m_variable;
     private SymbolTableEntry m_entry;
     public ConstantValue m_constant;
     public ConstantSelection m_selection;
-    private static final int bitReadOnly = 0x01;
+    
+    private static final int bitIsConstant = 0x01;
     private static final int bitIsFunctionCall = 0x02;
 
     
@@ -63,11 +62,14 @@ public class ASTAttribute {
      */
     private static final int needImplicitDereferencing = 0x08;
     
+    /**
+     * flag is set if the expression if a lValue
+     */
+    private static final int isLValue = 0x10;
+    
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
-      //  m_readonly = false;
         m_flags = 0;
-     //   m_variable = null;
         m_entry = null;
         m_constant = null;
         m_selection    = null;
@@ -75,9 +77,7 @@ public class ASTAttribute {
 
     ASTAttribute(ConstantSelection slice) {
         m_type     = null;
-       // m_readonly = false;
         m_flags = 0;
-      //  m_variable = null;
         m_entry=null;
         m_constant = null;
         m_selection    = slice;
@@ -85,55 +85,48 @@ public class ASTAttribute {
 
     ASTAttribute(TypeDefinition type, boolean constant) {
         m_type = type;
-       // m_readonly = constant;
-        setReadOnly(constant);
-        //m_variable = null;
+        setIsConstant(constant);
         m_entry = null;
         m_selection    = null;
     }
 
     ASTAttribute(TypeDefinition type, boolean constant, VariableEntry variable ) {
         m_type = type;
-        //m_variable = variable;
         m_entry=variable;
         m_constant = null;
         m_selection    = null;
 
         if ( variable.getLoopControlVariable()) {
-            //m_readonly = false;
-          setReadOnly(false);
+          setIsConstant(false);
         }
         else {
-            //m_readonly = constant;
-          setReadOnly(constant);
+          setIsConstant(constant);
         }
     }
     public ASTAttribute(TypeDefinition type, SymbolTableEntry entry ) {
       m_type = type;
-      //m_variable = variable;
       m_entry=entry;
       m_constant = null;
       m_selection    = null;
 
       if (getVariable()== null || getVariable().getLoopControlVariable()) {
-        setReadOnly(false);
-//          m_readonly = false;
+        setIsConstant(false);
       }
    
   }
 
     /**
      * indicate whether the element is a constant or an expression of constants
+     * or a constant variable (INV)
      * 
      * @return
      */
-    public boolean isReadOnly() {
-      return getFlag(bitReadOnly);
-//        return this.m_readonly;
+    public boolean isConstant() {
+      return getFlag(bitIsConstant);
     }
     
-    public void setReadOnly(boolean newValue) {
-      setFlag(bitReadOnly, newValue);
+    public void setIsConstant(boolean newValue) {
+      setFlag(bitIsConstant, newValue);
     }
 
     public boolean isLoopControlVariable() {
@@ -142,7 +135,7 @@ public class ASTAttribute {
     }
 
 
-    public boolean isWritable() { return !this.isReadOnly(); }
+    public boolean isWritable() { return !this.isConstant(); }
     public TypeDefinition getType() { return this.m_type; }
     public VariableEntry getVariable() {
 //    return this.m_variable; }
@@ -161,14 +154,14 @@ public class ASTAttribute {
     public Void setConstant(ConstantValue val) {
         m_constant = val;
         //m_readonly = true;
-        setReadOnly(true);
+        setIsConstant(true);
         return null;
     }
 
     public Void setConstantFixedValue(ConstantFixedValue val) {
         m_constant = val;
         //m_readonly = true;
-        setReadOnly(true);
+        setIsConstant(true);
         return null;
     }
 
@@ -183,7 +176,7 @@ public class ASTAttribute {
     public Void setConstantFloatValue(ConstantFloatValue val) {
         m_constant = val;
         //m_readonly = true;
-        setReadOnly(true);
+        setIsConstant(true);
         return null;
     }
 
@@ -198,7 +191,7 @@ public class ASTAttribute {
     public Void setConstantDurationValue(ConstantDurationValue val) {
         m_constant = val;
         //m_readonly = true;
-        setReadOnly(true);
+        setIsConstant(true);
         return null;
     }
 
@@ -221,7 +214,7 @@ public class ASTAttribute {
 
     public String toString() {
 //        return "(" + this.m_type + " " + this.isReadOnly() + " " + this.m_variable + " " + this.m_constant + " " + this.m_selection + ")";
-      return "(" + this.m_type + " " + this.isReadOnly() + " " + this.m_entry + " " + this.m_constant + " " + this.m_selection + ")";
+      return "(" + this.m_type + " " + this.isConstant() + " " + this.m_entry + " " + this.m_constant + " " + this.m_selection + ")";
     }
 
     public void setVariable(VariableEntry ve) {
@@ -258,6 +251,15 @@ public class ASTAttribute {
     public void setNeedImplicitDereferencing(boolean set ) {
         setFlag(needImplicitDereferencing,set);
     }
+    
+    public boolean isLValue() {
+        return (getFlag(isLValue));
+    }
+    
+    public void setIsLValue(boolean set ) {
+        setFlag(isLValue,set);
+    }
+    
     
     
     private boolean getFlag(int whichFlag) {

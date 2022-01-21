@@ -35,7 +35,7 @@ import org.openpearl.compiler.*;
 public class VariableEntry extends SymbolTableEntry {
 
     private TypeDefinition    m_type;
-    private Boolean           m_hasAssigmentProtection;
+ //   private Boolean           m_hasAssigmentProtection;
     private Boolean           m_loopControlVariable;
     private Initializer  m_initializer;   // just memorize the location of the initializer in AST 
    
@@ -44,7 +44,7 @@ public class VariableEntry extends SymbolTableEntry {
         super("");
         //this.m_ctx = null;
         this.m_type = null;
-        this.m_hasAssigmentProtection = false;
+     //   this.m_hasAssigmentProtection = false;
         this.m_loopControlVariable = false;
         this.m_initializer = null;
     }
@@ -54,7 +54,7 @@ public class VariableEntry extends SymbolTableEntry {
         super(name);
         //this.m_ctx = null;
         this.m_type = null;
-        this.m_hasAssigmentProtection = false;
+      //  this.m_hasAssigmentProtection = false;
         this.m_loopControlVariable = false;
         this.m_initializer = null;
     }
@@ -64,21 +64,21 @@ public class VariableEntry extends SymbolTableEntry {
         super(name);
         this.m_ctx = ctx;
         this.m_type = type;
-        this.m_hasAssigmentProtection = false;
+     //   this.m_hasAssigmentProtection = false;
         this.m_loopControlVariable = false;
         this.m_initializer = null;
 
 
     }
-    public VariableEntry(String name, TypeDefinition type, Boolean hasAssignmentProtection, ParserRuleContext ctx)
-    {
-        super(name);
-        this.m_ctx = ctx;
-        this.m_type = type;
-        this.m_hasAssigmentProtection = hasAssignmentProtection;
-        this.m_loopControlVariable = false;
-        this.m_initializer = null;
-    }
+//    public VariableEntry(String name, TypeDefinition type, Boolean hasAssignmentProtection, ParserRuleContext ctx)
+//    {
+//        super(name);
+//        this.m_ctx = ctx;
+//        this.m_type = type;
+//     //   this.m_hasAssigmentProtection = hasAssignmentProtection;
+//        this.m_loopControlVariable = false;
+//        this.m_initializer = null;
+//    }
 
     /**
      * 
@@ -88,12 +88,13 @@ public class VariableEntry extends SymbolTableEntry {
      * @param ctx
      * @param init
      */
-    public VariableEntry(String name, TypeDefinition type, Boolean hasAssigmentProtection, ParserRuleContext ctx, Initializer init)
+    public VariableEntry(String name, TypeDefinition type, //Boolean hasAssigmentProtection,
+            ParserRuleContext ctx, Initializer init)
     {
         super(name);
         this.m_ctx = ctx;
         this.m_type = type;
-        this.m_hasAssigmentProtection = hasAssigmentProtection;
+    //    this.m_hasAssigmentProtection = hasAssigmentProtection;
         this.m_loopControlVariable = false;
         this.m_initializer = init;
     
@@ -101,13 +102,13 @@ public class VariableEntry extends SymbolTableEntry {
     }
 
     public String toString(int level) {
-        String assigmenProtection = this.m_hasAssigmentProtection ? "INV" : "";
+     //   String assigmenProtection = this.m_hasAssigmentProtection ? "INV" : "";
         
         return indentString(level) +
                 super.toString(level) +
                 "var " +
                 m_type + " " +
-                assigmenProtection +
+       //         assigmenProtection +
                 (this.m_loopControlVariable ? " LC" :"") +
                 (this.m_initializer != null ? "  INIT(" + m_initializer + ")" : "");
     }
@@ -120,7 +121,7 @@ public class VariableEntry extends SymbolTableEntry {
 //        return m_type;
 //    }
 
-    public Boolean getAssigmentProtection() { return m_hasAssigmentProtection; }
+   // public Boolean getAssigmentProtection() { return m_hasAssigmentProtection; }
 
     public Void setLoopControlVariable() {
         m_loopControlVariable = true;

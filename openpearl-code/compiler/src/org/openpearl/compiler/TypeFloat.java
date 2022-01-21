@@ -51,7 +51,7 @@ public class TypeFloat extends TypeDefinition {
     }
 
     public String toString() {
-        return this.getName() + "(" + this.m_precision + ")";
+        return super.toString() + "(" + this.m_precision + ")";
     }
     
     public String toString4IMC(boolean isInStructure) {

@@ -49,7 +49,7 @@ public class TypeStructure extends TypeDefinition {
     }
 
     public String toString() {
-        String line = this.getName() + " [ ";
+        String line = super.toString() + " [ ";
 
         for (int i = 0; i < m_listOfComponents.size(); i++) {
             String prefix = " ";

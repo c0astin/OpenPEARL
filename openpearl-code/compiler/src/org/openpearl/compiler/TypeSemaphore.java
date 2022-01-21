@@ -38,9 +38,9 @@ public class TypeSemaphore extends TypeDefinition {
         super("SEMA");
     }
 
-    public String toString() {
-        return this.getName() ;
-    }
+//    public String toString() {
+//        return this.getName() ;
+//    }
 
     public String toString4IMC(boolean isInStructure) {
         return this.getName() ;

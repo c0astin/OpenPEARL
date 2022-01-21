@@ -68,11 +68,14 @@ import java.util.LinkedList;
  *     except in CONT, IS and ISNT
  *
  * If an EXPRESSION needs an implicit dereference, the ASTAttribute becomes 
- * modifies with the flag 'needImplicitDereferencing'. This helps the code 
+ * modified with the flag 'needImplicitDereferencing'. This helps the code 
  * generator. Explicit dereferencing is not noted in the ASTAttributes.
  * 
- * Implicit dereferencing of STRUCT components are noted in the ASTAtrribute 
+ * Implicit dereferencing of STRUCT components are noted in the ASTAttribute 
  * of the name of the structure.
+ * 
+ * Names of variables are marked as lValue; expression results are marked 
+ * as non lValue, which is the default setting 
  *  
  */
 /**
@@ -274,7 +277,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             TypeDefinition type1,
             TypeDefinition type2,
             boolean resIsFloat,
-            Boolean isReadOnly,
+            Boolean isConstant,
             ASTAttribute op1,
             ASTAttribute op2,
             String operator) {
@@ -303,27 +306,27 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         }
 
         if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
-            if (resIsFloat) res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
-            else res = new ASTAttribute(new TypeFixed(precision), isReadOnly);
+            if (resIsFloat) res = new ASTAttribute(new TypeFloat(precision), isConstant);
+            else res = new ASTAttribute(new TypeFixed(precision), isConstant);
 
             Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#1");
         } else if (type1 instanceof TypeFixed && type2 instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
+            res = new ASTAttribute(new TypeFloat(precision), isConstant);
             Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#2");
         } else if (type1 instanceof TypeFloat && type2 instanceof TypeFixed) {
-            res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
+            res = new ASTAttribute(new TypeFloat(precision), isConstant);
             Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#3");
         } else if (type1 instanceof TypeFloat && type2 instanceof TypeFloat) {
-            res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
+            res = new ASTAttribute(new TypeFloat(precision), isConstant);
             Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#4");
         } else if (type1 instanceof TypeDuration && type2 instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeDuration(), isReadOnly);
+            res = new ASTAttribute(new TypeDuration(), isConstant);
             Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#5");
         } else if (type1 instanceof TypeDuration && type2 instanceof TypeClock) {
-            res = new ASTAttribute(new TypeClock(), isReadOnly);
+            res = new ASTAttribute(new TypeClock(), isConstant);
             Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#6");
         } else if (type1 instanceof TypeClock && type2 instanceof TypeDuration) {
-            res = new ASTAttribute(new TypeClock(), isReadOnly);
+            res = new ASTAttribute(new TypeClock(), isConstant);
             Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#7");
         } else {
             ErrorStack.add(
@@ -385,24 +388,24 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             TypeDefinition type1 = performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 = performImplicitDereferenceAndFunctioncall(op2);
             
-            Boolean isReadOnly = op1.isReadOnly() && op2.isReadOnly();
+            Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             ErrorStack.enter(ctx);
 
             if (type1 instanceof TypeDuration && type2 instanceof TypeDuration) {
-                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+                res = new ASTAttribute(new TypeDuration(), isConstant);
 
                 Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#5");
             } else if (type1 instanceof TypeDuration && type2 instanceof TypeClock) {
-                res = new ASTAttribute(new TypeClock(), isReadOnly);
+                res = new ASTAttribute(new TypeClock(), isConstant);
 
                 Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#6");
             } else if (type1 instanceof TypeClock && type2 instanceof TypeDuration) {
-                res = new ASTAttribute(new TypeClock(), isReadOnly);
+                res = new ASTAttribute(new TypeClock(), isConstant);
 
                 Log.debug("ExpressionTypeVisitor: AdditiveExpression: rule#7");
             } else {
-                res = treatFixedFloatDyadic(type1, type2, false, isReadOnly, op1, op2, "+");
+                res = treatFixedFloatDyadic(type1, type2, false, isConstant, op1, op2, "+");
             }
             ErrorStack.leave();
         }
@@ -459,24 +462,24 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             TypeDefinition type1 = performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 = performImplicitDereferenceAndFunctioncall(op2);
             
-            Boolean isReadOnly = op1.isReadOnly() && op2.isReadOnly();
+            Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             ErrorStack.enter(ctx);
 
             if (type1 instanceof TypeDuration && type2 instanceof TypeDuration) {
-                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+                res = new ASTAttribute(new TypeDuration(), isConstant);
 
                 Log.debug("ExpressionTypeVisitor: SubtractiveExpression: rule#5");
             } else if (type1 instanceof TypeClock && type2 instanceof TypeDuration) {
-                res = new ASTAttribute(new TypeClock(), isReadOnly);
+                res = new ASTAttribute(new TypeClock(), isConstant);
 
                 Log.debug("ExpressionTypeVisitor: SubtractiveExpression: rule#6");
             } else if (type1 instanceof TypeClock && type2 instanceof TypeClock) {
-                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+                res = new ASTAttribute(new TypeDuration(), isConstant);
 
                 Log.debug("ExpressionTypeVisitor: SubtractiveExpression: rule#7");
             } else {
-                res = treatFixedFloatDyadic(type1, type2, false, isReadOnly, op1, op2, "-");
+                res = treatFixedFloatDyadic(type1, type2, false, isConstant, op1, op2, "-");
             }
             ErrorStack.leave();
         }
@@ -582,14 +585,14 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                 res =
                         new ASTAttribute(
                                 new TypeBit(((TypeBit) op.getType()).getPrecision()),
-                                op.isReadOnly());
+                                op.isConstant());
                 m_ast.put(ctx, res);
 
                 if (m_debug) System.out.println("ExpressionTypeVisitor: NotExpression: rule#1");
             } else {
                 ErrorStack.add("expected type BIT -- got type " + op.getType().toString());
                 // set default result type for easy continuation
-                res = new ASTAttribute( new TypeBit(1), op.isReadOnly());
+                res = new ASTAttribute( new TypeBit(1), op.isConstant());
                 m_ast.put(ctx, res);
                 //            throw new IllegalExpressionException(ctx.getText(),
                 // ctx.start.getLine(), ctx.start.getCharPositionInLine());
@@ -651,7 +654,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             res =
                     new ASTAttribute(
                             new TypeFixed(((TypeFixed) op.getType()).getPrecision()),
-                            op.isReadOnly());
+                            op.isConstant());
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: " + operation + "Expression: rule#1");
@@ -659,7 +662,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             res =
                     new ASTAttribute(
                             new TypeFloat(((TypeFloat) op.getType()).getPrecision()),
-                            op.isReadOnly());
+                            op.isConstant());
 
             if (m_debug)
                 System.out.println("ExpressionTypeVisitor: " + operation + "Expression: rule#2");
@@ -763,7 +766,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ErrorStack.enter(ctx);
 
         if (op1 != null && op2 != null) {
-            Boolean isReadOnly = op1.isReadOnly() && op2.isReadOnly();
+            Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             // implicit dereferences
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op1);
@@ -771,20 +774,20 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeDuration) {
-                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+                res = new ASTAttribute(new TypeDuration(), isConstant);
                 Log.debug("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#6");
             } else if (type1 instanceof TypeDuration && type2 instanceof TypeFixed) {
-                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+                res = new ASTAttribute(new TypeDuration(), isConstant);
                 Log.debug("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#6");
             } else if (type1 instanceof TypeFloat && type2 instanceof TypeDuration) {
-                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+                res = new ASTAttribute(new TypeDuration(), isConstant);
                 Log.debug("ExpressionTypeVisitor: visitMultiplicativeExpression: rule#7");
             } else if (type1 instanceof TypeDuration && type2 instanceof TypeFloat) {
-                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+                res = new ASTAttribute(new TypeDuration(), isConstant);
             } else {
                 res =
                         treatFixedFloatDyadic(
-                                type1, op2.getType(), false, isReadOnly, op1, op2, "*");
+                                type1, op2.getType(), false, isConstant, op1, op2, "*");
             }
 
             m_ast.put(ctx, res);
@@ -840,28 +843,28 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 =  performImplicitDereferenceAndFunctioncall(op2);
             
-            Boolean isReadOnly = op1.isReadOnly() && op2.isReadOnly();
+            Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             if (type1 instanceof TypeFloat && type2 instanceof TypeDuration) {
-                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+                res = new ASTAttribute(new TypeDuration(), isConstant);
 
                 Log.debug("ExpressionTypeVisitor: DivideExpression: rule#6");
             } else if (type1 instanceof TypeDuration && type2 instanceof TypeFloat) {
-                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+                res = new ASTAttribute(new TypeDuration(), isConstant);
 
                 Log.debug("ExpressionTypeVisitor: DivideExpression: rule#7");
             } else if (type1 instanceof TypeDuration && type2 instanceof TypeFixed) {
-                res = new ASTAttribute(new TypeDuration(), isReadOnly);
+                res = new ASTAttribute(new TypeDuration(), isConstant);
 
                 Log.debug("ExpressionTypeVisitor: DivideExpression: rule#6");
             } else if (type1 instanceof TypeDuration && type2 instanceof TypeDuration) {
-                res = new ASTAttribute(new TypeFloat(23), isReadOnly);
+                res = new ASTAttribute(new TypeFloat(23), isConstant);
 
                 Log.debug("ExpressionTypeVisitor: DivideExpression: rule#7");
             } else {
                 res =
                         treatFixedFloatDyadic(
-                                op1.getType(), op2.getType(), true, isReadOnly, op1, op2, "/");
+                                op1.getType(), op2.getType(), true, isConstant, op1, op2, "/");
             }
 
             m_ast.put(ctx, res);
@@ -914,11 +917,11 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 =  performImplicitDereferenceAndFunctioncall(op2);
             
-            Boolean isReadOnly = op1.isReadOnly() && op2.isReadOnly();
+            Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
                 Integer precision = Math.max(type1.getPrecision(), type2.getPrecision());
-                res = new ASTAttribute(new TypeFixed(precision), isReadOnly);
+                res = new ASTAttribute(new TypeFixed(precision), isConstant);
                 m_ast.put(ctx, res);
 
                 Log.debug("ExpressionTypeVisitor: DivideIntegerExpression: rule#1");
@@ -979,11 +982,11 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 =  performImplicitDereferenceAndFunctioncall(op2);
             
-            Boolean isReadOnly = op1.isReadOnly() && op2.isReadOnly();
+            Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
                 Integer precision = Math.max(type1.getPrecision(), type2.getPrecision());
-                res = new ASTAttribute(new TypeFixed(precision), isReadOnly);
+                res = new ASTAttribute(new TypeFixed(precision), isConstant);
                 m_ast.put(ctx, res);
 
                 Log.debug("ExpressionTypeVisitor: visitRemainderExpression: rule#1");
@@ -1043,11 +1046,11 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 =  performImplicitDereferenceAndFunctioncall(op2);
             
-            Boolean isReadOnly = op1.isReadOnly() && op2.isReadOnly();
+            Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
                 Integer precision = type1.getPrecision();
-                res = new ASTAttribute(new TypeFixed(precision), isReadOnly);
+                res = new ASTAttribute(new TypeFixed(precision), isConstant);
                 m_ast.put(ctx, res);
 
                 Log.debug("ExpressionTypeVisitor: ExponentiationExpression: rule#1");
@@ -1055,7 +1058,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                 res =
                         new ASTAttribute(
                                 new TypeFloat(((TypeFloat) op1.getType()).getPrecision()),
-                                isReadOnly);
+                                isConstant);
                 m_ast.put(ctx, res);
 
                 Log.debug("ExpressionTypeVisitor: ExponentiationExpression: rule#1");
@@ -1113,18 +1116,18 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 =  performImplicitDereferenceAndFunctioncall(op2);
             
-            Boolean isReadOnly = op1.isReadOnly() && op2.isReadOnly();
+            Boolean isConstant = op1.isConstant() && op2.isConstant();
 
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
                 Integer precision = ((TypeFixed) op2.getType()).getPrecision();
-                res = new ASTAttribute(new TypeFixed(precision), isReadOnly);
+                res = new ASTAttribute(new TypeFixed(precision), isConstant);
                 m_ast.put(ctx, res);
 
                 Log.debug("ExpressionTypeVisitor: FitExpression: rule#1");
             } else if (type1 instanceof TypeFloat && type2 instanceof TypeFloat) {
                 Integer precision = ((TypeFloat) op2.getType()).getPrecision();
-                res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
+                res = new ASTAttribute(new TypeFloat(precision), isConstant);
                 m_ast.put(ctx, res);
 
                 Log.debug("ExpressionTypeVisitor: FitExpression: rule#2");
@@ -1282,10 +1285,10 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             ErrorStack.addInternal("no AST attribute found for " + operator);
         } else {
             TypeDefinition type =  performImplicitDereferenceAndFunctioncall(op);
-            Boolean isReadOnly = op.isReadOnly();
+            Boolean isConstant = op.isConstant();
            
             if (type instanceof TypeFloat) {
-                res = new ASTAttribute(new TypeFloat(type.getPrecision()), isReadOnly);
+                res = new ASTAttribute(new TypeFloat(type.getPrecision()), isConstant);
                 m_ast.put(ctx, res);
                 Log.debug("ExpressionTypeVisitor: " + operator + "Expression: rule#2");
             } else if (type instanceof TypeFixed) {
@@ -1295,7 +1298,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                 } else {
                     precision = Defaults.FLOAT_SHORT_PRECISION;
                 }
-                res = new ASTAttribute(new TypeFloat(precision), isReadOnly);
+                res = new ASTAttribute(new TypeFloat(precision), isConstant);
                 m_ast.put(ctx, res);
             } else {
                 ErrorStack.add(
@@ -1343,14 +1346,14 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                         ctx.expression(), ctx, "ToFIXED", "no AST attribute found for TOFIXED");
 
         if (op != null) {
-            Boolean isReadOnly = op.isReadOnly();
+            Boolean isConstant = op.isConstant();
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op);
             
            if (type1 instanceof TypeBit) {
                 res =
                         new ASTAttribute(
                                 new TypeFixed(((TypeBit) op.getType()).getPrecision() - 1),
-                                isReadOnly);
+                                isConstant);
                 m_ast.put(ctx, res);
 
                 Log.debug("ExpressionTypeVisitor: TOFIXED: rule#1");
@@ -1366,7 +1369,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                     ErrorStack.add("only single CHAR allowed");
                 }
 
-                res = new ASTAttribute(new TypeFixed(1));
+                res = new ASTAttribute(new TypeFixed(1));  // isConstant missing??
                 m_ast.put(ctx, res);
             } else {
                 ErrorStack.add("only BIT and CHAR are allowed -- got " + op.getType().toString());
@@ -1395,7 +1398,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         if (op != null) {
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op);
-            Boolean isReadOnly = op.isReadOnly();
+            Boolean isConstant = op.isConstant();
 
             if (type1 instanceof TypeFixed) {
                 TypeFixed fixedValue = (TypeFixed) type1;
@@ -1435,10 +1438,10 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         if (op != null) {
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op);
-            Boolean isReadOnly = op.isReadOnly();
+            Boolean isConstant = op.isConstant();
 
             if (type1 instanceof TypeFixed) {
-                res = new ASTAttribute(new TypeBit(type1.getPrecision()), isReadOnly);
+                res = new ASTAttribute(new TypeBit(type1.getPrecision()), isConstant);
                 m_ast.put(ctx, res);
                 Log.debug("ExpressionTypeVisitor: TOBIT: rule#1");
             } else {
@@ -1474,7 +1477,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ErrorStack.enter(ctx, "TOCHAR");
         if (op != null) {
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op);
-            Boolean isReadOnly = op.isReadOnly();
+            Boolean isConstant = op.isConstant();
 
             if (type1 instanceof TypeFixed) {
                 res = new ASTAttribute(new TypeChar(1));
@@ -1513,10 +1516,10 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         if (op != null) {
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op);
-            Boolean isReadOnly = op.isReadOnly();
+            Boolean isConstant = op.isConstant();
 
             if (type1 instanceof TypeFloat) {
-                res = new ASTAttribute(new TypeFixed(type1.getPrecision()), isReadOnly);
+                res = new ASTAttribute(new TypeFixed(type1.getPrecision()), isConstant);
                 m_ast.put(ctx, res);
                 if (m_debug) System.out.println("ExpressionTypeVisitor: ENTIER: rule#1");
             } else {
@@ -1552,11 +1555,11 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         if (op != null) {
             TypeDefinition type1 =  performImplicitDereferenceAndFunctioncall(op);
-            Boolean isReadOnly = op.isReadOnly();
+            Boolean isConstant = op.isConstant();
 
 
             if (type1 instanceof TypeFloat) {
-                res = new ASTAttribute(new TypeFixed(type1.getPrecision()), isReadOnly);
+                res = new ASTAttribute(new TypeFixed(type1.getPrecision()), isConstant);
                 m_ast.put(ctx, res);
                 Log.debug("ExpressionTypeVisitor: ROUND: rule#1");
             } else {
@@ -1940,7 +1943,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ErrorStack.enter(ctx); 
         TypeFixed type = new TypeFixed(Defaults.FIXED_LENGTH);
         ASTAttribute expressionResult = new ASTAttribute(type);
-        expressionResult.setReadOnly(true);
+        expressionResult.setIsConstant(true);
 
         if (ctx.name() != null) {
             SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.name().ID().getText());
@@ -2074,12 +2077,12 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ErrorStack.enter(ctx);
 
         if (op1 != null && op2 != null) {
-            TypeDefinition type1 = performImplicitDereferenceAndFunctioncall(op1);
-            TypeDefinition type2 = performImplicitDereferenceAndFunctioncall(op2);
-            Boolean isReadOnly = op1.isReadOnly() && op2.isReadOnly();
+            performImplicitDereferenceAndFunctioncall(op1);
+            performImplicitDereferenceAndFunctioncall(op2);
+            Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             if (op1.getType() instanceof TypeBit && op2.getType() instanceof TypeBit) {
-                res = new ASTAttribute(new TypeBit(1), isReadOnly);
+                res = new ASTAttribute(new TypeBit(1), isConstant);
                 m_ast.put(ctx, res);
 
                 if (m_debug)
@@ -2320,22 +2323,22 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (op1 != null && op2 != null) {
             TypeDefinition type1 = performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 = performImplicitDereferenceAndFunctioncall(op2);
-            Boolean isReadOnly = op1.isReadOnly() && op2.isReadOnly();
+            Boolean isConstant = op1.isConstant() && op2.isConstant();
           
             if (type1 instanceof TypeProcedure) {
                 type1 = ((TypeProcedure)type1).getResultType();
-                isReadOnly = false;
+                isConstant = false;
                 op1.setIsFunctionCall(true);
             }
             
             if (type2 instanceof TypeProcedure) {
                 type2 = ((TypeProcedure)type2).getResultType();
-                isReadOnly = false;
+                isConstant = false;
                 op2.setIsFunctionCall(true);
             }
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
-                res = new ASTAttribute(new TypeBit(1), isReadOnly);
+                res = new ASTAttribute(new TypeBit(1), isConstant);
 
                 if (m_debug)
                     Log.debug(
@@ -2343,7 +2346,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                                     + relation
                                     + "RelationalExpression: rule#1");
             } else if (type1 instanceof TypeFixed && type2 instanceof TypeFloat) {
-                res = new ASTAttribute(new TypeBit(1), isReadOnly);
+                res = new ASTAttribute(new TypeBit(1), isConstant);
 
 
                 if (m_debug)
@@ -2352,7 +2355,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                                     + relation
                                     + "RelationalExpression: rule#2");
             } else if (type1 instanceof TypeFloat && type2 instanceof TypeFixed) {
-                res = new ASTAttribute(new TypeBit(1), isReadOnly);
+                res = new ASTAttribute(new TypeBit(1), isConstant);
       
                 if (m_debug)
                     System.out.println(
@@ -2360,7 +2363,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                                     + relation
                                     + "RelationalExpression: rule#3");
             } else if (type1 instanceof TypeFloat && type2 instanceof TypeFloat) {
-                res = new ASTAttribute(new TypeBit(1), isReadOnly);
+                res = new ASTAttribute(new TypeBit(1), isConstant);
   
                 if (m_debug)
                     Log.debug(
@@ -2368,7 +2371,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                                     + relation
                                     + "RelationalExpression: rule#4");
             } else if (type1 instanceof TypeClock && type2 instanceof TypeClock) {
-                res = new ASTAttribute(new TypeBit(1), isReadOnly);
+                res = new ASTAttribute(new TypeBit(1), isConstant);
 
                 if (m_debug)
                     Log.debug(
@@ -2376,7 +2379,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                                     + relation
                                     + "RelationalExpression: rule#5");
             } else if (type1 instanceof TypeDuration && type2 instanceof TypeDuration) {
-                res = new ASTAttribute(new TypeBit(1), isReadOnly);
+                res = new ASTAttribute(new TypeBit(1), isConstant);
 
                 if (m_debug)
                     Log.debug(
@@ -2385,7 +2388,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                                     + "RelationalExpression: rule#6");
             } else if ((type1 instanceof TypeChar || type1 instanceof TypeVariableChar)
                     && (type2 instanceof TypeChar || type2 instanceof TypeVariableChar)) {
-                res = new ASTAttribute(new TypeBit(1), isReadOnly);
+                res = new ASTAttribute(new TypeBit(1), isConstant);
 
                 if (m_debug)
                     Log.debug(
@@ -3009,8 +3012,8 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             type = ((VariableEntry) se).getType();
             ASTAttribute attr = new ASTAttribute(type);
 
-            if (((VariableEntry) se).getAssigmentProtection()) {
-                attr.setReadOnly(true);
+            if (type.hasAssignmentProtection()) {
+                attr.setIsConstant(true);
                 Initializer i = ((VariableEntry) se).getInitializer();
                 if (i instanceof SimpleInitializer) {
                     attr.setConstant(((SimpleInitializer) i).getConstant());
@@ -3343,7 +3346,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ErrorStack.enter(ctx, ".CHAR()");
         ASTAttribute expressionResult = m_ast.lookup(ctx.expression());
         if (expressionResult != null) {
-            if (expressionResult.isReadOnly()) {
+            if (expressionResult.isConstant()) {
                 if (expressionResult.getType() instanceof TypeFixed) {
                     m_ast.put(ctx, new ASTAttribute(new TypeChar(1)));
                 } else {
@@ -3466,7 +3469,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             return null;
         }
 
-        if (lwb.isReadOnly() && upb.isReadOnly()) {
+        if (lwb.isConstant() && upb.isConstant()) {
             size =
                     upb.getConstantFixedValue().getValue()
                             - lwb.getConstantFixedValue().getValue()
@@ -3755,8 +3758,10 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             m_type = var.getType();
             attr = new ASTAttribute(m_type, entry);
             attr.setVariable(var);
-            if (var.getAssigmentProtection()) {
-                attr.setReadOnly(true);
+            if (m_type.hasAssignmentProtection()) {
+                attr.setIsConstant(true);
+            } else {
+                attr.setIsLValue(true);
             }
 
         } else {
@@ -3893,10 +3898,11 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         VariableEntry actualVariableEntry = null;
         ASTAttribute attr = m_ast.lookup(expression);
+       
 
         if (attr != null) {
             actualType = attr.getType();
-            actualIsInv = attr.isReadOnly();
+            actualIsInv = actualType.hasAssignmentProtection();
 
             actualVariableEntry = attr.getVariable();
 
@@ -3911,7 +3917,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                 ErrorStack.add("only variables may be passed by IDENT");
                 return; // do no further checks on this parameter
             } else {
-                if (actualIsInv && !formalParameter.getAssigmentProtection()) {
+                if (actualIsInv && !formalParameter.getType().hasAssignmentProtection()) {
                     ErrorStack.add("pass INV data as non INV IDENT parameter");
                 }
             }

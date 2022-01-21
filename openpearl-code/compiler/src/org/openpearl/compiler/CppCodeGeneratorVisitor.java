@@ -567,7 +567,7 @@ System.out.println("CppCg@487 called");
                 ST fp = m_group.getInstanceOf("FormalParameter");
                 //FormalParameter(id,type,assignmentProtection,passIdentical,isArray) ::= <%
                 fp.add("type", visitTypeAttribute(f.getType()));
-                fp.add("assignmentProtection", f.getAssigmentProtection());
+                fp.add("assignmentProtection", f.getType().hasAssignmentProtection());
                 fp.add("passIdentical", f.passIdentical);
                 //fp.add("isArray",f.
                 formalParams.add("FormalParameters",fp);
@@ -601,7 +601,7 @@ System.out.println("CppCg@487 called");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
             st.add("type",
                     visitTypeAttribute(ve.getType()));
-            st.add("inv", ve.getAssigmentProtection());
+            st.add("inv", ve.getType().hasAssignmentProtection());
             scope.add("variable", st);
             dationSpecifications.add("decl", scope);
       
@@ -726,7 +726,7 @@ System.out.println("CppCg@487 called");
             ST storage = m_group.getInstanceOf("ArrayStorageDeclaration");
             storage.add("name", ve.getName());
             storage.add("type",visitTypeAttribute(t));
-            storage.add("assignmentProtection", ve.getAssigmentProtection());
+            storage.add("assignmentProtection", ve.getType().hasAssignmentProtection());
             storage.add("totalNoOfElements", ((TypeArray) ve.getType()).getTotalNoOfElements());
             if (t instanceof TypeBolt) {
                 storage.add("initElements", boltArrayInitializer(ve));   
@@ -766,7 +766,7 @@ System.out.println("CppCg@487 called");
                 // Log.warn("CppCodeGenerator@889: STRUCT+INIT incomplete");
             }
 
-            st.add("inv", ve.getAssigmentProtection());
+            st.add("inv", ve.getType().hasAssignmentProtection());
             scope.add("variable", st);
             scalarVariableDeclaration.add("variable_denotations", scope);
           
@@ -780,7 +780,7 @@ System.out.println("CppCg@487 called");
                 st.add("init", getInitialiser(ve.getInitializer()));
             }
 
-            st.add("inv", ve.getAssigmentProtection());
+            st.add("inv", ve.getType().hasAssignmentProtection());
             scope.add("variable", st);
             scalarVariableDeclaration.add("variable_denotations", scope);
             
@@ -842,7 +842,7 @@ System.out.println("CppCg@487 called");
                 st.add("init", getInitialiser(ve.getInitializer()));
             }
 
-            st.add("inv", ve.getAssigmentProtection());
+            st.add("inv", ve.getType().hasAssignmentProtection());
             scalarVariableDeclaration.add("variable_denotations", st);
 
         } else {
@@ -2402,7 +2402,7 @@ System.out.println("CppCg@487 called");
 
         ASTAttribute attr = m_ast.lookup(ctx);
 
-        if (attr.isReadOnly() && attr.getConstantFixedValue() != null) {
+        if (attr.isConstant() && attr.getConstantFixedValue() != null) {
             expr.add("code", attr.getConstantFixedValue());
         } else {
             expr.add("code", visitAndDereference(ctx.expression(0)));
@@ -2418,7 +2418,7 @@ System.out.println("CppCg@487 called");
 
         ASTAttribute attr = m_ast.lookup(ctx);
 
-        if (attr.isReadOnly() && attr.getConstantFixedValue() != null) {
+        if (attr.isConstant() && attr.getConstantFixedValue() != null) {
             expr.add("code", attr.getConstantFixedValue());
         } else {
             expr.add("code", visitAndDereference(ctx.expression(0)));
@@ -2434,7 +2434,7 @@ System.out.println("CppCg@487 called");
 
         ASTAttribute attr = m_ast.lookup(ctx);
 
-        if (attr.isReadOnly() && attr.getConstantFixedValue() != null) {
+        if (attr.isConstant() && attr.getConstantFixedValue() != null) {
             expr.add("code", attr.getConstantFixedValue());
         } else {
             expr.add("code", visitAndDereference(ctx.expression(0)));
@@ -2464,7 +2464,7 @@ System.out.println("CppCg@487 called");
 
         ASTAttribute attr = m_ast.lookup(ctx);
 
-        if (attr.isReadOnly() && attr.getConstantFixedValue() != null) {
+        if (attr.isConstant() && attr.getConstantFixedValue() != null) {
             expr = m_group.getInstanceOf("IntegerConstant");
             expr.add("value", attr.getConstantFixedValue());
         } else {
@@ -2512,7 +2512,7 @@ System.out.println("CppCg@487 called");
 
                 ASTAttribute attr = m_ast.lookup(ctx);
                 if (attr.getType() instanceof TypeFloat) {
-                    if (attr.isReadOnly()) {
+                    if (attr.isConstant()) {
                         expr = m_group.getInstanceOf("FloatConstant");
                         expr.add("value", attr.getConstantFloatValue());
                     } else {
@@ -2520,7 +2520,7 @@ System.out.println("CppCg@487 called");
                         expr.add("code", visitAndDereference(ctx.expression()));
                     }
                 } else if (attr.getType() instanceof TypeFixed) {
-                    if (attr.isReadOnly()) {
+                    if (attr.isConstant()) {
                         expr = m_group.getInstanceOf("FixedConstant");
                         expr.add("value", attr.getConstantFixedValue());
                     } else {
@@ -2528,7 +2528,7 @@ System.out.println("CppCg@487 called");
                         expr.add("code", visitAndDereference(ctx.expression()));
                     }
                 } else if (attr.getType() instanceof TypeDuration) {
-                    if (attr.isReadOnly()) {
+                    if (attr.isConstant()) {
                         expr = m_group.getInstanceOf("DurationConstant");
                         expr.add("value", attr.getConstantDurationValue());
                     } else {
@@ -3498,7 +3498,7 @@ System.out.println("CppCg@487 called");
                             data.add("upb",
                                     visitAndDereference(ssc.charSelectionSlice().expression(1)));
 
-                        } else if (attr.isReadOnly() || attr.getVariable() != null) {
+                        } else if (attr.isConstant() || attr.getVariable() != null) {
                             // check if we must extend to the larger type
                             if (m_typeOfTransmission != null &&
                                 !attr.getType().equals(m_typeOfTransmission)) {
@@ -3727,7 +3727,7 @@ System.out.println("CppCg@487 called");
             System.out.println("no ASTAttributes on " + ctx.getText());
             m_isNonStatic = true;
         } else {
-            if (attr.m_constant == null && !attr.isReadOnly()) {
+            if (attr.m_constant == null && !attr.isConstant()) {
                 m_isNonStatic = true; // no constant
             }
         }

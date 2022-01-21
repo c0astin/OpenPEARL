@@ -56,11 +56,11 @@ public class TypeReference extends TypeDefinition {
     }
 
     public String toString() {
-        return this.getName() + " " + this.m_baseType;
+        return super.toString() + " " + this.m_baseType;
     }
     
     public String toString4IMC(boolean isInStructure) {
-        return this.getName() + " " + this.m_baseType.toString4IMC(isInStructure);
+        return super.toString() + " " + this.m_baseType.toString4IMC(isInStructure);
     }
 
     @Override

@@ -442,7 +442,8 @@ implements OpenPearlVisitor<Void> {
 
                 listOfFormalParameters.add(
                         new FormalParameter(
-                                name, m_type, assignmentProtection, passIdentical, ctx));
+                                name, m_type, //assignmentProtection, 
+                                passIdentical, ctx));
             }
         }
 
@@ -721,7 +722,7 @@ implements OpenPearlVisitor<Void> {
         String sCtx = ctx.getText();
         m_isGlobal = false;
         m_globalName = null;
-        
+        m_hasAllocationProtection = false;
         
         TypeDefinition safeType = m_type;
 
@@ -730,6 +731,9 @@ implements OpenPearlVisitor<Void> {
         }
 
         visitChildren(ctx);
+
+        m_type.setHasAssignmentProtection(m_hasAllocationProtection);
+       
 
         if (safeType instanceof TypeArray) {
             ((TypeArray) safeType).setBaseType(m_type);
@@ -940,7 +944,7 @@ implements OpenPearlVisitor<Void> {
                     new VariableEntry(
                             s,
                             m_type,
-                            m_hasAllocationProtection,
+                            //m_hasAllocationProtection,
                             m_identifierDenotationContext.identifier(i),
                             init);
 
@@ -1023,7 +1027,7 @@ implements OpenPearlVisitor<Void> {
                     new VariableEntry(
                             s,
                             m_type,
-                            m_hasAllocationProtection,
+                            //m_hasAllocationProtection,
                             m_identifierDenotationContext.identifier(i),
                             init);
             } else {
@@ -1033,7 +1037,7 @@ implements OpenPearlVisitor<Void> {
                         new VariableEntry(
                                 s,
                                 m_type,
-                                m_hasAllocationProtection,
+                                //m_hasAllocationProtection,
                                 m_identifierDenotationContext.identifier(i),
                                 aInit);
                 
@@ -1607,7 +1611,7 @@ implements OpenPearlVisitor<Void> {
                     new VariableEntry(
                             ctx.loopStatement_for().ID().getText(),
                             new TypeFixed(Defaults.FIXED_LENGTH),
-                            true,
+                            //true,
                             ctx.loopStatement_for(),
                             null);
             controlVariable.setLoopControlVariable();
@@ -1652,7 +1656,7 @@ implements OpenPearlVisitor<Void> {
  
         for (int i = 0; i < m_identifierDenotationContext.identifier().size(); i++) {
             String s = m_identifierDenotationContext.identifier(i).getText();
-            VariableEntry ve = new VariableEntry(s, m_type, m_hasAllocationProtection, 
+            VariableEntry ve = new VariableEntry(s, m_type, //m_hasAllocationProtection, 
                     m_identifierDenotationContext.identifier(i));
 
             // spc/dcl and global attribute is treated in checkDoubleDefinitionAndEnterToSymbolTable
@@ -1711,7 +1715,7 @@ implements OpenPearlVisitor<Void> {
                     new VariableEntry(
                             s,
                             m_type,
-                            m_hasAllocationProtection,
+                            //m_hasAllocationProtection,
                             m_identifierDenotationContext.identifier(i));
 
             // spc/dcl and global attribute is treated in checkDoubleDefinitionAndEnterToSymbolTable
@@ -1857,7 +1861,8 @@ implements OpenPearlVisitor<Void> {
 
                     VariableEntry var = (VariableEntry) entry;
 
-                    if (var.getAssigmentProtection()) {
+                    //if (var.getAssigmentProtection()) {
+                    if (m_type.hasAssignmentProtection()) {
                         if (var.getInitializer() instanceof SimpleInitializer) {
 
                             constant = ((SimpleInitializer) var.getInitializer()).getConstant();

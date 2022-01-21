@@ -54,7 +54,7 @@ public class TypeChar extends TypeDefinition {
     public Integer getPrecision() { return m_size;}
 
     public String toString() {
-        return this.getName() + "(" + this.m_size + ")";
+        return super.toString() + "(" + this.m_size + ")";
     }
 
     public String toString4IMC(boolean isInStructure) {

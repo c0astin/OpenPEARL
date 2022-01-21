@@ -46,20 +46,23 @@ public class FormalParameter extends VariableEntry {
     public FormalParameter(
             String name,
             TypeDefinition type,
-            Boolean assignmentProtection,
+            //Boolean assignmentProtection,
             Boolean passIdentical,
             OpenPearlParser.FormalParameterContext ctx) {
-    	super(name, type, assignmentProtection, ctx);
+    	super(name, type, //assignmentProtection,
+    	        ctx);
     	this.passIdentical = passIdentical;
         
     }
 
     public String toString() {
-        return (super.getAssigmentProtection() ? " INV " : " " ) + super.getType() +(passIdentical ? " IDENT" : "");
+        //return (super.getAssigmentProtection() ? " INV " : " " ) + super.getType() +(passIdentical ? " IDENT" : "");
+      return super.getType() +(passIdentical ? " IDENT" : "");
+        
     }
 
     public String toString4IMC(boolean isInStructure) {
-        return (super.getAssigmentProtection() ? " INV " : " " ) + super.getType().toString4IMC(isInStructure) +(passIdentical ? " IDENT" : "");
+        return  super.getType().toString4IMC(isInStructure) +(passIdentical ? " IDENT" : "");
     }
     
     public ST toST(STGroup group) {
@@ -69,7 +72,7 @@ public class FormalParameter extends VariableEntry {
        st.add("type", super.getType().toST(group));
        if (super.getType() instanceof TypeArraySpecification) st.add("isArray", "");
        
-       if (super.getAssigmentProtection()) st.add("assignmentProtection","");
+       if (super.getType().hasAssignmentProtection()) st.add("assignmentProtection","");
        if (passIdentical)st.add("passIdentical","");
        return st;
     }

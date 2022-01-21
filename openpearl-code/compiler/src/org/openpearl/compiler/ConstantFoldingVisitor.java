@@ -37,7 +37,7 @@ import org.openpearl.compiler.SymbolTable.*;
  * These new constants are attached as ASTAttributes to the expression node.
  * 
  *  @note The implementation is not complete. 
- *  Some vistor methods are present are still empty. 
+ *  Some visitor methods are present are still empty. 
  *  They emit Log.error() with a suitable message  
  *  
  *  Support for FIXED seems to be complete,
@@ -145,82 +145,7 @@ String s = ctx.getText();
             return null;
         }
         
-        // all constant values are already added to ASTAttributes by ExpressionTypeVisitor
 
-
-//        if (ctx.durationConstant() != null) {
-//            ConstantDurationValue cv = attr.getConstantDurationValue();
-//        } else if (ctx.floatingPointConstant() != null) {
-//            try {
-//                double value =
-//                        CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
-//                Integer precision = CommonUtils.getFloatingPointConstantPrecision(
-//                        ctx.floatingPointConstant(), Defaults.FLOAT_SHORT_PRECISION);
-//                
-//               
-//
-//                //attr.setConstantFloatValue(new ConstantFloatValue(value, precision));
-//                //m_ast.put(ctx, expressionResult);
-//                m_ast.put(ctx, attr);
-//            } catch (NumberFormatException ex) {
-//                ErrorStack.enter(ctx.floatingPointConstant());
-//                ErrorStack
-//                        .addInternal("bad number '" + ctx.floatingPointConstant().getText() + "'");
-//                ErrorStack.leave();
-//                return null;
-//                // throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-//            }
-//        } else if (ctx.timeConstant() != null) {
-//            Log.error("missing code for timeConstant");
-//        } else if (ctx.stringConstant() != null) {
-//            Log.error("missing code for StringLiteral");
-//        } else if (ctx.bitStringConstant() != null) {
-//            Log.error("missing code for BitStringLiteral");
-//        } else if (ctx.fixedConstant() != null) {
-//            try {
-//                long value = Long.parseLong(ctx.fixedConstant().IntegerConstant().getText());
-//
-//                int precision = m_currentSymbolTable.lookupDefaultFixedLength();
-//
-//                if (ctx.fixedConstant().fixedNumberPrecision() != null) {
-//                    precision = Integer.parseInt(ctx.fixedConstant().fixedNumberPrecision()
-//                            .IntegerConstant().toString());
-//                } else {
-//
-//                    
-//                    
-//                    if (m_currFixedLength != null) {
-//                        precision = m_currFixedLength;
-//                    }
-//                    // no explicit precision given
-//
-//                    precision = Long.toBinaryString(Math.abs(value)).length();
-//
-//                    if (value < 0) {
-//                        precision++;
-//                    }
-//                }
-//                Log.debug("ConstantFoldingVisitor:visitLiteral:precision=" + precision);
-//                ASTAttribute attrp = m_ast.lookup(ctx);
-//
-//                if (attrp == null) {
-//                    ErrorStack.enter(ctx);
-//                    ErrorStack.addInternal("no ASTAttributes found for '" + ctx.getText() + "'");
-//                    ErrorStack.leave();
-//                    return null;
-//                    //  throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-//                }
-//
-//                attr.setConstantFixedValue(new ConstantFixedValue(value,precision));
-//            } catch (NumberFormatException ex) {
-//                ErrorStack.enter(ctx.fixedConstant());
-//                ErrorStack.addInternal("bad number '" + ctx.fixedConstant().getText() + "'");
-//                ErrorStack.leave();
-//                return null;
-//                //  throw new NumberOutOfRangeException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
-//            }
-//        }
-//
         return null;
     }
 
@@ -256,7 +181,7 @@ String s = ctx.getText();
         }
 
         if (op1 != null && op2 != null) {
-            if (op1.isReadOnly() && op2.isReadOnly()) {
+            if (op1.isConstant() && op2.isConstant()) {
                 ConstantFixedValue op1Value = op1.getConstantFixedValue();
                 ConstantFixedValue op2Value = op2.getConstantFixedValue();
                 if (op1Value == null) {
@@ -280,7 +205,7 @@ String s = ctx.getText();
 
     private ConstantFixedValue look4ConstantFixedVariable(ASTAttribute op) {
         // let's see if we have an INV FIXED variable
-        if (op.isReadOnly() && op.getVariable() != null && op.m_type instanceof TypeFixed) {
+        if (op.isConstant() && op.getVariable() != null && op.m_type instanceof TypeFixed) {
             // seem be be INV const
             SymbolTableEntry se = m_currentSymbolTable.lookup(op.getVariable().getName());
             if (se != null) {
@@ -354,37 +279,37 @@ String s = ctx.getText();
         return null;
     }
 
-    @Override
-    public Void visitLwbDyadicExpression(OpenPearlParser.LwbDyadicExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitLwbDyadicExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for LWB expression");
-        return null;
-    }
-
-    @Override
-    public Void visitUpbDyadicExpression(OpenPearlParser.UpbDyadicExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitUpbDyadicExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for UPB expression");
-        return null;
-    }
-
-    @Override
-    public Void visitLwbMonadicExpression(OpenPearlParser.LwbMonadicExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitLwbMonadicExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for LWB expression");
-        return null;
-    }
-
-    @Override
-    public Void visitUpbMonadicExpression(OpenPearlParser.UpbMonadicExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitUpbMonadicExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for UPB expression");
-        return null;
-    }
+//    @Override
+//    public Void visitLwbDyadicExpression(OpenPearlParser.LwbDyadicExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitLwbDyadicExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for LWB expression");
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitUpbDyadicExpression(OpenPearlParser.UpbDyadicExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitUpbDyadicExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for UPB expression");
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitLwbMonadicExpression(OpenPearlParser.LwbMonadicExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitLwbMonadicExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for LWB expression");
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitUpbMonadicExpression(OpenPearlParser.UpbMonadicExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitUpbMonadicExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for UPB expression");
+//        return null;
+//    }
 
     @Override
     public Void visitUnaryAdditiveExpression(OpenPearlParser.UnaryAdditiveExpressionContext ctx) {
@@ -436,7 +361,7 @@ String s = ctx.getText();
 
 
         if (op2 != null) {
-            if (op2.isReadOnly()) {
+            if (op2.isConstant()) {
                 if (op2.m_type instanceof TypeFixed) {
                     ConstantFixedValue op2Value = op2.getConstantFixedValue();
 
@@ -454,18 +379,7 @@ String s = ctx.getText();
                         res.setConstantFloatValue(value);
                     }
 
-                    /* 2019-10-18 rm 
-                     does not work -- the new constant must go into the pool 
-                                    	} else if ( op2.m_type instanceof TypeDuration) {
-                    ConstantDurationValue op2Value = op2.getConstantDurationValue();
-                    if (op2Value != null) {
-                       int sign = op2Value.getSign();
-                       sign = -sign;
-                       ConstantDurationValue value = new ConstantDurationValue(
-                    		op2Value.getHours(), op2Value.getMinutes(),op2Value.getSeconds(),sign);
-                       res.setConstantDurationValue(value);
-                    }
-                    */
+
                 } else if (op2.m_type instanceof TypeDuration) {
                     ConstantDurationValue op2Value = op2.getConstantDurationValue();
 
@@ -516,7 +430,7 @@ String s = ctx.getText();
         }
 
         if (op1 != null && op2 != null) {
-            if (op1.isReadOnly() && op2.isReadOnly()) {
+            if (op1.isConstant() && op2.isConstant()) {
                 ConstantFixedValue op1Value = op1.getConstantFixedValue();
                 ConstantFixedValue op2Value = op2.getConstantFixedValue();
 
@@ -532,26 +446,26 @@ String s = ctx.getText();
         return null;
     }
 
-    @Override
-    public Void visitNotExpression(OpenPearlParser.NotExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitNotExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for NOT expression");
-        return null;
-    }
-
-    @Override
-    public Void visitAbsExpression(OpenPearlParser.AbsExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitAbsExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for ABS expression");
-        return null;
-    }
-
-    @Override
-    public Void visitSignExpression(OpenPearlParser.SignExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitSignExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for SIGN expression");
-        return null;
-    }
+//    @Override
+//    public Void visitNotExpression(OpenPearlParser.NotExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitNotExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for NOT expression");
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitAbsExpression(OpenPearlParser.AbsExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitAbsExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for ABS expression");
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitSignExpression(OpenPearlParser.SignExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitSignExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for SIGN expression");
+//        return null;
+//    }
 
     @Override
     public Void visitMultiplicativeExpression(
@@ -586,7 +500,7 @@ String s = ctx.getText();
         }
 
         if (op1 != null && op2 != null) {
-            if (op1.isReadOnly() && !op1.isLoopControlVariable() && op2.isReadOnly()
+            if (op1.isConstant() && !op1.isLoopControlVariable() && op2.isConstant()
                     && !op2.isLoopControlVariable()) {
                 ConstantFixedValue op1Value = op1.getConstantFixedValue();
                 ConstantFixedValue op2Value = op2.getConstantFixedValue();
@@ -635,7 +549,7 @@ String s = ctx.getText();
         }
 
         if (op1 != null && op2 != null) {
-            if (op1.isReadOnly() && op2.isReadOnly()) {
+            if (op1.isConstant() && op2.isConstant()) {
                 ConstantFixedValue op1Value = op1.getConstantFixedValue();
                 ConstantFixedValue op2Value = op2.getConstantFixedValue();
 
@@ -691,7 +605,7 @@ String s = ctx.getText();
         }
 
         if (op1 != null && op2 != null) {
-            if (op1.isReadOnly() && op2.isReadOnly()) {
+            if (op1.isConstant() && op2.isConstant()) {
                 ConstantFixedValue op1Value = op1.getConstantFixedValue();
                 ConstantFixedValue op2Value = op2.getConstantFixedValue();
 
@@ -714,97 +628,97 @@ String s = ctx.getText();
         return null;
     }
 
-    @Override
-    public Void visitRemainderExpression(OpenPearlParser.RemainderExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitRemainderExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for REM expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitExponentiationExpression(
-            OpenPearlParser.ExponentiationExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitExponentiationExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for ** expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitFitExpression(OpenPearlParser.FitExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitFitExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for FIT expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitSqrtExpression(OpenPearlParser.SqrtExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitSqrtExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for SQRT expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitSinExpression(OpenPearlParser.SinExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitSinExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for SIN expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitCosExpression(OpenPearlParser.CosExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitCosExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for COS expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitExpExpression(OpenPearlParser.ExpExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitExpExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for EXP expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitLnExpression(OpenPearlParser.LnExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitLnExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for LN expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitTanExpression(OpenPearlParser.TanExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitTanExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for TAN expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitAtanExpression(OpenPearlParser.AtanExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitAtanExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for ATAN expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitTanhExpression(OpenPearlParser.TanhExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitTanhExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for TANH expression");
-        visitChildren(ctx);
-        return null;
-    }
-
+//    @Override
+//    public Void visitRemainderExpression(OpenPearlParser.RemainderExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitRemainderExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for REM expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitExponentiationExpression(
+//            OpenPearlParser.ExponentiationExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitExponentiationExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for ** expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitFitExpression(OpenPearlParser.FitExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitFitExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for FIT expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitSqrtExpression(OpenPearlParser.SqrtExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitSqrtExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for SQRT expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitSinExpression(OpenPearlParser.SinExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitSinExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for SIN expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitCosExpression(OpenPearlParser.CosExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitCosExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for COS expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitExpExpression(OpenPearlParser.ExpExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitExpExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for EXP expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitLnExpression(OpenPearlParser.LnExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitLnExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for LN expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitTanExpression(OpenPearlParser.TanExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitTanExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for TAN expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitAtanExpression(OpenPearlParser.AtanExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitAtanExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for ATAN expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitTanhExpression(OpenPearlParser.TanhExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitTanhExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for TANH expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
 
     @Override
     public Void visitTOFIXEDExpression(OpenPearlParser.TOFIXEDExpressionContext ctx) {
@@ -839,238 +753,238 @@ String s = ctx.getText();
         return null;
     }
 
-    @Override
-    public Void visitTOFLOATExpression(OpenPearlParser.TOFLOATExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitTOFLOATExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for TOFLOAT expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitTOBITExpression(OpenPearlParser.TOBITExpressionContext ctx) {
-        Log.debug(
-                "ConstantFoldingVisitor:visitTOBITExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for TOBIT expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitTOCHARExpression(OpenPearlParser.TOCHARExpressionContext ctx) {
-        Log.debug(
-                "ConstantFoldingVisitor:visitTOCHARExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for TOCHAR expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitEntierExpression(OpenPearlParser.EntierExpressionContext ctx) {
-        Log.debug(
-                "ConstantFoldingVisitor:visitEntierExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for ENTIER expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitRoundExpression(OpenPearlParser.RoundExpressionContext ctx) {
-        Log.debug(
-                "ConstantFoldingVisitor:visitRoundExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for ROUND expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitUnaryExpression(OpenPearlParser.UnaryExpressionContext ctx) {
-        Log.debug(
-                "ConstantFoldingVisitor:visitUnaryExpression:ctx" + CommonUtils.printContext(ctx));
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitSemaTry(OpenPearlParser.SemaTryContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitSemaTry:ctx" + CommonUtils.printContext(ctx));
-        // TRY is never constant!
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitNowFunction(OpenPearlParser.NowFunctionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitNowFunction:ctx" + CommonUtils.printContext(ctx));
-        // NOW is never constant!
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitSizeofExpression(OpenPearlParser.SizeofExpressionContext ctx) {
-        Log.debug(
-                "ConstantFoldingVisitor:visitSizeofExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for SIZEOF expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitEqRelationalExpression(OpenPearlParser.EqRelationalExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitEqRelationalExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitLtRelationalExpression(OpenPearlParser.LtRelationalExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitLtRelationalExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for LT expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitNeRelationalExpression(OpenPearlParser.NeRelationalExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitNeRelationalExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for NE expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitLeRelationalExpression(OpenPearlParser.LeRelationalExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitLeRelationalExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for LE expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitGtRelationalExpression(OpenPearlParser.GtRelationalExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitGtRelationalExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for GT expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitGeRelationalExpression(OpenPearlParser.GeRelationalExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitGeRelationalExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        Log.error("missing code for GE expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitStringSelection(OpenPearlParser.StringSelectionContext ctx) {
-        Log.debug(
-                "ConstantFoldingVisitor:visitStringSelection:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for string selection expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitCshiftExpression(OpenPearlParser.CshiftExpressionContext ctx) {
-        Log.debug(
-                "ConstantFoldingVisitor:visitCshiftExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for CSHIFT expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitShiftExpression(OpenPearlParser.ShiftExpressionContext ctx) {
-        Log.debug(
-                "ConstantFoldingVisitor:visitShiftExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for SHIFT expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitCatExpression(OpenPearlParser.CatExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitCatExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for CAT expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitAndExpression(OpenPearlParser.AndExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitAndExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for AND expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitOrExpression(OpenPearlParser.OrExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitOrExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for OR expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitExorExpression(OpenPearlParser.ExorExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitExorExpression:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for EXOR expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitCONTExpression(OpenPearlParser.CONTExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitCONTExpression:ctx" + CommonUtils.printContext(ctx));
-        // CONT is never constant!
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitStringSlice(OpenPearlParser.StringSliceContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitStringSlice:ctx" + CommonUtils.printContext(ctx));
-        Log.error("missing code for StringSlice expression");
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitConstantFixedExpressionFit(
-            OpenPearlParser.ConstantFixedExpressionFitContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitConstantFixedExpressionFit:ctx"
-                + CommonUtils.printContext(ctx));
-        // is code missing or is this treated in visitChildren()?
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitInitElement(OpenPearlParser.InitElementContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitInitElement:ctx" + CommonUtils.printContext(ctx));
-        // is code missing or is this treated in visitChildren()?
-        visitChildren(ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitConstantExpression(OpenPearlParser.ConstantExpressionContext ctx) {
-        Log.debug("ConstantFoldingVisitor:visitConstantExpression:ctx"
-                + CommonUtils.printContext(ctx));
-        // is code missing or is this treated in visitChildren()?
-        visitChildren(ctx);
-        return null;
-    }
+//    @Override
+//    public Void visitTOFLOATExpression(OpenPearlParser.TOFLOATExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitTOFLOATExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for TOFLOAT expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitTOBITExpression(OpenPearlParser.TOBITExpressionContext ctx) {
+//        Log.debug(
+//                "ConstantFoldingVisitor:visitTOBITExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for TOBIT expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitTOCHARExpression(OpenPearlParser.TOCHARExpressionContext ctx) {
+//        Log.debug(
+//                "ConstantFoldingVisitor:visitTOCHARExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for TOCHAR expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitEntierExpression(OpenPearlParser.EntierExpressionContext ctx) {
+//        Log.debug(
+//                "ConstantFoldingVisitor:visitEntierExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for ENTIER expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitRoundExpression(OpenPearlParser.RoundExpressionContext ctx) {
+//        Log.debug(
+//                "ConstantFoldingVisitor:visitRoundExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for ROUND expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitUnaryExpression(OpenPearlParser.UnaryExpressionContext ctx) {
+//        Log.debug(
+//                "ConstantFoldingVisitor:visitUnaryExpression:ctx" + CommonUtils.printContext(ctx));
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitSemaTry(OpenPearlParser.SemaTryContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitSemaTry:ctx" + CommonUtils.printContext(ctx));
+//        // TRY is never constant!
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitNowFunction(OpenPearlParser.NowFunctionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitNowFunction:ctx" + CommonUtils.printContext(ctx));
+//        // NOW is never constant!
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitSizeofExpression(OpenPearlParser.SizeofExpressionContext ctx) {
+//        Log.debug(
+//                "ConstantFoldingVisitor:visitSizeofExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for SIZEOF expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitEqRelationalExpression(OpenPearlParser.EqRelationalExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitEqRelationalExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitLtRelationalExpression(OpenPearlParser.LtRelationalExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitLtRelationalExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for LT expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitNeRelationalExpression(OpenPearlParser.NeRelationalExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitNeRelationalExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for NE expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitLeRelationalExpression(OpenPearlParser.LeRelationalExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitLeRelationalExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for LE expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitGtRelationalExpression(OpenPearlParser.GtRelationalExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitGtRelationalExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for GT expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitGeRelationalExpression(OpenPearlParser.GeRelationalExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitGeRelationalExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        Log.error("missing code for GE expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitStringSelection(OpenPearlParser.StringSelectionContext ctx) {
+//        Log.debug(
+//                "ConstantFoldingVisitor:visitStringSelection:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for string selection expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitCshiftExpression(OpenPearlParser.CshiftExpressionContext ctx) {
+//        Log.debug(
+//                "ConstantFoldingVisitor:visitCshiftExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for CSHIFT expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitShiftExpression(OpenPearlParser.ShiftExpressionContext ctx) {
+//        Log.debug(
+//                "ConstantFoldingVisitor:visitShiftExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for SHIFT expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitCatExpression(OpenPearlParser.CatExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitCatExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for CAT expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitAndExpression(OpenPearlParser.AndExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitAndExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for AND expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitOrExpression(OpenPearlParser.OrExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitOrExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for OR expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitExorExpression(OpenPearlParser.ExorExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitExorExpression:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for EXOR expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitCONTExpression(OpenPearlParser.CONTExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitCONTExpression:ctx" + CommonUtils.printContext(ctx));
+//        // CONT is never constant!
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitStringSlice(OpenPearlParser.StringSliceContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitStringSlice:ctx" + CommonUtils.printContext(ctx));
+//        Log.error("missing code for StringSlice expression");
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitConstantFixedExpressionFit(
+//            OpenPearlParser.ConstantFixedExpressionFitContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitConstantFixedExpressionFit:ctx"
+//                + CommonUtils.printContext(ctx));
+//        // is code missing or is this treated in visitChildren()?
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitInitElement(OpenPearlParser.InitElementContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitInitElement:ctx" + CommonUtils.printContext(ctx));
+//        // is code missing or is this treated in visitChildren()?
+//        visitChildren(ctx);
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitConstantExpression(OpenPearlParser.ConstantExpressionContext ctx) {
+//        Log.debug("ConstantFoldingVisitor:visitConstantExpression:ctx"
+//                + CommonUtils.printContext(ctx));
+//        // is code missing or is this treated in visitChildren()?
+//        visitChildren(ctx);
+//        return null;
+//    }
 
     @Override
     public Void visitName(OpenPearlParser.NameContext ctx) {
@@ -1086,7 +1000,7 @@ String s = ctx.getText();
         SymbolTableEntry se = m_currentSymbolTable.lookup(ctx.ID().toString());
         if (se instanceof VariableEntry) {
             VariableEntry ve = (VariableEntry) se;
-            if (ve.getAssigmentProtection() == false) {
+            if (ve.getType().hasAssignmentProtection() == false) {
                 return null;
             }
             if (ve.getType() instanceof TypeArray) {
@@ -1113,11 +1027,11 @@ String s = ctx.getText();
                 //            System.out.println("ConstantFolding: treatment of struct component ans initilisier missing");
                 return null;
             }
-            if (ve.getAssigmentProtection()) {
+            if (ve.getType().hasAssignmentProtection()) {
                 // is INV
                 Initializer ini = ve.getInitializer();
                 if (ini != null && ini instanceof SimpleInitializer) {
-                    res.setReadOnly(true);
+                    res.setIsConstant(true);
                     res.setConstant(((SimpleInitializer) ini).getConstant());
                     res.setVariable(ve);
                 }
@@ -1127,15 +1041,15 @@ String s = ctx.getText();
         return null;
     }
 
-    private int getIndexOfComponent(TypeStructure ts, OpenPearlParser.NameContext name) {
-        String componentId = name.ID().toString();
-        for (int i = 0; i < ts.m_listOfComponents.size(); i++) {
-            String s = ts.m_listOfComponents.get(i).m_id;
-            if (ts.m_listOfComponents.get(i).m_id.equals(componentId)) {
-                return i;
-            }
-        }
-        // component name not found - should be detected in expressionTypeVisitor
-        return -1;
-    }
+//    private int getIndexOfComponent(TypeStructure ts, OpenPearlParser.NameContext name) {
+//        String componentId = name.ID().toString();
+//        for (int i = 0; i < ts.m_listOfComponents.size(); i++) {
+//            String s = ts.m_listOfComponents.get(i).m_id;
+//            if (ts.m_listOfComponents.get(i).m_id.equals(componentId)) {
+//                return i;
+//            }
+//        }
+//        // component name not found - should be detected in expressionTypeVisitor
+//        return -1;
+//    }
 }

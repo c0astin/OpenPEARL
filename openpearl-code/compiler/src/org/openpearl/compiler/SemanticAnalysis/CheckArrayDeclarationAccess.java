@@ -297,7 +297,7 @@ public class CheckArrayDeclarationAccess extends OpenPearlBaseVisitor<Void>
                 if (checkIndexValue) {
 
                     ASTAttribute attr = m_ast.lookup(expression.get(d));
-                    if (attr.isReadOnly()) {
+                    if (attr.isConstant()) {
                         if (attr.getConstantFixedValue() != null) {
                             long val = attr.getConstantFixedValue().getValue();
                             if (val < ta.getDimensions().get(d).getLowerBoundary()

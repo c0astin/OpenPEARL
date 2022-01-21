@@ -53,7 +53,7 @@ public class TypeProcedure extends TypeDefinition {
     public String toString() {
       String s = this.getName();
       if (m_formalParameters != null && m_formalParameters.size()> 0) {
-        s += " ("+m_formalParameters.get(0).toString();
+        s += " ( "+m_formalParameters.get(0).toString();
         for (int i=1; i<m_formalParameters.size(); i++) {
           s += ", "+m_formalParameters.get(i).toString();
         }
@@ -69,7 +69,7 @@ public class TypeProcedure extends TypeDefinition {
     public String toString4IMC(boolean isInStructure) {
         String s = this.getName();
         if (m_formalParameters != null && m_formalParameters.size()> 0) {
-          s += " ("+m_formalParameters.get(0).toString4IMC(isInStructure);
+          s += " ( "+m_formalParameters.get(0).toString4IMC(isInStructure);
           for (int i=1; i<m_formalParameters.size(); i++) {
             s += ", "+m_formalParameters.get(i).toString4IMC(isInStructure);
           }

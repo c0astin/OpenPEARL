@@ -9,12 +9,12 @@ public class TypeRefChar extends TypeDefinition {
         super("CHAR()");
     }
     
-    public String toString() {
-        return getName();
-    }
+//    public String toString() {
+//        return getName();
+//    }
     
     public String toString4IMC(boolean isInStructure) {
-        return getName();
+        return toString();
     }
     
 }
