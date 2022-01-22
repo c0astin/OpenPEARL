@@ -1438,7 +1438,16 @@ and the results are inserted in the respective positions.
 \input{Factor.bnf}
 \end{grammarframe}
 
-
+%%%%% begin added 2022-01-22 (rm)
+The meaning of the \code{ConstantFIXEDExpression} at the \code{FIT} operator
+is the precision of a type FIXED.
+OpenPEARL emits an error message if the value of the expression left of 
+the \code{FIT}
+operator  exceeds the desired precision.
+Since the constant fixed expressions are evaluated by the compiler 
+the assignment rules must be fullfilled at each usage. An explicit \code{FIT} 
+is not required.
+%%%%% end added
 
 Constant expressions of type \code{FIXED} can, e.g., be applied in the
 following positions:

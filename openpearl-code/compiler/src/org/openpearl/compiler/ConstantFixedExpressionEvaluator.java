@@ -30,7 +30,6 @@
 package org.openpearl.compiler;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.openpearl.compiler.Exception.*;
 import org.openpearl.compiler.SymbolTable.SymbolTable;
 import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.openpearl.compiler.SymbolTable.VariableEntry;
@@ -45,21 +44,18 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
 
     private int m_verbose;
     private boolean m_debug;
-    private String m_sourceFileName;
     private SymbolTable m_currentSymbolTable;
-    private ConstantExpressionEvaluatorVisitor  m_constantExpressionEvaluatorVisitor;
     private ConstantPoolVisitor m_constantPoolVisitor;
 
     public ConstantFixedExpressionEvaluator(int verbose,
-                                            boolean debug,
-                                            SymbolTable symbolTable,
-                                            ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor,
-                                            ConstantPoolVisitor constantPoolVisitor) {
+            boolean debug,
+            SymbolTable symbolTable,
+            ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor,
+            ConstantPoolVisitor constantPoolVisitor) {
 
         m_debug = debug;
         m_verbose = verbose;
         m_currentSymbolTable = symbolTable;
-        m_constantExpressionEvaluatorVisitor = constantExpressionEvaluatorVisitor;
         m_constantPoolVisitor = constantPoolVisitor;
 
         //m_debug = true;
@@ -80,7 +76,7 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
         value = visitChildren(ctx);
 
         if (m_debug) {
-           System.out.println("ConstantFixedExpressionEvaluator: value="+value);
+            System.out.println("ConstantFixedExpressionEvaluator: value="+value);
         }
 
         return value;
@@ -94,33 +90,42 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
             System.out.println("ConstantFixedExpressionEvaluator: visitConstantFixedExpression");
         }
 
-        value = visitConstantFixedExpressionTerm(ctx.constantFixedExpressionTerm());
+        //String s = ctx.getText();
 
-        for (ParseTree c : ctx.children) {
-            if (c instanceof OpenPearlParser.AdditiveConstantFixedExpressionTermContext) {
-                ConstantFixedValue rhs =  visit(c);
-                long res = value.getValue() + rhs.getValue();
-                ConstantFixedValue v = new ConstantFixedValue(res);
-                value = v;
-            }
-            else if (c instanceof OpenPearlParser.SubtractiveConstantFixedExpressionTermContext) {
-                ConstantFixedValue rhs =  visit(c);
-                long res = value.getValue() - rhs.getValue();
-                ConstantFixedValue v = new ConstantFixedValue(res);
-                value = v;
-            }
-        }
-        
-        // adjust m_precision according the result
-        int bc ;//= Long.numberOfLeadingZeros(value.getValue());
-        long val= value.getValue();
+        // in case of evaluation problems, the method emit error messages and throw exceptions
+        // the calling method become informed by a 'null' result
+        try {
+            value = visitConstantFixedExpressionTerm(ctx.constantFixedExpressionTerm());
 
-        // this solution is not nice for the cpu, but it works
-        bc = Long.toBinaryString(Math.abs(val)).length();
-        if (val < 0) {
-          bc--;
+
+            for (ParseTree c : ctx.children) {
+                if (c instanceof OpenPearlParser.AdditiveConstantFixedExpressionTermContext) {
+                    ConstantFixedValue rhs =  visit(c);
+                    long res = value.getValue() + rhs.getValue();
+                    ConstantFixedValue v = new ConstantFixedValue(res);
+                    value = v;
+                }
+                else if (c instanceof OpenPearlParser.SubtractiveConstantFixedExpressionTermContext) {
+                    ConstantFixedValue rhs =  visit(c);
+                    long res = value.getValue() - rhs.getValue();
+                    ConstantFixedValue v = new ConstantFixedValue(res);
+                    value = v;
+                }
+            }
+
+            // adjust m_precision according the result
+            int bc ;//= Long.numberOfLeadingZeros(value.getValue());
+            long val= value.getValue();
+
+            // this solution is not nice for the cpu, but it works
+            bc = Long.toBinaryString(Math.abs(val)).length();
+            if (val < 0) {
+                bc--;
+            }
+            value.setPrecision(bc);
+        } catch (Exception e) {
+            value=null;
         }
-        value.setPrecision(bc);
         return value;
     }
 
@@ -154,7 +159,9 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
                     ConstantFixedValue v = new ConstantFixedValue(res);
                     value = v;
                 } else {
-                    throw new DivisionByZeroException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                    ErrorStack.add(ctx, "constantFixedExpression", "divide by zero");
+                    throw new RuntimeException();  // abort evaluation
+                    //throw new DivisionByZeroException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
             }
             else if (c instanceof OpenPearlParser.RemainderConstantFixedExpressionTermContext) {
@@ -165,7 +172,9 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
                     ConstantFixedValue v = new ConstantFixedValue(res);
                     value = v;
                 } else {
-                    throw new DivisionByZeroException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                    ErrorStack.add(ctx,"constantFixedExpression","REM with zero");
+                    throw new RuntimeException();
+                    //throw new DivisionByZeroException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
             }
 
@@ -190,13 +199,13 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
         }
 
         if ( ctx.fixedConstant() != null) {
-          long curval = 0;
-          try {
-             curval = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
-          } catch (NumberFormatException e) {
-            ErrorStack.add(ctx,"FIXED","too large");
-          }
-//            int curval = sign * Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
+            long curval = 0;
+            try {
+                curval = sign * Long.parseLong(ctx.fixedConstant().IntegerConstant().toString());
+            } catch (NumberFormatException e) {
+                ErrorStack.add(ctx,"FIXED","too large");
+            }
+            //            int curval = sign * Integer.parseInt(ctx.fixedConstant().IntegerConstant().toString());
             int curlen =   m_currentSymbolTable.lookupDefaultFixedLength();
 
             if ( ctx.fixedConstant().fixedNumberPrecision() != null ) {
@@ -209,21 +218,25 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
             SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().toString());
 
             if ( entry == null ) {
-                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                ErrorStack.addInternal(ctx, "constantFixedExpression", "symbol '"+ctx.ID().toString()+"' not found");
+                throw new RuntimeException();
+                //throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
 
             if ( entry instanceof VariableEntry ) {
                 VariableEntry variableEntry = (VariableEntry)entry;
                 if ( !variableEntry.getType().hasAssignmentProtection() ) {
-                  ErrorStack.enter(ctx);
-                  ErrorStack.add("constant expected");
-                  ErrorStack.leave();
-                  return new ConstantFixedValue(1); // let's return for smooth ending of pass
-                  //throw new ConstantExpectedException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                    ErrorStack.enter(ctx);
+                    ErrorStack.add("constant expected");
+                    ErrorStack.leave();
+                    return new ConstantFixedValue(1); // let's return for smooth ending of pass
+                    //throw new ConstantExpectedException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
                 if ( !(variableEntry.getType() instanceof TypeFixed )) {
-                    throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                    ErrorStack.add(ctx,"type mismatch","expected type FIXED --- got "+variableEntry.getType());
+                    throw new RuntimeException();
+                    //throw new TypeMismatchException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                 }
 
                 if ( variableEntry.getInitializer() != null ) {
@@ -232,13 +245,18 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
                         if ( ((SimpleInitializer)variableEntry.getInitializer()).getConstant() instanceof ConstantFixedValue) {
                             value = (ConstantFixedValue) ((SimpleInitializer)variableEntry.getInitializer()).getConstant();
                         } else {
-                            throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                            ErrorStack.add(ctx,"type mismatch","expected FIXED --- got "+
+                                   (((SimpleInitializer)variableEntry.getInitializer()).getConstant()).getType());
+                            throw new RuntimeException();
+                            //throw new UnknownIdentifierException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                         }
                     }
                     else {
-                        throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                        ErrorStack.addInternal(ctx, "constantFixedExpressionEvaluator@260", "initializer missing");
+                        throw new RuntimeException();
+                        //throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                     }
-/*
+                    /*
                     if ( variableEntry.getInitializer().getContext() instanceof OpenPearlParser.ConstantExpressionContext) {
                         OpenPearlParser.ConstantExpressionContext c = (OpenPearlParser.ConstantExpressionContext)variableEntry.getInitializer().getContext();
 
@@ -276,7 +294,7 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
                             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
                         }
                     }
-*/
+                     */
 
                 }
             }
@@ -285,11 +303,19 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
             value = visitConstantFixedExpression(ctx.constantFixedExpression());
         }
 
+        if (sign == -1) {
+            ConstantFixedValue invertedValue = new ConstantFixedValue(value.getValue()*sign);
+            value = invertedValue;
+        }
+
         if ( ctx.constantFixedExpressionFit() != null ) {
             ConstantFixedValue length;
             length = visitConstantFixedExpressionFit( ctx.constantFixedExpressionFit());
 
             int l = length.getPrecision();
+            if (l < value.getPrecision()) {
+                ErrorStack.add(ctx.constantFixedExpressionFit(),"FIT","value too large");
+            }
             ConstantFixedValue fittedValue = new ConstantFixedValue(value.getValue(),l);
             value = fittedValue;
 
@@ -301,14 +327,13 @@ public  class ConstantFixedExpressionEvaluator extends OpenPearlBaseVisitor<Cons
         if ( m_debug) {
             System.out.println("ConstantFixedExpressionEvaluatorVisitor: value=" + value);
         }
-        
+
         return value;
     }
 
     @Override
     public ConstantFixedValue visitConstantFixedExpressionFit(OpenPearlParser.ConstantFixedExpressionFitContext ctx) {
         ConstantFixedValue value = null;
-        int sign = 1;
 
         if (m_debug) {
             System.out.println("ConstantFixedExpressionEvaluator: visitConstantFixedExpressionFit");

@@ -128,7 +128,6 @@ public class ConstantExpressionEvaluatorVisitor extends OpenPearlBaseVisitor<Voi
 
         ConstantValue value = null;
         int sign = 1;
-        int precision = 0;
         long curval = 0;
 
         if (ctx.sign() != null) {

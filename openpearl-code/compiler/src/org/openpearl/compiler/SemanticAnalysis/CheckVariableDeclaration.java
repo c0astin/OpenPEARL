@@ -192,13 +192,19 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
     
     /**
      * 
-     * @param initializer is ether a simple initializer or a referenze initializer 
+     * @param initializer is ether a simple initializer or a reference initializer 
      * @param baseType the base type of the variable
      */
     private void checkTypes(TypeDefinition typeOfVariable, ConstantValue initializer, ParserRuleContext ctx) {
 
         if (isSimpleType(initializer.getType()) ) {
              checkTypeCompatibility(typeOfVariable, initializer.getType(),ctx);
+        }
+        if (typeOfVariable instanceof TypeSemaphore) {
+            long value = ((ConstantFixedValue)initializer).getValue();
+            if ( value < 0) {
+                ErrorStack.add(ctx,"PRESET","must be not negative");
+            }
         }
             
 //        } else {

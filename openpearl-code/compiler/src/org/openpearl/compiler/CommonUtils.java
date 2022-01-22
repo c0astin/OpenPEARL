@@ -33,7 +33,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 import org.openpearl.compiler.SymbolTable.*;
 import org.openpearl.compiler.OpenPearlParser;
-
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 

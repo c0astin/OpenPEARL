@@ -1862,7 +1862,7 @@ implements OpenPearlVisitor<Void> {
                     VariableEntry var = (VariableEntry) entry;
 
                     //if (var.getAssigmentProtection()) {
-                    if (m_type.hasAssignmentProtection()) {
+                    if (var.getType().hasAssignmentProtection()) {
                         if (var.getInitializer() instanceof SimpleInitializer) {
 
                             constant = ((SimpleInitializer) var.getInitializer()).getConstant();
@@ -1884,9 +1884,10 @@ implements OpenPearlVisitor<Void> {
                 }
             }
         }
-
-        constant = m_constantPool.add(constant);
-
+        if (constant != null) {
+           constant = m_constantPool.add(constant);
+        }
+        
         return constant;
     }
 
@@ -2044,13 +2045,9 @@ implements OpenPearlVisitor<Void> {
         ConstantFixedExpressionEvaluator evaluator =
                 new ConstantFixedExpressionEvaluator(
                         m_verbose, m_debug, m_currentSymbolTable, null, null);
-        try {
-            constant = evaluator.visit(ctx.constantFixedExpression());
-        } catch (Exception e) {
-            // could not evaluate constantFixedExpression
-            constant=null;
-        }
-
+     
+        constant = evaluator.visit(ctx.constantFixedExpression());
+        // note: if there was a problem, the method above already emitted an error message
         return constant;
     }
 
