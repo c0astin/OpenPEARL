@@ -465,8 +465,7 @@ assignment_statement(lhs,rhs) ::= <%
 if_statement(rhs, then_block, else_block) ::= <<
 	if (<rhs>) {
 	    <then_block>
-	}
-	<if(else_block)>else {
+	}<if(else_block)> else {
 	    <else_block>
 	}<endif>
 >>
