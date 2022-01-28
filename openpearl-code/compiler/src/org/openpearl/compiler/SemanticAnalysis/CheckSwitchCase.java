@@ -454,4 +454,19 @@ public class CheckSwitchCase extends OpenPearlBaseVisitor<Void>
 
         return null;
     }
+    
+    @Override
+    public Void visitIf_statement(OpenPearlParser.If_statementContext ctx) {
+        ASTAttribute attr = m_ast.lookup(ctx.expression());
+        String originalType = attr.getType().toString4IMC(true);
+        TypeBit trueFalse= new TypeBit(1);
+        TypeDefinition typeOfExpression = attr.getType();
+        if (!(typeOfExpression.equals(trueFalse)) ) {
+            typeOfExpression = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
+        }  
+        if (!(typeOfExpression.equals(trueFalse)) ) {
+            ErrorStack.add(ctx.expression(),"IF","expression must be of type BIT(1) --- got "+originalType);
+        }
+        return null;
+    }
 }
