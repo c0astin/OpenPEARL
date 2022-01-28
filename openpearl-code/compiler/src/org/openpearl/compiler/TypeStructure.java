@@ -142,6 +142,8 @@ public class TypeStructure extends TypeDefinition {
         if ( type instanceof TypeChar)            return "D" + type.getPrecision().toString();
         if ( type instanceof TypeClock)           return "E";
         if ( type instanceof TypeDuration)        return "F";
+        if ( type instanceof TypeTask)            return "G";
+        if ( type instanceof TypeProcedure)       return "H";
         if ( type instanceof TypeSemaphore)       return "I";
         if ( type instanceof TypeBolt)            return "J";
         if ( type instanceof TypeInterrupt)       return "K";
@@ -166,7 +168,7 @@ public class TypeStructure extends TypeDefinition {
 
         if ( type instanceof TypeReference) {
             TypeReference reftype = (TypeReference) type;
-            String s = reftype.getBaseType().getName();
+            String s = getDataTypeEncoding(reftype.getBaseType());
             s = Character.toLowerCase(s.charAt(0)) + s.substring(1);
             return s;
 //            if ( reftype.getBaseType() instanceof TypeFixed)           return "a" + type.getPrecision().toString();

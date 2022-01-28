@@ -1,6 +1,22 @@
 MODULE(proc_062);
 
 PROBLEM;
+DCL xsema SEMA PRESET(1);
+
+!! REF as parameter
+ref_01: PROC (x REF SEMA);
+   RELEASE x;
+END;
+
+refproc: PROC RETURNS(REF SEMA);
+   RETURN (xsema);
+END;
+
+refTest: PROC;
+   ref_01(xsema);
+   ref_01(refproc);
+END;
+
 !! Ticket 348 RT-Objects as parameters
 
 rt_001: PROC (x SEMA IDENT );

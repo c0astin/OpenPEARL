@@ -12,9 +12,9 @@ import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.openpearl.compiler.SymbolTable.VariableEntry;
 
 /**
- * check for array boundaries: lwb <= upb
+ * check for array boundaries: lwb &le; upb
  * check indices
- *   - type to be FIXED with precision <= 31
+ *   - type to be FIXED with precision &le; 31
  *   - number as required by the array denotation
  *   - values in range if value is constant and array is no formal parameter 
  *   

@@ -19,27 +19,27 @@ read: PROC;
    READ f15 FROM file;
    READ f7 FROM file;
 /*$     ^
-error: READ: type mismatch: required: FIXED(15) got FIXED(7)
+error: READ: type mismatch: required: FIXED(15) --- got FIXED(7)
 */
    READ f31 FROM file;
 /*$     ^
-error: READ: type mismatch: required: FIXED(15) got FIXED(31)
+error: READ: type mismatch: required: FIXED(15) --- got FIXED(31)
 */
    READ fl, d, clk, c4, b5 FROM file;
 /*$     ^
-error: READ: type mismatch: required: FIXED(15) got FLOAT(23)
+error: READ: type mismatch: required: FIXED(15) --- got FLOAT(23)
 */
 /*$         ^
-error: READ: type mismatch: required: FIXED(15) got DURATION
+error: READ: type mismatch: required: FIXED(15) --- got DURATION
 */
 /*$            ^
-error: READ: type mismatch: required: FIXED(15) got CLOCK
+error: READ: type mismatch: required: FIXED(15) --- got CLOCK
 */
 /*$                 ^
-error: READ: type mismatch: required: FIXED(15) got CHAR(4)
+error: READ: type mismatch: required: FIXED(15) --- got CHAR(4)
 */
 /*$                     ^
-error: READ: type mismatch: required: FIXED(15) got BIT(5)
+error: READ: type mismatch: required: FIXED(15) --- got BIT(5)
 */
 END;
 
@@ -49,23 +49,23 @@ write: PROC;
    WRITE f7 TO file;
    WRITE f31 TO file;
 /*$      ^
-error: WRITE: type mismatch: required: FIXED(15) got FIXED(31)
+error: WRITE: type mismatch: required: FIXED(15) --- got FIXED(31)
 */
    WRITE fl, d, clk, c4, b5 TO file;
 /*$      ^
-error: WRITE: type mismatch: required: FIXED(15) got FLOAT(23)
+error: WRITE: type mismatch: required: FIXED(15) --- got FLOAT(23)
 */
 /*$          ^
-error: WRITE: type mismatch: required: FIXED(15) got DURATION
+error: WRITE: type mismatch: required: FIXED(15) --- got DURATION
 */
 /*$             ^
-error: WRITE: type mismatch: required: FIXED(15) got CLOCK
+error: WRITE: type mismatch: required: FIXED(15) --- got CLOCK
 */
 /*$                  ^
-error: WRITE: type mismatch: required: FIXED(15) got CHAR(4)
+error: WRITE: type mismatch: required: FIXED(15) --- got CHAR(4)
 */
 /*$                      ^
-error: WRITE: type mismatch: required: FIXED(15) got BIT(5)
+error: WRITE: type mismatch: required: FIXED(15) --- got BIT(5)
 */
 END;
 

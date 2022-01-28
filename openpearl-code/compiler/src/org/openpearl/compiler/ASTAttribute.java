@@ -32,14 +32,33 @@ package org.openpearl.compiler;
 import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.openpearl.compiler.SymbolTable.VariableEntry;
 
-/*
- * change for support of multiple flags
- * boolean m_readOnly replaced by 
- * int m_flags
+/**
+ * <p><b>Description</b> 
+ * Additional information about a nodes in the AST are stored in objects of this type.
+ * The ETV adds type information and required operations about implicit dereference and implicit 
+ * procedure calls.
  * 
- * all flags are cleared at creation of an ASTAttribute
- * the individual flags are defined as static final in bitReadOnly, ..
- * they are set and cleared via bit operations in the m_flags attribute
+ * Stored data:
+ * <ul>
+ *   <li>{@link  org.openpearl.compiler.TypeDefinition} : the effective type of an expression</li>
+ *   <li>{@link org.openpearl.compiler.SymbolTable.SymbolTableEntry} the reference to the object in the symbol table<br>
+ *     this is null, if no symbol is used</li> 
+ *   <li>{@link org.openpearl.compiler.ConstantValue} the value of a constant, may be if any simple type</li>  
+ *   <li>{@link org.openpearl.compiler.ConstantSelection} is used for .CHAR(a:b) or .BIT(a:b)</li>
+ *   <li>flags for: 
+ *      <ul>
+ *         <li>isConstant</li>
+ *         <li>IsFunctionCall</li>
+ *         <li>isInternal: the symbol is created automatically for EXIT statements</li>
+ *         <li>needImplicitDereferencing indicates that the resultind data needs an implicit
+ *             dereference</lI>
+ *         <li>isLValue indicates that the variable is writable</li>
+ *         <li>arrayOrProcedure needs implicit dereference</lI>
+ *      </ul>
+ *      All flags are cleared at creation of an ASTAttribute
+ *      the individual flags are defined as static final like bitIsConstant, ..
+ *      they are set and cleared via bit operations in the m_flags attribute
+ * </ul>
  */
 public class ASTAttribute {
     public TypeDefinition  m_type;
@@ -63,9 +82,14 @@ public class ASTAttribute {
     private static final int needImplicitDereferencing = 0x08;
     
     /**
-     * flag is set if the expression if a lValue
+     * flag is set if the expression is a lValue
      */
     private static final int isLValue = 0x10;
+    
+    /**
+     * flag is set, if a functionCall need derefering
+     */
+    private static final int arrayOrProcNeedsImplicitDereferencing = 0x20;
     
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
@@ -136,9 +160,11 @@ public class ASTAttribute {
 
 
     public boolean isWritable() { return !this.isConstant(); }
+
     public TypeDefinition getType() { return this.m_type; }
+    
     public VariableEntry getVariable() {
-//    return this.m_variable; }
+
       if (m_entry instanceof VariableEntry) {
         return (VariableEntry)m_entry;
       }
@@ -175,7 +201,6 @@ public class ASTAttribute {
 
     public Void setConstantFloatValue(ConstantFloatValue val) {
         m_constant = val;
-        //m_readonly = true;
         setIsConstant(true);
         return null;
     }
@@ -190,7 +215,6 @@ public class ASTAttribute {
 
     public Void setConstantDurationValue(ConstantDurationValue val) {
         m_constant = val;
-        //m_readonly = true;
         setIsConstant(true);
         return null;
     }
@@ -260,7 +284,14 @@ public class ASTAttribute {
         setFlag(isLValue,set);
     }
     
+    public boolean arrayOrProcNeedsImplicitDereferencing() {
+        return (getFlag(arrayOrProcNeedsImplicitDereferencing));
+    }
     
+    public void setArrayOrProcNeedsImplicitDereferencing(boolean set) {
+        setFlag(arrayOrProcNeedsImplicitDereferencing, set);
+        
+    }
     
     private boolean getFlag(int whichFlag) {
       return ((m_flags & whichFlag) == whichFlag);
@@ -275,21 +306,21 @@ public class ASTAttribute {
       }
     }
 
-    /**
-     * indicate whether the attribute is scalar or not.
-     *
-     * @return true if scalar, otherwise fales
-     */
-    public boolean isScalarType() {
-        return this.m_type instanceof TypeBit ||
-               this.m_type instanceof TypeChar ||
-                this.m_type instanceof TypeDuration ||
-                this.m_type instanceof TypeClock ||
-                this.m_type instanceof TypeFixed ||
-                this.m_type instanceof TypeFloat ||
-                this.m_type instanceof TypeClock ||
-                this.m_type instanceof TypeVariableChar;
-    }
+//    /**
+//     * indicate whether the attribute is scalar or not.
+//     *
+//     * @return true if scalar, otherwise false
+//     */
+//    public boolean isScalarType() {
+//        return this.m_type instanceof TypeBit ||
+//               this.m_type instanceof TypeChar ||
+//                this.m_type instanceof TypeDuration ||
+//                this.m_type instanceof TypeClock ||
+//                this.m_type instanceof TypeFixed ||
+//                this.m_type instanceof TypeFloat ||
+//                this.m_type instanceof TypeClock ||
+//                this.m_type instanceof TypeVariableChar;
+//    }
 
 
 }

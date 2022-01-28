@@ -543,6 +543,16 @@ dation: PROC;
 END;
 
 DCL sema1 SEMA PRESET(1);
+DCL semaTaskCounter FIXED INIT(0);
+semaTask: TASK;
+   REQUEST sema1;
+   semaTaskCounter := semaTaskCounter + 1;
+END;
+DCL strSema STRUCT [ x REF  SEMA ]; ! INIT (sema1);
+
+semaProc: PROC RETURNS (REF SEMA);
+   RETURN (sema1);
+END;
 
 sema: PROC;
    DCL refSema REF SEMA;
@@ -576,7 +586,76 @@ sema: PROC;
      PUT 'test ',testNbr,': error: REQUEST refSema failed' TO so BY A,F(3),A, SKIP;
      fails := fails + 1;
    FIN; 
-   RELEASE refSema;
+
+   ! test release via REF, REQUEST direct
+   testNbr := testNbr + 1;
+   semaTaskCounter = 0;
+   ACTIVATE semaTask;
+   AFTER 0.1 SEC RESUME;
+   IF semaTaskCounter  == 0 THEN
+      PUT 'fine: semaTask seems to be blocked' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: semaTask did run' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   IF semaTaskCounter == 0 THEN
+       RELEASE refSema;
+       AFTER 0.1 SEC RESUME;
+       IF semaTaskCounter  == 1 THEN
+          PUT 'fine: semaTask did run' TO so BY A, SKIP;
+       ELSE
+           PUT 'test ',testNbr,': error: semaTask did not run' TO so BY A,F(3),A, SKIP;
+           fails := fails + 1;
+       FIN;
+   FIN;
+
+   ! test release via REF(), REQUEST direct
+   testNbr := testNbr + 1;
+   semaTaskCounter = 0;
+   ACTIVATE semaTask;
+   AFTER 0.1 SEC RESUME;
+   IF semaTaskCounter  == 0 THEN
+      PUT 'fine: () REF: semaTask seems to be blocked' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: () REF: semaTask did run' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   IF semaTaskCounter == 0 THEN
+       RELEASE refSemaArray(1);
+       AFTER 0.1 SEC RESUME;
+       IF semaTaskCounter  == 1 THEN
+          PUT 'fine: () REF: semaTask did run' TO so BY A, SKIP;
+       ELSE
+           PUT 'test ',testNbr,': error: ()REF: semaTask did not run' TO so BY A,F(3),A, SKIP;
+           fails := fails + 1;
+       FIN;
+   FIN;
+
+   ! test release via PROC RETURNS REF(), REQUEST direct
+   testNbr := testNbr + 1;
+   semaTaskCounter = 0;
+   ACTIVATE semaTask;
+   AFTER 0.1 SEC RESUME;
+   IF semaTaskCounter  == 0 THEN
+      PUT 'fine: PROC RETURNS () REF: semaTask seems to be blocked' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: PROC RETURNS () REF: semaTask did run' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN;
+
+   IF semaTaskCounter == 0 THEN
+       RELEASE semaProc;
+       AFTER 0.1 SEC RESUME;
+       IF semaTaskCounter  == 1 THEN
+          PUT 'fine: PROC RETURNS () REF: semaTask did run' TO so BY A, SKIP;
+       ELSE
+           PUT 'test ',testNbr,': error: PROC RETURNS ()REF: semaTask did not run' TO so BY A,F(3),A, SKIP;
+           fails := fails + 1;
+       FIN;
+   FIN;
+
 END;
 
 DCL bolt1 BOLT;

@@ -63,8 +63,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     private SymbolTable m_symboltable;
     private SymbolTable m_currentSymbolTable;
     private AST m_ast = null;
-    private TypeDefinition m_type = null;
-
+    
 
     public CheckRealTimeStatements(String sourceFileName, int verbose, boolean debug,
             SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
@@ -148,16 +147,18 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
         return null;
     }
 
-    @Override
-    public Void visitUnlabeled_statement(OpenPearlParser.Unlabeled_statementContext ctx) {
-        // look only for realtime statements
-        if (ctx.realtime_statement()!= null) {
-            visitChildren(ctx.realtime_statement());
-        } else if (ctx.interrupt_statement() != null) {
-            visitChildren(ctx.interrupt_statement());
-        }
-        return null;
-    }
+//    @Override
+//    public Void visitUnlabeled_statement(OpenPearlParser.Unlabeled_statementContext ctx) {
+//        // look only for realtime statements
+//           
+//        if (ctx.realtime_statement()!= null) {
+//            int x=1;
+//            visitChildren(ctx.realtime_statement());
+//        } else if (ctx.interrupt_statement() != null) {
+//            visitChildren(ctx.interrupt_statement());
+//        }
+//        return null;
+//    }
     @Override
     public Void visitAssignment_statement(OpenPearlParser.Assignment_statementContext ctx) {
         // do not check lhs
@@ -263,11 +264,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     public Void visitTaskStart(OpenPearlParser.TaskStartContext ctx) {
         ErrorStack.enter(ctx, "ACTIVATE");
 
-        // visitChildren(ctx);
-        // visitChildren() is not applicapable, since there may be more than one 
-        // 'name' in the context
-       
-        //visitName(ctx.name());
+
         checkName(ctx.name(), new TypeTask());
 
 
@@ -472,7 +469,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
     private void checkClockValue(OpenPearlParser.ExpressionContext ctx, String prefix) {
         ASTAttribute attr = m_ast.lookup(ctx);
-        TypeDefinition t = getEffectiveType(ctx);
+        TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); //  getEffectiveType(ctx);
 
 
         ErrorStack.enter(ctx, prefix);
@@ -511,9 +508,8 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
     private void checkName(OpenPearlParser.NameContext ctx, TypeDefinition expectedType) {
         ASTAttribute attr = m_ast.lookup(ctx);
-        TypeDefinition t = getEffectiveType(ctx);
-            
         
+        TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); // getEffectiveType(ctx);
         
         if (!t.equals(expectedType)) {
             ErrorStack.add(ctx, null, "expected type '" + expectedType.toString() + "' -- got '"

@@ -36,8 +36,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.openpearl.compiler.*;
 import org.openpearl.compiler.Compiler;
-import org.openpearl.compiler.OpenPearlParser.ExpressionContext;
-import org.openpearl.compiler.OpenPearlParser.IoDataListContext;
 import org.openpearl.compiler.OpenPearlParser.IoListElementContext;
 import org.openpearl.compiler.Exception.*;
 import org.openpearl.compiler.SymbolTable.ModuleEntry;
@@ -556,7 +554,7 @@ implements OpenPearlVisitor<Void> {
         TypeDefinition t = attr.getType();
         TypeDation td = null;
         
-        t = ExpressionTypeVisitor.performImplicitDereferenceAndFunctioncall(attr);
+        t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
       
         if (t instanceof TypeDation) {
             td = (TypeDation) t;
@@ -592,7 +590,7 @@ implements OpenPearlVisitor<Void> {
                 ErrorStack.add("need ALPHIC dation");
                 ErrorStack.leave();
             }
-
+            
             checkPutGetDataFormat(ctx.ioDataList(), ctx.listOfFormatPositions());
             checkArraySliceForTakeSendConvert(ctx.ioDataList(),false);
         }
@@ -792,14 +790,21 @@ implements OpenPearlVisitor<Void> {
                         if (m_directionInput && (!attr.getType().equals(m_typeDation.getTypeOfTransmissionAsType()))) {
                             typeMismatch=true;
                         }
-                        if ((!m_directionInput) && (!CommonUtils.mayBeAssignedTo(m_typeDation.getTypeOfTransmissionAsType(),attr.getType()))) {
-                            typeMismatch=true;
+                        TypeDefinition td = attr.getType();
+                        if (!m_directionInput) {
+                            // maybe we need implicit dereference
+                            if (td instanceof TypeReference) {
+                                td = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
+                            }
+                            if ((!TypeUtilities.simpleTypeMayBeAssignedTo(m_typeDation.getTypeOfTransmissionAsType(),td))) {
+                                typeMismatch=true;
+                            }
                         }
                         
                         if (typeMismatch) {
                             ErrorStack.enter(ioDataList.ioListElement(i).expression());
                             ErrorStack.add("type mismatch: required: "
-                                    + m_typeDation.getTypeOfTransmission() + " got "
+                                    + m_typeDation.getTypeOfTransmission() + " --- got "
                                     + attr.getType().toString());
                             ErrorStack.leave();
                         }
@@ -898,7 +903,7 @@ implements OpenPearlVisitor<Void> {
     @Override
     public Void visitTakeStatement(OpenPearlParser.TakeStatementContext ctx) {
         if (m_debug) {
-            System.out.println("Semantic: Check IOStatements: visitPositionTAKE");
+            System.out.println("Semantic: Check IOStatements: visitTake");
         }
 
         ErrorStack.enter(ctx, "TAKE");
@@ -936,7 +941,7 @@ implements OpenPearlVisitor<Void> {
     @Override
     public Void visitSendStatement(OpenPearlParser.SendStatementContext ctx) {
         if (m_debug) {
-            System.out.println("Semantic: Check IOStatements: visitPositionSEND");
+            System.out.println("Semantic: Check IOStatements: visitSend");
         }
 
         // enshure that the dation id of type BASIC
@@ -1126,9 +1131,22 @@ implements OpenPearlVisitor<Void> {
         }
 
         // implicit dereference
-        if (td instanceof TypeReference) {
-            td = ((TypeReference) td).getBaseType();
+        if (!m_directionInput && td instanceof TypeReference) {
+            td = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
         }
+        if (!m_directionInput && td instanceof TypeProcedure) {
+            td = ((TypeProcedure)td).getResultType();
+            attr.setIsFunctionCall(true);
+        }
+
+        if (m_directionInput && (td instanceof TypeReference || td instanceof TypeProcedure) ) {
+            ErrorStack.enter(dataElementWithContext.ctx);
+            ErrorStack.add("type mismatch: required: ALPHIC --- got "
+                    + attr.getType().toString());
+            ErrorStack.leave();
+            return true;  // let's say that it is ok - no further messages with illegal REF type
+        }
+        
         // treat only simple types
         // F-format
         if (formatCtx.getChild(0) instanceof OpenPearlParser.FixedFormatContext
@@ -1186,8 +1204,6 @@ implements OpenPearlVisitor<Void> {
             }
 
             if (attr != null) {
-                ExpressionTypeVisitor.performImplicitDereferenceAndFunctioncall(attr);
-
                 if (attr.getType() instanceof TypeArray) {
                     int nbrOfElements = ((TypeArray) (attr.getType())).getTotalNoOfElements();
                     etc.setType(((TypeArray) (attr.getType())).getBaseType());
@@ -2171,7 +2187,7 @@ implements OpenPearlVisitor<Void> {
         // check the types of all children
         // check, if we have ASTattributes for this node
         for (int i = 0; i < ctx.ID().size(); i++) {
-            CheckFixedVariable(ctx.ID(i).getText(), ctx);
+            checkFixedVariable(ctx.ID(i).getText(), ctx);
         }
 
 
@@ -2245,8 +2261,11 @@ implements OpenPearlVisitor<Void> {
 
     private Void enshureTypeFixed(OpenPearlParser.ExpressionContext ctx) {
         TypeDefinition type = m_ast.lookupType(ctx);
-
+        ASTAttribute attr = m_ast.lookup(ctx);
         ErrorStack.enter(ctx, "expression");
+        if (type instanceof TypeReference) {
+            type = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
+        }
         if (!(type instanceof TypeFixed)) {
             ErrorStack.add("must be FIXED");
         }
@@ -2272,9 +2291,13 @@ implements OpenPearlVisitor<Void> {
 
     private void checkPrecision(OpenPearlParser.OpenClosePositionRSTContext ctx) {
         ASTAttribute attr = m_ast.lookup(ctx.name());
-        if (attr.getType() instanceof TypeFixed) {
-            TypeFixed type = (TypeFixed) (attr.getType());
-            if (((TypeFixed) (attr.getType())).getPrecision() < 15) {
+        TypeDefinition td = attr.getType();
+        if (td instanceof TypeReference) {
+            td = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
+        }
+        if (td instanceof TypeFixed) {
+            TypeFixed type = (TypeFixed) (td);
+            if (((TypeFixed)td).getPrecision() < 15) {
                 ErrorStack.add(
                         "must be at least FIXED(15) -- got FIXED(" + type.getPrecision() + ")");
             }
@@ -2284,7 +2307,7 @@ implements OpenPearlVisitor<Void> {
         return;
     }
 
-    private Void CheckFixedVariable(String id, ParserRuleContext ctx) {
+    private Void checkFixedVariable(String id, ParserRuleContext ctx) {
 
         SymbolTableEntry entry = m_currentSymbolTable.lookup(id);
         VariableEntry var = null;

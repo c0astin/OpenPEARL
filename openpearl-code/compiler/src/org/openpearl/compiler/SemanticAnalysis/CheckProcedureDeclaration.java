@@ -357,48 +357,7 @@ implements OpenPearlVisitor<Void> {
 
   
 
-//    @Override
-//    public Void visitPrimaryExpression(OpenPearlParser.PrimaryExpressionContext ctx) {
-//
-//        if (ctx.name() != null && ctx.name().ID() != null) {
-//            SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.name().ID().getText());
-//
-//            if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry) {
-//                org.openpearl.compiler.SymbolTable.ProcedureEntry proc =
-//                        (org.openpearl.compiler.SymbolTable.ProcedureEntry) (entry);
-//
-//                int nbrActualParameters = 0;
-//                int nbrFormalParameters = 0;
-//                if (ctx.name().listOfExpression() != null
-//                        && ctx.name().listOfExpression().expression().size() > 0) {
-//                    nbrActualParameters = ctx.name().listOfExpression().expression().size();
-//                }
-//                if (proc.getFormalParameters() != null) {
-//                    nbrFormalParameters = proc.getFormalParameters().size();
-//                }
-//                /*
-//                 * not useful for ref proc assignments
-//                if (nbrActualParameters != nbrFormalParameters) {
-//                	ErrorStack.enter(ctx);
-//                	ErrorStack.add("number of parameters mismatch: given "+nbrActualParameters+" expected: "+nbrFormalParameters);
-//                	ErrorStack.leave();
-//                }
-//                 */
-//                if (ctx.name().listOfExpression() != null
-//                        && ctx.name().listOfExpression().expression().size() > 0) {
-//                    int min = Math.min(nbrActualParameters, nbrFormalParameters);
-//                    for (int i = 0; i < min; i++) {
-//                        ErrorStack.enter(ctx.name().listOfExpression().expression(i), "param");
-//                        checkParameter(proc, ctx.name().listOfExpression().expression(i),
-//                                proc.getFormalParameters().get(i));
-//                        ErrorStack.leave();
-//                    }
-//                }
-//
-//            }
-//        }
-//        return null;
-//    }
+
 
 
     private void checkFormalParameter(FormalParameter formalParameter) {
