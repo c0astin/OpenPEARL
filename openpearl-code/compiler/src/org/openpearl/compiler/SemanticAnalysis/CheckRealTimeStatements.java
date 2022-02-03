@@ -147,18 +147,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
         return null;
     }
 
-//    @Override
-//    public Void visitUnlabeled_statement(OpenPearlParser.Unlabeled_statementContext ctx) {
-//        // look only for realtime statements
-//           
-//        if (ctx.realtime_statement()!= null) {
-//            int x=1;
-//            visitChildren(ctx.realtime_statement());
-//        } else if (ctx.interrupt_statement() != null) {
-//            visitChildren(ctx.interrupt_statement());
-//        }
-//        return null;
-//    }
+
     @Override
     public Void visitAssignment_statement(OpenPearlParser.Assignment_statementContext ctx) {
         // do not check lhs
@@ -383,8 +372,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
         }
         return null;
     }
-
-
+    
 
     @Override
     public Void visitStartCondition(OpenPearlParser.StartConditionContext ctx) {
@@ -449,8 +437,10 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
     private void checkPriority(OpenPearlParser.ExpressionContext ctx) {
         ErrorStack.enter(ctx);
+        
         ASTAttribute attr = m_ast.lookup(ctx);
-        TypeDefinition t = getEffectiveType(ctx);
+        TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
+        //TypeDefinition t = getEffectiveType(ctx);
 
         if (t instanceof TypeFixed) {
             if (attr.isConstant()) {
@@ -469,64 +459,67 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
     private void checkClockValue(OpenPearlParser.ExpressionContext ctx, String prefix) {
         ASTAttribute attr = m_ast.lookup(ctx);
-        TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); //  getEffectiveType(ctx);
+        TypeClock clk = new TypeClock();
+        TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); // getEffectiveType(ctx);
 
+        if (!t.equals(clk)) {
+            t = TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(attr,clk); 
 
-        ErrorStack.enter(ctx, prefix);
-        if (!(t instanceof TypeClock)) {
-            ErrorStack.add("must be of type CLOCK  -- but is of " + attr.getType().toString4IMC(false));
+            if (t == null || !t.equals(clk)) {
+                ErrorStack.add(ctx, null, "expected type '" + clk.toString() + "' -- got '"
+                        + attr.getType().toString4IMC(false) + "'");
+            }
         }
-        ErrorStack.leave();
 
     }
 
     private void checkDurationValue(OpenPearlParser.ExpressionContext ctx, String prefix) {
         ASTAttribute attr = m_ast.lookup(ctx);
-        TypeDefinition t = getEffectiveType(ctx);
+        TypeDuration dur = new TypeDuration();
+        TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); // getEffectiveType(ctx);
 
-        ErrorStack.enter(ctx, prefix);
-        if (!(t instanceof TypeDuration)) {
-            ErrorStack.add("must be of type DURATION  -- but is of " + attr.getType().toString4IMC(false));
-        } else {
-            if (attr.isConstant()) {
-                ConstantDurationValue cd = attr.getConstantDurationValue();
-                if (cd.getValue() <= 0) {
-                    ErrorStack.add("must be > 0");
-                }
+        if (!t.equals(dur)) {
+            t = TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(attr,dur); 
+
+            if (t == null || !t.equals(dur)) {
+                ErrorStack.add(ctx, null, "expected type '" + dur.toString() + "' -- got '"
+                        + attr.getType().toString4IMC(false) + "'");
             }
         }
-        ErrorStack.leave();
     }
 
     private void checkInterrupt(OpenPearlParser.NameContext ctx, String prefix) {
         ErrorStack.enter(ctx, prefix);
         
-        //visitName(ctx);
         checkName(ctx, new TypeInterrupt());
         ErrorStack.leave();
     }
 
     private void checkName(OpenPearlParser.NameContext ctx, TypeDefinition expectedType) {
         ASTAttribute attr = m_ast.lookup(ctx);
-        
+
         TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); // getEffectiveType(ctx);
-        
+
         if (!t.equals(expectedType)) {
-            ErrorStack.add(ctx, null, "expected type '" + expectedType.toString() + "' -- got '"
-                    + attr.getType().toString4IMC(false) + "'");
+            t = TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(attr,expectedType); 
+
+            if (t == null || !t.equals(expectedType)) {
+                ErrorStack.add(ctx, null, "expected type '" + expectedType.toString() + "' -- got '"
+                        + attr.getType().toString4IMC(false) + "'");
+            }
         }
     }
 
-    private TypeDefinition getEffectiveType(ParserRuleContext ctx) {
-
-        ASTAttribute attr = m_ast.lookup(ctx);
-        TypeDefinition t = attr.getType();
-        if (t instanceof TypeReference) {
-            t = ((TypeReference)t).getBaseType();
-            attr.setNeedImplicitDereferencing(true);
-        }
-
-        return t;
-    }
+//    private TypeDefinition getEffectiveType(ParserRuleContext ctx) {
+//
+//        ASTAttribute attr = m_ast.lookup(ctx);
+//        TypeDefinition t = attr.getType();
+//        if (t instanceof TypeReference) {
+//            t = ((TypeReference)t).getBaseType();
+//            attr.setNeedImplicitDereferencing(true);
+//        }
+//
+//        return t;
+//    }
 
 }

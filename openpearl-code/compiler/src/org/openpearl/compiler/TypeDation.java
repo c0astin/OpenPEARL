@@ -400,7 +400,7 @@ public class TypeDation extends TypeDefinition {
         if (this.m_alphic != that.m_alphic) return false;
         if (this.m_basic != that.m_basic) return false;
         if (this.m_typeOfTransmission != null && that.m_typeOfTransmission != null) { 
-            if (this.m_typeOfTransmission.equals(that.m_typeOfTransmission)) return false;
+            if (!this.m_typeOfTransmission.equals(that.m_typeOfTransmission)) return false;
         }
         if (this.m_hasAccessAttributes) {
             if (this.m_direct != that.m_direct) return false;

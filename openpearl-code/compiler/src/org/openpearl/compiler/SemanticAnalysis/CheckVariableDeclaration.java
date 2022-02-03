@@ -151,6 +151,10 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
                
                 ReferenceInitializer ri =(ReferenceInitializer)(v.getInitializer());
                 ASTAttribute attr = m_ast.lookup(ri.getContext());
+                if (attr == null) {
+                    ErrorStack.addInternal(ri.getContext(), "CheckVariableDeclaration@155", "no ASTAttribute found");
+                    return ;
+                }
                 if (baseTypeOfVariable instanceof TypeArraySpecification ) {
                     if (!(attr.m_type instanceof TypeArray)) {
                         ErrorStack.add(ri.getContext(), "type mismatch in REF INIT",

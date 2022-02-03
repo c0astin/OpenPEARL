@@ -122,8 +122,15 @@ implements OpenPearlVisitor<Void> {
 
       
         /* boolean assignable = */
+        ASTAttribute rhsAttr = m_ast.lookup(ctx.expression());
+        //TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(rhsAttr, lhsType);
         TypeUtilities.mayBeAssignedTo(lhsType, lhsVariable, ctx.expression(),m_ast);
-        
+//        if (t != null) {
+//            // target type found
+//            if (lhsType.getPrecision() < t.getPrecision()) {
+//                CommonErrorMessages.typeMismatch(lhsType, t);
+//            }
+//        }
         ErrorStack.leave();
         return null;
     }

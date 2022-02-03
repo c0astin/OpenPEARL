@@ -110,14 +110,14 @@ import java.util.LinkedList;
  *     <tr><td>assignment</td><td>{@link org.smallpearl.compiler.SemanticAnalysis.CheckAssignment}</td></tr>
  *     <tr><td>i/o statements</td><td>{@link org.smallpearl.compiler.SemanticAnalysis.CheckIOStatements}</td></tr>
  *     <tr><td>real-time statements</td><td>{@link org.smallpearl.compiler.SemanticAnalysis.CheckRealTimeStatements}</td></tr>
- 
+
  *     </table>  
  *     <ul>
  *     <p>For an overview of the execution of the various visitors see {@link
  *     org.openpearl.compiler.SymbolTableVisitor}.
  */
 public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
-        implements OpenPearlVisitor<Void> {
+implements OpenPearlVisitor<Void> {
 
     private int m_verbose;
     private boolean m_debug;
@@ -130,8 +130,8 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
     private boolean m_calculateRealFixedLength;
     private org.openpearl.compiler.AST m_ast;
     private TypeDefinition m_type = null;
-     
-   
+
+
     public ExpressionTypeVisitor(
             int verbose,
             boolean debug,
@@ -160,6 +160,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         m_currentSymbolTable = m_module.scope;
         m_calculateRealFixedLength = false;
     }
+
 
     @Override
     public Void visitBaseExpression(OpenPearlParser.BaseExpressionContext ctx) {
@@ -278,6 +279,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             if (t instanceof TypeReference) {
                 t = ((TypeReference)t).getBaseType();
                 tsk.setNeedImplicitDereferencing(true);
+                tsk.setType(t);
             }
             se = tsk.getSymbolTableEntry();
             if (!(t instanceof TypeTask)) {
@@ -292,8 +294,8 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         return null;
     }
-    
-     private ASTAttribute treatFixedFloatDyadic(
+
+    private ASTAttribute treatFixedFloatDyadic(
             TypeDefinition type1,
             TypeDefinition type2,
             boolean resIsFloat,
@@ -407,7 +409,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (op1 != null && op2 != null) {
             TypeDefinition type1 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
-            
+
             Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             ErrorStack.enter(ctx);
@@ -481,7 +483,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (op1 != null && op2 != null) {
             TypeDefinition type1 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
-            
+
             Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             ErrorStack.enter(ctx);
@@ -533,7 +535,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ErrorStack.enter(ctx, "unary +");
         op = m_ast.lookup(ctx.expression());
         TypeDefinition type1 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op);
-        
+
         res = enshureFixedFloatDuration(op, "UnaryAdditive");
         m_ast.put(ctx, res);
         ErrorStack.leave();
@@ -862,7 +864,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (op1 != null && op2 != null) {
             TypeDefinition type1 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
-            
+
             Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             if (type1 instanceof TypeFloat && type2 instanceof TypeDuration) {
@@ -936,7 +938,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (op1 != null && op2 != null) {
             TypeDefinition type1 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
-            
+
             Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
@@ -1001,7 +1003,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (op1 != null && op2 != null) {
             TypeDefinition type1 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
-            
+
             Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
@@ -1065,7 +1067,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (op1 != null && op2 != null) {
             TypeDefinition type1 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
-            
+
             Boolean isConstant = op1.isConstant() && op2.isConstant();
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
@@ -1135,7 +1137,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (op1 != null && op2 != null) {
             TypeDefinition type1 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
-            
+
             Boolean isConstant = op1.isConstant() && op2.isConstant();
 
 
@@ -1190,7 +1192,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         visit(ctx.expression());
         op = saveGetAttribute(ctx.expression(), ctx, "SQRT", "no AST attribute found for SQRT");
-        
+
         treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext) ctx, op, "SQRT");
 
         return null;
@@ -1218,7 +1220,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         visit(ctx.expression());
         op = saveGetAttribute(ctx.expression(), ctx, "COS", "no AST attribute found for COS");
- 
+
         treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext) ctx, op, "COS");
 
         return null;
@@ -1260,7 +1262,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         visit(ctx.expression());
         op = saveGetAttribute(ctx.expression(), ctx, "TAN", "no AST attribute found for TAN");
-        
+
         treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext) ctx, op, "TAN");
 
         return null;
@@ -1275,7 +1277,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         visit(ctx.expression());
         op = saveGetAttribute(ctx.expression(), ctx, "ATAN", "no AST attribute found for ATAN");
-   
+
         treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext) ctx, op, "ATAN");
 
         return null;
@@ -1289,7 +1291,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         visit(ctx.expression());
         op = saveGetAttribute(ctx.expression(), ctx, "TANH", "no AST attribute found for TANH");
-        
+
         treatFixedFloatParameterForMonadicArithmeticOperators((ExpressionContext) ctx, op, "TANH");
 
         return null;
@@ -1306,7 +1308,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         } else {
             TypeDefinition type =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op);
             Boolean isConstant = op.isConstant();
-           
+
             if (type instanceof TypeFloat) {
                 res = new ASTAttribute(new TypeFloat(type.getPrecision()), isConstant);
                 m_ast.put(ctx, res);
@@ -1368,8 +1370,8 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (op != null) {
             Boolean isConstant = op.isConstant();
             TypeDefinition type1 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op);
-            
-           if (type1 instanceof TypeBit) {
+
+            if (type1 instanceof TypeBit) {
                 res =
                         new ASTAttribute(
                                 new TypeFixed(((TypeBit) op.getType()).getPrecision() - 1),
@@ -1620,12 +1622,12 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         // set AST attributes for the names. This makes is easier in the CppCodeGenerator
         visitChildren(ctx);
-        
+
         for (int i=0; i<ctx.listOfNames().name().size(); i++) {
             ASTAttribute op = m_ast.lookup(ctx.listOfNames().name(i));
             TypeDefinition type1 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op);
         }
-        
+
         res = new ASTAttribute(new TypeBit(1));
         m_ast.put(ctx, res);
 
@@ -1726,26 +1728,26 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         return null;
     }
 
-    
-// obsolete: the result type is stored already in the symbol table    
-//    // set an AST attribute if we have a CHAR-type as result attribute
-//    // we need for all result types as AST Attribute
-//    @Override
-//    public Void visitResultAttribute(OpenPearlParser.ResultAttributeContext ctx) {
-//        if (ctx.resultType().simpleType() != null) {
-//            if (ctx.resultType().simpleType().typeCharacterString() != null) {
-//                int len =
-//                        Integer.parseInt(
-//                                ctx.resultType()
-//                                        .simpleType()
-//                                        .typeCharacterString()
-//                                        .length()
-//                                        .getText());
-//                m_ast.put(ctx, new ASTAttribute(new TypeChar(len)));
-//            }
-//        }
-//        return null;
-//    }
+
+    // obsolete: the result type is stored already in the symbol table    
+    //    // set an AST attribute if we have a CHAR-type as result attribute
+    //    // we need for all result types as AST Attribute
+    //    @Override
+    //    public Void visitResultAttribute(OpenPearlParser.ResultAttributeContext ctx) {
+    //        if (ctx.resultType().simpleType() != null) {
+    //            if (ctx.resultType().simpleType().typeCharacterString() != null) {
+    //                int len =
+    //                        Integer.parseInt(
+    //                                ctx.resultType()
+    //                                        .simpleType()
+    //                                        .typeCharacterString()
+    //                                        .length()
+    //                                        .getText());
+    //                m_ast.put(ctx, new ASTAttribute(new TypeChar(len)));
+    //            }
+    //        }
+    //        return null;
+    //    }
 
     @Override
     public Void visitBlock_statement(OpenPearlParser.Block_statementContext ctx) {
@@ -1884,13 +1886,13 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         String s = ctx.getText();
         ASTAttribute attrName = null;
         ASTAttribute selection = null;
-
+        visitChildren(ctx);
         Log.debug(
                 "ExpressionTypeVisitor:visitAssignment_statement:ctx"
                         + CommonUtils.printContext(ctx));
         ErrorStack.enter(ctx, "assignment");
 
-        visit(ctx.name());
+        // visit(ctx.name());
 
         attrName = m_ast.lookup(ctx.name());
         if (attrName == null) {
@@ -1900,7 +1902,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         }
 
         if (ctx.charSelectionSlice() != null) {
-            visit(ctx.charSelectionSlice());
+            //  visit(ctx.charSelectionSlice());
             selection = m_ast.lookup(ctx.charSelectionSlice());
             if (!(attrName.getType() instanceof TypeChar)) {
                 ErrorStack.add(
@@ -1908,7 +1910,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                                 + attrName.getType());
             }
         } else if (ctx.bitSelectionSlice() != null) {
-            visit(ctx.bitSelectionSlice());
+            // visit(ctx.bitSelectionSlice());
             selection = m_ast.lookup(ctx.bitSelectionSlice());
             if (!(attrName.getType() instanceof TypeBit)) {
                 ErrorStack.add(
@@ -1936,7 +1938,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             }
         }
 
-        visit(ctx.expression());
+        //visit(ctx.expression());
         ASTAttribute a = m_ast.lookup(ctx.expression());
 
         ErrorStack.leave();
@@ -1983,12 +1985,12 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         }
         if (ctx.refCharSizeofAttribute() != null) {
             if (isRefChar) {
-                
+
             } else {
                 ErrorStack.add("MAX/LENGTH may only be used on type REF CHAR()");
             }
         }
-        
+
 
         m_ast.put(ctx, expressionResult);
 
@@ -2344,13 +2346,13 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             TypeDefinition type1 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
             Boolean isConstant = op1.isConstant() && op2.isConstant();
-          
+
             if (type1 instanceof TypeProcedure) {
                 type1 = ((TypeProcedure)type1).getResultType();
                 isConstant = false;
                 op1.setIsFunctionCall(true);
             }
-            
+
             if (type2 instanceof TypeProcedure) {
                 type2 = ((TypeProcedure)type2).getResultType();
                 isConstant = false;
@@ -2376,7 +2378,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                                     + "RelationalExpression: rule#2");
             } else if (type1 instanceof TypeFloat && type2 instanceof TypeFixed) {
                 res = new ASTAttribute(new TypeBit(1), isConstant);
-      
+
                 if (m_debug)
                     System.out.println(
                             "ExpressionTypeVisitor: visit"
@@ -2384,7 +2386,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                                     + "RelationalExpression: rule#3");
             } else if (type1 instanceof TypeFloat && type2 instanceof TypeFloat) {
                 res = new ASTAttribute(new TypeBit(1), isConstant);
-  
+
                 if (m_debug)
                     Log.debug(
                             "ExpressionTypeVisitor: visit"
@@ -2414,7 +2416,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                     Log.debug(
                             "ExpressionTypeVisitor: visit\"+relation+\"RelationalExpression: rule#7");
 
-                    
+
             } else {
                 ErrorStack.add(
                         "type mismatch: '"
@@ -2422,11 +2424,11 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                                 + "' cannot be compared with '"
                                 + op2.getType().getName()
                                 + "'");
-              
+
             }
         }
         if (res != null) {
-           m_ast.put(ctx, res);
+            m_ast.put(ctx, res);
         }
 
         ErrorStack.leave();
@@ -2549,7 +2551,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                             || (type2 == null && type1 instanceof TypeArraySpecification)
                             || type1.equals(type2)) {
                         typeMismatch = false;
-                    
+
                     } else if ((type1 == null && type2 instanceof TypeTask)
                             || (type2 == null && type1 instanceof TypeTask)
                             || type1.equals(type2)) {
@@ -2592,14 +2594,14 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (ctx.bitSelection() != null) {
             attr = m_ast.lookup(ctx.bitSelection().name());
             TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
-            
+
             attr = m_ast.lookup(ctx.bitSelection().bitSelectionSlice());
             //          attrName = m_ast.lookup(ctx.bitSelection().name());
             m_ast.put(ctx.bitSelection(), attr);
         } else if (ctx.charSelection() != null) {
             attr = m_ast.lookup(ctx.charSelection().name());
             TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
-            
+
             attr = m_ast.lookup(ctx.charSelection().charSelectionSlice());
             //          attrName = m_ast.lookup(ctx.charSelection().name());
             m_ast.put(ctx.charSelection(), attr);
@@ -2670,7 +2672,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ErrorStack.enter(ctx, operation);
         if (op1 != null && op2 != null) {
             // implicit dereferences
-            
+
             TypeDefinition type1 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
             TypeDefinition type2 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
 
@@ -3003,7 +3005,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
     @Override
     public Void visitIdentifier(OpenPearlParser.IdentifierContext ctx) {
         String s = ctx.getText();
-      
+
         SymbolTableEntry se = m_currentSymbolTable.lookup(s);
         if (se == null) {
             // we need no attributes for procedure specification parameters
@@ -3024,8 +3026,8 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             }
         }
         if (se == null) {
-           ErrorStack.addInternal(ctx, "ExpressionTypeVisitor", "no entry found for " + s);
-           return null;
+            ErrorStack.addInternal(ctx, "ExpressionTypeVisitor", "no entry found for " + s);
+            return null;
         }
         TypeDefinition type = null;
         if (se instanceof VariableEntry) {
@@ -3041,11 +3043,16 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             }
             m_ast.put(ctx, attr);
         } else if (se instanceof InterruptEntry) {
-            // currently no action needed for interrupt
+            ASTAttribute attr = new ASTAttribute(new TypeInterrupt());
+            m_ast.put(ctx, attr);
         } else if (se instanceof ProcedureEntry) {
             type = ((ProcedureEntry) se).getType();
             ASTAttribute attr = new ASTAttribute(type);
             m_ast.put(ctx, attr);
+        } else if (se instanceof TaskEntry) {
+
+            ASTAttribute attr = new ASTAttribute(new TypeTask());
+            m_ast.put(ctx, attr);            
         } else {
             ErrorStack.addInternal(
                     ctx, "ExpressionTypeVisitor:visitIdentifer", "missing alternative@2979");
@@ -3086,7 +3093,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             expressionResult = new ASTAttribute(new TypeDuration(), true);
             ConstantDurationValue c =
                     (ConstantDurationValue)
-                            (CommonUtils.getConstantDurationValue(ctx.durationConstant(), sign));
+                    (CommonUtils.getConstantDurationValue(ctx.durationConstant(), sign));
             expressionResult.setConstant(c);
             m_constantPool.add(c);
         } else if (ctx.floatingPointConstant() != null) {
@@ -3094,7 +3101,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             try {
                 double value =
                         CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant())
-                                * sign;
+                        * sign;
                 int precision =
                         CommonUtils.getFloatingPointConstantPrecision(
                                 ctx.floatingPointConstant(),
@@ -3162,15 +3169,15 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                     precision =
                             Integer.parseInt(
                                     ctx.fixedConstant()
-                                            .fixedNumberPrecision()
-                                            .IntegerConstant()
-                                            .toString());
+                                    .fixedNumberPrecision()
+                                    .IntegerConstant()
+                                    .toString());
                 }
                 if (precision < Defaults.FIXED_MIN_LENGTH
-                         || precision > Defaults.FIXED_MAX_LENGTH) {
+                        || precision > Defaults.FIXED_MAX_LENGTH) {
                     CommonErrorMessages.wrongFixedPrecission(ctx.fixedConstant());
                 }
-             
+
                 expressionResult = new ASTAttribute(new TypeFixed(precision), true);
                 ConstantFixedValue cfv = new ConstantFixedValue(value * sign, precision);
                 ConstantValue cv =
@@ -3247,18 +3254,18 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         visitChildren(ctx);
         ASTAttribute op1 = m_ast.lookup(ctx.expression(0));
         TypeDefinition type1 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
-                
+
         ASTAttribute op2 = m_ast.lookup(ctx.expression(1));
         TypeDefinition type2 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
-        
+
 
         if (!(type1 instanceof TypeFixed)) {
             ErrorStack.warn(ctx, "LWB","index selector must be FIXED -- got "+type1.toString4IMC(false));
-         }
+        }
 
         if (!(type2 instanceof TypeArray)) {
             ErrorStack.warn(ctx, "LWB","must be applied on array -- got "+type2.toString4IMC(false));
-         }
+        }
 
         return null;
     }
@@ -3276,18 +3283,18 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         visitChildren(ctx);
         ASTAttribute op1 = m_ast.lookup(ctx.expression(0));
         TypeDefinition type1 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op1);
-                
+
         ASTAttribute op2 = m_ast.lookup(ctx.expression(1));
         TypeDefinition type2 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
 
         if (!(type1 instanceof TypeFixed)) {
             ErrorStack.warn(ctx, "UPB","index selector must be FIXED -- got "+type1.toString4IMC(false));
-         }
+        }
 
         if (!(type2 instanceof TypeArray)) {
             ErrorStack.warn(ctx, "UPB","must be applied on array -- got "+type2.toString4IMC(false));
-         }
-        
+        }
+
 
         return null;
     }
@@ -3321,10 +3328,10 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         visitChildren(ctx);
         ASTAttribute op = m_ast.lookup(ctx.expression());
         TypeDefinition type1 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op);
-        
+
         if (!(type1 instanceof TypeArray)) {
             ErrorStack.warn(ctx, "LWB","must be applied on array -- got "+type1.toString4IMC(false));
-         }
+        }
 
         return null;
     }
@@ -3343,7 +3350,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ASTAttribute op = m_ast.lookup(ctx.expression());
         TypeDefinition type1 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op);
         if (!(type1 instanceof TypeArray)) {
-           ErrorStack.warn(ctx, "UPB","must be applied on array -- got "+type1.toString4IMC(false));
+            ErrorStack.warn(ctx, "UPB","must be applied on array -- got "+type1.toString4IMC(false));
         }
 
         return null;
@@ -3355,7 +3362,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ASTAttribute res;
         ASTAttribute attr = m_ast.lookup(ctx);
         ErrorStack.warn(ctx,"ExprTypeVis:@3841","deref check missing");
-        
+
         Log.debug("ExpressionTypeVisitor:visitCase1CharSlice:ctx" + CommonUtils.printContext(ctx));
         Log.debug("ExpressionTypeVisitor:visitCase1CharSlice:id=" + ctx.ID().getText());
 
@@ -3492,8 +3499,8 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         if (lwb.isConstant() && upb.isConstant()) {
             size =
                     upb.getConstantFixedValue().getValue()
-                            - lwb.getConstantFixedValue().getValue()
-                            + 1;
+                    - lwb.getConstantFixedValue().getValue()
+                    + 1;
             if (size < 1) {
                 ErrorStack.add("must select at least 1 character");
             } else if (size > Defaults.CHARACTER_MAX_LENGTH) {
@@ -3511,15 +3518,15 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         return null;
     }
-    
-    
+
+
 
     @Override
     public Void visitCharSelection(OpenPearlParser.CharSelectionContext ctx) {
         Log.debug("ExpressionTypeVisitor:visitCharSelection:ctx" + CommonUtils.printContext(ctx));
         visitName(ctx.name());
         visitCharSelectionSlice(ctx.charSelectionSlice());
-        
+
         ASTAttribute attrSelection = m_ast.lookup(ctx.charSelectionSlice());
         if (attrSelection.getType() instanceof TypeVariableChar) {
             // in the code generation we need the size of the char variable
@@ -3532,6 +3539,22 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         return null;
     }
 
+    @Override
+    public Void visitBitSelection(OpenPearlParser.BitSelectionContext ctx) {
+        Log.debug("ExpressionTypeVisitor:visitBitSelection:ctx" + CommonUtils.printContext(ctx));
+        visitChildren(ctx);
+        ASTAttribute attrName = m_ast.lookup(ctx.name());
+        if (attrName.getType() instanceof TypeReference) {
+            attrName.setType(((TypeReference)attrName.getType()).getBaseType());
+        }
+
+        ASTAttribute attrSelection = m_ast.lookup(ctx.bitSelectionSlice());
+
+
+        m_ast.put(ctx.bitSelectionSlice(), attrSelection);
+
+        return null;
+    }
     /*
      bitSelectionSlice:
     '.' 'BIT' '('
@@ -3555,8 +3578,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         String expr0 = null;
         String expr1 = null;
         int intValue = -1; // impossible value, since the Fixed-const is always >= 0
-        ErrorStack.warn(ctx,"ExprTypeVis:@3541","deref check missing");
-        
+
         visitChildren(ctx);
 
         ErrorStack.enter(ctx, ".BIT()");
@@ -3638,17 +3660,17 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ErrorStack.leave();
         return null;
     }
-    
+
     private boolean expressionIsFixedWithImplicitDereference(ASTAttribute attr) {
-            
-            TypeDefinition savedActualIndexType = attr.getType();
-            
-            if (savedActualIndexType instanceof TypeReference) {
-                savedActualIndexType = ((TypeReference)savedActualIndexType).getBaseType();
-                attr.setNeedImplicitDereferencing(true);
-            }
-            return ((savedActualIndexType instanceof TypeFixed));
-            
+
+        TypeDefinition savedActualIndexType = attr.getType();
+
+        if (savedActualIndexType instanceof TypeReference) {
+            savedActualIndexType = ((TypeReference)savedActualIndexType).getBaseType();
+            attr.setNeedImplicitDereferencing(true);
+        }
+        return ((savedActualIndexType instanceof TypeFixed));
+
     }
 
     @Override
@@ -3657,7 +3679,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         Log.debug(
                 "ExpressionTypeVisitor:visitCharSelectionSlice:ctx"
                         + CommonUtils.printContext(ctx));
-        
+
         ASTAttribute attr0 = null;
         ASTAttribute attr1 = null;
         String expr0 = null; // we need both expressions to detect .CHAR(x:x+3)
@@ -3742,10 +3764,10 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
     public Void visitName(OpenPearlParser.NameContext ctx) {
         NameContext saveCtx = ctx;
         ASTAttribute attr = null;
-        
+
         Log.debug("ExpressionTypeVisitor:visitName:ctx=" + CommonUtils.printContext(ctx));
         Log.debug("ExpressionTypeVisitor:visitName:id=" + ctx.ID().toString());
-        //System.out.println("name = "+ ctx.getText());
+        //        System.out.println("name = "+ ctx.getText());
 
         ErrorStack.enter(ctx, ctx.ID().toString());
 
@@ -3790,7 +3812,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             return null;
         }
         m_ast.put(ctx, attr);
-        
+
         boolean firstLoop = true;
 
         do {
@@ -3817,7 +3839,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         ErrorStack.leave();
 
         attr.setType(m_type);
- 
+
         return null;
     }
 
@@ -3826,16 +3848,16 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         TypeDefinition safeType = m_type;  // save current type and treat the listOfExpressions 
         visitChildren(ctx.listOfExpression());
         m_type = safeType;                 // restore type
-                
+
         if (m_type instanceof TypeReference) {
-          
+
             m_type = ((TypeReference)m_type).getBaseType();
 
         }
         if (m_type instanceof TypeArray) {
             m_type = ((TypeArray)m_type).getBaseType();
             checkListOfExpressionAsIndices(ctx.listOfExpression());
-            
+
         } else if (m_type instanceof TypeProcedure) {
             if (((TypeProcedure)m_type).getFormalParameters()== null) {
                 ErrorStack.add(ctx.listOfExpression(),"procedure expects no parameters","");
@@ -3843,7 +3865,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             }
 
             checkListOfExpressionAsParameters(ctx.listOfExpression(),(TypeProcedure)m_type);
-           
+
             m_type = ((TypeProcedure)m_type).getResultType();
         } else {
             ErrorStack.addInternal("treatListOfExpressions@4133: untreated type "+ m_type);
@@ -3851,8 +3873,8 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         }
         return true;
     }
-    
-  
+
+
     private void checkListOfExpressionAsIndices(ListOfExpressionContext ctx) {
         for (int i=0; i<ctx.expression().size(); i++) {
             ASTAttribute attr = m_ast.lookup(ctx.expression(i));
@@ -3863,17 +3885,17 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                 attr.setType(savedActualIndexType);
             }
             if (savedActualIndexType instanceof TypeFixed) {
-              if (((TypeFixed)(savedActualIndexType)).getPrecision() <= 31 ) {
+                if (((TypeFixed)(savedActualIndexType)).getPrecision() <= 31 ) {
                     continue;
                 }
                 ErrorStack.add(ctx.expression(i),"type mismatch for index","got "+savedActualIndexType+" larger than FIXED(31)");
             } else {
                 ErrorStack.add(ctx.expression(i),"type mismatch for index","got "+savedActualIndexType+" expected FIXED");
             }
-            
-         }
+
+        }
     }
-    
+
     private void checkListOfExpressionAsParameters(ListOfExpressionContext ctx, TypeProcedure proc) {
         int nbrOfFormalParameters = proc.getFormalParameters().size();
         int nbrOfActualParameters = ctx.expression().size();
@@ -3881,31 +3903,30 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
             ErrorStack.add("number of parameters mismtatch: expected "+nbrOfFormalParameters+" got "+nbrOfActualParameters);
         }
 
-              
+
         for (int i=0; i<Math.min(nbrOfActualParameters,nbrOfFormalParameters); i++) {
 
             ASTAttribute attr = m_ast.lookup(ctx.expression(i));
             TypeDefinition savedActualParameterType = attr.getType();
             TypeDefinition typeOfFormalParameter = proc.getFormalParameters().get(i).getType();
             TypeDefinition typeOfActualParameter = savedActualParameterType;
-            ErrorStack.enter(ctx.expression(i),"parameter");
-            boolean assignable = TypeUtilities.mayBeAssignedTo(typeOfActualParameter, attr.getVariable(), ctx.expression(i), m_ast);
-            if (assignable) {
-                // additional tests for IDENT parameters
-                if (proc.getFormalParameters().get(i).passIdentical) {
-                    if (typeOfActualParameter.hasAssignmentProtection() == true &&
-                            typeOfFormalParameter.hasAssignmentProtection() == false) {
-                        ErrorStack.add("pass INV data as non INV IDENT parameter");
-                    }
-                }
-            }
+            ErrorStack.enter(ctx.expression(i));
+            boolean assignable = TypeUtilities.mayBeAssignedTo(typeOfFormalParameter, proc.getFormalParameters().get(i), ctx.expression(i), m_ast);
+//            if (!assignable) {
+//                // additional tests for IDENT parameters
+//                if (proc.getFormalParameters().get(i).passIdentical) {
+//                    ErrorStack.add("type mismatch: formal parameter "+typeOfFormalParameter + " IDENT --- got "+typeOfActualParameter);
+//                } else {
+//                    ErrorStack.add("type mismatch: formal parameter "+typeOfFormalParameter + " --- got "+typeOfActualParameter);
+//                }
+//            }
 
             ErrorStack.leave();
-         }
+        }
     }
 
 
-    
+
     /*
      * check for error situations
      *   * m_type must be a kind of structure (PROC returning (REF?) STRUCT or (REF?) STRUCT
@@ -3914,7 +3935,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
      *  else emit error message and return false   
      */
     private boolean getNextStructComponent(NameContext ctx) {
-     
+
 
         if (m_type instanceof TypeReference) {
 
@@ -3924,7 +3945,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
                     ErrorStack.add(ctx,"missing parameters for procedure call","");
                     return false;
                 }
-                
+
                 m_type = ((TypeProcedure)m_type).getResultType();
             } else  if (m_type instanceof TypeStructure) {
                 m_type = treatStructComponent(ctx.name());
@@ -3935,7 +3956,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
 
         return true;
     }
-    
+
     private TypeDefinition treatStructComponent(NameContext ctx) {
         String componentName = ctx.ID().getText();
         StructureComponent component = ((TypeStructure)m_type).lookup(componentName);
@@ -4028,6 +4049,7 @@ public class ExpressionTypeVisitor extends OpenPearlBaseVisitor<Void>
         }
         return op;
     }
+
 
     @Override
     public Void visitListOfExpression(OpenPearlParser.ListOfExpressionContext ctx) {

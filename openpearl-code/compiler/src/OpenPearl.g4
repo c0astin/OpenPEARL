@@ -1998,7 +1998,7 @@ ioStructureComponent
 // All monadic standard operators have rank 1.
 ////////////////////////////////////////////////////////////////////////////////
 
-expression:
+expression:													
     primaryExpression                                       # baseExpression
     | op='ATAN' expression                                  # atanExpression
     | op='COS' expression                                   # cosExpression

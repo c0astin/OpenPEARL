@@ -329,7 +329,7 @@ printf("----------- \n\n");
    for (exp=expFile->first; exp!= NULL && found == 0; exp=exp->next) {
        if (exp->line == currentMessage.line &&
            exp->col == currentMessage.col) {
-            fprintf(stderr,"%s:%d:%d: message differs\n\t>%s<\n\t>%s<\n",
+            fprintf(stderr,"%s:%d:%d: message differs\n\t   found: >%s<\n\texpected: >%s<\n",
                  currentMessage.source,currentMessage.line,
                  currentMessage.col, currentMessage.message, exp->message);
             exp->useCount ++;

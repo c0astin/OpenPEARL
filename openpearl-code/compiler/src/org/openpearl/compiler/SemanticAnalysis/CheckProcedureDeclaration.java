@@ -215,19 +215,34 @@ implements OpenPearlVisitor<Void> {
         //System.out.println(ctx.getText());
         ErrorStack.enter(ctx, "CALL");
         ASTAttribute attr = m_ast.lookup(ctx.name());
-        SymbolTableEntry entry = attr.getSymbolTableEntry();
-        TypeProcedure tp=null;
+        TypeDefinition tp=attr.getType();
+   
 
+        SymbolTableEntry entry = attr.getSymbolTableEntry();
+        if (entry instanceof VariableEntry) {
+            tp = ((VariableEntry)entry).getType();
+        } else if (entry instanceof ProcedureEntry) {
+            tp = ((ProcedureEntry)entry).getType();
+        }
+        String originalType;
+        if (attr.m_type != null) {
+            originalType = attr.m_type.toString();
+        } else {
+            originalType = tp.toString();
+        }
+
+        
         if(attr.getType() instanceof TypeReference) {
             attr.setNeedImplicitDereferencing(true);
             tp = ((TypeProcedure)((TypeReference)attr.getType()).getBaseType());
+            attr.setType(tp);
         } else {
             tp = (TypeProcedure)((ProcedureEntry)entry).getType();
         }
-        if (tp.getResultType() != null) {
-            ErrorStack.add("result discarded");
+        if (((TypeProcedure)tp).getResultType() != null) {
+            ErrorStack.add("result discarded: type ="+originalType);
         }
-        if (tp.getFormalParameters() == null) {
+        if (((TypeProcedure)  tp).getFormalParameters() == null) {
             // we must mark procedure calls without formal parameters
             // as procedure calls
             attr.setIsFunctionCall(true);
@@ -244,6 +259,8 @@ implements OpenPearlVisitor<Void> {
 
             if (resultType != null) {
                 ErrorStack.add("result discarded");
+                ErrorStack.leave();
+                return null;
             }
         } else {
             if (entry instanceof VariableEntry) {

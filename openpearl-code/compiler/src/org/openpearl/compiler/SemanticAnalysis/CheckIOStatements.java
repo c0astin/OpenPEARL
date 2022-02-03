@@ -1289,11 +1289,7 @@ implements OpenPearlVisitor<Void> {
         ErrorStack.enter(ctx, "numberOfCharacters");
 
         // check, if we have ASTattributes for this node
-        TypeDefinition type = m_ast.lookupType(ctx.expression());
-
-        if (!(type instanceof TypeFixed)) {
-            ErrorStack.add("type must be FIXED");
-        } else {
+        if (enshureTypeFixed(ctx.expression())) {
             ASTAttribute attr = m_ast.lookup(ctx.expression());
             // width is mandatory, which is definied in the grammar
             ConstantFixedValue cfv = getConstantValue(attr);
@@ -2259,7 +2255,7 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
-    private Void enshureTypeFixed(OpenPearlParser.ExpressionContext ctx) {
+    private boolean enshureTypeFixed(OpenPearlParser.ExpressionContext ctx) {
         TypeDefinition type = m_ast.lookupType(ctx);
         ASTAttribute attr = m_ast.lookup(ctx);
         ErrorStack.enter(ctx, "expression");
@@ -2268,9 +2264,10 @@ implements OpenPearlVisitor<Void> {
         }
         if (!(type instanceof TypeFixed)) {
             ErrorStack.add("must be FIXED");
+            return false;
         }
         ErrorStack.leave();
-        return null;
+        return true;
     }
 
     private Void enshureGreaterZero(OpenPearlParser.ExpressionContext ctx) {

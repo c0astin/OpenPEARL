@@ -1534,6 +1534,7 @@ implements OpenPearlVisitor<ST> {
     @Override
     public ST visitPrioFunction(OpenPearlParser.PrioFunctionContext ctx) {
         ST stmt = m_group.getInstanceOf("taskPrio");
+        ASTAttribute attr = m_ast.lookup(ctx.expression());
         stmt.add("taskName", visit(ctx.expression()));
         return stmt;
     }
@@ -1968,9 +1969,9 @@ implements OpenPearlVisitor<ST> {
 
         stmt = m_group.getInstanceOf("assignment_statement");
 
-        if (ctx.dereference() != null) {
-            derefLhs = true;
-        }
+//        if (ctx.dereference() != null) {
+//            derefLhs = true;
+//        }
 
         // check if we have a deref and/or a type Reference
         if (ctx.bitSelectionSlice() != null) {
@@ -2088,7 +2089,7 @@ implements OpenPearlVisitor<ST> {
         ASTAttribute attr = m_ast.lookup(ctx);
         SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
         boolean isStructComponent=false;  // required for different array access 
-
+              
         // vfromNamespace(name,fromNs) ::= <%   <if(fromNs)>ns_<fromNs>::<endif><name> %>
         stOfName = m_group.getInstanceOf("user_variable");
         stOfName.add("name", entry.getName());
@@ -2106,6 +2107,7 @@ implements OpenPearlVisitor<ST> {
             ST st = m_group.getInstanceOf("TaskName");
             st.add("name", stOfName);
             stOfName = st;
+            currentType = new TypeTask();
         } else if (entry instanceof InterruptEntry) {
             // nothing to do here 
         } else if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry && ctx.listOfExpression()!= null) {
@@ -2118,6 +2120,9 @@ implements OpenPearlVisitor<ST> {
         } else if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry && ctx.listOfExpression() == null) {
             // just the name of a procedure
             currentType=((ProcedureEntry)entry).getType();
+        }else if (entry instanceof FormalParameter) {
+            int x=0;
+            currentType= ((FormalParameter) entry).getType();
         } else if (entry instanceof VariableEntry) {
             // simple variable treated in else of namespace check
             currentType = ((VariableEntry)entry).getType();
@@ -2221,21 +2226,26 @@ implements OpenPearlVisitor<ST> {
 
             }
         } while (ctx.name() != null);    
-        if (attr.arrayOrProcNeedsImplicitDereferencing()) {
-            stOfName = dereference(stOfName);
-            //currentType = ((TypeReference)currentType).getBaseType();
-        }
-        if (attr.isFunctionCall()) {
-            ST st = m_group.getInstanceOf("FunctionCall");
-            st.add("callee",stOfName);
-            //currentType = ((TypeProcedure)currentType).getResultType();
-            stOfName = st; 
-        }
-        if (attr.needImplicitDereferencing()) {
-            stOfName = dereference(stOfName);
-            //currentType = ((TypeReference)currentType).getBaseType();
-        }
-
+        
+        int loopCounter=0;
+        while (currentType != null && !currentType.equals(attr.m_type)) {
+           if (currentType instanceof TypeReference) {
+               stOfName = dereference(stOfName);
+               currentType = ((TypeReference)currentType).getBaseType();
+           }
+           if (currentType instanceof TypeProcedure) {
+               ST st = m_group.getInstanceOf("FunctionCall");
+               st.add("callee",stOfName);
+               currentType = ((TypeProcedure)currentType).getResultType();
+               stOfName = st; 
+           }
+           if (loopCounter++ > 10) {
+               ErrorStack.addInternal(ctx, "CppCodeGen@2244", "loopCounter too large");
+               break;
+           }
+           
+        } 
+        
         return stOfName;
     }
 
@@ -3028,11 +3038,16 @@ implements OpenPearlVisitor<ST> {
                 listIsConstant = false;
             } else if (attr.m_type instanceof TypeReference) {
                 listIsConstant = false;
+            } else if (attr.getVariable() != null && attr.getVariable().getType() instanceof TypeReference) {
+                listIsConstant = false;
             } else if (attr.getVariable() != null && attr.getVariable().getType() instanceof TypeArray) {
                 // check array index
                 name=attr.getVariable().getName();
 
                 TypeArray ta = (TypeArray)(attr.getVariable().getType());
+                if (ta.getBaseType() instanceof TypeReference) {
+                    listIsConstant=false;
+                } else {
                 int dimensions = ta.getNoOfDimensions();
                 for (int dim=0; dim<dimensions; dim++) {
                     ASTAttribute indexAttr = m_ast.lookup(ctx.name(i).listOfExpression().expression(dim));
@@ -3041,6 +3056,7 @@ implements OpenPearlVisitor<ST> {
                     } else {
                         name += "_" + indexAttr.getConstantFixedValue().getValue();
                     }
+                }
                 }
                 if (listIsConstant) {
 
@@ -5327,7 +5343,7 @@ implements OpenPearlVisitor<ST> {
 
 
 
-    /**
+    /*
      * create code for CONVERT .. TO
      * we can use lot of the PUT-stuff.
      * We must remove the "dation" tag from the string template,
