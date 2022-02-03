@@ -2,7 +2,7 @@
 # 
 # Run in the directory of this dockerfile
 #
-#        docker build -t openpearl .
+#  docker build -t openpearl .
 #
 # This command builds an docker image with all the necessary packages and setup.
 #
@@ -14,11 +14,18 @@
 #       prl 220_philosophers.prl
 #       ./220_philosophers.prl
 #
-##############################################################################
+# To start development, you want to keep your changes persistent:
+#
+#       docker run -it  --mount source=openpearl-vol,target=/home/openpearl \
+#                       --mount source=openpearl-bin,target=/usr/local/bin  openpearl
+#
+#############################################################################
 
 FROM ubuntu
 RUN apt-get -qq update 
 RUN DEBIAN_FRONTEND="noninteractive" TZ="Europe/Berlin" apt-get install -y tzdata
+
+#VOLUME ["/home/openpearl"]
 
 # Install dependencies
 RUN apt-get install -qqy --no-install-recommends \
@@ -29,7 +36,6 @@ RUN apt-get install -qqy --no-install-recommends \
     rm -rf /var/lib/apt/lists/*	   	    	      
 #
 RUN apt-get -qq update 
-
 
 # configure locale
 RUN touch /usr/share/locale/locale.alias 
@@ -46,7 +52,7 @@ RUN git clone https://git.code.sf.net/p/openpearl/code openpearl-code
 
 # install the missing packages
 WORKDIR /home/openpearl/openpearl-code/openpearl-code
-RUN ./installPackages dev
+RUN ./installPackages
 
 # fix permissions
 RUN cd /home/openpearl ; chown -R openpearl:openpearl openpearl-code
