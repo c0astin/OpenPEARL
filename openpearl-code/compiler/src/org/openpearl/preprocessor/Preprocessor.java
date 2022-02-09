@@ -36,6 +36,8 @@ import org.openpearl.compiler.ASTAttribute;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -66,15 +68,15 @@ public class Preprocessor {
     static Stack<SourceFile> m_sourcefiles = new Stack<>();
     static int m_ifdef_level = 0;
     static Pattern m_pattern = Pattern.compile("^#(.+?)([ \t]+(.*))?;(.*)$");
-    static Matcher m_matcher;
-
+    static PrintStream m_outputStream = null;
+    static PrintStream m_console = System.out;
 
     public enum Statement
     {
         IF, IFDEF, ELSE, FIN, ERROR, WARN, INCLUDE, PRAGMA, DEFINE, UNDEF, MISC
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
         if (args.length < 1) {
             printHelp();
             return;
@@ -87,6 +89,10 @@ public class Preprocessor {
             return;
         }
 
+        if ( m_outputFilename != null ) {
+            m_outputStream = new PrintStream(m_outputFilename);
+        }
+
         for (int i = 0; i < m_inputFiles.size(); i++) {
             m_sourceFilename = m_inputFiles.get(i);
 
@@ -94,6 +100,11 @@ public class Preprocessor {
             processLines(new HashSet<Statement>(),0);
             m_sourcefiles.pop();
 
+            if ( m_outputFilename != null ) {
+                m_outputStream.close();
+            }
+
+            System.setOut(m_console);
             System.out.flush();
             System.out.println();
             System.out.println(
@@ -107,11 +118,21 @@ public class Preprocessor {
         }
     }
 
+    private static void outputLine(String line) {
+        m_outputStream.println(line);
+    }
+
+    private static void outputPPLine(int lineNo, String filename, String flags) {
+        m_outputStream.println("# " + lineNo + " " + filename + " " + flags);
+    }
+
     private static void handleInclude(String args) {
         args = stripComment(args.trim());
         String currentFileName = m_sourceFilename;
         m_sourceFilename = args;
         m_sourcefiles.push(new SourceFile(m_sourceFilename));
+
+        outputPPLine(m_sourcefiles.peek().getLineNo(), m_sourceFilename, "1");
 
         if (m_seenIncludes.contains(m_sourcefiles.peek().getFileName())) {
             System.out.println("ERROR: Endless Include file:"+m_sourceFilename);
@@ -122,6 +143,8 @@ public class Preprocessor {
         processLines(new HashSet<Statement>(),0);
         m_sourcefiles.pop();
         m_sourceFilename = currentFileName;
+
+        outputPPLine(m_sourcefiles.peek().getLineNo(), m_sourceFilename, "2");
     }
 
     private static void handleDefine(String args) {
@@ -129,35 +152,20 @@ public class Preprocessor {
         String var = parts[0].trim();
         String expr = parts[1].trim();
 
-        /*
-        System.out.println("handleDefine: " + args);
-        System.out.println("var="+var);
-        System.out.println("expr"+expr);
-        */
-
         m_defines.put(var,expr);
-
-        /*
-        for (String i : m_defines.keySet()) {
-            System.out.println("DEFINE: " + i + " value: " + m_defines.get(i));
-        }
-        */
     }
 
     private static void handleUndef(String args) {
-                System.out.println("handleUndef: " + args);
+        System.out.println("handleUndef: " + args);
     }
 
     private static void handleError(String args) {
-        //System.out.println("handleError: " + args);
         System.out.println("#ERROR:"+args);
         System.exit(-1);
     }
 
     private static void handleWarn(String args) {
-        //System.out.println("handleWarn: " + args);
         System.out.println("#WARN:"+args);
-
     }
 
     private static void handleIf(String args) {
@@ -169,8 +177,6 @@ public class Preprocessor {
         HashSet<Statement> stopSet = new HashSet<>();
 
         if ( m_defines.get(args) != null ) {
-            // System.out.println("handleIfdef("+m_ifdef_level+"): " + args + " is defined");
-
             stopSet.add(Statement.ELSE);
             stopSet.add(Statement.FIN);
             Statement lastStatement = processLines(stopSet,currentLevel);
@@ -181,7 +187,6 @@ public class Preprocessor {
             }
         }
         else {
-            // System.out.println("handleIfdef: " + args + " is *NOT* defined");
             stopSet.add(Statement.ELSE);
             stopSet.add(Statement.FIN);
             Statement lastStatement = skipLines(stopSet,currentLevel);
@@ -197,7 +202,6 @@ public class Preprocessor {
         HashSet<Statement> stopSet = new HashSet<>();
 
         if ( m_defines.get(args) == null ) {
-            // System.out.println("handleIfndef("+m_ifdef_level+"): " + args + " is defined");
 
             stopSet.add(Statement.ELSE);
             stopSet.add(Statement.FIN);
@@ -209,7 +213,6 @@ public class Preprocessor {
             }
         }
         else {
-            // System.out.println("handleIfndef: " + args + " is *NOT* defined");
             stopSet.add(Statement.ELSE);
             stopSet.add(Statement.FIN);
             Statement lastStatement = skipLines(stopSet,currentLevel);
@@ -221,11 +224,9 @@ public class Preprocessor {
     }
 
     private static void handleFin(String args) {
-        System.out.println("handleFin: " + args);
     }
 
     private static void handleElse(String args) {
-        System.out.println("handleElse: " + args);
     }
 
     private static boolean handlePragma(String args) {
@@ -233,7 +234,7 @@ public class Preprocessor {
         if (args.equals("ONCE")) {
             res = m_seenIncludes.contains(m_sourcefiles.peek().getFileName());
         } else {
-            System.out.println("ERROR: Unknown PRAGMA:"+args);
+            System.err.println("ERROR: Unknown PRAGMA:"+args);
             System.exit(-3);
         }
         return res;
@@ -252,8 +253,6 @@ public class Preprocessor {
                 + "  [-U<macro>]                 Undefine a macro                      \n"
                 + "  [-I<dir>...]                Specify include path                  \n"
                 + "  --output <filename>         Filename of the generated code        \n"
-                + "  --stacktrace                Print stacktrace in case of an        \n"
-                + "                              exception                             \n"
                 + "  infile                                                            \n");
     }
 
@@ -264,9 +263,6 @@ public class Preprocessor {
 
         while (i < args.length) {
             String arg = args[i];
-            if(m_verbose > 0) {
-                System.out.println("command line arguments arg("+i+")="+arg);
-            }
             i++;
             if (arg.charAt(0) != '-') { // input file name
                 m_inputFiles.add(arg);
@@ -337,8 +333,8 @@ public class Preprocessor {
             String line;
             SourceFile sourceFile = m_sourcefiles.peek();
             while ((line = sourceFile.getNextLine()) != null) {
-                //System.out.println("LINE:[I]:" + line + "$");
                 checkForTerminatingSemicolon(line);
+                Matcher m_matcher;
                 m_matcher = m_pattern.matcher(line);
                 while(m_matcher.find()) {
                     if(m_matcher.group(1).equals("INCLUDE")) {
@@ -400,19 +396,21 @@ public class Preprocessor {
                             return Statement.FIN;
                         }
                     }
+/*
                     else if(m_matcher.group(1).equals("PRAGMA")) {
                         directiveFound = true;
                         if ( handlePragma(m_matcher.group(2).trim())) {
                             return Statement.MISC;
                         }
                     }
+*/
                     else {
                         System.err.println("ERROR: Unknown preprocessor directive: #" + m_matcher.group(1).toString());
                         System.exit(-1);
                     }
                 }
                 if (!directiveFound) {
-                    System.out.println("[O]:" + line + "$");
+                    outputLine(line);
                 } else {
                     directiveFound = false;
                 }
@@ -432,6 +430,7 @@ public class Preprocessor {
             SourceFile sourceFile = m_sourcefiles.peek();
             while ((line = sourceFile.getNextLine()) != null) {
                 checkForTerminatingSemicolon(line);
+                Matcher m_matcher;
                 m_matcher = m_pattern.matcher(line);
                 while(m_matcher.find()) {
                     if(m_matcher.group(1).equals("IFDEF")) {
@@ -636,5 +635,5 @@ class SourceFile {
     private Reader m_reader;
     private BufferedReader m_bufferedReader;
     private File m_file;
-    private int m_lineno;
+    private int m_lineno = 1;
 }
