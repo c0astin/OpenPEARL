@@ -20,7 +20,7 @@
 include ../../configuration/.config
  
 DONOTBUILD= 030 031  \
-	120 
+	120 901
 
 # on ESP32 we have no Disc
 DONOTBUILDESP32= 030 031  \
