@@ -277,6 +277,8 @@ public class Preprocessor {
             } else if (arg.equals("--stacktrace")) {
                 m_stacktrace = true;
             } else if (arg.equals("-I")) {
+            } else if (arg.startsWith("-D")) {
+                addDefine(arg.substring(2,arg.length()));
             } else if (arg.equals("--output")) {
                 if (i >= args.length) {
                     System.err.println("missing filename on --output");
@@ -327,6 +329,27 @@ public class Preprocessor {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    private static void addDefine(String variable) {
+        Pattern pattern = Pattern.compile("^(.+?)(?:=(.+))?$");
+        Matcher matcher = pattern.matcher(variable);
+
+        String name = null, value = null;
+
+        if (matcher.find()) {
+            name = matcher.group(1);
+            if (matcher.groupCount() == 2) {
+                value = matcher.group(2);
+            }
+
+            m_defines.put(name,value);
+        } else {
+            System.err.println("ERROR: -D wrong variable name or value");
+            System.exit(-2);
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     private static Statement processLines(HashSet stopset, int level) {
         boolean directiveFound = false;
         try {

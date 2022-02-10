@@ -1,4 +1,3 @@
-#DEFINE DEBUG = 1;
 MODULE(pp);
 
 SYSTEM;
