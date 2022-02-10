@@ -71,6 +71,7 @@ endif
 	# is created by includeComposer but not needed here
 	@rm -f sysincs.h
 	@cp prl $(CONFIG_INSTALL_Target)/bin
+	@cp prlpp $(CONFIG_INSTALL_Target)/bin
 
 # create rule to run menuconfig, if no configuration/include/autoconf.h exists
 #ifeq ($(wildcard "configuration/include/autoconf.h")),)

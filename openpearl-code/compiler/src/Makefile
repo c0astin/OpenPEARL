@@ -44,12 +44,13 @@ ANTLR_GENERATED_FILES = OpenPearl.tokens          \
 ANTLR_FLAGS = 
 
 OUTPUT_DIR = ../out
+OUTPUT_PREPROCESSOR_DIR = ../preprocessor-out
 ##JAVAC_FLAGS = -Xlint:unchecked
 JAVAC_FLAGS =
 
 ###############################################################################
 
-.PHONY: gen javac 
+.PHONY: gen compiler preprocessor 
 
 help:
 	@echo "      ---------------------------------------------------"
@@ -61,7 +62,7 @@ help:
 	@echo "      make install  - install compiler and compile-script"
 	@echo "      ---------------------------------------------------"
 
-all: gen javac install
+all: gen compiler preprocessor install
 
 .cmd_ok:
 	./check_cmds.sh
@@ -73,7 +74,7 @@ gen ./check_cmds.sh $(ANTLR_GENERATED_FILES) : OpenPearl.g4
 
 ###############################################################################
 
-javac:
+compiler:
 	test -d $(OUTPUT_DIR) || mkdir $(OUTPUT_DIR)
 	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_DIR) $(JAVAC_FLAGS) org/openpearl/compiler/Compiler.java
 	rm -f openpearl_compiler.jar
@@ -90,6 +91,15 @@ javac:
 
 ##############################################################################
 
+preprocessor:
+	test -d $(OUTPUT_PREPROCESSOR_DIR) || mkdir $(OUTPUT_PREPROCESSOR_DIR)
+	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_PREPROCESSOR_DIR) $(JAVAC_FLAGS) org/openpearl/preprocessor/Preprocessor.java
+	rm -f openpearl_preprocessor.jar
+	cd $(OUTPUT_PREPROCESSOR_DIR) && jar cf  openpearl_preprocessor.jar \
+				    org/openpearl/preprocessor/*.class
+
+##############################################################################
+
 test:
 	../regression.sh
 
@@ -99,10 +109,11 @@ prepare:
 	touch $(CONFIG_INSTALL_Target)/bin/openpearl_compiler.jar 
 	chmod 777 $(CONFIG_INSTALL_Target)/bin/openpearl_compiler.jar 
 
-install: gen javac prl_cc.inc
+install: gen compiler prl_cc.inc
 #	cp prl_c $(INSTALL_DIR)
 #	cp smallpearl_compiler.jar $(INSTALL_DIR)
 	cp $(OUTPUT_DIR)/openpearl_compiler.jar $(CONFIG_INSTALL_Target)/bin
+	cp $(OUTPUT_PREPROCESSOR_DIR)/openpearl_preprocessor.jar $(CONFIG_INSTALL_Target)/bin
 	@echo 
 	@echo '========================================='
 	@echo '==             SUCCESS                 =='
