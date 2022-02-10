@@ -487,7 +487,7 @@ structureDenotationS :
 ////////////////////////////////////////////////////////////////////////////////
 
 typeReference :
-	'REF' assignmentProtection? virtualDimensionList?
+	'REF' virtualDimensionList? assignmentProtection? 
     (
 	 simpleType 
 	| typeStructure 
@@ -911,9 +911,7 @@ charSelection:
 ////////////////////////////////////////////////////////////////////////////////
 
 charSelectionSlice:
- //   '.' ( 'CHAR' | 'CHARACTER' ) '('  expression ( ':' expression )? ')'
- //   ;
-     '.' 'CHAR' '(' 
+   '.' 'CHAR' '(' 
     (
     	 expression
        | expression ':' expression '+' IntegerConstant	    	 
@@ -2274,45 +2272,8 @@ rFormat
     : 'R' '(' ID ')'
     ;
 
-
 ////////////////////////////////////////////////////////////////////////////////
-
-stringSlice
-	: bitSlice
-	| charSlice
-	;
-
-////////////////////////////////////////////////////////////////////////////////
-
-bitSlice:
-	  ID '.' 'BIT' '(' constantFixedExpression ')'                                                  #case1BitSlice
-	| ID '.' 'BIT' '(' constantFixedExpression ( ':' constantFixedExpression ) ')'                  #case2BitSlice
-	| ID '.' 'BIT' '(' expression ':' expression '+' IntegerConstant  ')'     					    #case3BitSlice
-	;
-
-////////////////////////////////////////////////////////////////////////////////
-//
-charSlice:
-	  ID '.' ( 'CHAR' | 'CHARACTER' ) '(' expression ')'                                            #case1CharSlice
-// 2020-03-17 (rm) the lexer does not distinguish between expression and constantFixedExpression
-// map case2CharSlice to case4CharSlice	
-//	| ID '.' ( 'CHAR' | 'CHARACTER' ) '(' constantFixedExpression ':' constantFixedExpression ')'   #case2CharSlice
-	| ID '.' ( 'CHAR' | 'CHARACTER' ) '(' expression ':' expression '+' IntegerConstant  ')'        #case3CharSlice
-	| ID '.' ( 'CHAR' | 'CHARACTER' ) '(' expression ':' expression ')'                             #case4CharSlice
-	;
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-literal:
-    fixedConstant
-    | floatingPointConstant
-    | BitStringLiteral
-    | StringLiteral
-    | timeConstant
-    | durationConstant
-    | referenceConstant
-    ;
-*/    
+  
 referenceConstant:
 	'NIL'
 	;    
