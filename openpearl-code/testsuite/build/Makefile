@@ -20,7 +20,7 @@
 include ../../configuration/.config
  
 DONOTBUILD= 030 031  \
-	120 
+	120 901
 
 # on ESP32 we have no Disc
 DONOTBUILDESP32= 030 031  \
@@ -28,7 +28,7 @@ DONOTBUILDESP32= 030 031  \
 	224 410\
 	700 701 703 \
 	704 705 707 710 \
-	900
+	900 901
 
 #	022_mixedDcl \ not int repo yet
 

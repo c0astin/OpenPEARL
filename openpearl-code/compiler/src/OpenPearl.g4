@@ -44,6 +44,8 @@ grammar OpenPearl;
 @header
 {
 import org.openpearl.compiler.OpenPearlLexer;
+import org.openpearl.compiler.SourceLocation;
+import org.openpearl.compiler.SourceLocations;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2662,28 +2664,14 @@ STRING: '"' (~'"')* '"'
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//INCLUDE_TOKEN:
-//    '#INCLUDE' Whitespace? STRING ';'
-//    {
-//        try {
-//            System.out.println( "include file:" + getText());
-//            ANTLRFileStream inputStream = new ANTLRFileStream("/home/marcel/repositories/openpearl-code/openpearl-code/testsuite/build/TEST.PRL");
-//            org.openpearl.compiler.OpenPearlLexer subLexer = new org.openpearl.compiler.OpenlPearlLexer(inputStream);
-//            subLexer.setFilename("/home/marcel/repositories/openpearl-code/openpearl-code/testsuite/build/TEST.PRL");
-//            selector.push(sublexer);
-//            selector.retry();
-//            nextToken();
-//        }
-//        catch(Exception ex) {
-//             System.out.println("Error:" + ex.getMessage());
-//             System.exit(-2);
-//        }
-//
-//        System.out.println( "include file:" + getText());
-//        System.out.println( _input);
-//        nextToken();
-//    }
-//    ;
+// Handle Preprocessor Line Markings:
+// # linenum filename flags
+PP:
+    '#'  ~('\n'|'\r')* '\r'? '\n'
+    {
+        System.out.println("PP:"+getText()+":"+_tokenStartLine);
+        SourceLocations.m_sourceLocs.add(new SourceLocation("fgsdhfdhfg",1,2));
+    } -> channel(HIDDEN);
 
 ////////////////////////////////////////////////////////////////////////////////
 

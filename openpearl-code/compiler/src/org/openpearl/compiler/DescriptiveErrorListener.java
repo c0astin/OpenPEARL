@@ -31,33 +31,40 @@ package org.openpearl.compiler;
 
 import org.antlr.v4.runtime.*;
 
+
 public class DescriptiveErrorListener extends BaseErrorListener {
     public static DescriptiveErrorListener INSTANCE = new DescriptiveErrorListener();
 
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer,
                             Object offendingSymbol,
-                            int line,
+                            int lineNo,
                             int charPositionInLine,
                             String msg,
                             RecognitionException e) {
         String sourceName = recognizer.getInputStream().getSourceName();
 
-        System.err.println(sourceName + ":" + line + ":" + (charPositionInLine +1 )+ ": ERROR : Syntax error :" + msg);
-        underlineError(recognizer,(Token)offendingSymbol, line, charPositionInLine);
+        SourceLocation loc = SourceLocations.getSourceLoc(lineNo);
+        if ( loc != null ) {
+            System.err.println(loc.filename() + ":" + loc.to() + ":" + (charPositionInLine +1 )+ ": ERROR : Syntax error :" + msg);
+            underlineError(recognizer,(Token)offendingSymbol, loc.to(), charPositionInLine);
+        } else {
+            System.err.println(sourceName + ":" + lineNo + ":" + (charPositionInLine +1 )+ ": ERROR : Syntax error :" + msg);
+            underlineError(recognizer,(Token)offendingSymbol, lineNo, charPositionInLine);
+        }
     }
 
     protected void underlineError(Recognizer<?,?> recognizer,
-                                  Token offendingToken, int line,
+                                  Token offendingToken, int lineNo,
                                   int charPositionInLine) {
         CommonTokenStream tokens =
                 (CommonTokenStream)recognizer.getInputStream();
         String input = tokens.getTokenSource().getInputStream().toString();
         String[] lines = input.split("\n");
-        if (line > lines.length) {
-            line = lines.length;
+        if (lineNo > lines.length) {
+            lineNo = lines.length;
         }
-        String errorLine = lines[line - 1];
+        String errorLine = lines[lineNo - 1];
         System.err.println(errorLine);
         for (int i=0; i<charPositionInLine; i++) System.err.print(" ");
         int start = offendingToken.getStartIndex();
@@ -68,7 +75,6 @@ public class DescriptiveErrorListener extends BaseErrorListener {
         }
         System.err.println();
     }
-
 }
 
 

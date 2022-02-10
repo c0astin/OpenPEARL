@@ -30,18 +30,26 @@ package org.openpearl.preprocessor;
  */
 
 
+import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.openpearl.compiler.ASTAttribute;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.Stack;
 
 public class Preprocessor {
     static String m_version = "v0.1";
@@ -54,8 +62,21 @@ public class Preprocessor {
     static int m_noOfWarnings = 0;
     static int m_lineWidth = 80;
     static int m_lineno = 1;
+    static List<String> m_includeDirs = new ArrayList<>();
+    static HashMap<String,String> m_defines = new HashMap<>();
+    static List<String> m_seenIncludes = new ArrayList<>();
+    static Stack<SourceFile> m_sourcefiles = new Stack<>();
+    static int m_ifdef_level = 0;
+    static Pattern m_pattern = Pattern.compile("^#(.+?)([ \t]+(.*))?;(.*)$");
+    static PrintStream m_outputStream = null;
+    static PrintStream m_console = System.out;
 
-    public static void main(String[] args) {
+    public enum Statement
+    {
+        IF, IFDEF, ELSE, FIN, ERROR, WARN, INCLUDE, PRAGMA, DEFINE, UNDEF, MISC
+    }
+
+    public static void main(String[] args) throws FileNotFoundException {
         if (args.length < 1) {
             printHelp();
             return;
@@ -63,15 +84,27 @@ public class Preprocessor {
 
         long startTime = System.nanoTime();
 
+        System.out.println("Working Directory = " + System.getProperty("user.dir"));
         if (!checkAndProcessArguments(args)) {
             return;
+        }
+
+        if ( m_outputFilename != null ) {
+            m_outputStream = new PrintStream(m_outputFilename);
         }
 
         for (int i = 0; i < m_inputFiles.size(); i++) {
             m_sourceFilename = m_inputFiles.get(i);
 
-            processFile(m_sourceFilename);
+            m_sourcefiles.push(new SourceFile(m_sourceFilename));
+            processLines(new HashSet<Statement>(),0);
+            m_sourcefiles.pop();
 
+            if ( m_outputFilename != null ) {
+                m_outputStream.close();
+            }
+
+            System.setOut(m_console);
             System.out.flush();
             System.out.println();
             System.out.println(
@@ -85,16 +118,41 @@ public class Preprocessor {
         }
     }
 
+    private static void outputLine(String line) {
+        m_outputStream.println(line);
+    }
+
+    private static void outputPPLine(int lineNo, String filename, String flags) {
+        m_outputStream.println("# " + lineNo + " " + filename + " " + flags);
+    }
+
     private static void handleInclude(String args) {
-        System.out.println("handleInclude: " + args);
-        args = stripComment(args);
-        System.out.println("      args=: " + args);
-        checkForTerminatingSemicolon(args);
-        processFile(args);
+        args = stripComment(args.trim());
+        String currentFileName = m_sourceFilename;
+        m_sourceFilename = args;
+        m_sourcefiles.push(new SourceFile(m_sourceFilename));
+
+        outputPPLine(m_sourcefiles.peek().getLineNo(), m_sourceFilename, "1");
+
+        if (m_seenIncludes.contains(m_sourcefiles.peek().getFileName())) {
+            System.out.println("ERROR: Endless Include file:"+m_sourceFilename);
+            System.exit(-2);
+        }
+
+        m_seenIncludes.add(m_sourcefiles.peek().getFileName());
+        processLines(new HashSet<Statement>(),0);
+        m_sourcefiles.pop();
+        m_sourceFilename = currentFileName;
+
+        outputPPLine(m_sourcefiles.peek().getLineNo(), m_sourceFilename, "2");
     }
 
     private static void handleDefine(String args) {
-        System.out.println("handleDefine: " + args);
+        String[] parts = args.split("=");
+        String var = parts[0].trim();
+        String expr = parts[1].trim();
+
+        m_defines.put(var,expr);
     }
 
     private static void handleUndef(String args) {
@@ -102,11 +160,12 @@ public class Preprocessor {
     }
 
     private static void handleError(String args) {
-        System.out.println("handleError: " + args);
+        System.out.println("#ERROR:"+args);
+        System.exit(-1);
     }
 
     private static void handleWarn(String args) {
-        System.out.println("handleWarn: " + args);
+        System.out.println("#WARN:"+args);
     }
 
     private static void handleIf(String args) {
@@ -114,19 +173,71 @@ public class Preprocessor {
     }
 
     private static void handleIfdef(String args) {
-        System.out.println("handleIfdef: " + args);
+        int currentLevel = m_ifdef_level;
+        HashSet<Statement> stopSet = new HashSet<>();
+
+        if ( m_defines.get(args) != null ) {
+            stopSet.add(Statement.ELSE);
+            stopSet.add(Statement.FIN);
+            Statement lastStatement = processLines(stopSet,currentLevel);
+
+            if ( lastStatement == Statement.ELSE) {
+                stopSet.remove(Statement.ELSE);
+                lastStatement = skipLines(stopSet,currentLevel);
+            }
+        }
+        else {
+            stopSet.add(Statement.ELSE);
+            stopSet.add(Statement.FIN);
+            Statement lastStatement = skipLines(stopSet,currentLevel);
+            if ( lastStatement == Statement.ELSE) {
+                stopSet.remove(Statement.ELSE);
+                lastStatement = processLines(stopSet,currentLevel);
+            }
+        }
     }
 
-    private static void handleIfudef(String args) {
-        System.out.println("handleIfudef: " + args);
+    private static void handleIfndef(String args) {
+        int currentLevel = m_ifdef_level;
+        HashSet<Statement> stopSet = new HashSet<>();
+
+        if ( m_defines.get(args) == null ) {
+
+            stopSet.add(Statement.ELSE);
+            stopSet.add(Statement.FIN);
+            Statement lastStatement = processLines(stopSet,currentLevel);
+
+            if ( lastStatement == Statement.ELSE) {
+                stopSet.remove(Statement.ELSE);
+                lastStatement = skipLines(stopSet,currentLevel);
+            }
+        }
+        else {
+            stopSet.add(Statement.ELSE);
+            stopSet.add(Statement.FIN);
+            Statement lastStatement = skipLines(stopSet,currentLevel);
+            if ( lastStatement == Statement.ELSE) {
+                stopSet.remove(Statement.ELSE);
+                lastStatement = processLines(stopSet,currentLevel);
+            }
+        }
     }
 
     private static void handleFin(String args) {
-        System.out.println("handleFin: " + args);
     }
 
     private static void handleElse(String args) {
-        System.out.println("handleElse: " + args);
+    }
+
+    private static boolean handlePragma(String args) {
+        boolean res = false;
+        if (args.equals("ONCE")) {
+            res = m_seenIncludes.contains(m_sourcefiles.peek().getFileName());
+        } else {
+            System.err.println("ERROR: Unknown PRAGMA:"+args);
+            System.exit(-3);
+        }
+        return res;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,8 +253,6 @@ public class Preprocessor {
                 + "  [-U<macro>]                 Undefine a macro                      \n"
                 + "  [-I<dir>...]                Specify include path                  \n"
                 + "  --output <filename>         Filename of the generated code        \n"
-                + "  --stacktrace                Print stacktrace in case of an        \n"
-                + "                              exception                             \n"
                 + "  infile                                                            \n");
     }
 
@@ -154,9 +263,6 @@ public class Preprocessor {
 
         while (i < args.length) {
             String arg = args[i];
-            if(m_verbose > 0) {
-                System.out.println("command line arguments arg("+i+")="+arg);
-            }
             i++;
             if (arg.charAt(0) != '-') { // input file name
                 m_inputFiles.add(arg);
@@ -170,6 +276,7 @@ public class Preprocessor {
                 m_verbose++;
             } else if (arg.equals("--stacktrace")) {
                 m_stacktrace = true;
+            } else if (arg.equals("-I")) {
             } else if (arg.equals("--output")) {
                 if (i >= args.length) {
                     System.err.println("missing filename on --output");
@@ -220,59 +327,131 @@ public class Preprocessor {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private static void processFile(String filePath) {
-        InputStream ins = null; // raw byte-stream
-        Reader r = null; // cooked reader
-        BufferedReader br = null; // buffered for readLine()
-
-        File file = new File(filePath);
-        String filename = file.getAbsolutePath();
-
-        Pattern pattern = Pattern.compile("^#(.+?)[ \t]+(.*)$");
-        Matcher matcher;
-
+    private static Statement processLines(HashSet stopset, int level) {
+        boolean directiveFound = false;
         try {
             String line;
+            SourceFile sourceFile = m_sourcefiles.peek();
+            while ((line = sourceFile.getNextLine()) != null) {
+                checkForTerminatingSemicolon(line);
+                Matcher m_matcher;
+                m_matcher = m_pattern.matcher(line);
+                while(m_matcher.find()) {
+                    if(m_matcher.group(1).equals("INCLUDE")) {
+                        directiveFound = true;
+                        handleInclude(m_matcher.group(2));
+                        m_seenIncludes.add(m_matcher.group(2));
+                    }
+                    else if(m_matcher.group(1).equals("DEFINE")) {
+                        directiveFound = true;
+                        handleDefine(m_matcher.group(2));
+                    }
+                    else if(m_matcher.group(1).equals("UNDEF")) {
+                        directiveFound = true;
+                        handleUndef(m_matcher.group(2));
+                    }
+                    else if(m_matcher.group(1).equals("ERROR")) {
+                        directiveFound = true;
+                        handleError(m_matcher.group(2));
+                    }
+                    else if(m_matcher.group(1).equals("WARN")) {
+                        directiveFound = true;
+                        handleWarn(m_matcher.group(2));
+                    }
+                    else if(m_matcher.group(1).equals("IF")) {
+                        directiveFound = true;
+                        handleIf(m_matcher.group(2));
+                    }
+                    else if(m_matcher.group(1).equals("IFDEF")) {
+                        directiveFound = true;
+                        String s1, s2, s3;
+                        s1 = m_matcher.group(1);
+                        s2 = m_matcher.group(2);
+                        s3 = m_matcher.group(3);
 
-            ins = new FileInputStream(filename);
-            r = new InputStreamReader(ins, "UTF-8"); // leave charset out for default
-            br = new BufferedReader(r);
+                        m_ifdef_level++;
+                        handleIfdef(m_matcher.group(2).trim());
+                    }
+                    else if(m_matcher.group(1).equals("IFUDEF")) {
+                        directiveFound = true;
+                        String s1, s2, s3;
+                        s1 = m_matcher.group(1);
+                        s2 = m_matcher.group(2);
+                        s3 = m_matcher.group(3);
 
-            while ((line = br.readLine()) != null) {
-                System.out.println("LINE:"+line);
-                matcher = pattern.matcher(line);
-                while(matcher.find()) {
-                    if(matcher.group(1).equals("INCLUDE")) {
-                        handleInclude(matcher.group(2));
+                        m_ifdef_level++;
+                        handleIfndef(m_matcher.group(2).trim());
                     }
-                    else if(matcher.group(1).equals("DEFINE")) {
-                        handleDefine(matcher.group(2));
+                    else if(m_matcher.group(1).equals("ELSE")) {
+                        directiveFound = true;
+                        String ss = m_matcher.group(2);
+                        if ( stopset.contains(Statement.ELSE) && (level == m_ifdef_level)) {
+                            return Statement.ELSE;
+                        }
                     }
-                    else if(matcher.group(1).equals("UNDEF")) {
-                        handleUndef(matcher.group(2));
+                    else if(m_matcher.group(1).equals("FIN")) {
+                        directiveFound = true;
+                        if ( stopset.contains(Statement.FIN) && (level == m_ifdef_level)) {
+                            m_ifdef_level--;
+                            return Statement.FIN;
+                        }
                     }
-                    else if(matcher.group(1).equals("ERROR")) {
-                        handleError(matcher.group(2));
+/*
+                    else if(m_matcher.group(1).equals("PRAGMA")) {
+                        directiveFound = true;
+                        if ( handlePragma(m_matcher.group(2).trim())) {
+                            return Statement.MISC;
+                        }
                     }
-                    else if(matcher.group(1).equals("WARN")) {
-                        handleWarn(matcher.group(2));
-                    }
-                    else if(matcher.group(1).equals("IF")) {
-                        handleIf(matcher.group(2));
-                    }
-                    else if(matcher.group(1).equals("IFDEF")) {
-                        handleIfdef(matcher.group(2));
-                    }
-                    else if(matcher.group(1).equals("ELSE")) {
-                        handleElse(matcher.group(2));
-                    }
-                    else if(matcher.group(1).equals("FIN")) {
-                        handleFin(matcher.group(2));
-                    }
+*/
                     else {
-                        System.err.println("ERROR: Unknown preprocessor directive: #" + matcher.group(1).toString());
+                        System.err.println("ERROR: Unknown preprocessor directive: #" + m_matcher.group(1).toString());
                         System.exit(-1);
+                    }
+                }
+                if (!directiveFound) {
+                    outputLine(line);
+                } else {
+                    directiveFound = false;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            System.err.println(e.getMessage()); // handle exception
+        }
+
+        return Statement.MISC;
+    }
+
+    private static Statement skipLines(HashSet stopset, int level) {
+        try {
+            String line;
+            SourceFile sourceFile = m_sourcefiles.peek();
+            while ((line = sourceFile.getNextLine()) != null) {
+                checkForTerminatingSemicolon(line);
+                Matcher m_matcher;
+                m_matcher = m_pattern.matcher(line);
+                while(m_matcher.find()) {
+                    if(m_matcher.group(1).equals("IFDEF")) {
+                        m_ifdef_level++;
+                    }
+                    else if(m_matcher.group(1).equals("IFUDEF")) {
+                        m_ifdef_level++;
+                    }
+                    else if(m_matcher.group(1).equals("ELSE")) {
+                        if ( stopset.contains(Statement.ELSE) && (level == m_ifdef_level)) {
+                            return Statement.ELSE;
+                        }
+                    }
+                    else if(m_matcher.group(1).equals("FIN")) {
+                        if ( stopset.contains(Statement.FIN) ){
+                            if (level == m_ifdef_level) {
+                                m_ifdef_level--;
+                                return Statement.FIN;
+                            }
+                            m_ifdef_level--;
+                        }
                     }
                 }
             }
@@ -281,11 +460,12 @@ public class Preprocessor {
         {
             System.err.println(e.getMessage()); // handle exception
         }
-        finally {
-            if (br != null) { try { br.close(); } catch(Throwable t) { /* ensure close happens */ } }
-            if (r != null) { try { r.close(); } catch(Throwable t) { /* ensure close happens */ } }
-            if (ins != null) { try { ins.close(); } catch(Throwable t) { /* ensure close happens */ } }
-        }
+
+        return Statement.MISC;
+    }
+
+    private static String getNextLine() {
+        return "????";
     }
 
     private static String stripComment(String line) {
@@ -303,8 +483,8 @@ public class Preprocessor {
         Pattern pattern = Pattern.compile("^(.*?);[ \t\n]*$");
         Matcher matcher = pattern.matcher(line);
 
-        if (!matcher.find() ) {
-            System.err.println(m_lineno +":"+m_sourceFilename+":ERROR: Missing ';' : " + line);
+        if (line.startsWith("#") && !matcher.find() ) {
+            System.err.println(m_sourcefiles.peek().getLineNo() +":"+m_sourcefiles.peek().getFileName()+":ERROR: Missing ';' : " + line);
             System.exit(-1);
         }
     }
@@ -317,4 +497,143 @@ public class Preprocessor {
     public static String getSourceFilename() {
         return m_sourceFilename;
     }
+
+    public static double eval(final String str) {
+        return new Object() {
+            int pos = -1, ch;
+
+            void nextChar() {
+                ch = (++pos < str.length()) ? str.charAt(pos) : -1;
+            }
+
+            boolean eat(int charToEat) {
+                while (ch == ' ') nextChar();
+                if (ch == charToEat) {
+                    nextChar();
+                    return true;
+                }
+                return false;
+            }
+
+            double parse() {
+                nextChar();
+                double x = parseExpression();
+                if (pos < str.length()) throw new RuntimeException("Unexpected: " + (char)ch);
+                return x;
+            }
+
+            // Grammar:
+            // expression = term | expression `+` term | expression `-` term
+            // term = factor | term `*` factor | term `/` factor
+            // factor = `+` factor | `-` factor | `(` expression `)` | number
+            //        | functionName `(` expression `)` | functionName factor
+            //        | factor `^` factor
+
+            double parseExpression() {
+                double x = parseTerm();
+                for (;;) {
+                    if      (eat('+')) x += parseTerm(); // addition
+                    else if (eat('-')) x -= parseTerm(); // subtraction
+                    else return x;
+                }
+            }
+
+            double parseTerm() {
+                double x = parseFactor();
+                for (;;) {
+                    if      (eat('*')) x *= parseFactor(); // multiplication
+                    else if (eat('/')) x /= parseFactor(); // division
+                    else return x;
+                }
+            }
+
+            double parseFactor() {
+                if (eat('+')) return +parseFactor(); // unary plus
+                if (eat('-')) return -parseFactor(); // unary minus
+
+                double x;
+                int startPos = this.pos;
+                if (eat('(')) { // parentheses
+                    x = parseExpression();
+                    if (!eat(')')) throw new RuntimeException("Missing ')'");
+                } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
+                    while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
+                    x = Double.parseDouble(str.substring(startPos, this.pos));
+                } else if (ch >= 'a' && ch <= 'z') { // functions
+                    while (ch >= 'a' && ch <= 'z') nextChar();
+                    String func = str.substring(startPos, this.pos);
+                    if (eat('(')) {
+                        x = parseExpression();
+                        if (!eat(')')) throw new RuntimeException("Missing ')' after argument to " + func);
+                    } else {
+                        x = parseFactor();
+                    }
+                    if (func.equals("sqrt")) x = Math.sqrt(x);
+                    else if (func.equals("sin")) x = Math.sin(Math.toRadians(x));
+                    else if (func.equals("cos")) x = Math.cos(Math.toRadians(x));
+                    else if (func.equals("tan")) x = Math.tan(Math.toRadians(x));
+                    else throw new RuntimeException("Unknown function: " + func);
+                } else {
+                    throw new RuntimeException("Unexpected: " + (char)ch);
+                }
+
+                if (eat('^')) x = Math.pow(x, parseFactor()); // exponentiation
+
+                return x;
+            }
+        }.parse();
+    }
+}
+
+class SourceFile {
+    public SourceFile(String filename) {
+        m_filename = filename;
+
+        m_file = new File(m_filename);
+        String filenamehandleDefine = m_file.getAbsolutePath();
+
+        try {
+            m_inputStream = new FileInputStream(m_filename);
+            m_reader = new InputStreamReader(m_inputStream, "UTF-8");
+            m_bufferedReader = new BufferedReader(m_reader);
+        }
+        catch (Exception e)
+        {
+            System.err.println(e.getMessage()); // handle exception
+        }
+    }
+
+    public int getLineNo() {
+        return m_lineno;
+    }
+
+    public String getFileName() {
+        return m_filename;
+    }
+    public String getNextLine() {
+        try {
+            String line;
+            m_lineno++;
+            line = this.m_bufferedReader.readLine();
+            return line;
+        }
+        catch (Exception e)
+        {
+            System.err.println(e.getMessage()); // handle exception
+        }
+        return null;
+    }
+
+    public void close() {
+        if (m_bufferedReader != null) { try { m_bufferedReader.close(); } catch(Throwable t) { /* ensure close happens */ } }
+        if (m_reader != null) { try { m_reader.close(); } catch(Throwable t) { /* ensure close happens */ } }
+        if (m_inputStream != null) { try { m_inputStream.close(); } catch(Throwable t) { /* ensure close happens */ } }
+    }
+
+    private String m_filename;
+    private InputStream m_inputStream;
+    private Reader m_reader;
+    private BufferedReader m_bufferedReader;
+    private File m_file;
+    private int m_lineno = 1;
 }
