@@ -341,6 +341,10 @@ public class Preprocessor {
                 value = matcher.group(2);
             }
 
+            if( value == null ) {
+                value = "1";
+            }
+
             m_defines.put(name,value);
         } else {
             System.err.println("ERROR: -D wrong variable name or value");
