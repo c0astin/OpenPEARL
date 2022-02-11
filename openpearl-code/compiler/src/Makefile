@@ -43,8 +43,8 @@ ANTLR_GENERATED_FILES = OpenPearl.tokens          \
 ## ANTLR_FLAGS = -XdbgST
 ANTLR_FLAGS = 
 
-OUTPUT_DIR = ../out
-OUTPUT_PREPROCESSOR_DIR = ../preprocessor-out
+OUTPUT_PRL_DIR = ../prl-out
+OUTPUT_PP_DIR = ../pp-out
 ##JAVAC_FLAGS = -Xlint:unchecked
 JAVAC_FLAGS =
 
@@ -55,9 +55,10 @@ JAVAC_FLAGS =
 help:
 	@echo "      ---------------------------------------------------"
 	@echo "      make help     - this output"
-	@echo "      make all      - gen;javac;install in one pass"
+	@echo "      make all      - gen;prl;pp;install in one pass"
 	@echo "      make gen      - generate parser"
-	@echo "      make javac    - build compiler"
+	@echo "      make prl      - build compiler"
+	@echo "      make pp       - build preprocessor"	
 	@echo "      make test     - run regression test suite"
 	@echo "      make install  - install compiler and compile-script"
 	@echo "      ---------------------------------------------------"
@@ -74,13 +75,13 @@ gen ./check_cmds.sh $(ANTLR_GENERATED_FILES) : OpenPearl.g4
 
 ###############################################################################
 
-compiler:
-	test -d $(OUTPUT_DIR) || mkdir $(OUTPUT_DIR)
-	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_DIR) $(JAVAC_FLAGS) org/openpearl/compiler/Compiler.java
+prl:
+	test -d $(OUTPUT_PRL_DIR) || mkdir $(OUTPUT_PRL_DIR)
+	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_PRL_DIR) $(JAVAC_FLAGS) org/openpearl/compiler/Compiler.java
 	rm -f openpearl_compiler.jar
-	cp OpenPearlCpp.stg $(OUTPUT_DIR)
-	cp IMC.stg $(OUTPUT_DIR)
-	cd $(OUTPUT_DIR) && jar cf  openpearl_compiler.jar \
+	cp OpenPearlCpp.stg $(OUTPUT_PRL_DIR)
+	cp IMC.stg $(OUTPUT_PRL_DIR)
+	cd $(OUTPUT_PRL_DIR) && jar cf  openpearl_compiler.jar \
 				    org/openpearl/compiler/*.class \
 	                            org/openpearl/compiler/SymbolTable/*.class \
 	                            org/openpearl/compiler/ControlFlowGraph/*.class \
@@ -91,11 +92,11 @@ compiler:
 
 ##############################################################################
 
-preprocessor:
-	test -d $(OUTPUT_PREPROCESSOR_DIR) || mkdir $(OUTPUT_PREPROCESSOR_DIR)
-	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_PREPROCESSOR_DIR) $(JAVAC_FLAGS) org/openpearl/preprocessor/Preprocessor.java
+pp:
+	test -d $(OUTPUT_PP_DIR) || mkdir $(OUTPUT_PP_DIR)
+	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_PP_DIR) $(JAVAC_FLAGS) org/openpearl/preprocessor/Preprocessor.java
 	rm -f openpearl_preprocessor.jar
-	cd $(OUTPUT_PREPROCESSOR_DIR) && jar cf  openpearl_preprocessor.jar \
+	cd $(OUTPUT_PP_DIR) && jar cf  openpearl_preprocessor.jar \
 				    org/openpearl/preprocessor/*.class
 
 ##############################################################################
@@ -112,8 +113,8 @@ prepare:
 install: gen compiler prl_cc.inc
 #	cp prl_c $(INSTALL_DIR)
 #	cp smallpearl_compiler.jar $(INSTALL_DIR)
-	cp $(OUTPUT_DIR)/openpearl_compiler.jar $(CONFIG_INSTALL_Target)/bin
-	cp $(OUTPUT_PREPROCESSOR_DIR)/openpearl_preprocessor.jar $(CONFIG_INSTALL_Target)/bin
+	cp $(OUTPUT_PRL_DIR)/openpearl_compiler.jar $(CONFIG_INSTALL_Target)/bin
+	cp $(OUTPUT_PP_DIR)/openpearl_preprocessor.jar $(CONFIG_INSTALL_Target)/bin
 	@echo 
 	@echo '========================================='
 	@echo '==             SUCCESS                 =='
@@ -137,13 +138,16 @@ clean:
 	$(RM) org/openpearl/compiler/OpenPearlLexer.tokens
 	$(RM) org/openpearl/compiler/OpenPearlParser.java
 	$(RM) org/openpearl/compiler/OpenPearlVisitor.java
-	$(RM) $(OUTPUT_DIR)/org/openpearl/compiler/*.class
-	$(RM) $(OUTPUT_DIR)/org/openpearl/compiler/SymbolTable/*.class
-	$(RM) $(OUTPUT_DIR)/org/openpearl/compiler/SemanticAnalysis/*.class
-	$(RM) $(OUTPUT_DIR)/org/openpearl/compiler/AST/*.class
-	$(RM) $(OUTPUT_DIR)/org/openpearl/compiler/Exception/*.class
-	$(RM) $(OUTPUT_DIR)/*.jar
-	$(RM) $(OUTPUT_DIR)/*.stg
+	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/*.class
+	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/SymbolTable/*.class
+	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/SemanticAnalysis/*.class
+	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/AST/*.class
+	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/Exception/*.class
+	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/preprocessor/*.class
+	$(RM) $(OUTPUT_PP_DIR)/*.jar
+	$(RM) $(OUTPUT_PRL_DIR)/*.jar
+	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/preprocessor/*.class
+	$(RM) $(OUTPUT_PRL_DIR)/*.stg
 	$(RM) ../prl_cc.inc
 
 ###############################################################################
