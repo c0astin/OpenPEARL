@@ -50,7 +50,7 @@ JAVAC_FLAGS =
 
 ###############################################################################
 
-.PHONY: gen compiler preprocessor 
+.PHONY: gen prl pp
 
 help:
 	@echo "      ---------------------------------------------------"
@@ -63,7 +63,7 @@ help:
 	@echo "      make install  - install compiler and compile-script"
 	@echo "      ---------------------------------------------------"
 
-all: gen compiler preprocessor install
+all: gen prl pp install
 
 .cmd_ok:
 	./check_cmds.sh
@@ -109,8 +109,10 @@ test:
 prepare:
 	touch $(CONFIG_INSTALL_Target)/bin/openpearl_compiler.jar 
 	chmod 777 $(CONFIG_INSTALL_Target)/bin/openpearl_compiler.jar 
+	touch $(CONFIG_INSTALL_Target)/bin/openpearl_preprocessor.jar 
+	chmod 777 $(CONFIG_INSTALL_Target)/bin/openpearl_preprocessor.jar 
 
-install: gen compiler prl_cc.inc
+install: gen prl pp prl_cc.inc
 #	cp prl_c $(INSTALL_DIR)
 #	cp smallpearl_compiler.jar $(INSTALL_DIR)
 	cp $(OUTPUT_PRL_DIR)/openpearl_compiler.jar $(CONFIG_INSTALL_Target)/bin
