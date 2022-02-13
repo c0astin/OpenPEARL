@@ -1,0 +1,6 @@
+#!/bin/bash
+# Name: prlpp
+#echo "called with :" $@
+#
+
+java -cp /usr/local/bin/openpearl_preprocessor.jar  org/openpearl/preprocessor/Preprocessor $@
