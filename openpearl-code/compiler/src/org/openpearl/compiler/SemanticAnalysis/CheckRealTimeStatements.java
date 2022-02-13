@@ -29,10 +29,9 @@
 
 package org.openpearl.compiler.SemanticAnalysis;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.openpearl.compiler.*;
-import org.openpearl.compiler.OpenPearlParser.Realtime_statementContext;
+import org.openpearl.compiler.OpenPearlParser.ExpressionContext;
 import org.openpearl.compiler.SymbolTable.*;
 
 /**
@@ -159,7 +158,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     private Void checkListOfNames(OpenPearlParser.ListOfNamesContext ctx,
             TypeDefinition expectedType) {
         for (int i = 0; i < ctx.name().size(); i++) {
-                checkName(ctx.name(i), expectedType);
+            TypeUtilities.deliversTypeOrEmitErrorMessage(ctx.name(i), expectedType, m_ast, null);;
         }
 
         return null;
@@ -253,17 +252,17 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     public Void visitTaskStart(OpenPearlParser.TaskStartContext ctx) {
         ErrorStack.enter(ctx, "ACTIVATE");
 
-
-        checkName(ctx.name(), new TypeTask());
-
+     
+       TypeUtilities.deliversTypeOrEmitErrorMessage(ctx.name(), new TypeTask(), m_ast, null);
 
         visitStartCondition(ctx.startCondition());
 
 
         if (ctx.frequency() != null) {
             OpenPearlParser.FrequencyContext c = ctx.frequency();
-            checkDurationValue(c.expression(0), "ALL");
-
+            //checkDurationValue(c.expression(0), "ALL");
+            TypeUtilities.deliversTypeOrEmitErrorMessage(c.expression(0), new TypeDuration(), m_ast, "ALL");
+            checkDurationPositive(c.expression(0),"ALL");
 
             for (int i = 0; i < c.getChildCount(); i++) {
                 if (c.getChild(i) instanceof TerminalNodeImpl) {
@@ -271,10 +270,13 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
                         // ALL is mandatory!
                     } else if (((TerminalNodeImpl) c.getChild(i)).getSymbol().getText()
                             .equals("UNTIL")) {
-                        checkClockValue(c.expression(1), "UNTIL");
+                        TypeUtilities.deliversTypeOrEmitErrorMessage(c.expression(1), new TypeClock(), m_ast, "UNTIL");
+                        //checkClockValue(c.expression(1), "UNTIL");
                     } else if (((TerminalNodeImpl) c.getChild(i)).getSymbol().getText()
                             .equals("DURING")) {
-                        checkDurationValue(c.expression(1), "DURING");
+                        TypeUtilities.deliversTypeOrEmitErrorMessage(c.expression(1), new TypeDuration(), m_ast, "DURING");
+                        checkDurationPositive(c.expression(1),"DURING");
+                        //checkDurationValue(c.expression(1), "DURING");
                     } else {
                         ErrorStack.addInternal("untreated alternative: "
                                 + ((TerminalNodeImpl) c.getChild(i)).getSymbol().getText());
@@ -297,7 +299,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
         if (ctx.name() != null) {
        
            //visitName(ctx.name());
-            checkName(ctx.name(), new TypeTask());
+            TypeUtilities.deliversTypeOrEmitErrorMessage(ctx.name(), new TypeTask(), m_ast, null);;
         }
         ErrorStack.leave();
 
@@ -312,7 +314,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
         ErrorStack.enter(ctx, "SUSPEND");
        
         if (ctx.name() != null) {
-            checkName(ctx.name(), new TypeTask());
+            TypeUtilities.deliversTypeOrEmitErrorMessage(ctx.name(), new TypeTask(), m_ast, null);;
         }
         ErrorStack.leave();
 
@@ -326,7 +328,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
     public Void visitTask_preventing(OpenPearlParser.Task_preventingContext ctx) {
         ErrorStack.enter(ctx, "PREVENT");
         if (ctx.name() != null) {
-            checkName(ctx.name(), new TypeTask());
+            TypeUtilities.deliversTypeOrEmitErrorMessage(ctx.name(), new TypeTask(), m_ast, null);;
         }
         ErrorStack.leave();
 
@@ -352,7 +354,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
         ErrorStack.enter(ctx, "CONTINUE");
 
         if (ctx.name() != null) {
-            checkName(ctx.name(), new TypeTask());
+            TypeUtilities.deliversTypeOrEmitErrorMessage(ctx.name(), new TypeTask(), m_ast, null);
         }
 
         visitStartCondition(ctx.startCondition());
@@ -386,16 +388,29 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
     @Override
     public Void visitStartConditionAT(OpenPearlParser.StartConditionATContext ctx) {
-        checkClockValue(ctx.expression(), "AT");
-
+        //checkClockValue(ctx.expression(), "AT");
+        TypeUtilities.deliversTypeOrEmitErrorMessage(ctx.expression(), new TypeClock(), m_ast, "AT");
         return null;
     }
 
 
     @Override
     public Void visitStartConditionAFTER(OpenPearlParser.StartConditionAFTERContext ctx) {
-        checkDurationValue(ctx.expression(), "AFTER");
+        //checkDurationValue(ctx.expression(), "AFTER");
+        TypeUtilities.deliversTypeOrEmitErrorMessage(ctx.expression(), new TypeDuration(), m_ast, "AFTER");
+        checkDurationPositive(ctx.expression(),"AFTER");
 
+        return null;
+    }
+    
+    private Void checkDurationPositive(ExpressionContext ctx,String message) {
+        ASTAttribute attr = m_ast.lookup(ctx);
+        if (attr.getConstant()!= null) {
+            ConstantDurationValue c = (ConstantDurationValue)attr.getConstant();
+            if (c.getSign() < 0) {
+                ErrorStack.add(ctx,message,"duration must be > 0 SEC");
+            }
+        }
         return null;
     }
 
@@ -457,69 +472,14 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
     }
 
-    private void checkClockValue(OpenPearlParser.ExpressionContext ctx, String prefix) {
-        ASTAttribute attr = m_ast.lookup(ctx);
-        TypeClock clk = new TypeClock();
-        TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); // getEffectiveType(ctx);
 
-        if (!t.equals(clk)) {
-            t = TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(attr,clk); 
-
-            if (t == null || !t.equals(clk)) {
-                ErrorStack.add(ctx, null, "expected type '" + clk.toString() + "' -- got '"
-                        + attr.getType().toString4IMC(false) + "'");
-            }
-        }
-
-    }
-
-    private void checkDurationValue(OpenPearlParser.ExpressionContext ctx, String prefix) {
-        ASTAttribute attr = m_ast.lookup(ctx);
-        TypeDuration dur = new TypeDuration();
-        TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); // getEffectiveType(ctx);
-
-        if (!t.equals(dur)) {
-            t = TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(attr,dur); 
-
-            if (t == null || !t.equals(dur)) {
-                ErrorStack.add(ctx, null, "expected type '" + dur.toString() + "' -- got '"
-                        + attr.getType().toString4IMC(false) + "'");
-            }
-        }
-    }
 
     private void checkInterrupt(OpenPearlParser.NameContext ctx, String prefix) {
         ErrorStack.enter(ctx, prefix);
         
-        checkName(ctx, new TypeInterrupt());
+        TypeUtilities.deliversTypeOrEmitErrorMessage(ctx, new TypeInterrupt(), m_ast, null);
         ErrorStack.leave();
     }
 
-    private void checkName(OpenPearlParser.NameContext ctx, TypeDefinition expectedType) {
-        ASTAttribute attr = m_ast.lookup(ctx);
-
-        TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); // getEffectiveType(ctx);
-
-        if (!t.equals(expectedType)) {
-            t = TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(attr,expectedType); 
-
-            if (t == null || !t.equals(expectedType)) {
-                ErrorStack.add(ctx, null, "expected type '" + expectedType.toString() + "' -- got '"
-                        + attr.getType().toString4IMC(false) + "'");
-            }
-        }
-    }
-
-//    private TypeDefinition getEffectiveType(ParserRuleContext ctx) {
-//
-//        ASTAttribute attr = m_ast.lookup(ctx);
-//        TypeDefinition t = attr.getType();
-//        if (t instanceof TypeReference) {
-//            t = ((TypeReference)t).getBaseType();
-//            attr.setNeedImplicitDereferencing(true);
-//        }
-//
-//        return t;
-//    }
 
 }

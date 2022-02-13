@@ -50,11 +50,6 @@ public class TypeVariableChar extends TypeDefinition {
         this.m_baseType = null;
     }
 
-//    TypeVariableChar(TypeDefinition type) {
-//        super("VariableChar");
-//        this.m_baseType = type;
-//    }
-//    
     public void setBaseType(TypeDefinition m_baseType) {
       this.m_baseType = m_baseType;
     }
@@ -68,8 +63,7 @@ public class TypeVariableChar extends TypeDefinition {
     }
 
     public String toString4IMC(boolean isInStructure) {
-        ErrorStack.addInternal(null, "TypeVariableChar", "toString4IMC nit implemented");
-        return null;
+        return toString();
     }
     
     @Override

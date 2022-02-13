@@ -134,7 +134,7 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
         if (v.getType() instanceof TypeArray) {
             TypeArray ta = (TypeArray)v.getType();
             if (ta.getBaseType() instanceof TypeStructure) {
-                ErrorStack.addInternal(v.getCtx(), "INIT ARRAY", "STRUCT initializer not implemented yet");
+                ErrorStack.addInternal(v.getCtx(), "CheckVariableDeclaration@137", "STRUCT initializer not implemented yet");
 
             } else if (isScalarType(ta.getBaseType())) {
                 TypeDefinition baseType = ta.getBaseType();    
@@ -146,9 +146,11 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
             }
         } else if (isScalarType(v.getType())) {
             if (v.getType() instanceof TypeReference) {
+                // baseType must match the type of the initializer
+                // except it is possible to initialize an REF INV xxx with type xxx to reduce
+                // access possibilities
                 TypeDefinition baseTypeOfVariable = ((TypeReference)(v.getType())).getBaseType();
-                // lookup the name
-               
+                
                 ReferenceInitializer ri =(ReferenceInitializer)(v.getInitializer());
                 ASTAttribute attr = m_ast.lookup(ri.getContext());
                 if (attr == null) {
@@ -156,17 +158,47 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
                     return ;
                 }
                 if (baseTypeOfVariable instanceof TypeArraySpecification ) {
-                    if (!(attr.m_type instanceof TypeArray)) {
+                    TypeArraySpecification tas = (TypeArraySpecification)baseTypeOfVariable;
+                    boolean ok = true;
+                    TypeDefinition typeOfInitializer = null;
+                    if (attr.m_type instanceof TypeArray) {
+                        typeOfInitializer = ((TypeArray)(attr.m_type)).getBaseType();
+                        if (tas.getNoOfDimensions() != ((TypeArray)(attr.m_type)).getNoOfDimensions()) {
+                            ok = false;
+                        }
+                    } else {
+                        ok = false;
+                    }
+                    if (ok && typeOfInitializer != null) {
+                           
+                    
+                            if (!typeOfInitializer.getName().equals(tas.getBaseType().getName()) || 
+                                    typeOfInitializer.getPrecision() != tas.getBaseType().getPrecision()) {
+                                ok = false;
+                            }
+                    }
+                    if (ok) {
+                        if (tas.getBaseType().hasAssignmentProtection() == false && 
+                                typeOfInitializer.hasAssignmentProtection()) {
+                            ok = false;
+                        }
+                    }
+                    if (!ok) {
                         ErrorStack.add(ri.getContext(), "type mismatch in REF INIT",
                              "REF "+baseTypeOfVariable.toString4IMC(true)  +" := " + attr.getType().toString4IMC(true));    
-                    }
+                    } 
                     
                 } else {
-                    if (!attr.getType().equals(baseTypeOfVariable)) {
-                        ErrorStack.add(ri.getContext(),"type mismatch in REF INIT",
-                                "REF "+baseTypeOfVariable.toString4IMC(true)  +" := " + attr.getType().toString4IMC(true));
+                    boolean ok= true;
+                    if (!attr.getType().getName().equals(baseTypeOfVariable.getName()) || 
+                            attr.getType().getPrecision() != baseTypeOfVariable.getPrecision()) {
+                        ok = false;
                     }
-                    if (attr.isConstant() && v.getType().hasAssignmentProtection() == false) {
+                    if (ok && baseTypeOfVariable.hasAssignmentProtection()==false &&
+                            attr.isConstant()) {
+                        ok = false;
+                    }
+                    if (!ok) {
                         ErrorStack.add(ri.getContext(),"type mismatch in REF INIT",
                                 "REF "+baseTypeOfVariable.toString4IMC(true)  +" := " + attr.getType().toString4IMC(true));
                     }

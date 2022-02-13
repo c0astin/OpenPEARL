@@ -68,28 +68,18 @@ public class ASTAttribute {
     public ConstantSelection m_selection;
     
     private static final int bitIsConstant = 0x01;
-    private static final int bitIsFunctionCall = 0x02;
-
     
     /** flag is set if the corresponding symbol table entry 
      * is generated automatically (like unnamed blocks or loops)
      */
-    private static final int bitIsInternal = 0x04;
+    private static final int bitIsInternal = 0x02;
     
-    /**
-     * flag is set, if an expression or name needs an implicit dereferencing 
-     */
-    private static final int needImplicitDereferencing = 0x08;
-    
+ 
     /**
      * flag is set if the expression is a lValue
      */
-    private static final int isLValue = 0x10;
+    private static final int isLValue = 0x04;
     
-    /**
-     * flag is set, if a functionCall need derefering
-     */
-    private static final int arrayOrProcNeedsImplicitDereferencing = 0x20;
     
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
@@ -251,14 +241,7 @@ public class ASTAttribute {
         m_type = type;
       }
 
-    public void setIsFunctionCall(boolean newValue) {
-      setFlag(bitIsFunctionCall, newValue);
-    }
     
-    public boolean isFunctionCall() {
-      return getFlag(bitIsFunctionCall);
-    }
-
     public void setIsInternal(boolean newValue) {
       setFlag(bitIsInternal, newValue);
     }
@@ -268,14 +251,7 @@ public class ASTAttribute {
     }
 
     
-    public boolean needImplicitDereferencing() {
-        return (getFlag(needImplicitDereferencing));
-    }
-    
-    public void setNeedImplicitDereferencing(boolean set ) {
-        setFlag(needImplicitDereferencing,set);
-    }
-    
+  
     public boolean isLValue() {
         return (getFlag(isLValue));
     }
@@ -284,14 +260,7 @@ public class ASTAttribute {
         setFlag(isLValue,set);
     }
     
-    public boolean arrayOrProcNeedsImplicitDereferencing() {
-        return (getFlag(arrayOrProcNeedsImplicitDereferencing));
-    }
-    
-    public void setArrayOrProcNeedsImplicitDereferencing(boolean set) {
-        setFlag(arrayOrProcNeedsImplicitDereferencing, set);
-        
-    }
+  
     
     private boolean getFlag(int whichFlag) {
       return ((m_flags & whichFlag) == whichFlag);

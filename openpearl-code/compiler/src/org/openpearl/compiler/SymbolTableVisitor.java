@@ -507,10 +507,9 @@ implements OpenPearlVisitor<Void> {
      */
     @Override
     public Void visitVariableDenotation(VariableDenotationContext ctx) {
-        boolean hasAllocationProtection = false;
 
         Log.debug("SymbolTableVisitor:visitVariableDenotation:ctx" + CommonUtils.printContext(ctx));
-
+        // System.out.println(ctx.getText());
         m_type = null;
         m_hasAllocationProtection = false;
         m_identifierDenotationContext = ctx.identifierDenotation();
@@ -560,158 +559,6 @@ implements OpenPearlVisitor<Void> {
             }
         }
 
-        /*
-        if (ctx.problemPartDataAttribute() != null) {
-            m_type.setHasAssignmentProtection(m_hasAllocationProtection);
-            if (m_type instanceof TypeReference) {
-                // check allowed REF types; only types which may be used as arrays are allowed
-                // REF () is not allowed on TASK, INTERRUPT, SIGNAL, PROCEDURE, FORMAT
-                //         in OpenPEARL additionally not for DATION
-                TypeDefinition base = ((TypeReference) m_type).getBaseType();
-                if (base instanceof TypeArraySpecification) {
-                    TypeDefinition arraySpec = ((TypeArraySpecification) base).getBaseType();
-                    if (arraySpec instanceof TypeTask || arraySpec instanceof TypeInterrupt
-                            || arraySpec instanceof TypeSignal
-                            || arraySpec instanceof TypeProcedure) {
-                        ErrorStack.add(ctx.problemPartDataAttribute().typeAttribute(), null,
-                                " REF () not allowed on " + arraySpec);
-                    } else if (arraySpec instanceof TypeDation) {
-                        ErrorStack.add(ctx.problemPartDataAttribute().typeAttribute(), null,
-                                " REF () DATION is not supported");
-                    }
-                }
-
-            }
-        } else if (ctx.dationDenotation() != null) {
-            if (ctx.dimensionAttribute()!=null) {
-                ErrorStack.add(ctx, "DationDCL", "no arrays of DATIONs allowed");
-            }
-
-        }
-
-
-
-        // check and set initialiser for scalar inv fixed types
-
-        if (m_hasAllocationProtection && ctx.dimensionAttribute() == null
-                && m_type instanceof TypeFixed) {
-            if (initElements == null) {
-                ErrorStack.add(ctx, "DCL", "INV needs INIT");
-            } else {
-                if (initElements.size() != m_identifierDenotationContext.identifier().size()) {
-                    ErrorStack.enter(ctx.identifierDenotation());
-                    ErrorStack.add("wrong number of initialisers: found " + initElements.size()
-                            + " -- required " + m_identifierDenotationContext.identifier().size());
-                    ErrorStack.leave();
-                } else {
-                    // numbers look fine; target type is m_type!
-                    for (int i = 0; i < initElements.size(); i++) {
-                        ConstantValue cv = getInitElement(i, initElements.get(i));
-                        TypeDefinition type = null;
-                        InitElementContext initElement = ctx.problemPartDataAttribute()
-                                .initialisationAttribute().initElement(i);
-                        if (initElement.identifier() != null) {
-                            SymbolTableEntry se =
-                                    m_currentSymbolTable.lookup(initElement.identifier().getText());
-                            if (se == null) {
-                                ErrorStack.add(initElement.identifier(), "SymbolTableVisitor", "id "
-                                        + initElement.identifier().getText() + " not defined yet");
-                            } else {
-                                if (se instanceof VariableEntry) {
-                                    VariableEntry ve = (VariableEntry) se;
-                                    if (!ve.getAssigmentProtection()) {
-                                        ErrorStack.add(initElement, "INIT", "must be INV");
-                                    }
-                                    if (ve.getType() instanceof TypeFixed) {
-                                        if (ve.getType().getPrecision() > m_type.getPrecision()) {
-                                            ErrorStack.add(initElement, "typemismatch in INIT",
-                                                    m_type + " := " + ve.getType());
-                                        } else {
-
-                                            VariableEntry variableEntry = new VariableEntry(
-                                                    identifierDenotationList.get(i), m_type,
-                                                    m_hasAllocationProtection,
-                                                    ctx.identifierDenotation().identifier(i),
-                                                    ve.getInitializer());
-                                            String s = identifierDenotationList.get(i).toString();
-                                            checkDoubleDefinitionAndEnterToSymbolTable(
-                                                    variableEntry,
-                                                    ctx.identifierDenotation().identifier(i), s);
-                                        }
-
-                                    }
-
-                                } else {
-                                    ErrorStack.addInternal(ctx, "SymbolTableVisitor",
-                                            "missing alternative@1");
-                                }
-                            }
-                        }
-                        if (initElement.constant() != null
-                                && initElement.constant().fixedConstant() != null) {
-                            int precision = 0;
-                            long value = 0;
-                            if (initElement.constant().fixedConstant() != null) {
-                                value = Long.parseLong(initElement.constant().fixedConstant()
-                                        .IntegerConstant().getText());
-
-                                precision = Long.toBinaryString(Math.abs(value)).length();
-                                if (value < 0) {
-                                    precision++;
-                                }
-                            }
-
-                            if (initElement.constant().fixedConstant()
-                                    .fixedNumberPrecision() != null) {
-                                precision = Integer.parseInt(initElement.constant().fixedConstant()
-                                        .fixedNumberPrecision().IntegerConstant().toString());
-                            }
-
-
-                            ConstantFixedValue cfv = new ConstantFixedValue(value, precision);
-                            m_constantPool.add(cfv); // add to constant pool; maybe we have it alreadyConstantFixedValue c = evaluator.visit(initElement.constant().fixedConstant() );
-
-                            if (cfv != null && m_type.getPrecision() < cfv.getPrecision()) {
-                                ErrorStack.add(initElement, "type mismatch in INIT",
-                                        m_type + " := FIXED(" + cfv.getPrecision() + ")");
-                            } else {
-                                SimpleInitializer initializer =
-                                        new SimpleInitializer(initElement, cfv);
-                                VariableEntry variableEntry = new VariableEntry(
-                                        identifierDenotationList.get(i), m_type,
-                                        m_hasAllocationProtection,
-                                        ctx.identifierDenotation().identifier(i), initializer);
-
-                                String s = identifierDenotationList.get(i).toString();
-                                checkDoubleDefinitionAndEnterToSymbolTable(variableEntry,
-                                        ctx.identifierDenotation().identifier(i), s);
-
-                            }
-                        }
-
-
-
-                    }
-
-                }
-            }
-        } else {
-
-            for (int i = 0; i < identifierDenotationList.size(); i++) {
-                Initializer init = null;
-                if (i<initElements.size()) {
-                    init = initElements.get(i);
-                }
-                VariableEntry variableEntry = new VariableEntry(identifierDenotationList.get(i),
-                        m_type, hasAllocationProtection, ctx.identifierDenotation().identifier(i),
-                        null);
-
-                String s = identifierDenotationList.get(i).toString();
-                checkDoubleDefinitionAndEnterToSymbolTable(variableEntry,
-                        ctx.identifierDenotation().identifier(i), s);
-            }
-        }
-         */
 
         return null;
     }
@@ -719,7 +566,7 @@ implements OpenPearlVisitor<Void> {
     @Override
     public Void visitProblemPartDataAttribute(ProblemPartDataAttributeContext ctx) {
         List<InitElementContext> initElements = null;
-        String sCtx = ctx.getText();
+        //String sCtx = ctx.getText();
         m_isGlobal = false;
         m_globalName = null;
         m_hasAllocationProtection = false;
@@ -1069,99 +916,7 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
-    /**
-     * Check the compability of the variable type and the initializer
-     *
-     * <p>missing stuff: treatment of identifier for REF variables
-     *
-     * @param type of the variable
-     * @param initializer
-     */
-    private void checkTypeCompability(TypeDefinition type, SimpleInitializer initializer) {
-        Log.debug("SymbolTableVisitor:checkTypeCompability:type" + type);
-
-        if ((type instanceof TypeFixed
-                && !(initializer.getConstant() instanceof ConstantFixedValue))
-                || (type instanceof TypeFloat
-                        && (!(initializer.getConstant() instanceof ConstantFloatValue)
-                                && !(initializer.getConstant() instanceof ConstantFixedValue)))
-                || (type instanceof TypeDuration
-                        && !(initializer.getConstant() instanceof ConstantDurationValue))
-                || (type instanceof TypeClock
-                        && (!(initializer.getConstant() instanceof ConstantDurationValue)
-                                && !(initializer.getConstant() instanceof ConstantClockValue)))
-                || (type instanceof TypeChar
-                        && !(initializer.getConstant() instanceof ConstantCharacterValue))
-                || (type instanceof TypeBit
-                        && !(initializer.getConstant() instanceof ConstantBitValue))) {
-            ErrorStack.add(
-                    initializer.m_context, null, " init type does not match type of variable");
-        }
-    }
-
-    private void fixPrecision(
-            ParserRuleContext ctx, TypeDefinition type, SimpleInitializer initializer) {
-        Log.debug("SymbolTableVisitor:fixPrecision:ctx" + CommonUtils.printContext(ctx));
-
-        if (type instanceof TypeFixed) {
-            TypeFixed typ = (TypeFixed) type;
-
-            if (initializer.getConstant() instanceof ConstantFixedValue) {
-                ConstantFixedValue value = (ConstantFixedValue) initializer.getConstant();
-                value.setPrecision(typ.getPrecision());
-            }
-        } else if (type instanceof TypeFloat) {
-            TypeFloat typ = (TypeFloat) type;
-
-            if (initializer.getConstant() instanceof ConstantFloatValue) {
-                ConstantFloatValue value = (ConstantFloatValue) initializer.getConstant();
-                value.setPrecision(typ.getPrecision());
-            } else if (initializer.getConstant() instanceof ConstantFixedValue) {
-                ConstantFixedValue fixedValue = (ConstantFixedValue) initializer.getConstant();
-                ConstantFloatValue floatValue =
-                        new ConstantFloatValue((double) fixedValue.getValue(), typ.getPrecision());
-                m_constantPool.add(floatValue);
-                initializer.setConstant(floatValue);
-            }
-        }
-    }
-
-    //    @Override
-    //    public Void visitTypeAttribute(TypeAttributeContext ctx) {
-    //        Log.debug("SymbolTableVisitor:visitTypeAttribute:ctx" +
-    // CommonUtils.printContext(ctx));
-    //
-    //        if (ctx.simpleType() != null) {
-    //            visitSimpleType(ctx.simpleType());
-    //        } else if (ctx.typeReference() != null) {
-    //            visitTypeReference(ctx.typeReference());
-    //        }
-    //        return null;
-    //    }
-
-    //    @Override
-    //    public Void visitSimpleType(SimpleTypeContext ctx) {
-    //        Log.debug("SymbolTableVisitor:visitSimpleType:ctx" + CommonUtils.printContext(ctx));
-    //
-    //        if (ctx != null) {
-    //            if (ctx.typeInteger() != null) {
-    //                visitTypeInteger(ctx.typeInteger());
-    //            } else if (ctx.typeDuration() != null) {
-    //                visitTypeDuration(ctx.typeDuration());
-    //            } else if (ctx.typeBitString() != null) {
-    //                visitTypeBitString(ctx.typeBitString());
-    //            } else if (ctx.typeFloatingPointNumber() != null) {
-    //                visitTypeFloatingPointNumber(ctx.typeFloatingPointNumber());
-    //            } else if (ctx.typeClock() != null) {
-    //                visitTypeClock(ctx.typeClock());
-    //            } else if (ctx.typeCharacterString() != null) {
-    //                visitTypeCharacterString(ctx.typeCharacterString());
-    //            }
-    //        }
-    //
-    //        return null;
-    //    }
-
+      
     @Override
     public Void visitTypeReference(TypeReferenceContext ctx) {
         Log.debug("SymbolTableVisitor:visitTypeReference:ctx" + CommonUtils.printContext(ctx));
@@ -1171,7 +926,7 @@ implements OpenPearlVisitor<Void> {
         if (ctx.virtualDimensionList() != null) {
             hasVistualDimensionList = true;
             if (ctx.virtualDimensionList().commas() != null) {
-                dimensions = ctx.virtualDimensionList().commas().getChildCount();
+                dimensions = ctx.virtualDimensionList().commas().getChildCount()+1;
             } else {
                 dimensions = 1;
             }
@@ -1990,7 +1745,7 @@ implements OpenPearlVisitor<Void> {
                 }
             }
 
-            constant = new ConstantDurationValue(hours, minutes, seconds);
+            constant = new ConstantDurationValue(hours, minutes, seconds,sign);
 
         } else if (ctx.bitStringConstant() != null) {
             long value =

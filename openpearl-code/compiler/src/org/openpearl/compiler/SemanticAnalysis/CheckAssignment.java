@@ -30,8 +30,6 @@
 package org.openpearl.compiler.SemanticAnalysis;
 
 import org.openpearl.compiler.*;
-import org.openpearl.compiler.OpenPearlParser.ExpressionContext;
-import org.openpearl.compiler.SymbolTable.ProcedureEntry;
 import org.openpearl.compiler.SymbolTable.SymbolTable;
 import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.openpearl.compiler.SymbolTable.VariableEntry;
@@ -111,7 +109,7 @@ implements OpenPearlVisitor<Void> {
 
 
         if (!(lhsType instanceof TypeStructure || lhsType instanceof TypeReference
-                || lhsType instanceof TypeVariableChar || TypeUtilities.isSimpleType(lhsType))) {
+                || lhsType instanceof TypeVariableChar || TypeUtilities.isSimpleTypeInclVarCharAndRefChar(lhsType))) {
             ErrorStack.add(lhsAttr.getType().toString4IMC(true) + " not allowed on lhs");
         }
 
@@ -123,14 +121,9 @@ implements OpenPearlVisitor<Void> {
       
         /* boolean assignable = */
         ASTAttribute rhsAttr = m_ast.lookup(ctx.expression());
-        //TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(rhsAttr, lhsType);
+
         TypeUtilities.mayBeAssignedTo(lhsType, lhsVariable, ctx.expression(),m_ast);
-//        if (t != null) {
-//            // target type found
-//            if (lhsType.getPrecision() < t.getPrecision()) {
-//                CommonErrorMessages.typeMismatch(lhsType, t);
-//            }
-//        }
+
         ErrorStack.leave();
         return null;
     }

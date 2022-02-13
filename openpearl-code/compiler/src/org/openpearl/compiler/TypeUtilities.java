@@ -1,5 +1,6 @@
 package org.openpearl.compiler;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.openpearl.compiler.OpenPearlParser.ExpressionContext;
 import org.openpearl.compiler.SymbolTable.FormalParameter;
 import org.openpearl.compiler.SymbolTable.ProcedureEntry;
@@ -75,12 +76,11 @@ public class TypeUtilities {
             }
             if (rhsType instanceof TypeProcedure) {
                 resultType = ((TypeProcedure)rhsType).getResultType();
-                rhsAttr.setIsFunctionCall(true);
             }
             // resultType is != null, if it may be a procedure call
 
             //-- easiest case; simple variable assignment
-            if (simpleTypeMayBeAssignedTo(lhsType, rhsType)) {
+            if (simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, rhsType)) {
                 ruleApplied=true;
                 break;
             }
@@ -90,9 +90,8 @@ public class TypeUtilities {
             if (!(lhsType instanceof TypeReference) ) {
                 //-- lhs is not TypeReference; rhs is TypeReference with compatible baseType
                 if (rhsType instanceof TypeReference &&          
-                        TypeUtilities.simpleTypeMayBeAssignedTo(lhsType, ((TypeReference)rhsType).getBaseType())) {
+                        TypeUtilities.simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, ((TypeReference)rhsType).getBaseType())) {
                     // implicit dereference required
-                    rhsAttr.setNeedImplicitDereferencing(true);
                     rhsAttr.setType(((TypeReference)rhsType).getBaseType());
                     ruleApplied=true;
                     break;
@@ -101,14 +100,11 @@ public class TypeUtilities {
                 //-- lhs is not TypeReference; rhs may be PROC or REF PROC --> create function call
                 if ( (rhsType instanceof TypeProcedure) ){
                     // function call on rhs
-                    rhsAttr.setIsFunctionCall(true);
                     rhsType = ((TypeProcedure)rhsType).getResultType();
                     rhsAttr.setType(rhsType);
                     ruleApplied=true;
                 }
                 if ( rhsType instanceof TypeReference) {
-
-                    rhsAttr.setNeedImplicitDereferencing(true);
                     rhsType = ((TypeReference)rhsType).getBaseType();
                     rhsAttr.setType(rhsType);
                  
@@ -199,7 +195,7 @@ public class TypeUtilities {
                         // emit special error message
                         ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := expression of type "+ rhsType.toString4IMC(false));
                     }
-                    rhsAttr.setIsFunctionCall(true);
+
                     rhsType = ((TypeProcedure)rhsType).getResultType();
                     rhsAttr.setType(rhsType);
                     ruleApplied=true;
@@ -267,18 +263,29 @@ public class TypeUtilities {
     }
 
 
-    public static boolean isSimpleType(TypeDefinition type) {
+    public static boolean isSimpleTypeInclVarCharAndRefChar(TypeDefinition type) {
         boolean result = false;
 
         if (type instanceof TypeFixed || type instanceof TypeFloat || type instanceof TypeBit
                 || type instanceof TypeChar || type instanceof TypeDuration
-                || type instanceof TypeClock) {
+                || type instanceof TypeClock 
+                || type instanceof TypeVariableChar || type instanceof TypeRefChar) {
             result = true;
         }
         return result;
     }
 
-    public static boolean simpleTypeMayBeAssignedTo(TypeDefinition lhs, TypeDefinition rhs) {
+    public static boolean isSimpleInclVarCharAndRefCharOrStructureType(TypeDefinition type) {
+        boolean result = false;
+
+        if (isSimpleTypeInclVarCharAndRefChar(type) || type instanceof TypeStructure) {
+            result = true;
+        }
+        return result;
+    }
+    
+
+    public static boolean simpleTypeInclVarCharAndRefCharMayBeAssignedTo(TypeDefinition lhs, TypeDefinition rhs) {
         boolean result = false;
 
         if (lhs.equals(rhs)) { 
@@ -318,6 +325,11 @@ public class TypeUtilities {
                 result=true;
             }
 
+        } else if (lhs instanceof TypeVariableChar) {
+            if (rhs instanceof TypeChar) {
+                // the check for correct size must be done at runtime
+                result=true;
+            }
         } else if (lhs instanceof TypeBit) {
             int lhsPrecision = ((TypeBit)lhs).getPrecision(); 
             if (rhs instanceof TypeBit) {
@@ -333,7 +345,7 @@ public class TypeUtilities {
     /**
      * check if the expression result may be assigned to the type targetType 
      * 
-     * if targetType a of TypeReference, the baseType must match exactly
+     * if targetType is of TypeReference, the baseType must match exactly
      * else, targetType may be larger
      * 
      * @param attr ASTAttribute of expression()
@@ -344,10 +356,8 @@ public class TypeUtilities {
 
         TypeDefinition currentType = attr.m_type;
         boolean goon;
-        boolean needExactType = false;
-
-        if (targetType instanceof TypeReference) needExactType=true;
-
+        int loopCounter = 0;
+        
         do {
             goon = true;
             if (targetType instanceof TypeReference) {
@@ -355,14 +365,15 @@ public class TypeUtilities {
                     break;
                 }
             }
-            //            if (currentType instanceof TypeReference)
-            currentType = performImplicitDereferenceAndFunctioncall(attr);
-            if (currentType == null) goon = false;
             if (currentType.equals(targetType)) goon = false;
+            if (goon) 
+                currentType = performImplicitDereferenceAndFunctioncall(attr);
+            if (currentType == null) goon = false;
+            
             if (targetType instanceof TypeReference && ((TypeReference)targetType).getBaseType().equals(currentType)) goon = false;
-            if (simpleTypeMayBeAssignedTo(targetType, currentType) ) goon = false;
+            if (simpleTypeInclVarCharAndRefCharMayBeAssignedTo(targetType, currentType) ) goon = false;
 
-        } while (goon);//while (t instanceof TypeProcedure);
+        } while (goon && loopCounter ++ < 100);//while (t instanceof TypeProcedure);
         return currentType;
 
     }
@@ -370,7 +381,7 @@ public class TypeUtilities {
     /**
      * check if we can obtain a TypeFixed (of any size) with dereferencing or procedure calls
      * 
-     * @param attr th ASTAttribute of an expression 
+     * @param attr the ASTAttribute of an expression 
      * @return TypeFixed if it was possible<br>
      *         null, else 
      */
@@ -389,29 +400,72 @@ public class TypeUtilities {
 
     public static TypeDefinition performImplicitDereferenceAndFunctioncall(ASTAttribute attr) {
         TypeDefinition type = attr.getType();
-        if (type instanceof TypeReference) {
-            type = ((TypeReference)type).getBaseType();
-            if (type instanceof TypeProcedure || type instanceof TypeArray) {
-                attr.setArrayOrProcNeedsImplicitDereferencing(true);
-            } else {
-                attr.setNeedImplicitDereferencing(true);
-            }
-            attr.setType(type);
-        }
-        if (type instanceof TypeProcedure) {
-            type = ((TypeProcedure)type).getResultType();
-            attr.setIsFunctionCall(true);
+        boolean actionDone = true;
+        while (actionDone) {
+            actionDone=false;
             if (type instanceof TypeReference) {
-                attr.setIsLValue(true);
+                type = ((TypeReference)type).getBaseType();
+                attr.setType(type);
+                actionDone=true;
             }
-            attr.setType(type);
+            if (type instanceof TypeProcedure) {
+                type = ((TypeProcedure)type).getResultType();
+
+                if (type instanceof TypeReference) {
+                    if (!((TypeReference)type).getBaseType().hasAssignmentProtection()) {
+                       attr.setIsLValue(true);
+                    }
+                }
+                attr.setType(type);
+                actionDone=true;
+            }
         }
-        //        if (type instanceof TypeReference) {
-        //            type = ((TypeReference)type).getBaseType();
-        //            attr.setNeedImplicitDereferencing(true);
-        //            attr.setType(type);
-        //        }
+
         return type;
     }
 
+    /**
+     * check if given context element may be used as expectedType
+     * 
+     * assert error message if the element may not be used as the expected type
+     * 
+     * @param ctx
+     * @param targetType
+     * @param m_ast
+     * @param prefix if true, the ctx must be exactly the target type, else the precision may not exceed the target presicion
+     * 
+     */
+    public static void deliversTypeOrEmitErrorMessage(ParserRuleContext ctx, TypeDefinition targetType, AST m_ast, String prefix) {
+        ASTAttribute attr = m_ast.lookup(ctx);
+        boolean equal=false;
+        boolean exactMatch=false;
+        TypeDefinition baseTypeOfTarget=null;
+        if (targetType instanceof TypeReference) {
+            baseTypeOfTarget = ((TypeReference)targetType).getBaseType();
+            exactMatch = true;
+        }
+        
+        TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); // getEffectiveType(ctx);
+        
+         
+        if (exactMatch) {
+            equal = t.equals(targetType);
+            if (!equal) {
+                equal = t.equals(baseTypeOfTarget);
+            }
+        } else {
+            if (isSimpleInclVarCharAndRefCharOrStructureType(t) && isSimpleInclVarCharAndRefCharOrStructureType(targetType)) {
+                equal = simpleTypeInclVarCharAndRefCharMayBeAssignedTo(targetType,t);
+            } 
+        }
+        
+        if (!equal) {
+            t = TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(attr,targetType); 
+
+            if (t == null || !t.equals(targetType)) {
+                ErrorStack.add(ctx, prefix, "expected type '" + targetType.toString() + "' --- got '"
+                        + attr.getType().toString4IMC(true) + "'");
+            }
+        }
+    }
 }

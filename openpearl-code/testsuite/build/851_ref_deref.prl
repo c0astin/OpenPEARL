@@ -6,32 +6,27 @@ done: FIXED, array of REFs upon FIXED
     DATION (only REF assignment, REF compare, 
             PUT TO referencedDation scalar and array of REF )
     SEMA,BOLT (array of .. and array of REF ...)
-
-missing:
     REF PROC
-
 */
 MODULE(ref_deref);
 SYSTEM;
-stdout: StdOut; !Console throws EOF-Signal in Jenkins
-irupt1 : SoftInt(1);
-irupt2 : SoftInt(2);
+   stdout: StdOut; !Console throws EOF-Signal in Jenkins
+   irupt1 : SoftInt(1);
+   irupt2 : SoftInt(2);
 
 PROBLEM;
-SPC stdout DATION OUT SYSTEM ALPHIC ;
-! SPC (irupt1, irupt2) INTERRUPT;
-SPC irupt1 INTERRUPT;
-SPC irupt2 INTERRUPT;
+   SPC stdout DATION OUT SYSTEM ALPHIC ;
+   SPC (irupt1, irupt2) INTERRUPT;
 
-DCL so                 DATION OUT ALPHIC DIM(*,80) TFU FORWARD NOSTREAM CREATED(stdout);
+   DCL so                 DATION OUT ALPHIC DIM(*,80) TFU FORWARD NOSTREAM CREATED(stdout);
 
-DCL refArray(10) REF FIXED;
+   DCL refArray(10) REF FIXED;
 
-DCL t1runs FIXED INIT(0);
-DCL t2runs FIXED INIT(0);
+   DCL t1runs FIXED INIT(0);
+   DCL t2runs FIXED INIT(0);
 
-DCL (testNbr,fails) FIXED INIT(0,0);
-DCL allTestsOk BIT(1) INIT('1'B);
+   DCL (testNbr,fails) FIXED INIT(0,0);
+   DCL allTestsOk BIT(1) INIT('1'B);
 
 maintask: TASK  PRIO 10 MAIN;
     OPEN so;
@@ -55,6 +50,12 @@ maintask: TASK  PRIO 10 MAIN;
 
     CALL bolt;
     CALL printTestResult('bolt');
+
+    CALL bit;
+    CALL printTestResult('bit');
+
+    CALL refProc;
+    CALL printTestResult('refProc');
 
     IF NOT allTestsOk THEN
       __cpp__("   pearlrt::Control::setExitCode(1);       ");
@@ -688,6 +689,86 @@ bolt: PROC;
    ENTER refBolt;
    LEAVE bolt1;
    PUT 'fine: ENTER refBolt is ok' TO so BY A, SKIP;
+END;
+
+bit: PROC;
+   DCL bit5 BIT(5);
+   DCL refBit REF BIT(5);
+
+   refBit = bit5;
+   bit5 = '10101'B;
+
+   testNbr := testNbr + 1;
+   IF refBit IS bit5 THEN
+      PUT 'fine: refBit is bit5' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: refBit is not bit5' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+     
+   testNbr := testNbr + 1;
+   refBit.BIT(1:2) = '01'B;
+   IF bit5 == '01101'B THEN
+      PUT 'fine: bit5 is 01101' TO so BY A, SKIP;
+   ELSE
+     PUT 'test ',testNbr,': error: bit5 is not 01101' TO so BY A,F(3),A, SKIP;
+     fails := fails + 1;
+   FIN; 
+END;
+
+refProc: PROC;
+   testNbr := testNbr + 1;
+   IF refProcW(proc42) EQ 42 THEN
+      PUT 'fine: refProcW(proc42) is 42' TO so BY A, SKIP;
+   ELSE
+      PUT 'test ',testNbr,':error: refProcW(proc42) is NOT 42' TO so BY A,F(3),A, SKIP;
+   FIN;
+
+   testNbr := testNbr + 1;
+   IF refProc2 EQ 42 THEN
+      PUT 'fine: ref_01(refProc) is 42' TO so BY A, SKIP;
+   ELSE
+      PUT 'test ',testNbr,':error: ref_01(refProc) is NOT 42' TO so BY A,F(3),A, SKIP;
+   FIN;
+   
+END;
+
+proc42: PROC  RETURNS ( FIXED);
+   RETURN (42);
+END;
+
+
+refProcW: PROC (x REF PROC RETURNS (FIXED)) RETURNS (FIXED);
+!   DCL y FIXED;
+!   y = x;
+!   RETURN (y);
+    RETURN(x);
+END;
+
+refProc1: PROC RETURNS(REF PROC RETURNS(FIXED));
+   RETURN (proc42);
+END;
+
+!! REF as parameter
+ref_01: PROC (x REF FIXED) RETURNS (FIXED);
+!   DCL y FIXED;
+!   y = x;
+!   RETURN  (y);
+    RETURN(x);
+END;
+DCL refProcVarX FIXED INIT(42);
+
+refproc: PROC RETURNS(REF FIXED);
+   RETURN (refProcVarX);
+END;
+
+refProc2: PROC RETURNS (REF PROC RETURNS(REF FIXED));
+   RETURN (refproc);
+END;
+
+
+refRefProc: PROC RETURNS (REF PROC RETURNS (REF PROC RETURNS (FIXED)));
+   RETURN (refProc1);
 END;
 
 MODEND;

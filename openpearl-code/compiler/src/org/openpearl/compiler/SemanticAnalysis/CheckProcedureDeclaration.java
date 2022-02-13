@@ -65,7 +65,6 @@ import org.openpearl.compiler.SymbolTable.VariableEntry;
 public class CheckProcedureDeclaration extends OpenPearlBaseVisitor<Void>
 implements OpenPearlVisitor<Void> {
 
-    private int m_verbose;
     private boolean m_debug;
     private SymbolTableVisitor m_symbolTableVisitor;
     private SymbolTable m_symboltable;
@@ -79,7 +78,6 @@ implements OpenPearlVisitor<Void> {
             AST ast) {
 
         m_debug = debug;
-        m_verbose = verbose;
         m_symbolTableVisitor = symbolTableVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
         m_currentSymbolTable = m_symboltable;
@@ -216,72 +214,37 @@ implements OpenPearlVisitor<Void> {
         ErrorStack.enter(ctx, "CALL");
         ASTAttribute attr = m_ast.lookup(ctx.name());
         TypeDefinition tp=attr.getType();
-   
 
         SymbolTableEntry entry = attr.getSymbolTableEntry();
-        if (entry instanceof VariableEntry) {
-            tp = ((VariableEntry)entry).getType();
-        } else if (entry instanceof ProcedureEntry) {
-            tp = ((ProcedureEntry)entry).getType();
-        }
-        String originalType;
-        if (attr.m_type != null) {
-            originalType = attr.m_type.toString();
-        } else {
-            originalType = tp.toString();
-        }
-
-        
-        if(attr.getType() instanceof TypeReference) {
-            attr.setNeedImplicitDereferencing(true);
-            tp = ((TypeProcedure)((TypeReference)attr.getType()).getBaseType());
-            attr.setType(tp);
-        } else {
-            tp = (TypeProcedure)((ProcedureEntry)entry).getType();
-        }
-        if (((TypeProcedure)tp).getResultType() != null) {
-            ErrorStack.add("result discarded: type ="+originalType);
-        }
-        if (((TypeProcedure)  tp).getFormalParameters() == null) {
-            // we must mark procedure calls without formal parameters
-            // as procedure calls
-            attr.setIsFunctionCall(true);
-        }
-
-        String procName = entry.getName(); 
-        ProcedureEntry proc = null;
-
-
         if (entry instanceof ProcedureEntry) {
-            Log.debug("Semantic: Check ProcedureCall: found call in expression");
-            proc = (ProcedureEntry) entry;
-            TypeDefinition resultType = proc.getResultType();
-
-            if (resultType != null) {
-                ErrorStack.add("result discarded");
+            tp = ((ProcedureEntry)entry).getType();
+        } else if (entry instanceof VariableEntry) {
+            tp = ((VariableEntry)entry).getType();
+            if (tp instanceof TypeReference && ((TypeReference)tp).getBaseType() instanceof TypeProcedure) {
+                tp = ((TypeReference)tp).getBaseType();
+            }
+            if (!(tp instanceof TypeProcedure)) {
+                ErrorStack.add("must be PROCEDURE --- got "+((VariableEntry)entry).getType());
                 ErrorStack.leave();
                 return null;
             }
         } else {
-            if (entry instanceof VariableEntry) {
-                if (((VariableEntry)entry).getType() instanceof TypeReference) {
-                    TypeReference tr = (TypeReference)((VariableEntry)entry).getType();
-                    attr.setNeedImplicitDereferencing(true);
-                    if (tr.getBaseType() instanceof TypeProcedure) {
-                        TypeDefinition resultType = ((TypeProcedure)(tr.getBaseType())).getResultType();
-                        if (resultType != null) {
-                            ErrorStack.add("result discarded");
-                        }
-                    }
-                }
-            } else {
-                ErrorStack.add("'" + procName + "' is not of type PROC  -- is of type "
-                        + CommonUtils.getTypeOf(entry));
-            }
+            ErrorStack.addInternal("CppCodeGen@240: untreated alternative");
+            ErrorStack.leave();
+            return null;
         }
 
-
-
+        if (((TypeProcedure)tp).getFormalParameters() != null && attr.getType() != null) {
+            ErrorStack.add(tp.toString4IMC(true)+" requires actual parameters");
+            ErrorStack.leave();
+            return null;
+        }
+        if (((TypeProcedure)tp).getResultType() != null) {
+            ErrorStack.add(tp.toString4IMC(true)+" --- result discarded");
+            ErrorStack.leave();
+            return null; 
+        }
+        attr.setType(null);  // mark procedure call
         ErrorStack.leave();
 
         return null;
@@ -304,53 +267,67 @@ implements OpenPearlVisitor<Void> {
 
             TypeDefinition tmpTypeOfResult = m_typeOfReturns;
             TypeDefinition tmpExprType = exprType;
+            ASTAttribute attr = m_ast.lookup(ctx.expression());
 
             if (m_typeOfReturns != null) {
-                // check for implicit dereference /reference possibilities
-                // --> base types must be compatible
-                if (tmpTypeOfResult instanceof TypeReference) {
-                    tmpTypeOfResult = ((TypeReference) tmpTypeOfResult).getBaseType();
+                if (TypeUtilities.isSimpleInclVarCharAndRefCharOrStructureType(m_typeOfReturns)) {
+                    TypeUtilities.deliversTypeOrEmitErrorMessage(ctx.expression(), m_typeOfReturns,  m_ast, "RETURN"); 
+                } else if (m_typeOfReturns instanceof TypeReference) {
+                    String typeOfExpression = attr.getType().toString4IMC(true);
+                    TypeDefinition t= 
+                    TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(attr,
+                            ((TypeReference)m_typeOfReturns).getBaseType());
+                    if (t == null) {
+                        ErrorStack.add(ctx.expression(),null, "expected type '" + m_typeOfReturns.toString4IMC(true) + "' --- got '"
+                                + typeOfExpression + "'");
+                    }
+                    int x=0;
                 }
-                if (tmpExprType instanceof TypeReference) {
-                    tmpExprType = ((TypeReference) tmpExprType).getBaseType();
-                }
-
-                // check compatibility of baseTypes
-                if (tmpTypeOfResult instanceof TypeFixed && tmpExprType instanceof TypeFixed) {
-                    if (((TypeFixed) tmpTypeOfResult).getPrecision() < ((TypeFixed) tmpExprType)
-                            .getPrecision()) {
-                        typeIsCompatible = false;
-                    }
-                } else if (tmpTypeOfResult instanceof TypeFloat
-                        && tmpExprType instanceof TypeFloat) {
-                    if (((TypeFloat) tmpTypeOfResult).getPrecision() < ((TypeFloat) tmpExprType)
-                            .getPrecision()) {
-                        typeIsCompatible = false;
-                    }
-                } else if (tmpTypeOfResult instanceof TypeBit && tmpExprType instanceof TypeBit) {
-                    if (((TypeBit) tmpTypeOfResult).getPrecision() < ((TypeBit) tmpExprType)
-                            .getPrecision()) {
-                        typeIsCompatible = false;
-                    }
-                } else if (tmpTypeOfResult instanceof TypeChar && tmpExprType instanceof TypeChar) {
-                    if (((TypeChar) tmpTypeOfResult).getSize() < ((TypeChar) tmpExprType)
-                            .getSize()) {
-                        typeIsCompatible = false;
-                    }
-                } else if (tmpTypeOfResult instanceof TypeChar
-                        && tmpExprType instanceof TypeVariableChar) {
-                    // this must be checked during runtime
-                } else {
-                    if (!tmpTypeOfResult.equals(tmpExprType)) {
-                        typeIsCompatible = false;
-                    }
-                }
-
-                if (!typeIsCompatible) {
-                    ErrorStack.add("expression does not fit to RETURN type: expected "
-                            + m_typeOfReturns.toString() + " -- got " + exprType.toString());
-                }
-
+//                // check for implicit dereference /reference possibilities
+//                // --> base types must be compatible
+//                if (tmpTypeOfResult instanceof TypeReference) {
+//                    tmpTypeOfResult = ((TypeReference) tmpTypeOfResult).getBaseType();
+//                }
+//                if (tmpExprType instanceof TypeReference) {
+//                    tmpExprType = ((TypeReference) tmpExprType).getBaseType();
+//                }
+//
+//                // check compatibility of baseTypes
+//                if (tmpTypeOfResult instanceof TypeFixed && tmpExprType instanceof TypeFixed) {
+//                    if (((TypeFixed) tmpTypeOfResult).getPrecision() < ((TypeFixed) tmpExprType)
+//                            .getPrecision()) {
+//                        typeIsCompatible = false;
+//                    }
+//                } else if (tmpTypeOfResult instanceof TypeFloat
+//                        && tmpExprType instanceof TypeFloat) {
+//                    if (((TypeFloat) tmpTypeOfResult).getPrecision() < ((TypeFloat) tmpExprType)
+//                            .getPrecision()) {
+//                        typeIsCompatible = false;
+//                    }
+//                } else if (tmpTypeOfResult instanceof TypeBit && tmpExprType instanceof TypeBit) {
+//                    if (((TypeBit) tmpTypeOfResult).getPrecision() < ((TypeBit) tmpExprType)
+//                            .getPrecision()) {
+//                        typeIsCompatible = false;
+//                    }
+//                } else if (tmpTypeOfResult instanceof TypeChar && tmpExprType instanceof TypeChar) {
+//                    if (((TypeChar) tmpTypeOfResult).getSize() < ((TypeChar) tmpExprType)
+//                            .getSize()) {
+//                        typeIsCompatible = false;
+//                    }
+//                } else if (tmpTypeOfResult instanceof TypeChar
+//                        && tmpExprType instanceof TypeVariableChar) {
+//                    // this must be checked during runtime
+//                } else {
+//                    if (!tmpTypeOfResult.equals(tmpExprType)) {
+//                        typeIsCompatible = false;
+//                    }
+//                }
+//
+//                if (!typeIsCompatible) {
+//                    ErrorStack.add("expression does not fit to RETURN type: expected "
+//                            + m_typeOfReturns.toString() + " -- got " + exprType.toString());
+//                }
+//
                 if (m_typeOfReturns instanceof TypeReference) {
                     // check lifeCyle required
                     ASTAttribute attrRhs = m_ast.lookup(ctx.expression());
@@ -360,8 +337,8 @@ implements OpenPearlVisitor<Void> {
                             ErrorStack.add("life cycle of '" + attrRhs.getVariable().getName()
                                     + "' is too short");
                         }
-                    } else if (attrRhs.getType() instanceof TypeProcedure) {
-                        // ok - we have a procedure name
+//                    } else if (attrRhs.getType() instanceof TypeProcedure) {
+//                        // ok - we have a procedure name
                     }
                 }
 
@@ -372,7 +349,7 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
-  
+
 
 
 

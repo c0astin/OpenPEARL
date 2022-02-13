@@ -796,7 +796,7 @@ implements OpenPearlVisitor<Void> {
                             if (td instanceof TypeReference) {
                                 td = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
                             }
-                            if ((!TypeUtilities.simpleTypeMayBeAssignedTo(m_typeDation.getTypeOfTransmissionAsType(),td))) {
+                            if ((!TypeUtilities.simpleTypeInclVarCharAndRefCharMayBeAssignedTo(m_typeDation.getTypeOfTransmissionAsType(),td))) {
                                 typeMismatch=true;
                             }
                         }
@@ -1136,7 +1136,6 @@ implements OpenPearlVisitor<Void> {
         }
         if (!m_directionInput && td instanceof TypeProcedure) {
             td = ((TypeProcedure)td).getResultType();
-            attr.setIsFunctionCall(true);
         }
 
         if (m_directionInput && (td instanceof TypeReference || td instanceof TypeProcedure) ) {

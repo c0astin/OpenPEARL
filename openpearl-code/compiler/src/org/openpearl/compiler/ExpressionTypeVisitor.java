@@ -250,7 +250,6 @@ implements OpenPearlVisitor<Void> {
             se = tsk.getSymbolTableEntry();
             if (t instanceof TypeReference) {
                 t = ((TypeReference)t).getBaseType();
-                tsk.setNeedImplicitDereferencing(true);
             }
             if (!(t instanceof TypeTask)) {
                 ErrorStack.add(
@@ -278,7 +277,6 @@ implements OpenPearlVisitor<Void> {
             TypeDefinition t = tsk.getType();
             if (t instanceof TypeReference) {
                 t = ((TypeReference)t).getBaseType();
-                tsk.setNeedImplicitDereferencing(true);
                 tsk.setType(t);
             }
             se = tsk.getSymbolTableEntry();
@@ -1904,6 +1902,10 @@ implements OpenPearlVisitor<Void> {
         if (ctx.charSelectionSlice() != null) {
             //  visit(ctx.charSelectionSlice());
             selection = m_ast.lookup(ctx.charSelectionSlice());
+            if (attrName.getType() instanceof TypeReference &&
+                    ((TypeReference)attrName.getType()).getBaseType() instanceof TypeChar) {
+                    attrName.setType(((TypeReference)attrName.getType()).getBaseType());
+            }
             if (!(attrName.getType() instanceof TypeChar)) {
                 ErrorStack.add(
                         ".CHAR must be applied on variable of type CHAR -- used with "
@@ -1912,6 +1914,10 @@ implements OpenPearlVisitor<Void> {
         } else if (ctx.bitSelectionSlice() != null) {
             // visit(ctx.bitSelectionSlice());
             selection = m_ast.lookup(ctx.bitSelectionSlice());
+            if (attrName.getType() instanceof TypeReference &&
+                ((TypeReference)attrName.getType()).getBaseType() instanceof TypeBit) {
+                attrName.setType(((TypeReference)attrName.getType()).getBaseType());
+            }
             if (!(attrName.getType() instanceof TypeBit)) {
                 ErrorStack.add(
                         ".BIT must be applied on variable of type BIT -- used with "
@@ -2350,13 +2356,11 @@ implements OpenPearlVisitor<Void> {
             if (type1 instanceof TypeProcedure) {
                 type1 = ((TypeProcedure)type1).getResultType();
                 isConstant = false;
-                op1.setIsFunctionCall(true);
             }
 
             if (type2 instanceof TypeProcedure) {
                 type2 = ((TypeProcedure)type2).getResultType();
                 isConstant = false;
-                op2.setIsFunctionCall(true);
             }
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
@@ -2889,6 +2893,7 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
+    /*
     @Override
     public Void visitStringSlice(OpenPearlParser.StringSliceContext ctx) {
         ASTAttribute res = null;
@@ -2968,7 +2973,7 @@ implements OpenPearlVisitor<Void> {
 
         return null;
     }
-
+*/
     @Override
     public Void visitConstantFixedExpression(OpenPearlParser.ConstantFixedExpressionContext ctx) {
         Log.debug(
@@ -3355,7 +3360,7 @@ implements OpenPearlVisitor<Void> {
 
         return null;
     }
-
+/*
     @Override
     public Void visitCase1CharSlice(OpenPearlParser.Case1CharSliceContext ctx) {
         ASTAttribute op;
@@ -3518,7 +3523,7 @@ implements OpenPearlVisitor<Void> {
 
         return null;
     }
-
+*/
 
 
     @Override
@@ -3667,7 +3672,6 @@ implements OpenPearlVisitor<Void> {
 
         if (savedActualIndexType instanceof TypeReference) {
             savedActualIndexType = ((TypeReference)savedActualIndexType).getBaseType();
-            attr.setNeedImplicitDereferencing(true);
         }
         return ((savedActualIndexType instanceof TypeFixed));
 
@@ -3881,7 +3885,6 @@ implements OpenPearlVisitor<Void> {
             TypeDefinition savedActualIndexType = attr.getType();
             if (savedActualIndexType instanceof TypeReference) {
                 savedActualIndexType = ((TypeReference)savedActualIndexType).getBaseType();
-                attr.setNeedImplicitDereferencing(true);
                 attr.setType(savedActualIndexType);
             }
             if (savedActualIndexType instanceof TypeFixed) {

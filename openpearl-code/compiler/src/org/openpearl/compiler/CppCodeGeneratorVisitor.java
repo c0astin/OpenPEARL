@@ -2228,8 +2228,10 @@ implements OpenPearlVisitor<ST> {
         } while (ctx.name() != null);    
         
         int loopCounter=0;
+        
         while (currentType != null && !currentType.equals(attr.m_type)) {
-           if (currentType instanceof TypeReference) {
+
+            if (currentType instanceof TypeReference) {
                stOfName = dereference(stOfName);
                currentType = ((TypeReference)currentType).getBaseType();
            }
@@ -2245,7 +2247,13 @@ implements OpenPearlVisitor<ST> {
            }
            
         } 
-        
+//        if (currentType instanceof TypeProcedure) {
+//            ST st = m_group.getInstanceOf("FunctionCall");
+//            st.add("callee",stOfName);
+//            currentType = ((TypeProcedure)currentType).getResultType();
+//            stOfName = st; 
+//        }
+       
         return stOfName;
     }
 
@@ -2299,9 +2307,11 @@ implements OpenPearlVisitor<ST> {
             } else {
                 st.add("upb", visitAndDereference(ctx.charSelectionSlice().expression(0)));
             }
+            String s = st.render();
             if (ctx.charSelectionSlice().IntegerConstant() != null) {
                 st.add("offset", ctx.charSelectionSlice().IntegerConstant().getText());
             }
+            
         }
         return st;
     }
@@ -2311,7 +2321,7 @@ implements OpenPearlVisitor<ST> {
         ASTAttribute attr = m_ast.lookup(ctx);
 
         if (m_verbose > 0) {
-            System.out.println("CppCodeGeneratorVisitor: visitCharSelection");
+            System.out.println("CppCodeGeneratorVisitor: visitBitSelection");
         }
 
         // we have different situations
@@ -4110,39 +4120,11 @@ implements OpenPearlVisitor<ST> {
 
     @Override
     public ST visitCallStatement(OpenPearlParser.CallStatementContext ctx) {
-        ASTAttribute attr = m_ast.lookup(ctx);
-        ST stOfName = visitName(ctx.name());
         ST call = m_group.getInstanceOf("CallStatement");
-        call.add("callee",  stOfName);
+        call.add("callee",  visitName(ctx.name()));
+ 
         return call;
     }    
-    //        String fromns = se.getGlobalAttribute();
-    //     
-    //        if (fromns != null && fromns.equals(m_module.getName())) {
-    //            fromns = null;
-    //        }
-    //        stmt.add("fromns",fromns);
-    //        if (se instanceof ProcedureEntry) {
-    //            m_formalParameters = ((ProcedureEntry)se).getFormalParameters();
-    //            stmt.add("callee", getUserVariableWithoutNamespace(procName));
-    //        } else if (se instanceof VariableEntry) {
-    //            VariableEntry ve= (VariableEntry)se;
-    //            TypeReference tr = (TypeReference)(ve.getType());
-    //            TypeProcedure tp = (TypeProcedure)(tr.getBaseType());
-    //            m_formalParameters = tp.getFormalParameters();
-    //            ST cont = m_group.getInstanceOf("CONT");
-    //            cont.add("operand", visit(ctx.name()));
-    //            stmt.add("callee", cont);
-    //            
-    //        }
-    //       
-    // 
-    //        if (ctx.listOfActualParameters() != null) {
-    //            stmt.add("ListOfActualParameters",
-    //                    visitListOfActualParameters(ctx.listOfActualParameters()));
-    //        }
-    //
-    //        return stmt;
 
 
     @Override
@@ -4215,12 +4197,14 @@ implements OpenPearlVisitor<ST> {
         } else {
             // scalar type
             if (attr.getType() instanceof TypeVariableChar) {
+                // we do not know the size of the VariableCharacter -> let's create a
+                // temporary variable of the size of the formal parameter
+                // and assign the temporary variabbe with the selection
                 ST temp = m_group.getInstanceOf("TempCharVariable");
 
                 String tempVarName = nextTempVarName();
-
-                TypeVariableChar t = (TypeVariableChar) (attr.getType());
-                temp.add("char_size", t.getBaseType().getPrecision());
+              
+                temp.add("char_size", formalParameter.getType().getPrecision());
                 temp.add("variable", tempVarName);
                 temp.add("expr", visitAndDereference(expression));
                 ST param = m_group.getInstanceOf("ActualParameters");

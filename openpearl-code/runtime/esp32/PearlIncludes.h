@@ -63,6 +63,7 @@ Only this file mus be included.
 #include "PutCharacter.h"
 #include "GetCharacter.h"
 
+#include "Ref.h"
 #include "RefChar.h"
 #include "ScheduleSignalAction.h"
 #include "Prio.h"
