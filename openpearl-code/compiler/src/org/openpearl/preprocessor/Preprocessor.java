@@ -41,6 +41,10 @@ import java.io.PrintStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,7 +57,7 @@ import java.util.Stack;
 
 public class Preprocessor {
     static String m_version = "v0.1";
-    static List<String> m_inputFiles = new ArrayList<String>();
+    static ArrayList<String> m_inputFiles = new ArrayList<String>();
     static String m_sourceFilename = "";
     static String m_outputFilename = null;
     static int m_verbose = 0;
@@ -62,7 +66,7 @@ public class Preprocessor {
     static int m_noOfWarnings = 0;
     static int m_lineWidth = 80;
     static int m_lineno = 1;
-    static List<String> m_includeDirs = new ArrayList<>();
+    static ArrayList<String> m_includeDirs = new ArrayList<>();
     static HashMap<String,String> m_defines = new HashMap<>();
     static List<String> m_seenIncludes = new ArrayList<>();
     static Stack<SourceFile> m_sourcefiles = new Stack<>();
@@ -96,6 +100,7 @@ public class Preprocessor {
         for (int i = 0; i < m_inputFiles.size(); i++) {
             m_sourceFilename = m_inputFiles.get(i);
 
+            outputPPLine(1, m_sourceFilename, "1");
             m_sourcefiles.push(new SourceFile(m_sourceFilename));
             processLines(new HashSet<Statement>(),0);
             m_sourcefiles.pop();
@@ -127,9 +132,16 @@ public class Preprocessor {
     }
 
     private static void handleInclude(String args) {
+
         args = stripComment(args.trim());
         String currentFileName = m_sourceFilename;
-        m_sourceFilename = args;
+        m_sourceFilename= findFile(args, m_includeDirs);
+
+        if (m_sourceFilename == null) {
+            System.out.println("ERROR: Include file not found:"+args);
+            System.exit(-2);
+        }
+
         m_sourcefiles.push(new SourceFile(m_sourceFilename));
 
         outputPPLine(m_sourcefiles.peek().getLineNo(), m_sourceFilename, "1");
@@ -276,7 +288,8 @@ public class Preprocessor {
                 m_verbose++;
             } else if (arg.equals("--stacktrace")) {
                 m_stacktrace = true;
-            } else if (arg.equals("-I")) {
+            } else if (arg.startsWith("-I")) {
+                addIncludeSearchPath(arg.substring(2,arg.length()));
             } else if (arg.startsWith("-D")) {
                 addDefine(arg.substring(2,arg.length()));
             } else if (arg.equals("--output")) {
@@ -329,6 +342,13 @@ public class Preprocessor {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    static void addIncludeSearchPath(String path) {
+        m_includeDirs.add(path);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     private static void addDefine(String variable) {
         Pattern pattern = Pattern.compile("^(.+?)(?:=(.+))?$");
         Matcher matcher = pattern.matcher(variable);
@@ -610,6 +630,21 @@ public class Preprocessor {
             }
         }.parse();
     }
+
+    public static String findFile(String filename, ArrayList<String> searchPaths) {
+        for (String path : searchPaths) {
+            String absoluteFilename = path + "/" + filename;
+            Path fullPath = Paths.get(absoluteFilename);
+            boolean b = Files.exists(fullPath, LinkOption.NOFOLLOW_LINKS);
+            File file = new File(absoluteFilename);
+            System.out.println("Original file path : " + file.getPath());
+//            System.out.println("Canonical file path : " + (String)file.getCanonicalPath());
+//            System.out.println("Canonical file path : " + file.getCanonicalFile());
+
+        }
+
+        return null;
+    }
 }
 
 class SourceFile {
@@ -617,15 +652,14 @@ class SourceFile {
         m_filename = filename;
 
         m_file = new File(m_filename);
+
         String filenamehandleDefine = m_file.getAbsolutePath();
 
         try {
             m_inputStream = new FileInputStream(m_filename);
             m_reader = new InputStreamReader(m_inputStream, "UTF-8");
             m_bufferedReader = new BufferedReader(m_reader);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.err.println(e.getMessage()); // handle exception
         }
     }
@@ -637,24 +671,41 @@ class SourceFile {
     public String getFileName() {
         return m_filename;
     }
+
     public String getNextLine() {
         try {
             String line;
             m_lineno++;
             line = this.m_bufferedReader.readLine();
             return line;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.err.println(e.getMessage()); // handle exception
         }
         return null;
     }
 
     public void close() {
-        if (m_bufferedReader != null) { try { m_bufferedReader.close(); } catch(Throwable t) { /* ensure close happens */ } }
-        if (m_reader != null) { try { m_reader.close(); } catch(Throwable t) { /* ensure close happens */ } }
-        if (m_inputStream != null) { try { m_inputStream.close(); } catch(Throwable t) { /* ensure close happens */ } }
+        if (m_bufferedReader != null) {
+            try {
+                m_bufferedReader.close();
+            } catch (Throwable t) {
+                /* ensure close happens */
+            }
+        }
+        if (m_reader != null) {
+            try {
+                m_reader.close();
+            } catch (Throwable t) {
+                /* ensure close happens */
+            }
+        }
+        if (m_inputStream != null) {
+            try {
+                m_inputStream.close();
+            } catch (Throwable t) {
+                /* ensure close happens */
+            }
+        }
     }
 
     private String m_filename;
