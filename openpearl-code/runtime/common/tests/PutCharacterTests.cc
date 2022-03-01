@@ -57,13 +57,13 @@ TEST(PutCharacter, simpleCharacter) {
    pearlrt::Character<5> x("PEARL");
    rc.setWork(c);
    {
-      rc.clear();
+      rc.rewind();
       ASSERT_THROW(
          pearlrt::PutCharacter<5>::toA(x,
                                        (pearlrt::Fixed<31>) - 1,
                                        sink),
          pearlrt::CharacterFormatSignal);
-      rc.clear();
+      rc.rewind();
       EXPECT_THROW(
          pearlrt::PutCharacter<5>::toA(x,
                                     (pearlrt::Fixed<31>)0 ,
@@ -71,25 +71,25 @@ TEST(PutCharacter, simpleCharacter) {
          pearlrt::CharacterFormatSignal);
 
       EXPECT_EQ(rc.getCurrent(), 0);
-      rc.clear();
+      rc.rewind();
       pearlrt::PutCharacter<5>::toA(x,
                                     (pearlrt::Fixed<31>)2 ,
                                     sink);
       EXPECT_EQ(rc.getCurrent(), 2);
       EXPECT_STREQ(rc.getCstring(), "PE");
-      rc.clear();
+      rc.rewind();
       pearlrt::PutCharacter<5>::toA(x,
                                     (pearlrt::Fixed<31>)5 ,
                                     sink);
       EXPECT_EQ(rc.getCurrent(), 5);
       EXPECT_STREQ(rc.getCstring(), "PEARL");
-      rc.clear();
+      rc.rewind();
       pearlrt::PutCharacter<5>::toA(x,
                                     (pearlrt::Fixed<31>)7 ,
                                     sink);
       EXPECT_EQ(rc.getCurrent(), 7);
       EXPECT_STREQ(rc.getCstring(), "PEARL  ");
-      rc.clear();
+      rc.rewind();
       pearlrt::PutCharacter<5>::toA(x,
                                     sink);
       EXPECT_EQ(rc.getCurrent(), 5);

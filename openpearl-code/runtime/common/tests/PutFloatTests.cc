@@ -57,7 +57,7 @@ TEST(PutFloat, simpleFloat) {
    pearlrt::Float<52> x(-1234);
    rc.setWork(c);
    {
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>) - 1234;
       ASSERT_THROW(
          pearlrt::PutFloat<52>::toF(x,
@@ -65,14 +65,14 @@ TEST(PutFloat, simpleFloat) {
                                     (pearlrt::Fixed<31>)0,
                                     sink),
          pearlrt::FixedFormatSignal);
-      rc.clear();
+      rc.rewind();
       ASSERT_THROW(
          pearlrt::PutFloat<52>::toF(x,
                                     (pearlrt::Fixed<31>) - 1,
                                     (pearlrt::Fixed<31>)0,
                                     sink),
          pearlrt::FixedFormatSignal);
-      rc.clear();
+      rc.rewind();
       ASSERT_THROW(
          pearlrt::PutFloat<52>::toF(x,
                                     (pearlrt::Fixed<31>)5,
@@ -81,7 +81,7 @@ TEST(PutFloat, simpleFloat) {
          pearlrt::FixedValueSignal);
    }
    {
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>) - 1234;
       ASSERT_THROW(
          pearlrt::PutFloat<52>::toF(x,
@@ -92,7 +92,7 @@ TEST(PutFloat, simpleFloat) {
    }
    {
       pearlrt::Character<5> d1(5, (char*)"-1234"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>) - 1234;
       pearlrt::PutFloat<52>::toF(x,
                                  (pearlrt::Fixed<31>)5,
@@ -104,7 +104,7 @@ TEST(PutFloat, simpleFloat) {
    }
    {
       pearlrt::Character<5> d1(5, (char*)"   -1"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>) - 1;
       pearlrt::PutFloat<52>::toF(x,
                                  (pearlrt::Fixed<31>)5,
@@ -116,7 +116,7 @@ TEST(PutFloat, simpleFloat) {
    }
    {
       pearlrt::Character<5> d1(5, (char*)"12345"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>)12345;
       pearlrt::PutFloat<52>::toF(x,
                                  (pearlrt::Fixed<31>)5,
@@ -128,7 +128,7 @@ TEST(PutFloat, simpleFloat) {
    }
    {
       pearlrt::Character<5> d1(5, (char*)" 12.0"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>)12;
       pearlrt::PutFloat<52>::toF(x,
                                  (pearlrt::Fixed<31>)5,
@@ -150,7 +150,7 @@ TEST(PutFloat, exp2Format) {
    pearlrt::Float<52> x(-1234);
    rc.setWork(c);
    {
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>) - 1234;
       ASSERT_THROW(
          pearlrt::PutFloat<52>::toE(x,
@@ -160,7 +160,7 @@ TEST(PutFloat, exp2Format) {
                                     (pearlrt::Fixed<31>)2,
                                     sink),
          pearlrt::ExpFormatSignal);
-      rc.clear();
+      rc.rewind();
       ASSERT_THROW(
          pearlrt::PutFloat<52>::toE(x,
                                     (pearlrt::Fixed<31>)-1,
@@ -169,7 +169,7 @@ TEST(PutFloat, exp2Format) {
                                     (pearlrt::Fixed<31>)2,
                                     sink),
          pearlrt::ExpFormatSignal);
-      rc.clear();
+      rc.rewind();
       ASSERT_THROW(
          pearlrt::PutFloat<52>::toE(x,
                                     (pearlrt::Fixed<31>)13,
@@ -178,7 +178,7 @@ TEST(PutFloat, exp2Format) {
                                     (pearlrt::Fixed<31>)2,
                                     sink),
          pearlrt::ExpFormatSignal);
-      rc.clear();
+      rc.rewind();
       ASSERT_THROW(
          pearlrt::PutFloat<52>::toE(x,
                                     (pearlrt::Fixed<31>)13,
@@ -187,7 +187,7 @@ TEST(PutFloat, exp2Format) {
                                     (pearlrt::Fixed<31>)2,
                                     sink),
          pearlrt::ExpFormatSignal);
-      rc.clear();
+      rc.rewind();
       ASSERT_THROW(
          pearlrt::PutFloat<52>::toE(x,
                                     (pearlrt::Fixed<31>)13,
@@ -196,12 +196,12 @@ TEST(PutFloat, exp2Format) {
                                     (pearlrt::Fixed<31>)2,
                                     sink),
          pearlrt::ExpFormatSignal);
-      rc.clear();
+      rc.rewind();
    }
    {
                                        //   12345678901234567
       pearlrt::Character<12> d1(12, (char*)"     0.0E+00"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>)0.0;
       pearlrt::PutFloat<52>::toE(x,
                                  (pearlrt::Fixed<31>)12,
@@ -216,7 +216,7 @@ TEST(PutFloat, exp2Format) {
    {
                                        //   12345678901234567
       pearlrt::Character<12> d1(12, (char*)"    12.3E+02"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>)1.2345E3;
       pearlrt::PutFloat<52>::toE(x,
                                  (pearlrt::Fixed<31>)12,
@@ -231,7 +231,7 @@ TEST(PutFloat, exp2Format) {
    {
                                        //   12345678901234567
       pearlrt::Character<12> d1(12, (char*)"   -12.3E+02"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>)-1.2345E3;
       pearlrt::PutFloat<52>::toE(x,
                                  (pearlrt::Fixed<31>)12,
@@ -246,7 +246,7 @@ TEST(PutFloat, exp2Format) {
    {
                                        //   12345678901234567
       pearlrt::Character<12> d1(12, (char*)"    12.3E-04"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>)1.2345e-3;
       pearlrt::PutFloat<52>::toE(x,
                                  (pearlrt::Fixed<31>)12,
@@ -261,7 +261,7 @@ TEST(PutFloat, exp2Format) {
    {
                                        //   12345678901234567
       pearlrt::Character<12> d1(12, (char*)"   -12.3E-04"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>)-1.2345e-3;
       pearlrt::PutFloat<52>::toE(x,
                                  (pearlrt::Fixed<31>)12,
@@ -276,7 +276,7 @@ TEST(PutFloat, exp2Format) {
    {
                                        //   12345678901234567
       pearlrt::Character<12> d1(12, (char*)"   -12.3E-04"), d2;
-      rc.clear();
+      rc.rewind();
       pearlrt::Float<52> nan;
       EXPECT_THROW(
       pearlrt::PutFloat<52>::toE(nan,
@@ -291,7 +291,7 @@ TEST(PutFloat, exp2Format) {
    {
                                        //   12345678901234567
       pearlrt::Character<12> d1(12, (char*)"     0.0E+00"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>)-1.2345e+103;
       EXPECT_THROW(
       pearlrt::PutFloat<52>::toE(x,
@@ -305,7 +305,7 @@ TEST(PutFloat, exp2Format) {
    {
                                        //   12345678901234567
       pearlrt::Character<12> d1(12, (char*)"     0.0E+00"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Float<52>)-1.2345e-103;
       pearlrt::PutFloat<52>::toE(x,
                                  (pearlrt::Fixed<31>)12,

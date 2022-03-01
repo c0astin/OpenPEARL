@@ -418,7 +418,7 @@ endSampling:
          throw theCharacterFormatSignal;
       }
 
-      rc->clear();
+      rc->rewind();
       rc->fill();
 
       while (width > 0) {

@@ -41,14 +41,14 @@ TEST(RefCharTests, CTors) {
       pearlrt::Character<10> c;
       pearlrt::RefCharacter rc(c);
       EXPECT_EQ(rc.getMax(), 10);
-      EXPECT_EQ(rc.getCurrent(), 0);
+      EXPECT_EQ(rc.getCurrent(), 10);
    }
    {
       pearlrt::RefCharacter rc;
       pearlrt::Character<10> c;
       rc.setWork(c);
       EXPECT_EQ(rc.getMax(), 10);
-      EXPECT_EQ(rc.getCurrent(), 0);
+      EXPECT_EQ(rc.getCurrent(), 10);
    }
 }
 TEST(RefCharTests, Operations) {
@@ -57,8 +57,8 @@ TEST(RefCharTests, Operations) {
       pearlrt::Character<10> c;
       rc.setWork(c);
       EXPECT_EQ(rc.getMax(), 10);
-      EXPECT_EQ(rc.getCurrent(), 0);
-//      rc.clear();   // << clear is not necessary immediatelly afeter setWork
+      EXPECT_EQ(rc.getCurrent(), 10);
+      rc.rewind();   
       EXPECT_EQ(rc.getMax(), 10);
       EXPECT_EQ(rc.getCurrent(), 0);
       pearlrt::Character<3> h(3, (char*)"Hal");
@@ -84,7 +84,7 @@ TEST(RefCharTests, Operations) {
       pearlrt::Character<100> content;
       pearlrt::RefCharacter rc;
       rc.setWork(content);
-//      rc.clear();   // << clear is not necessary immediatelly afeter setWork
+      rc.rewind();
       rc.add(hello);
       rc.add(world);
       rc.store(hw);
@@ -106,7 +106,7 @@ TEST(RefCharTests, Operations) {
       pearlrt::Character<100> content;
       pearlrt::RefCharacter rc;
       rc.setWork(content);
-//      rc.clear();   // << clear is not necessary immediatelly afeter setWork
+      rc.rewind();
       rc.add(hello);
       rc.add(world);
       rc.add(hello);

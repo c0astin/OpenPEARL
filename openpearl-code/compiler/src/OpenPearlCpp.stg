@@ -376,6 +376,10 @@ char_type(size) ::= <<
 pearlrt::Character\<<size>\>
 >>
 
+refChar_type() ::= <<
+pearlrt::RefCharacter
+>>
+
 float_type(size) ::= <<
 pearlrt::Float\<<size>\>
 >>
@@ -844,19 +848,25 @@ pearlrt::IODataEntry dataEntries[]  = {
 
 /*
 variable is the address of the data storage
+refCharVariable is used if we have a REF CHAR()
 type     is the type of the data
 nbr_of_elements is the number of (array-)elements to be transmitted
 lbw,upb   defines a variable character selection limits .CHAR(lwb,upb)
-isArray  marks taht a complete array shoul be transmitted
+isArray  marks that a complete array should be transmitted
 */
-iojob_data_item(variable,type,size,nbr_of_elements,lwb,upb,isArray) ::= <<
+iojob_data_item(variable,refCharVariable,type,size,nbr_of_elements,lwb,upb,isArray) ::= <<
 {
    .dataType={pearlrt::IODataEntry::<type>,<size>},
    <if(isArray)>
    .dataPtr={.outData=<variable>.getDataPtr()},
    .param1={.numberOfElements = <variable>.getTotalNbrOfElements()}
    <else>
+   <if(variable)>
    .dataPtr={.outData=&<variable>},
+   <endif>
+   <if(refCharVariable)>
+   .dataPtr={.outData=&<refCharVariable>},
+   <endif>
    .param1={.numberOfElements = <nbr_of_elements>},
    <endif>
    <if(lwb)>
@@ -2046,6 +2056,20 @@ AssignCharSelection2Char(id,expr) ::= <%
 	pearlrt::CharSlice(<id>).setSlice(<expr>);
 %>
 
+AssignRefChar(id,expr) ::= <<
+/* AssignRefChar */
+	<id>.rewind();
+	<id>.add(<expr>);
+>>
+
+AssignStorageToRefChar(id,expr) ::= <<
+    <id>.setWork(<expr>);
+>>
+
+AssignRefCharToChar(id,expr) ::= <%
+	<expr>.store(<id>);
+%>	
+	
 // variable character string e.g. in compare
 RhsCharSelection(id,lwb,upb,offset) ::= <%
 pearlrt::CharSlice(<id>).getSlice(<lwb>,<upb><if(offset)>+pearlrt::Fixed\<15>(<offset>)<endif>)

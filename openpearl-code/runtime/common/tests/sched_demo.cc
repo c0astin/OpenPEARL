@@ -151,12 +151,12 @@ DCLTASK(_TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    Character<16> ttt;
    RefCharacter rc;
    rc.setWork(ttt);
-   rc.clear();
+   rc.rewind();
    RefCharSink sink(rc);
    /*do something*/
   
    c = Clock::now();
-   rc.clear();
+   rc.rewind();
    PutClock::toT(c,15,6,sink);
    printf("%s: activate TASK2\n", rc.getCstring());
    task_TASK2.activate(me, pearlrt::Task::PRIO, pearlrt::Prio(10)); //  priority
@@ -166,7 +166,7 @@ DCLTASK(_TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
    while( Clock::now().compare(end) < 0)
    {
      c = Clock::now();
-     rc.clear();
+     rc.rewind();
      PutClock::toT(c,15,6,sink);
      printf("%s: 1 laueft\n",rc.getCstring());
 
@@ -176,25 +176,25 @@ DCLTASK(_TASK1,pearlrt::Prio(2),pearlrt::BitString<1>(1)) {
            0);
    }
    c = Clock::now();
-   rc.clear();
+   rc.rewind();
    PutClock::toT(c,15,6,sink);
    printf("%s:  Task1: preventing TASK3\n",rc.getCstring());
    task_TASK3.prevent(me);
    c = Clock::now();
-   rc.clear();
+   rc.rewind();
    PutClock::toT(c,15,6,sink);
    printf("%s: Task1: terminate Task2\n", rc.getCstring());
    task_TASK2.terminate(me);
  
    /*--- test of round-robin-timeslice within tasks of same priority ---*/
    c = Clock::now();
-   rc.clear();
+   rc.rewind();
    PutClock::toT(c,15,6,sink);
    printf("%s: Task1: perform rr-test\n", rc.getCstring());
    rr_test((Task*)me);
 
    c = Clock::now();
-   rc.clear();
+   rc.rewind();
    PutClock::toT(c,15,6,sink);
    printf("%s: Task1: finished \n", rc.getCstring());
 
@@ -206,7 +206,7 @@ DCLTASK(_TASK2,pearlrt::Prio(4),pearlrt::BitString<1>(0)) {
    Character<16> ttt;
    RefCharacter rc;
    rc.setWork(ttt);
-   rc.clear();
+   rc.rewind();
    RefCharSink sink(rc);
    
    /* do something*/
@@ -220,7 +220,7 @@ DCLTASK(_TASK2,pearlrt::Prio(4),pearlrt::BitString<1>(0)) {
    while(1)
    {
      Clock c = Clock::now();
-     rc.clear();
+     rc.rewind();
      PutClock::toT(c,15,6,sink);
      printf("%s:       2 laeuft\n", rc.getCstring());
      //sleep for 5 seconds
@@ -240,13 +240,13 @@ DCLTASK(_TASK3,pearlrt::Prio(6),pearlrt::BitString<1>(0)) {
    Character<16> ttt;
    RefCharacter rc;
    rc.setWork(ttt);
-   rc.clear();
+   rc.rewind();
    RefCharSink sink(rc);
    
    /* do something*/
      
      Clock c = Clock::now();
-     rc.clear();
+     rc.rewind();
      PutClock::toT(c,15,6,sink);
      printf("%s:                  3 laeuft\n", rc.getCstring());
    

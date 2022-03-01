@@ -218,16 +218,16 @@ printf("rr_test func %d\n",id);
           loopcounter --;
       }
       printf("    RR%d: time slice size: min=" , id);
-           rc.clear();        
+           rc.rewind();        
            PutDuration::toD(min,30,6, sink);
            printf("%s \n", rc.getCstring());
       printf("    RR%d: time slice size: max=" , id); 
-           rc.clear();        
+           rc.rewind();        
            PutDuration::toD(max,30,6, sink);
            printf("%s \n", rc.getCstring());
       sum = sum / (Float<23>)(loopcounter);
       printf("    RR%d: time slice size: avg=" , id);
-           rc.clear();        
+           rc.rewind();        
            PutDuration::toD(sum,30,6, sink);
            printf("%s \n", rc.getCstring());
   }

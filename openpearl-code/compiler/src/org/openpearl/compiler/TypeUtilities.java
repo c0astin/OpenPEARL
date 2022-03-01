@@ -6,6 +6,7 @@ import org.openpearl.compiler.SymbolTable.FormalParameter;
 import org.openpearl.compiler.SymbolTable.ProcedureEntry;
 import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.openpearl.compiler.SymbolTable.VariableEntry;
+import org.w3c.dom.Attr;
 
 /**
  * Class with utilities for type checks, which are used at more than one location
@@ -37,6 +38,7 @@ public class TypeUtilities {
      *    <li>if rhsType is procedure returning a ref --> invoke procedure: continue checking in a loop
      *    <li>if rhsType is a Ref to procedure : dereference and continue
      *    </ol>
+     * <li>if lhsType is TypeRefChar , rhs must be a variable entry of type TypeChar</li>
      * </ul>
      * apply the rules until no rule was applied in a loop 
      *
@@ -60,6 +62,20 @@ public class TypeUtilities {
 
         // there are a lot of possible cases
         // let's check valid assignments start with easy cases
+        // RefChar() assignment this differs from
+        // rc = charVariable; ! setup the work zone
+        // CONT rc = charExpression ! fill the work zone
+        if (lhsType instanceof TypeReference && (((TypeReference)lhsType).getBaseType() instanceof TypeRefChar)) { 
+            if (rhsVariable != null && rhsVariable.getType() instanceof TypeChar) {
+                // ok: ref char assigment of work zone
+                return true;
+            }
+            if (rhsAttr.getType() instanceof TypeChar && rhsAttr.getVariable() != null) {
+                return true;
+            }
+        }
+
+
         // and continue with more complicated cases as long we have not found
         // a valid assignment
         boolean ruleApplied ;
@@ -92,7 +108,9 @@ public class TypeUtilities {
                 if (rhsType instanceof TypeReference &&          
                         TypeUtilities.simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, ((TypeReference)rhsType).getBaseType())) {
                     // implicit dereference required
-                    rhsAttr.setType(((TypeReference)rhsType).getBaseType());
+                    if (! (((TypeReference)rhsType).getBaseType() instanceof TypeRefChar)) {
+                       rhsAttr.setType(((TypeReference)rhsType).getBaseType());
+                    }
                     ruleApplied=true;
                     break;
                 }
@@ -232,6 +250,9 @@ public class TypeUtilities {
 //            CommonErrorMessages.typeMismatch(lhsType, rhsType,"IDENT parameter:");
             if (rhsSymbol instanceof ProcedureEntry) {
                 ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := "+ ((ProcedureEntry)rhsSymbol).getType());//  rhsType.toString4IMC(false));
+            } else if (lhsType instanceof TypeReference && ((TypeReference)lhsType).getBaseType() instanceof TypeRefChar &&
+                    rhsType instanceof TypeChar && rhsSymbol == null) {
+                ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := constant of type "+ rhsOriginalType);//  rhsType.toString4IMC(false));
             } else {
                 ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := "+ rhsOriginalType);//  rhsType.toString4IMC(false));
             }
@@ -319,15 +340,22 @@ public class TypeUtilities {
                 if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }
-            }
-            if (rhs instanceof TypeVariableChar) {
+            } else if (rhs instanceof TypeVariableChar) {
                 // the check for correct size must be done at runtime
                 result=true;
+            } else if (rhs instanceof TypeRefChar) {
+                // the check for correct size must be done at runtime
+                result = true;
             }
 
         } else if (lhs instanceof TypeVariableChar) {
             if (rhs instanceof TypeChar) {
                 // the check for correct size must be done at runtime
+                result=true;
+            }
+        } else if (lhs instanceof TypeRefChar) {
+            if (rhs instanceof TypeChar ||
+                    rhs instanceof TypeVariableChar) {
                 result=true;
             }
         } else if (lhs instanceof TypeBit) {

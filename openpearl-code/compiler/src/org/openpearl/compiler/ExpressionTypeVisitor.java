@@ -3872,7 +3872,7 @@ implements OpenPearlVisitor<Void> {
 
             m_type = ((TypeProcedure)m_type).getResultType();
         } else {
-            ErrorStack.addInternal("treatListOfExpressions@4133: untreated type "+ m_type);
+            ErrorStack.add("cannot apply indices or parameters on type "+ safeType);
             return false;
         }
         return true;

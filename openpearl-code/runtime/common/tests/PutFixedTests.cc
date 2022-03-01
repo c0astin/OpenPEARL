@@ -58,7 +58,7 @@ TEST(PutFixed, simpleFixed) {
    rc.setWork(c);
    {
       pearlrt::Character<5> d1(5, (char*)"*****"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Fixed<15>) - 1234;
       ASSERT_THROW(
          pearlrt::PutFixed<15>::toF(x,
@@ -66,14 +66,14 @@ TEST(PutFixed, simpleFixed) {
                                     (pearlrt::Fixed<31>)0,
                                     sink),
          pearlrt::FixedFormatSignal);
-      rc.clear();
+      rc.rewind();
       ASSERT_THROW(
          pearlrt::PutFixed<15>::toF(x,
                                     (pearlrt::Fixed<31>) - 1,
                                     (pearlrt::Fixed<31>)0,
                                     sink),
          pearlrt::FixedFormatSignal);
-      rc.clear();
+      rc.rewind();
       ASSERT_THROW(
          pearlrt::PutFixed<15>::toF(x,
                                     (pearlrt::Fixed<31>)5,
@@ -83,7 +83,7 @@ TEST(PutFixed, simpleFixed) {
    }
    {
       pearlrt::Character<5> d1(5, (char*)"*****"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Fixed<15>) - 1234;
       ASSERT_THROW(
          pearlrt::PutFixed<15>::toF(x,
@@ -94,7 +94,7 @@ TEST(PutFixed, simpleFixed) {
    }
    {
       pearlrt::Character<5> d1(5, (char*)"-1234"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Fixed<15>) - 1234;
       pearlrt::PutFixed<15>::toF(x,
                                  (pearlrt::Fixed<31>)5,
@@ -106,7 +106,7 @@ TEST(PutFixed, simpleFixed) {
    }
    {
       pearlrt::Character<5> d1(5, (char*)"   -1"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Fixed<15>) - 1;
       pearlrt::PutFixed<15>::toF(x,
                                  (pearlrt::Fixed<31>)5,
@@ -118,7 +118,7 @@ TEST(PutFixed, simpleFixed) {
    }
    {
       pearlrt::Character<5> d1(5, (char*)"12345"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Fixed<15>)12345;
       pearlrt::PutFixed<15>::toF(x,
                                  (pearlrt::Fixed<31>)5,
@@ -130,7 +130,7 @@ TEST(PutFixed, simpleFixed) {
    }
    {
       pearlrt::Character<5> d1(5, (char*)" 12.0"), d2;
-      rc.clear();
+      rc.rewind();
       x = (pearlrt::Fixed<15>)12;
       pearlrt::PutFixed<15>::toF(x,
                                  (pearlrt::Fixed<31>)5,

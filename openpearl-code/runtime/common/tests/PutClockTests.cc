@@ -59,33 +59,33 @@ TEST(PutClock, Operations) {
    pearlrt::RefCharacter rc;
    rc.setWork(wrk);
    pearlrt::RefCharSink sink(rc);
-   rc.clear();
+   rc.rewind();
    ASSERT_THROW(
       pearlrt::PutClock::toT(c, 6, 0, sink),
       pearlrt::ClockFormatSignal);
-   rc.clear();
+   rc.rewind();
    ASSERT_NO_THROW(
       pearlrt::PutClock::toT(c, 8, 0, sink) );
    ASSERT_STREQ(rc.getCstring(), " 1:02:03") ;
       
-   rc.clear();
+   rc.rewind();
    ASSERT_THROW(
       pearlrt::PutClock::toT(c, 18, -1, sink),
       pearlrt::ClockFormatSignal);
-   rc.clear();
+   rc.rewind();
    ASSERT_THROW(
       pearlrt::PutClock::toT(c, 14, 7, sink),
       pearlrt::ClockFormatSignal);
-   rc.clear();
+   rc.rewind();
    ASSERT_NO_THROW(
       pearlrt::PutClock::toT(c, 16, 7, sink));
    ASSERT_STREQ(rc.getCstring(), " 1:02:03.0000000") ;
-   rc.clear();
+   rc.rewind();
    ASSERT_NO_THROW(pearlrt::PutClock::toT(c, 15, 6, sink));
-   rc.clear();
+   rc.rewind();
    pearlrt::PutClock::toT(c, 15, 6, sink);
    ASSERT_STREQ(rc.getCstring(), " 1:02:03.000000") ;
-   rc.clear();
+   rc.rewind();
    pearlrt::PutClock::toT(c, 15, 0, sink);
    ASSERT_STREQ(rc.getCstring(), "        1:02:03") ;
 }

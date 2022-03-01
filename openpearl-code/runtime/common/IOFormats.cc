@@ -53,7 +53,7 @@ namespace pearlrt {
       checkCapacity(w);
       RefCharacter rc;
       rc.setWork(s, len);
-      rc.clear();
+      rc.rewind();
       PutHelper::doPutChar(w.x, &rc, sink);
    }
 
@@ -64,7 +64,7 @@ namespace pearlrt {
 
       RefCharacter rc;
       rc.setWork(s, len);
-      rc.clear();
+      rc.rewind();
 
       helper.readCharacterByA(&rc);
    }
@@ -355,6 +355,24 @@ namespace pearlrt {
               Log::error("type mismatch in A format");
               throw theDationDatatypeSignal;
            }
+         }
+         break;
+
+      case IODataEntry::REFCHAR:
+         {
+            RefCharacter* rc = (RefCharacter*)(dataEntry->dataPtr.inData)+loopOffset;
+	    char* start = rc->getDataPtr();
+ 	    Fixed<31> len = rc->getCurrent();
+
+            if (fmtEntry->format == IOFormatEntry::A ||
+             fmtEntry->format == IOFormatEntry::LIST) {
+              toA(start,len.x,len);
+            } else if (fmtEntry->format == IOFormatEntry::Aw) {
+              toA(start,len.x,fmtEntry->fp1.f31);
+            } else {
+              Log::error("type mismatch in A format");
+              throw theDationDatatypeSignal;
+            }
          }
          break;
 

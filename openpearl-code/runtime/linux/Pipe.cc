@@ -198,7 +198,7 @@ namespace pearlrt {
 
       Character<80> capString;
       RefCharacter rc(capString);
-      rc.clear();
+      rc.rewind();
 
       if (cap & IDF) {
          rc.add("IDF ");

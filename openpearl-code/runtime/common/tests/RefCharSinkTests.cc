@@ -44,7 +44,7 @@ TEST(RefCharSinkTests, Operations) {
    pearlrt::Character<10> d(10, (char*)"1234567890");
    pearlrt::RefCharSink sink(rc);
    rc.setWork(c);
-   rc.clear();
+   rc.rewind();
    sink.putChar('1');
    sink.putChar('2');
    sink.putChar('3');

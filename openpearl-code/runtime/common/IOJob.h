@@ -319,6 +319,13 @@ namespace pearlrt {
          param1.nbrOfElements is the number of chars to transmit<br>
          */
          CHARSLICE,
+         /**
+         a REF CHAR() must be treated separatelly
+
+         the REF CHAR kwonw its starting positions as well
+	 as its current length
+         */
+         REFCHAR,
          CLOCK, ///< CLOCK types
          DURATION, ///< DURATION types
          /** a virtual type, which enabled loops on parts

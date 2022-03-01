@@ -69,6 +69,10 @@ implements OpenPearlVisitor<Void> {
     @Override
     public Void visitAssignment_statement(OpenPearlParser.Assignment_statementContext ctx) {
         Log.debug("CheckAssignment:visitAssignment_statement:ctx" + CommonUtils.printContext(ctx));
+        
+        Log.debug("CheckAssignment:visitAssignment_statement:ctx.expression"
+                + CommonUtils.printContext(ctx.expression()));
+        
         String id = null;
         // System.out.println(ctx.getText());
 
@@ -97,8 +101,6 @@ implements OpenPearlVisitor<Void> {
             ErrorStack.addInternal(id + " not in symbol table or is no variable");
         }
 
-        Log.debug("CheckAssignment:visitAssignment_statement:ctx.expression"
-                + CommonUtils.printContext(ctx.expression()));
 
         if(lhsVariable.getLoopControlVariable()==true) {
             ErrorStack.add("loop variable not allowed on lhs");
@@ -121,6 +123,7 @@ implements OpenPearlVisitor<Void> {
       
         /* boolean assignable = */
         ASTAttribute rhsAttr = m_ast.lookup(ctx.expression());
+
 
         TypeUtilities.mayBeAssignedTo(lhsType, lhsVariable, ctx.expression(),m_ast);
 

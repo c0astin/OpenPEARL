@@ -723,7 +723,12 @@ implements OpenPearlVisitor<ST> {
             TypeDefinition t = ((TypeArray)(ve.getType())).getBaseType();
             ST storage = m_group.getInstanceOf("ArrayStorageDeclaration");
             storage.add("name", ve.getName());
-            storage.add("type",visitTypeAttribute(t));
+            if (t instanceof TypeReference && ((TypeReference)t).getBaseType() instanceof TypeRefChar) {
+                storage.add("type",visitTypeAttribute(((TypeReference)t).getBaseType()));
+            } else {
+                storage.add("type",visitTypeAttribute(t));
+            }
+           
             storage.add("assignmentProtection", ve.getType().hasAssignmentProtection());
             storage.add("totalNoOfElements", ((TypeArray) ve.getType()).getTotalNoOfElements());
             if (t instanceof TypeBolt) {
@@ -744,7 +749,11 @@ implements OpenPearlVisitor<ST> {
 
             st = m_group.getInstanceOf("ArrayVariableDeclaration");
             st.add("name", ve.getName());
-            st.add("type",visitTypeAttribute(t));
+            if (t instanceof TypeReference && ((TypeReference)t).getBaseType() instanceof TypeRefChar) {
+                st.add("type",visitTypeAttribute(((TypeReference)t).getBaseType()));
+            } else {
+               st.add("type",visitTypeAttribute(t));
+            }
             st.add("descriptor", getArrayDescriptor(ve));
             st.add("storage", "data_"+ve.getName());
 
@@ -841,6 +850,7 @@ implements OpenPearlVisitor<ST> {
             }
 
             st.add("inv", ve.getType().hasAssignmentProtection());
+            String s= st.render();
             scalarVariableDeclaration.add("variable_denotations", st);
 
         } else {
@@ -1960,7 +1970,7 @@ implements OpenPearlVisitor<ST> {
     public ST visitAssignment_statement(OpenPearlParser.Assignment_statementContext ctx) {
         ST stmt = null;
         String s = ctx.getText();
-        ST lhs = visit(ctx.name());
+        // ST lhs = visit(ctx.name());
         Boolean derefLhs = false;
         ASTAttribute attrLhs = m_ast.lookup(ctx.name());
         ASTAttribute attrRhs = m_ast.lookup(ctx.expression());
@@ -1981,9 +1991,16 @@ implements OpenPearlVisitor<ST> {
         } else if (ctx.charSelectionSlice() != null) {
             stmt.add("lhs", lhs4CharSelection(ctx, derefLhs));
             // rhs is already treated
+        } else if (attrLhs.getType() instanceof TypeReference && 
+                ( ((TypeReference)(attrLhs.getType())).getBaseType() instanceof TypeRefChar) &&
+                attrRhs.getType() instanceof TypeChar) {
+            stmt = m_group.getInstanceOf("AssignStorageToRefChar");
+            stmt.add("id", visitName(ctx.name()));
+            stmt.add("expr", visit(ctx.expression()));
+        
         } else if (attrLhs.getType() instanceof TypeReference && derefLhs == false) {
             // we have a reference assignment; rhs may only be a name
-            stmt.add("lhs", lhs);
+            stmt.add("lhs", visit(ctx.name()));
             stmt.add("rhs", visit(ctx.expression()));
         } else if (attrLhs.getType() instanceof TypeChar
                 && attrRhs.getType() instanceof TypeVariableChar) {
@@ -1991,7 +2008,22 @@ implements OpenPearlVisitor<ST> {
             // assign a TypeVariableChar to a Char<S> is very special
             // we must convert the Char<s> into a CharSlice and set the rhs-slice
             // via .setSlice -> CharSlice(lhs).setSlice(<rhs>);
-            stmt.add("id", visit(ctx.name()));
+            stmt.add("id", visitName(ctx.name()));
+            stmt.add("expr", visit(ctx.expression()));
+        } else if  (attrLhs.getType() instanceof TypeChar &&
+                ((attrRhs.getType() instanceof TypeReference && 
+                ((TypeReference)attrRhs.getType()).getBaseType() instanceof TypeRefChar) ||
+                        (attrRhs.getType() instanceof TypeRefChar) ) ){
+            stmt = m_group.getInstanceOf("AssignRefCharToChar");
+            stmt.add("id", visitName(ctx.name()));
+            stmt.add("expr", visit(ctx.expression()));  
+            String xxx = stmt.render();
+            xxx += ".";
+        } else if (attrLhs.getType() instanceof TypeRefChar) {
+            stmt = m_group.getInstanceOf("AssignRefChar");
+            // fake lhsType to RefChar()
+            attrLhs.setType(new TypeReference(new TypeRefChar()));
+            stmt.add("id", visitName(ctx.name()));
             stmt.add("expr", visit(ctx.expression()));
         } else if (attrLhs.getType() instanceof TypeStructure) {
             ST st = m_group.getInstanceOf("assignment_statement");
@@ -2003,10 +2035,10 @@ implements OpenPearlVisitor<ST> {
         } else {
             if (derefLhs) {
                 ST deref = m_group.getInstanceOf("CONT");
-                deref.add("operand", lhs);
+                deref.add("operand", visit(ctx.name()));
                 stmt.add("lhs", deref);
             } else {
-                stmt.add("lhs", lhs);
+                stmt.add("lhs", visit(ctx.name()));
             }
             stmt.add("rhs", visit(ctx.expression()));
         }
@@ -2120,7 +2152,7 @@ implements OpenPearlVisitor<ST> {
         } else if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry && ctx.listOfExpression() == null) {
             // just the name of a procedure
             currentType=((ProcedureEntry)entry).getType();
-        }else if (entry instanceof FormalParameter) {
+        } else if (entry instanceof FormalParameter) {
             int x=0;
             currentType= ((FormalParameter) entry).getType();
         } else if (entry instanceof VariableEntry) {
@@ -2247,12 +2279,6 @@ implements OpenPearlVisitor<ST> {
            }
            
         } 
-//        if (currentType instanceof TypeProcedure) {
-//            ST st = m_group.getInstanceOf("FunctionCall");
-//            st.add("callee",stOfName);
-//            currentType = ((TypeProcedure)currentType).getResultType();
-//            stOfName = st; 
-//        }
        
         return stOfName;
     }
@@ -3470,8 +3496,13 @@ implements OpenPearlVisitor<ST> {
                                     visitAndDereference(ssc.charSelectionSlice().expression(0)));
                             data.add("upb",
                                     visitAndDereference(ssc.charSelectionSlice().expression(1)));
+                        } else if (attr.getType() instanceof TypeRefChar) {
+                            attr.setType(new TypeReference(new TypeRefChar()));  // fake AST attribute
+                            data.add("size", "0") ;
+                            data.add("refCharVariable", visitAndDereference(ctx.ioListElement(i).expression()));
+                            data.add("nbr_of_elements", "1");
 
-                        } else if (attr.isConstant() || attr.getVariable() != null) {
+                        } else if (attr.getConstant() != null || attr.getVariable() != null) {
                             // check if we must extend to the larger type
                             if (m_typeOfTransmission != null &&
                                     !attr.getType().equals(m_typeOfTransmission)) {
@@ -3674,6 +3705,9 @@ implements OpenPearlVisitor<ST> {
         } else if (type instanceof TypeVariableChar) {
             data.add("type", "CHARSLICE");
             data.add("size", ((TypeVariableChar) (type)).getBaseType().getPrecision());
+        } else if (type instanceof TypeRefChar) {
+            data.add("type", "REFCHAR");
+            // size must be written by superior function level
         } else if (type instanceof TypeBit) {
             data.add("type", "BIT");
             data.add("size", ((TypeBit) (type)).getPrecision());
@@ -5315,7 +5349,9 @@ implements OpenPearlVisitor<ST> {
     @Override
     public ST visitCONTExpression(OpenPearlParser.CONTExpressionContext ctx) {
         TypeDefinition op = m_ast.lookupType(ctx.expression());
-
+        if (op instanceof TypeReference && ((TypeReference)op).getBaseType() instanceof TypeRefChar) {
+            return visit(ctx.expression());
+        }
         // the dereferencing occurs implicit in getExpression
         ST st = m_group.getInstanceOf("CONT");
         st.add("operand", visit(ctx.expression()));

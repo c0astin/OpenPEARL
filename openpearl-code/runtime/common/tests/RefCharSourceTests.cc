@@ -43,6 +43,7 @@ TEST(RefCharSourceTests, Operations) {
    pearlrt::RefCharSource source(rc);
    char ch;
    rc.setWork(d);
+   rc.rewind();
    ASSERT_EQ(ch = source.getChar(), '1');
    ASSERT_EQ(ch = source.getChar(), '2');
    ASSERT_EQ(ch = source.getChar(), '3');

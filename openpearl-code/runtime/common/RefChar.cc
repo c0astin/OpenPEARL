@@ -63,7 +63,7 @@ namespace pearlrt {
       charIsINV = true;
    }
 
-   void RefCharacter::clear() {
+   void RefCharacter::rewind() {
       current = 0;
    }
 
@@ -165,6 +165,10 @@ namespace pearlrt {
 
    size_t RefCharacter::getCurrent() {
       return current;
+   }
+
+   char * RefCharacter::getDataPtr() {
+       return data;
    }
 
    void RefCharacter::setCurrent(size_t newCurrent) {

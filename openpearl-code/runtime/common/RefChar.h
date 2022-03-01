@@ -118,7 +118,7 @@ namespace pearlrt {
       template<size_t S>
       RefCharacter(Character<S> & rhs) {
          max = rhs.upb().x;
-         current = 0; //max;
+         current = max;
          data = &rhs.data[0];
          charIsINV = false;
       }
@@ -134,11 +134,18 @@ namespace pearlrt {
       template<size_t S>
       RefCharacter(const Character<S> & rhs) {
          max = rhs.upb().x;
-         current = 0; //max;
+         current = max;
          data = (char*) &rhs.data[0];
          charIsINV = true;
       }
 
+/*
+      template<size_t S>
+      RefCharacter& operator=(Character<S> & rhs) {
+         setWork(rhs);
+         return *this;
+      }
+*/
 
       /**
        setWork(rhs)
@@ -155,7 +162,7 @@ namespace pearlrt {
       template<size_t S>
       void setWork(Character<S> & rhs) {
          max = rhs.upb().x;
-         current = 0; //max;
+         current = max;
          data = &rhs.data[0];
       }
 
@@ -212,7 +219,7 @@ namespace pearlrt {
       /**
          set current content to 'empty'
       */
-      void clear();
+      void rewind();
 
       /**
          fill the remaining data in the container to SPACE
@@ -250,6 +257,13 @@ namespace pearlrt {
          \returns current size of the content
       */
       size_t getCurrent();
+
+      /**
+         get the current data pointer 
+
+         \returns the data pointer of the RefCharacter
+      */
+      char* getDataPtr();
 
       /**
          set current content size

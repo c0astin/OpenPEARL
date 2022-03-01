@@ -66,25 +66,25 @@ TEST(PutBitString, B4) {
       pearlrt::BitFormatSignal);
    {
       x = (pearlrt::BitString<7>)1;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB4(x, f2, sink);
       EXPECT_STREQ(rc.getCstring(), "02");
    }
    {
       x = (pearlrt::BitString<7>)0x7f;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB4(x, f2, sink);
       EXPECT_STREQ(rc.getCstring(), "FE");
    }
    {
       x = (pearlrt::BitString<7>)0x7f;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB4(x, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "F");
    }
    {
       x = (pearlrt::BitString<7>)0x7f;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB4(x, f3, sink);
       EXPECT_STREQ(rc.getCstring(), "FE0");
    }
@@ -92,7 +92,7 @@ TEST(PutBitString, B4) {
 /* removed -- job for the compiler: pass default width
    {
       x = (pearlrt::BitString<7>)0x7f;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB4(x, sink);
       EXPECT_STREQ(rc.getCstring(), "FE");
    }
@@ -117,52 +117,52 @@ TEST(PutBitString, B1) {
       pearlrt::BitFormatSignal);
    {
       x = (pearlrt::BitString<7>)1;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB1(x, f7, sink);
       EXPECT_STREQ(rc.getCstring(), "0000001");
    }
    {
       x = (pearlrt::BitString<7>)1;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB1(x, f6, sink);
       EXPECT_STREQ(rc.getCstring(), "000000");
    }
    {
       x = (pearlrt::BitString<7>)1;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB1(x, f8, sink);
       EXPECT_STREQ(rc.getCstring(), "00000010");
    }
    {
       x = (pearlrt::BitString<7>)0x7f;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB1(x, f7, sink);
       EXPECT_STREQ(rc.getCstring(), "1111111");
    }
    {
       x = (pearlrt::BitString<7>)0x7f;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB1(x, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "1");
    }
 
    {
    //   x = (pearlrt::BitString<7>)0x7f;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<1>::toB1(x1, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "1");
    }
    {
       pearlrt::BitString<34> x34;
       x34 = x1;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<34>::toB1(x34, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "1");
    }
    {
       pearlrt::BitString<64> x64;
       x64 = x1;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<64>::toB1(x64, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "1");
    }
@@ -170,7 +170,7 @@ TEST(PutBitString, B1) {
    /** removed job for the compiler --- pass default width
    {
       x = (pearlrt::BitString<7>)0x7f;
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<7>::toB1(x, sink);
       EXPECT_STREQ(rc.getCstring(), "1111111");
    }
@@ -186,42 +186,42 @@ TEST(PutBitString, B1234) {
    rc.setWork(r1);
    x64 = x1;
    {
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<1>::toB1(x1, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "1");
    }
    {
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<1>::toB2(x1, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "2");
    }
    {
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<1>::toB3(x1, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "4");
    }
    {
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<1>::toB4(x1, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "8");
    }
    {
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<64>::toB1(x64, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "1");
    }
    {
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<64>::toB2(x64, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "2");
    }
    {
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<64>::toB3(x64, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "4");
    }
    {
-      rc.clear();
+      rc.rewind();
       pearlrt::PutBitString<64>::toB4(x64, f1, sink);
       EXPECT_STREQ(rc.getCstring(), "8");
    }

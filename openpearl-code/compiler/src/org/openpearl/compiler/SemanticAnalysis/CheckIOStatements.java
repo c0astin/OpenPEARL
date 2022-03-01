@@ -1169,9 +1169,18 @@ implements OpenPearlVisitor<Void> {
         if (formatCtx.getChild(0) instanceof OpenPearlParser.CharacterStringFormatContext
                 && td instanceof TypeChar) {
             return true;
-        }
+        } 
         if (formatCtx.getChild(0) instanceof OpenPearlParser.CharacterStringFormatContext
                 && td instanceof TypeVariableChar && m_directionInput == false) {
+            return true;
+        }
+
+        if (formatCtx.getChild(0) instanceof OpenPearlParser.CharacterStringFormatContext
+                && td instanceof  TypeRefChar && m_directionInput == false) {
+            return true;
+        }
+        if (formatCtx.getChild(0) instanceof OpenPearlParser.CharacterStringFormatContext
+                && td instanceof  TypeReference && ((TypeReference)td).getBaseType() instanceof TypeRefChar && m_directionInput == false) {
             return true;
         }
 

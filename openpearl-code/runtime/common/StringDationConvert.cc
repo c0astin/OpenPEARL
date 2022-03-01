@@ -51,9 +51,9 @@ namespace pearlrt {
 
       if (isOutput) {
           // clear target string
-          string->clear();
+          string->rewind();
 	  string->fill();
-          string->clear();
+          string->rewind();
           sink.pos(0);
       } else {
           source.rewind();

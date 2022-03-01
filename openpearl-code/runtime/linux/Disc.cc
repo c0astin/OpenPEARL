@@ -93,7 +93,7 @@ namespace pearlrt {
 
       Character<80> capString;
       RefCharacter rc(capString);
-      rc.clear();
+      rc.rewind();
 
       if (cap & IDF) {
          rc.add("IDF ");
@@ -236,7 +236,7 @@ namespace pearlrt {
       //            like NEW, if file does not exist
 
       rcFn.setWork(completeFileName);
-      rcFn.clear();
+      rcFn.rewind();
       rcFn.add(myDisc->devicePath);
       rcFn.add(*fn);
       fileName = rcFn.getCstring();

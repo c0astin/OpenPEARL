@@ -140,7 +140,7 @@ TEST(Convert, putPosSop) {
 test CONVERT FROM 
 */
 TEST(Convert, simpleGet) {
-   pearlrt::Log::info("*** Convert: simpleGut start ***");
+   pearlrt::Log::info("*** Convert: simpleGet start ***");
    {
        pearlrt::Character<8> text;
        pearlrt::Fixed<31>  x;

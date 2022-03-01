@@ -313,7 +313,7 @@ namespace pearlrt {
       unsigned int uiVal;
       double fVal;
       char * sPtr;
-      rc.clear();
+      rc.rewind();
 
       Clock c = Clock::now();
       PutClock::toT(c, 15, 6, sink);
