@@ -598,7 +598,7 @@ procedureDenotation:
     
 
 typeProcedure:
-	 ( 'PROCEDURE' | 'PROC' ) listOfFormalParameters? resultAttribute?
+	 ( 'ENTRY' | ( ':' )? ('PROCEDURE' | 'PROC' ) ) listOfFormalParameters? resultAttribute?
 	 ;
 	 
 ////////////////////////////////////////////////////////////////////////////////

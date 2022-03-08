@@ -1,7 +1,8 @@
 \htgt{ProcedureSpecification} ::=\\
-\x \{ \kw{SPECIFY} $\mid$ \kw{SPC} \} \hlink{Identifier}\S Procedure 
-%%%\{ {\bf ENTRY $\mid$ [ : ] PROC} \} \\
-\{ \kw{PROC} $\mid$  \kw{PROCEDURE} \} \\
+\x \{ \kw{SPECIFY} $\mid$ \kw{SPC} \} \hlink{Identifier}\S Procedure  \\
+%%% ENTRY reanimated and PROCEDURE added 
+\x \{ \bf \kw{ENTRY} $\mid$ \{ [ : ] \{ \kw{PROC} $\mid$  \kw{PROCEDURE} \} \} \} \\
+%%%\{ \kw{PROC} $\mid$  \kw{PROCEDURE} \} \\
 \x [ \hlink{ListOfParametersForSPC} ] [\hlink{ResultAttribute} ] 
    \hlink{GlobalAttribute} \kw{;}
 

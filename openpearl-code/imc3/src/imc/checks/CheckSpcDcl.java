@@ -313,35 +313,43 @@ public class CheckSpcDcl {
                         "attributes in DCL " + dcl.getDationAttributes());
             }
         } else if (spc.getType().equals("PROC")) {
-            if (!spc.getProcParameters().equals(dcl.getProcParameters())) {
+        	if (spc.getProcParameters() == null && dcl.getProcParameters() != null) {
+                    Log.error("mismatch in parameter list of PROC '" + spc.getUserName() + "' expected in SPC: "
+                            + " - none -" + "'");
+                    Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
+                            "parameter list of PROC in DCL: " + dcl.getProcParameters());
+        	} else if (spc.getProcParameters() != null && dcl.getProcParameters() == null) {
+                Log.error("mismatch in parameter list of PROC '" + spc.getUserName() + "' expected in SPC: "
+                        + spc.getProcParameters()+"'");
+                Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
+                        "parameter list of PROC in DCL: " + " - none -");
+        	}
+        	
+            if (spc.getProcParameters() != null && !spc.getProcParameters().equals(dcl.getProcParameters())) {
                 Log.error("mismatch in parameter list of PROC '" + spc.getUserName() + "' expected in SPC: "
                         + spc.getProcParameters() + "'");
                 Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
                         "parameter list of PROC in DCL: " + dcl.getProcParameters());
             }
 
-            if (!spc.getProcReturns().equals(dcl.getProcReturns())) {
-                if (spc.getProcReturns() != null) {
+            if (spc.getProcReturns() == null && dcl.getProcReturns() != null) {
+            	 Log.error("type mismatch in result type of PROC '" + spc.getUserName()
+                 + "' does not return a value");
+            	 Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
+                         "result type in declaration of PROC '" + dcl.getUserName() + "' is '"
+                                 + dcl.getProcReturns() + "'");
+            } else if (spc.getProcReturns() != null && dcl.getProcReturns() == null) {
+                Log.error("type mismatch in result type of PROC '" + spc.getUserName() + "' RETURNS '"
+                        + spc.getProcReturns() + "'");
+                
+            } else    if (spc.getProcReturns() != null && !(spc.getProcReturns().equals(dcl.getProcReturns()))) {
                     Log.error("type mismatch in result type of PROC '" + spc.getUserName() + "' RETURNS '"
                             + spc.getProcReturns() + "'");
-                } else {
-                    Log.error("type mismatch in result type of PROC '" + spc.getUserName()
-                    + "' does not return a value");
-                }
-                if (dcl.getProcReturns() != null) {
-                    Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
-                            "result type in declaration of PROC '" + dcl.getUserName() + "' is '"
-                                    + dcl.getProcReturns() + "'");
-                } else {
+
                     Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
                             "declaration of PROC '" + dcl.getUserName() + "' does not return a value");
-
-                }
             }
         }
-
-
-
     }
 
     private void checkType(SpcProblemPart spc, Module m1, int  indexInSystemPart) {

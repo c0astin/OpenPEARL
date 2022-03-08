@@ -148,6 +148,15 @@ possible to copy the head of a procedure declaration into another module
 and to generate a correct specification of the procedure by adding the
 keyword SPECIFY.
 
+%%%%%%%%% begin added 2022-03-08
+\paragraph{Differences zu PEARL90:}
+\begin{itemize}
+\item PEARL90 allows only an optional identifier in formal parameters. OpenPEARL accepts the same notation as used in procedure declarations.
+\item PEARL90 allows in procedure specification only \kw{ENTRY} or \kw{PROC} and not \kw{PROCEDURE}
+\end{itemize}
+%%%%%%%%% end added 2022-03-08
+
+
 Subprogram procedures are declared without and function procedures with
 result attribute. The result type determines the type of the calculated
 result which is returned to the call position. With the help of the

@@ -8,6 +8,10 @@ PROBLEM;
 
    SPC export FIXED  GLOBAL(spcDclExport);
    SPC struct STRUCT [(c,d) FIXED ] GLOBAL(spcDclExport);
+   SPC proc1 PROC GLOBAL(spcDclExport);
+   SPC proc2 : PROC GLOBAL(spcDclExport);
+   SPC proc3  ENTRY GLOBAL(spcDclExport);
+
 
 tImport: TASK MAIN;
    AFTER 1 SEC RESUME;
