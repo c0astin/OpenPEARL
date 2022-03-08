@@ -180,10 +180,17 @@ implements OpenPearlVisitor<Void> {
         // m_typeOfReturnExpression contains the type of the last RETURN statement
         // in the procedure body
         m_typeOfReturns = procedureEntry.getResultType();
+ 
 
         visitChildren(ctx);
 
         if (m_typeOfReturns != null) {
+            TypeReference refChar = new TypeReference(new TypeRefChar());
+            
+            if (m_typeOfReturns.equals(refChar)) {
+                ErrorStack.add(ctx.typeProcedure().resultAttribute().resultType(),"RETURNS", "type "+refChar+" is not allowed as result type");
+            }
+            
             // check last statement of function to be RETURN
             // this is easier to implement as to enshure that all paths of control
             // meet a RETURN(..) statement
@@ -390,6 +397,17 @@ implements OpenPearlVisitor<Void> {
             ErrorStack.enter(ctx, "param");
             ErrorStack.add("SIGNAL must passed by IDENT");
             ErrorStack.leave();
+        }
+        
+        if (passIdentical && type instanceof TypeReference) {
+            TypeDefinition base =  ((TypeReference)type).getBaseType();
+            if (base instanceof TypeRefChar) {
+                if (! base.hasAssignmentProtection() && !type.hasAssignmentProtection()) {
+                    ErrorStack.enter(ctx, "param");
+                    ErrorStack.add("REF CHAR() must not be passed by IDENT");
+                    ErrorStack.leave();
+                }
+            }
         }
 
     }

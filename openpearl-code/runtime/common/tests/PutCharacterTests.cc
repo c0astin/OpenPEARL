@@ -70,29 +70,29 @@ TEST(PutCharacter, simpleCharacter) {
                                     sink),
          pearlrt::CharacterFormatSignal);
 
-      EXPECT_EQ(rc.getCurrent(), 0);
+      EXPECT_EQ(rc.getCurrent().x, 0);
       rc.rewind();
       pearlrt::PutCharacter<5>::toA(x,
                                     (pearlrt::Fixed<31>)2 ,
                                     sink);
-      EXPECT_EQ(rc.getCurrent(), 2);
+      EXPECT_EQ(rc.getCurrent().x, 2);
       EXPECT_STREQ(rc.getCstring(), "PE");
       rc.rewind();
       pearlrt::PutCharacter<5>::toA(x,
                                     (pearlrt::Fixed<31>)5 ,
                                     sink);
-      EXPECT_EQ(rc.getCurrent(), 5);
+      EXPECT_EQ(rc.getCurrent().x, 5);
       EXPECT_STREQ(rc.getCstring(), "PEARL");
       rc.rewind();
       pearlrt::PutCharacter<5>::toA(x,
                                     (pearlrt::Fixed<31>)7 ,
                                     sink);
-      EXPECT_EQ(rc.getCurrent(), 7);
+      EXPECT_EQ(rc.getCurrent().x, 7);
       EXPECT_STREQ(rc.getCstring(), "PEARL  ");
       rc.rewind();
       pearlrt::PutCharacter<5>::toA(x,
                                     sink);
-      EXPECT_EQ(rc.getCurrent(), 5);
+      EXPECT_EQ(rc.getCurrent().x, 5);
       EXPECT_STREQ(rc.getCstring(), "PEARL");
    }
 }

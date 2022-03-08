@@ -412,7 +412,7 @@ endSampling:
 
    void GetHelper::readCharacterByA(RefCharacter * rc) {
       int c;   // characters or field delimiters to read
-      int nbrOfCharsToTreat = rc->getMax();
+      int nbrOfCharsToTreat = rc->getMax().x;
 
       if (width <= 0) {
          throw theCharacterFormatSignal;

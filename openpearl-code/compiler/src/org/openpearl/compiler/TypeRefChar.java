@@ -4,7 +4,7 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
 public class TypeRefChar extends TypeDefinition {
-    TypeRefChar() {
+     public TypeRefChar() {
         /* note
          * the grammar selects 'REF' (... | typeRefChar | ...)
          * thus this type is the baseType of a TypeReference object
@@ -15,9 +15,8 @@ public class TypeRefChar extends TypeDefinition {
 //    public String toString() {
 //        return getName();
 //    }
-    @Override
 
-    
+    @Override
     public String toString4IMC(boolean isInStructure) {
         return toString();
     }

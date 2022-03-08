@@ -1,0 +1,20 @@
+MODULE(refChar);
+
+PROBLEM;
+
+
+p: PROC;
+   DCL data CHAR(10);
+   DCL rc REF CHAR() INIT(data);
+  
+  CONT rc = rc CAT '1';
+/*$         ^
+error: CAT: REF CHAR() not supported in expressions, yet  
+*/
+
+END;
+
+
+MODEND;
+
+  

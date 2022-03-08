@@ -1,0 +1,40 @@
+MODULE(r);
+
+PROBLEM;
+   DCL bitArray(10)     BIT;
+   DCL fixedArray1(10)     FIXED;
+   DCL fixedArray1i(10) INV FIXED INIT(0);
+   DCL fixedArray2(2,2)    FIXED;
+
+   DCL refFixedArrayA REF ()      FIXED INIT(fixedArray1);
+   DCL refFixedArrayB REF ()      FIXED INIT(fixedArray1i);
+/*$                                          ^
+error: type mismatch in REF INIT: REF () FIXED(31) := (1:10) INV FIXED(31)
+*/
+   DCL refFixedArrayC REF ()  INV FIXED INIT(fixedArray1i);
+   DCL refFixedArrayD REF ()      FIXED INIT(fixedArray2);
+/*$                                          ^
+error: type mismatch in REF INIT: REF () FIXED(31) := (1:2,1:2) FIXED(31)
+*/
+   DCL refFixedArrayE REF (,)     FIXED INIT(fixedArray1);
+/*$                                          ^
+error: type mismatch in REF INIT: REF (,) FIXED(31) := (1:10) FIXED(31)
+*/
+   DCL refFixedArrayF REF (,)     FIXED INIT(fixedArray1i);
+/*$                                          ^
+error: type mismatch in REF INIT: REF (,) FIXED(31) := (1:10) INV FIXED(31)
+*/
+   DCL refFixedArrayG REF (,) INV FIXED INIT(fixedArray1i);
+/*$                                          ^
+error: type mismatch in REF INIT: REF (,) INV FIXED(31) := (1:10) INV FIXED(31)
+*/
+   DCL refFixedArrayH REF (,)     FIXED INIT(fixedArray2);
+
+! -------------------- type mix
+   DCL refFixedArrayI REF ()      FIXED INIT(bitArray);
+/*$                                          ^
+error: type mismatch in REF INIT: REF () FIXED(31) := (1:10) BIT(1)
+*/
+
+MODEND;
+

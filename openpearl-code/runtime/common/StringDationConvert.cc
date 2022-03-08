@@ -36,6 +36,7 @@
 #include "Signals.h"
 #include "Log.h"
 #include "Fixed.h"
+#include "compare.h"
 
 namespace pearlrt {
 
@@ -68,7 +69,7 @@ namespace pearlrt {
       // check 0 or negativ, which must be accepted to produce the
       // correct Signal from the I/O formats
       if (n.x <= 0) return;
-      if (string->getCurrent()+n.x > string->getMax() ) {
+      if ((string->getCurrent()+n > string->getMax()).getBoolean() ) {
           Log::error("attempt to read/write past the string limits");
           throw theCharacterTooLongSignal;
       }

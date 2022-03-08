@@ -40,15 +40,15 @@ TEST(RefCharTests, CTors) {
    {
       pearlrt::Character<10> c;
       pearlrt::RefCharacter rc(c);
-      EXPECT_EQ(rc.getMax(), 10);
-      EXPECT_EQ(rc.getCurrent(), 10);
+      EXPECT_EQ(rc.getMax().x, 10);
+      EXPECT_EQ(rc.getCurrent().x, 10);
    }
    {
       pearlrt::RefCharacter rc;
       pearlrt::Character<10> c;
       rc.setWork(c);
-      EXPECT_EQ(rc.getMax(), 10);
-      EXPECT_EQ(rc.getCurrent(), 10);
+      EXPECT_EQ(rc.getMax().x, 10);
+      EXPECT_EQ(rc.getCurrent().x, 10);
    }
 }
 TEST(RefCharTests, Operations) {
@@ -56,11 +56,11 @@ TEST(RefCharTests, Operations) {
       pearlrt::RefCharacter rc;
       pearlrt::Character<10> c;
       rc.setWork(c);
-      EXPECT_EQ(rc.getMax(), 10);
-      EXPECT_EQ(rc.getCurrent(), 10);
+      EXPECT_EQ(rc.getMax().x, 10);
+      EXPECT_EQ(rc.getCurrent().x, 10);
       rc.rewind();   
-      EXPECT_EQ(rc.getMax(), 10);
-      EXPECT_EQ(rc.getCurrent(), 0);
+      EXPECT_EQ(rc.getMax().x, 10);
+      EXPECT_EQ(rc.getCurrent().x, 0);
       pearlrt::Character<3> h(3, (char*)"Hal");
       rc.add(h);
       pearlrt::Character<2> h1(2, (char*)"lo ");

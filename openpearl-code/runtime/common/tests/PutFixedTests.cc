@@ -100,7 +100,7 @@ TEST(PutFixed, simpleFixed) {
                                  (pearlrt::Fixed<31>)5,
                                  (pearlrt::Fixed<31>)0,
                                  sink);
-      ASSERT_EQ(rc.getCurrent(), 5);
+      ASSERT_EQ(rc.getCurrent().x, 5);
       rc.store(d2);
       EXPECT_TRUE((d1 == d2).getBoolean());
    }
@@ -112,7 +112,7 @@ TEST(PutFixed, simpleFixed) {
                                  (pearlrt::Fixed<31>)5,
                                  (pearlrt::Fixed<31>)0,
                                  sink);
-      ASSERT_EQ(rc.getCurrent(), 5);
+      ASSERT_EQ(rc.getCurrent().x, 5);
       rc.store(d2);
       EXPECT_TRUE((d1 == d2).getBoolean());
    }
@@ -124,7 +124,7 @@ TEST(PutFixed, simpleFixed) {
                                  (pearlrt::Fixed<31>)5,
                                  (pearlrt::Fixed<31>)0,
                                  sink);
-      ASSERT_EQ(rc.getCurrent(), 5);
+      ASSERT_EQ(rc.getCurrent().x, 5);
       rc.store(d2);
       EXPECT_TRUE((d1 == d2).getBoolean());
    }
@@ -136,7 +136,7 @@ TEST(PutFixed, simpleFixed) {
                                  (pearlrt::Fixed<31>)5,
                                  (pearlrt::Fixed<31>)1,
                                  sink);
-      ASSERT_EQ(rc.getCurrent(), 5);
+      ASSERT_EQ(rc.getCurrent().x, 5);
       rc.store(d2);
       EXPECT_TRUE((d1 == d2).getBoolean());
    }

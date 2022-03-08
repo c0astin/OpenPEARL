@@ -1,0 +1,53 @@
+MODULE(refChar);
+
+PROBLEM;
+
+DCL rc REF CHAR();
+
+p: PROC;
+   DCL data CHAR(10);
+   DCL prc REF CHAR() INIT (data);
+   DCL invRefCharInit INV REF CHAR() INIT(data);
+   DCL invRefInvChar INV REF INV CHAR() INIT('hallo');
+   DCL refInvChar REF INV CHAR() INIT(data);
+
+   rc = data;
+/*$^
+error: assignment: life cycle of 'data' is shorter than 'rc'
+*/
+
+   invRefCharInit = data;
+/*$^
+error: assignment: INV variable not allowed on lhs
+*/
+
+   invRefInvChar = data;
+/*$^
+error: assignment: INV variable not allowed on lhs
+*/
+
+  CONT refInvChar = '1';
+/*$
+  ^
+error: assignment: INV variable not allowed on lhs
+*/
+
+   refInvChar = '12345';
+
+   print(rc);
+
+END;
+
+proc: PROC RETURNS(REF CHAR());
+/*$                ^
+error: PROC:RETURNS: type REF CHAR() is not allowed as result type
+*/
+   RETURN(rc);
+END;
+
+print: PROC(x REF CHAR());
+END;
+
+MODEND;
+
+  

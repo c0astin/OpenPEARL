@@ -1,0 +1,23 @@
+MODULE(cfe);
+
+PROBLEM;
+
+   DCL n INV FIXED INIT(5);
+   DCL c INV CHAR(1) INIT(' ');
+   DCL b INV BIT(8) INIT('06'B4);
+   DCL d FIXED INIT(n);
+   DCL sema0 SEMA PRESET(n);
+   DCL sema0a SEMA PRESET(+n);
+   DCL sema0b SEMA PRESET(-n);
+   DCL sema1 SEMA PRESET(n*2);
+   DCL sema2 SEMA PRESET(n-2*n);
+   DCL sema3 SEMA PRESET(n//3);
+   DCL sema3a SEMA PRESET(n REM 3);
+   DCL sema3b SEMA PRESET((n*n) FIT 3);
+/*$                             ^
+error: FIT: value too large
+*/
+!   DCL sema5 SEMA PRESET(n - TOFIXED b);   ! TOFIXED is not supported yet
+!   DCL sema6 SEMA PRESET(n - TOFIXED c);
+MODEND;
+

@@ -79,6 +79,7 @@ implements OpenPearlVisitor<Void> {
         ErrorStack.enter(ctx, "assignment");
         ASTAttribute lhsAttr = null;
         TypeDefinition lhsType = null;
+        boolean lhsHasCont = ctx.dereference() != null;
 
         OpenPearlParser.NameContext ctxName = ctx.name();
         lhsAttr = m_ast.lookup(ctx.name());
@@ -106,7 +107,7 @@ implements OpenPearlVisitor<Void> {
             ErrorStack.add("loop variable not allowed on lhs");
             //} else if(lhsVariable.getAssigmentProtection()==true) {
         } else if(lhsType.hasAssignmentProtection()==true) {    
-            ErrorStack.add(lhsAttr.getType().toString() + " variable not allowed on lhs");
+            ErrorStack.add("INV variable not allowed on lhs");
         }
 
 

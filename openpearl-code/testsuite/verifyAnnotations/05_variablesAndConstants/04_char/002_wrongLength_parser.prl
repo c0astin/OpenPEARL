@@ -1,0 +1,14 @@
+MODULE(m);
+
+PROBLEM;
+   DCL okLength1 CHAR(1);
+   DCL okLength2 CHAR(32767);
+
+   DCL negativeLength CHAR(-1);
+/*$                        ^
+ERROR : Syntax error :extraneous input '-' expecting IntegerConstant
+*/
+   DCL zeroLength CHAR(0);
+   DCL toLong CHAR(32768);
+MODEND;
+

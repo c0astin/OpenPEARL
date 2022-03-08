@@ -396,9 +396,11 @@ duration_type(init) ::= <<
 pearlrt::Duration
 >>
 
+/* obsolete ? (20220302)
 TypeRefChar() ::= <<
 pearlrt::RefCharacter
 >>
+*/
 
 TypeReferenceDation(BaseType) ::= <<
 pearlrt::Ref \< <BaseType>* > 
@@ -864,9 +866,6 @@ iojob_data_item(variable,refCharVariable,type,size,nbr_of_elements,lwb,upb,isArr
    <if(variable)>
    .dataPtr={.outData=&<variable>},
    <endif>
-   <if(refCharVariable)>
-   .dataPtr={.outData=&<refCharVariable>},
-   <endif>
    .param1={.numberOfElements = <nbr_of_elements>},
    <endif>
    <if(lwb)>
@@ -1085,6 +1084,10 @@ pearlrt::CharSlice(<variable>).setSlice(<expr>);
 TempVariableList(variable) ::= <<	
 <variable: {v|<v>} ; separator="\n">	 	
 >>
+
+MakeRefChar(expr) ::= <%
+	pearlrt::RefCharacter(<expr>)
+%>
 
 /******************************** CPP INLINING *********************************/
 

@@ -67,7 +67,7 @@ printf("RefCharSource throw NoMoreCharactersSignal\n");
    }
 
    size_t RefCharSource::sop() {
-      return sourceObj->getCurrent();
+      return sourceObj->getCurrent().x;
    }
 
 }

@@ -31,6 +31,7 @@ package org.openpearl.compiler;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.openpearl.compiler.Exception.*;
 import org.openpearl.compiler.SymbolTable.*;
 import org.openpearl.compiler.OpenPearlParser.*;
@@ -91,6 +92,7 @@ implements OpenPearlVisitor<Void> {
     private String m_currentModuleName;
     private boolean m_isInSpecification = false;
     private IdentifierDenotationContext m_identifierDenotationContext;
+    private LinkedList<FormalParameter> m_formalParameters;
 
     public SymbolTableVisitor(int verbose, ConstantPool constantPool) {
         m_debug = false;
@@ -106,6 +108,7 @@ implements OpenPearlVisitor<Void> {
         this.m_constantPool = constantPool;
         // TODO: MS REMOVE?:        this.m_currentStructureEntry = null;
         this.m_typeStructure = null;
+        m_formalParameters=null;
     }
 
     @Override
@@ -382,12 +385,14 @@ implements OpenPearlVisitor<Void> {
         if (ctx != null) {
             for (int i = 0; i < ctx.formalParameter().size(); i++) {
                 if (m_isInSpecification && 
-                        ctx.formalParameter(i).identifier()!= null && 
-                        ctx.formalParameter(i).identifier().size()>1) {
-                  ErrorStack.add(ctx.formalParameter(i),"SPC","no identifier list allowed");
+                        ctx.formalParameter(i).getChild(0) instanceof TerminalNode &&
+                        Compiler.isStdPEARL90() == true) {
+                  ErrorStack.add(ctx.formalParameter(i),"SPC PROC","no list of identifiers allowed");
+                  break; // report error only once
                 }
-                if ((!m_isInSpecification && ctx.formalParameter(i).identifier() == null)) {
-                    ErrorStack.add(ctx.formalParameter(i),"DCL","identifier(s) required");
+               
+                if ((!m_isInSpecification) && ctx.formalParameter(i).identifier().size()== 0) {
+                    ErrorStack.add(ctx.formalParameter(i),"PROC declaration","identifier(s) required");
                 }
                 getFormalParameter(listOfFormalParameters, ctx.formalParameter(i));
             }
@@ -430,6 +435,7 @@ implements OpenPearlVisitor<Void> {
 
                 getParameterType(ctx.parameterType());
 
+                
                 if (nbrDimensions > 0) {
                     TypeArray array = new TypeArray();
                     array.setBaseType(m_type);
@@ -439,7 +445,8 @@ implements OpenPearlVisitor<Void> {
                     }
                     m_type = array;
                 }
-
+                m_type.setHasAssignmentProtection(assignmentProtection);
+                
                 listOfFormalParameters.add(
                         new FormalParameter(
                                 name, m_type, //assignmentProtection, 
@@ -735,7 +742,7 @@ implements OpenPearlVisitor<Void> {
                     }
                 } else if (m_type instanceof TypeReference) {
                     // lookup the SymboltableEntry of the identifier
-                    // further checks of existance, type and struct components are done 
+                    // further checks of existence, type and structure components are done 
                     // in CheckVariableDefinition
                     if (initElements.get(nextInitializerIndex).identifier() != null) {
                         String identifier = initElements.get(nextInitializerIndex).identifier().getText();
@@ -745,6 +752,14 @@ implements OpenPearlVisitor<Void> {
                         String identifier = initElements.get(nextInitializerIndex).name().ID().getText();
                         SymbolTableEntry se = m_currentSymbolTable.lookup(identifier);
                         init = new ReferenceInitializer( initElements.get(nextInitializerIndex).name(),se,m_currentSymbolTable);
+                    } else if (initElements.get(nextInitializerIndex).constant()!= null) {
+                        ConstantValue constant =
+                                getInitElement(
+                                        nextInitializerIndex,
+                                        initElements.get(nextInitializerIndex));
+                         init = new SimpleInitializer(
+                                        initElements.get(nextInitializerIndex), constant);
+                    } else if (initElements.get(nextInitializerIndex).constantExpression()!= null) {
                     } else {
                        ErrorStack.add(m_identifierDenotationContext.identifier(i),
                             "INIT","need identifier for REF");
@@ -1087,13 +1102,13 @@ implements OpenPearlVisitor<Void> {
         LinkedList<FormalParameter> formalParameters = null;
         TypeDefinition resultType = null;
 
-        ASTAttribute resultAttr = null;
+       // ASTAttribute resultAttr = null;
         for (ParseTree c : ctx.children) {
             if (c instanceof ResultAttributeContext) {
                 resultType = getResultAttribute((ResultAttributeContext) c);
-                resultAttr = new ASTAttribute(resultType);
+        //        resultAttr = new ASTAttribute(resultType);
             } else if (c instanceof ListOfFormalParametersContext) {
-                formalParameters =
+                m_formalParameters =
                         getListOfFormalParameters(
                                 (ListOfFormalParametersContext) c);
             }
@@ -1863,16 +1878,13 @@ implements OpenPearlVisitor<Void> {
         
         visitChildren(ctx);
         
-        LinkedList<FormalParameter> formalParameters = null;
         ASTAttribute resultType = null;
 
-        formalParameters =
-                getListOfFormalParameters(ctx.typeProcedure().listOfFormalParameters());
         if (ctx.typeProcedure().resultAttribute() != null) {
            resultType =     new ASTAttribute(   getResultAttribute(ctx.typeProcedure().resultAttribute()));
-           m_type = new TypeProcedure(formalParameters, getResultAttribute(ctx.typeProcedure().resultAttribute()));
+           m_type = new TypeProcedure(m_formalParameters, getResultAttribute(ctx.typeProcedure().resultAttribute()));
         } else {
-            m_type = new TypeProcedure(formalParameters, null);
+            m_type = new TypeProcedure(m_formalParameters, null);
         }
 
         
@@ -1881,7 +1893,7 @@ implements OpenPearlVisitor<Void> {
             Log.warn("SymbolTableVisitor@1924: visitProcedureDenotation still incomplete");
             
             //set scope to null to inhibit the creation of a new scope
-            ProcedureEntry ie = new ProcedureEntry(iName,m_type, formalParameters, resultType,m_globalName,ctx,null);
+            ProcedureEntry ie = new ProcedureEntry(iName,m_type, m_formalParameters, resultType,m_globalName,ctx,null);
             checkDoubleDefinitionAndEnterToSymbolTable(ie, ctx.identifierDenotation().identifier(i));
         }
         m_type = null; // invalidate m_type to avoid side effects with SIZOF <type>

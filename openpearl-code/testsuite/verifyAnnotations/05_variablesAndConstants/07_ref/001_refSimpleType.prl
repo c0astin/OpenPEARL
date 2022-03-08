@@ -1,0 +1,129 @@
+MODULE(r);
+/*
+Strategy:
+check REF for FIXED with different length and all other types of objects
+and assume the other type behave similar.
+
+check lifecycle on top level
+*/
+PROBLEM;
+
+init: PROC;
+   DCL f15 FIXED(15);
+   DCL f31 FIXED(31);
+   DCL b15 BIT(15);
+   DCL b31 BIT(31);
+   DCL fl23 FLOAT(23);
+   DCL fl52 FLOAT(52);
+   DCL c15 CHAR(15);
+   DCL c31 CHAR(31);
+   DCL d DURATION;
+   DCL clk CLOCK;
+
+   DCL rf15  REF FIXED(15) INIT(f15);
+   DCL rf15a REF FIXED(15) INIT(f31);
+/*$                             ^
+error: type mismatch in REF INIT: REF FIXED(15) := FIXED(31)
+*/
+   DCL rf15b REF FIXED(15) INIT(b15);
+/*$                             ^
+error: type mismatch in REF INIT: REF FIXED(15) := BIT(15)
+*/
+   DCL rf15c REF FIXED(15) INIT(b31);
+/*$                             ^
+error: type mismatch in REF INIT: REF FIXED(15) := BIT(31)
+*/
+   DCL rf15d REF FIXED(15) INIT(fl23);
+/*$                             ^
+error: type mismatch in REF INIT: REF FIXED(15) := FLOAT(23)
+*/
+   DCL rf15e REF FIXED(15) INIT(fl52);
+/*$                             ^
+error: type mismatch in REF INIT: REF FIXED(15) := FLOAT(52)
+*/
+   DCL rf15f REF FIXED(15) INIT(c15);
+/*$                             ^
+error: type mismatch in REF INIT: REF FIXED(15) := CHAR(15)
+*/
+   DCL rf15g REF FIXED(15) INIT(c31);
+/*$                             ^
+error: type mismatch in REF INIT: REF FIXED(15) := CHAR(31)
+*/
+   DCL rf15h REF FIXED(15) INIT(d);
+/*$                             ^
+error: type mismatch in REF INIT: REF FIXED(15) := DURATION
+*/
+   DCL rf15i REF FIXED(15) INIT(clk);
+/*$                             ^
+error: type mismatch in REF INIT: REF FIXED(15) := CLOCK
+*/
+END;
+
+assign: PROC;
+   DCL f15 FIXED(15);
+   DCL f31 FIXED(31);
+   DCL b15 BIT(15);
+   DCL b31 BIT(31);
+   DCL fl23 FLOAT(23);
+   DCL fl52 FLOAT(52);
+   DCL c15 CHAR(15);
+   DCL c31 CHAR(31);
+   DCL d DURATION;
+   DCL clk CLOCK;
+
+   DCL rf15  REF FIXED(15);
+   rf15 = f15;
+   rf15 = f31;
+/*$^
+error: assignment: type mismatch: REF FIXED(15) := FIXED(31)
+*/
+   rf15 = b15;
+/*$^
+error: assignment: type mismatch: REF FIXED(15) := BIT(15)
+*/
+   rf15 = b31;
+/*$^
+error: assignment: type mismatch: REF FIXED(15) := BIT(31)
+*/
+   rf15 = fl23;
+/*$^
+error: assignment: type mismatch: REF FIXED(15) := FLOAT(23)
+*/
+   rf15 = fl52; 
+/*$^
+error: assignment: type mismatch: REF FIXED(15) := FLOAT(52)
+*/
+   rf15 = c15;
+/*$^
+error: assignment: type mismatch: REF FIXED(15) := CHAR(15)
+*/
+   rf15 = c31;
+/*$^
+error: assignment: type mismatch: REF FIXED(15) := CHAR(31)
+*/
+   rf15 = d;
+/*$^
+error: assignment: type mismatch: REF FIXED(15) := DURATION
+*/
+   rf15 = clk;
+/*$^
+error: assignment: type mismatch: REF FIXED(15) := CLOCK
+*/
+END;
+
+DCL rf REF FIXED(15);
+
+wrongScope: PROC;
+   DCL f FIXED;
+   rf = f;
+/*$^
+error: assignment: type mismatch: REF FIXED(15) := FIXED(31)
+*/
+/*$^
+error: assignment: life cycle of 'f' is shorter than 'rf'
+*/
+END;
+
+
+MODEND;
+

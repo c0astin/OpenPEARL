@@ -34,6 +34,7 @@
 #include "BitString.h"
 #include "Character.h"
 #include "CharSlice.h"
+#include "RefChar.h"
 #include "Ref.h"
 
 /**
@@ -876,6 +877,123 @@ namespace pearlrt {
       return BitString<1>(lhs.x != (C*)(rhs.x));
    }    
 
+
+   /* -------------------------------------------------------------- */
+   /* RefCharacter<> comparisons (IS,ISNT)			     */
+   /* -------------------------------------------------------------- */
+
+   /**
+   compare equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are identical
+   */
+   BitString<1> operator== (const RefCharacter & lhs,
+                            const RefCharacter & rhs);
+
+   /**
+   compare equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are identical
+   */
+   template <size_t S> 
+   BitString<1> operator== (const Character<S> & lhs,
+                            const RefCharacter & rhs) {
+      return BitString<1>(lhs.data == rhs.getDataPtr());
+   }    
+
+   /**
+   compare equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are identical
+   */
+   template <size_t S>
+   BitString<1> operator== (const RefCharacter & lhs,
+                            const Character<S> & rhs) {
+      return BitString<1>(lhs.getDataPtr() == rhs.data);
+   }    
+
+   /**
+   compare equal operation for NIL comparisons
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are identical
+   */
+   BitString<1> operator== (const Ref<char> & lhs,
+                            const RefCharacter & rhs); 
+
+   /**
+   compare equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are identical
+   */
+   BitString<1> operator== (const RefCharacter & lhs,
+                            const Ref<char> & rhs);
+
+   /**
+   compare not equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are not identical
+   */
+   BitString<1> operator!= (const RefCharacter & lhs,
+                            const RefCharacter & rhs);
+
+   /**
+   compare not equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are not identical
+   */
+   template <size_t S>
+   BitString<1> operator!= (const Character<S> & lhs,
+                            const RefCharacter & rhs) {
+      return BitString<1>(lhs.data != rhs.getDataPtr());
+   }    
+
+   /**
+   compare not equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are not identical
+   */
+   template <size_t S>
+   BitString<1> operator!= (const RefCharacter & lhs,
+                            const Character<S> & rhs) {
+      return BitString<1>(lhs.getDataPtr() != rhs.data);
+   }
+    
+   /**
+   compare not equal operation for NIL comparisons
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are not identical
+   */
+   BitString<1> operator!= (const Ref<char> & lhs,
+                            const RefCharacter& rhs);
+
+   /**
+   compare not equal operation
+
+   \param lhs the first parameter of the comparison
+   \param rhs the second parameter of the comparison
+   \returns '1'B1, if both objects are not identical
+   */
+   BitString<1> operator!= (const RefCharacter & lhs,
+                            const Ref<char> & rhs);
 }
+
 #endif
 

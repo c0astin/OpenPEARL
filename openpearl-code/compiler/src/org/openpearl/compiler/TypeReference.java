@@ -36,12 +36,12 @@ import org.stringtemplate.v4.STGroup;
 public class TypeReference extends TypeDefinition {
     private TypeDefinition m_baseType;
 
-    TypeReference() {
+    public TypeReference() {
         super("REF");
         this.m_baseType = null;
     }
 
-    TypeReference(TypeDefinition type) {
+    public TypeReference(TypeDefinition type) {
         super("REF");
         this.m_baseType = type;
     }
@@ -90,6 +90,9 @@ public class TypeReference extends TypeDefinition {
 //        st.add("basetype", ((TypeArraySpecification)m_baseType).getBaseType().toST(group));
 //        return st;
 //      } else {
+        if (m_baseType instanceof TypeRefChar) {
+          return m_baseType.toST(group);
+        } 
         ST st = group.getInstanceOf("TypeReference");
         st.add("BaseType", m_baseType.toST(group));
         return st;

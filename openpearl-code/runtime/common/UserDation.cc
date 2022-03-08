@@ -38,6 +38,7 @@
 #include "UserDation.h"
 #include "Signals.h"
 #include "TaskCommon.h"
+#include "compare.h"
 
 namespace pearlrt {
 
@@ -292,7 +293,7 @@ namespace pearlrt {
          }
          if ((p & IDF) && parametersOk) {
              RefCharacter *oldFilename = systemDation->getIDFName();
-             if (oldFilename->getCurrent() != rc->getCurrent()) {
+             if ((oldFilename->getCurrent() != rc->getCurrent()).getBoolean()) {
                 parametersOk = false;
              } else {
                 parametersOk = ! strncmp(oldFilename->data, rc->data, rc->max);

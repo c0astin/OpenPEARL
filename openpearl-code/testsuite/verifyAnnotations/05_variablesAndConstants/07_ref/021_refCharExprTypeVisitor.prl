@@ -1,0 +1,42 @@
+MODULE(refChar);
+
+PROBLEM;
+
+DCL rc REF CHAR();
+
+p: PROC;
+   DCL data CHAR(10);
+   DCL prc REF CHAR() INIT (data);
+   DCL invRefCharInit INV REF CHAR() INIT(data);
+   DCL invRefInvChar INV REF INV CHAR() INIT('hallo');
+   DCL refInvChar REF INV CHAR() INIT(data);
+
+
+   refInvChar = '12345';
+
+   print(rc);
+   print(refInvChar);
+/*$      ^
+error: print: type mismatch: cannot pass INV value to non INV formal parameter
+*/
+   print(invRefCharInit);
+/*$      ^
+error: print: type mismatch: cannot pass INV value to non INV formal parameter
+*/
+   print('Hallo');
+/*$      ^
+error: print: type mismatch: cannot pass constant of type CHAR(5) as REF CHAR()
+*/
+
+END;
+
+proc: PROC RETURNS(REF CHAR());
+   RETURN(rc);
+END;
+
+print: PROC(x REF CHAR());
+END;
+
+MODEND;
+
+  

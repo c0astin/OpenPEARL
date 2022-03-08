@@ -1,0 +1,71 @@
+MODULE(r);
+/*
+Strategy:
+check INV? REF for INV? FIXED INIT(INV? FIXED) in all combinations
+*/
+PROBLEM;
+
+
+inv: PROC;
+  DCL invFixed                INV FIXED INIT(42);
+  DCL fixed                       FIXED INIT(43);
+
+  DCL refFixed            REF     FIXED INIT(fixed);
+  DCL refFixed2           REF     FIXED INIT(invFixed);  ! error breaks INV
+/*$                                          ^
+error: type mismatch in REF INIT: REF FIXED(31) := INV FIXED(31)
+*/
+  DCL refInvFixed         REF INV FIXED INIT(fixed);     ! ok removes write
+  DCL refInvFixed2        REF INV FIXED INIT(invFixed);
+  DCL invRefFixed     INV REF     FIXED INIT(fixed);
+  DCL invRefFixed2    INV REF     FIXED INIT(invFixed);  ! error breaks INV
+/*$                                          ^
+error: type mismatch in REF INIT: REF FIXED(31) := INV FIXED(31)
+*/
+  DCL invRefInvFixed  INV REF INV FIXED INIT(fixed);     ! ok removes write
+  DCL invRefInvFixed2 INV REF INV FIXED INIT(invFixed);
+
+
+  refFixed = fixed;  ! ok
+  refInvFixed = fixed; ! ok
+  invRefFixed = fixed; ! error
+/*$
+  ^
+error: assignment: INV variable not allowed on lhs
+*/
+
+  invRefInvFixed = fixed; ! error
+/*$
+  ^
+error: assignment: INV variable not allowed on lhs
+*/
+
+  refFixed = invFixed;  ! error
+/*$
+  ^
+error: assignment: type mismatch: REF FIXED(31) := INV FIXED(31)
+*/
+
+  refInvFixed = invFixed; ! ok
+  invRefFixed = invFixed; ! error
+/*$
+  ^
+error: assignment: INV variable not allowed on lhs
+*/
+
+  invRefInvFixed = invFixed; ! error
+/*$
+  ^
+error: assignment: INV variable not allowed on lhs
+*/
+  
+  invRefFixed=fixed; ! error would change the REF
+/*$
+  ^
+error: assignment: INV variable not allowed on lhs
+*/
+END;
+
+
+MODEND;
+

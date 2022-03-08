@@ -159,15 +159,15 @@ namespace pearlrt {
       }
    }
 
-   size_t RefCharacter::getMax() {
-      return max;
+   Fixed<31> RefCharacter::getMax() {
+      return Fixed<31>(max);
    }
 
-   size_t RefCharacter::getCurrent() {
-      return current;
+   Fixed<31> RefCharacter::getCurrent() {
+      return Fixed<31>(current);
    }
 
-   char * RefCharacter::getDataPtr() {
+   char * RefCharacter::getDataPtr() const {
        return data;
    }
 

@@ -58,7 +58,7 @@ namespace pearlrt {
          throw theCharacterFormatSignal;
       }
 
-      length = (width < (int)(rc->getMax())) ? width : (int)(rc->getMax());
+      length = (width < (int)(rc->getMax().x)) ? width : (int)(rc->getMax().x);
 
       for (i = 0; i < length; i++) {
          sink->putChar(rc->getCharAt(i));

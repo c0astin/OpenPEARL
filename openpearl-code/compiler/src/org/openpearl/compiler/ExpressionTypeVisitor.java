@@ -2545,25 +2545,39 @@ implements OpenPearlVisitor<Void> {
                             typeMismatch = false;
                         }
                     }
-                    if ((type2 instanceof TypeArray && type1 instanceof TypeArraySpecification)) {
-                        if (((TypeArray) type2)
-                                .getBaseType()
-                                .equals(((TypeArraySpecification) type1).getBaseType())) {
+                    if (typeMismatch) {
+                        if ((type2 instanceof TypeArray && type1 instanceof TypeArraySpecification)) {
+                            if (((TypeArray) type2)
+                                    .getBaseType()
+                                    .equals(((TypeArraySpecification) type1).getBaseType())) {
+                                typeMismatch = false;
+                            }
+                        } else if ((type1 == null && type2 instanceof TypeArraySpecification)
+                                || (type2 == null && type1 instanceof TypeArraySpecification)
+                                || type1.equals(type2)) {
+                            typeMismatch = false;
+
+                        } else if ((type1 == null && type2 instanceof TypeTask)
+                                || (type2 == null && type1 instanceof TypeTask)
+                                || type1.equals(type2)) {
+                            typeMismatch = false;
+                        } else if ((type1 == null && type2 instanceof TypeDation)
+                                || (type2 == null && type1 instanceof TypeDation)
+                                || type1.equals(type2)) {
                             typeMismatch = false;
                         }
-                    } else if ((type1 == null && type2 instanceof TypeArraySpecification)
-                            || (type2 == null && type1 instanceof TypeArraySpecification)
-                            || type1.equals(type2)) {
-                        typeMismatch = false;
-
-                    } else if ((type1 == null && type2 instanceof TypeTask)
-                            || (type2 == null && type1 instanceof TypeTask)
-                            || type1.equals(type2)) {
-                        typeMismatch = false;
-                    } else if ((type1 == null && type2 instanceof TypeDation)
-                            || (type2 == null && type1 instanceof TypeDation)
-                            || type1.equals(type2)) {
-                        typeMismatch = false;
+                    }
+                    // check REF CHAR()
+                    if (typeMismatch) {
+                        if (type1 instanceof TypeRefChar) {
+                            if (type2 instanceof TypeChar || type2 instanceof TypeRefChar) {
+                                typeMismatch = false;
+                            }
+                        } else if (type2 instanceof TypeRefChar) {
+                            if (type1 instanceof TypeChar) {
+                                typeMismatch = false;
+                            }
+                        }
                     }
                 }
             }
@@ -2742,6 +2756,9 @@ implements OpenPearlVisitor<Void> {
                 TypeChar type = new TypeChar(type1.getPrecision() + type2.getPrecision());
                 ASTAttribute expressionResult = new ASTAttribute(type);
                 m_ast.put(ctx, expressionResult);
+            } else if (type1 instanceof TypeRefChar || type2 instanceof TypeRefChar) {
+                ErrorStack.add(
+                        "REF CHAR() not supported in expressions, yet");
             } else {
                 ErrorStack.add(
                         "type mismatch: expected BIT CAT BIT or CHAR CAT CHAR -- got "
@@ -3360,170 +3377,6 @@ implements OpenPearlVisitor<Void> {
 
         return null;
     }
-/*
-    @Override
-    public Void visitCase1CharSlice(OpenPearlParser.Case1CharSliceContext ctx) {
-        ASTAttribute op;
-        ASTAttribute res;
-        ASTAttribute attr = m_ast.lookup(ctx);
-        ErrorStack.warn(ctx,"ExprTypeVis:@3841","deref check missing");
-
-        Log.debug("ExpressionTypeVisitor:visitCase1CharSlice:ctx" + CommonUtils.printContext(ctx));
-        Log.debug("ExpressionTypeVisitor:visitCase1CharSlice:id=" + ctx.ID().getText());
-
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().getText());
-
-        visit(ctx.expression());
-
-        ErrorStack.enter(ctx, ".CHAR()");
-        ASTAttribute expressionResult = m_ast.lookup(ctx.expression());
-        if (expressionResult != null) {
-            if (expressionResult.isConstant()) {
-                if (expressionResult.getType() instanceof TypeFixed) {
-                    m_ast.put(ctx, new ASTAttribute(new TypeChar(1)));
-                } else {
-                    ErrorStack.addInternal("constant fixed expression expected");
-                }
-            } else {
-                if (entry instanceof VariableEntry) {
-                    VariableEntry var = (VariableEntry) entry;
-                    if (var.getType() instanceof TypeChar) {
-                        m_ast.put(ctx, new ASTAttribute(new TypeChar(1)));
-                    } else {
-                        ErrorStack.add(
-                                "type mismatch: '"
-                                        + var.getName()
-                                        + "' must be of type CHAR -- but is "
-                                        + var.getType().toString());
-                    }
-                } else {
-                    ErrorStack.add("need variable");
-                }
-            }
-        } else {
-            ErrorStack.addInternal("expression missing");
-        }
-
-        ErrorStack.leave();
-        return null;
-    }
-
-    @Override
-    public Void visitCase3CharSlice(OpenPearlParser.Case3CharSliceContext ctx) {
-        Log.debug("ExpressionTypeVisitor:visitCase3CharSlice:ctx" + CommonUtils.printContext(ctx));
-
-        ErrorStack.enter(ctx, ".CHAR(x:x+y)");
-        ErrorStack.warn(ctx,"ExprTypeVis:@3388","deref check missing");
-
-        int intConst = Integer.parseInt(ctx.IntegerConstant().toString());
-
-        ASTAttribute lwb = m_ast.lookup(ctx.expression(0));
-        ASTAttribute upb = m_ast.lookup(ctx.expression(1));
-
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().getText());
-
-        VariableEntry var = null;
-        if (entry instanceof VariableEntry) {
-            var = (VariableEntry) entry;
-            if (!(var.getType() instanceof TypeChar)) {
-                ErrorStack.add("must be of type CHAR -- but is " + var.getType().toString());
-            }
-        } else {
-            ErrorStack.addInternal("need variable");
-            ErrorStack.leave();
-            return null;
-        }
-
-        String ex0 = ctx.expression(0).getText();
-        String ex1 = ctx.expression(1).getText();
-        if (ex0.equals(ex1)) {
-            visit(ctx.expression(0));
-            visit(ctx.expression(1));
-
-            // check types -- all must be of type fixed
-            for (int i = 0; i < 2; i++) {
-                ASTAttribute attr = m_ast.lookup(ctx.expression(i));
-                if (attr == null) {
-                    ErrorStack.addInternal("no AST attribute found for expression " + i);
-                } else {
-                    if (!(attr.getType() instanceof TypeFixed)) {
-                        ErrorStack.add(ctx.expression(i), null, "must be of type FIXED");
-                    }
-                }
-            }
-            m_ast.put(ctx, new ASTAttribute(new TypeChar(intConst)));
-
-        } else {
-            // we must treat this as case4!
-            // set the attribute for smooth further checking
-            m_ast.put(ctx, new ASTAttribute(new TypeVariableChar()));
-        }
-
-        ErrorStack.leave();
-        return null;
-    }
-
-    @Override
-    public Void visitCase4CharSlice(OpenPearlParser.Case4CharSliceContext ctx) {
-        Log.debug("ExpressionTypeVisitor:visitCase4CharSlice:ctx" + CommonUtils.printContext(ctx));
-        long size = -1; // preset with an illegal size
-        TypeDefinition td = new TypeChar(); // set a default result
-
-        ErrorStack.enter(ctx, ".CHAR(:)");
-        ErrorStack.warn(ctx,"ExprTypeVis:@3445","deref check missing");
-
-        visitChildren(ctx);
-
-        ASTAttribute lwb =
-                saveGetAttribute(
-                        ctx.expression(0),
-                        ctx,
-                        ".CHAR(x:y)",
-                        "no AST attribute found for lhs of operation .CHAR(x:y)");
-        ASTAttribute upb =
-                saveGetAttribute(
-                        ctx.expression(1),
-                        ctx,
-                        ".CHAR(x:y)",
-                        "no AST attribute found for rhs of operation .CHAR(x:y)");
-
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.ID().getText());
-
-        VariableEntry var = null;
-        if (entry instanceof VariableEntry) {
-            var = (VariableEntry) entry;
-            if (!(var.getType() instanceof TypeChar)) {
-                ErrorStack.add("must be of type CHAR -- but is " + var.getType().toString());
-            }
-        } else {
-            ErrorStack.addInternal("need variable");
-            ErrorStack.leave();
-            return null;
-        }
-
-        if (lwb.isConstant() && upb.isConstant()) {
-            size =
-                    upb.getConstantFixedValue().getValue()
-                    - lwb.getConstantFixedValue().getValue()
-                    + 1;
-            if (size < 1) {
-                ErrorStack.add("must select at least 1 character");
-            } else if (size > Defaults.CHARACTER_MAX_LENGTH) {
-                ErrorStack.add("must select max " + Defaults.CHARACTER_MAX_LENGTH + " characters");
-                size = Defaults.CHARACTER_MAX_LENGTH;
-            } else {
-                td = new TypeChar((int) size);
-            }
-        } else {
-            td = new TypeVariableChar();
-        }
-        m_ast.put(ctx, new ASTAttribute(td));
-
-        ErrorStack.leave();
-
-        return null;
-    }
-*/
 
 
     @Override
@@ -3915,15 +3768,20 @@ implements OpenPearlVisitor<Void> {
             TypeDefinition typeOfActualParameter = savedActualParameterType;
             ErrorStack.enter(ctx.expression(i));
             boolean assignable = TypeUtilities.mayBeAssignedTo(typeOfFormalParameter, proc.getFormalParameters().get(i), ctx.expression(i), m_ast);
-//            if (!assignable) {
-//                // additional tests for IDENT parameters
-//                if (proc.getFormalParameters().get(i).passIdentical) {
-//                    ErrorStack.add("type mismatch: formal parameter "+typeOfFormalParameter + " IDENT --- got "+typeOfActualParameter);
-//                } else {
-//                    ErrorStack.add("type mismatch: formal parameter "+typeOfFormalParameter + " --- got "+typeOfActualParameter);
-//                }
-//            }
 
+            if (assignable) {
+                // additional tests for INV and REF violations
+                if (typeOfActualParameter.hasAssignmentProtection() && !(typeOfFormalParameter.hasAssignmentProtection())) {
+                    ErrorStack.add("type mismatch: cannot pass INV value to non INV formal parameter");
+                }
+                if (typeOfFormalParameter instanceof TypeReference) {
+                    if (!((TypeReference)typeOfFormalParameter).getBaseType().hasAssignmentProtection()) {
+                        if (typeOfActualParameter instanceof TypeReference && ((TypeReference)typeOfActualParameter).getBaseType().hasAssignmentProtection()) {
+                            ErrorStack.add("type mismatch: cannot pass INV value to non INV formal parameter");
+                        }
+                    }
+                }
+            }
             ErrorStack.leave();
         }
     }

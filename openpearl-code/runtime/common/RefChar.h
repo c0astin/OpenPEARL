@@ -41,6 +41,7 @@ This class provides the operations of the data type ref char.
 #include <string.h>
 #include "Signals.h"
 #include "Character.h"
+#include "Fixed.h"
 
 namespace pearlrt {
 
@@ -250,20 +251,20 @@ namespace pearlrt {
          get size of the container
          \returns maximum size of the content
       */
-      size_t getMax();
+      Fixed<31> getMax();
 
       /**
          get current content size
          \returns current size of the content
       */
-      size_t getCurrent();
+      Fixed<31> getCurrent();
 
       /**
          get the current data pointer 
 
          \returns the data pointer of the RefCharacter
       */
-      char* getDataPtr();
+      char* getDataPtr() const;
 
       /**
          set current content size

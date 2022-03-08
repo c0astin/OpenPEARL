@@ -51,7 +51,7 @@ namespace pearlrt {
    }
 
    size_t RefCharSink::sop() {
-      return sinkObj->getCurrent();
+      return sinkObj->getCurrent().x;
    }
 
 }

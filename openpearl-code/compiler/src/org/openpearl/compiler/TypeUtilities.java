@@ -50,8 +50,9 @@ public class TypeUtilities {
      */
     public static  boolean mayBeAssignedTo( TypeDefinition lhsType, SymbolTableEntry lhs,
             ExpressionContext expression, AST m_ast) {
-        
 
+        boolean isFunctionCall = lhs instanceof FormalParameter;
+      
         TypeDefinition rhsType = m_ast.lookupType(expression);
         String rhsOriginalType = rhsType.toString4IMC(true);
 
@@ -68,9 +69,13 @@ public class TypeUtilities {
         if (lhsType instanceof TypeReference && (((TypeReference)lhsType).getBaseType() instanceof TypeRefChar)) { 
             if (rhsVariable != null && rhsVariable.getType() instanceof TypeChar) {
                 // ok: ref char assigment of work zone
+                checkLifeCycle(lhs, rhsVariable);
                 return true;
             }
             if (rhsAttr.getType() instanceof TypeChar && rhsAttr.getVariable() != null) {
+                return true;
+            }
+            if (((TypeReference)lhsType).getBaseType().hasAssignmentProtection() && rhsAttr.getConstant()!= null) {
                 return true;
             }
         }
@@ -200,7 +205,11 @@ public class TypeUtilities {
                 if ((rhsAttr.isLValue())) {
                     if (!(lhsType.equals(rhsType))) {
                         // emit special error message
-                        ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := "+ rhsType.toString4IMC(false));
+                        if (isFunctionCall) {
+                            ErrorStack.add("type mismatch: cannot pass expression of type "+ rhsType.toString4IMC(false)+" as " +lhsType.toString4IMC(true));
+                        } else {
+                            ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := "+ rhsType.toString4IMC(false));
+                        }
                     }
                     checkLifeCycle(lhs, rhsVariable);
                     ruleApplied=true;
@@ -211,7 +220,11 @@ public class TypeUtilities {
                 if (rhsType instanceof TypeProcedure) {
                     if (!(lhsType.equals(resultType))) {
                         // emit special error message
-                        ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := expression of type "+ rhsType.toString4IMC(false));
+                        if (isFunctionCall) {
+                            ErrorStack.add("type mismatch: cannot pass expression of type "+ rhsType.toString4IMC(false)+" as " +lhsType.toString4IMC(true));
+                        } else {
+                            ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := expression of type "+ rhsType.toString4IMC(false));
+                        }
                     }
 
                     rhsType = ((TypeProcedure)rhsType).getResultType();
@@ -226,7 +239,6 @@ public class TypeUtilities {
                        // pointer assignment from SymbolTableEntry
                        ruleApplied=true;
                        break;
-
                     }
                 }
             }
@@ -238,38 +250,44 @@ public class TypeUtilities {
         // maybe some cases are missing
 
         if (ruleApplied == false) {
-//            String prefix = "type mismatch:";
-//            String postfix="";
 
-//                prefix += " formal parameter:";
-//                if (((FormalParameter)lhs).passIdentical) {
-//                  postfix=" IDENT ";
-//                }
-//                
-//            }
-//            CommonErrorMessages.typeMismatch(lhsType, rhsType,"IDENT parameter:");
             if (rhsSymbol instanceof ProcedureEntry) {
-                ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := "+ ((ProcedureEntry)rhsSymbol).getType());//  rhsType.toString4IMC(false));
+                if (isFunctionCall) {
+                    ErrorStack.add("type mismatch: cannot pass expression of type "+ ((ProcedureEntry)rhsSymbol).getType()+" as " +lhsType.toString4IMC(true));
+                } else {
+                    ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := "+ ((ProcedureEntry)rhsSymbol).getType());//  rhsType.toString4IMC(false));
+                }
+                return false;
             } else if (lhsType instanceof TypeReference && ((TypeReference)lhsType).getBaseType() instanceof TypeRefChar &&
-                    rhsType instanceof TypeChar && rhsSymbol == null) {
-                ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := constant of type "+ rhsOriginalType);//  rhsType.toString4IMC(false));
+                    rhsType instanceof TypeChar && rhsAttr.getConstant() != null) {
+                if (isFunctionCall) {
+                    ErrorStack.add("type mismatch: cannot pass constant of type "+ rhsOriginalType+" as " +lhsType.toString4IMC(false));
+                } else {
+                    ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := constant of type "+ rhsOriginalType);//  rhsType.toString4IMC(false));
+                }
+                return false;
             } else {
-                ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := "+ rhsOriginalType);//  rhsType.toString4IMC(false));
+                if (isFunctionCall) {
+                    ErrorStack.add("type mismatch: cannot pass "+ rhsOriginalType+" as " +lhsType.toString4IMC(true));
+                } else {
+                    ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := "+ rhsOriginalType);//  rhsType.toString4IMC(false));
+                }
+                return false;
             }
             
         } else {
-            if (lhs instanceof FormalParameter) {
+            if (isFunctionCall) {
                 FormalParameter fp = (FormalParameter)lhs;
                 if (fp.passIdentical) {
                     if (fp.getType().hasAssignmentProtection()==false && rhsType.hasAssignmentProtection()==true) {
                         ErrorStack.add("type mismatch: formal parameter "+lhsType.toString4IMC(true) + " IDENT --- got "+ rhsOriginalType);
+                        return false;
                     }
-                               
-                    
                 }
+
             }
         }
-        return !ruleApplied;
+        return true;
     }
 
     private static void checkLifeCycle(SymbolTableEntry lhsVariable, VariableEntry rhsVariable) {

@@ -1,0 +1,21 @@
+MODULE(refChar);
+
+PROBLEM;
+
+DCL rc REF CHAR();
+
+p: PROC;
+   DCL data CHAR(10);
+   DCL prc REF CHAR() INIT (data);
+   DCL invRefInvChar INV REF CHAR() INIT('123');
+   DCL invRefChar INV REF CHAR();
+/*$    ^
+error: DCL: INV needs INIT
+*/
+   DCL invRefCharInit INV REF CHAR() INIT(data);
+
+END;
+
+MODEND;
+
+  

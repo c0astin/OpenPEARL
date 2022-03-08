@@ -564,7 +564,7 @@ implements OpenPearlVisitor<ST> {
                 FormalParameter f = ve.getFormalParameters().get(i);
                 ST fp = m_group.getInstanceOf("FormalParameter");
                 //FormalParameter(id,type,assignmentProtection,passIdentical,isArray) ::= <%
-                fp.add("type", visitTypeAttribute(f.getType()));
+                fp.add("type", f.getType().toST(m_group)); // (f.getType()));
                 fp.add("assignmentProtection", f.getType().hasAssignmentProtection());
                 fp.add("passIdentical", f.passIdentical);
                 //fp.add("isArray",f.
@@ -836,7 +836,7 @@ implements OpenPearlVisitor<ST> {
                 array.add("type", baseType.toST(m_group));
             } else if (baseType instanceof TypeRefChar){
                 // replace previous init value of ref
-                ref = m_group.getInstanceOf("TypeRefChar");
+                ref = m_group.getInstanceOf("refChar_type");
             } else if (baseType instanceof TypeDation){
                 ref = m_group.getInstanceOf("TypeReferenceDation");
                 ref.add("BaseType", visitTypeAttribute(baseType));
@@ -2185,7 +2185,6 @@ implements OpenPearlVisitor<ST> {
 
                     m_formalParameters = ((TypeProcedure)currentType).getFormalParameters(); 
                     if (ctx.listOfExpression().expression().size() > 0) {
-
                         st.add("ListOfActualParameters",
                                 getActualParameters(ctx.listOfExpression().expression()));
                     }
@@ -3499,7 +3498,7 @@ implements OpenPearlVisitor<ST> {
                         } else if (attr.getType() instanceof TypeRefChar) {
                             attr.setType(new TypeReference(new TypeRefChar()));  // fake AST attribute
                             data.add("size", "0") ;
-                            data.add("refCharVariable", visitAndDereference(ctx.ioListElement(i).expression()));
+                            data.add("variable", visitAndDereference(ctx.ioListElement(i).expression()));
                             data.add("nbr_of_elements", "1");
 
                         } else if (attr.getConstant() != null || attr.getVariable() != null) {
@@ -4248,7 +4247,16 @@ implements OpenPearlVisitor<ST> {
                 m_tempVariableList.lastElement().add("variable", temp);
             } else {
                 ST param = m_group.getInstanceOf("ActualParameters");
-                if (formalParameter.getType() instanceof TypeReference) {
+                if (formalParameter.getType() instanceof TypeReference && ((TypeReference)(formalParameter.getType())).getBaseType() instanceof TypeRefChar) {
+                    if (attr.getType() instanceof TypeChar) {
+                        ST ref = m_group.getInstanceOf("MakeRefChar");
+                        ref.add("expr", visit(expression));
+                        param.add("ActualParameter", ref);
+                    } else {
+                        param.add("ActualParameter", visit(expression));
+                    }
+                    
+                } else if (formalParameter.getType() instanceof TypeReference) {
                     param.add("ActualParameter", visit(expression)); 
                 } else {
                     param.add("ActualParameter", visitAndDereference(expression));

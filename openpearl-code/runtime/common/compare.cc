@@ -29,6 +29,7 @@
 
 #include "BitString.h"
 #include "CharSlice.h"
+#include <Ref.h>
 
 namespace pearlrt {
    /* -------------------------------------------------------------- */
@@ -71,4 +72,33 @@ namespace pearlrt {
       return BitString<1>(r >= 0);
    }
 
+   BitString<1> operator== (const RefCharacter & lhs,
+                            const RefCharacter & rhs) {
+      return BitString<1>(lhs.getDataPtr() == rhs.getDataPtr());
+   }
+
+   BitString<1> operator== (const Ref<char> & lhs,
+                            const RefCharacter & rhs) {
+      return BitString<1>(lhs.x == rhs.getDataPtr());
+   }
+
+   BitString<1> operator== (const RefCharacter & lhs,
+                            const Ref<char> & rhs) {
+      return BitString<1>(lhs.getDataPtr() == rhs.x);
+   }
+
+   BitString<1> operator!= (const RefCharacter & lhs,
+                            const RefCharacter & rhs) {
+      return BitString<1>(lhs.getDataPtr() != rhs.getDataPtr());
+   }
+
+   BitString<1> operator!= (const Ref<char> & lhs,
+                            const RefCharacter & rhs) {
+      return BitString<1>(lhs.x != rhs.getDataPtr());
+   }
+
+   BitString<1> operator!= (const RefCharacter & lhs,
+                            const Ref<char> & rhs) {
+      return BitString<1>(lhs.getDataPtr() != rhs.x);
+   }  
 }

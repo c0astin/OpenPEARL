@@ -117,7 +117,7 @@ namespace pearlrt {
        	 	param2.charSliceLimits.lwb.x + 1; 
 	   return nbrOfBytes;
         case REFCHAR:
-	   nbrOfBytes = ((RefCharacter*)(dataPtr.outData))->getCurrent();
+	   nbrOfBytes = ((RefCharacter*)(dataPtr.outData))->getCurrent().x;
            return nbrOfBytes;
         case CLOCK: ///< CLOCK types
 	   return sizeof (Clock);
