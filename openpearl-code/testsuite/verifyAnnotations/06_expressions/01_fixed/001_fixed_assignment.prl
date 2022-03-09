@@ -7,7 +7,7 @@ a: TASK;
   f := 2;  ! illegal, since f is INV
 /*$
   ^
-error: assignment: INV FIXED(31) variable not allowed on lhs
+error: assignment: INV variable not allowed on lhs
 */
 
 END;
