@@ -63,7 +63,7 @@ namespace pearlrt {
          */
          if (!usePrintf) {
             mutex.lock();
-            provider->dationWrite(rc.getCstring(), rc.getCurrent());
+            provider->dationWrite(rc.getCstring(), rc.getCurrent().x);
             mutex.unlock();
          } else {
             ets_printf(rc.getCstring());
