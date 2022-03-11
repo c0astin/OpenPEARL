@@ -38,7 +38,12 @@ import java.util.LinkedList;
 
 public class TypeStructure extends TypeDefinition {
     public LinkedList<StructureComponent> m_listOfComponents;
-
+    
+    // used in getfirstElement() and getNextElement()
+    private int m_currentComponentForIteration =0;
+    private int m_nbrOfRemainingElementsInArray = 0;
+    private StructureComponent m_currentStructureComponent=null;
+    
     TypeStructure() {
         super("STRUCT");
         m_listOfComponents = new LinkedList<StructureComponent>();
@@ -263,4 +268,67 @@ public class TypeStructure extends TypeDefinition {
         return this.getStructureName().equals(that.getStructureName());
     }
 
+    
+    /**
+     * iterator over STRUCT components
+     * 
+     * getFirstElement() returns the first data element of a nested TypeStructure
+     * getNextElement() returns the next data element of a nested TypeStructure
+     * 
+     * Components of TypeStructure are rolled out and arrays of TypeStructure 
+     * are rolled out repeatedly. 
+     * All other types are returned step-by-step for each call of getNextElement() 
+
+     * @return the selected StructureComponent, or
+     *         null, if the end of the structure was reached
+     */
+    public StructureComponent getFirstElement() {
+        m_currentComponentForIteration =-1;
+        return getNextElement();
+       
+    }
+    
+    public StructureComponent getNextElement() {
+        StructureComponent sc=null;
+        if (m_currentStructureComponent != null) {
+            if (m_currentStructureComponent.m_type instanceof TypeArray) {
+                // m_currentStructureComponent is only != null, if we have a
+                //  component of TypeStructure, or of array of TypeStructure. 
+                sc = ((TypeStructure )(((TypeArray)m_currentStructureComponent.m_type)).getBaseType()).getNextElement();
+                if (sc != null) {
+                    return sc;
+                }
+                // end of TypeStructure reached!
+                m_nbrOfRemainingElementsInArray --;
+                if (m_nbrOfRemainingElementsInArray > 0) {
+                    return ((TypeStructure )(((TypeArray)m_currentStructureComponent.m_type)).getBaseType()).getFirstElement();
+                 } else {
+                     m_currentStructureComponent = null;
+                 }
+            } else {
+               sc = m_currentStructureComponent.getNextElement();
+               if (sc != null) {
+                  return sc;
+              }
+            }
+        }
+        m_currentComponentForIteration ++;
+        if (m_currentComponentForIteration >= m_listOfComponents.size()) {
+            return null;
+        }
+        StructureComponent comp = getStructureComponentByIndex(m_currentComponentForIteration);
+        TypeDefinition td = comp.m_type;
+        
+        if (td instanceof TypeStructure) {
+            m_currentStructureComponent = comp;
+            m_nbrOfRemainingElementsInArray=0;
+            return comp.getFirstElement();
+        }
+        if (td instanceof TypeArray && ((TypeArray)td).getBaseType() instanceof TypeStructure) {
+            m_nbrOfRemainingElementsInArray = ((TypeArray)td).getTotalNoOfElements();
+            m_currentStructureComponent = comp;
+            return ((TypeStructure )(((TypeArray)comp.m_type)).getBaseType()).getFirstElement();
+        }
+        return comp;
+    }
 }

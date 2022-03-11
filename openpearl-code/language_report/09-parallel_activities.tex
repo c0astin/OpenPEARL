@@ -1552,6 +1552,12 @@ dialogue: TASK;
 END; ! dialogue 
 \end{lstlisting}
 
+%%%% begin added 2022-03-11 (rm)
+\paragraph{Note:} OpenPEARL accepts in TRY also a list of semaphores like the operations 
+REQUEST and RELEASE. 
+With \code{-std=PEARL90} an error message is emitted, if a list of semphore is detected.
+%%%% end added 
+
 Due to erroneous synchronisations, tasks can constantly block one
 another; such a deadlock, e.g., could arise due to the following program
 organisation:

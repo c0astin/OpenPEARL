@@ -34,13 +34,36 @@ public class StructureComponent {
     public TypeDefinition  m_type;
     public int             m_index;
     public String          m_alias;
-
+    
+    private int m_nbrOfRemainingElementsInCurrentComponent = 0;
+    
     public String toString() {
         return m_id + " " +  m_type + " " + m_index + " " + m_alias;
     }
     
     public String toString4IMC(boolean isInStruct) {
         return m_type.toString4IMC(isInStruct);
+    }
+    
+    public StructureComponent getFirstElement() {
+       
+        
+        if (m_type instanceof TypeStructure) {
+            return ((TypeStructure) m_type).getFirstElement();
+        }
+        return this;
+// TypeArray not treated yet
+   
+        
+    }
+
+    public StructureComponent getNextElement() {
+        if (m_type instanceof TypeStructure) {
+            return ((TypeStructure) m_type).getNextElement();
+        }
+        return null;
+
+        
     }
 
 }

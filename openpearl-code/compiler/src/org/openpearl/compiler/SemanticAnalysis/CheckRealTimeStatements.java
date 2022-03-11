@@ -31,6 +31,7 @@ package org.openpearl.compiler.SemanticAnalysis;
 
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.openpearl.compiler.*;
+import org.openpearl.compiler.Compiler;
 import org.openpearl.compiler.OpenPearlParser.ExpressionContext;
 import org.openpearl.compiler.SymbolTable.*;
 
@@ -170,7 +171,11 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
         ErrorStack.enter(ctx, "TRY");
         checkListOfNames(ctx.listOfNames(), new TypeSemaphore());
-
+        if (Compiler.isStdPEARL90()) {
+            if (ctx.listOfNames().name().size()> 1) {
+                ErrorStack.add("no list of semaphores allowed");
+            }
+        }
         ErrorStack.leave();
 
         return null;

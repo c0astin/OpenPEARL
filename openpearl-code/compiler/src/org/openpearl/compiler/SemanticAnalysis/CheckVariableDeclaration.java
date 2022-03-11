@@ -102,7 +102,18 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
         }
         List<VariableEntry> listOfVariables = m_symboltable.getAllVariableDeclarations();
         for (VariableEntry v : listOfVariables) {
-            
+            if (v.getType() instanceof TypeStructure) {
+                System.out.println(v.getName() + " has components ");
+                StructureComponent comp;
+                TypeStructure ts =  (TypeStructure)v.getType();
+                comp = ts.getFirstElement();
+                while (comp != null) {
+                    System.out.println("   "+comp.m_type);
+                    comp = ts.getNextElement();
+                }
+                System.out.println("---");
+                
+            }
             if (v.getInitializer() != null) {
                 checkInitializer(v);
             }

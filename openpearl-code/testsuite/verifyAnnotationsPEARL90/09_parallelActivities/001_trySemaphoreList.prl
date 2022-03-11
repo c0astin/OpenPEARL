@@ -1,0 +1,17 @@
+MODULE(m);
+
+PROBLEM;
+
+DCL (s1,s2) SEMA PRESET(1,1);
+
+p: PROC;
+   DCL ok  BIT(1);
+   ok = TRY s1,s2;
+/*$     ^
+error: TRY: no list of semaphores allowed
+*/
+END;
+
+MODEND;
+     
+

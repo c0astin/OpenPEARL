@@ -3,6 +3,14 @@ MODULE(xx);
 PROBLEM;
 SPC file DATION INOUT FIXED(15) DIM(*,80) DIRECT GLOBAL(other);
 SPC fileAll DATION INOUT ALL  DIM(*,80) DIRECT GLOBAL(other);
+SPC refInType DATION INOUT STRUCT [ a FIXED, b STRUCT [ c REF FLOAT, d REF CHAR(1) ]] DIM(*,10) DIRECT GLOBAL(other);
+/*$ ^
+error: DationSPC: no REF allowed in TypeOfTransmissionData
+*/
+SPC refInType2 DATION INOUT STRUCT [ b(2) STRUCT [ c(2) REF FLOAT, d REF CHAR(1) ]] DIM(*,10) DIRECT GLOBAL(other);
+/*$ ^
+error: DationSPC: no REF allowed in TypeOfTransmissionData
+*/
 
    DCL f7 FIXED(7);
    DCL f15 FIXED(15);

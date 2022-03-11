@@ -134,8 +134,9 @@ implements OpenPearlVisitor<Void> {
     }
 
     private void checkUserDation(VariableEntry ve, TypeDation d, boolean isDecl) {
-        ErrorStack.enter(ve.getCtx(),"DationDCL");
+
         if (isDecl) {
+            ErrorStack.enter(ve.getCtx(),"DationDCL");
             // System.out.println("UserDCL: "+ve.getName());
             if (d.isSystemDation()) {
                 ErrorStack.add("SYSTEM dations may not be declared");
@@ -144,7 +145,7 @@ implements OpenPearlVisitor<Void> {
 
 
         } else {
-            //            System.out.println("UserSPC: "+ve.getName());
+            ErrorStack.enter(ve.getCtx(),"DationSPC");
         }
         // userdation must be 
         // of type ALPHIC                      -> DationPG
@@ -178,6 +179,20 @@ implements OpenPearlVisitor<Void> {
             ErrorStack.add("TFU requires limited record length");
         }
 
+        TypeDefinition typeOfTransmission = d.getTypeOfTransmissionAsType(); 
+        if (typeOfTransmission!= null && typeOfTransmission instanceof TypeStructure) {
+            // check that there is no REF in the type of transmission data
+            StructureComponent comp = ((TypeStructure)typeOfTransmission).getFirstElement();
+            do {
+                if ( comp.m_type instanceof TypeReference ||
+                        (comp.m_type instanceof TypeArray && ((TypeArray)(comp.m_type)).getBaseType() instanceof TypeReference)) {
+                    ErrorStack.add("no REF allowed in TypeOfTransmissionData");
+                    break;
+                }
+                comp = ((TypeStructure)typeOfTransmission).getNextElement();
+            } while (comp != null);
+        }
+        
         if (isDecl) {
             // SymbolTableEntry sys = this.m_currentSymbolTable.lookup(d.getCreatedOn().getName());;
             SymbolTableEntry sys = this.m_currentSymbolTable.lookup(d.getCreatedOnAsString());;

@@ -301,14 +301,19 @@ public class TypeUtilities {
         }
     }
 
+    public static boolean isSimpleType(TypeDefinition type) {
+        if (type instanceof TypeFixed || type instanceof TypeFloat || type instanceof TypeBit
+                || type instanceof TypeChar || type instanceof TypeDuration
+                || type instanceof TypeClock ) {
+            return true;
+        }
+        return false;        
+    }
 
     public static boolean isSimpleTypeInclVarCharAndRefChar(TypeDefinition type) {
         boolean result = false;
 
-        if (type instanceof TypeFixed || type instanceof TypeFloat || type instanceof TypeBit
-                || type instanceof TypeChar || type instanceof TypeDuration
-                || type instanceof TypeClock 
-                || type instanceof TypeVariableChar || type instanceof TypeRefChar) {
+        if (isSimpleType(type) || type instanceof TypeVariableChar || type instanceof TypeRefChar) {
             result = true;
         }
         return result;
@@ -513,5 +518,23 @@ public class TypeUtilities {
                         + attr.getType().toString4IMC(true) + "'");
             }
         }
+    }
+    
+    /**
+     * return true, if given type is a <ul>
+     * <li>simpleType pr
+     * <li>reference of simple type
+     * </ul>
+     * return false, else  
+     * @return
+     */
+    public static boolean isScalarType(TypeDefinition type) {
+        if (isSimpleType(type)) {
+            return true;
+        }
+        if (type instanceof TypeReference && isSimpleType(((TypeReference)type).getBaseType() )) {
+            return true;
+        }
+        return false;
     }
 }
