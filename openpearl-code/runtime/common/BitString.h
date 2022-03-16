@@ -515,7 +515,7 @@ namespace pearlrt {
       \returns true, if at least one bit is set
       \returns false, if all bits are cleared
       */
-      bool inline getBoolean() {
+      bool inline getBoolean() const {
          return (!!x);
       }
 
