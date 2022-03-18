@@ -922,7 +922,7 @@ implements OpenPearlVisitor<ST> {
                 st.add("value", getUserVariable(ri.getSymbolTableEntry()));
 
             } else {
-                ErrorStack.addInternal(c, "CppCodeGrenerator@909", "untreated type of context");
+                ErrorStack.addInternal(c, "CppCodeGrenerator@925", "untreated type of context");
             }
             //  ST st = generateLHS(ri.getContext().name(), ri.getSymbolTable());
 
@@ -980,7 +980,28 @@ implements OpenPearlVisitor<ST> {
                     stValue.add("preset", preset);
                 } else {
                     stValue = m_group.getInstanceOf("expression");
-                    stValue.add("code", ((SimpleInitializer)(initList.get(i))).getConstant() );
+                    if (initList.get(i) instanceof SimpleInitializer) {
+                       stValue.add("code", ((SimpleInitializer)(initList.get(i))).getConstant() );
+                    }
+                    if (initList.get(i) instanceof ReferenceInitializer) {
+                        ReferenceInitializer ri = (ReferenceInitializer)initList.get(i);
+                        ParserRuleContext c = ri.getContext();
+                        if ( c instanceof OpenPearlParser.NameContext) {
+                            NameContext nc = (NameContext)c;
+
+                            stValue.add("code", generateLHS(nc, ri.getSymbolTable()));
+
+                        } else if (c instanceof OpenPearlParser.IdentifierContext) {
+                            IdentifierContext ic =(IdentifierContext)c;
+                            stValue.add("code", getUserVariable(ri.getSymbolTableEntry()));
+
+                        } else {
+                            ErrorStack.addInternal(c, "CppCodeGrenerator@1000", "untreated type of context");
+                        }
+                        //  ST st = generateLHS(ri.getContext().name(), ri.getSymbolTable());
+
+                    }
+
                 }
                 lastInitValue = stValue;
                 initElementList.add(stValue);
@@ -4456,7 +4477,7 @@ implements OpenPearlVisitor<ST> {
         ST st = m_group.getInstanceOf("SIZEOF");
         TypeDefinition type = null;
 
-        //| op='SIZEOF' ( name | simpleType | typeStructure) ('MAX'|'LENGTH')?   # sizeofExpression     
+        //| op='SIZEOF' ( name | simpleType ) refCharSizeofAttribute?   # sizeofExpression     
 
         if (ctx.name() != null) {
             ASTAttribute attr = m_ast.lookup(ctx.name());
@@ -4515,9 +4536,6 @@ implements OpenPearlVisitor<ST> {
             }
 
             st.add("operand", typeName);
-        } else if (ctx.typeStructure() != null) {
-            ErrorStack.addInternal(ctx.typeStructure(), "SIZEOF", "STRUCT [ ...] is not allowed");
-            return null;
         } 
         //st.add("operand", visitAndDereference(ctx.getChild(1)));
         return st;

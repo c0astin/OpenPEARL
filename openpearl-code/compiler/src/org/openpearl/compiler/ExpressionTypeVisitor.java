@@ -1968,37 +1968,61 @@ implements OpenPearlVisitor<Void> {
         Log.debug(
                 "ExpressionTypeVisitor:visitSizeofExpression:ctx" + CommonUtils.printContext(ctx));
         boolean isRefChar = false;
-        ErrorStack.enter(ctx); 
+        ErrorStack.enter(ctx,"SIZEOF"); 
         TypeFixed type = new TypeFixed(Defaults.FIXED_LENGTH);
         ASTAttribute expressionResult = new ASTAttribute(type);
         expressionResult.setIsConstant(true);
+        m_ast.put(ctx, expressionResult);
 
         if (ctx.name() != null) {
-            SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.name().ID().getText());
-            if (entry != null && entry instanceof VariableEntry) {
-                // no implicit dereference??
-                VariableEntry ve = (VariableEntry)entry;
-                ASTAttribute nameAttr = new ASTAttribute(ve.getType());
-                m_ast.put(ctx.name(), nameAttr);
-                if (ve.getType() instanceof TypeReference) {
-                    if (((TypeReference)ve.getType()).getBaseType() instanceof TypeRefChar) {
-                        isRefChar = true;
+            visitName(ctx.name());
+        }
+
+        if (ctx.refCharSizeofAttribute() != null ) {
+
+            ASTAttribute attrName = m_ast.lookup(ctx.name());
+            if (attrName.getType()  instanceof TypeReference && 
+                    (((TypeReference)(attrName.getType())).getBaseType() instanceof TypeRefChar)) {
+                isRefChar = true;
+            }
+
+            if (! isRefChar) {
+                ErrorStack.add(ctx.refCharSizeofAttribute().getText()+" must be used on type REF CHAR() --- got "
+                            +attrName.m_type);
+            }
+
+        } else {
+            if (ctx.name() != null) {
+                if (ctx.name().listOfExpression() != null || ctx.name().name() != null) {
+                    ErrorStack.add("only identifier allowed");
+                } else {
+                    ASTAttribute attrName = m_ast.lookup(ctx.name());
+                    if (attrName.getVariable() != null) {
+                        if (attrName.getType() instanceof TypeDation ||
+                                attrName.getType() instanceof TypeSemaphore ||
+                                attrName.getType() instanceof TypeBolt ||
+                                attrName.getType() instanceof TypeInterrupt ||
+                                attrName.getType() instanceof TypeSignal) {
+                            ErrorStack.add("may not be applied on type "+attrName.getType().getName());
+                        }
+                    } else {
+                        ErrorStack.add("may not be applied on type "+attrName.getType().getName());
                     }
+                    // visitName(ctx.name(); already invoked
                 }
-            } else {
-                ErrorStack.add("'" + ctx.name().ID().getText() + "' is not defined ***");
-            }
+            } else if (ctx.simpleType() != null) {
+//                SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.name().ID().getText());
+//                if (entry == null) {
+//                    ErrorStack.add("'" + ctx.name().ID().getText() + "' is not defined");
+//                } else if (entry instanceof VariableEntry) {
+//                    VariableEntry ve = (VariableEntry)entry;
+//                    ASTAttribute nameAttr = new ASTAttribute(ve.getType());
+//                    m_ast.put(ctx.name(), nameAttr);
+//                } else {
+//                    ErrorStack.addInternal(ctx.name(),"ExpressionTypeVisitor@2004","missing alternative");
+//                }
+            } 
         }
-        if (ctx.refCharSizeofAttribute() != null) {
-            if (isRefChar) {
-
-            } else {
-                ErrorStack.add("MAX/LENGTH may only be used on type REF CHAR()");
-            }
-        }
-
-
-        m_ast.put(ctx, expressionResult);
 
         ErrorStack.leave();
         return null;

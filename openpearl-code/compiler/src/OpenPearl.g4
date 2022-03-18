@@ -404,27 +404,6 @@ initElement
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
-// StructureDeclaration ::=
-//   { DECLARE | DCL } StructureDenotation [ , StructureDenotation ] ... ;
-////////////////////////////////////////////////////////////////////////////////
-/*
-structVariableDeclaration :
-    ( 'DECLARE' | 'DCL' ) structureDenotation ( ',' structureDenotation )* ';'
-    | cpp_inline
-    ;
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-// StructureDenotation ::=
-//   IdentifierDenotation§MainStructure [ DimensionAttribute ]
-//   TypeStructure [ GlobalAttribute ][ InitialisationAttribute ]
-////////////////////////////////////////////////////////////////////////////////
-
-/*structureDenotation :
-    typeStructure globalAttribute? initialisationAttribute?
-    ;
-*/
-////////////////////////////////////////////////////////////////////////////////
 // TypeStructure ::=
 //   STRUCT [ StructureComponent [ , StructureComponent ] ... ]
 ////////////////////////////////////////////////////////////////////////////////
@@ -1881,11 +1860,9 @@ basicDation
 typeOfTransmissionData
     : 'ALL'                     # typeOfTransmissionDataALL
     | simpleType                # typeOfTransmissionDataSimpleType
-//    | compoundType              # typeOfTransmissionDataCompoundType
-    | typeStructure             # typeOfTransmissionDataCompoundType
+    | typeStructure              # typeOfTransmissionDataCompoundType
     ;
-
-////////////////////////////////////////////////////////////////////////////////
+    
 // AccessAttribute ::=
 //  { DIRECT | FORWARD | FORBACK } [ NOCYCL | CYCLIC ] [ STREAM | NOSTREAM ]
 ////////////////////////////////////////////////////////////////////////////////
@@ -2010,8 +1987,7 @@ expression:
     | op='TANH' expression                                  # tanhExpression
     | op='ABS' expression                                   # absExpression
     | op='SIGN' expression                                  # signExpression
-    | op='SIZEOF' ( name | simpleType | typeStructure)
-//                  ('MAX'|'LENGTH')?                         
+    | op='SIZEOF' ( name | simpleType)					// note ID is part of the rule name
                   refCharSizeofAttribute?					# sizeofExpression
     | op='NOT' expression                                   # notExpression
     | op='TOBIT' expression                                 # TOBITExpression

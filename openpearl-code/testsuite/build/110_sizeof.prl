@@ -30,10 +30,18 @@ t1: TASK MAIN;
     DCL s STRUCT [ x FIXED(31), y FLOAT(52) ]; 
 
     DCL sArray(10) STRUCT [ x FIXED(31), y FLOAT(52) ]; 
-
+!f = SIZEOF p;
+!f = SIZEOF t1;
+!f = SIZEOF stdout;
     OPEN stdout;
 
 !    f = SIZEOF STRUCT [ x FIXED(31), y FLOAT(52) ] FIT f; ! not supported yet
+    f = SIZEOF s FIT f;
+    IF f NE 16 THEN
+        PUT 'SIZEOF s delivers ',f , ' instead of 16' TO stdout
+           BY A,F(3), A, SKIP; 
+        ok = '0'B1;
+    FIN;
 
     f := (SIZEOF DURATION ) FIT f ;
 

@@ -78,23 +78,17 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
         implements OpenPearlVisitor<Void> {
 
     private int m_verbose;
-    private boolean m_debug;
-    private SymbolTableVisitor m_symbolTableVisitor;
     private SymbolTable m_symboltable;
-    private SymbolTable m_currentSymbolTable;
     private AST m_ast;
-    private ArrayList<String> m_identifierDenotationList = null;
+
 
     
     public CheckVariableDeclaration(String sourceFileName, int verbose, boolean debug,
             SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
             AST ast) {
 
-        m_debug = debug;
         m_verbose = verbose;
-        m_symbolTableVisitor = symbolTableVisitor;
         m_symboltable = symbolTableVisitor.symbolTable;
-        m_currentSymbolTable = m_symboltable;
         m_ast = ast;
 
         if (m_verbose > 0) {
@@ -102,173 +96,215 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
         }
         List<VariableEntry> listOfVariables = m_symboltable.getAllVariableDeclarations();
         for (VariableEntry v : listOfVariables) {
-            if (v.getType() instanceof TypeStructure) {
-                System.out.println(v.getName() + " has components ");
-                StructureComponent comp;
-                TypeStructure ts =  (TypeStructure)v.getType();
-                comp = ts.getFirstElement();
-                while (comp != null) {
-                    System.out.println("   "+comp.m_type);
-                    comp = ts.getNextElement();
-                }
-                System.out.println("---");
-                
-            }
+//            if (v.getType() instanceof TypeStructure|| 
+//                    (v.getType() instanceof TypeArray && (((TypeArray)(v.getType())).getBaseType() instanceof TypeStructure))) {
+//                System.out.println(v.getName() + " has components ");
+//                StructureComponent comp;
+//                TypeStructure ts=null;
+//                if (v.getType() instanceof TypeStructure) {
+//                    ts =  (TypeStructure)v.getType();
+//                } else {
+//                    ts = (TypeStructure)(((TypeArray)(v.getType())).getBaseType());
+//                }
+//                comp = ts.getFirstElement();
+//                while (comp != null) {
+//                    System.out.println("   "+comp.m_type);
+//                    comp = ts.getNextElement();
+//                }
+//                System.out.println("---");
+//                
+//            }
             if (v.getInitializer() != null) {
                 checkInitializer(v);
             }
         }
     }
     
-    /* simple implementation without nested structure components and no arrays as structure components */
-    private int m_componentIndex;
-    private TypeStructure m_typeStructure;
-    
-    private TypeDefinition getFirstStructureComponentElement (TypeStructure ts){
-        m_componentIndex = 0;
-        m_typeStructure = ts;
-        TypeDefinition t = m_typeStructure.getStructureComponentByIndex(m_componentIndex).m_type;
-        m_componentIndex ++;
-        return t;
-    }
-    
-    private TypeDefinition getNextStructureComponentElement (){
-        if (m_componentIndex < m_typeStructure.getTotalNoOfElements()) {
-            TypeDefinition t = m_typeStructure.getStructureComponentByIndex(m_componentIndex).m_type;
-            m_componentIndex ++;
-            return t;
-        }
-        return null;
-    }
-    
+      
     private void checkInitializer(VariableEntry v) {
         if (v.getType() instanceof TypeArray) {
             TypeArray ta = (TypeArray)v.getType();
+            int nbrOfArrayElements = ta.getTotalNoOfElements();
             if (ta.getBaseType() instanceof TypeStructure) {
-                ErrorStack.addInternal(v.getCtx(), "CheckVariableDeclaration@137", "STRUCT initializer not implemented yet");
-
+                int indexOfInitializer = 0;
+                for (int arrayIndex=0; arrayIndex<nbrOfArrayElements; arrayIndex++) {
+                    StructureComponent comp = ((TypeStructure)(ta.getBaseType())).getFirstElement();
+                    ArrayOrStructureInitializer asi = (ArrayOrStructureInitializer)(v.getInitializer());
+                    
+                    do {
+                        TypeDefinition typeOfElement = comp.m_type;
+                        if (typeOfElement instanceof TypeArray) {
+                            int localArraySize = ((TypeArray)typeOfElement).getTotalNoOfElements();
+                            TypeDefinition baseType = ((TypeArray)typeOfElement).getBaseType();
+                            for (int j=0; j<localArraySize; j++) {
+                                indexOfInitializer = Math.min(indexOfInitializer, asi.getInitElementList().size()-1);
+                                Initializer init = asi.getInitElementList().get(indexOfInitializer++);
+                                if (init instanceof SimpleInitializer) {
+                                    checkTypes(baseType, ((SimpleInitializer)init));
+                                }else {
+                                    ErrorStack.addInternal("missing alternativ: CheckVariabladeclaration@166");
+                                } 
+                            }
+                        } else {
+                            indexOfInitializer = Math.min(indexOfInitializer, asi.getInitElementList().size()-1);
+                            Initializer init = asi.getInitElementList().get(indexOfInitializer++);
+                            if (init instanceof SimpleInitializer) {
+                                checkTypes(typeOfElement, ((SimpleInitializer)init));
+                            } else {
+                                ErrorStack.addInternal("missing alternativ: CheckVariabladeclaration@158");
+                            }
+                        }
+                        comp = ((TypeStructure)(ta.getBaseType())).getNextElement();
+                    } while (comp!= null);
+                }
             } else if (isScalarType(ta.getBaseType())) {
                 TypeDefinition baseType = ta.getBaseType();    
                 ArrayOrStructureInitializer asi = (ArrayOrStructureInitializer)(v.getInitializer());
                 for (int i=0; i<asi.getInitElementList().size(); i++) {
-                    SimpleInitializer init = (SimpleInitializer)(asi.getInitElementList().get(i));
-                    checkTypes(baseType, init.getConstant(), init.getContext());
+                    if (asi.getInitElementList().get(i) instanceof SimpleInitializer) {
+                       SimpleInitializer init = (SimpleInitializer)(asi.getInitElementList().get(i));
+                       checkTypes(baseType, init);
+                    } else {
+                        checkRefInitializer(baseType, asi.getInitElementList().get(i));
+                    }
                 }
             }
         } else if (isScalarType(v.getType())) {
             if (v.getType() instanceof TypeReference) {
-                // baseType must match the type of the initializer
-                // except it is possible to initialize an REF INV xxx with type xxx to reduce
-                // access possibilities
-                TypeDefinition baseTypeOfVariable = ((TypeReference)(v.getType())).getBaseType();
-                ASTAttribute attrInit=null;
-                ParserRuleContext ctx=null;
-                if (v.getInitializer() instanceof ReferenceInitializer) {
-                   ReferenceInitializer ri =(ReferenceInitializer)(v.getInitializer());
-                   ctx = ri.getContext();
-                   attrInit = m_ast.lookup(ri.getContext());
-                } else if (v.getInitializer() instanceof SimpleInitializer) {
-                    SimpleInitializer si =(SimpleInitializer)(v.getInitializer());
-                    ctx = si.getContext();
-                    attrInit = m_ast.lookup(si.getContext());
-                }
-                if (attrInit == null) {
-                    ErrorStack.addInternal(ctx, "CheckVariableDeclaration@155", "no ASTAttribute found");
-                    return ;
-                }
-                if (baseTypeOfVariable instanceof TypeArraySpecification ) {
-                    TypeArraySpecification tas = (TypeArraySpecification)baseTypeOfVariable;
-                    boolean ok = true;
-                    TypeDefinition typeOfInitializer = null;
-                    if (attrInit.m_type instanceof TypeArray) {
-                        typeOfInitializer = ((TypeArray)(attrInit.m_type)).getBaseType();
-                        if (tas.getNoOfDimensions() != ((TypeArray)(attrInit.m_type)).getNoOfDimensions()) {
-                            ok = false;
-                        }
-                    } else {
-                        ok = false;
-                    }
-                    if (ok && typeOfInitializer != null) {
-                           
-                    
-                            if (!typeOfInitializer.getName().equals(tas.getBaseType().getName()) || 
-                                    typeOfInitializer.getPrecision() != tas.getBaseType().getPrecision()) {
-                                ok = false;
-                            }
-                    }
-                    if (ok) {
-                        if (tas.getBaseType().hasAssignmentProtection() == false && 
-                                typeOfInitializer.hasAssignmentProtection()) {
-                            ok = false;
-                        }
-                    }
-                    if (!ok) {
-                        ErrorStack.add(ctx, "type mismatch in REF INIT",
-                             "REF "+baseTypeOfVariable.toString4IMC(true)  +" := " + attrInit.getType().toString4IMC(true));    
-                    } 
-                    
-                } else {
-                    boolean ok= true;
-                    if (baseTypeOfVariable instanceof TypeRefChar) {
-                        if (! (attrInit.getType() instanceof TypeChar)) {
-                            ok = false;
-                        }
-                    } else if (!attrInit.getType().getName().equals(baseTypeOfVariable.getName()) || 
-                            attrInit.getType().getPrecision() != baseTypeOfVariable.getPrecision()) {
-                        ok = false;
-                    }
-                    if (ok && baseTypeOfVariable.hasAssignmentProtection()==false &&
-                            attrInit.isConstant()) {
-                        ok = false;
-                    }
-                    if (!ok) {
-                        ErrorStack.add(ctx,"type mismatch in REF INIT",
-                                "REF "+baseTypeOfVariable.toString4IMC(true)  +" := " + attrInit.getType().toString4IMC(true));
-                    }
-                }
+                checkRefInitializer(v.getType(),v.getInitializer());
+                
             } else {
                SimpleInitializer si = (SimpleInitializer )(v.getInitializer());
-               checkTypes(v.getType(), si.getConstant(),si.getContext());
+               checkTypes(v.getType(), si);
             }
 
         } else if (v.getType() instanceof TypeStructure){
-            TypeDefinition t = getFirstStructureComponentElement((TypeStructure)(v.getType()));
+            StructureComponent comp = ((TypeStructure)(v.getType())).getFirstElement();
             int nextInitializer = 0;
             ArrayOrStructureInitializer asi = (ArrayOrStructureInitializer)(v.getInitializer());
             do {
-                SimpleInitializer init = (SimpleInitializer)(asi.getInitElementList().get(nextInitializer));
+                TypeDefinition t = comp.m_type;
+                Initializer init = asi.getInitElementList().get(nextInitializer);
                 nextInitializer++;
-                checkTypes(t, init.getConstant(), init.getContext());
-                t=getNextStructureComponentElement();
-            } while (t!= null);
-
-
+                if (init instanceof SimpleInitializer) {
+                    SimpleInitializer si = (SimpleInitializer)init;
+                    checkTypes(t, si);
+                } else {
+                    //  is Reference Initializer
+                    checkRefInitializer(t, init);
+                }
+                comp = ((TypeStructure)(v.getType())).getNextElement();
+            } while (comp!= null);
         } else {
             ErrorStack.addInternal(v.getCtx(),"CheckVariableDeclaration","missing alternative@137 for "+v.getType());
         }
 
     }
+
+    private void checkRefInitializer(TypeDefinition typeOfVariableOrComponent, Initializer init) {
+        // typeOfVariableOrComponent must match the type of the initializer
+        // except it is possible to initialize an REF INV xxx with type xxx to reduce
+        // access possibilities
+        ParserRuleContext ctx = init.getContext();
+        ASTAttribute attrInit=null;
+        TypeDefinition baseTypeOfVariableOrComponent = null;
+        if (typeOfVariableOrComponent instanceof TypeReference) {
+            baseTypeOfVariableOrComponent = ((TypeReference)typeOfVariableOrComponent).getBaseType();
+        } else {
+            ErrorStack.addInternal(ctx, "CheckVariableDefinition", "missing alternative@210");
+        }
+       
+
+        if (init instanceof ReferenceInitializer) {
+            ReferenceInitializer ri =(ReferenceInitializer)(init);
+            ctx = ri.getContext();
+            attrInit = m_ast.lookup(ri.getContext());
+        } else if (init instanceof SimpleInitializer) {
+            SimpleInitializer si =(SimpleInitializer)(init);
+            ctx = si.getContext();
+            attrInit = m_ast.lookup(si.getContext());
+        }
+        if (attrInit == null) {
+            ErrorStack.addInternal(ctx, "CheckVariableDeclaration@155", "no ASTAttribute found");
+            return ;
+        }
+        if (baseTypeOfVariableOrComponent instanceof TypeArraySpecification ) {
+            TypeArraySpecification tas = (TypeArraySpecification)baseTypeOfVariableOrComponent;
+            boolean ok = true;
+            TypeDefinition typeOfInitializer = null;
+            if (attrInit.m_type instanceof TypeArray) {
+                typeOfInitializer = ((TypeArray)(attrInit.m_type)).getBaseType();
+                if (tas.getNoOfDimensions() != ((TypeArray)(attrInit.m_type)).getNoOfDimensions()) {
+                    ok = false;
+                }
+            } else {
+                ok = false;
+            }
+            if (ok && typeOfInitializer != null) {
+                if (!typeOfInitializer.getName().equals(tas.getBaseType().getName()) || 
+                        typeOfInitializer.getPrecision() != tas.getBaseType().getPrecision()) {
+                    ok = false;
+                }
+            }
+            if (ok) {
+                if (tas.getBaseType().hasAssignmentProtection() == false && 
+                        typeOfInitializer.hasAssignmentProtection()) {
+                    ok = false;
+                }
+            }
+            if (!ok) {
+                ErrorStack.add(ctx, "type mismatch in REF INIT",
+                        "REF "+baseTypeOfVariableOrComponent.toString4IMC(true)  +" := " + attrInit.getType().toString4IMC(true));    
+            } 
+
+        } else {
+            boolean ok= false;
+            if (baseTypeOfVariableOrComponent instanceof TypeRefChar) {
+                if ( (attrInit.getType() instanceof TypeChar)) {
+                    ok = true;
+                }
+            } else if (attrInit.getType().getName().equals(baseTypeOfVariableOrComponent.getName()) && 
+                    attrInit.getType().getPrecision() == baseTypeOfVariableOrComponent.getPrecision()) {
+                ok = true;
+            }  else if (attrInit.getType().getName().equals(typeOfVariableOrComponent.getName()) &&
+                    attrInit.getType().getPrecision() == typeOfVariableOrComponent.getPrecision()) {
+                ok = true;
+            }
+            if (ok && baseTypeOfVariableOrComponent.hasAssignmentProtection()==false &&
+                    attrInit.isConstant()) {
+                ok = false;
+            }
+            if (!ok) {
+                ErrorStack.add(ctx,"type mismatch in REF INIT",
+                        "REF "+baseTypeOfVariableOrComponent.toString4IMC(true)  +" := " + attrInit.getType().toString4IMC(true));
+            }
+        }
+    }
     
     /**
      * 
-     * @param initializer is ether a simple initializer or a reference initializer 
+     * @param initializer is either a simple initializer or a reference initializer 
      * @param baseType the base type of the variable
      */
-    private void checkTypes(TypeDefinition typeOfVariable, ConstantValue initializer, ParserRuleContext ctx) {
-
-        if (isSimpleType(initializer.getType()) ) {
-             checkTypeCompatibility(typeOfVariable, initializer.getType(),ctx);
+    private void checkTypes(TypeDefinition typeOfVariable, SimpleInitializer simpleInitializer) {
+        
+        ParserRuleContext ctx = simpleInitializer.getContext();
+        
+        if (simpleInitializer.getConstant() == null) {
+            ASTAttribute attr = m_ast.lookup(ctx);
+            simpleInitializer.setConstant(attr.getConstant());
+        }
+        
+        
+        if (isSimpleType(simpleInitializer.getConstant().getType()) ) {
+             checkTypeCompatibility(typeOfVariable, simpleInitializer.getConstant().getType(),ctx);
         }
         if (typeOfVariable instanceof TypeSemaphore) {
-            long value = ((ConstantFixedValue)initializer).getValue();
+            long value = ((ConstantFixedValue)(simpleInitializer.getConstant())).getValue();
             if ( value < 0) {
                 ErrorStack.add(ctx,"PRESET","must be not negative");
             }
         }
-            
-//        } else {
-//            ErrorStack.add(ctx, "CheckVariableDeclaration", "untreated type of initializer");
-//        }
     }
 
     private boolean checkTypeCompatibility(TypeDefinition typeOfVariable, TypeDefinition typeOfInitializer, ParserRuleContext ctxOfInitElement) {

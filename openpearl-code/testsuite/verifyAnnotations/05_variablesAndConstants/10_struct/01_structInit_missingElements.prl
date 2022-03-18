@@ -12,5 +12,10 @@ DCL (str2,str3) STRUCT [ (a,b,c) FIXED] INIT(1,2,3,4,5);
 error: INIT: 1 initializers missing
 */
 
+DCL a(3) STRUCT [ a FIXED, b FLOAT , c CHAR(3)] 
+/*$ ^
+error: INIT: array of STRUCT 3 initialisers missing
+*/
+    INIT (1,1.1,'1',2,2.2,'2');
 MODEND;
 

@@ -611,7 +611,7 @@ implements OpenPearlVisitor<Void> {
             nbrOfInitializer = initElements.size();
             int nbrOfVariables = m_identifierDenotationContext.identifier().size();
 
-            // check number of initializers
+            // check number of required and given initializers
             if (m_type instanceof TypeArray) {
                 // need ArrayOrStructureInitialiser
                 int maxOfInitializers =
@@ -620,6 +620,11 @@ implements OpenPearlVisitor<Void> {
                     maxOfInitializers *=
                             ((TypeStructure) ((TypeArray) m_type).getBaseType())
                             .getTotalNoOfElements();
+                    if (nbrOfInitializer< maxOfInitializers) {
+                        ErrorStack.add(m_identifierDenotationContext,
+                                "INIT",
+                                "array of STRUCT "+ (maxOfInitializers-nbrOfInitializer) +" initialisers missing");
+                    }
                 }
                 if (nbrOfInitializer > maxOfInitializers) {
                     ErrorStack.add(
@@ -642,7 +647,7 @@ implements OpenPearlVisitor<Void> {
                 }
             } else if (m_type instanceof TypeReference) {
                 // need NameInitializer
-                nbrOfInitializer = 1;
+                nbrOfInitializer = nbrOfVariables;
 
                 //ErrorStack.addInternal(m_identifierDenotationContext,"","SymbolTableVisitor@708: NameInitializer missing");
             } else {
@@ -651,15 +656,18 @@ implements OpenPearlVisitor<Void> {
                     ErrorStack.add(
                             m_identifierDenotationContext.identifier(nbrOfInitializer),
                             "INIT",
-                            nbrOfVariables - nbrOfInitializer + " initializers missing");
+                            (nbrOfVariables - nbrOfInitializer) + " initializers missing");
                 } else if (nbrOfInitializer > nbrOfVariables) {
                     ErrorStack.add(
                             initElements.get(nbrOfVariables), "INIT", "too many initializers");
                 }
             }
         }
+        
+
         int nextInitializerIndex = 0;
         init = null;
+        Initializer initializer = null;
         for (int i = 0; i < m_identifierDenotationContext.identifier().size(); i++) {
             String s = m_identifierDenotationContext.identifier(i).getText();
             if (initElements != null) {
@@ -677,45 +685,27 @@ implements OpenPearlVisitor<Void> {
                     if (remainingInitializers > maxOfInitializers) {
                         ParserRuleContext startCtx = initElements.get(nextInitializerIndex);
                         ArrayList<Initializer> ali = new ArrayList<Initializer>();
+                        
                         for (int j = 0; j < maxOfInitializers; j++) {
-                            ConstantValue constant =
-                                    getInitElement(
-                                            nextInitializerIndex,
-                                            initElements.get(nextInitializerIndex));
-
-                            SimpleInitializer si =
-                                    new SimpleInitializer(
-                                            initElements.get(nextInitializerIndex), constant);
+                             initializer = getInitializer(initElements.get(nextInitializerIndex));
                             nextInitializerIndex++;
-                            ali.add(si);
+                            ali.add(initializer);
                         }
                         init = new ArrayOrStructureInitializer(startCtx, ali);
                     } else if (remainingInitializers == 0) {
                         // (re-)use last init element
                         ParserRuleContext startCtx = initElements.get(nextInitializerIndex);
                         ArrayList<Initializer> ali = new ArrayList<Initializer>();
-                        ConstantValue constant =
-                                getInitElement(
-                                        nextInitializerIndex,
-                                        initElements.get(nextInitializerIndex));
-                        SimpleInitializer si =
-                                new SimpleInitializer(
-                                        initElements.get(nextInitializerIndex), constant);
-                        ali.add(si);
+
+                        ali.add(initializer);
                         init = new ArrayOrStructureInitializer(startCtx, ali);
                     } else {
                         ArrayList<Initializer> ali = new ArrayList<Initializer>();
                         ParserRuleContext startCtx = initElements.get(nextInitializerIndex);
                         for (int j = 0; j < remainingInitializers; j++) {
-                            ConstantValue constant =
-                                    getInitElement(
-                                            nextInitializerIndex,
-                                            initElements.get(nextInitializerIndex));
-                            SimpleInitializer si =
-                                    new SimpleInitializer(
-                                            initElements.get(nextInitializerIndex), constant);
+                            initializer = getInitializer(initElements.get(nextInitializerIndex));
                             nextInitializerIndex++;
-                            ali.add(si);
+                            ali.add(initializer);
                         }
                         init = new ArrayOrStructureInitializer(startCtx, ali);
                     }
@@ -728,15 +718,9 @@ implements OpenPearlVisitor<Void> {
                         ParserRuleContext startCtx = initElements.get(nextInitializerIndex);
                         ArrayList<Initializer> ali = new ArrayList<Initializer>();
                         for (int j = 0; j < maxOfInitializers; j++) {
-                            ConstantValue constant =
-                                    getInitElement(
-                                            nextInitializerIndex,
-                                            initElements.get(nextInitializerIndex));
-                            SimpleInitializer si =
-                                    new SimpleInitializer(
-                                            initElements.get(nextInitializerIndex), constant);
+                            initializer = getInitializer(initElements.get(nextInitializerIndex));
                             nextInitializerIndex++;
-                            ali.add(si);
+                            ali.add(initializer);
                         }
                         init = new ArrayOrStructureInitializer(startCtx, ali);
                     }
@@ -744,48 +728,21 @@ implements OpenPearlVisitor<Void> {
                     // lookup the SymboltableEntry of the identifier
                     // further checks of existence, type and structure components are done 
                     // in CheckVariableDefinition
-                    if (initElements.get(nextInitializerIndex).identifier() != null) {
-                        String identifier = initElements.get(nextInitializerIndex).identifier().getText();
-                        SymbolTableEntry se = m_currentSymbolTable.lookup(identifier);
-                        init = new ReferenceInitializer( initElements.get(nextInitializerIndex).identifier(),se,m_currentSymbolTable);
-                    } else if (initElements.get(nextInitializerIndex).name() != null) {
-                        String identifier = initElements.get(nextInitializerIndex).name().ID().getText();
-                        SymbolTableEntry se = m_currentSymbolTable.lookup(identifier);
-                        init = new ReferenceInitializer( initElements.get(nextInitializerIndex).name(),se,m_currentSymbolTable);
-                    } else if (initElements.get(nextInitializerIndex).constant()!= null) {
-                        ConstantValue constant =
-                                getInitElement(
-                                        nextInitializerIndex,
-                                        initElements.get(nextInitializerIndex));
-                         init = new SimpleInitializer(
-                                        initElements.get(nextInitializerIndex), constant);
-                    } else if (initElements.get(nextInitializerIndex).constantExpression()!= null) {
-                    } else {
-                       ErrorStack.add(m_identifierDenotationContext.identifier(i),
-                            "INIT","need identifier for REF");
-                    }
-                    
+                    init = getInitializer(initElements.get(nextInitializerIndex));
+                 
                 } else {
                     // need SimpleInitializer
                     if (nextInitializerIndex < initElements.size()) {
-                        ConstantValue constant =
-                                getInitElement(
-                                        nextInitializerIndex,
-                                        initElements.get(nextInitializerIndex));
-                        if (constant == null) {
-                            ErrorStack.add(m_identifierDenotationContext.identifier(i),
-                                    "INIT","could not evaluate initializer");
-                            continue; // treat next variable
-                        } else {
-                            init =
-                                    new SimpleInitializer(
-                                            initElements.get(nextInitializerIndex), constant);
+                        init = getInitializer(initElements.get(nextInitializerIndex));
                             nextInitializerIndex++;
                             if (m_hasAllocationProtection && m_type instanceof TypeFixed) { 
-
-                                if (constant != null &&(
-                                        !(constant instanceof ConstantFixedValue) || 
-                                        m_type.getPrecision() < ((ConstantFixedValue)constant).getPrecision()) ){
+                                if (init instanceof SimpleInitializer && ((SimpleInitializer)init).getConstant() != null) {
+                                    ConstantValue constant = ((SimpleInitializer)init).getConstant();
+                                    if (!( constant instanceof ConstantValue) || m_type.getPrecision() < ((ConstantFixedValue)constant).getPrecision()) {
+//                                        
+//                                if (constant != null &&(
+//                                        !(constant instanceof ConstantFixedValue) || 
+//                                        m_type.getPrecision() < ((ConstantFixedValue)constant).getPrecision()) ){
                                     // error in case of initializer is not of type fixed
                                     // or precision of initializer is larger than variable
                                     // if the constant is null --> the error is reported already
@@ -819,6 +776,37 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
+    private Initializer getInitializer(InitElementContext ctx) {
+        Initializer init = null;
+        if (ctx.identifier() != null) {
+            String identifier = ctx.identifier().getText();
+            SymbolTableEntry se = m_currentSymbolTable.lookup(identifier);
+            if (se != null) {
+               init = new ReferenceInitializer( ctx.identifier(),se,m_currentSymbolTable);
+            } else {
+                ErrorStack.add(ctx,"DCL","undefined symbol: '"+ identifier+"'");
+            }
+        } else if (ctx.name() != null) {
+            String identifier = ctx.name().ID().getText();
+            SymbolTableEntry se = m_currentSymbolTable.lookup(identifier);
+            if (se != null) {
+               init = new ReferenceInitializer( ctx.name(),se,m_currentSymbolTable);
+            } else {
+                ErrorStack.add(ctx,"DCL","undefined symbol: '"+ identifier+"'");
+            }
+        } else if (ctx.constant()!= null) {
+            ConstantValue constant =
+                    getInitElement(ctx);
+             init = new SimpleInitializer(
+                            ctx, constant);
+        } else if (ctx.constantExpression()!= null) {
+            init = new SimpleInitializer(ctx, null); // the constant expression becomes evaluated in ContantFolding!
+        }  else {
+            ErrorStack.addInternal(ctx,"SymbolTableVisitor@857","missing alternative");
+        }
+        return init;
+    }
+    
     @Override
     public Void visitSemaDenotation(SemaDenotationContext ctx) {
         int nbrOfInitializersPerName = 1;
@@ -862,7 +850,7 @@ implements OpenPearlVisitor<Void> {
                     if (i < initElements.size()) {
                         ConstantValue constant =
                                 getInitElement(
-                                        nextInitializerIndex,
+                                      
                                         initElements.get(nextInitializerIndex));
                         if (constant == null) {
                             ErrorStack.add(m_identifierDenotationContext.identifier(i),
@@ -1603,7 +1591,7 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
-    private ConstantValue getInitElement(int index, InitElementContext ctx) {
+    private ConstantValue getInitElement(InitElementContext ctx) {
         ConstantValue constant = null;
 
         Log.debug("SymbolTableVisitor:getInitElement:ctx" + CommonUtils.printContext(ctx));
@@ -1967,8 +1955,8 @@ implements OpenPearlVisitor<Void> {
             TypeAttributeInStructureComponentContext ctx) {
         Log.debug(
                 "SymbolTableVisitor:visitTypeAttributeInStructureComponent:ctx"
-                        + CommonUtils.printContext(ctx));
-
+                       + CommonUtils.printContext(ctx));
+        String s = ctx.getText();
         if (ctx.simpleType() != null) {
             visitSimpleType(ctx.simpleType());
         } else if (ctx.structuredType() != null) {
