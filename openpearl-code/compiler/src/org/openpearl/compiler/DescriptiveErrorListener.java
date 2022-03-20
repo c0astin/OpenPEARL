@@ -46,8 +46,8 @@ public class DescriptiveErrorListener extends BaseErrorListener {
 
         SourceLocation loc = SourceLocations.getSourceLoc(lineNo);
         if ( loc != null ) {
-            System.err.println(loc.filename() + ":" + loc.to() + ":" + (charPositionInLine +1 )+ ": ERROR : Syntax error :" + msg);
-            underlineError(recognizer,(Token)offendingSymbol, loc.to(), charPositionInLine);
+            System.err.println(loc.filename() + ":" + loc.getLineNo(lineNo) + ":" + (charPositionInLine +1 )+ ": ERROR : Syntax error :" + msg);
+            underlineError(recognizer,(Token)offendingSymbol, lineNo, charPositionInLine);
         } else {
             System.err.println(sourceName + ":" + lineNo + ":" + (charPositionInLine +1 )+ ": ERROR : Syntax error :" + msg);
             underlineError(recognizer,(Token)offendingSymbol, lineNo, charPositionInLine);

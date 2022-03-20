@@ -281,17 +281,32 @@ public class ErrorStack {
         return null;
     }
 
-
-
     private static Void printMessage(String msg, String typeOfMessage) {
         int startLineNumber;
+        int stopLineNumber;
+        int expandedStartLineNumber;
+        int expandedStopLineNumber;
         int startColNumber;
+        int stopColNumber;
         String sourceLine;
+        String filename;
 
-        startLineNumber = m_stack[m_sp].getCtx().start.getLine();
+        expandedStartLineNumber = m_stack[m_sp].getCtx().start.getLine();
+        expandedStopLineNumber = m_stack[m_sp].getCtx().stop.getLine();
+
+        SourceLocation startLoc = SourceLocations.getSourceLoc(expandedStartLineNumber);
+        SourceLocation stopLoc = SourceLocations.getSourceLoc(expandedStopLineNumber);
+
+        if (startLoc == null || stopLoc == null ) {
+            System.err.println("internal compiler error: "+msg + "\n\tplease send a bug report" );
+        }
+
+        filename = startLoc.filename();
+
+        startLineNumber = startLoc.getLineNo(m_stack[m_sp].getCtx().start.getLine());
         startColNumber = m_stack[m_sp].getCtx().start.getCharPositionInLine();
-        int stopLineNumber = m_stack[m_sp].getCtx().stop.getLine();
-        int stopColNumber = m_stack[m_sp].getCtx().stop.getCharPositionInLine();
+        stopLineNumber = stopLoc.getLineNo(m_stack[m_sp].getCtx().start.getLine());
+        stopColNumber = m_stack[m_sp].getCtx().stop.getCharPositionInLine();
 
         /* print error message */
         String prefix = "";
@@ -302,7 +317,7 @@ public class ErrorStack {
         }
 
         /* print source line */
-        sourceLine = getLineFromSourceFile(Compiler.getSourceFilename(), startLineNumber);
+        sourceLine = getLineFromSourceFile(Compiler.getSourceFilename(), expandedStartLineNumber);
 
         String errorLine = "";
 
@@ -311,9 +326,8 @@ public class ErrorStack {
 
         errorLine = spaces(errorPos) + errorOn;
 
-        System.err.println(Compiler.getSourceFilename() + ":" + startLineNumber + ":"
+        System.err.println(filename + ":" + startLineNumber + ":"
                 + (errorPos + 1) + ": " + typeOfMessage + ": " + prefix + " " + msg);
-
 
         if (startLineNumber == stopLineNumber) {
             errorLine += sourceLine.substring(startColNumber, stopColNumber + 1);
@@ -327,12 +341,12 @@ public class ErrorStack {
             System.err.println(errorLine);
 
             // print complete lines of the token
-            for (int i = startLineNumber + 1; i < stopLineNumber; i++) {
-                sourceLine = expandTabs(getLineFromSourceFile(Compiler.getSourceFilename(), i));
+            for (int i =expandedStartLineNumber + 1; i < expandedStopLineNumber; i++) {
+                sourceLine = expandTabs(getLineFromSourceFile(filename, i));
                 System.err.println(sourceLine);
             }
             // print last line
-            sourceLine = getLineFromSourceFile(Compiler.getSourceFilename(), stopLineNumber);
+            sourceLine = getLineFromSourceFile(filename, expandedStopLineNumber);
             errorLine = expandTabs(sourceLine.substring(0, stopColNumber + 1)) + errorOff
                     + sourceLine.substring(stopColNumber + 1);
             System.err.println(errorLine);

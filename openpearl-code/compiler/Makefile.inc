@@ -1,6 +1,6 @@
 ###############################################################################
 ## [The "BSD license"]
-## Copyright (c) 2012-2013 Marcel Schaible
+## Copyright (c) 2012-2022 Marcel Schaible
 ## All rights reserved.
 ##
 ## Redistribution and use in source and binary forms, with or without
@@ -39,16 +39,5 @@ RANLIB	     = ranlib
 ECHO	     = echo
 SHELL	     = /bin/sh
 
-################################
-# Where to install the compiler:
-################################
-#
-# obsolete --> use $(CONFIG_INSTALL_Target) from menuconfig tool
-#
-#ifndef OPENPEARL_INSTALL_DIR
-#       INSTALL_DIR  = /usr/local/bin
-#else
-#       INSTALL_DIR = $(OPENPEARL_INSTALL_DIR)
-#endif
-
 #.SILENT :
+

@@ -20,6 +20,7 @@ help:
 	@echo "make menuconfig: edit configuration setting"
 	@echo "make all:     install"
 	@echo "make clean:   clean in all project parts"
+	@echo "make compiler-update:   build compiler and copy "
 	@echo
 	@echo "Usual sequence for developer"
 	@echo "+ initially as root:        make prepare"
@@ -78,6 +79,12 @@ endif
 
 configuration/.config:
 	(cd configuration; make menuconfig; cd ..)
+
+
+compiler-update:
+	(cd compiler/src; make install; )
+	cp prl $(CONFIG_INSTALL_Target)/bin
+	cp prlpp $(CONFIG_INSTALL_Target)/bin
 
 .PHONY: configuration/include/autoconf.h
 configuration/include/autoconf.h:  configuration/.config

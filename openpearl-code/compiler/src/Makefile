@@ -1,6 +1,6 @@
 ###############################################################################
 ## [The "BSD license"]
-## Copyright (c) 2012-2021 Marcel Schaible
+## Copyright (c) 2012-2022 Marcel Schaible
 ## All rights reserved.
 ##
 ## Redistribution and use in source and binary forms, with or without
@@ -127,8 +127,9 @@ install: gen prl pp prl_cc.inc
 prl_cc.inc:
 	echo "##### auto generated  start " > ../prl_cc.inc
 	echo 'java -cp $(CONFIG_INSTALL_Target)/bin/openpearl_compiler.jar:$(CONFIG_COMPILER_ANTLR)  org/openpearl/compiler/Compiler \' >> ../prl_cc.inc
-	echo '   $$standard $$PRLFLAGS $$fn.prl \' >> ../prl_cc.inc
-	echo '   --output $$outputPrlCC ' >> ../prl_cc.inc
+	echo '   $$standard $$PRLFLAGS $$prlccinput.prl \' >> ../prl_cc.inc
+	echo '   --imc-output $$fn.xml \' >> ../prl_cc.inc
+	echo '   --output $$outputPrlCC ' >> ../prl_cc.inc	
 	echo "##### auto generated end " >> ../prl_cc.inc
 
 ###############################################################################

@@ -12,8 +12,10 @@ then
    PLATTFORM=linux
 fi
 
+DEBUG=0
 SYSTEM="system.cc"
 COMPILEONLY=0
+PPONLY=0
 StopBeforeCpp=0
 RUN=
 HELP=
@@ -21,6 +23,8 @@ INPUT=
 imcInputFiles=
 objects=
 target=
+noPP=0
+
 standard="-std=OpenPEARL"
 if [[ $PRLFLAGS =~ "-std=PEARL90" ]]; then
    standard="-std=PEARL90"
@@ -32,29 +36,32 @@ fi
 while [ "$1" != "" ] ; do
     #echo "input: " $INPUT
     case $1 in
-        -std=OpenPEARL) standard=$1; shift;;
-        -std=PEARL90) standard=$1; shift;;
-        -o) target=$2;  shift 2;;
-        -b) PLATTFORM=$2;  shift 2;;
-        -i) INTERFACE=$2;  shift 2;;
-        -cc) StopBeforeCpp=1;     shift;;
-        -c) COMPILEONLY=1;        shift;;
-        -r) RUN=1;                shift;;
-        -v) VERBOSE=1;            shift;;
-        -noimc) noIMC=1;   shift;;
-        -nosys) NOSYSTEMPART=1;   shift;;
-        -h) HELP=1;        shift;;
-        -keep) keepFiles=1;       shift;;
+        -std=OpenPEARL) standard=$1;             shift;;
+        -std=PEARL90)   standard=$1;             shift;;
+        -o)             target=$2;               shift 2;;
+        -b)             PLATTFORM=$2;            shift 2;;
+        -i)             INTERFACE=$2;            shift 2;;
+        -cc)            StopBeforeCpp=1;         shift;;
+        -c)             COMPILEONLY=1;           shift;;
+	-E)             PPONLY=1;                shift;;
+	-nopp)          noPP=1;                  shift;;
+        -r)             RUN=1;                   shift;;
+        -v)             VERBOSE=1;               shift;;
+        -noimc)         noIMC=1;                 shift;;
+        -nosys)         NOSYSTEMPART=1;          shift;;
+        -h)             HELP=1;                  shift;;
+        -keep)          keepFiles=1;             shift;;
 	 -*) echo "unknown option " $1; 
                shift;
 	       exit 1;;
-        *) INPUT="$INPUT $1"; shift;;
+        *) INPUT="$INPUT $1";        shift;;
      esac
 done
 
 #echo "HELP=" $HELP 
 #echo PLATFORM = $PLATFORM
 #echo COMPILEONLY = $COMPILEONLY
+#echo PPONLY = $PPONLY
 #echo INPUT = $INPUT
 #echo "StopBeforeCpp= " $StopBeforeCpp
 
@@ -65,12 +72,13 @@ then
    echo "    -std=OpenPEARL  (default) "
    echo "    -std=PEARL90 (disable OpenPEARL extensions)"
    echo "    -c compile only (until object and xml output)" 
-   echo "    -o \<outputFileName> defines the name of the executable"
+   echo "    -o <outputFileName> defines the name of the executable"
    echo "    -cc compile only until C++ source and xml (for developers)" 
    echo "    -keep keep intermediate files (for developers)"
-   echo "    -b \<plattform> build for plattform (defaults to linux)" 
+   echo "    -b <plattform> build for plattform (defaults to linux)" 
    echo "        or OpenPEARLTarget environment variable" 
    echo "        known plattforms: $plattforms"
+   echo "    -E preprocess only"
    echo "    -r run application on MCU" 
    echo "    -i <interface> download interface for MCU (default /dev/ttyUSB0)" 
    echo "    -noimc do not invoke the imc - current system.cc is used (for developers)"
@@ -164,9 +172,7 @@ rm -f $target.out $target.log
       if [[ "$fn" = "$inp_ext" ]] ; then
          inp_ext=""
       fi
-      #echo ext: $inp_ext
-      #echo fn: $fn 
-      #echo targetDir: $targetDir
+
       outputPrlCC=""
    
      if [[ "$inp_ext" = "o" ]] ; then
@@ -183,15 +189,38 @@ rm -f $target.out $target.log
                outputPrlCC=`mktemp -t openpearl.XXXXXXX --suffix=".cc"` || exit 1
                intermediateFiles+=" $outputPrlCC"
             fi
+	    imcoutput=$fn
+	    
+	    # --------------------
+	    # run preprocessor
+	    if [[ "$noPP" != "1" ]] ; then
+		outputPrlPP=`mktemp -t openpearl.XXXXXXX --suffix=".prl"` || exit 1
+		intermediateFiles+=" $outputPrlPP"
+		/usr/local/bin/prlpp --quiet $fn.prl --output $outputPrlPP
+		rc=$?
+		if [ $rc -ne 0 ]
+		then
+		    echo "terminate due to errors in stage 1a (pp)" 1>>$fn.log
+		    exit $rc
+		fi
+		prlccinput="/tmp/"`basename $outputPrlPP .prl`		
+	    fi
 
-           # echo $fn.prl " ---> " $outputPrlCC 
-   #include "compiler/prl_cc.inc"
-
+            if [ $DEBUG -ne 0 ] ; then    
+		echo ">>> prl: fn=" $fn 
+		echo ">>> prl: prlccinput=" $prlccinput
+		echo ">>> prl: prlccinput=" $prlccinput
+	    fi
+	    
+            # echo $fn.prl " ---> " $outputPrlCC 
+	    #include "compiler/prl_cc.inc"
+	    
             rc=$?
 
             if [[ "$StopBeforeCpp" = "0" && "$COMPILEONLY" = "0" ]] ; then
                intermediateFiles+=" $fn.xml"
             fi 
+
             intermediateFiles+=" $fn.log $fn.out"
 
             if [ $rc -ne 0 ] ; then
@@ -223,8 +252,12 @@ rm -f $target.out $target.log
                outputPrlCC=$fn.cc
             fi
 
-	   # echo $outputPrlCC " -> " $outputCcO
-   
+            if [ $DEBUG -ne 0 ] ; then    
+		echo "[100] prl: fn=" $fn 
+		echo "[101] prl: outputPrlCC=" $outputPrlCC
+		echo "[102] prl: outputCcO=" $$outputCcO 
+	    fi
+	    
    #         echo "cmd: " g++ -DTARGET=1 -c -Wall -g  -fstack-protector -pthread -O2 -fno-non-call-exceptions -DTARGET=1 -std=c++11    -I "/usr/local"/include  $outputPrlCC -o $outputCcO
    #
    #        rc=$?
@@ -259,7 +292,6 @@ rm -f $target.out $target.log
    # --------------------
    # run imc
    if [[ "$noIMC" != "1" && "$imcInputFiles" != "" ]] ; then
-      # echo "IMC "  $imcInputFiles
        java -cp "/usr/local"/bin/imc.jar imc/main/InterModuleChecker $standard -b $PLATTFORM  -I "/usr/local" -o system.cc $imcInputFiles
    
        rc=$?

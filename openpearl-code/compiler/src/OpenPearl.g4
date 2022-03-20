@@ -1,6 +1,6 @@
 /*
  [A "BSD license"]
- Copyright (c) 2012-2021 Rainer Mueller & Marcel Schaible
+ Copyright (c) 2012-2022 Rainer Mueller & Marcel Schaible
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@ grammar OpenPearl;
 import org.openpearl.compiler.OpenPearlLexer;
 import org.openpearl.compiler.SourceLocation;
 import org.openpearl.compiler.SourceLocations;
+import org.openpearl.compiler.Compiler;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2645,8 +2646,7 @@ STRING: '"' (~'"')* '"'
 PP:
     '#'  ~('\n'|'\r')* '\r'? '\n'
     {
-        System.out.println("PP:"+getText()+":"+_tokenStartLine);
-        SourceLocations.m_sourceLocs.add(new SourceLocation("fgsdhfdhfg",1,2));
+        Compiler.m_sourcelocations.process(getLine(),getText());
     } -> channel(HIDDEN);
 
 ////////////////////////////////////////////////////////////////////////////////
