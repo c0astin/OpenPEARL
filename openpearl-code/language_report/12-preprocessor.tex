@@ -1,0 +1,124 @@
+\chapter{Preprocessor}
+
+\OpenPEARL{} requires the specification of the global interface of
+other modules in each module which wants to use other modules.  In
+some cases conditional compilation is needed.  To support this
+efforts, the OpenPEARL{} preprocessor (PP) is introduced and
+automatically called by the compiler. PP transforms the source code
+before compilation.
+
+\section{Command-Line Interface}
+\label{sec:commandline_interface}
+
+\section{Include Statement}
+
+The import of a different source file is triggered with:
+\\
+\begin{lstlisting}
+#INCLUDE path/filename ;
+\end{lstlisting}
+
+Please note the terminating semicolon, which is mandatory and is
+inherited from RTOS-UH.
+
+The extension of the included file can be freely choosen. It is
+recommended to use the extension \texttt{.inc}.
+
+The filename can be prefixed with an absolute or relative path.  In
+case of a relative path the search for the include file starts in the
+current working directory of the OpenPEARL{} source code file.
+
+The search path can be adapted by setting the includepath as a
+command-line argument(see \ref{sec:commandline_interface}).
+
+The content of the specified source file is inserted at the place of
+the include statement. Error messages from the compiler and the
+runtime system will be given relative to the included file.
+
+The base location for relative path names is the directory containing
+the file, doing the \texttt{INCLUDE}.
+
+If an included file contains further \texttt{\#INCLUDE} statements
+with relative path names, they included relative to the location of
+the including file.
+
+Example:
+
+\begin{lstlisting}
+/* declaration of a variable switch of type bit string of length 1 */ 
+DECLARE switch BIT;
+
+/* specification of a global variable status of type bit string 
+of length 16 */ 
+SPECIFY status BIT(16) GLOBAL(otherModule);
+\end{lstlisting}
+
+
+\section{Conditional Compilation}
+
+\subsection{Definition of Macros Constants}
+\#DEFINE ConstantIdentifier {\bf = } ConstantIntegerExpression ;
+
+ConstantIntegerExpression :== \\
+\x [ ConstantMonadicOperator ] ConstantOperand  [ 
+ ConstantDyadicOperator ConstantIntegerExpression  ] $^{...}$\\
+
+ConstantMonadicOperator:== \\
+\x {\bf +} $\mid$ {\bf -}
+
+ConstantDyadicOperator:== \\
+\x {\bf +} $\mid$ {\bf -} $\mid$ {\bf *} $\mid$ {\bf // }
+
+ConstantOperand :== \\
+\x Integer $\mid$ Identifier$\S $Constant $\mid$ 
+{\bf (} ConstantIntegerExpression {\bf )}
+
+Example:\\
+\#DEFINE lines = 10;			\\
+\#DEFINE lineLength = 80;		\\
+\#DEFINE size = 2*(lines*lineLength);	\\
+
+Example usage:
+
+MODULE(condCompile);\\
+\\
+SYSTEM:\\
+\ \\
+PROBLEM;\\
+\#INCLUDE config.inc    ! defines target\\
+\ \\
+\#IFUDEF target;\\
+\x \#ERROR 'target is not set';\\
+\#ENDIF;\\
+\\
+\#IF target == 2;\\
+\x  \#INCLUDE 'module2.inc' ;\\
+\#ELSE IF target == 3 ;\\
+\x   \#INCLUDE 'module3.inc' ;\\
+\#ELSE ;\\
+\x   \#ERROR 'unknown target';\\
+\#ENDIF;\\
+
+Zulaessige Vergleiche: $<, <= >, >=, ==, /= $
+
+Macros: DEFINE, INCLUDE, IF, IFUDEF, IFDEF, (?? auch UNDEF?? )
+
+'\#' und Makroname muessen zusammen stehen. Vor einem Makro ist nur
+Whitespace erlaubt. Makroanweisungen enden mit ';'.  Nach dem ';' sind
+normal PEARL-Anweisungen zulaessig.
+
+\subsection{Undefining of Macros Constants}
+
+\section{Pragmas}
+
+\section{Diagnostics}
+\#error
+\#warn
+\#info
+
+
+
+
+%%% Local Variables:
+%%% TeX-master: "p-report"
+%%% End:

@@ -30,33 +30,50 @@
 package org.openpearl.compiler;
 
 import java.util.ArrayList;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class SourceLocation {
     private String m_filename;
-    private int m_fromLineNo;
-    private int m_toLineNo;
+    private int m_srcFromLineNo;
+    private int m_srcToLineNo;
+    private int m_dstLineNo;
+    private int m_flag;
 
-    SourceLocation(String filename, int fromlineNo, int toLineNo) {
-        this.m_filename = filename;
-        this.m_fromLineNo = fromlineNo;
-        this.m_toLineNo = toLineNo;
-        System.out.println(toString());
+    SourceLocation(int srcLineNo, int dstLineNo, String filename, int flag) {
+        m_srcFromLineNo = srcLineNo;
+        m_srcToLineNo = -1;
+        m_dstLineNo = dstLineNo;
+        m_filename = filename;
+        m_flag = flag;
     }
 
     public String toString() {
-        return "LOC:" + this.m_fromLineNo + "-" + this.m_toLineNo + ":" + this.m_filename;
+        return "LOC:" + this.m_srcFromLineNo + ":" + this.m_srcToLineNo + ":" + this.m_filename;
     }
 
-    public int from() {
-        return this.m_fromLineNo;
+    public int srcFrom() {
+        return this.m_srcFromLineNo;
     }
 
-    public int to() {
-        return this.m_toLineNo;
+    public void setSrcFrom(int lineNo) {
+        m_srcFromLineNo = lineNo;
+    }
+
+    public int srcTo() {
+        return this.m_srcToLineNo;
+    }
+
+    public void setSrcTo(int lineNo) {
+        m_srcToLineNo = lineNo;
     }
 
     public String filename() {
         return this.m_filename;
+    }
+
+    public int getLineNo(int lineNo) {
+        return lineNo - m_srcFromLineNo + m_dstLineNo;
     }
 }
 

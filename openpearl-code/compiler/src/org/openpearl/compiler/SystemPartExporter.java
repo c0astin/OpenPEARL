@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- * *  Copyright (c) 2012-2021 Marcel Schaible
+ * *  Copyright (c) 2012-2022 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -87,7 +87,6 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
         if (m_verbose > 1) {
             System.out.println("Generating InterModuleChecker definitions");
         }
-
         this.ReadTemplate(IMC_EXPORT_STG);
     }
 
@@ -153,8 +152,11 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
     public ST visitSystemElementDefinition(OpenPearlParser.SystemElementDefinitionContext ctx) {
         ST decl = group.getInstanceOf("SystemElementDefinition");
 
+        int xxx = ctx.start.getLine();
+        SourceLocation loc = getSourceLoc(ctx.start.getLine());
+
         decl.add("username", ctx.systemPartName().getText());
-        decl.add("lineno", ctx.start.getLine());
+        decl.add("lineno", loc.getLineNo(ctx.start.getLine()));
         decl.add("col", ctx.start.getCharPositionInLine() + 1);
         decl.add("decl", visit(ctx.systemDescription()));
 
@@ -166,7 +168,9 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
     public ST visitConfigurationElement(OpenPearlParser.ConfigurationElementContext ctx) {
         ST decl = group.getInstanceOf("ConfigurationElement");
 
-        decl.add("lineno", ctx.start.getLine());
+        SourceLocation loc = getSourceLoc(ctx.start.getLine());
+
+        decl.add("lineno", loc.getLineNo(ctx.start.getLine()));
         decl.add("col", ctx.start.getCharPositionInLine() + 1);
         decl.add("decl", visit(ctx.systemDescription()));
 
@@ -253,10 +257,15 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
 
         LinkedList<InterruptEntry> l = m_currentSymbolTable.getInterruptSpecifications();
         for (InterruptEntry v : l) {
+            SourceLocation loc = getSourceLoc(v.getCtx().start.getLine());
+
+            if (loc == null) {
+                System.err.println("internal compiler error: SystemPartExporter\n\tplease send a bug report");
+            }
 
             ST interruptSpecification = group.getInstanceOf("Specification");
             interruptSpecification.add("type", "INTERRUPT");
-            interruptSpecification.add("lineno", v.getCtx().start.getLine());
+            interruptSpecification.add("lineno", loc.getLineNo(v.getCtx().start.getLine()));
             interruptSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
             interruptSpecification.add("name", v.getName());
             if (m_useNamespaceForGlobals) {
@@ -380,7 +389,8 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
             dation = group.getInstanceOf("DationDeclaration");
         }
 
-        dation.add("lineno", v.getCtx().start.getLine());
+        SourceLocation loc = getSourceLoc(v.getCtx().start.getLine());
+        dation.add("lineno", loc.getLineNo(v.getCtx().start.getLine()));
         dation.add("col", v.getCtx().start.getCharPositionInLine() + 1);
         dation.add("name", v.getName());
         if (v.getGlobalAttribute()!= null) {
@@ -523,4 +533,13 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
         tfuUsage.add("decls", tfuInUserDation);
     }
 
+    private SourceLocation getSourceLoc(int lineNo) {
+        SourceLocation loc = SourceLocations.getSourceLoc(lineNo);
+
+        if (loc == null) {
+            System.err.println("internal compiler error: SystemPartExporter\n\tplease send a bug report");
+        }
+
+        return loc;
+    }
 }

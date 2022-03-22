@@ -1,0 +1,23 @@
+MODULE(pp);
+
+SYSTEM;
+#INCLUDE 902_pp_system.inc;
+
+PROBLEM;
+#INCLUDE 902_pp_problem.inc;
+
+t: TASK MAIN;
+   OPEN stdout;
+   struct.a = 3;
+   PUT 'export:', export TO stdout BY A,F(3),SKIP;
+   PUT 'struct.(a,b)', struct.a, struct.b TO stdout BY A,2F(4),SKIP;
+END;
+
+proc1: PROC GLOBAL;
+END;
+proc2: PROC GLOBAL;
+END;
+proc3: PROC GLOBAL;
+END;
+
+MODEND;

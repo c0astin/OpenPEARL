@@ -27,7 +27,7 @@ DONOTBUILDESP32= 030 031  \
 	224 410\
 	700 701 703 \
 	704 705 707 710 \
-	900 901
+	900 
 
 #	022_mixedDcl \ not int repo yet
 

@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 import static org.openpearl.compiler.Log.*;
 
 public class Compiler {
-    static String version = "v0.8.9.42";
+    static String version = "v0.9.10";
     static String grammarName;
     static String startRuleName;
     static List<String> inputFiles = new ArrayList<String>();
@@ -77,6 +77,7 @@ public class Compiler {
     static boolean createCfg = false;
     static boolean stacktrace = false;
     static boolean imc = true;
+    static String imc_output = null;
     static boolean printSysInfo = false;
     static int noOfErrors = 0;
     static int noOfWarnings = 0;
@@ -85,6 +86,7 @@ public class Compiler {
     static boolean coloured = false;
     static boolean stdPearl90 = false;
     static boolean stdOpenPEARL = true;
+    static SourceLocations m_sourcelocations = new SourceLocations();
 
     public static void main(String[] args) {
         int i;
@@ -115,6 +117,8 @@ public class Compiler {
             AST ast = new AST();
 
             m_sourceFilename = inputFiles.get(i);
+
+            SourceLocations.setSourceFileName(m_sourceFilename);
 
             logger.setLogFilename(getBaseName(m_sourceFilename) + ".log");
             Log.info("OpenPEARL compiler version " + version);
@@ -257,7 +261,6 @@ public class Compiler {
                             moduleGraph.createVariableStack(procedureMap, null);
                         }
 
-
                         // The Variable Stack of the Module is passed to all other ControlFlowGraphs,
                         // since the Variables can be accessed from Procedures and Tasks
                         ControlFlowGraph finalModuleGraph = moduleGraph;
@@ -284,10 +287,13 @@ public class Compiler {
                 }
 
                 if (ErrorStack.getTotalErrorCount() <= 0 && imc) {
-                    SystemPartExport(lexer.getSourceName(), tree, symbolTableVisitor, ast, stdOpenPEARL);
+                    if ( imc_output == null ) {
+                        imc_output = lexer.getSourceName();
+                    }
+                    SystemPartExport(imc_output, tree, symbolTableVisitor, ast, stdOpenPEARL);
                 }
                 if (ErrorStack.getTotalErrorCount() <= 0) {
-                    CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor,
+                    CppGenerate(SourceLocations.getTopFileName(), tree, symbolTableVisitor,
                             expressionTypeVisitor, constantExpressionVisitor, ast, stdOpenPEARL);
                 }
             } catch (Exception ex) {
@@ -336,7 +342,6 @@ public class Compiler {
                 }
 
                 System.exit(-1);
-
             }
 
             noOfErrors = parser.getNumberOfSyntaxErrors();
@@ -344,7 +349,7 @@ public class Compiler {
             System.out.flush();
             System.out.println();
             System.out.println(
-                    "Number of errors in " + inputFiles.get(i) + " encountered: " + noOfErrors);
+                    "Number of errors in " + SourceLocations.getTopFileName() + " encountered: " + noOfErrors);
 
             if (printSysInfo) {
                 String lines;
@@ -389,19 +394,21 @@ public class Compiler {
                 + "  --debug                     Generate debug information            \n"
                 + "  --stacktrace                Print stacktrace in case of an        \n"
                 + "                              exception                             \n"
-                + "  --warninglevel <m_level>      Set the warning m_level             \n"
+                + "  --warninglevel <m_level>    Set the warning m_level               \n"
                 + "                              Level   0: no warning                 \n"
                 + "                              Level 255: all warnings (default)     \n"
                 + " --imc                        Enable Inter Module Checker           \n"
-                + "                              file                                  \n"
-                + "  --sysinfo                   Print system information              \n"
-                + "  -std=OpenPEARL              use OpenPEARL behavior (default)      \n"
-                + "  -std=PEARL90                use PEARL90 behavior                  \n"
-                + "  --coloured                  mark errors with colour               \n"
-                + "  --output <filename>         Filename of the generated code        \n"
-                + "  --createCfg                 create control flow graph             \n"
-                + "  --debugCfg                  Outputs a .dot File with a cfg        \n" 
-                + "  infile ...                                                        \n");
+                + " --imc-output                 Set the IMC output file               \n"
+                + "                              if not specified, derive filename from\n"
+                + "                              the '--output' option                 \n"
+                + " --sysinfo                    Print system information              \n"
+                + " -std=OpenPEARL               use OpenPEARL behavior (default)      \n"
+                + " -std=PEARL90                 use PEARL90 behavior                  \n"
+                + " --coloured                   mark errors with colour               \n"
+                + " --output <filename>          Filename of the generated code        \n"
+                + " --createCfg                  create control flow graph             \n"
+                + " --debugCfg                   Outputs a .dot File with a cfg        \n"
+                + " infile ...                                                         \n");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -462,6 +469,9 @@ public class Compiler {
                 stacktrace = true;
             } else if (arg.equals("--imc")) {
                 imc = true;
+            } else if (arg.equals("--imc-output")) {
+                imc_output = args[i];
+                i++;
             } else if (arg.equals("--coloured")) {
                 coloured = true;
             } else if (arg.equals("--output")) {
@@ -585,9 +595,7 @@ public class Compiler {
         }
 
         outputFileName = getBaseName(outputFileName).concat(".xml");
-
         try {
-
             if (verbose > 0) {
                 System.out.println("Generating IMC file " + outputFileName);
             }

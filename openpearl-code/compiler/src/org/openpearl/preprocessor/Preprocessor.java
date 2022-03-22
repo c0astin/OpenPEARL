@@ -61,6 +61,7 @@ public class Preprocessor {
     static String m_sourceFilename = "";
     static String m_outputFilename = null;
     static int m_verbose = 0;
+    static boolean m_quiet = false;
     static boolean m_stacktrace = false;
     static int m_noOfErrors = 0;
     static int m_noOfWarnings = 0;
@@ -88,15 +89,22 @@ public class Preprocessor {
 
         long startTime = System.nanoTime();
 
-        System.out.println("Working Directory = " + System.getProperty("user.dir"));
         if (!checkAndProcessArguments(args)) {
             return;
         }
 
-        if ( m_outputFilename != null ) {
-            m_outputStream = new PrintStream(m_outputFilename);
+        if (!m_quiet) {
+            System.out.println("Working Directory = " + System.getProperty("user.dir"));
         }
 
+        if ( m_outputFilename != null ) {
+            m_outputStream = new PrintStream(m_outputFilename);
+        } else {
+            System.out.println("ERROR: Output file not specified");
+            System.exit(-2);
+        }
+
+        m_includeDirs.add(".");
         for (int i = 0; i < m_inputFiles.size(); i++) {
             m_sourceFilename = m_inputFiles.get(i);
 
@@ -110,10 +118,16 @@ public class Preprocessor {
             }
 
             System.setOut(m_console);
-            System.out.flush();
-            System.out.println();
-            System.out.println(
-                    "Number of errors in " + m_inputFiles.get(i) + " encountered: " + m_noOfErrors);
+
+            if (!m_quiet) {
+                System.out.flush();
+                System.out.println();
+                System.out.println(
+                        "Number of errors in "
+                                + m_inputFiles.get(i)
+                                + " encountered: "
+                                + m_noOfErrors);
+            }
 
             if (m_noOfErrors == 0) {
                 System.exit(0);
@@ -168,7 +182,6 @@ public class Preprocessor {
     }
 
     private static void handleUndef(String args) {
-        System.out.println("handleUndef: " + args);
     }
 
     private static void handleError(String args) {
@@ -177,11 +190,9 @@ public class Preprocessor {
     }
 
     private static void handleWarn(String args) {
-        System.out.println("#WARN:"+args);
     }
 
     private static void handleIf(String args) {
-        System.out.println("handleIf: " + args);
     }
 
     private static void handleIfdef(String args) {
@@ -260,6 +271,7 @@ public class Preprocessor {
                 + "  --help                      Print this help message               \n"
                 + "  --version                   Print version information             \n"
                 + "  --verbose                   Print more information                \n"
+                + "  --quiet                     Suppress all unnecessary output       \n"
                 + "  [-D<macro> [=defn]]         Define a macro with optional value    \n"
                 + "                              1, if value is omitted                \n"
                 + "  [-U<macro>]                 Undefine a macro                      \n"
@@ -286,6 +298,8 @@ public class Preprocessor {
                 System.exit(0);
             } else if (arg.equals("--verbose")) {
                 m_verbose++;
+            } else if (arg.equals("--quiet")) {
+                m_quiet=true;
             } else if (arg.equals("--stacktrace")) {
                 m_stacktrace = true;
             } else if (arg.startsWith("-I")) {
@@ -636,11 +650,9 @@ public class Preprocessor {
             String absoluteFilename = path + "/" + filename;
             Path fullPath = Paths.get(absoluteFilename);
             boolean b = Files.exists(fullPath, LinkOption.NOFOLLOW_LINKS);
-            File file = new File(absoluteFilename);
-            System.out.println("Original file path : " + file.getPath());
-//            System.out.println("Canonical file path : " + (String)file.getCanonicalPath());
-//            System.out.println("Canonical file path : " + file.getCanonicalFile());
-
+            if ( b) {
+                return fullPath.toString();
+            }
         }
 
         return null;

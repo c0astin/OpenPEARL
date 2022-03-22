@@ -33,9 +33,13 @@ import org.openpearl.compiler.SymbolTable.TaskEntry;
 import org.stringtemplate.v4.ST;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SourceLocations {
-    public static ArrayList<SourceLocation> m_sourceLocs = new ArrayList<>();
+    private static ArrayList<SourceLocation> m_sourceLocs = new ArrayList<>();
+    private static Pattern m_pattern = Pattern.compile("^#[ \t]([0-9]+)[ \t](.+?)[ \t]([0-9])$");
+    private static SourceLocation m_loc = null;
 
     public static void print() {
         for (int i = 0; i < m_sourceLocs.size(); i++) {
@@ -43,14 +47,67 @@ public class SourceLocations {
         }
     }
 
+    public static void process(int lineNo, String line) {
+        int nlineNo = 0;
+        String filename = null;
+        int flag = 0;
+
+        Matcher matcher = m_pattern.matcher(line);
+
+        if (matcher.find()) {
+            nlineNo = Integer.parseInt(matcher.group(1));
+            filename = matcher.group(2);
+            flag = Integer.parseInt(matcher.group(3));
+            switch (flag) {
+                case 1:
+                    if (m_sourceLocs.size() >= 1) {
+                        SourceLocations.closeLoc(lineNo-2);
+                    }
+                    SourceLocations.openLoc(lineNo, filename, nlineNo, flag);
+                    break;
+                case 2:
+                    SourceLocations.closeLoc(lineNo-1);
+                    SourceLocations.openLoc(lineNo,filename,nlineNo,flag);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    public static void openLoc(int currentLineNo, String filename, int startingLineNo, int flag) {
+        m_sourceLocs.add(new SourceLocation(currentLineNo, startingLineNo, filename, flag));
+    }
+
+    public static void closeLoc(int lineNo) {
+        SourceLocation loc = m_sourceLocs.get(m_sourceLocs.size()-1);
+        loc.setSrcTo(lineNo);
+    }
+
     public static SourceLocation getSourceLoc(int lineNo) {
+        if ( m_sourceLocs.size() == 0) {
+            return m_loc;
+        }
+
         for (int i = 0; i < m_sourceLocs.size(); i++) {
             SourceLocation loc = m_sourceLocs.get(i);
-            if ( lineNo >= loc.from() && lineNo <= loc.to()) {
+            if ( lineNo >= loc.srcFrom() && (lineNo <= loc.srcTo() || loc.srcTo() == -1)) {
                 return loc;
             }
         }
+
         return null;
     }
 
+    public static String getTopFileName() {
+        if ( m_sourceLocs != null && m_sourceLocs.size() > 0) {
+            return m_sourceLocs.get(0).filename();
+        } else {
+            return null;
+        }
+    }
+
+    public static void setSourceFileName(String filename) {
+        m_loc = new SourceLocation(0,0,filename,0 );
+    }
 }

@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- * *  Copyright (c) 2012-2021 Marcel Schaible
+ * *  Copyright (c) 2012-2022 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -46,8 +46,8 @@ public class DescriptiveErrorListener extends BaseErrorListener {
 
         SourceLocation loc = SourceLocations.getSourceLoc(lineNo);
         if ( loc != null ) {
-            System.err.println(loc.filename() + ":" + loc.to() + ":" + (charPositionInLine +1 )+ ": ERROR : Syntax error :" + msg);
-            underlineError(recognizer,(Token)offendingSymbol, loc.to(), charPositionInLine);
+            System.err.println(loc.filename() + ":" + loc.getLineNo(lineNo) + ":" + (charPositionInLine +1 )+ ": ERROR : Syntax error :" + msg);
+            underlineError(recognizer,(Token)offendingSymbol, lineNo, charPositionInLine);
         } else {
             System.err.println(sourceName + ":" + lineNo + ":" + (charPositionInLine +1 )+ ": ERROR : Syntax error :" + msg);
             underlineError(recognizer,(Token)offendingSymbol, lineNo, charPositionInLine);
