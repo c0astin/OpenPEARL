@@ -93,6 +93,7 @@ implements OpenPearlVisitor<Void> {
     private boolean m_isInSpecification = false;
     private IdentifierDenotationContext m_identifierDenotationContext;
     private LinkedList<FormalParameter> m_formalParameters;
+    private String m_currentTypeDefinition = null;
 
     public SymbolTableVisitor(int verbose, ConstantPool constantPool) {
         m_debug = false;
@@ -212,6 +213,48 @@ implements OpenPearlVisitor<Void> {
     }
 
     @Override
+    public Void visitTypeDefinition(TypeDefinitionContext ctx) {
+        m_currentTypeDefinition = ctx.identifier().ID().toString();
+        UserDefinedType newType = new UserDefinedType(m_currentTypeDefinition,ctx.identifier());
+        m_isInSpecification = false;
+        m_isGlobal = false;
+        
+        checkDoubleDefinitionAndEnterToSymbolTable(newType, ctx.identifier());
+
+        if (ctx.simpleType() != null) {
+            visit(ctx.simpleType());
+        } else if (ctx.typeStructure()!= null) {
+            newType.setType(new UserDefinedTypeStructure(ctx.identifier().ID().toString()));
+            visit(ctx.typeStructure());
+            
+        }
+        newType.setType(m_type);
+
+        return null;
+    }
+    
+    @Override
+    public Void visitIdentifierForType(IdentifierForTypeContext ctx) {
+        String name = ctx.ID().toString();
+        ErrorStack.enter(ctx);
+        m_type = null;
+        SymbolTableEntry se = m_currentSymbolTable.lookup(name);
+        if (se != null) {
+            if (se instanceof UserDefinedType) {
+                if (name.equals(m_currentTypeDefinition)) {
+                    m_type = new TypeSameStructure();
+                } else {
+                   m_type = ((UserDefinedType)se).getType();
+                }
+            } else {
+                ErrorStack.add(name + " should be user defined type -- got " +se);
+            }
+        }
+        ErrorStack.leave();
+        return null;
+    }
+    
+    @Override
     public Void visitVariableDeclaration(VariableDeclarationContext ctx) {
         m_isInSpecification = false;
         visitChildren(ctx);
@@ -230,7 +273,6 @@ implements OpenPearlVisitor<Void> {
     @Override
     public Void visitTaskDeclaration(TaskDeclarationContext ctx) {
         Boolean isMain = false;
-        Boolean isGlobal = false;
         PriorityContext priority = null;
 
         Log.debug("SymbolTableVisitor:visitTaskDeclaration:ctx" + CommonUtils.printContext(ctx));
@@ -953,6 +995,25 @@ implements OpenPearlVisitor<Void> {
         m_type = new TypeRefChar();
         return null;
     }
+    
+//    @Override
+//    public Void visitIdentifierForType(IdentifierForTypeContext ctx) {
+//        ErrorStack.enter(ctx);
+//        m_type = null;
+//        String idAsString = ctx.ID().getText();
+//        SymbolTableEntry se = m_currentSymbolTable.lookup(idAsString);
+//        if (se == null) {
+//            ErrorStack.add("unknown identifier '"+idAsString+"'");
+//        } else {
+//            if (se instanceof UserDefinedType) {
+//                m_type = ((UserDefinedType) se).getType();
+//            } else {
+//                ErrorStack.add("expected user defined type -- got "+se.getClass());
+//            }
+//        }
+//        ErrorStack.leave();
+//        return null;
+//    }
 
     @Override
     public Void visitTypeDation(TypeDationContext ctx) {
@@ -1106,18 +1167,6 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
-/*    
-    @Override
-    public Void visitTypeProcedure(
-            TypeProcedureContext ctx) {
-        Log.debug(
-                "SymbolTableVisitor:visitTypeProcedure:ctx"
-                        + CommonUtils.printContext(ctx));
-
-        m_type = new TypeProcedure();
-        return null;
-    }
-*/
     
     @Override
     public Void visitTypeInterrupt(
@@ -1609,11 +1658,7 @@ implements OpenPearlVisitor<Void> {
                 ErrorStack.add(
                         ctx, "initializer " + ctx.identifier().getText(), "is not defined yet");
                 return null;
-                //                throw new UnknownIdentifierException(
-                //                        ctx.getText(),
-                //                        ctx.start.getLine(),
-                //                        ctx.start.getCharPositionInLine(),
-                //                        (ctx.ID().toString()));
+
             } else {
                 if (entry instanceof VariableEntry) {
 
@@ -1630,11 +1675,6 @@ implements OpenPearlVisitor<Void> {
                         }
                     } else {
                         ErrorStack.add(ctx, "initializer", "must be INV");
-                        //                    throw new TypeMismatchException(
-                        //                            ctx.getText(),
-                        //                            ctx.start.getLine(),
-                        //                            ctx.start.getCharPositionInLine(),
-                        //                            (ctx.ID().toString()));
                     }
                 } else {
                     ErrorStack.addInternal("SymbolTableVisitor@1699: untreated alternative");
@@ -1649,35 +1689,6 @@ implements OpenPearlVisitor<Void> {
         return constant;
     }
 
-//    private int getPrecisionByType(int index, TypeDefinition type) {
-//        int precision = 0;
-//
-//        if (type instanceof TypeFixed) {
-//            precision = type.getPrecision();
-//        } else if (type instanceof TypeFloat) {
-//            precision = type.getPrecision();
-//        } else if (type instanceof TypeBit) {
-//            precision = type.getPrecision();
-//        } else if (type instanceof TypeChar) {
-//            precision = type.getPrecision();
-//        } else if (type instanceof TypeDuration) {
-//            precision = 0;
-//        } else if (type instanceof TypeClock) {
-//            precision = 0;
-//        } else if (type instanceof TypeArray) {
-//            TypeArray arrType = (TypeArray) type;
-//            precision = getPrecisionByType(index, arrType.getBaseType());
-//        } else if (type instanceof TypeStructure) {
-//            TypeStructure structType = (TypeStructure) type;
-//            precision =
-//                    getPrecisionByType(
-//                            index, structType.getStructureComponentByIndex(index).m_type);
-//        } else {
-//            throw new InternalCompilerErrorException("Cannot determine lenght of type");
-//        }
-//
-//        return precision;
-//    }
 
     private ConstantValue getConstant(ConstantContext ctx) {
         ConstantValue constant = null;
@@ -1773,8 +1784,7 @@ implements OpenPearlVisitor<Void> {
             } else if (ctx.timeConstant().IntegerConstant(2) != null) {
                 seconds = Double.valueOf(ctx.timeConstant().IntegerConstant(2).toString());
             } else {
-                throw new InternalCompilerErrorException(
-                        ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
+                ErrorStack.addInternal(ctx, "SymbolTableVisitor@1738", "missing alternative");
             }
 
             constant = new ConstantClockValue(hours, minutes, seconds);
@@ -1959,10 +1969,12 @@ implements OpenPearlVisitor<Void> {
         String s = ctx.getText();
         if (ctx.simpleType() != null) {
             visitSimpleType(ctx.simpleType());
-        } else if (ctx.structuredType() != null) {
-            visitStructuredType(ctx.structuredType());
+        } else if (ctx.typeStructure() != null) {
+            visitTypeStructure(ctx.typeStructure());
         } else if (ctx.typeReference() != null) {
             visitTypeReference(ctx.typeReference());
+        } else if (ctx.identifierForType() != null) {
+            visitIdentifierForType(ctx.identifierForType());
         } else {
             ErrorStack.addInternal(
                     ctx,

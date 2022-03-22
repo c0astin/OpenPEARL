@@ -53,18 +53,6 @@ public class InterruptEntry extends SymbolTableEntry {
     public String toString(int level) {
      
         return  indentString(level) + super.toString(level) + "INTERRUPT";
-        		
-                
     }
-// m_global moved into SymbolTableEntry
-// deprecated. is now in SymboleTableEntry   
-//   public int getSourceLineNo() {
-//       return m_ctx.getStart().getLine();
-//   }
-//
-//   public int getCharPositionInLine() {
-//       return m_ctx.getStart().getCharPositionInLine();
-//   }
-//
-//   private OpenPearlParser.InterruptSpecificationContext m_ctx;
+
 }

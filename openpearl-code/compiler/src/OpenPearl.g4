@@ -35,8 +35,13 @@
 2021-10-03 (rm):
    DCL and SPC with mixed types in one DCL/SPC
    task/proc usage with list of identifiers
+   
+2022-03-20 (rm)
+   StructuredType replaced by typeStructure | ID (of type)   
+   ID of type replaced by identifierForType
       
 */
+
 grammar OpenPearl;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -253,8 +258,12 @@ identificationAttribute:
 ////////////////////////////////////////////////////////////////////////////////
 
 typeDefinition :
-    'TYPE' ID ( simpleType | typeStructure | ID) ';'
+    'TYPE' identifier ( simpleType | typeStructure ) ';'
     ;
+    
+identifierForType:
+	ID
+	;    
 
 ////////////////////////////////////////////////////////////////////////////////
 //  ScalarVariableDeclaration ::=
@@ -280,6 +289,7 @@ problemPartDataAttribute :
 typeAttribute :
     simpleType
     | typeStructure
+    | identifierForType
     | typeReference
     ;
 
@@ -428,17 +438,11 @@ structureComponent :
 ////////////////////////////////////////////////////////////////////////////////
 
 typeAttributeInStructureComponent :
-    (simpleType | structuredType | typeReference )
+    (simpleType | typeStructure 
+     | identifierForType
+     | typeReference )
     ;
 
-////////////////////////////////////////////////////////////////////////////////
-// StructuredType ::=
-//   TypeStructure | Identifier§ForNewDefinedType
-////////////////////////////////////////////////////////////////////////////////
-
-structuredType :
-    typeStructure | ID
-    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // StructureSpecification ::=
@@ -472,6 +476,7 @@ typeReference :
     (
 	 simpleType 
 	| typeStructure 
+	| identifierForType
 	| typeDation
 	| typeProcedure		
 	| typeTask				
@@ -487,34 +492,7 @@ typeRefChar:
 	'CHAR' ('('  ')' | '()')
 	;
 	
-/*
-replaced by definition above
-typeReferences
-    : typeReferenceSimpleType
-    | typeReferenceStructuredType
-    | typeReferenceDationType
-    | typeReferenceSemaType
-    | typeReferenceBoltType
-    | typeReferenceProcedureType
-    | typeReferenceTaskType
-    | typeReferenceInterruptType
-    | typeReferenceSignalType
-    ;
 
-
-typeReferenceSimpleType
-    : assignmentProtection? simpleType
-    ;
-
-
-typeReferenceStructuredType
-    :
-    ;
-
-typeReferenceDationType
-    :
-    ;
-*/
 
 typeSema
     : 'SEMA'
@@ -524,11 +502,6 @@ typeBolt
     : 'BOLT'
     ;
 
-/* already defines without globalAttribute 
-typeProcedure
-    : ('PROCEDURE' | 'PROC' )  listOfFormalParameters? resultAttribute? globalAttribute?
-    ;
-*/
 
 typeTask
     : 'TASK'
@@ -586,7 +559,7 @@ typeProcedure:
 ////////////////////////////////////////////////////////////////////////////////
 
 procedureBody :
-    ( variableDeclaration | lengthDefinition)*
+    ( variableDeclaration | lengthDefinition | typeDefinition )*
     statement*
     ;
 
@@ -648,6 +621,7 @@ parameterType :
     | typeDation
     | typeReference
     | typeStructure
+    | identifierForType
     | typeRealTimeObject
     ;
 
@@ -703,7 +677,7 @@ resultType :
     simpleType
     | typeReference
     | typeStructure
-    | ID
+    | identifierForType
     ;
 
 
@@ -732,7 +706,7 @@ task_main: 'MAIN';
 ////////////////////////////////////////////////////////////////////////////////
 
 taskBody:
-    ( variableDeclaration | lengthDefinition)*
+    ( variableDeclaration | lengthDefinition | typeDefinition )*
     procedureDeclaration*
     statement*
     ;
@@ -1012,7 +986,7 @@ constantCharacterString
 
 block_statement:
     'BEGIN'
-    ( variableDeclaration | lengthDefinition )*
+    ( variableDeclaration | lengthDefinition | typeDefinition )*
     statement*
     'END' blockId? ';'
     ;
@@ -1039,7 +1013,7 @@ loopStatement:
     ;
 
 loopBody:
-    ( variableDeclaration | lengthDefinition)*
+   ( variableDeclaration | lengthDefinition | typeDefinition )*
     statement*
     ;
 
@@ -1861,6 +1835,7 @@ typeOfTransmissionData
     : 'ALL'                     # typeOfTransmissionDataALL
     | simpleType                # typeOfTransmissionDataSimpleType
     | typeStructure              # typeOfTransmissionDataCompoundType
+    | identifierForType	         # typeOfTransmissionDataIdentifierForType
     ;
     
 // AccessAttribute ::=
@@ -1927,36 +1902,6 @@ boundaryDenotation:
 indices:
     '(' expression ( ',' expression )* ')'
     ;
-
-/* obsolete 2020-02-25 (rm)
-
-////////////////////////////////////////////////////////////////////////////////
-//  CompoundType ::=
-//    IO-Structure | Identifier§ForNewTypeFromSimpleTypes
-////////////////////////////////////////////////////////////////////////////////
-
-compoundType:
-    ioStructure | ID
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-//  IO-Structure ::=
-//   STRUCT [ IO-StructureComponent [ , IO-StructureComponent ] ... ]
-////////////////////////////////////////////////////////////////////////////////
-
-ioStructure
-    : 'STRUCT' ( ioStructureComponent ( ',' ioStructureComponent )* )?
-    ;
-
-////////////////////////////////////////////////////////////////////////////////
-//   IO-StructureComponent := IdentifierDenotation
-//     { SimpleType | IO-Structure | Identifier§ForNewTypeFromSimpleTypes }
-////////////////////////////////////////////////////////////////////////////////
-
-ioStructureComponent
-    : identifierDenotation ( simpleType | ioStructure | ID )+
-    ;
-*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -37,7 +37,6 @@ import org.openpearl.compiler.ControlFlowGraph.NotImplementedException;
 import org.openpearl.compiler.SemanticAnalysis.CheckUnreachableStatements;
 import org.stringtemplate.v4.*;
 
-import javax.xml.transform.Source;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

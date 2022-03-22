@@ -3,13 +3,13 @@
 %%%vgl. TypeReference
 %%%% discussion result 8.2.2018: there seams to be no problem to
 %%%%                             support references to INTERRUPTS and SIGNAL
+%%% 2022-03-20 TypeDefinition replaced by ID§ForType
 
 \htgt{TypeAttributeForArray} ::=\\
-\x \hlink{SimpleType} $\mid$ \hlink{TypeStructure} \\
+\x \hlink{SimpleType} $\mid$ \hlink{TypeStructure} $\mid$ \hlink{ID}$\S $ForType 
 %%\x \htgt{TypeInteger} $\mid$ \hlink{TypeFloat} \\
 %\x $\mid$ \hlink{TypeDuration} $\mid$ \hlink{TypeClock} \\
 %\x $\mid$ \hlink{TypeBitString} $\mid$ \hlink{TypeCharacterString} \\
-\x $\mid$ \hlink{TypeDefinition} 
 %%% added
 \\$\x \mid$ \kw{REF} \{ \hlink{TypeDation} $\mid$ \kw{SEMA} $\mid$ \kw{BOLT} \\
 \x \x $\mid$ \hlink{TypeProcedure} $\mid$ \kw{TASK} $\mid$ \kw{CHAR()} \\
