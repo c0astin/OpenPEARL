@@ -294,7 +294,7 @@ public class Compiler {
                     SystemPartExport(imc_output, tree, symbolTableVisitor, ast, stdOpenPEARL);
                 }
                 if (ErrorStack.getTotalErrorCount() <= 0) {
-                    CppGenerate(lexer.getSourceName(), tree, symbolTableVisitor,
+                    CppGenerate(SourceLocations.getTopFileName(), tree, symbolTableVisitor,
                             expressionTypeVisitor, constantExpressionVisitor, ast, stdOpenPEARL);
                 }
             } catch (Exception ex) {
