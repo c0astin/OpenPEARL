@@ -1,6 +1,6 @@
 /*
  * [The "BSD license"]
- * *  Copyright (c) 2012-2021 Marcel Schaible
+ * *  Copyright (c) 2012-2022 Marcel Schaible
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -287,10 +287,11 @@ public class Compiler {
                 }
 
                 if (ErrorStack.getTotalErrorCount() <= 0 && imc) {
-                    if ( imc_output == null ) {
-                        imc_output = lexer.getSourceName();
+                    String filename = SourceLocations.getTopFileName();
+                    if ( filename == null ) {
+                        filename = lexer.getSourceName();
                     }
-                    SystemPartExport(imc_output, tree, symbolTableVisitor, ast, stdOpenPEARL);
+                    SystemPartExport(filename, tree, symbolTableVisitor, ast, stdOpenPEARL);
                 }
                 if (ErrorStack.getTotalErrorCount() <= 0) {
                     CppGenerate(SourceLocations.getTopFileName(), tree, symbolTableVisitor,
