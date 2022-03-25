@@ -30,6 +30,8 @@
 package org.openpearl.compiler.SymbolTable;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.openpearl.compiler.SourceLocation;
+import org.openpearl.compiler.SourceLocations;
 
 /**
  * base class for all symbol table entries
@@ -111,9 +113,11 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
             return indentString(level) + Integer.toString(level) + ": ";
         }
     }
-        
+
     public int getSourceLineNo() {
-      return m_ctx.getStart().getLine();
+        SourceLocation loc = SourceLocations.getSourceLoc(m_ctx.getStart().getLine());
+        int lineNo = loc.getLineNo(m_ctx.getStart().getLine());
+        return lineNo;
   }
 
   public int getCharPositionInLine() {

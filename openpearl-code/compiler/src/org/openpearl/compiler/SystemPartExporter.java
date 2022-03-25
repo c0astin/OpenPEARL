@@ -152,7 +152,6 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
     public ST visitSystemElementDefinition(OpenPearlParser.SystemElementDefinitionContext ctx) {
         ST decl = group.getInstanceOf("SystemElementDefinition");
 
-        int xxx = ctx.start.getLine();
         SourceLocation loc = getSourceLoc(ctx.start.getLine());
 
         decl.add("username", ctx.systemPartName().getText());
@@ -389,8 +388,7 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
             dation = group.getInstanceOf("DationDeclaration");
         }
 
-        SourceLocation loc = getSourceLoc(v.getCtx().start.getLine());
-        dation.add("lineno", loc.getLineNo(v.getCtx().start.getLine()));
+        dation.add("lineno", v.getSourceLineNo());
         dation.add("col", v.getCtx().start.getCharPositionInLine() + 1);
         dation.add("name", v.getName());
         if (v.getGlobalAttribute()!= null) {
