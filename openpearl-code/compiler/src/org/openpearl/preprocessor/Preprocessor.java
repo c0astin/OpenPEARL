@@ -56,6 +56,9 @@ import java.util.regex.Matcher;
 import java.util.Stack;
 
 public class Preprocessor {
+    /**
+     * The {@link String} instance representing something.
+     */
     static String m_version = "v0.1";
     static ArrayList<String> m_inputFiles = new ArrayList<String>();
     static String m_sourceFilename = "";
@@ -76,6 +79,21 @@ public class Preprocessor {
     static PrintStream m_outputStream = null;
     static PrintStream m_console = System.out;
 
+    /**
+     * Returns an Image object that can then be painted on the screen.
+     * The url argument must specify an absolute <a href="#{@link}">{@link URL}</a>. The name
+     * argument is a specifier that is relative to the url argument.
+     * <p>
+     * This method always returns immediately, whether or not the
+     * image exists. When this applet attempts to draw the image on
+     * the screen, the data will be loaded. The graphics primitives
+     * that draw the image will incrementally paint on the screen.
+     *
+     * @param  url  an absolute URL giving the base location of the image
+     * @param  name the location of the image, relative to the url argument
+     * @return      the image at the specified URL
+     * @see         Image
+     */
     public enum Statement
     {
         IF, IFDEF, ELSE, FIN, ERROR, WARN, INCLUDE, PRAGMA, DEFINE, UNDEF, MISC
@@ -110,10 +128,10 @@ public class Preprocessor {
 
             outputPPLine(1, m_sourceFilename, "1");
             m_sourcefiles.push(new SourceFile(m_sourceFilename));
-            processLines(new HashSet<Statement>(),0);
+            processLines(new HashSet<Statement>(), 0);
             m_sourcefiles.pop();
 
-            if ( m_outputFilename != null ) {
+            if (m_outputFilename != null) {
                 m_outputStream.close();
             }
 
@@ -177,11 +195,12 @@ public class Preprocessor {
         String[] parts = args.split("=");
         String var = parts[0].trim();
         String expr = parts[1].trim();
-
         m_defines.put(var,expr);
     }
 
     private static void handleUndef(String args) {
+        String var = args.trim();
+        m_defines.remove(var);
     }
 
     private static void handleError(String args) {
@@ -306,6 +325,8 @@ public class Preprocessor {
                 addIncludeSearchPath(arg.substring(2,arg.length()));
             } else if (arg.startsWith("-D")) {
                 addDefine(arg.substring(2,arg.length()));
+            } else if (arg.startsWith("-U")) {
+                removeDefine(arg.substring(2,arg.length()));
             } else if (arg.equals("--output")) {
                 if (i >= args.length) {
                     System.err.println("missing filename on --output");
@@ -384,6 +405,12 @@ public class Preprocessor {
             System.err.println("ERROR: -D wrong variable name or value");
             System.exit(-2);
         }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static void removeDefine(String variable) {
+            m_defines.remove(variable.trim());
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
