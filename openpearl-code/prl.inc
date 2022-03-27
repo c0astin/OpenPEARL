@@ -15,7 +15,6 @@ fi
 DEBUG=0
 SYSTEM="system.cc"
 COMPILEONLY=0
-PPONLY=0
 StopBeforeCpp=0
 RUN=
 HELP=
@@ -23,7 +22,9 @@ INPUT=
 imcInputFiles=
 objects=
 target=
+PPONLY=0
 noPP=0
+PPFLAGS=""
 
 standard="-std=OpenPEARL"
 if [[ $PRLFLAGS =~ "-std=PEARL90" ]]; then
@@ -36,21 +37,24 @@ fi
 while [ "$1" != "" ] ; do
     #echo "input: " $INPUT
     case $1 in
-        -std=OpenPEARL) standard=$1;             shift;;
-        -std=PEARL90)   standard=$1;             shift;;
-        -o)             target=$2;               shift 2;;
-        -b)             PLATTFORM=$2;            shift 2;;
-        -i)             INTERFACE=$2;            shift 2;;
-        -cc)            StopBeforeCpp=1;         shift;;
-        -c)             COMPILEONLY=1;           shift;;
-	-E)             PPONLY=1;                shift;;
-	-nopp)          noPP=1;                  shift;;
-        -r)             RUN=1;                   shift;;
-        -v)             VERBOSE=1;               shift;;
-        -noimc)         noIMC=1;                 shift;;
-        -nosys)         NOSYSTEMPART=1;          shift;;
-        -h)             HELP=1;                  shift;;
-        -keep)          keepFiles=1;             shift;;
+        -std=OpenPEARL) standard=$1;                   shift;;
+        -std=PEARL90)   standard=$1;                   shift;;
+        -o)             target=$2;                     shift 2;;
+        -b)             PLATTFORM=$2;                  shift 2;;
+        -i)             INTERFACE=$2;                  shift 2;;
+        -cc)            StopBeforeCpp=1;               shift;;
+        -c)             COMPILEONLY=1;                 shift;;
+	-I)             PPFLAGS+=" -I$2";              shift 2;;
+	-D)             PPFLAGS+=" -D$2";              shift 2;;
+	-U)             PPFLAGS+=" -U$2";              shift 2;;
+	-E)             PPONLY=1;                      shift;;
+	-nopp)          noPP=1;                        shift;;
+        -r)             RUN=1;                         shift;;
+        -v)             VERBOSE=1;                     shift;;
+        -noimc)         noIMC=1;                       shift;;
+        -nosys)         NOSYSTEMPART=1;                shift;;
+        -h)             HELP=1;                        shift;;
+        -keep)          keepFiles=1;                   shift;;
 	 -*) echo "unknown option " $1; 
                shift;
 	       exit 1;;
@@ -64,6 +68,7 @@ done
 #echo PPONLY = $PPONLY
 #echo INPUT = $INPUT
 #echo "StopBeforeCpp= " $StopBeforeCpp
+#echo "PPFLAGS=" $PPFLAGS
 
 if [ -n "$HELP" ]
 then
@@ -204,7 +209,8 @@ rm -f $target.out $target.log
 	    if [[ "$noPP" != "1" ]] ; then
 		outputPrlPP=`mktemp -t openpearl.XXXXXXX --suffix=".prl"` || exit 1
 		intermediateFiles+=" $outputPrlPP"
-		/usr/local/bin/prlpp --quiet $fn.prl --output $outputPrlPP
+		echo ">>> /usr/local/bin/prlpp --quiet $PPFLAGS $fn.prl --output $outputPrlPP"
+		/usr/local/bin/prlpp --quiet $PPFLAGS $fn.prl --output $outputPrlPP
 		rc=$?
 		if [ $rc -ne 0 ]
 		then
