@@ -6,8 +6,8 @@ import org.openpearl.compiler.TypeDefinition;
 public class UserDefinedType extends SymbolTableEntry {
     private TypeDefinition m_type;
     
-    public UserDefinedType(String nameOfType,OpenPearlParser.IdentifierContext ctx) {
-        super(nameOfType);
+    public UserDefinedType(OpenPearlParser.IdentifierContext ctx) {
+        super(ctx.ID().toString());
         this.m_ctx = ctx;
         m_type = null;
     }

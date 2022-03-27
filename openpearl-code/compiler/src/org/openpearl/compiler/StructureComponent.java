@@ -35,7 +35,6 @@ public class StructureComponent {
     public int             m_index;
     public String          m_alias;
     
-    private int m_nbrOfRemainingElementsInCurrentComponent = 0;
     
     public String toString() {
         return m_id + " " +  m_type + " " + m_index + " " + m_alias;
@@ -52,9 +51,7 @@ public class StructureComponent {
             return ((TypeStructure) m_type).getFirstElement();
         }
         return this;
-// TypeArray not treated yet
-   
-        
+ 
     }
 
     public StructureComponent getNextElement() {

@@ -156,7 +156,7 @@ public class TypeStructure extends TypeDefinition {
         if ( type instanceof TypeBolt)            return "J";
         if ( type instanceof TypeInterrupt)       return "K";
         if ( type instanceof TypeStructure)       return "S";
-        if ( type instanceof TypeSameStructure)    return "T";
+        if ( type instanceof TypeSameStructure)   return "T";
 
         if ( type instanceof TypeArray ) {
             TypeArray typeArray = (TypeArray) type;

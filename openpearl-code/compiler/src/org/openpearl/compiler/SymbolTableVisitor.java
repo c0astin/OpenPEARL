@@ -49,7 +49,7 @@ import java.util.List;
  *     <p><img width=200 src="{@docRoot}/OpenPEARL-Visitors.png" alt="alternative directory">
  *     <p><b>Overview</b>
  *     <ul>
- *       <li>SymbolTableVisitor: Collects Module, Variable, Task and Procedure Declarations
+ *       <li>SymbolTableVisitor: Collects Module, Variable, Task and Procedure Declarations as well as TYPE definitions
  *       <li>{@link org.openpearl.compiler.ExpressionTypeVisitor}: Determines for all expressions the resulting type
  *       <li>{@link org.openpearl.compiler.ConstantFoldingVisitor}: Evaluates constant expressions
  *       <li>{@link org.openpearl.compiler.ConstantPoolVisitor}: Collects all constants and adds them into the constant pool
@@ -70,6 +70,12 @@ import java.util.List;
  *     <ol>
  *       <li>{@link org.openpearl.compiler.SemanticAnalysis.CheckDeclarationScope}
  *       <li>{@link org.openpearl.compiler.SemanticAnalysis.CheckVariableDeclaration} for fitting initialisers and presets
+ *     </ol>
+ *     
+ *     Treatment of TYPE definitions:
+ *     <ol>
+ *     <li>redefinition of simpleType or structure without self reference is just an alias
+ *     <li>redefinition of a structure with reference to itself  uses the attribute m_currentTypeStructureDefinition
  *     </ol>
  */
 public class SymbolTableVisitor extends OpenPearlBaseVisitor<Void>
@@ -93,7 +99,7 @@ implements OpenPearlVisitor<Void> {
     private boolean m_isInSpecification = false;
     private IdentifierDenotationContext m_identifierDenotationContext;
     private LinkedList<FormalParameter> m_formalParameters;
-    private String m_currentTypeDefinition = null;
+    private UserDefinedType m_currentUserdefinedType = null;
 
     public SymbolTableVisitor(int verbose, ConstantPool constantPool) {
         m_debug = false;
@@ -214,21 +220,24 @@ implements OpenPearlVisitor<Void> {
 
     @Override
     public Void visitTypeDefinition(TypeDefinitionContext ctx) {
-        m_currentTypeDefinition = ctx.identifier().ID().toString();
-        UserDefinedType newType = new UserDefinedType(m_currentTypeDefinition,ctx.identifier());
+
+        m_currentUserdefinedType = new UserDefinedType(ctx.identifier());
         m_isInSpecification = false;
         m_isGlobal = false;
         
-        checkDoubleDefinitionAndEnterToSymbolTable(newType, ctx.identifier());
+        checkDoubleDefinitionAndEnterToSymbolTable(m_currentUserdefinedType, ctx.identifier());
 
         if (ctx.simpleType() != null) {
             visit(ctx.simpleType());
         } else if (ctx.typeStructure()!= null) {
-            newType.setType(new UserDefinedTypeStructure(ctx.identifier().ID().toString()));
-            visit(ctx.typeStructure());
+            UserDefinedTypeStructure uts = new UserDefinedTypeStructure(ctx.identifier().ID().toString());
             
+            m_currentUserdefinedType.setType(uts);
+            visit(ctx.typeStructure());
+            uts.setStructuredType(m_type);
         }
-        newType.setType(m_type);
+        m_currentUserdefinedType.setType(m_type);
+        m_currentUserdefinedType = null;
 
         return null;
     }
@@ -241,8 +250,9 @@ implements OpenPearlVisitor<Void> {
         SymbolTableEntry se = m_currentSymbolTable.lookup(name);
         if (se != null) {
             if (se instanceof UserDefinedType) {
-                if (name.equals(m_currentTypeDefinition)) {
-                    m_type = new TypeSameStructure();
+                if (m_currentUserdefinedType != null && 
+                        name.equals(m_currentUserdefinedType.getName())) {
+                    m_type = new TypeSameStructure((UserDefinedTypeStructure)(m_currentUserdefinedType).getType());
                 } else {
                    m_type = ((UserDefinedType)se).getType();
                 }

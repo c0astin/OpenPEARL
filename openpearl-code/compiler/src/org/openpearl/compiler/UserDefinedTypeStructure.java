@@ -1,5 +1,13 @@
 package org.openpearl.compiler;
 
+/**
+ * stores user defined type of kind simpleType like in:
+ * TYPE MyInt STRUCT [ (a,b) FIXED(7) ];
+ * 
+ * The idea is that the error messages in type mismatches are 
+ * printed with the user defined type and its base type similar 
+ * to the behavior if the g++
+ */
 public class UserDefinedTypeStructure extends TypeDefinition {
     private TypeDefinition m_structuredType;
     
