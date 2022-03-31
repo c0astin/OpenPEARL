@@ -12,7 +12,7 @@ do
    # echo $files
    allExpectationsOk=1
    for f in $files ; do
-   # echo "treat $f"
+    # echo "treat $f"
       $path/genExpectations $f 1>/dev/null
       rc=$?
       basename=${f%.*}
@@ -26,10 +26,11 @@ do
       fi
    done
    if [[ "$allExpectationsOk" -eq "1" ]] ; then
-      prl $1*.prl 2> $1.err 1>/dev/null
+     # echo "run prl"
+     prl $1*.prl 2> $1.err 1>/dev/null
      # echo "prl " $1*.prl "done"
      # echo "start errorParser $files"
-      $path/errorParser $files <$1.err 1>>$1.log
+     $path/errorParser $files <$1.err 1>>$1.log
       rc=$?
    #   echo "errorParser $1 done"
       if [ $rc -ne 0 ] ; then

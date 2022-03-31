@@ -158,7 +158,7 @@ printf("***line =%d col=%d pos=%p\n",currentMessage.line, currentMessage.col,pos
    clearLine(line);
    pos = fgets(line,LINELENGTH,stdin);
 #if DEBUG == 1
-   printf("next line: >%s<\n",line);
+   printf("next line: >%s<  pos=%p\n",line,pos);
 #endif
 
    if (pos) {
@@ -171,7 +171,7 @@ printf("***line =%d col=%d pos=%p\n",currentMessage.line, currentMessage.col,pos
       }
       strncpy(currentMessage.sourceLine, line, strlen(line)-1);
    } else {
-       fprintf(stderr,"<eof>\n");
+       printf("info: eof in error messages reached\n");
        return 0;
    }
 
@@ -403,11 +403,11 @@ int main(int narg, char*argv[]) {
             exit(-1);
          }
          line[strlen(line)-1] = '\0';
-//printf("parseError>%s<\n",line);
+printf("parseError>%s<\n",line);
          nextLinePresent = parseError(line);
-//printf("nextLinePreset=%d\n",nextLinePresent);
+printf("nextLinePreset=%d\n",nextLinePresent);
          expFile = readExpectationIfNotLoadedYet();
-//printf("expFile=%d\n",expFile);
+printf("expFile=%p\n",expFile);
          searchExpectationAndMarkUsed(expFile);
        }
     } while (nextLinePresent == 1 || !feof(stdin));
