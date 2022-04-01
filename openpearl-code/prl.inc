@@ -15,7 +15,6 @@ fi
 DEBUG=0
 SYSTEM="system.cc"
 COMPILEONLY=0
-PPONLY=0
 StopBeforeCpp=0
 RUN=
 HELP=
@@ -23,7 +22,9 @@ INPUT=
 imcInputFiles=
 objects=
 target=
+PPONLY=0
 noPP=0
+PPFLAGS=""
 
 standard="-std=OpenPEARL"
 if [[ $PRLFLAGS =~ "-std=PEARL90" ]]; then
@@ -36,21 +37,24 @@ fi
 while [ "$1" != "" ] ; do
     #echo "input: " $INPUT
     case $1 in
-        -std=OpenPEARL) standard=$1;             shift;;
-        -std=PEARL90)   standard=$1;             shift;;
-        -o)             target=$2;               shift 2;;
-        -b)             PLATTFORM=$2;            shift 2;;
-        -i)             INTERFACE=$2;            shift 2;;
-        -cc)            StopBeforeCpp=1;         shift;;
-        -c)             COMPILEONLY=1;           shift;;
-	-E)             PPONLY=1;                shift;;
-	-nopp)          noPP=1;                  shift;;
-        -r)             RUN=1;                   shift;;
-        -v)             VERBOSE=1;               shift;;
-        -noimc)         noIMC=1;                 shift;;
-        -nosys)         NOSYSTEMPART=1;          shift;;
-        -h)             HELP=1;                  shift;;
-        -keep)          keepFiles=1;             shift;;
+        -std=OpenPEARL) standard=$1;                   shift;;
+        -std=PEARL90)   standard=$1;                   shift;;
+        -o)             target=$2;                     shift 2;;
+        -b)             PLATTFORM=$2;                  shift 2;;
+        -i)             INTERFACE=$2;                  shift 2;;
+        -cc)            StopBeforeCpp=1;               shift;;
+        -c)             COMPILEONLY=1;                 shift;;
+	-I)             PPFLAGS+=" -I$2";              shift 2;;
+	-D)             PPFLAGS+=" -D$2";              shift 2;;
+	-U)             PPFLAGS+=" -U$2";              shift 2;;
+	-E)             PPONLY=1;                      shift;;
+	-nopp)          noPP=1;                        shift;;
+        -r)             RUN=1;                         shift;;
+        -v)             VERBOSE=1;                     shift;;
+        -noimc)         noIMC=1;                       shift;;
+        -nosys)         NOSYSTEMPART=1;                shift;;
+        -h)             HELP=1;                        shift;;
+        -keep)          keepFiles=1;                   shift;;
 	 -*) echo "unknown option " $1; 
                shift;
 	       exit 1;;
@@ -64,27 +68,36 @@ done
 #echo PPONLY = $PPONLY
 #echo INPUT = $INPUT
 #echo "StopBeforeCpp= " $StopBeforeCpp
+#echo "PPFLAGS=" $PPFLAGS
 
 if [ -n "$HELP" ]
-then 
+then
+#        ==============================================================================
    echo "Usage $0 [options] file file ..."
    echo "   Parameters: " 
-   echo "    -std=OpenPEARL  (default) "
-   echo "    -std=PEARL90 (disable OpenPEARL extensions)"
-   echo "    -c compile only (until object and xml output)" 
-   echo "    -o <outputFileName> defines the name of the executable"
-   echo "    -cc compile only until C++ source and xml (for developers)" 
-   echo "    -keep keep intermediate files (for developers)"
-   echo "    -b <plattform> build for plattform (defaults to linux)" 
-   echo "        or OpenPEARLTarget environment variable" 
-   echo "        known plattforms: $plattforms"
-   echo "    -E preprocess only"
-   echo "    -r run application on MCU" 
-   echo "    -i <interface> download interface for MCU (default /dev/ttyUSB0)" 
-   echo "    -noimc do not invoke the imc - current system.cc is used (for developers)"
+   echo "    -std=OpenPEARL             (default) "
+   echo "    -std=PEARL90               (disable OpenPEARL extensions)"
+   echo "    -c                         compile only (until object and xml output)" 
+   echo "    -o <outputFileName>        defines the name of the executable"
+   echo "    -cc                        compile only until C++ source and xml"
+   echo "                               (for developers)" 
+   echo "    -keep                      keep intermediate files (for developers)"
+   echo "    -b <plattform>             build for plattform (defaults to linux)" 
+   echo "                               or OpenPEARLTarget environment variable" 
+   echo "                               known plattforms: $plattforms"
+   echo "    -D name                    Predefine name as a macro with a definition of 1"
+   echo "    -D name=definition         Predefine name as a macro with value of definition"
+   echo "    -E                         preprocess only"
+   echo "    -I dir                     add the driectory dir to the list of directories"
+   echo "                               to be searched by the preprocessor"
+   echo "    -r                         run application on MCU" 
+   echo "    -i <interface>             download interface for MCU (default /dev/ttyUSB0)" 
+   echo "    -noimc                     do not invoke the imc - current system.cc is used"
+   echo "                               (for developers)"
 #   echo "    -nosys do not invoke the imc - no system part is used"
-   echo "    -v verbose: print log file to console"
-   echo "    -h this page" 
+   echo "    -U name                    Cancel a previous definition with -D name"
+   echo "    -v                         verbose: print log file to console"
+   echo "    -h                         this page" 
    echo "   Note: "
    echo "     * If only one input file (.prl, .cc or .o) is given, the name of binary output"
    echo "       is derived from the input file."
@@ -196,7 +209,8 @@ rm -f $target.out $target.log
 	    if [[ "$noPP" != "1" ]] ; then
 		outputPrlPP=`mktemp -t openpearl.XXXXXXX --suffix=".prl"` || exit 1
 		intermediateFiles+=" $outputPrlPP"
-		/usr/local/bin/prlpp --quiet $fn.prl --output $outputPrlPP
+		echo ">>> /usr/local/bin/prlpp --quiet $PPFLAGS $fn.prl --output $outputPrlPP"
+		/usr/local/bin/prlpp --quiet $PPFLAGS $fn.prl --output $outputPrlPP
 		rc=$?
 		if [ $rc -ne 0 ]
 		then
