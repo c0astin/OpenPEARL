@@ -1,0 +1,67 @@
+MODULE(type);
+
+SYSTEM;
+  so: StdOut;
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC;
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD NOCYCL STREAM CREATED(so);
+
+  TYPE Payload STRUCT [ data FIXED];
+  TYPE ListElement STRUCT [ next REF ListElement, index FIXED, payload Payload];
+  DCL list(100) ListElement;
+  DCL used REF ListElement; ! INIT(NIL);
+  DCL unUsed REF ListElement; ! INIT(NIL);
+
+t: TASK MAIN;
+   DCL i REF ListElement;
+   OPEN stdout;
+   presetList;
+   printList;
+   add(1);
+   printList;
+   add(2);
+   printList;
+
+END;
+
+add: PROC(x FIXED);
+   DCL i REF ListElement;
+   i = unUsed;
+   IF i IS NIL THEN
+      PUT 'list is full' TO stdout BY A, SKIP;
+   FIN;
+   i.payload.data = x;
+   unUsed = unUsed.next;
+   i.next = used;
+   used = i;
+END;
+
+printList: PROC;
+   DCL i REF ListElement;
+   PUT '----','used elements: ' TO stdout BY A,SKIP;
+   i = used; 
+   WHILE i ISNT NIL REPEAT
+       PUT i.index TO stdout BY F(4);
+       i = i.next;
+   END;
+
+   PUT 'unused elements: ' TO stdout BY SKIP(2), A,SKIP;
+   i = unUsed; 
+   WHILE i ISNT NIL REPEAT
+       PUT i.index TO stdout BY F(4);
+       i = i.next;
+   END;
+   PUT TO stdout BY SKIP;
+END;
+
+presetList: PROC;
+   FOR i TO 99 REPEAT
+     list(i).next = list(i+1);
+     list(i).index = i;
+   END;
+   list(100).next = NIL; 
+   list(100).index = 100;
+   unUsed = list(1);
+END;
+
+MODEND;
