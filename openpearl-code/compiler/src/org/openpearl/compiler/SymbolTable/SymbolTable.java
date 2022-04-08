@@ -386,20 +386,21 @@ public class SymbolTable {
                 }
             }
         }
-
+        Collections.sort( listOfVariableDeclarationsEntries, new SortByContext()); 
         return listOfVariableDeclarationsEntries;
     }
 
     
-    public LinkedList<VariableEntry> getAllArrayDeclarations(SymbolTable symbolTable) {
-        LinkedList<VariableEntry> listOfArrayDeclarations = new LinkedList<VariableEntry>();
-
-        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
-            SymbolTableEntry entry = it.next();
-        }
-
-        return listOfArrayDeclarations;
-    }
+   // not used (2022-04-01 rm)
+//    public LinkedList<VariableEntry> getAllArrayDeclarations(SymbolTable symbolTable) {
+//        LinkedList<VariableEntry> listOfArrayDeclarations = new LinkedList<VariableEntry>();
+//
+//        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
+//            SymbolTableEntry entry = it.next();
+//        }
+//
+//        return listOfArrayDeclarations;
+//    }
 
     public LinkedList<SemaphoreEntry> getSemaphoreDeclarations() {
         LinkedList<SemaphoreEntry> listOfSemaEntries = new LinkedList<SemaphoreEntry>();
@@ -509,6 +510,13 @@ public class SymbolTable {
                         getStructureDeclarationsForStructure(struct.getStructureName(), struct,
                                 structures);
                     }
+                }
+            } else if (symbolTableEntry instanceof UserDefinedType) {
+                UserDefinedType entry = (UserDefinedType) symbolTableEntry;
+                if (entry.getType() instanceof UserDefinedTypeStructure) {
+                    TypeStructure struct = (TypeStructure) ((UserDefinedTypeStructure)(entry.getType())).getStructuredType();
+                    getStructureDeclarationsForStructure(struct.getStructureName(), struct,
+                            structures);
                 }
             } else if (symbolTableEntry instanceof ProcedureEntry) {
                 ProcedureEntry procedureEntry = (ProcedureEntry) symbolTableEntry;

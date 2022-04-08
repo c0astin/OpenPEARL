@@ -368,8 +368,14 @@ implements OpenPearlVisitor<ST> {
                         } else if (component.m_type instanceof TypeArray) {
                             TypeArray array = (TypeArray) component.m_type;
 
-                            if (array.getBaseType() instanceof TypeStructure) {
-                                TypeStructure arraystruct = (TypeStructure) array.getBaseType();
+                            if (array.getBaseType() instanceof TypeStructure ||
+                                    array.getBaseType() instanceof UserDefinedTypeStructure) {
+                                TypeStructure arraystruct=null;
+                                if (array.getBaseType() instanceof TypeStructure) {
+                                 arraystruct = (TypeStructure) array.getBaseType();
+                                } else {
+                                     arraystruct = (TypeStructure) (((UserDefinedTypeStructure)(array.getBaseType())).getStructuredType());
+                                }
                                 ST declaration =
                                         m_group.getInstanceOf("StructureArrayComponentDeclaration");
 
@@ -384,19 +390,21 @@ implements OpenPearlVisitor<ST> {
                                 TypeDefinition type = array.getBaseType();
                                 ST declaration =
                                         m_group.getInstanceOf("StructureArrayComponentDeclaration");
-                                ST typeST = null;
-
-                                // TODO: (MS) Are here the other types like e.g. CLOCK are missing???
-                                if (type instanceof TypeFixed) {
-                                    typeST = m_group.getInstanceOf("fixed_type");
-                                    typeST.add("size", type.getPrecision());
-                                } else if (type instanceof TypeFloat) {
-                                    typeST = m_group.getInstanceOf("float_type");
-                                    typeST.add("size", type.getPrecision());
-                                } else if (type instanceof TypeChar) {
-                                    typeST = m_group.getInstanceOf("char_type");
-                                    typeST.add("size", type.getSize());
-                                }
+                                ST typeST = type.toST(m_group);
+//                                if (type instanceof UserDefinedSimpleType) {
+//                                    type = ((UserDefinedSimpleType)type).getSimpleType();
+//                                }
+//                                // TODO: (MS) Are here the other types like e.g. CLOCK are missing???
+//                                if (type instanceof TypeFixed) {
+//                                    typeST = m_group.getInstanceOf("fixed_type");
+//                                    typeST.add("size", type.getPrecision());
+//                                } else if (type instanceof TypeFloat) {
+//                                    typeST = m_group.getInstanceOf("float_type");
+//                                    typeST.add("size", type.getPrecision());
+//                                } else if (type instanceof TypeChar) {
+//                                    typeST = m_group.getInstanceOf("char_type");
+//                                    typeST.add("size", type.getSize());
+//                                }
 
                                 declaration.add("name", component.m_alias);
                                 declaration.add("type", typeST);
@@ -584,6 +592,7 @@ implements OpenPearlVisitor<ST> {
         ST dationSpecifications = m_group.getInstanceOf("DationSpecifications");
         //System.out.println("Spec: "+ ve.getName()+" "+ve.getType());
         TypeDefinition t = ve.getType();
+        ErrorStack.enter(ve.getCtx());
 
         ST scope = getScope(ve);
         if (ve.getType() instanceof TypeArray) {
@@ -665,9 +674,9 @@ implements OpenPearlVisitor<ST> {
             scope.add("variable", specifyVariable);
             dationSpecifications.add("decl",  scope);
         } else {
-            ErrorStack.add(ve.getCtx(),"CppCodeGenerator:generateSpecification @865","missing alternative");
+            ErrorStack.add("CppCodeGenerator:generateSpecification @865: missing alternative");
         }
-
+        ErrorStack.leave();
         return dationSpecifications;
 
     }
@@ -761,8 +770,7 @@ implements OpenPearlVisitor<ST> {
             scope.add("variable", st);
             scalarVariableDeclaration.add("variable_denotations", scope);
 
-        } else if (ve.getType() instanceof TypeStructure) {
-            TypeDefinition td= ve.getType();
+        } else if (ve.getType() instanceof TypeStructure || ve.getType() instanceof UserDefinedTypeStructure) {
             st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
             st.add("type",
@@ -777,7 +785,7 @@ implements OpenPearlVisitor<ST> {
             scope.add("variable", st);
             scalarVariableDeclaration.add("variable_denotations", scope);
 
-        } else if (isSimpleType(ve)) {
+        } else if (isSimpleType(ve) || ve.getType() instanceof UserDefinedSimpleType) {
 
             st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
@@ -1428,130 +1436,7 @@ implements OpenPearlVisitor<ST> {
     }
 
 
-    //    private ST getReferenceExpression(OpenPearlParser.ExpressionContext ctx) {
-    //        ST st = m_group.getInstanceOf("ReferenceExpression");
-    //
-    //        if (ctx != null) {
-    //            if (ctx instanceof OpenPearlParser.BaseExpressionContext) {
-    //                st.add("code", visitBaseExpression(((OpenPearlParser.BaseExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.AdditiveExpressionContext) {
-    //                st.add("code", visitAdditiveExpression(
-    //                        ((OpenPearlParser.AdditiveExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.SubtractiveExpressionContext) {
-    //                st.add("code", visitSubtractiveExpression(
-    //                        ((OpenPearlParser.SubtractiveExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.MultiplicativeExpressionContext) {
-    //                st.add("code", visitMultiplicativeExpression(
-    //                        (OpenPearlParser.MultiplicativeExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.DivideExpressionContext) {
-    //                st.add("code",
-    //                        visitDivideExpression((OpenPearlParser.DivideExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.DivideIntegerExpressionContext) {
-    //                st.add("code", visitDivideIntegerExpression(
-    //                        (OpenPearlParser.DivideIntegerExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.UnaryAdditiveExpressionContext) {
-    //                st.add("code", visitUnaryAdditiveExpression(
-    //                        (OpenPearlParser.UnaryAdditiveExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.UnarySubtractiveExpressionContext) {
-    //                st.add("code", visitUnarySubtractiveExpression(
-    //                        (OpenPearlParser.UnarySubtractiveExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.ExponentiationExpressionContext) {
-    //                st.add("code", visitExponentiationExpression(
-    //                        (OpenPearlParser.ExponentiationExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.LtRelationalExpressionContext) {
-    //                st.add("code", visitLtRelationalExpression(
-    //                        (OpenPearlParser.LtRelationalExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.GeRelationalExpressionContext) {
-    //                st.add("code", visitGeRelationalExpression(
-    //                        (OpenPearlParser.GeRelationalExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.NeRelationalExpressionContext) {
-    //                st.add("code", visitNeRelationalExpression(
-    //                        (OpenPearlParser.NeRelationalExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.EqRelationalExpressionContext) {
-    //                st.add("code", visitEqRelationalExpression(
-    //                        (OpenPearlParser.EqRelationalExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.GtRelationalExpressionContext) {
-    //                st.add("code", visitGtRelationalExpression(
-    //                        (OpenPearlParser.GtRelationalExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.LeRelationalExpressionContext) {
-    //                st.add("code", visitLeRelationalExpression(
-    //                        (OpenPearlParser.LeRelationalExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.IsRelationalExpressionContext) {
-    //                st.add("code", visitIsRelationalExpression(
-    //                        (OpenPearlParser.IsRelationalExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.IsntRelationalExpressionContext) {
-    //                st.add("code", visitIsntRelationalExpression(
-    //                        (OpenPearlParser.IsntRelationalExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.AtanExpressionContext) {
-    //                st.add("code", visitAtanExpression((OpenPearlParser.AtanExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.CosExpressionContext) {
-    //                st.add("code", visitCosExpression((OpenPearlParser.CosExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.ExpExpressionContext) {
-    //                st.add("code", visitExpExpression((OpenPearlParser.ExpExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.LnExpressionContext) {
-    //                st.add("code", visitLnExpression((OpenPearlParser.LnExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.SinExpressionContext) {
-    //                st.add("code", visitSinExpression((OpenPearlParser.SinExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.SqrtExpressionContext) {
-    //                st.add("code", visitSqrtExpression((OpenPearlParser.SqrtExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.TanExpressionContext) {
-    //                st.add("code", visitTanExpression((OpenPearlParser.TanExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.TanhExpressionContext) {
-    //                st.add("code", visitTanhExpression((OpenPearlParser.TanhExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.FitExpressionContext) {
-    //                st.add("code", visitFitExpression((OpenPearlParser.FitExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.ExponentiationExpressionContext) {
-    //                st.add("code", visitExponentiationExpression(
-    //                        (OpenPearlParser.ExponentiationExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.AbsExpressionContext) {
-    //                st.add("code", visitAbsExpression((OpenPearlParser.AbsExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.SizeofExpressionContext) {
-    //                st.add("code",
-    //                        visitSizeofExpression((OpenPearlParser.SizeofExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.EntierExpressionContext) {
-    //                st.add("code",
-    //                        visitEntierExpression((OpenPearlParser.EntierExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.RoundExpressionContext) {
-    //                st.add("code", visitRoundExpression((OpenPearlParser.RoundExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.SignExpressionContext) {
-    //                st.add("code", visitSignExpression((OpenPearlParser.SignExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.RemainderExpressionContext) {
-    //                st.add("code", visitRemainderExpression(
-    //                        (OpenPearlParser.RemainderExpressionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.NowFunctionContext) {
-    //                st.add("code", visitNowFunction((OpenPearlParser.NowFunctionContext) ctx));
-    //            } else if (ctx instanceof OpenPearlParser.AndExpressionContext) {
-    //                st.add("code", visitAndExpression(((OpenPearlParser.AndExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.OrExpressionContext) {
-    //                st.add("code", visitOrExpression(((OpenPearlParser.OrExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.ExorExpressionContext) {
-    //                st.add("code", visitExorExpression(((OpenPearlParser.ExorExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.CshiftExpressionContext) {
-    //                st.add("code",
-    //                        visitCshiftExpression(((OpenPearlParser.CshiftExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.ShiftExpressionContext) {
-    //                st.add("code",
-    //                        visitShiftExpression(((OpenPearlParser.ShiftExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.CatExpressionContext) {
-    //                st.add("code", visitCatExpression(((OpenPearlParser.CatExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.NotExpressionContext) {
-    //                st.add("code", visitNotExpression(((OpenPearlParser.NotExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.TOFIXEDExpressionContext) {
-    //                st.add("code",
-    //                        visitTOFIXEDExpression(((OpenPearlParser.TOFIXEDExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.TOFLOATExpressionContext) {
-    //                st.add("code",
-    //                        visitTOFLOATExpression(((OpenPearlParser.TOFLOATExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.TOBITExpressionContext) {
-    //                st.add("code",
-    //                        visitTOBITExpression(((OpenPearlParser.TOBITExpressionContext) ctx)));
-    //            } else if (ctx instanceof OpenPearlParser.TaskFunctionContext) {
-    //                st.add("code", visitTaskFunction(((OpenPearlParser.TaskFunctionContext) ctx)));
-    //            }
-    //        }
-    //
-    //        return st;
-    //    }
+    
 
     @Override
     public ST visitTaskFunction(OpenPearlParser.TaskFunctionContext ctx) {
@@ -2177,7 +2062,7 @@ implements OpenPearlVisitor<ST> {
             int x=0;
             currentType= ((FormalParameter) entry).getType();
         } else if (entry instanceof VariableEntry) {
-            // simple variable treated in else of namespace check
+            // simple variable treated in else of name space check
             currentType = ((VariableEntry)entry).getType();
         } else {
             ErrorStack.addInternal(ctx, "CppCodegen@2194", "missing treatment of "+ entry.getClass());
@@ -2236,6 +2121,7 @@ implements OpenPearlVisitor<ST> {
                 // possible currentTypes: TypeStructure -> no nothing
                 //                        TypeReference with base Type TypeStructure  --> use -> operator
                 //                        TypeProcedure or REF TypeProcedure-> add function call 
+                stOfReference = null;
                 if (currentType instanceof TypeReference) {
                     if (((TypeReference)currentType).getBaseType() instanceof TypeProcedure) {
                         stOfName=dereference(stOfName);
@@ -2244,6 +2130,14 @@ implements OpenPearlVisitor<ST> {
                         stOfReference = stOfName;
                         stOfName=dereference(stOfName);
                         currentType = ((TypeReference)currentType).getBaseType();
+                    } else if (((TypeReference)currentType).getBaseType() instanceof TypeSameStructure) {
+                        stOfReference = stOfName;
+                        stOfName = dereference(stOfName);
+                        currentType = ((TypeSameStructure)((TypeReference)currentType).getBaseType()).getContainerStructure().getStructuredType();
+                    } else if (((TypeReference)currentType).getBaseType() instanceof UserDefinedTypeStructure) {
+                        stOfReference = stOfName;
+                        stOfName = dereference(stOfName);
+                        currentType = ((UserDefinedTypeStructure)((TypeReference)currentType).getBaseType()).getStructuredType();
                     }
                 }
                 if (currentType instanceof TypeProcedure) {
@@ -2253,18 +2147,26 @@ implements OpenPearlVisitor<ST> {
                     currentType = ((TypeProcedure)currentType).getResultType();
                     stOfName = st;
                 }
-                if (currentType instanceof TypeStructure) {
-                    TypeStructure ts = (TypeStructure)currentType;
+                if (currentType instanceof TypeStructure || currentType instanceof UserDefinedTypeStructure) {
+                    TypeStructure ts = null;
+               
+                    if (currentType instanceof TypeStructure) {
+                       ts = (TypeStructure)currentType;
+                    } else {
+                        ts =(TypeStructure)( ((UserDefinedTypeStructure)currentType).getStructuredType());
+                    }
+                    
                     String componentName = ctx.name().ID().getText();
                     StructureComponent component = ts.lookup(componentName);
                     // System.out.println(component.m_alias);
                     ST st = m_group.getInstanceOf("addStructComponent");
-                    if (stOfReference != null) {
-                        st.add("name", stOfReference);
-                        st.add("nameIsReference", true);
-                    } else {
+                    // nameIsReference does not work for REF STRUCT --> use (* ...).comp 
+                   // if (stOfReference != null) {
+                   //     st.add("name", stOfReference);
+                   //     st.add("nameIsReference", true);
+                   // } else {
                         st.add("name", stOfName);
-                    }
+                   // }
                     st.add("component", component.m_alias);
 
                     stOfName = st;
@@ -2283,7 +2185,7 @@ implements OpenPearlVisitor<ST> {
         
         while (currentType != null && !currentType.equals(attr.m_type)) {
 
-            if (currentType instanceof TypeReference) {
+           if (currentType instanceof TypeReference) {
                stOfName = dereference(stOfName);
                currentType = ((TypeReference)currentType).getBaseType();
            }
@@ -2293,6 +2195,8 @@ implements OpenPearlVisitor<ST> {
                currentType = ((TypeProcedure)currentType).getResultType();
                stOfName = st; 
            }
+           if (currentType instanceof TypeSameStructure) 
+               break;
            if (loopCounter++ > 10) {
                ErrorStack.addInternal(ctx, "CppCodeGen@2244", "loopCounter too large");
                break;
@@ -4698,12 +4602,12 @@ implements OpenPearlVisitor<ST> {
     }
 
     private ST visitDationDenotation(VariableEntry ve) {
-
+        ErrorStack.enter(ve.getCtx());
         String name = ve.getName();
         TypeDation td = (TypeDation)(ve.getType());
         int tfuRecord = -1;
         ST typeDation = m_group.getInstanceOf("TypeDation");
-
+        
         typeDation =  getTypeDation(td);
 
         ST typology = m_group.getInstanceOf("Typology");
@@ -4722,7 +4626,7 @@ implements OpenPearlVisitor<ST> {
             }
         }
         //
-        if (!(td.isBasic() && td.getTypeOfTransmission()!= null)) {
+        if (!(td.isBasic() && td.getTypeOfTransmissionAsType()!= null)) {
             // not needed for DationTS
             if (td.isDirect()) accessAttributes.add("attribute", "DIRECT");
             if (td.isForward()) accessAttributes.add("attribute", "FORWARD");
@@ -4765,7 +4669,7 @@ implements OpenPearlVisitor<ST> {
         }
         m_dationDeclarationInitializers.add("decl", dationInitialiser);
 
-
+        ErrorStack.leave();
         return null;
     }
 
@@ -4855,8 +4759,10 @@ implements OpenPearlVisitor<ST> {
             st.add("alphic", "1");
         } else if (td.isBasic()) {
             st.add("basic", "1");
-        } else if (td.getTypeOfTransmission() != null) {
+        } else if (td.getTypeOfTransmissionAsType() != null) {
             st.add("attribute",getTypeOfTransmissionData(td));
+        } else if (td.getTypeOfTransmissionAsType() == null) {
+            st.add("attribute",1);  // indicates ALL in DationRW            
         }
 
         return st;
@@ -4865,14 +4771,14 @@ implements OpenPearlVisitor<ST> {
     private ST getTypeOfTransmissionData(TypeDation td) {
         ST st = m_group.getInstanceOf("TypeOfTransmissionData");
 
-        if (td.getTypeOfTransmission().equals("ALL")) {
+        if (td.getTypeOfTransmissionAsType() == null) {
             st.add("all", "1");
             //        } else if (ctx instanceof OpenPearlParser.TypeOfTransmissionDataSimpleTypeContext) {
             //            OpenPearlParser.TypeOfTransmissionDataSimpleTypeContext c =
             //                    (OpenPearlParser.TypeOfTransmissionDataSimpleTypeContext) ctx;
             //            st.add("type", visitSimpleType(c.simpleType()));
         } else {
-            st.add("type", getSTforType(td.getTypeOfTransmissionAsType()));
+            st.add("type",getSTforType(td.getTypeOfTransmissionAsType()));
         }
 
         return st;
@@ -4901,8 +4807,15 @@ implements OpenPearlVisitor<ST> {
             st = m_group.getInstanceOf("sema_type");
         } else if (t instanceof TypeBolt) {
             st = m_group.getInstanceOf("bolt_type");
+        } else if (t instanceof TypeStructure) {
+            st = m_group.getInstanceOf("TypeStructure");
+            st.add("name" ,((TypeStructure)t).getStructureName());
+        } else if (t instanceof UserDefinedSimpleType) {
+            return getSTforType(((UserDefinedSimpleType)t).getSimpleType());
+        } else if (t instanceof UserDefinedTypeStructure) {
+            return getSTforType(((UserDefinedTypeStructure)t).getStructuredType());
         } else {
-            System.err.println("CppCodeGen: missing alternative@4591");
+            ErrorStack.addInternal("CppCodeGenerator@4904: missing alternative");
         }
 
 

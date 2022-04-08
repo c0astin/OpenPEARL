@@ -461,7 +461,11 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
         ASTAttribute attr = m_ast.lookup(ctx);
         TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
         //TypeDefinition t = getEffectiveType(ctx);
-
+        
+        String gotType = t.toErrorString();
+        if (t instanceof UserDefinedSimpleType) {
+            t = ((UserDefinedSimpleType)t).getSimpleType(); 
+        }
         if (t instanceof TypeFixed) {
             if (attr.isConstant()) {
                 long p = attr.getConstantFixedValue().getValue();
@@ -471,7 +475,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
                 }
             }
         } else {
-            ErrorStack.add("must be of type FIXED");
+            ErrorStack.add("must be of type FIXED --- got "+gotType);
         }
         ErrorStack.leave();
 

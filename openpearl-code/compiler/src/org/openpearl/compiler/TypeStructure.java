@@ -69,6 +69,7 @@ public class TypeStructure extends TypeDefinition {
     }
     
     public String toString4IMC(boolean isInStructure) {
+      //  return getStructureName();
         String line = super.getName() + " [ ";
 
         for (int i = 0; i < m_listOfComponents.size(); i++) {
@@ -157,7 +158,11 @@ public class TypeStructure extends TypeDefinition {
         if ( type instanceof TypeInterrupt)       return "K";
         if ( type instanceof TypeStructure)       return "S";
         if ( type instanceof TypeSameStructure)   return "T";
-
+        if ( type instanceof UserDefinedTypeStructure) 
+            return ((TypeStructure)((UserDefinedTypeStructure)type).getStructuredType()).getStructureName();
+        if ( type instanceof UserDefinedSimpleType) 
+            return getDataTypeEncoding (((UserDefinedSimpleType)type).getSimpleType());
+        
         if ( type instanceof TypeArray ) {
             TypeArray typeArray = (TypeArray) type;
             String encoding =  Integer.toString(typeArray.getNoOfDimensions());
@@ -199,16 +204,24 @@ public class TypeStructure extends TypeDefinition {
     private String getComponentName(TypeDefinition type) {
         String componentName = "";
 
-        if ( type instanceof TypeStructure) {
-            TypeStructure typeStructure = (TypeStructure) type;
+        if ( type instanceof TypeStructure || type instanceof UserDefinedTypeStructure) {
+            TypeStructure typeStructure;
+            if (type instanceof TypeStructure) {
+               typeStructure = (TypeStructure) type;
+            } else {
+                typeStructure = (TypeStructure)((UserDefinedTypeStructure)type).getStructuredType();
+            }
+            
             String components = "";
             for (int i = 0; i < typeStructure.m_listOfComponents.size(); i++ ) {
                 TypeDefinition typ = typeStructure.m_listOfComponents.get(i).m_type;
                 components += getComponentName(typ);
             }
             componentName += "S" + components.length() + components;
-        }
-        else {
+        } else if (type instanceof UserDefinedSimpleType) {
+            TypeDefinition t = ((UserDefinedSimpleType)type).getSimpleType();
+            componentName = getDataTypeEncoding(t);
+        } else {
             componentName = getDataTypeEncoding(type);
         }
 
@@ -322,5 +335,21 @@ public class TypeStructure extends TypeDefinition {
             return ((TypeStructure )(((TypeArray)comp.m_type)).getBaseType()).getFirstElement();
         }
         return comp;
+    }
+
+    public String toErrorString() {
+        String line = "STRUCT [ ";
+
+        for (int i = 0; i < m_listOfComponents.size(); i++) {
+            String prefix = " ";
+            if ( i > 0 ) {
+                prefix = ",";
+            }
+
+            line += prefix + m_listOfComponents.get(i).toErrorString();
+        }
+
+        return line + " ] ";
+ 
     }
 }

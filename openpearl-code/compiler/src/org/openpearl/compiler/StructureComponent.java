@@ -39,6 +39,10 @@ public class StructureComponent {
     public String toString() {
         return m_id + " " +  m_type + " " + m_index + " " + m_alias;
     }
+   
+    public String toErrorString() {
+        return m_id + " " +  m_type;
+    }
     
     public String toString4IMC(boolean isInStruct) {
         return m_type.toString4IMC(isInStruct);
@@ -59,8 +63,11 @@ public class StructureComponent {
             return ((TypeStructure) m_type).getNextElement();
         }
         return null;
-
         
     }
+
+
+
+
 
 }

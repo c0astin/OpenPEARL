@@ -74,7 +74,7 @@ implements OpenPearlVisitor<Void> {
                 + CommonUtils.printContext(ctx.expression()));
         
         String id = null;
-        // System.out.println(ctx.getText());
+        //System.out.println(ctx.getText());
 
         ErrorStack.enter(ctx, "assignment");
         ASTAttribute lhsAttr = null;
@@ -111,7 +111,8 @@ implements OpenPearlVisitor<Void> {
         }
 
 
-        if (!(lhsType instanceof TypeStructure || lhsType instanceof TypeReference
+        if (!(lhsType instanceof TypeStructure || lhsType instanceof UserDefinedTypeStructure 
+                || lhsType instanceof TypeReference
                 || lhsType instanceof TypeVariableChar || TypeUtilities.isSimpleTypeInclVarCharAndRefChar(lhsType))) {
             ErrorStack.add(lhsAttr.getType().toString4IMC(true) + " not allowed on lhs");
         }

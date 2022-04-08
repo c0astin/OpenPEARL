@@ -134,7 +134,9 @@ implements OpenPearlVisitor<Void> {
     }
 
     private void checkUserDation(VariableEntry ve, TypeDation d, boolean isDecl) {
-
+        if (ve.getName().equals("typeFail5")) {
+            int x=0;
+        }
         if (isDecl) {
             ErrorStack.enter(ve.getCtx(),"DationDCL");
             // System.out.println("UserDCL: "+ve.getName());
@@ -223,19 +225,19 @@ implements OpenPearlVisitor<Void> {
                 // use system dation as primary selector
                 if (sd.isBasic()) {
                     if (d.isAlphic()) {
-                        ErrorStack.add("attempt to create ALPHIC dation upon BASIC system dation");
+                        ErrorStack.add("attempt to create an 'ALPHIC' dation upon BASIC system dation");
                         ErrorStack.leave();
                         return ;
                     }
                     if (!d.isBasic()) {
                         // d is not of type ALPHIC and not type BASIC --> check typeOfTransmission for
                         // correct error message
-                        if (d.getTypeOfTransmission() != null) {
-                            ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
+                        if (d.getTypeOfTransmissionAsType() != null) {
+                            ErrorStack.add("attempt to create a '" + d.getTypeOfTransmissionAsType()
                             + "' dation upon a BASIC system dation");
                         } else {
                             ErrorStack.add(
-                                    "attempt to create an ALPHIC dation upon a BASIC system dation");
+                                    "attempt to create an 'ALL' dation upon a BASIC system dation");
                         }
                         ErrorStack.leave();
                         return ;
@@ -246,23 +248,28 @@ implements OpenPearlVisitor<Void> {
                     if (!d.isAlphic()) {
                         if (d.isBasic()) {
                             ErrorStack.add(
-                                    "attempt to create a BASIC dation upon an ALPHIC system dation");
+                                    "attempt to create a BASIC dation upon an 'ALPHIC' system dation");
                             ErrorStack.leave();
                             return ;
                         }
-                        if (d.getTypeOfTransmission() != null) {
-                            ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
-                            + "' dation upon an ALPHIC system dation");
+                        if (d.getTypeOfTransmissionAsType() != null) {
+                            ErrorStack.add("attempt to create a '" + d.getTypeOfTransmissionAsType()
+                            + "' dation upon an 'ALPHIC' system dation");
                             ErrorStack.leave();
                             return ;
+                        } else {
+                            ErrorStack.add("attempt to create an 'ALL' dation upon an 'ALPHIC' system dation");
+                            ErrorStack.leave();
+                            return ;
+                            
                         }
                     }
                 }
-                if (sd.getTypeOfTransmission() != null && !sd.isBasic()) {
+                if (sd.getTypeOfTransmissionAsType() != null && !sd.isBasic()) {
                     if (d.isAlphic()) {
-                        if (!sd.getTypeOfTransmission().equals("ALL")) {
-                            ErrorStack.add("attempt to create an ALPHIC dation upon '"
-                                    + d.getTypeOfTransmission() + "' system dation");
+                        if (!(sd.getTypeOfTransmissionAsType() == null)) {
+                            ErrorStack.add("attempt to create an 'ALPHIC' dation upon '"
+                                    + d.getTypeOfTransmissionAsType() + "' system dation");
                             ErrorStack.leave();
                             return ;
                         }
@@ -272,18 +279,26 @@ implements OpenPearlVisitor<Void> {
                         ErrorStack.leave();
                         return ;
                     }
-                    if (d.getTypeOfTransmission() != null) {
-                        if (!sd.getTypeOfTransmission().equals("ALL")) {
+                    if (d.getTypeOfTransmissionAsType() != null) {
+                        if (!(sd.getTypeOfTransmissionAsType() == null)) {
                             // types must be equal
                             if (!sd.getTypeOfTransmissionAsType()
                                     .equals(d.getTypeOfTransmissionAsType())) {
-                                ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
-                                + "' dation upon a '" + sd.getTypeOfTransmission()
-                                + "' system dation");
-
+                                ErrorStack.add("attempt to create an 'ALL' dation upon an 'ALPHIC' system dation");
+                                return;
                             }
                         }
                     }
+                }
+                
+                if (sd.getTypeOfTransmissionAsType() == null && !sd.isBasic()) {
+                    // system dation is ALL and not BASIC
+                    if (d.isBasic()) {
+                        ErrorStack.add("attempt to create a BASIC dation upon non BASIC system dation");
+                        ErrorStack.leave();
+                        return ;
+                    }
+                   
                 }
 
                 // (2) direction must fit (sourceSinkAttribute)
@@ -657,7 +672,7 @@ implements OpenPearlVisitor<Void> {
 
         // create dummy Type Dation for reuse of checkPutGetDataFormat
         m_typeDation = new TypeDation();
-        m_typeDation.setTypeOfTransmission("ALPHIC");
+//        m_typeDation.setTypeOfTransmission("ALPHIC");
         m_typeDation.setAlphic(true);
         m_typeDation.setTfu(false);
 
@@ -708,7 +723,7 @@ implements OpenPearlVisitor<Void> {
 
         // create dummy Type Dation for reuse of checkPutGetDataFormat
         m_typeDation = new TypeDation();
-        m_typeDation.setTypeOfTransmission("ALPHIC");
+      //  m_typeDation.setTypeOfTransmission("ALPHIC");
         m_typeDation.setAlphic(true);
         m_typeDation.setTfu(false);
 
@@ -819,7 +834,7 @@ implements OpenPearlVisitor<Void> {
                         if (typeMismatch) {
                             ErrorStack.enter(ioDataList.ioListElement(i).expression());
                             ErrorStack.add("type mismatch: required: "
-                                    + m_typeDation.getTypeOfTransmission() + " --- got "
+                                    + m_typeDation.getTypeOfTransmissionAsType() + " --- got "
                                     + attr.getType().toString());
                             ErrorStack.leave();
                         }
@@ -1139,6 +1154,7 @@ implements OpenPearlVisitor<Void> {
         
         TypeDefinition td = dataElementWithContext.td;
         IoListElementContext lctx = (IoListElementContext)(dataElementWithContext.ctx);
+        String fff = lctx.getText();
         if (lctx.expression() != null) {
             attr = m_ast.lookup(lctx.expression());
         } else {

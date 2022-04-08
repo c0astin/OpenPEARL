@@ -36,7 +36,7 @@ error: DationDCL: system dation 's0' is not defined
 */
 
 
-! ************* typology must existe in ALPHIC or type dations
+! ************* typology must exist in ALPHIC or type dations
 !                must not exist in BASIC dation
    DCL stdout DATION  OUT   ALPHIC FORWARD CREATED(so);
 /*$    ^
@@ -45,7 +45,7 @@ error: DationDCL: non BASIC user dation needs typology (DIM)
 
    DCL stdout2 DATION  IN    CHAR   FORWARD CREATED(so);
 /*$    ^
-error: DationDCL: attempt to create a 'CHAR' dation upon an ALPHIC system dation
+error: DationDCL: attempt to create a 'CHAR(1)' dation upon an 'ALPHIC' system dation
 */
 
    DCL stdout3 DATION  OUT  ALPHIC   DIRECT CREATED(so);
@@ -68,17 +68,17 @@ error: DationDCL: attempt to create a 'FIXED(15)' dation upon a BASIC system dat
 
    DCL typeFail2 DATION OUT ALL CREATED(sbd);
 /*$    ^
-error: DationDCL: attempt to create a 'ALL' dation upon a BASIC system dation
+error: DationDCL: attempt to create an 'ALL' dation upon a BASIC system dation
 */
 
    DCL typeFail3 DATION OUT ALPHIC CREATED(sbd);
 /*$    ^
-error: DationDCL: attempt to create ALPHIC dation upon BASIC system dation
+error: DationDCL: attempt to create an 'ALPHIC' dation upon BASIC system dation
 */
 
    DCL typeFail4 DATION OUT ALL DIM(*) FORWARD CREATED(so);
 /*$    ^
-error: DationDCL: attempt to create a 'ALL' dation upon an ALPHIC system dation
+error: DationDCL: attempt to create an 'ALL' dation upon an 'ALPHIC' system dation
 */
 
    DCL typeFail5 DATION OUT BASIC FIXED(15)  CREATED(disc);

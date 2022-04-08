@@ -51,10 +51,29 @@ public class TypeUtilities {
     public static  boolean mayBeAssignedTo( TypeDefinition lhsType, SymbolTableEntry lhs,
             ExpressionContext expression, AST m_ast) {
 
+  
         boolean isFunctionCall = lhs instanceof FormalParameter;
       
         TypeDefinition rhsType = m_ast.lookupType(expression);
         String rhsOriginalType = rhsType.toString4IMC(true);
+        if (rhsType instanceof UserDefinedSimpleType) {
+            rhsOriginalType = rhsType.toErrorString();
+        }
+        
+        if (rhsType instanceof UserDefinedTypeStructure) {
+            rhsOriginalType = rhsType.toErrorString();
+           // rhsType = ((UserDefinedTypeStructure)rhsType).getStructuredType();
+        }
+
+        String lhsOriginalType = lhsType.toString4IMC(true);
+        if (lhsType instanceof UserDefinedSimpleType) {
+            lhsOriginalType = lhsType.toErrorString();
+        }
+        
+        if (lhsType instanceof UserDefinedTypeStructure) {
+            lhsOriginalType = lhsType.toErrorString();
+            //lhsType = ((UserDefinedTypeStructure)lhsType).getStructuredType();
+        }
 
         ASTAttribute rhsAttr = m_ast.lookup(expression);
         VariableEntry rhsVariable = rhsAttr.getVariable();
@@ -129,6 +148,9 @@ public class TypeUtilities {
                 }
                 if ( rhsType instanceof TypeReference) {
                     rhsType = ((TypeReference)rhsType).getBaseType();
+                    if (rhsType instanceof TypeSameStructure) {
+                        rhsType = ((TypeSameStructure)rhsType).getContainerStructure().getStructuredType();
+                    }
                     rhsAttr.setType(rhsType);
                  
                     ruleApplied=true;
@@ -136,9 +158,21 @@ public class TypeUtilities {
 
             } else {
                 TypeDefinition lhsBaseType = ((TypeReference)lhsType).getBaseType();
+                
                 // Part 2: lhsType IS TypeReference
+                // -- lhs is reference; ths is Type Reference with compatible base type
+                if (rhsType instanceof TypeReference) {
+                    TypeDefinition rhsBaseType = ((TypeReference)rhsType).getBaseType();
+                    if (lhsBaseType.equals(rhsBaseType)) {
+                        System.out.println("checklifecycle is missing");
+                        ruleApplied = true;
+                        break;
+                    }
+                }
+                
                 // -- lhs is reference; rhs is variable of the same type and INV setting
                 // -- lhs is reference; rhs PROC returning basetype of lhs with same INV-setting
+
                 if (    (rhsSymbol != null) && rhsSymbol instanceof VariableEntry &&  
                         (lhsBaseType.equals(rhsType) &&
                         (lhsBaseType.hasAssignmentProtection() == rhsType.hasAssignmentProtection()))) { 
@@ -203,7 +237,23 @@ public class TypeUtilities {
 
                 // -- lhs is reference; rhs is real expression resulting in lValue 
                 if ((rhsAttr.isLValue())) {
-                    if (!(lhsType.equals(rhsType))) {
+                    Boolean ok = false;
+                    if (!ok && (lhsType.equals(rhsType))) {
+                        ok = true;
+                    }
+                    // test rhs is UserDefineTypeStructure
+                    
+                    if (!ok && rhsType instanceof UserDefinedTypeStructure) {
+                        String lhsTypeString = ((TypeSameStructure)lhsBaseType).getContainerStructure().getStructuredType().getName();
+                        String rhsTypeAsString = ((UserDefinedTypeStructure)rhsType).getStructuredType().getName();
+                        if (lhsTypeString.equals(rhsTypeAsString)) {
+                           ok = true;
+                        }
+                    }
+                            
+                        
+                    
+                    if (!ok) {
                         // emit special error message
                         if (isFunctionCall) {
                             ErrorStack.add("type mismatch: cannot pass expression of type "+ rhsType.toString4IMC(false)+" as " +lhsType.toString4IMC(true));
@@ -268,9 +318,9 @@ public class TypeUtilities {
                 return false;
             } else {
                 if (isFunctionCall) {
-                    ErrorStack.add("type mismatch: cannot pass "+ rhsOriginalType+" as " +lhsType.toString4IMC(true));
+                    ErrorStack.add("type mismatch: cannot pass "+ rhsOriginalType+" as " +lhsOriginalType);
                 } else {
-                    ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := "+ rhsOriginalType);//  rhsType.toString4IMC(false));
+                    ErrorStack.add("type mismatch: "+lhsOriginalType + " := "+ rhsOriginalType);//  rhsType.toString4IMC(false));
                 }
                 return false;
             }
@@ -280,7 +330,7 @@ public class TypeUtilities {
                 FormalParameter fp = (FormalParameter)lhs;
                 if (fp.passIdentical) {
                     if (fp.getType().hasAssignmentProtection()==false && rhsType.hasAssignmentProtection()==true) {
-                        ErrorStack.add("type mismatch: formal parameter "+lhsType.toString4IMC(true) + " IDENT --- got "+ rhsOriginalType);
+                        ErrorStack.add("type mismatch: formal parameter "+lhsOriginalType + " IDENT --- got "+ rhsOriginalType);
                         return false;
                     }
                 }
@@ -313,7 +363,8 @@ public class TypeUtilities {
     public static boolean isSimpleTypeInclVarCharAndRefChar(TypeDefinition type) {
         boolean result = false;
 
-        if (isSimpleType(type) || type instanceof TypeVariableChar || type instanceof TypeRefChar) {
+        if (isSimpleType(type) || type instanceof TypeVariableChar || type instanceof TypeRefChar ||
+                type instanceof UserDefinedSimpleType) {
             result = true;
         }
         return result;
@@ -331,35 +382,49 @@ public class TypeUtilities {
 
     public static boolean simpleTypeInclVarCharAndRefCharMayBeAssignedTo(TypeDefinition lhs, TypeDefinition rhs) {
         boolean result = false;
-
-        if (lhs.equals(rhs)) { 
+        TypeDefinition effectiveLhs = lhs;
+        TypeDefinition effectiveRhs = rhs;
+        
+        if (lhs instanceof UserDefinedSimpleType) {
+            effectiveLhs = ((UserDefinedSimpleType)lhs).getSimpleType();
+        }
+        if (rhs instanceof UserDefinedSimpleType) {
+            effectiveRhs = ((UserDefinedSimpleType)rhs).getSimpleType();
+        }
+        if (lhs instanceof UserDefinedTypeStructure) {
+            effectiveLhs = ((UserDefinedTypeStructure)lhs).getStructuredType();
+        }
+        if (rhs instanceof UserDefinedTypeStructure) {
+            effectiveRhs = ((UserDefinedTypeStructure)rhs).getStructuredType();
+        }
+        if (effectiveLhs.equals(effectiveRhs)) { 
             result=true;
-        } else if (lhs instanceof TypeFixed) {
-            int lhsPrecision = ((TypeFixed)lhs).getPrecision(); 
-            if (rhs instanceof TypeFixed) {
-                int rhsPrecision = ((TypeFixed)rhs).getPrecision();
+        } else if (effectiveLhs instanceof TypeFixed) {
+            int lhsPrecision = ((TypeFixed)effectiveLhs).getPrecision(); 
+            if (effectiveRhs instanceof TypeFixed) {
+                int rhsPrecision = ((TypeFixed)effectiveRhs).getPrecision();
                 if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }
             }
-        } else if (lhs instanceof TypeFloat) {
-            int lhsPrecision = ((TypeFloat)lhs).getPrecision(); 
-            if (rhs instanceof TypeFixed) {
-                int rhsPrecision = ((TypeFixed)rhs).getPrecision();
+        } else if (effectiveLhs instanceof TypeFloat) {
+            int lhsPrecision = ((TypeFloat)effectiveLhs).getPrecision(); 
+            if (effectiveRhs instanceof TypeFixed) {
+                int rhsPrecision = ((TypeFixed)effectiveRhs).getPrecision();
                 if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }
             }
-            if (rhs instanceof TypeFloat) {
-                int rhsPrecision = ((TypeFloat)rhs).getPrecision();
+            if (effectiveRhs instanceof TypeFloat) {
+                int rhsPrecision = ((TypeFloat)effectiveRhs).getPrecision();
                 if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }
             }
-        } else if (lhs instanceof TypeChar) {
-            int lhsPrecision = ((TypeChar)lhs).getPrecision(); 
-            if (rhs instanceof TypeChar) {
-                int rhsPrecision = ((TypeChar)rhs).getPrecision();
+        } else if (effectiveLhs instanceof TypeChar) {
+            int lhsPrecision = ((TypeChar)effectiveLhs).getPrecision(); 
+            if (effectiveRhs instanceof TypeChar) {
+                int rhsPrecision = ((TypeChar)effectiveRhs).getPrecision();
                 if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }
@@ -371,20 +436,20 @@ public class TypeUtilities {
                 result = true;
             }
 
-        } else if (lhs instanceof TypeVariableChar) {
-            if (rhs instanceof TypeChar) {
+        } else if (effectiveLhs instanceof TypeVariableChar) {
+            if (effectiveRhs instanceof TypeChar) {
                 // the check for correct size must be done at runtime
                 result=true;
             }
-        } else if (lhs instanceof TypeRefChar) {
-            if (rhs instanceof TypeChar ||
-                    rhs instanceof TypeVariableChar) {
+        } else if (effectiveLhs instanceof TypeRefChar) {
+            if (effectiveRhs instanceof TypeChar ||
+                    effectiveRhs instanceof TypeVariableChar) {
                 result=true;
             }
-        } else if (lhs instanceof TypeBit) {
-            int lhsPrecision = ((TypeBit)lhs).getPrecision(); 
-            if (rhs instanceof TypeBit) {
-                int rhsPrecision = ((TypeBit)rhs).getPrecision();
+        } else if (effectiveLhs instanceof TypeBit) {
+            int lhsPrecision = ((TypeBit)effectiveLhs).getPrecision(); 
+            if (effectiveRhs instanceof TypeBit) {
+                int rhsPrecision = ((TypeBit)effectiveRhs).getPrecision();
                 if (rhsPrecision<= lhsPrecision) {
                     result=true;
                 }

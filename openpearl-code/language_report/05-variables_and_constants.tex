@@ -1069,9 +1069,9 @@ increase the readability of the program, the type of a structure can be
 defined as new data type under a freely selectable identifier, and used
 under this identifier, e.g., to declare variables of this data type.
 
-Example:
-%%%\begin{enumerate}
-%%%\item
+Examples:
+\begin{enumerate}
+\item
 \begin{lstlisting}
 PROBLEM;
   ...
@@ -1094,79 +1094,80 @@ coord: TASK;
 END; ! coord
 ...     
 \end{lstlisting}
-%%%\item A task controls certain devices; it receives the control orders
-%%%from another task. Since occasionally more than one order can be
-%%%existing and the orders can be of different urgency, they are buffered
-%%%in form of a queue. Let the structure of the orders be of the (re-defined)
-%%%type OrderType; let this even contain the urgency criteria for
-%%%arranging new orders. The reference variables Next\_Order and Free,
-%%%respectively, as shown in Figure~\ref{kette}, point at the order to be treated next or the next free position
-%%%in the queue order string, respectively; starting with Free, let the free
-%%%positions be interlinked as well. Let the queue be not longer than 10
-%%%elements.
-%%%
-%%%
-%%%\begin{figure}
-%%%\setlength{\unitlength}{0.0007500in}%
-%%%\begin{picture}(7539,2889)(124,-2110)
-%%%\thicklines
-%%%\put(451,-1411){\framebox(1035,1350){}}
-%%%\put(2071,-1411){\framebox(1035,1350){}}
-%%%\put(3646,-1411){\framebox(1035,1350){}}
-%%%\put(6121,-1411){\framebox(1035,1350){}}
-%%%\thinlines
-%%%\put(451,-961){\line( 1, 0){1035}}
-%%%\put(946,-1276){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Succ}}}
-%%%\put(901,-421){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Order}}}
-%%%\put(901,-781){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots}}}
-%%%\put(2071,-961){\line( 1, 0){1035}}
-%%%\put(2566,-1276){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Succ}}}
-%%%\put(2521,-421){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Order}}}
-%%%\put(2521,-781){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
-%%%\put(3646,-961){\line( 1, 0){1035}}
-%%%\put(4141,-1276){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Succ}}}
-%%%\put(4096,-421){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Order}}}
-%%%\put(4096,-781){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
-%%%\put(6121,-961){\line( 1, 0){1035}}
-%%%\put(6616,-1276){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Succ}}}
-%%%\put(6571,-421){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Order}}}
-%%%\put(6571,-781){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
-%%%\put(4681,-1186){\line( 1, 0){270}}
-%%%\put(4951,-1186){\line( 0,-1){450}}
-%%%\put(4951,-1636){\line(-1, 0){4815}}
-%%%\put(136,-1636){\line( 0, 1){1260}}
-%%%\put(136,-376){\vector( 1, 0){315}}
-%%%\put(3106,-1186){\line( 1, 0){270}}
-%%%\put(3376,-1186){\line( 0, 1){1575}}
-%%%\put(3376,389){\line( 1, 0){2250}}
-%%%\put(5626,389){\line( 0,-1){765}}
-%%%\put(5626,-376){\line( 1, 0){495}}
-%%%\put(1486,-1186){\line( 1, 0){315}}
-%%%\put(1801,-1186){\line( 0,-1){675}}
-%%%\put(1801,-1861){\vector( 1, 0){450}}
-%%%\put(2566,614){\vector( 0,-1){675}}
-%%%\put(4186,614){\line( 0,-1){180}}
-%%%\put(4186,344){\vector( 0,-1){405}}
-%%%\put(7156,-1186){\line( 1, 0){495}}
-%%%\put(7651,-1186){\line( 0, 1){1575}}
-%%%\put(7651,389){\vector(-1, 0){450}}
-%%%\put(2566,659){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Next\_Order}}}
-%%%\put(4186,659){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Free}}}
-%%%\put(2476,-1861){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
-%%%\put(5401,-736){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
-%%%\put(7021,389){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
-%%%\put(946,-2086){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}1}}}
-%%%\put(2521,-2086){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}2}}}
-%%%\put(4141,-2086){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}3}}}
-%%%\put(6616,-2086){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}10}}}
-%%%\end{picture}
-%%%\caption{}
-%%%\label{kette}
-%%%\end{figure}
-%%%
-%%%
-%%%The order string can be declared as follows:
-%%%
+\item A task controls certain devices; it receives the control orders
+from another task. Since occasionally more than one order can be
+existing and the orders can be of different urgency, they are buffered
+in form of a queue. Let the structure of the orders be of the (re-defined)
+type OrderType; let this even contain the urgency criteria for
+arranging new orders. The reference variables Next\_Order and Free,
+respectively, as shown in Figure~\ref{kette}, point at the order to be treated next or the next free position
+in the queue order string, respectively; starting with Free, let the free
+positions be interlinked as well. Let the queue be not longer than 10
+elements.
+
+
+\begin{figure}
+\setlength{\unitlength}{0.0007500in}%
+\begin{picture}(7539,2889)(124,-2110)
+\thicklines
+\put(451,-1411){\framebox(1035,1350){}}
+\put(2071,-1411){\framebox(1035,1350){}}
+\put(3646,-1411){\framebox(1035,1350){}}
+\put(6121,-1411){\framebox(1035,1350){}}
+\thinlines
+\put(451,-961){\line( 1, 0){1035}}
+\put(946,-1276){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Succ}}}
+\put(901,-421){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Order}}}
+\put(901,-781){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots}}}
+\put(2071,-961){\line( 1, 0){1035}}
+\put(2566,-1276){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Succ}}}
+\put(2521,-421){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Order}}}
+\put(2521,-781){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
+\put(3646,-961){\line( 1, 0){1035}}
+\put(4141,-1276){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Succ}}}
+\put(4096,-421){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Order}}}
+\put(4096,-781){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
+\put(6121,-961){\line( 1, 0){1035}}
+\put(6616,-1276){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Succ}}}
+\put(6571,-421){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Order}}}
+\put(6571,-781){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
+\put(4681,-1186){\line( 1, 0){270}}
+\put(4951,-1186){\line( 0,-1){450}}
+\put(4951,-1636){\line(-1, 0){4815}}
+\put(136,-1636){\line( 0, 1){1260}}
+\put(136,-376){\vector( 1, 0){315}}
+\put(3106,-1186){\line( 1, 0){270}}
+\put(3376,-1186){\line( 0, 1){1575}}
+\put(3376,389){\line( 1, 0){2250}}
+\put(5626,389){\line( 0,-1){765}}
+\put(5626,-376){\line( 1, 0){495}}
+\put(1486,-1186){\line( 1, 0){315}}
+\put(1801,-1186){\line( 0,-1){675}}
+\put(1801,-1861){\vector( 1, 0){450}}
+\put(2566,614){\vector( 0,-1){675}}
+\put(4186,614){\line( 0,-1){180}}
+\put(4186,344){\vector( 0,-1){405}}
+\put(7156,-1186){\line( 1, 0){495}}
+\put(7651,-1186){\line( 0, 1){1575}}
+\put(7651,389){\vector(-1, 0){450}}
+\put(2566,659){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Next\_Order}}}
+\put(4186,659){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}Free}}}
+\put(2476,-1861){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
+\put(5401,-736){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
+\put(7021,389){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}\ldots }}}
+\put(946,-2086){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}1}}}
+\put(2521,-2086){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}2}}}
+\put(4141,-2086){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}3}}}
+\put(6616,-2086){\makebox(0,0)[b]{\smash{\SetFigFont{10}{12.0}{rm}10}}}
+\end{picture}
+\caption{}
+\label{kette}
+\end{figure}
+
+
+\begin{minipage}{\linewidth}
+The order string can be declared as follows:
+
 %%%\begin{tabbing}
 %%%{\bf TYPE} \= \x \= \x \= \kill
 %%%... \> \> \> \\
@@ -1178,28 +1179,47 @@ END; ! coord
 %%%           \> (Next\_Order, Free) {\bf REF} StringElement;\\
 %%%... \> \> \>
 %%%\end{tabbing}
-%%%
-%%%After initialising and arranging various orders, a finished order can be
-%%%removed from the queue as follows (let Help be a variable of type REF
-%%%string element):
-%%%
-%%%...\\
-%%%Help := Next\_Order;
-%%%Next\_Order := Next\_Order.Succ;\\
-%%%Help.Succ := Free\\
-%%%Free := Help\\
-%%%...
-%%%
-%%%These statements are also further examples for implicit
-%%%dereferentiation. The order string can be initialised as follows:
-%%%
+\begin{lstlisting}
+...
+TYPE StringElement STRUCT 
+      [ Order OrderType,
+        ...
+        Succ REF StringElement
+      ];
+DCL OrderString(10) StringElement,
+    (Next_Order, Free) REF StringElement;
+...
+\end{lstlisting}
+\end{minipage}
+
+After initialising and arranging various orders, a finished order can be
+removed from the queue as follows (let Help be a variable of type REF
+StringElement):
+
+\begin{lstlisting}
+...
+Help := Next_Order;
+Next_Order := Next_Order.Succ;
+Help.Succ := Free
+Free := Help
+...
+\end{lstlisting}
+These statements are also further examples for implicit
+dereferentiation. The order string can be initialised as follows:
+
 %%%{\bf FOR} i {\bf TO} 9\\
 %%%\x {\bf REPEAT} \\
 %%%\x \x OrderString(i).Succ:=OrderString(i+1);\\
 %%%\x {\bf END};\\
 %%%OrderString(10).Succ:={\bf NIL};
-%%%\end{enumerate}
-%%%
+\begin{lstlisting}
+FOR i TO 9 REPEAT
+   OrderString(i).Succ := OrderString(i+1);
+END;
+OrderString(10).Succ:=NIL;
+\end{lstlisting}
+\end{enumerate}
+
 Generally, a new data type is defined as follows:
 
 \begin{grammarframe}
@@ -1217,6 +1237,7 @@ global objects have to be repeated in all used modules.
 
 \begin{minipage}{\linewidth}
 Example:
+
 \begin{multicols}{2}
 \begin{lstlisting}
 MODULE (ModuleA);
@@ -1228,6 +1249,7 @@ DCL x MyType GLOBAL;
 ...           
 MODEND;     
 \end{lstlisting}
+
 \columnbreak
 \begin{lstlisting}
 MODULE (ModuleB);

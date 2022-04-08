@@ -127,10 +127,13 @@ public class TypeDation extends TypeDefinition {
     }
 
     public String getDataAsString() {
-        String s="";
-        if (m_alphic) s+="ALPHIC";
-        if (m_typeOfTransmission!= null) {
-            s+=m_typeOfTransmission;
+        String s=null;
+        if (m_alphic) {
+            s="ALPHIC";
+        } else if (m_typeOfTransmissionAsType!= null) {
+            s=m_typeOfTransmissionAsType.toString4IMC(true);
+        } else {
+            s="ALL";
         }
         return s;
     }
@@ -151,9 +154,23 @@ public class TypeDation extends TypeDefinition {
         return s;
     }
     
+    /**
+     * return type of transmission for the IMC
+     */
     public String toString4IMC(boolean isInStructure) {
-        
-        return toString();
+        String s=this.getName()+" ";
+        if (m_in) s += "IN";
+        if (m_out) s += "OUT";
+        if (m_systemDation) s+= " SYSTEM";
+        if (m_basic) s+=" BASIC";
+        s += " ";
+        s += getDataAsString();
+        s += getTypeAsString();
+
+        if (m_global != null) s+= " GLOBAL("+m_global+")";      
+        if (m_created_on != null) s+= " CREATED("+m_created_on.getName()+")";
+        else if (m_createdOnAsString!= null) s+= " CREATED("+m_createdOnAsString+")";
+        return s;        
     }
 
     public boolean isIn() {
@@ -204,13 +221,13 @@ public class TypeDation extends TypeDefinition {
         this.m_basic = m_basic;
     }
 
-    public String getTypeOfTransmission() {
-        return m_typeOfTransmission;
-    }
-
-    public void setTypeOfTransmission(String m_typeOfTransmission) {
-        this.m_typeOfTransmission = m_typeOfTransmission;
-    }
+//    public String getTypeOfTransmission() {
+//        return m_typeOfTransmission;
+//    }
+//
+//    public void setTypeOfTransmission(String m_typeOfTransmission) {
+//        this.m_typeOfTransmission = m_typeOfTransmission;
+//    }
 
     /**
      * 

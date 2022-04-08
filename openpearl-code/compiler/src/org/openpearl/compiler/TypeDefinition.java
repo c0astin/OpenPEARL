@@ -80,6 +80,17 @@ public abstract class TypeDefinition {
         return s;
     }
     
+    /**
+     * create a representation of the type for error messages
+     * this is mainly the same as toString() except in TypeStructure and UserDefinedTypeStructure
+     * In these cases the debugging information with component index and alias is suppressed
+     * 
+     * @return the PEARL text for the typoe definition
+     */
+    public String toErrorString() {
+        return toString();
+    }
+    
     abstract public String toString4IMC(boolean isInStructure);
     
     public ST toST(STGroup group) {

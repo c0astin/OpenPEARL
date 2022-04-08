@@ -220,7 +220,9 @@ implements OpenPearlVisitor<Void> {
 
     @Override
     public Void visitTypeDefinition(TypeDefinitionContext ctx) {
-
+        Log.debug(
+                "SymbolTableVisitor:visitTypeDefinition:ctx"
+                        + CommonUtils.printContext(ctx));
         m_currentUserdefinedType = new UserDefinedType(ctx.identifier());
         m_isInSpecification = false;
         m_isGlobal = false;
@@ -229,6 +231,9 @@ implements OpenPearlVisitor<Void> {
 
         if (ctx.simpleType() != null) {
             visit(ctx.simpleType());
+            UserDefinedSimpleType udst = new UserDefinedSimpleType(ctx.identifier().ID().toString(),m_type);
+            m_currentUserdefinedType.setType(udst);
+    
         } else if (ctx.typeStructure()!= null) {
             UserDefinedTypeStructure uts = new UserDefinedTypeStructure(ctx.identifier().ID().toString());
             
@@ -236,7 +241,7 @@ implements OpenPearlVisitor<Void> {
             visit(ctx.typeStructure());
             uts.setStructuredType(m_type);
         }
-        m_currentUserdefinedType.setType(m_type);
+        
         m_currentUserdefinedType = null;
 
         return null;
@@ -259,6 +264,8 @@ implements OpenPearlVisitor<Void> {
             } else {
                 ErrorStack.add(name + " should be user defined type -- got " +se);
             }
+        } else {
+            ErrorStack.add( name + " is no name of a TYPE");
         }
         ErrorStack.leave();
         return null;
@@ -335,6 +342,7 @@ implements OpenPearlVisitor<Void> {
         String globalId = null;
         LinkedList<FormalParameter> formalParameters = null;
         ASTAttribute resultType = null;
+        m_isGlobal = false;
 
         Log.debug(
                 "SymbolTableVisitor:visitProcedureDeclaration:ctx" + CommonUtils.printContext(ctx));
@@ -625,7 +633,7 @@ implements OpenPearlVisitor<Void> {
     @Override
     public Void visitProblemPartDataAttribute(ProblemPartDataAttributeContext ctx) {
         List<InitElementContext> initElements = null;
-        //String sCtx = ctx.getText();
+        String sCtx = ctx.getText();
         m_isGlobal = false;
         m_globalName = null;
         m_hasAllocationProtection = false;
@@ -682,10 +690,16 @@ implements OpenPearlVisitor<Void> {
                     ErrorStack.add(
                             initElements.get(maxOfInitializers), "INIT", "too many initializers");
                 }
-            } else if (m_type instanceof TypeStructure) {
+            } else if (m_type instanceof TypeStructure || m_type instanceof UserDefinedTypeStructure) {
                 // need ArrayOrStructureInitialiser
-                int requiredInitializers =
+                int requiredInitializers;
+                if (m_type instanceof TypeStructure) {
+                   requiredInitializers =
                         nbrOfVariables * ((TypeStructure) (m_type)).getTotalNoOfElements();
+                } else {
+                    requiredInitializers = nbrOfVariables *
+                            ((TypeStructure)(((UserDefinedTypeStructure)m_type).getStructuredType())).getTotalNoOfElements();
+                }
                 if (nbrOfInitializer < requiredInitializers) {
                     ErrorStack.add(
                             m_identifierDenotationContext,
@@ -762,9 +776,14 @@ implements OpenPearlVisitor<Void> {
                         init = new ArrayOrStructureInitializer(startCtx, ali);
                     }
 
-                } else if (m_type instanceof TypeStructure) {
+                } else if (m_type instanceof TypeStructure || m_type instanceof UserDefinedTypeStructure) {
                     // need ArrayOrStructureInitialiser
-                    int maxOfInitializers = ((TypeStructure) (m_type)).getTotalNoOfElements();
+                    int maxOfInitializers;
+                    if (m_type instanceof TypeStructure) {
+                        maxOfInitializers = ((TypeStructure) (m_type)).getTotalNoOfElements();
+                    } else {
+                        maxOfInitializers = ((TypeStructure)(((UserDefinedTypeStructure)(m_type)).getStructuredType())) .getTotalNoOfElements();
+                    }
                     int remainingInitializers = nbrOfInitializer - nextInitializerIndex;
                     if (remainingInitializers >= maxOfInitializers) {
                         ParserRuleContext startCtx = initElements.get(nextInitializerIndex);
@@ -990,12 +1009,13 @@ implements OpenPearlVisitor<Void> {
             hasAssignmentProtection = true;
         }
         visitChildren(ctx);
-        m_type.setHasAssignmentProtection(hasAssignmentProtection);
-        if (hasVistualDimensionList) {
-            m_type = new TypeArraySpecification(m_type, dimensions);
+        if (m_type != null) {
+            m_type.setHasAssignmentProtection(hasAssignmentProtection);
+            if (hasVistualDimensionList) {
+                m_type = new TypeArraySpecification(m_type, dimensions);
+            }
+            m_type = new TypeReference(m_type);
         }
-        m_type = new TypeReference(m_type);
-
         return null;
     }
 
@@ -1006,24 +1026,6 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
     
-//    @Override
-//    public Void visitIdentifierForType(IdentifierForTypeContext ctx) {
-//        ErrorStack.enter(ctx);
-//        m_type = null;
-//        String idAsString = ctx.ID().getText();
-//        SymbolTableEntry se = m_currentSymbolTable.lookup(idAsString);
-//        if (se == null) {
-//            ErrorStack.add("unknown identifier '"+idAsString+"'");
-//        } else {
-//            if (se instanceof UserDefinedType) {
-//                m_type = ((UserDefinedType) se).getType();
-//            } else {
-//                ErrorStack.add("expected user defined type -- got "+se.getClass());
-//            }
-//        }
-//        ErrorStack.leave();
-//        return null;
-//    }
 
     @Override
     public Void visitTypeDation(TypeDationContext ctx) {
@@ -1068,7 +1070,7 @@ implements OpenPearlVisitor<Void> {
                         d.setTypeOfTransmission(m_type);
                     }
                     // maybe we need some treatment for STRUCT
-                    d.setTypeOfTransmission(c.getText());
+                    //d.setTypeOfTransmission(c.getText());
                 }
             }
         }
@@ -1121,7 +1123,7 @@ implements OpenPearlVisitor<Void> {
             ErrorStack.leave();
         }
         m_type = d;
-        Log.warn("SybolTableVisitor: treatment of TypeDation must be more elaboarate");
+        Log.warn("SmybolTableVisitor: treatment of TypeDation must be more elaboarate");
         return null;
     }
 
@@ -1167,11 +1169,12 @@ implements OpenPearlVisitor<Void> {
                 resultType = getResultAttribute((ResultAttributeContext) c);
         //        resultAttr = new ASTAttribute(resultType);
             } else if (c instanceof ListOfFormalParametersContext) {
-                m_formalParameters =
+                formalParameters =
                         getListOfFormalParameters(
                                 (ListOfFormalParametersContext) c);
             }
         }
+        m_formalParameters = formalParameters; // required for SPC PROC
         m_type = new TypeProcedure(formalParameters, resultType);
 
         return null;
@@ -1434,21 +1437,22 @@ implements OpenPearlVisitor<Void> {
             controlVariable.setLoopControlVariable();
             m_currentSymbolTable.enter(controlVariable);
         }
+        
+        visitChildren(ctx.loopBody());
 
-        for (int i = 0; i < ctx.loopBody().variableDeclaration().size(); i++) {
-            visitVariableDeclaration(ctx.loopBody().variableDeclaration(i));
-        }
-
-
-        for (int i = 0; i < ctx.loopBody().statement().size(); i++) {
-            StatementContext stmt = ctx.loopBody().statement(i);
-            visit(ctx.loopBody().statement(i));
-            //            if (stmt.block_statement() != null) {
-            //                visitBlock_statement(stmt.block_statement());
-            //            } else if (stmt.unlabeled_statement() != null) {
-            //                visitUnlabeled_statement(stmt.unlabeled_statement());
-            //            }
-        }
+//        for (int i = 0; i < ctx.loopBody().variableDeclaration().size(); i++) {
+//            visitVariableDeclaration(ctx.loopBody().variableDeclaration(i));
+//        }
+//        
+//        for (int i = 0; i < ctx.loopBody().statement().size(); i++) {
+//            StatementContext stmt = ctx.loopBody().statement(i);
+//            visit(ctx.loopBody().statement(i));
+//            //            if (stmt.block_statement() != null) {
+//            //                visitBlock_statement(stmt.block_statement());
+//            //            } else if (stmt.unlabeled_statement() != null) {
+//            //                visitUnlabeled_statement(stmt.unlabeled_statement());
+//            //            }
+//        }
 
         m_currentSymbolTable = m_currentSymbolTable.ascend();
         return null;
@@ -1915,14 +1919,14 @@ implements OpenPearlVisitor<Void> {
     @Override
     public Void visitTypeStructure(TypeStructureContext ctx) {
         Log.debug("SymbolTableVisitor:visitTypeStructure:ctx" + CommonUtils.printContext(ctx));
-
+       
         m_typeStructure = new TypeStructure();
         m_type = m_typeStructure;
 
         for (int i = 0; i < ctx.structureComponent().size(); i++) {
             visitStructureComponent(ctx.structureComponent(i));
         }
-
+        
         m_type = m_typeStructure;
 
         return null;

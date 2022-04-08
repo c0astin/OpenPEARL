@@ -2,6 +2,8 @@ package org.openpearl.compiler.SymbolTable;
 
 import org.openpearl.compiler.OpenPearlParser;
 import org.openpearl.compiler.TypeDefinition;
+import org.openpearl.compiler.UserDefinedSimpleType;
+import org.openpearl.compiler.UserDefinedTypeStructure;
 
 public class UserDefinedType extends SymbolTableEntry {
     private TypeDefinition m_type;
@@ -20,8 +22,14 @@ public class UserDefinedType extends SymbolTableEntry {
     }
     
     public String toString(int level) {
-        
-        return  indentString(level) + super.toString(level) + "TYPE (aka: " + m_type+" )";
+        String s = indentString(level) + super.toString(level) + "TYPE " ;
+    
+        if (m_type instanceof UserDefinedSimpleType) {
+           s += ((UserDefinedSimpleType)m_type).getSimpleType();
+        } else {
+            s += ((UserDefinedTypeStructure)m_type).toErrorString();
+        }
+        return s;
     }
 
 }

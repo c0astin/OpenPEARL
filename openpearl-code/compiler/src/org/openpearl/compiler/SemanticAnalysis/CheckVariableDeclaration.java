@@ -96,24 +96,7 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
         }
         List<VariableEntry> listOfVariables = m_symboltable.getAllVariableDeclarations();
         for (VariableEntry v : listOfVariables) {
-//            if (v.getType() instanceof TypeStructure|| 
-//                    (v.getType() instanceof TypeArray && (((TypeArray)(v.getType())).getBaseType() instanceof TypeStructure))) {
-//                System.out.println(v.getName() + " has components ");
-//                StructureComponent comp;
-//                TypeStructure ts=null;
-//                if (v.getType() instanceof TypeStructure) {
-//                    ts =  (TypeStructure)v.getType();
-//                } else {
-//                    ts = (TypeStructure)(((TypeArray)(v.getType())).getBaseType());
-//                }
-//                comp = ts.getFirstElement();
-//                while (comp != null) {
-//                    System.out.println("   "+comp.m_type);
-//                    comp = ts.getNextElement();
-//                }
-//                System.out.println("---");
-//                
-//            }
+
             if (v.getInitializer() != null) {
                 checkInitializer(v);
             }
@@ -169,7 +152,7 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
                     }
                 }
             }
-        } else if (isScalarType(v.getType())) {
+        } else if (isScalarType(v.getType()) || v.getType() instanceof UserDefinedSimpleType) {
             if (v.getType() instanceof TypeReference) {
                 checkRefInitializer(v.getType(),v.getInitializer());
                 
@@ -178,8 +161,13 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
                checkTypes(v.getType(), si);
             }
 
-        } else if (v.getType() instanceof TypeStructure){
-            StructureComponent comp = ((TypeStructure)(v.getType())).getFirstElement();
+        } else if (v.getType() instanceof TypeStructure || v.getType() instanceof UserDefinedTypeStructure){
+            StructureComponent comp;
+            if (v.getType() instanceof TypeStructure) {
+              comp = ((TypeStructure)(v.getType())).getFirstElement();
+            } else {
+                comp = ((TypeStructure)((UserDefinedTypeStructure)(v.getType())).getStructuredType()).getFirstElement(); 
+            }
             int nextInitializer = 0;
             ArrayOrStructureInitializer asi = (ArrayOrStructureInitializer)(v.getInitializer());
             do {
@@ -193,7 +181,12 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
                     //  is Reference Initializer
                     checkRefInitializer(t, init);
                 }
-                comp = ((TypeStructure)(v.getType())).getNextElement();
+                if (v.getType() instanceof TypeStructure) {
+                    comp = ((TypeStructure)(v.getType())).getNextElement();
+                  } else {
+                      comp = ((TypeStructure)((UserDefinedTypeStructure)(v.getType())).getStructuredType()).getNextElement(); 
+                  }
+
             } while (comp!= null);
         } else {
             ErrorStack.addInternal(v.getCtx(),"CheckVariableDeclaration","missing alternative@137 for "+v.getType());
@@ -271,7 +264,7 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
                 ok = true;
             }
             if (ok && baseTypeOfVariableOrComponent.hasAssignmentProtection()==false &&
-                    attrInit.isConstant()) {
+                    !(attrInit.getType() instanceof TypeReference) && attrInit.getType().hasAssignmentProtection()) {
                 ok = false;
             }
             if (!ok) {
@@ -308,33 +301,38 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
     }
 
     private boolean checkTypeCompatibility(TypeDefinition typeOfVariable, TypeDefinition typeOfInitializer, ParserRuleContext ctxOfInitElement) {
-        
-        if (typeOfVariable instanceof TypeFixed && typeOfInitializer instanceof TypeFixed) {
-            if (((TypeFixed)typeOfVariable).getPrecision() < ((TypeFixed)typeOfInitializer).getPrecision()) {
-                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+        TypeDefinition effectiveTypeOfvariable = typeOfVariable;
+        String typeOfVariable4Error = typeOfVariable.toString();
+        if (typeOfVariable instanceof UserDefinedSimpleType) {
+            effectiveTypeOfvariable = ((UserDefinedSimpleType)typeOfVariable).getSimpleType();
+            typeOfVariable4Error += " (aka: "+effectiveTypeOfvariable+")";
+        }
+        if (effectiveTypeOfvariable instanceof TypeFixed && typeOfInitializer instanceof TypeFixed) {
+            if (((TypeFixed)effectiveTypeOfvariable).getPrecision() < ((TypeFixed)typeOfInitializer).getPrecision()) {
+                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
             }
-        } else if (typeOfVariable instanceof TypeFloat && typeOfInitializer instanceof TypeFloat) {
-                if (((TypeFloat)typeOfVariable).getPrecision() < ((TypeFloat)typeOfInitializer).getPrecision()) {
-                    ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+        } else if (effectiveTypeOfvariable instanceof TypeFloat && typeOfInitializer instanceof TypeFloat) {
+                if (((TypeFloat)effectiveTypeOfvariable).getPrecision() < ((TypeFloat)typeOfInitializer).getPrecision()) {
+                    ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
                 }
-        } else if (typeOfVariable instanceof TypeFloat && typeOfInitializer instanceof TypeFixed) {
-            if (((TypeFloat)typeOfVariable).getPrecision() < ((TypeFixed)typeOfInitializer).getPrecision()) {
-                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+        } else if (effectiveTypeOfvariable instanceof TypeFloat && typeOfInitializer instanceof TypeFixed) {
+            if (((TypeFloat)effectiveTypeOfvariable).getPrecision() < ((TypeFixed)typeOfInitializer).getPrecision()) {
+                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
             }
-        } else if (typeOfVariable instanceof TypeChar && typeOfInitializer instanceof TypeChar) {
-            if (((TypeChar)typeOfVariable).getPrecision() < ((TypeChar)typeOfInitializer).getPrecision()) {
-                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+        } else if (effectiveTypeOfvariable instanceof TypeChar && typeOfInitializer instanceof TypeChar) {
+            if (((TypeChar)effectiveTypeOfvariable).getPrecision() < ((TypeChar)typeOfInitializer).getPrecision()) {
+                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
             }
-        } else if (typeOfVariable instanceof TypeBit && typeOfInitializer instanceof TypeBit) {
-            if (((TypeBit)typeOfVariable).getPrecision() < ((TypeBit)typeOfInitializer).getPrecision()) {
-                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+        } else if (effectiveTypeOfvariable instanceof TypeBit && typeOfInitializer instanceof TypeBit) {
+            if (((TypeBit)effectiveTypeOfvariable).getPrecision() < ((TypeBit)typeOfInitializer).getPrecision()) {
+                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
             }
-        } else if (typeOfVariable instanceof TypeSemaphore) {
+        } else if (effectiveTypeOfvariable instanceof TypeSemaphore) {
            if (!(typeOfInitializer instanceof TypeFixed)) {  
-               ErrorStack.add(ctxOfInitElement,"type mismatch in PRESET",typeOfVariable +" with " + typeOfInitializer);
+               ErrorStack.add(ctxOfInitElement,"type mismatch in PRESET",typeOfVariable4Error +" with " + typeOfInitializer);
            }
-        } else if (!typeOfVariable.equals(typeOfInitializer) ) {
-            ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable +" := " + typeOfInitializer);
+        } else if (!effectiveTypeOfvariable.equals(typeOfInitializer) ) {
+            ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
         } 
         
         return false;

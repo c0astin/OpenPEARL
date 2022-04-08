@@ -432,6 +432,7 @@ signal_type() ::= <%
  SIGNAL not available, yet
 %>
  
+
 dation_type(isAlphic, isType, isBasic) ::= <%
 <if(isAlphic)>pearlrt::DationPG
 <else>
@@ -1175,9 +1176,13 @@ pearlrt::Clock
 >>
 
 
-
 TypeBitString(length) ::= <<
 pearlrt::BitString\<<length>\>
+>>
+
+// TypeStructure for size calculation in DationRW and DationTS(?)
+TypeStructure(name) ::= <<
+<name>
 >>
 
 Constant(IntegerConstant,TimeConstant,DurationConstant,FloatingPointConstant,StringConstant,BitStringConstant) ::=  <%
