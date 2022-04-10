@@ -295,17 +295,17 @@ implements OpenPearlVisitor<Void> {
         Log.debug("SymbolTableVisitor:visitTaskDeclaration:ctx" + CommonUtils.printContext(ctx));
 
         String s = ctx.nameOfModuleTaskProc().ID().toString();
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(s);
-        if (entry != null) {
-            CommonErrorMessages.doubleDeclarationError(
-                    s, ctx.nameOfModuleTaskProc(), entry.getCtx());
-        } else {
-            entry = this.m_currentSymbolTable.lookup(s);
-            if (entry != null) {
-                CommonErrorMessages.doubleDeclarationWarning(
-                        "task definition ", s, ctx.nameOfModuleTaskProc(), entry.getCtx());
-            }
-        }
+//        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(s);
+//        if (entry != null) {
+//            CommonErrorMessages.doubleDeclarationError(
+//                    s, ctx.nameOfModuleTaskProc(), entry.getCtx());
+//        } else {
+//            entry = this.m_currentSymbolTable.lookup(s);
+//            if (entry != null) {
+//                CommonErrorMessages.doubleDeclarationWarning(
+//                        "task definition ", s, ctx.nameOfModuleTaskProc(), entry.getCtx());
+//            }
+//        }
 
         isMain = ctx.task_main() != null;
         if (ctx.priority() != null) {
@@ -411,11 +411,20 @@ implements OpenPearlVisitor<Void> {
 
                 entry = this.m_currentSymbolTable.lookup(formalParameter.getName());
                 if (entry != null) {
-                    CommonErrorMessages.doubleDeclarationWarning(
-                            "formal parameter ",
-                            formalParameter.getName(),
-                            formalParameter.getCtx(),
-                            entry.getCtx());
+                    if (entry instanceof FormalParameter) {
+
+                        CommonErrorMessages.doubleDeclarationError(
+                                formalParameter, entry);
+                        //"formal parameter ",
+                        //                            formalParameter.getName(),
+                        //                            formalParameter.getCtx(),
+                        //                            entry.getCtx());
+                    } else {
+                        CommonErrorMessages.doubleDeclarationWarning("formal parameter ",
+                                formalParameter.getName(),
+                                formalParameter.getCtx(),
+                                entry.getCtx());
+                    }
                 }
                 this.m_currentSymbolTable.enter(formalParameter);
             }
@@ -1440,19 +1449,6 @@ implements OpenPearlVisitor<Void> {
         
         visitChildren(ctx.loopBody());
 
-//        for (int i = 0; i < ctx.loopBody().variableDeclaration().size(); i++) {
-//            visitVariableDeclaration(ctx.loopBody().variableDeclaration(i));
-//        }
-//        
-//        for (int i = 0; i < ctx.loopBody().statement().size(); i++) {
-//            StatementContext stmt = ctx.loopBody().statement(i);
-//            visit(ctx.loopBody().statement(i));
-//            //            if (stmt.block_statement() != null) {
-//            //                visitBlock_statement(stmt.block_statement());
-//            //            } else if (stmt.unlabeled_statement() != null) {
-//            //                visitUnlabeled_statement(stmt.unlabeled_statement());
-//            //            }
-//        }
 
         m_currentSymbolTable = m_currentSymbolTable.ascend();
         return null;

@@ -2924,11 +2924,11 @@ implements OpenPearlVisitor<Void> {
                 m_ast.put(ctx, expressionResult);
             } else {
                 ErrorStack.add(
-                        "type mismatch: expected BIT +"
+                        "type mismatch: expected BIT "
                                 + operation
                                 + " BIT -- got"
                                 + op1.getType().toString()
-                                + " CAT "
+                                + operation
                                 + op2.getType().toString());
             }
         }
@@ -3599,7 +3599,7 @@ implements OpenPearlVisitor<Void> {
 
         Log.debug("ExpressionTypeVisitor:visitName:ctx=" + CommonUtils.printContext(ctx));
         Log.debug("ExpressionTypeVisitor:visitName:id=" + ctx.ID().toString());
-        // System.out.println("name = "+ ctx.getText());
+       // System.out.println("name = "+ ctx.getText());
 
         ErrorStack.enter(ctx, ctx.ID().toString());
 

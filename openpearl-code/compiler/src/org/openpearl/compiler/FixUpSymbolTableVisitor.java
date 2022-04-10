@@ -141,8 +141,7 @@ public class FixUpSymbolTableVisitor extends OpenPearlBaseVisitor<Void>
                 //                throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(), ctx.start.getCharPositionInLine());
             }
         } else {
-            throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
+            ErrorStack.addInternal(ctx,"missing symbol in symbol table", s);
         }
 
         return null;

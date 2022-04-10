@@ -100,18 +100,6 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
-    /* @Override
-    public Void visitProcedureDeclaration(OpenPearlParser.ProcedureDeclarationContext ctx) {
-        if (m_debug) {
-            System.out.println( "Semantic: CheckProcedureDeclaration: visitProcedureDeclaration");
-        }
-
-        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-        visitChildren(ctx);
-        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-        return null;
-    }
-     */
 
     @Override
     public Void visitTaskDeclaration(OpenPearlParser.TaskDeclarationContext ctx) {
@@ -204,7 +192,7 @@ implements OpenPearlVisitor<Void> {
                     if (lastStmnt.unlabeled_statement().returnStatement() == null) {
                         ErrorStack.add("must end with RETURN (" + m_typeOfReturns.toString() + ")");
 
-                    }
+                    } 
                 }
             }
         }
@@ -281,6 +269,7 @@ implements OpenPearlVisitor<Void> {
                     TypeUtilities.deliversTypeOrEmitErrorMessage(ctx.expression(), m_typeOfReturns,  m_ast, "RETURN"); 
                 } else if (m_typeOfReturns instanceof TypeReference) {
                     String typeOfExpression = attr.getType().toString4IMC(true);
+                    if (!attr.getType().equals(m_typeOfReturns)) {
                     TypeDefinition t= 
                     TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(attr,
                             ((TypeReference)m_typeOfReturns).getBaseType());
@@ -289,6 +278,7 @@ implements OpenPearlVisitor<Void> {
                                 + typeOfExpression + "'");
                     }
                     int x=0;
+                    }
                 }
 //                // check for implicit dereference /reference possibilities
 //                // --> base types must be compatible
@@ -340,7 +330,15 @@ implements OpenPearlVisitor<Void> {
                     ASTAttribute attrRhs = m_ast.lookup(ctx.expression());
                     if (attrRhs.getVariable() != null) {
                         int level = attrRhs.getVariable().getLevel();
-                        if (level > 1) {
+                        
+                        // level 1: the module statement
+                        // level 2: static, global,external objects, as well as formal parameters
+                        // level 3: task/proc local top level objects
+                        // level 4...: deeper nested blocks/loops
+                        
+                        // objects, which are related to a formal parameter have static lifetimem,
+                        //   since we have no nested procedures/tasks
+                        if (level > 2) {
                             ErrorStack.add("life cycle of '" + attrRhs.getVariable().getName()
                                     + "' is too short");
                         }

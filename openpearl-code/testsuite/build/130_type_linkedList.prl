@@ -21,14 +21,52 @@ t: TASK MAIN;
    printList;
    add(2);
    printList;
+   add(3);
+   add(2);
+   add(3);
+   add(2);
+   add(3);
+   add(2);
+   add(3);
+   add(2);
 
+   PUT 'search items with payload 2 ' TO stdout BY SKIP, A, SKIP;
+   i = search4first(2);
+   IF i ISNT NIL THEN
+      PUT 'payload of ',i.index, ' is ',i.payload.data TO stdout BY A,F(3),A,F(3),SKIP;
+      WHILE i ISNT NIL REPEAT
+         i = search4next(2);
+         IF i ISNT NIL THEN
+            PUT 'payload of ',i.index, ' is ',i.payload.data TO stdout BY A,F(3),A,F(3),SKIP;
+         FIN;
+      END;
+    FIN;
+
+    PUT 'alternative version of search items with payload 2 ' TO stdout BY SKIP, A, SKIP;
+    i = search4first(2);
+    WHILE i ISNT NIL REPEAT
+      PUT 'payload of ',i.index, ' is ',i.payload.data TO stdout BY A,F(3),A,F(3),SKIP;
+      i = search4nextv2(2,i);
+    END;
+
+    PUT 'content of list is:' TO stdout BY A, SKIP;
+    i = used;
+    WHILE i ISNT NIL REPEAT
+       PUT 'index ', i.index,' has content ', i.payload.data TO stdout
+        BY  A,       F(3),    A,              F(3) , SKIP;
+       i = i.next;
+    END; 
+          
 END;
 
 add: PROC(x FIXED);
    DCL i REF ListElement;
+
    i = unUsed;
    IF i IS NIL THEN
       PUT 'list is full' TO stdout BY A, SKIP;
+   ELSE
+      PUT '** add ',x,', at index ', i.index TO stdout BY A,F(3),A,F(3), SKIP;
    FIN;
    i.payload.data = x;
    unUsed = unUsed.next;
@@ -62,6 +100,44 @@ presetList: PROC;
    list(100).next = NIL; 
    list(100).index = 100;
    unUsed = list(1);
+END;
+
+DCL search REF ListElement;
+DCL first BIT(1);
+search4first: PROC(x FIXED) RETURNS(REF ListElement);
+   search = used;
+   first := '1'B1;
+   RETURN (search4next(x));
+END;
+
+search4next: PROC(x FIXED) RETURNS(REF ListElement);
+   DCL goon BIT(1) INIT('1'B1);
+   IF NOT first THEN
+      search = search.next;
+   FIN;
+   first := '0'B1;
+   WHILE goon REPEAT
+      IF search IS NIL THEN
+        goon = '0'B1;
+      FIN;
+      IF goon THEN
+        IF search.payload.data == x THEN
+           goon = '0'B1;
+        FIN;
+      FIN;
+      IF goon THEN
+         search = search.next;
+      FIN;
+   END;
+   RETURN (search);
+END;
+
+
+search4nextv2: PROC (x FIXED, current REF ListElement) RETURNS(REF ListElement);
+   IF current ISNT NIL THEN
+      current = current.next;
+   FIN;
+   RETURN(current);
 END;
 
 MODEND;

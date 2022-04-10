@@ -1,6 +1,8 @@
 package org.openpearl.compiler;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.openpearl.compiler.SymbolTable.FormalParameter;
+import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
 /**
  * some error messages, which are emitted at different source locations 
  * <ul>
@@ -12,6 +14,13 @@ import org.antlr.v4.runtime.ParserRuleContext;
  */
 public class CommonErrorMessages {
 
+
+    public static void doubleDeclarationError(SymbolTableEntry current,
+            SymbolTableEntry entry) {
+        ErrorStack.add(current.getCtx(), "duplicate declaration", current.getName());
+        ErrorStack.note(entry.getCtx(), "previous declaration", "was here");
+        
+    }
     public static void doubleDeclarationError(String name, ParserRuleContext ctx,
             ParserRuleContext previousCtx) {
         ErrorStack.add(ctx, "duplicate declaration", name);
@@ -47,4 +56,5 @@ public class CommonErrorMessages {
     public static void typeMismatch(TypeDefinition lhsType, TypeDefinition rhsType, String hint) {
         ErrorStack.add("type mismatch: "+hint+"expected: " + lhsType.toString4IMC(true) +" --- got "+ rhsType.toString4IMC(true));
     }
+
 }
