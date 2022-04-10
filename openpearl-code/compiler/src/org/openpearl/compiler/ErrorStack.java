@@ -324,7 +324,9 @@ public class ErrorStack {
         errorLine = sourceLine.substring(0, startColNumber);
         int errorPos = calculateErrorPosition(errorLine);
 
-        errorLine = spaces(errorPos) + errorOn;
+        //errorLine = spaces(errorPos) + errorOn;
+        // let's see the beginning of the line with the error 
+        errorLine += errorOn;
 
         System.err.println(filename + ":" + startLineNumber + ":"
                 + (errorPos + 1) + ": " + typeOfMessage + ": " + prefix + " " + msg);
