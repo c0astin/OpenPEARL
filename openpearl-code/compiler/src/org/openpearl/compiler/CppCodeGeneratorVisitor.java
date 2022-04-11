@@ -651,7 +651,7 @@ implements OpenPearlVisitor<ST> {
                 specifyDation.add("name", getUserVariableWithoutNamespace(ve.getName()));
                 specifyDation.add("TypeDation", "DationPG");
 
-            } else if (td.getTypeOfTransmissionAsType() != null) {
+            } else if (td.getTypeOfTransmission() != null) {
                 specifyDation = m_group.getInstanceOf("SpecificationUserDation");
                 specifyDation.add("name", getUserVariableWithoutNamespace(ve.getName()));
                 specifyDation.add("TypeDation", "DationRW");
@@ -4016,7 +4016,7 @@ implements OpenPearlVisitor<ST> {
 
         st.add("command", "send");
         ASTAttribute attr = m_ast.lookup(ctx.dationName().name());
-        m_typeOfTransmission=((TypeDation)(attr.getType())).getTypeOfTransmissionAsType();
+        m_typeOfTransmission=((TypeDation)(attr.getType())).getTypeOfTransmission();
         ErrorStack.enter(ctx, "SEND");
         st.add("dation", visitAndDereference(ctx.dationName().name()));
 
@@ -4064,7 +4064,7 @@ implements OpenPearlVisitor<ST> {
 
         ErrorStack.enter(ctx, "WRITE");
         ASTAttribute attr = m_ast.lookup(ctx.dationName().name());
-        m_typeOfTransmission=((TypeDation)(attr.getType())).getTypeOfTransmissionAsType();
+        m_typeOfTransmission=((TypeDation)(attr.getType())).getTypeOfTransmission();
 
         st.add("dation", visitAndDereference(ctx.dationName().name()));
 
@@ -4626,7 +4626,7 @@ implements OpenPearlVisitor<ST> {
             }
         }
         //
-        if (!(td.isBasic() && td.getTypeOfTransmissionAsType()!= null)) {
+        if (!(td.isBasic() && td.getTypeOfTransmission()!= null)) {
             // not needed for DationTS
             if (td.isDirect()) accessAttributes.add("attribute", "DIRECT");
             if (td.isForward()) accessAttributes.add("attribute", "FORWARD");
@@ -4759,9 +4759,9 @@ implements OpenPearlVisitor<ST> {
             st.add("alphic", "1");
         } else if (td.isBasic()) {
             st.add("basic", "1");
-        } else if (td.getTypeOfTransmissionAsType() != null) {
+        } else if (td.getTypeOfTransmission() != null) {
             st.add("attribute",getTypeOfTransmissionData(td));
-        } else if (td.getTypeOfTransmissionAsType() == null) {
+        } else if (td.getTypeOfTransmission() == null) {
             st.add("attribute",1);  // indicates ALL in DationRW            
         }
 
@@ -4771,14 +4771,14 @@ implements OpenPearlVisitor<ST> {
     private ST getTypeOfTransmissionData(TypeDation td) {
         ST st = m_group.getInstanceOf("TypeOfTransmissionData");
 
-        if (td.getTypeOfTransmissionAsType() == null) {
+        if (td.getTypeOfTransmission() == null) {
             st.add("all", "1");
             //        } else if (ctx instanceof OpenPearlParser.TypeOfTransmissionDataSimpleTypeContext) {
             //            OpenPearlParser.TypeOfTransmissionDataSimpleTypeContext c =
             //                    (OpenPearlParser.TypeOfTransmissionDataSimpleTypeContext) ctx;
             //            st.add("type", visitSimpleType(c.simpleType()));
         } else {
-            st.add("type",getSTforType(td.getTypeOfTransmissionAsType()));
+            st.add("type",getSTforType(td.getTypeOfTransmission()));
         }
 
         return st;

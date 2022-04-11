@@ -181,7 +181,7 @@ implements OpenPearlVisitor<Void> {
             ErrorStack.add("TFU requires limited record length");
         }
 
-        TypeDefinition typeOfTransmission = d.getTypeOfTransmissionAsType(); 
+        TypeDefinition typeOfTransmission = d.getTypeOfTransmission(); 
         if (typeOfTransmission!= null && typeOfTransmission instanceof TypeStructure) {
             // check that there is no REF in the type of transmission data
             StructureComponent comp = ((TypeStructure)typeOfTransmission).getFirstElement();
@@ -232,8 +232,8 @@ implements OpenPearlVisitor<Void> {
                     if (!d.isBasic()) {
                         // d is not of type ALPHIC and not type BASIC --> check typeOfTransmission for
                         // correct error message
-                        if (d.getTypeOfTransmissionAsType() != null) {
-                            ErrorStack.add("attempt to create a '" + d.getTypeOfTransmissionAsType()
+                        if (d.getTypeOfTransmission() != null) {
+                            ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
                             + "' dation upon a BASIC system dation");
                         } else {
                             ErrorStack.add(
@@ -252,8 +252,8 @@ implements OpenPearlVisitor<Void> {
                             ErrorStack.leave();
                             return ;
                         }
-                        if (d.getTypeOfTransmissionAsType() != null) {
-                            ErrorStack.add("attempt to create a '" + d.getTypeOfTransmissionAsType()
+                        if (d.getTypeOfTransmission() != null) {
+                            ErrorStack.add("attempt to create a '" + d.getTypeOfTransmission()
                             + "' dation upon an 'ALPHIC' system dation");
                             ErrorStack.leave();
                             return ;
@@ -265,11 +265,11 @@ implements OpenPearlVisitor<Void> {
                         }
                     }
                 }
-                if (sd.getTypeOfTransmissionAsType() != null && !sd.isBasic()) {
+                if (sd.getTypeOfTransmission() != null && !sd.isBasic()) {
                     if (d.isAlphic()) {
-                        if (!(sd.getTypeOfTransmissionAsType() == null)) {
+                        if (!(sd.getTypeOfTransmission() == null)) {
                             ErrorStack.add("attempt to create an 'ALPHIC' dation upon '"
-                                    + d.getTypeOfTransmissionAsType() + "' system dation");
+                                    + d.getTypeOfTransmission() + "' system dation");
                             ErrorStack.leave();
                             return ;
                         }
@@ -279,11 +279,11 @@ implements OpenPearlVisitor<Void> {
                         ErrorStack.leave();
                         return ;
                     }
-                    if (d.getTypeOfTransmissionAsType() != null) {
-                        if (!(sd.getTypeOfTransmissionAsType() == null)) {
+                    if (d.getTypeOfTransmission() != null) {
+                        if (!(sd.getTypeOfTransmission() == null)) {
                             // types must be equal
-                            if (!sd.getTypeOfTransmissionAsType()
-                                    .equals(d.getTypeOfTransmissionAsType())) {
+                            if (!sd.getTypeOfTransmission()
+                                    .equals(d.getTypeOfTransmission())) {
                                 ErrorStack.add("attempt to create an 'ALL' dation upon an 'ALPHIC' system dation");
                                 return;
                             }
@@ -291,7 +291,7 @@ implements OpenPearlVisitor<Void> {
                     }
                 }
                 
-                if (sd.getTypeOfTransmissionAsType() == null && !sd.isBasic()) {
+                if (sd.getTypeOfTransmission() == null && !sd.isBasic()) {
                     // system dation is ALL and not BASIC
                     if (d.isBasic()) {
                         ErrorStack.add("attempt to create a BASIC dation upon non BASIC system dation");
@@ -807,7 +807,7 @@ implements OpenPearlVisitor<Void> {
     }
 
     private void checkReadWriteTakeSendDataTypes(OpenPearlParser.IoDataListContext ioDataList) {
-        if (m_typeDation.getTypeOfTransmissionAsType() == null) {
+        if (m_typeDation.getTypeOfTransmission() == null) {
             // this is a type 'ALL' dation --> we are ready here
             return;
         }
@@ -817,7 +817,7 @@ implements OpenPearlVisitor<Void> {
                     ASTAttribute attr = m_ast.lookup(ioDataList.ioListElement(i).expression());
                     if (attr != null) {
                         boolean typeMismatch = false;
-                        if (m_directionInput && (!attr.getType().equals(m_typeDation.getTypeOfTransmissionAsType()))) {
+                        if (m_directionInput && (!attr.getType().equals(m_typeDation.getTypeOfTransmission()))) {
                             typeMismatch=true;
                         }
                         TypeDefinition td = attr.getType();
@@ -826,7 +826,7 @@ implements OpenPearlVisitor<Void> {
                             if (td instanceof TypeReference) {
                                 td = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
                             }
-                            if ((!TypeUtilities.simpleTypeInclVarCharAndRefCharMayBeAssignedTo(m_typeDation.getTypeOfTransmissionAsType(),td))) {
+                            if ((!TypeUtilities.simpleTypeInclVarCharAndRefCharMayBeAssignedTo(m_typeDation.getTypeOfTransmission(),td))) {
                                 typeMismatch=true;
                             }
                         }
@@ -834,7 +834,7 @@ implements OpenPearlVisitor<Void> {
                         if (typeMismatch) {
                             ErrorStack.enter(ioDataList.ioListElement(i).expression());
                             ErrorStack.add("type mismatch: required: "
-                                    + m_typeDation.getTypeOfTransmissionAsType() + " --- got "
+                                    + m_typeDation.getTypeOfTransmission() + " --- got "
                                     + attr.getType().toString());
                             ErrorStack.leave();
                         }

@@ -513,9 +513,9 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
             recordLength = d.getDimension1();
 
         // detect element size if not ALPHIC or ALL
-        if (d.getTypeOfTransmissionAsType() != null) {
+        if (d.getTypeOfTransmission() != null) {
 //            if (!d.getTypeOfTransmission().contentEquals("ALL")) {
-                recordLength *= d.getTypeOfTransmissionAsType().getSize();
+                recordLength *= d.getTypeOfTransmission().getSize();
   //          }
             // getSize returns -1, if the size is unknown to the compiler
             // the test od sufficient record size must be done at runtime

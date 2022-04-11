@@ -51,8 +51,7 @@ public class TypeDation extends TypeDefinition {
     private boolean m_systemDation; // is a SYSTEM dation
     private boolean m_alphic;
     private boolean m_basic;
-    private String m_typeOfTransmission;
-    private TypeDefinition m_typeOfTransmissionAsType;
+    private TypeDefinition m_typeOfTransmission;
     private boolean m_hasAccessAttributes;
     private boolean m_direct;
     private boolean m_forward;
@@ -82,7 +81,6 @@ public class TypeDation extends TypeDefinition {
         m_systemDation = false;
         m_alphic = false;
         m_basic = false;
-        m_typeOfTransmission = null;
         m_hasAccessAttributes = false;
         m_hasTypology = false;
         m_direct = false;
@@ -130,8 +128,8 @@ public class TypeDation extends TypeDefinition {
         String s=null;
         if (m_alphic) {
             s="ALPHIC";
-        } else if (m_typeOfTransmissionAsType!= null) {
-            s=m_typeOfTransmissionAsType.toString4IMC(true);
+        } else if (m_typeOfTransmission!= null) {
+            s=m_typeOfTransmission.toString4IMC(true);
         } else {
             s="ALL";
         }
@@ -221,25 +219,17 @@ public class TypeDation extends TypeDefinition {
         this.m_basic = m_basic;
     }
 
-//    public String getTypeOfTransmission() {
-//        return m_typeOfTransmission;
-//    }
-//
-//    public void setTypeOfTransmission(String m_typeOfTransmission) {
-//        this.m_typeOfTransmission = m_typeOfTransmission;
-//    }
-
     /**
      * 
      * @return null of typeOfTransmission is ALL,
      *      else the corresponding type
      */
-    public TypeDefinition getTypeOfTransmissionAsType() {
-        return m_typeOfTransmissionAsType;
+    public TypeDefinition getTypeOfTransmission() {
+        return m_typeOfTransmission;
     }
 
-    public void setTypeOfTransmission(TypeDefinition m_typeOfTransmissionAsType) {
-        this.m_typeOfTransmissionAsType = m_typeOfTransmissionAsType;
+    public void setTypeOfTransmission(TypeDefinition m_typeOfTransmission) {
+        this.m_typeOfTransmission = m_typeOfTransmission;
     }
 
     public boolean isDirect() {
