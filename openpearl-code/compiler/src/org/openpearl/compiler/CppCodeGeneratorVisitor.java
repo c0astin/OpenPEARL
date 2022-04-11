@@ -673,6 +673,12 @@ implements OpenPearlVisitor<ST> {
             specifyVariable.add("type",getSTforType(t));
             scope.add("variable", specifyVariable);
             dationSpecifications.add("decl",  scope);
+        } else if (t instanceof TypeReference) {
+            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
+            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
+            specifyVariable.add("type",getSTforType(t));
+            scope.add("variable", specifyVariable);
+            dationSpecifications.add("decl",  scope);
         } else {
             ErrorStack.add("CppCodeGenerator:generateSpecification @865: missing alternative");
         }
@@ -4814,6 +4820,8 @@ implements OpenPearlVisitor<ST> {
             return getSTforType(((UserDefinedSimpleType)t).getSimpleType());
         } else if (t instanceof UserDefinedTypeStructure) {
             return getSTforType(((UserDefinedTypeStructure)t).getStructuredType());
+        } else if (t instanceof TypeReference) {
+            return t.toST(m_group);
         } else {
             ErrorStack.addInternal("CppCodeGenerator@4904: missing alternative");
         }

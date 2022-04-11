@@ -456,7 +456,7 @@ implements OpenPearlVisitor<Void> {
                 if (m_isInSpecification && 
                         ctx.formalParameter(i).getChild(0) instanceof TerminalNode &&
                         Compiler.isStdPEARL90() == true) {
-                  ErrorStack.add(ctx.formalParameter(i),"SPC PROC","no list of identifiers allowed");
+                  ErrorStack.warn(ctx.formalParameter(i),"SPC PROC","no list of identifiers allowed");
                   break; // report error only once
                 }
                
@@ -476,13 +476,20 @@ implements OpenPearlVisitor<Void> {
         Log.debug("SymbolTableVisitor:getFormalParameter:ctx" + CommonUtils.printContext(ctx));
 
         if (ctx != null) {
-            for (int i = 0; i < ctx.identifier().size(); i++) {
+            int nbrOfRepetitions = 1;
+            Object o = ctx.identifier();
+            if (ctx.identifier().size() > 0) {
+                nbrOfRepetitions = ctx.identifier().size();
+            }
+            for (int i = 0; i < nbrOfRepetitions; i++) {
                 int nbrDimensions = 0; // default to scalar value
-                String name = null;
+                String name = "";
                 Boolean assignmentProtection = false;
                 Boolean passIdentical = false;
 
-                name = ctx.identifier(i).ID().getText();
+                if (ctx.identifier(i) != null) {
+                    name = ctx.identifier(i).ID().getText();
+                }
 
                 if (ctx.virtualDimensionList() != null) {
 

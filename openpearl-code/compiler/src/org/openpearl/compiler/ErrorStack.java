@@ -305,7 +305,7 @@ public class ErrorStack {
 
         startLineNumber = startLoc.getLineNo(m_stack[m_sp].getCtx().start.getLine());
         startColNumber = m_stack[m_sp].getCtx().start.getCharPositionInLine();
-        stopLineNumber = stopLoc.getLineNo(m_stack[m_sp].getCtx().start.getLine());
+        stopLineNumber = stopLoc.getLineNo(m_stack[m_sp].getCtx().stop.getLine());
         stopColNumber = m_stack[m_sp].getCtx().stop.getCharPositionInLine();
 
         /* print error message */
