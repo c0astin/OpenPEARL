@@ -1785,7 +1785,7 @@ dationDenotation :
 ////////////////////////////////////////////////////////////////////////////////
 
 typeDation:
-    'DATION' sourceSinkAttribute classAttribute typology? accessAttribute?
+    'DATION' sourceSinkAttribute classAttribute typology? accessAttribute? controlAttribute?
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1815,6 +1815,10 @@ systemDation
 
 classAttribute
     : systemDation? ( alphicDation | basicDation typeOfTransmissionData| typeOfTransmissionData)
+    ;
+
+controlAttribute
+    : 'CONTROL' '(' 'ALL' ')'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////

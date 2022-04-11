@@ -1515,6 +1515,11 @@ implements OpenPearlVisitor<Void> {
         // treatIdentifierDenotation(ctx.identifierDenotation(), d);
 
         treatGlobalAttribute(ctx.globalAttribute(), d);
+        if (ctx.typeDation().controlAttribute() != null) {
+            if (Compiler.isStdOpenPEARL()) {
+                Log.warn("deprecated: CONTROL(ALL)");
+            }
+        }
 
         // get CREATED parameter if we are in a declaration, must no given in specification
         if (ctx.ID() != null) {
