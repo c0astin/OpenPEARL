@@ -509,6 +509,32 @@ public class SymbolTable {
                         TypeStructure struct = (TypeStructure) array.getBaseType();
                         getStructureDeclarationsForStructure(struct.getStructureName(), struct,
                                 structures);
+                    } else if (array.getBaseType() instanceof UserDefinedTypeStructure ) {
+                        TypeStructure struct = (TypeStructure) (((UserDefinedTypeStructure)(array.getBaseType())).getStructuredType());
+                        getStructureDeclarationsForStructure(struct.getStructureName(), struct,
+                                structures);
+                    }
+                } else if (entry.getType() instanceof UserDefinedTypeStructure) {
+                    TypeStructure struct = (TypeStructure) (((UserDefinedTypeStructure)(entry.getType())).getStructuredType());
+                    getStructureDeclarationsForStructure(struct.getStructureName(), struct,
+                            structures);
+                }
+            } else if (symbolTableEntry instanceof FormalParameter) {
+                FormalParameter entry = (FormalParameter) symbolTableEntry;
+                if (entry.getType() instanceof TypeStructure) {
+                    TypeStructure struct = (TypeStructure) entry.getType();
+                    getStructureDeclarationsForStructure(struct.getStructureName(), struct,
+                            structures);
+                } else if (entry.getType() instanceof TypeArray) {
+                    TypeArray array = (TypeArray) entry.getType();
+                    if (array.getBaseType() instanceof TypeStructure) {
+                        TypeStructure struct = (TypeStructure) array.getBaseType();
+                        getStructureDeclarationsForStructure(struct.getStructureName(), struct,
+                                structures);
+                    } else if (array.getBaseType() instanceof UserDefinedTypeStructure ) {
+                        TypeStructure struct = (TypeStructure) (((UserDefinedTypeStructure)(array.getBaseType())).getStructuredType());
+                        getStructureDeclarationsForStructure(struct.getStructureName(), struct,
+                                structures);
                     }
                 }
             } else if (symbolTableEntry instanceof UserDefinedType) {
@@ -524,6 +550,9 @@ public class SymbolTable {
                 if (procedureEntry.getResultType() != null) {
                     if (procedureEntry.getResultType() instanceof TypeStructure) {
                         TypeStructure result = (TypeStructure) procedureEntry.getResultType();
+                        structures.put(result.getStructureName(), result);
+                    } else if (procedureEntry.getResultType() instanceof UserDefinedTypeStructure) {
+                        TypeStructure result = (TypeStructure) (((UserDefinedTypeStructure)(procedureEntry.getResultType())).getStructuredType());
                         structures.put(result.getStructureName(), result);
                     }
                 }
@@ -542,14 +571,19 @@ public class SymbolTable {
             } else if (symbolTableEntry instanceof LoopEntry) {
                 getStructureDeclarationsForSymboltable(((LoopEntry) symbolTableEntry).scope,
                         structures);
+            } else if (symbolTableEntry instanceof LabelEntry ||
+                       symbolTableEntry instanceof InterruptEntry ||
+                       symbolTableEntry instanceof LengthEntry){
+                // nothing to do
+            } else {
+                ErrorStack.add(symbolTableEntry.getCtx(),"SymbolTable@560", "missing alternative");
             }
         }
     }
 
     private void getStructureDeclarationsForStructure(String name, TypeStructure structure,
             HashMap<String, TypeStructure> structures) {
-        SymbolTableEntry e;
-
+        
         structures.put(name, structure);
 
         for (Iterator<StructureComponent> it = structure.m_listOfComponents.iterator(); it
@@ -567,6 +601,10 @@ public class SymbolTable {
                     getStructureDeclarationsForStructure(struct.getStructureName(), struct,
                             structures);
                 }
+            } else if (structureComponent.m_type instanceof UserDefinedTypeStructure) {
+                UserDefinedTypeStructure uts = (UserDefinedTypeStructure)(structureComponent.m_type);
+                TypeStructure struct = (TypeStructure)(uts.getStructuredType());
+                getStructureDeclarationsForStructure(struct.getStructureName(), struct, structures);
             }
         }
     }

@@ -262,10 +262,11 @@ implements OpenPearlVisitor<Void> {
                    m_type = ((UserDefinedType)se).getType();
                 }
             } else {
-                ErrorStack.add(name + " should be user defined type -- got " +se);
+                ErrorStack.add(name + " should be user defined type ");
+                ErrorStack.note(se.getCtx(),"previous definition of",name);
             }
         } else {
-            ErrorStack.add( name + " is no name of a TYPE");
+            ErrorStack.add( name + " is no name of a type or an user defined type");
         }
         ErrorStack.leave();
         return null;
@@ -649,7 +650,7 @@ implements OpenPearlVisitor<Void> {
     @Override
     public Void visitProblemPartDataAttribute(ProblemPartDataAttributeContext ctx) {
         List<InitElementContext> initElements = null;
-        String sCtx = ctx.getText();
+       
         m_isGlobal = false;
         m_globalName = null;
         m_hasAllocationProtection = false;
@@ -661,7 +662,12 @@ implements OpenPearlVisitor<Void> {
         }
 
         visitChildren(ctx);
-
+        
+        if (m_type == null) {
+            // type could be be resolved
+            return null;
+        }
+        
         m_type.setHasAssignmentProtection(m_hasAllocationProtection);
        
 
@@ -2018,7 +2024,7 @@ implements OpenPearlVisitor<Void> {
             entry = m_currentSymbolTable.lookup(s);
             if (entry != null) {
                 CommonErrorMessages.doubleDeclarationWarning(
-                        "double declaration of ", s, ctx, entry.getCtx());
+                        "redeclaration of ", s, ctx, entry.getCtx());
             }
             // setup SPC/DCL and GLOBAL information
             if (m_isInSpecification) {
@@ -2030,7 +2036,8 @@ implements OpenPearlVisitor<Void> {
                     newEntry.setGlobalAttribute(m_currentModuleName);
                 } else if (m_isGlobal == true && m_globalName == null) {
                     newEntry.setGlobalAttribute(m_currentModuleName);
-                    if (Compiler.isStdOpenPEARL()) {
+                    SymbolTableEntry isSystemName = m_currentSymbolTable.lookupSystemPartName(s);
+                    if (Compiler.isStdOpenPEARL() && isSystemName == null) {
                         ErrorStack.warn(ctx,"SPC", "import module name defaulted to '"+m_currentModuleName+"'");
                     }
                 } else if (m_isGlobal == true && m_globalName != null) {

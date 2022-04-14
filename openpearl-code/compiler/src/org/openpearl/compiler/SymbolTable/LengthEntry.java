@@ -38,7 +38,7 @@ import org.openpearl.compiler.TypeFloat;
 
 public class LengthEntry extends SymbolTableEntry {
     private TypeDefinition m_type;
-    private OpenPearlParser.LengthDefinitionContext m_ctx;
+
 
     public LengthEntry() {
     }
@@ -67,14 +67,6 @@ public class LengthEntry extends SymbolTableEntry {
         return s;
     }
 
- // deprecated. is now in SymboleTableEntry       
-//    public int getSourceLineNo() {
-//        return m_ctx.getStart().getLine();
-//    }
-//
-//    public int getCharPositionInLine() {
-//        return m_ctx.getStart().getCharPositionInLine();
-//    }
 
     public TypeDefinition getType() { return this.m_type; }
 }

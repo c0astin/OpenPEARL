@@ -339,6 +339,10 @@ implements OpenPearlVisitor<ST> {
                         TypeStructure innerStruct = (TypeStructure) array.getBaseType();
                         graph.addDependency(name, innerStruct.getStructureName());
                     }
+                } else if (component.m_type instanceof UserDefinedTypeStructure) {
+                    TypeStructure innerStruct = (TypeStructure)(((UserDefinedTypeStructure)(component.m_type)).getStructuredType());
+                    graph.addDependency(name, innerStruct.getStructureName());
+          
                 }
             }
         }
@@ -617,7 +621,7 @@ implements OpenPearlVisitor<ST> {
             // scopeXXX adds the extern/static/ ...
             ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
             specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-            specifyVariable.add("type",getSTforType(t));
+            specifyVariable.add("type",t.toST(m_group));
             scope.add("variable", specifyVariable);
             dationSpecifications.add("decl",  scope);
         } else if (t instanceof TypeDation) {
@@ -670,13 +674,13 @@ implements OpenPearlVisitor<ST> {
             // scopeXXX adds the extern/static/ ...
             ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
             specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-            specifyVariable.add("type",getSTforType(t));
+            specifyVariable.add("type",t.toST(m_group));
             scope.add("variable", specifyVariable);
             dationSpecifications.add("decl",  scope);
         } else if (t instanceof TypeReference) {
             ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
             specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-            specifyVariable.add("type",getSTforType(t));
+            specifyVariable.add("type",t.toST(m_group));
             scope.add("variable", specifyVariable);
             dationSpecifications.add("decl",  scope);
         } else {
@@ -4784,51 +4788,18 @@ implements OpenPearlVisitor<ST> {
             //                    (OpenPearlParser.TypeOfTransmissionDataSimpleTypeContext) ctx;
             //            st.add("type", visitSimpleType(c.simpleType()));
         } else {
-            st.add("type",getSTforType(td.getTypeOfTransmission()));
+            st.add("type",td.getTypeOfTransmission().toST(m_group));
         }
 
         return st;
     }
 
-    private ST getSTforType(TypeDefinition t) {
-        ST st= null;
-
-        if (t instanceof TypeFixed) {
-            st =  m_group.getInstanceOf("TypeInteger");
-            st.add("size", ((TypeFixed)(t)).getPrecision());
-        } else if (t instanceof TypeDuration) {
-            st =  m_group.getInstanceOf("TypeDuration");
-        } else if (t instanceof TypeBit) {
-            st =  m_group.getInstanceOf("TypeBitString");
-            st.add("length", ((TypeBit)(t)).getPrecision());
-        } else if (t instanceof TypeFloat) {
-            st =  m_group.getInstanceOf("TypeFloatingPointNumber");
-            st.add("precision", ((TypeFloat)(t)).getPrecision());
-        } else if (t instanceof TypeClock) {
-            st =  m_group.getInstanceOf("TypeClock");
-        } else if (t instanceof  TypeChar) {
-            st =  m_group.getInstanceOf("TypeCharacterString");
-            st.add("size", ((TypeChar)(t)).getPrecision());
-        } else if (t instanceof TypeSemaphore) {
-            st = m_group.getInstanceOf("sema_type");
-        } else if (t instanceof TypeBolt) {
-            st = m_group.getInstanceOf("bolt_type");
-        } else if (t instanceof TypeStructure) {
-            st = m_group.getInstanceOf("TypeStructure");
-            st.add("name" ,((TypeStructure)t).getStructureName());
-        } else if (t instanceof UserDefinedSimpleType) {
-            return getSTforType(((UserDefinedSimpleType)t).getSimpleType());
-        } else if (t instanceof UserDefinedTypeStructure) {
-            return getSTforType(((UserDefinedTypeStructure)t).getStructuredType());
-        } else if (t instanceof TypeReference) {
-            return t.toST(m_group);
-        } else {
-            ErrorStack.addInternal("CppCodeGenerator@4904: missing alternative");
-        }
-
-
-        return st;
-    }
+//    private ST getSTforType(TypeDefinition t) {
+//       
+//        return t.toST(m_group);
+//
+//
+//    }
 
 
     @Override
