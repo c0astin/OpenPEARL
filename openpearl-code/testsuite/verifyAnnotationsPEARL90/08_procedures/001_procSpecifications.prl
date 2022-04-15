@@ -1,0 +1,12 @@
+MODULE(c);
+
+PROBLEM;
+   SPC listOfNames PROC( (a,b) FIXED) GLOBAL;
+/*$                      ^
+warning: SPC PROC: no list of identifiers allowed
+*/
+/*$    ^
+error: SPC of 'listOfNames' has no declaration
+*/
+MODEND;
+
