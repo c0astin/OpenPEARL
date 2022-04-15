@@ -4,10 +4,8 @@ SYSTEM;
   sbd2 : SampleBasicDation;
 PROBLEM;
   SPC sbd1 DATION INOUT SYSTEM FIXED(15);
-  SPC sbd2 DATION INOUT SYSTEM FIXED(15) GLOBAL;
-/*$   ^
-warning: SPC: import module name defaulted to 'global'
-*/
+  ! GLOBAL with  no module name and symbol is in SYSTEM is ok
+  SPC sbd2 DATION INOUT SYSTEM FIXED(15) GLOBAL; 
 
   SPC sbd3 DATION INOUT SYSTEM FIXED(15);
 /*$   ^
