@@ -51,6 +51,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Stack;
@@ -79,24 +80,9 @@ public class Preprocessor {
     static PrintStream m_outputStream = null;
     static PrintStream m_console = System.out;
 
-    /**
-     * Returns an Image object that can then be painted on the screen.
-     * The url argument must specify an absolute <a href="#{@link}">{@link URL}</a>. The name
-     * argument is a specifier that is relative to the url argument.
-     * <p>
-     * This method always returns immediately, whether or not the
-     * image exists. When this applet attempts to draw the image on
-     * the screen, the data will be loaded. The graphics primitives
-     * that draw the image will incrementally paint on the screen.
-     *
-     * @param  url  an absolute URL giving the base location of the image
-     * @param  name the location of the image, relative to the url argument
-     * @return      the image at the specified URL
-     * @see         Image
-     */
     public enum Statement
     {
-        IF, IFDEF, ELSE, FIN, ERROR, WARN, INCLUDE, PRAGMA, DEFINE, UNDEF, MISC
+        IF, IFDEF, ELSE, FIN, ERROR, WARN, INCLUDE, PRAGMA, DEFINE, UNDEF, MISC, END_COMMENT
     }
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -164,8 +150,7 @@ public class Preprocessor {
     }
 
     private static void handleInclude(String args) {
-
-        args = stripComment(args.trim());
+        args = skipComment(args.trim());
         String currentFileName = m_sourceFilename;
         m_sourceFilename= findFile(args, m_includeDirs);
 
@@ -209,6 +194,7 @@ public class Preprocessor {
     }
 
     private static void handleWarn(String args) {
+        System.out.println("#WARN:"+args);
     }
 
     private static void handleIf(String args) {
@@ -417,87 +403,102 @@ public class Preprocessor {
 
     private static Statement processLines(HashSet stopset, int level) {
         boolean directiveFound = false;
+        boolean inComment = false;
+        Pattern pattern;
+        Matcher matcher;
         try {
             String line;
             SourceFile sourceFile = m_sourcefiles.peek();
             while ((line = sourceFile.getNextLine()) != null) {
-                checkForTerminatingSemicolon(line);
-                Matcher m_matcher;
-                m_matcher = m_pattern.matcher(line);
-                while(m_matcher.find()) {
-                    if(m_matcher.group(1).equals("INCLUDE")) {
-                        directiveFound = true;
-                        handleInclude(m_matcher.group(2));
-                        m_seenIncludes.add(m_matcher.group(2));
-                    }
-                    else if(m_matcher.group(1).equals("DEFINE")) {
-                        directiveFound = true;
-                        handleDefine(m_matcher.group(2));
-                    }
-                    else if(m_matcher.group(1).equals("UNDEF")) {
-                        directiveFound = true;
-                        handleUndef(m_matcher.group(2));
-                    }
-                    else if(m_matcher.group(1).equals("ERROR")) {
-                        directiveFound = true;
-                        handleError(m_matcher.group(2));
-                    }
-                    else if(m_matcher.group(1).equals("WARN")) {
-                        directiveFound = true;
-                        handleWarn(m_matcher.group(2));
-                    }
-                    else if(m_matcher.group(1).equals("IF")) {
-                        directiveFound = true;
-                        handleIf(m_matcher.group(2));
-                    }
-                    else if(m_matcher.group(1).equals("IFDEF")) {
-                        directiveFound = true;
-                        String s1, s2, s3;
-                        s1 = m_matcher.group(1);
-                        s2 = m_matcher.group(2);
-                        s3 = m_matcher.group(3);
+                line = skipComment(line);
+                if (!inComment) {
+                    // checkForTerminatingSemicolon(line);
+                    Matcher m_matcher;
+                    m_matcher = m_pattern.matcher(line);
+                    while (m_matcher.find()) {
+                        if (m_matcher.group(1).equals("INCLUDE")) {
+                            directiveFound = true;
+                            handleInclude(m_matcher.group(2));
+                            m_seenIncludes.add(m_matcher.group(2));
+                        } else if (m_matcher.group(1).equals("DEFINE")) {
+                            directiveFound = true;
+                            handleDefine(m_matcher.group(2));
+                        } else if (m_matcher.group(1).equals("UNDEF")) {
+                            directiveFound = true;
+                            handleUndef(m_matcher.group(2));
+                        } else if (m_matcher.group(1).equals("ERROR")) {
+                            directiveFound = true;
+                            handleError(m_matcher.group(2));
+                        } else if (m_matcher.group(1).equals("WARN")) {
+                            directiveFound = true;
+                            handleWarn(m_matcher.group(2));
+                        } else if (m_matcher.group(1).equals("IF")) {
+                            directiveFound = true;
+                            handleIf(m_matcher.group(2));
+                        } else if (m_matcher.group(1).equals("IFDEF")) {
+                            directiveFound = true;
+                            String s1, s2, s3;
+                            s1 = m_matcher.group(1);
+                            s2 = m_matcher.group(2);
+                            s3 = m_matcher.group(3);
 
-                        m_ifdef_level++;
-                        handleIfdef(m_matcher.group(2).trim());
-                    }
-                    else if(m_matcher.group(1).equals("IFUDEF")) {
-                        directiveFound = true;
-                        String s1, s2, s3;
-                        s1 = m_matcher.group(1);
-                        s2 = m_matcher.group(2);
-                        s3 = m_matcher.group(3);
+                            m_ifdef_level++;
+                            handleIfdef(m_matcher.group(2).trim());
+                        } else if (m_matcher.group(1).equals("IFUDEF")) {
+                            directiveFound = true;
+                            String s1, s2, s3;
+                            s1 = m_matcher.group(1);
+                            s2 = m_matcher.group(2);
+                            s3 = m_matcher.group(3);
 
-                        m_ifdef_level++;
-                        handleIfndef(m_matcher.group(2).trim());
-                    }
-                    else if(m_matcher.group(1).equals("ELSE")) {
-                        directiveFound = true;
-                        String ss = m_matcher.group(2);
-                        if ( stopset.contains(Statement.ELSE) && (level == m_ifdef_level)) {
-                            return Statement.ELSE;
+                            m_ifdef_level++;
+                            handleIfndef(m_matcher.group(2).trim());
+                        } else if (m_matcher.group(1).equals("ELSE")) {
+                            directiveFound = true;
+                            String ss = m_matcher.group(2);
+                            if (stopset.contains(Statement.ELSE) && (level == m_ifdef_level)) {
+                                return Statement.ELSE;
+                            }
+                        } else if (m_matcher.group(1).equals("FIN")) {
+                            directiveFound = true;
+                            if (stopset.contains(Statement.FIN) && (level == m_ifdef_level)) {
+                                m_ifdef_level--;
+                                return Statement.FIN;
+                            }
                         }
-                    }
-                    else if(m_matcher.group(1).equals("FIN")) {
-                        directiveFound = true;
-                        if ( stopset.contains(Statement.FIN) && (level == m_ifdef_level)) {
-                            m_ifdef_level--;
-                            return Statement.FIN;
+                        /*
+                                            else if(m_matcher.group(1).equals("PRAGMA")) {
+                                                directiveFound = true;
+                                                if ( handlePragma(m_matcher.group(2).trim())) {
+                                                    return Statement.MISC;
+                                                }
+                                            }
+                        */
+                        else {
+                            System.err.println(
+                                    "ERROR: Unknown preprocessor directive: #"
+                                            + m_matcher.group(1).toString());
+                            System.exit(-1);
                         }
-                    }
-/*
-                    else if(m_matcher.group(1).equals("PRAGMA")) {
-                        directiveFound = true;
-                        if ( handlePragma(m_matcher.group(2).trim())) {
-                            return Statement.MISC;
-                        }
-                    }
-*/
-                    else {
-                        System.err.println("ERROR: Unknown preprocessor directive: #" + m_matcher.group(1).toString());
-                        System.exit(-1);
                     }
                 }
+
+                pattern = Pattern.compile("^(.*?)(/\\*(.*))$");
+                matcher = pattern.matcher(line);
+                if (matcher.find()) {
+                    inComment = true;
+                }
+
+                if (inComment) {
+                    pattern = Pattern.compile("^.*?\\*/(.*)$");
+                    matcher = pattern.matcher(line);
+                    if (matcher.find()) {
+                        inComment = false;
+                    }
+                }
+
                 if (!directiveFound) {
+                    line = replaceDefine(line);
                     outputLine(line);
                 } else {
                     directiveFound = false;
@@ -517,7 +518,8 @@ public class Preprocessor {
             String line;
             SourceFile sourceFile = m_sourcefiles.peek();
             while ((line = sourceFile.getNextLine()) != null) {
-                checkForTerminatingSemicolon(line);
+                // Because RTOS-UH does not mandate a ending semicolon, we ignore it here.
+                // checkForTerminatingSemicolon(line);
                 Matcher m_matcher;
                 m_matcher = m_pattern.matcher(line);
                 while(m_matcher.find()) {
@@ -552,23 +554,73 @@ public class Preprocessor {
         return Statement.MISC;
     }
 
-    private static String getNextLine() {
-        return "????";
+    private static String skipComment(String line) {
+        String res = "";
+        String str = "";
+        int state = 0;
+        boolean done = false;
+        int i = 0;
+        char lch = ' ';
+        char ch = ' ';
+        while(!done && i < line.length()) {
+            ch = line.charAt(i);
+            switch(state) {
+                case 0:
+                    switch (ch) {
+                        case '"':
+                            str += ch;
+                            state = 1;
+                            break;
+                        case '\'':
+                            str += ch;
+                            state = 2;
+                            break;
+                        case '!':
+                            state = 4;
+                            break;
+                        default:
+                            res += ch;
+                            break;
+                    }
+                    break;
+                case 1:
+                    str += ch;
+                    if ( ch == '"' && lch != '\\') {
+                        res += str;
+                        str = "";
+                        state = 0;
+                    }
+                    break;
+                case 2:
+                    str += ch;
+                    if ( ch == '\'' && lch != '\\') {
+                        res += str;
+                        str = "";
+                        state = 0;
+                    }
+                    break;
+                case 3:
+                    done = true;
+                    break;
+            }
+            lch = ch;
+            i++;
+        }
+
+        return res;
     }
 
-    private static String stripComment(String line) {
-        Pattern pattern = Pattern.compile("^(.*?)!(.*)$");
-        Matcher matcher = pattern.matcher(line);
+    private static String replaceDefine(String line) {
+        String str = line;
 
-        if (matcher.find()) {
-            return matcher.group(1);
-        } else {
-            return line;
+        for (Map.Entry<String, String> entry : m_defines.entrySet()) {
+            str = str.replaceAll(entry.getKey(), entry.getValue());
         }
+        return str;
     }
 
     private static void checkForTerminatingSemicolon(String line) {
-        Pattern pattern = Pattern.compile("^(.*?);[ \t\n]*$");
+        Pattern pattern = Pattern.compile("^(.*?);.*$");
         Matcher matcher = pattern.matcher(line);
 
         if (line.startsWith("#") && !matcher.find() ) {
@@ -656,17 +708,9 @@ public class Preprocessor {
                     } else {
                         x = parseFactor();
                     }
-                    if (func.equals("sqrt")) x = Math.sqrt(x);
-                    else if (func.equals("sin")) x = Math.sin(Math.toRadians(x));
-                    else if (func.equals("cos")) x = Math.cos(Math.toRadians(x));
-                    else if (func.equals("tan")) x = Math.tan(Math.toRadians(x));
-                    else throw new RuntimeException("Unknown function: " + func);
                 } else {
                     throw new RuntimeException("Unexpected: " + (char)ch);
                 }
-
-                if (eat('^')) x = Math.pow(x, parseFactor()); // exponentiation
-
                 return x;
             }
         }.parse();
@@ -711,18 +755,6 @@ class SourceFile {
         return m_filename;
     }
 
-    public String getNextLine() {
-        try {
-            String line;
-            m_lineno++;
-            line = this.m_bufferedReader.readLine();
-            return line;
-        } catch (Exception e) {
-            System.err.println(e.getMessage()); // handle exception
-        }
-        return null;
-    }
-
     public void close() {
         if (m_bufferedReader != null) {
             try {
@@ -747,10 +779,68 @@ class SourceFile {
         }
     }
 
+    public String getNextLine() {
+        try {
+            readLine();
+            return m_curLine;
+        } catch (Exception e) {
+            System.err.println(e.getMessage()); // handle exception
+        }
+        return null;
+    }
+
+    public String readLine() {
+        try {
+            m_lineno++;
+            m_curLine = this.m_bufferedReader.readLine();
+            m_curIndex = 0;
+            return m_curLine;
+        } catch (Exception e) {
+            System.err.println(e.getMessage()); // handle exception
+        }
+        return null;
+    }
+
+    public char advance() {
+        if (m_curIndex == m_curLine.length()) {
+            readLine();
+        }
+        m_curChar = m_curLine.charAt(m_curIndex++);
+        return m_curChar;
+    }
+
+        public void getNextChar() {
+        int state = 0;
+        boolean done = false;
+
+        advance();
+
+        while(!done && m_curChar != -1 ) {
+            char lch = ' ';
+            switch (state) {
+                case 0:
+                    switch (m_curChar) {
+                        case '"':
+                            state = 1;
+                            break;
+                        case '!':
+                            state = 2;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                }
+            }
+        }
+
     private String m_filename;
     private InputStream m_inputStream;
     private Reader m_reader;
     private BufferedReader m_bufferedReader;
     private File m_file;
     private int m_lineno = 1;
+    private String m_curLine = "";
+    private char m_curChar = ' ';
+    private int m_curIndex = 0;
 }
