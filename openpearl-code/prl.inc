@@ -88,7 +88,7 @@ then
    echo "    -D name                    Predefine name as a macro with a definition of 1"
    echo "    -D name=definition         Predefine name as a macro with value of definition"
    echo "    -E                         preprocess only"
-   echo "    -I dir                     add the driectory dir to the list of directories"
+   echo "    -I dir                     add the directory dir to the list of directories"
    echo "                               to be searched by the preprocessor"
    echo "    -r                         run application on MCU" 
    echo "    -i <interface>             download interface for MCU (default /dev/ttyUSB0)" 
