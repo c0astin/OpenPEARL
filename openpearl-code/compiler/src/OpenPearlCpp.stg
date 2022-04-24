@@ -515,12 +515,15 @@ return_statement(expression,char_size) ::= <<
 	<if(char_size)>
 	{ pearlrt::Character\< <char_size> > result;
 	  pearlrt::CharSlice(result).setSlice(<expression>);
+	  me->setLocation(locationLine,locationFile);
 	  return result;
 	}
 	<else>
 	   <if(expression)>
+	   me->setLocation(locationLine,locationFile);
 	   return (<expression>);
 	<else>
+	   me->setLocation(locationLine,locationFile);
 	   return;
 	<endif>
 <endif>
@@ -1769,7 +1772,10 @@ ProcedureDeclaration(id,listOfFormalParameters,body,resultAttribute,globalAttrib
 <if(resultAttribute)><resultAttribute><else>void<endif>
 <user_procedure(id)>(pearlrt::Task *me<if(listOfFormalParameters)>, <listOfFormalParameters><endif>)
 {
+    const char* locationFile = me->getLocationFile();
+    int locationLine = me->getLocationLine(); 
     <body>
+    me->setLocation(locationLine,locationFile);
 }
 
 >>
