@@ -480,7 +480,7 @@ if_statement(rhs, then_block, else_block) ::= <<
 
 statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList) ::= <<
 <if(srcFilename)>
-me->setLocation(<srcLine>, filename);
+me->setLocation(<srcLine>, <srcFilename>);
 <endif>
 <if(label)><label><endif>
 <if(tempVariableList)>{<tempVariableList><endif>

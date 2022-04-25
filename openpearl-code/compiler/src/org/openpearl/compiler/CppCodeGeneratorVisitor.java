@@ -1470,8 +1470,11 @@ implements OpenPearlVisitor<ST> {
         ST stmt = m_group.getInstanceOf("statement");
         //String s = ctx.getText();
 
-        stmt.add("srcFilename", m_sourceFileName);
-        stmt.add("srcLine", ctx.start.getLine());
+        //stmt.add("srcFilename", m_sourceFileName);
+        //stmt.add("srcLine", ctx.start.getLine());
+        SourceLocation sl = SourceLocations.getSourceLoc(ctx.start.getLine());
+        stmt.add("srcFilename", '"'+sl.filename()+'"');
+        stmt.add("srcLine", sl.getLineNo(ctx.start.getLine()));
         stmt.add("srcColumn", ctx.start.getCharPositionInLine());
         m_tempVariableList.add(m_group.getInstanceOf("TempVariableList"));
         m_tempVariableNbr.add(Integer.valueOf(0));
