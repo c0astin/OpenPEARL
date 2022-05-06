@@ -185,6 +185,8 @@ namespace pearlrt {
 
       int dataElement;
 
+      assertOpen();
+
       try {
          beginSequence(me, Dation::OUT);
          this->formatItem = -1;
@@ -288,6 +290,7 @@ namespace pearlrt {
 
       int dataElement;
 
+      assertOpen();
 
       try {
          beginSequence(me, Dation::IN);

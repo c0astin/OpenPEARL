@@ -207,6 +207,8 @@ namespace pearlrt {
       size_t nbrOfBytes;
       char * startAddress;
 
+      assertOpen();
+
       try {
          beginSequence(me, Dation::OUT);
 
@@ -255,6 +257,8 @@ namespace pearlrt {
       size_t formatItem;
       size_t dataElement;
       size_t nbrOfBytes;
+
+      assertOpen();
 
       try {
          beginSequence(me, Dation::IN);

@@ -46,6 +46,7 @@ namespace pearlrt {
       //currentTask = NULL;
       //rstValue = NULL;
       rstVoidPointer = NULL;
+      dationStatus = CLOSED;
       isBusy = false;
       mutexUserDation.name("UserDation");
    }

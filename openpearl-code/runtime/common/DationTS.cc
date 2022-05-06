@@ -129,6 +129,8 @@ namespace pearlrt {
       size_t nbrOfBytes;
       char * startAddress;
 
+      assertOpen();
+
       try {
          beginSequence(me, Dation::OUT);
 
@@ -164,6 +166,8 @@ namespace pearlrt {
                        IODataList * dataList, IOFormatList * formatList) {
 
       size_t nbrOfBytes;
+
+      assertOpen();
 
       try {
          beginSequence(me, Dation::IN);
