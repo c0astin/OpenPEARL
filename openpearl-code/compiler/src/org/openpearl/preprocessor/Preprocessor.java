@@ -508,6 +508,7 @@ public class Preprocessor {
         catch (Exception e)
         {
             System.err.println(e.getMessage()); // handle exception
+            System.exit(-1);
         }
 
         return Statement.MISC;
@@ -549,6 +550,7 @@ public class Preprocessor {
         catch (Exception e)
         {
             System.err.println(e.getMessage()); // handle exception
+            System.exit(-1);
         }
 
         return Statement.MISC;
@@ -744,6 +746,7 @@ class SourceFile {
             m_bufferedReader = new BufferedReader(m_reader);
         } catch (Exception e) {
             System.err.println(e.getMessage()); // handle exception
+            System.exit(-1);
         }
     }
 
@@ -785,6 +788,7 @@ class SourceFile {
             return m_curLine;
         } catch (Exception e) {
             System.err.println(e.getMessage()); // handle exception
+            System.exit(-1);
         }
         return null;
     }
@@ -797,6 +801,7 @@ class SourceFile {
             return m_curLine;
         } catch (Exception e) {
             System.err.println(e.getMessage()); // handle exception
+            System.exit(-1);
         }
         return null;
     }
