@@ -64,6 +64,11 @@ public class TypeReference extends TypeDefinition {
         if (this.m_baseType == null) return "NIL";
         return super.toString() + " " + this.m_baseType.toString4IMC(isInStructure);
     }
+    
+    public String toErrorString() {
+        if (this.m_baseType == null) return "NIL";
+        return super.toString() + " " + this.m_baseType.toErrorString();
+    }
 
     @Override
     public boolean equals(Object other) {
@@ -84,17 +89,22 @@ public class TypeReference extends TypeDefinition {
     }
 
     public ST toST(STGroup group) {
-//      if (m_baseType instanceof TypeArraySpecification) {
-//        ST st = group.getInstanceOf("TypeReferenceArray");
-//        
-//        st.add("basetype", ((TypeArraySpecification)m_baseType).getBaseType().toST(group));
-//        return st;
-//      } else {
+        ST st = null;
         if (m_baseType instanceof TypeRefChar) {
-          return m_baseType.toST(group);
-        } 
-        ST st = group.getInstanceOf("TypeReference");
-        st.add("BaseType", m_baseType.toST(group));
+          st = m_baseType.toST(group);
+        } else if (m_baseType instanceof TypeDation){
+            st = group.getInstanceOf("TypeReference");
+            st.add("BaseType", m_baseType.toST(group));
+            st.add("needPointer", 1);
+        } else {
+           st = group.getInstanceOf("TypeReference");
+           st.add("BaseType", m_baseType.toST(group));
+        }
+        if (hasAssignmentProtection()) {
+            ST inv = group.getInstanceOf("const_type");
+            inv.add("type", st);
+            st = inv;
+        }
         return st;
 //      }
     }

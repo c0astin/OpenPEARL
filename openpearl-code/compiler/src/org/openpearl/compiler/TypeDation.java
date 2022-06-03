@@ -152,6 +152,10 @@ public class TypeDation extends TypeDefinition {
         return s;
     }
     
+    public String toErrorString() {
+        return toString4IMC(true);
+    }
+    
     /**
      * return type of transmission for the IMC
      */
@@ -165,9 +169,9 @@ public class TypeDation extends TypeDefinition {
         s += getDataAsString();
         s += getTypeAsString();
 
-        if (m_global != null) s+= " GLOBAL("+m_global+")";      
-        if (m_created_on != null) s+= " CREATED("+m_created_on.getName()+")";
-        else if (m_createdOnAsString!= null) s+= " CREATED("+m_createdOnAsString+")";
+        //if (m_global != null) s+= " GLOBAL("+m_global+")";      
+        //if (m_created_on != null) s+= " CREATED("+m_created_on.getName()+")";
+        //else if (m_createdOnAsString!= null) s+= " CREATED("+m_createdOnAsString+")";
         return s;        
     }
 

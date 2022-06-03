@@ -18,73 +18,73 @@ otherDataOutByF: PROC;
 
    PUT dur TO pipe_out BY F(6), SKIP;
 /*$    ^
-error: PUT:expression type match format: DURATION does not apply to format 
+error: PUT: expression type match format: DURATION does not apply to format 
 */
 /*$                       ^
-note: PUT:expression type match format: F(6)
+note: PUT: expression type match format: F(6)
 */
 
    PUT clk TO pipe_out BY F(6), SKIP;
 /*$    ^
-error: PUT:expression type match format: CLOCK does not apply to format 
+error: PUT: expression type match format: CLOCK does not apply to format 
 */
 /*$                       ^
-note: PUT:expression type match format: F(6)
+note: PUT: expression type match format: F(6)
 */
 
    PUT bit TO pipe_out BY F(6), SKIP;
 /*$    ^
-error: PUT:expression type match format: BIT(1) does not apply to format 
+error: PUT: expression type match format: BIT(1) does not apply to format 
 */
 /*$                       ^
-note: PUT:expression type match format: F(6)
+note: PUT: expression type match format: F(6)
 */
 
    PUT ch  TO pipe_out BY F(6), SKIP;
 /*$    ^
-error: PUT:expression type match format: CHAR(1) does not apply to format 
+error: PUT: expression type match format: CHAR(1) does not apply to format 
 */
 /*$                       ^
-note: PUT:expression type match format: F(6)
+note: PUT: expression type match format: F(6)
 */
 
    PUT sema  TO pipe_out BY F(6), SKIP;
 /*$    ^
-error: PUT:expression type match format: SEMA does not apply to format 
+error: PUT: expression type match format: SEMA does not apply to format 
 */
 /*$                         ^
-note: PUT:expression type match format: F(6)
+note: PUT: expression type match format: F(6)
 */
 
    PUT bolt  TO pipe_out BY F(6), SKIP;
 /*$    ^
-error: PUT:expression type match format: BOLT does not apply to format 
+error: PUT: expression type match format: BOLT does not apply to format 
 */
 /*$                         ^
-note: PUT:expression type match format: F(6)
+note: PUT: expression type match format: F(6)
 */
 
    PUT fixedOutByF  TO pipe_out BY F(6), SKIP;
 /*$    ^
-error: PUT:expression type match format: PROC does not apply to format 
+error: PUT: expression type match format: PROC does not apply to format 
 */
 /*$                                ^
-note: PUT:expression type match format: F(6)
+note: PUT: expression type match format: F(6)
 */
 
    PUT rt  TO pipe_out BY F(6), SKIP;
 /*$    ^
-error: PUT:expression type match format: REF TASK does not apply to format 
+error: PUT: expression type match format: REF TASK does not apply to format 
 */
 /*$                       ^
-note: PUT:expression type match format: F(6)
+note: PUT: expression type match format: F(6)
 */
    PUT rp  TO pipe_out BY F(6), SKIP;
 /*$    ^
-error: PUT:expression type match format: REF PROC does not apply to format 
+error: PUT: expression type match format: REF PROC does not apply to format 
 */
 /*$                       ^
-note: PUT:expression type match format: F(6)
+note: PUT: expression type match format: F(6)
 */
 END;
 
@@ -93,27 +93,27 @@ fixedOutByF: PROC;
 
      PUT f TO pipe_out BY F(1.0),SKIP;
 /*$                         ^
-error: PUT:F-format:fieldwidth: must by of type FIXED --- got FLOAT(23)
+error: PUT: F-format: fieldwidth: must by of type FIXED --- got FLOAT(23)
 */
 
      PUT f TO pipe_out BY F(0),SKIP;
 /*$                         ^
-error: PUT:F-format:fieldwidth: must be >0
+error: PUT: F-format: fieldwidth: must be >0
 */
 
      PUT f TO pipe_out BY F(2,1.0),SKIP;
 /*$                           ^
-error: PUT:F-format:decimal positions: type must be FIXED
+error: PUT: F-format: decimal positions: type must be FIXED
 */
 
      PUT f TO pipe_out BY F(2,0),SKIP;
      PUT f TO pipe_out BY F(2,-1),SKIP;
 /*$                           ^
-error: PUT:F-format:decimal positions: must be >=0
+error: PUT: F-format: decimal positions: must be >=0
 */
      PUT f TO pipe_out BY F(2,1),SKIP;
 /*$                       ^
-error: PUT:F-format: field width too small (at least 3 required)
+error: PUT: F-format: field width too small (at least 3 required)
 */
 
 END;
@@ -123,27 +123,27 @@ floatOutByF: PROC;
 
      PUT f TO pipe_out BY F(1.0),SKIP;
 /*$                         ^
-error: PUT:F-format:fieldwidth: must by of type FIXED --- got FLOAT(23)
+error: PUT: F-format: fieldwidth: must by of type FIXED --- got FLOAT(23)
 */
 
      PUT f TO pipe_out BY F(0),SKIP;
 /*$                         ^
-error: PUT:F-format:fieldwidth: must be >0
+error: PUT: F-format: fieldwidth: must be >0
 */
 
      PUT f TO pipe_out BY F(2,1.0),SKIP;
 /*$                           ^
-error: PUT:F-format:decimal positions: type must be FIXED
+error: PUT: F-format: decimal positions: type must be FIXED
 */
 
      PUT f TO pipe_out BY F(2,0),SKIP;
      PUT f TO pipe_out BY F(2,-1),SKIP;
 /*$                           ^
-error: PUT:F-format:decimal positions: must be >=0
+error: PUT: F-format: decimal positions: must be >=0
 */
      PUT f TO pipe_out BY F(2,1),SKIP;
 /*$                       ^
-error: PUT:F-format: field width too small (at least 3 required)
+error: PUT: F-format: field width too small (at least 3 required)
 */
 
 END;

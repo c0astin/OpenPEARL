@@ -2406,15 +2406,15 @@ implements OpenPearlVisitor<Void> {
             TypeDefinition type2 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
             Boolean isConstant = op1.isConstant() && op2.isConstant();
 
-            if (type1 instanceof TypeProcedure) {
-                type1 = ((TypeProcedure)type1).getResultType();
-                isConstant = false;
-            }
-
-            if (type2 instanceof TypeProcedure) {
-                type2 = ((TypeProcedure)type2).getResultType();
-                isConstant = false;
-            }
+//            if (type1 instanceof TypeProcedure) {
+//                type1 = ((TypeProcedure)type1).getResultType();
+//                isConstant = false;
+//            }
+//
+//            if (type2 instanceof TypeProcedure) {
+//                type2 = ((TypeProcedure)type2).getResultType();
+//                isConstant = false;
+//            }
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
                 res = new ASTAttribute(new TypeBit(1), isConstant);
@@ -3740,16 +3740,30 @@ implements OpenPearlVisitor<Void> {
 
             ASTAttribute attr = m_ast.lookup(ctx.expression(i));
             TypeDefinition savedActualParameterType = attr.getType();
-            TypeDefinition typeOfFormalParameter = proc.getFormalParameters().get(i).getType();
+            FormalParameter fp = proc.getFormalParameters().get(i);
+            TypeDefinition typeOfFormalParameter = fp.getType();
             TypeDefinition typeOfActualParameter = savedActualParameterType;
             ErrorStack.enter(ctx.expression(i));
-            boolean assignable = TypeUtilities.mayBeAssignedTo(typeOfFormalParameter, proc.getFormalParameters().get(i), ctx.expression(i), m_ast);
-
+            
+            boolean assignable = false;
+            if (fp.passIdentical()) {
+                // types must be identical or
+                // actual parameter must be a lValue if INV is not present
+               // if (!attr.isLValue()) {
+               //     ErrorStack.add(ctx.expression(i),"not an lvalue",""+attr.m_type+"  "+fp.getType());
+               // } else {
+                    assignable = TypeUtilities.mayBePassedByIdent(typeOfFormalParameter, proc.getFormalParameters().get(i), ctx.expression(i), m_ast);
+                //}
+            } else {
+               assignable = TypeUtilities.mayBeAssignedTo(typeOfFormalParameter, proc.getFormalParameters().get(i), ctx.expression(i), m_ast, false);
+            }
+            
             if (assignable) {
                 // additional tests for INV and REF violations
-                if (typeOfActualParameter.hasAssignmentProtection() && !(typeOfFormalParameter.hasAssignmentProtection())) {
-                    ErrorStack.add("type mismatch: cannot pass INV value to non INV formal parameter");
-                }
+//                if (typeOfActualParameter.hasAssignmentProtection() && !(typeOfFormalParameter.hasAssignmentProtection())) {
+//                    ErrorStack.add("type mismatch: cannot pass INV value to non INV formal parameter");
+//                }
+        
                 if (typeOfFormalParameter instanceof TypeReference) {
                     if (!((TypeReference)typeOfFormalParameter).getBaseType().hasAssignmentProtection()) {
                         if (typeOfActualParameter instanceof TypeReference && ((TypeReference)typeOfActualParameter).getBaseType().hasAssignmentProtection()) {

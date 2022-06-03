@@ -53,8 +53,33 @@ public class CommonErrorMessages {
                 "not in range [" + Defaults.CHARACTER_LENGTH + "," + Defaults.CHARACTER_MAX_LENGTH + "]");
     }
     
-    public static void typeMismatch(TypeDefinition lhsType, TypeDefinition rhsType, String hint) {
-        ErrorStack.add("type mismatch: "+hint+"expected: " + lhsType.toString4IMC(true) +" --- got "+ rhsType.toString4IMC(true));
+    public static void typeMismatchProcedureParameter(String lhsType, String rhsType, ASTAttribute rhsAttr) {
+        ErrorStack.add("type mismatch: cannot pass "+ getTypeOfRhs(rhsAttr)+" of type "+ rhsType + 
+                " as " + lhsType);
+    }
+    
+    public static void typeMismatchProcedureParameterIdent(String lhsType, String rhsType, ASTAttribute rhsAttr,String hint) {
+        ErrorStack.add("type mismatch: cannot pass "+ getTypeOfRhs(rhsAttr)+" of type "+ rhsType + 
+                " as " + lhsType+" by IDENT"+ (hint!=null?hint:"") );
     }
 
+    public static void typeMismatchInAssignment(String lhsType, String rhsType, ASTAttribute rhsAttr) {
+        ErrorStack.add("type mismatch: cannot assign "+ getTypeOfRhs(rhsAttr)+" of type "+ rhsType + 
+                " to " + lhsType);
+    }
+    
+    public static void typeMismatchInInit(String lhsType, String rhsType, ASTAttribute rhsAttr) {
+        ErrorStack.add("type mismatch: cannot use "+ getTypeOfRhs(rhsAttr)+" of type "+ rhsType + 
+                " as initializer for object of type " + lhsType);
+    }
+    
+    private static String getTypeOfRhs(ASTAttribute attr) {
+        if (attr == null || attr.m_constant != null) {
+            return "constant";
+        } else if (attr.getVariable() != null || attr.getSymbolTableEntry() != null) {
+            return "object";
+        } else {
+            return "expression";
+        }
+    }
 }

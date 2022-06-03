@@ -40,7 +40,7 @@ END;
 
 proc: PROC RETURNS(REF CHAR());
 /*$                ^
-error: PROC:RETURNS: type REF CHAR() is not allowed as result type
+error: PROC: RETURNS: type REF CHAR() is not allowed as result type
 */
    RETURN(rc);
 END;

@@ -38,7 +38,7 @@ import org.openpearl.compiler.TypeArraySpecification;
 
 public class FormalParameter extends VariableEntry {
 
-    public  Boolean			passIdentical;
+    private  Boolean			passIdentical;
         
     public FormalParameter() {
     }
@@ -60,6 +60,9 @@ public class FormalParameter extends VariableEntry {
       return super.getType() +(passIdentical ? " IDENT" : "");
         
     }
+    public Boolean passIdentical() {
+        return passIdentical;
+    }
 
     public String toString4IMC(boolean isInStructure) {
         return  super.getType().toString4IMC(isInStructure) +(passIdentical ? " IDENT" : "");
@@ -69,10 +72,12 @@ public class FormalParameter extends VariableEntry {
        ST st = group.getInstanceOf("FormalParameter");
        // id,type,assignmentProtection,passIdentical,isArray
        st.add("id",  super.getName());
+       TypeDefinition t = super.getType();
+       String s = t.toST(group).render();
        st.add("type", super.getType().toST(group));
        if (super.getType() instanceof TypeArraySpecification) st.add("isArray", "");
        
-       if (super.getType().hasAssignmentProtection()) st.add("assignmentProtection","");
+       //if (super.getType().hasAssignmentProtection()) st.add("assignmentProtection","");
        if (passIdentical)st.add("passIdentical","");
        return st;
     }

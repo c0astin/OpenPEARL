@@ -66,6 +66,11 @@ public class TypeFixed extends TypeDefinition {
     public ST toST(STGroup group) {
         ST st = group.getInstanceOf("fixed_type");
         st.add("size", m_precision);
+        if (hasAssignmentProtection()) {
+            ST inv = group.getInstanceOf("const_type");
+            inv.add("type", st);
+            st = inv;
+        }
         return st;
     }
 

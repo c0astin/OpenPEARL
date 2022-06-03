@@ -100,7 +100,11 @@ public class TypeArray extends TypeDefinition {
     public String toString() {
         return super.toString() + " " + this.m_dimensions + " " + this.m_baseType;
     }
-
+    
+    public String toErrorString() {
+        return toString4IMC(true);
+    }
+    
     public String toString4IMC(boolean isInStructure) {
         String result="(";
         for (int i=0; i< m_dimensions.size(); i++) {
@@ -111,6 +115,7 @@ public class TypeArray extends TypeDefinition {
         result += ") " + m_baseType.toString4IMC(isInStructure);
         return result;
     }
+    
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof TypeArray)) {
@@ -125,6 +130,11 @@ public class TypeArray extends TypeDefinition {
     public ST toST(STGroup group) {
         ST st = group.getInstanceOf("ArrayType");
         st.add("type",m_baseType.toST(group));
+        if (hasAssignmentProtection()) {
+            ST inv = group.getInstanceOf("const_type");
+            inv.add("type", st);
+            st = inv;
+        }
         return st;
     }
 }

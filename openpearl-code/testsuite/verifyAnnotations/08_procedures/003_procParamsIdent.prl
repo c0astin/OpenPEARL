@@ -1,0 +1,132 @@
+MODULE(m1);
+/*
+check types of procedure parameters with call by reference (IDENT)
+
+ happy day scenarios as wells as
+ fails with 
+   type conflicts
+
+ treat type FLOAT (with different length).
+ INV conflicts may appear
+ treat REF types
+*/
+PROBLEM;
+
+SPC so DATION OUT ALPHIC DIM(*,80) FORWARD GLOBAL(other);
+SPC irupt INTERRUPT GLOBAL(other);
+DCL b BOLT;
+DCL sem SEMA;
+   DCL f7 FIXED(7);
+   DCL f32 FIXED(32);
+   DCL hFloat FLOAT(52);
+   DCL bit2 BIT(2);
+   DCL dur DURATION;
+   DCL clk CLOCK;
+   DCL ch CHAR(2);
+
+q0: PROC (f FIXED(31) IDENT );
+  f = f + 1;
+END;
+
+q1: PROC (f INV FIXED(31) IDENT );
+  !f = f + 1;
+END;
+
+q2: PROC (f REF INV FIXED(31) IDENT );
+  !f = f + 1;
+END;
+
+q4: PROC (f INV REF FIXED(31) IDENT );
+  f = f + 1;
+END;
+
+q5: PROC (f INV REF INV FIXED(31) IDENT );
+  !f = f + 1;
+END;
+
+t0: TASK;
+   DCL f15 FIXED(15);
+   TYPE F15 FIXED(15);
+   DCL tf15 F15;
+   DCL f31 FIXED(31);
+   DCL if31 INV FIXED(31) INIT(42);
+   DCL rif31 REF INV FIXED(31);
+   DCL irif31 INV REF INV FIXED(31) INIT(if31);
+   DCL str STRUCT[a FIXED(31), b FIXED(15)];
+
+   DCL ia(3) INV FIXED INIT(1,2);
+   DCL ria REF () INV FIXED;
+   DCL iria INV REF () INV FIXED INIT(ia);
+
+   DCL c100 CHAR(100);
+   DCL rc REF CHAR();
+   
+   CALL q0(15);           
+/*$        ^
+error: q0: type mismatch: cannot pass constant of type FIXED(4) as FIXED(31) by IDENT
+*/
+
+   CALL q0(f15);          
+/*$        ^
+error: q0: type mismatch: cannot pass object of type FIXED(15) as FIXED(31) by IDENT
+*/
+
+   CALL q0(tf15);          
+/*$        ^
+error: q0: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as FIXED(31) by IDENT
+*/
+
+   CALL q0(str.a);        
+   CALL q0(str.b);        
+/*$        ^
+error: q0: type mismatch: cannot pass object of type FIXED(15) as FIXED(31) by IDENT
+*/
+
+   CALL q0(if31);         
+/*$        ^
+error: q0: type mismatch: cannot pass object of type INV FIXED(31) as FIXED(31) by IDENT -- would break INV
+*/
+
+   CALL q0(rif31);        
+/*$        ^
+error: q0: type mismatch: cannot pass object of type REF INV FIXED(31) as FIXED(31) by IDENT -- would break INV
+*/
+
+   CALL q0(irif31);       
+/*$        ^
+error: q0: type mismatch: cannot pass object of type INV REF INV FIXED(31) as FIXED(31) by IDENT -- would break INV
+*/
+
+   CALL q0(f31+1);        
+/*$        ^
+error: q0: type mismatch: cannot pass expression of type FIXED(31) as FIXED(31) by IDENT
+*/
+
+   CALL q0('a');
+/*$        ^
+error: q0: type mismatch: cannot pass constant of type CHAR(1) as FIXED(31) by IDENT
+*/
+
+   CALL q0(c100);
+/*$        ^
+error: q0: type mismatch: cannot pass object of type CHAR(100) as FIXED(31) by IDENT
+*/
+
+   CALL q0(rc);
+/*$        ^
+error: q0: type mismatch: cannot pass object of type REF CHAR() as FIXED(31) by IDENT
+*/
+
+
+   CALL q0(ria); ! REF () INV FIXED;
+/*$        ^
+error: q0: type mismatch: cannot pass object of type REF () INV FIXED(31) as FIXED(31) by IDENT
+*/
+
+   CALL q0(iria); ! INV REF () INV FIXED INIT(ia);
+/*$        ^
+error: q0: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as FIXED(31) by IDENT
+*/
+
+END;
+MODEND;

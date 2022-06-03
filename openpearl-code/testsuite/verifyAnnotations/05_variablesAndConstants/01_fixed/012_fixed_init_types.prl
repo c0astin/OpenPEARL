@@ -6,31 +6,31 @@ PROBLEM;
 
 DCL f1 FIXED(15) INIT(32768);
 /*$                   ^
-error: type mismatch in INIT: FIXED(15) := FIXED(16)
+error: type mismatch: cannot use constant of type FIXED(16) as initializer for object of type FIXED(15)
 */
 DCL f2 FIXED(15) INIT(-32769);
 /*$                   ^
-error: type mismatch in INIT: FIXED(15) := FIXED(17)
+error: type mismatch: cannot use constant of type FIXED(17) as initializer for object of type FIXED(15)
 */
 DCL f3 FIXED(15) INIT(3.14);
 /*$                   ^
-error: type mismatch in INIT: FIXED(15) := FLOAT(23)
+error: type mismatch: cannot use constant of type FLOAT(23) as initializer for object of type FIXED(15)
 */
 DCL f4 FIXED(15) INIT('123'B4);
 /*$                   ^
-error: type mismatch in INIT: FIXED(15) := BIT(12)
+error: type mismatch: cannot use constant of type BIT(12) as initializer for object of type FIXED(15)
 */
 DCL f5 FIXED(15) INIT(1:2:3);
 /*$                   ^
-error: type mismatch in INIT: FIXED(15) := CLOCK
+error: type mismatch: cannot use constant of type CLOCK as initializer for object of type FIXED(15)
 */
 DCL f6 FIXED(15) INIT(1SEC);
 /*$                   ^
-error: type mismatch in INIT: FIXED(15) := DURATION
+error: type mismatch: cannot use constant of type DURATION as initializer for object of type FIXED(15)
 */
 DCL f7 FIXED(15) INIT('abc');
 /*$                   ^
-error: type mismatch in INIT: FIXED(15) := CHAR(3)
+error: type mismatch: cannot use constant of type CHAR(3) as initializer for object of type FIXED(15)
 */
 
 

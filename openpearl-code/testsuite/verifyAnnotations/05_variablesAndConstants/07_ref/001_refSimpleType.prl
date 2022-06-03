@@ -23,39 +23,39 @@ init: PROC;
    DCL rf15  REF FIXED(15) INIT(f15);
    DCL rf15a REF FIXED(15) INIT(f31);
 /*$                             ^
-error: type mismatch in REF INIT: REF FIXED(15) := FIXED(31)
+error: type mismatch: cannot use object of type FIXED(31) as initializer for object of type REF FIXED(15)
 */
    DCL rf15b REF FIXED(15) INIT(b15);
 /*$                             ^
-error: type mismatch in REF INIT: REF FIXED(15) := BIT(15)
+error: type mismatch: cannot use object of type BIT(15) as initializer for object of type REF FIXED(15)
 */
    DCL rf15c REF FIXED(15) INIT(b31);
 /*$                             ^
-error: type mismatch in REF INIT: REF FIXED(15) := BIT(31)
+error: type mismatch: cannot use object of type BIT(31) as initializer for object of type REF FIXED(15)
 */
    DCL rf15d REF FIXED(15) INIT(fl23);
 /*$                             ^
-error: type mismatch in REF INIT: REF FIXED(15) := FLOAT(23)
+error: type mismatch: cannot use object of type FLOAT(23) as initializer for object of type REF FIXED(15)
 */
    DCL rf15e REF FIXED(15) INIT(fl52);
 /*$                             ^
-error: type mismatch in REF INIT: REF FIXED(15) := FLOAT(52)
+error: type mismatch: cannot use object of type FLOAT(52) as initializer for object of type REF FIXED(15)
 */
    DCL rf15f REF FIXED(15) INIT(c15);
 /*$                             ^
-error: type mismatch in REF INIT: REF FIXED(15) := CHAR(15)
+error: type mismatch: cannot use object of type CHAR(15) as initializer for object of type REF FIXED(15)
 */
    DCL rf15g REF FIXED(15) INIT(c31);
 /*$                             ^
-error: type mismatch in REF INIT: REF FIXED(15) := CHAR(31)
+error: type mismatch: cannot use object of type CHAR(31) as initializer for object of type REF FIXED(15)
 */
    DCL rf15h REF FIXED(15) INIT(d);
 /*$                             ^
-error: type mismatch in REF INIT: REF FIXED(15) := DURATION
+error: type mismatch: cannot use object of type DURATION as initializer for object of type REF FIXED(15)
 */
    DCL rf15i REF FIXED(15) INIT(clk);
 /*$                             ^
-error: type mismatch in REF INIT: REF FIXED(15) := CLOCK
+error: type mismatch: cannot use object of type CLOCK as initializer for object of type REF FIXED(15)
 */
 END;
 
@@ -75,39 +75,39 @@ assign: PROC;
    rf15 = f15;
    rf15 = f31;
 /*$^
-error: assignment: type mismatch: REF FIXED(15) := FIXED(31)
+error: assignment: type mismatch: cannot assign object of type FIXED(31) to REF FIXED(15)
 */
    rf15 = b15;
 /*$^
-error: assignment: type mismatch: REF FIXED(15) := BIT(15)
+error: assignment: type mismatch: cannot assign object of type BIT(15) to REF FIXED(15)
 */
    rf15 = b31;
 /*$^
-error: assignment: type mismatch: REF FIXED(15) := BIT(31)
+error: assignment: type mismatch: cannot assign object of type BIT(31) to REF FIXED(15)
 */
    rf15 = fl23;
 /*$^
-error: assignment: type mismatch: REF FIXED(15) := FLOAT(23)
+error: assignment: type mismatch: cannot assign object of type FLOAT(23) to REF FIXED(15)
 */
    rf15 = fl52; 
 /*$^
-error: assignment: type mismatch: REF FIXED(15) := FLOAT(52)
+error: assignment: type mismatch: cannot assign object of type FLOAT(52) to REF FIXED(15)
 */
    rf15 = c15;
 /*$^
-error: assignment: type mismatch: REF FIXED(15) := CHAR(15)
+error: assignment: type mismatch: cannot assign object of type CHAR(15) to REF FIXED(15)
 */
    rf15 = c31;
 /*$^
-error: assignment: type mismatch: REF FIXED(15) := CHAR(31)
+error: assignment: type mismatch: cannot assign object of type CHAR(31) to REF FIXED(15)
 */
    rf15 = d;
 /*$^
-error: assignment: type mismatch: REF FIXED(15) := DURATION
+error: assignment: type mismatch: cannot assign object of type DURATION to REF FIXED(15)
 */
    rf15 = clk;
 /*$^
-error: assignment: type mismatch: REF FIXED(15) := CLOCK
+error: assignment: type mismatch: cannot assign object of type CLOCK to REF FIXED(15)
 */
 END;
 
@@ -117,7 +117,7 @@ wrongScope: PROC;
    DCL f FIXED;
    rf = f;
 /*$^
-error: assignment: type mismatch: REF FIXED(15) := FIXED(31)
+error: assignment: type mismatch: cannot assign object of type FIXED(31) to REF FIXED(15)
 */
 /*$^
 error: assignment: life cycle of 'f' is shorter than 'rf'

@@ -64,6 +64,11 @@ public class TypeChar extends TypeDefinition {
     public ST toST(STGroup group) {
         ST st = group.getInstanceOf("char_type");
         st.add("size", m_size);
+        if (hasAssignmentProtection()) {
+            ST inv = group.getInstanceOf("const_type");
+            inv.add("type", st);
+            st = inv;
+        }
         return st;
     }
 

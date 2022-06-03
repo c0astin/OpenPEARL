@@ -61,6 +61,11 @@ public class TypeDuration extends TypeDefinition {
 
     public ST toST(STGroup group) {
         ST st = group.getInstanceOf("duration_type");
+        if (hasAssignmentProtection()) {
+            ST inv = group.getInstanceOf("const_type");
+            inv.add("type", st);
+            st = inv;
+        }
         return st;
     }
     

@@ -85,7 +85,7 @@ public abstract class TypeDefinition {
      * this is mainly the same as toString() except in TypeStructure and UserDefinedTypeStructure
      * In these cases the debugging information with component index and alias is suppressed
      * 
-     * @return the PEARL text for the typoe definition
+     * @return the PEARL text for the type definition
      */
     public String toErrorString() {
         return toString();

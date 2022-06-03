@@ -312,7 +312,7 @@ public class ErrorStack {
         String prefix = "";
         for (int i = 0; i <= m_sp; i++) {
             if (m_stack[i].getErrorPrefix() != null) {
-                prefix += m_stack[i].getErrorPrefix() + ":";
+                prefix += m_stack[i].getErrorPrefix() + ": ";
             }
         }
 
@@ -329,7 +329,9 @@ public class ErrorStack {
         errorLine += errorOn;
 
         System.err.println(filename + ":" + startLineNumber + ":"
-                + (errorPos + 1) + ": " + typeOfMessage + ": " + prefix + " " + msg);
+                + (errorPos + 1) + ": " + typeOfMessage + ": " + 
+                (prefix.length()>0 ? prefix : "")  +   // if prefix is empty suppress the second space 
+                msg);
 
         if (startLineNumber == stopLineNumber) {
             errorLine += sourceLine.substring(startColNumber, stopColNumber + 1);

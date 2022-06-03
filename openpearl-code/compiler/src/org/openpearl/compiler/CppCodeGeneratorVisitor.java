@@ -568,7 +568,7 @@ implements OpenPearlVisitor<ST> {
         spec.add("id", ve.getName());
 
         if (ve.getResultType() != null) {
-            spec.add("resultAttribute", visitTypeAttribute(ve.getResultType()));
+            spec.add("resultAttribute", ve.getResultType().toST(m_group));//visitTypeAttribute(ve.getResultType()));
         }
         if (ve.getFormalParameters() != null) {
             ST formalParams = m_group.getInstanceOf("ListOfFormalParameters");
@@ -577,8 +577,8 @@ implements OpenPearlVisitor<ST> {
                 ST fp = m_group.getInstanceOf("FormalParameter");
                 //FormalParameter(id,type,assignmentProtection,passIdentical,isArray) ::= <%
                 fp.add("type", f.getType().toST(m_group)); // (f.getType()));
-                fp.add("assignmentProtection", f.getType().hasAssignmentProtection());
-                fp.add("passIdentical", f.passIdentical);
+                //fp.add("assignmentProtection", f.getType().hasAssignmentProtection());
+                fp.add("passIdentical", f.passIdentical());
                 //fp.add("isArray",f.
                 formalParams.add("FormalParameters",fp);
             }
@@ -599,31 +599,32 @@ implements OpenPearlVisitor<ST> {
         ErrorStack.enter(ve.getCtx());
 
         ST scope = getScope(ve);
-        if (ve.getType() instanceof TypeArray) {
-            //ErrorStack.addInternal(ve.getCtx(), "SPC","arrays not supported, yet");    
-            TypeDefinition baseType = ((TypeArray)(ve.getType())).getBaseType();
-            ST st = m_group.getInstanceOf("ArrayVariableSpecification");
-            st.add("name", ve.getName());
-            st.add("type",visitTypeAttribute(baseType));//(((TypeArray)(ve.getType())).getBaseType()));
-            scope.add("variable", st);
-            dationSpecifications.add("decl", scope);
-        } else if (ve.getType() instanceof TypeStructure) {
+        if (t instanceof TypeArray || t instanceof TypeStructure ||
+            t instanceof TypeSemaphore || t instanceof TypeBolt ||
+            t instanceof TypeReference || isSimpleType(t)) {
+
             ST st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
-            st.add("type",
-                    visitTypeAttribute(ve.getType()));
-            st.add("inv", ve.getType().hasAssignmentProtection());
+            st.add("type", t.toST(m_group));
             scope.add("variable", st);
+            
             dationSpecifications.add("decl", scope);
-
-        } else if (ve.getType() instanceof TypeSemaphore ||
-                ve.getType() instanceof TypeBolt) {
-            // scopeXXX adds the extern/static/ ...
-            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
-            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-            specifyVariable.add("type",t.toST(m_group));
-            scope.add("variable", specifyVariable);
-            dationSpecifications.add("decl",  scope);
+//        } else if (ve.getType() instanceof TypeStructure) {
+//            ST st = m_group.getInstanceOf("variable_denotation");
+//            st.add("name", getUserVariableWithoutNamespace(ve.getName()));
+//            st.add("type",
+//                   // visitTypeAttribute(ve.getType()));
+//                    t.toST(m_group));
+//            scope.add("variable", st);
+//            dationSpecifications.add("decl", scope);
+//
+//        } else if (ve.getType() instanceof TypeSemaphore ||
+//                ve.getType() instanceof TypeBolt) {
+//            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
+//            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
+//            specifyVariable.add("type",t.toST(m_group));
+//            scope.add("variable", specifyVariable);
+//            dationSpecifications.add("decl",  scope);
         } else if (t instanceof TypeDation) {
             ST specifyDation = null;
             ST initializer = null;
@@ -632,19 +633,11 @@ implements OpenPearlVisitor<ST> {
                 specifyDation = m_group.getInstanceOf("SpecificationSystemDation");
                 specifyDation.add("name", ve.getName());
                 specifyDation.add("TypeDation", "SystemDationB");
-
-
-                // initializer = m_group.getInstanceOf("InitPointerToSpcSystemDation");
-                // initializer.add("name", getUserVariable(ve));
-                // initializer.add("TypeDation", "SystemDationB");
             } else if (td.isSystemDation() && !td.isBasic()) {
                 specifyDation = m_group.getInstanceOf("SpecificationSystemDation");
                 specifyDation.add("name", ve.getName());
                 specifyDation.add("TypeDation", "SystemDationNB");
 
-                //initializer = m_group.getInstanceOf("InitPointerToSpcSystemDation");
-                //initializer.add("name", ve.getName());
-                // initializer.add("TypeDation", "SystemDationNB");
 
             } else if (td.isBasic()) {
                 specifyDation = m_group.getInstanceOf("SpecificationUserDation");
@@ -670,19 +663,19 @@ implements OpenPearlVisitor<ST> {
             scope.add("variable", specifyDation);
             dationSpecifications.add("decl", scope);
 
-        } else if (isSimpleType(t)) {
-            // scopeXXX adds the extern/static/ ...
-            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
-            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-            specifyVariable.add("type",t.toST(m_group));
-            scope.add("variable", specifyVariable);
-            dationSpecifications.add("decl",  scope);
-        } else if (t instanceof TypeReference) {
-            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
-            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-            specifyVariable.add("type",t.toST(m_group));
-            scope.add("variable", specifyVariable);
-            dationSpecifications.add("decl",  scope);
+//        } else if (isSimpleType(t)) {
+//            // scopeXXX adds the extern/static/ ...
+//            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
+//            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
+//            specifyVariable.add("type",t.toST(m_group));
+//            scope.add("variable", specifyVariable);
+//            dationSpecifications.add("decl",  scope);
+//        } else if (t instanceof TypeReference) {
+//            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
+//            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
+//            specifyVariable.add("type",t.toST(m_group));
+//            scope.add("variable", specifyVariable);
+//            dationSpecifications.add("decl",  scope);
         } else {
             ErrorStack.add("CppCodeGenerator:generateSpecification @865: missing alternative");
         }
@@ -718,6 +711,7 @@ implements OpenPearlVisitor<ST> {
         return scope;
     }
 
+    
     private ST generateVariableDeclaration(VariableEntry ve) {
 
         ST variableDeclaration = m_group.getInstanceOf("variable_denotation");
@@ -737,18 +731,17 @@ implements OpenPearlVisitor<ST> {
         // derive the scope form the SymbolTableEntry
         ST scope = getScope(ve);
 
-
         if (ve.getType() instanceof TypeArray) {
+            // Array declarations need special treatment for the creation of
+            // the array storage 
+            // (1) create the storage object
             TypeDefinition t = ((TypeArray)(ve.getType())).getBaseType();
             ST storage = m_group.getInstanceOf("ArrayStorageDeclaration");
             storage.add("name", ve.getName());
-            if (t instanceof TypeReference && ((TypeReference)t).getBaseType() instanceof TypeRefChar) {
-                storage.add("type",visitTypeAttribute(((TypeReference)t).getBaseType()));
-            } else {
-                storage.add("type",visitTypeAttribute(t));
-            }
-           
-            storage.add("assignmentProtection", ve.getType().hasAssignmentProtection());
+            
+
+            storage.add("type", t.toST(m_group));
+
             storage.add("totalNoOfElements", ((TypeArray) ve.getType()).getTotalNoOfElements());
             if (t instanceof TypeBolt) {
                 storage.add("initElements", boltArrayInitializer(ve));   
@@ -756,6 +749,8 @@ implements OpenPearlVisitor<ST> {
                 storage.add("initElements", getStructOrArrayInitializer(ve));
             }    
 
+            // the scope of array data is never global!
+            // thus we must create a special scope object of localVariable or staticVariable
             if (ve.getLevel() == 1) {
                 scope = m_group.getInstanceOf("staticVariable");
             } else {
@@ -766,117 +761,78 @@ implements OpenPearlVisitor<ST> {
             scope.add("variable", storage);
             scalarVariableDeclaration.add("variable_denotations", scope);
 
+            // (2) create the array object with descriptor and storage object 
             st = m_group.getInstanceOf("ArrayVariableDeclaration");
             st.add("name", ve.getName());
-            if (t instanceof TypeReference && ((TypeReference)t).getBaseType() instanceof TypeRefChar) {
-                st.add("type",visitTypeAttribute(((TypeReference)t).getBaseType()));
-            } else {
-               st.add("type",visitTypeAttribute(t));
-            }
+
+            st.add("type",ve.getType().toST(m_group));
             st.add("descriptor", getArrayDescriptor(ve));
             st.add("storage", "data_"+ve.getName());
+            scope = getScope(ve); // get new scope object for the array object
 
-            scope = getScope(ve);
-            scope.add("variable", st);
-            scalarVariableDeclaration.add("variable_denotations", scope);
 
         } else if (ve.getType() instanceof TypeStructure || ve.getType() instanceof UserDefinedTypeStructure) {
             st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
-            st.add("type",
-                    visitTypeAttribute(ve.getType()));
+            st.add("type", ve.getType().toST(m_group));
 
             if (ve.getInitializer()!= null) {
                 st.add("init", getStructOrArrayInitializer(ve));
-                // Log.warn("CppCodeGenerator@889: STRUCT+INIT incomplete");
             }
 
-            st.add("inv", ve.getType().hasAssignmentProtection());
-            scope.add("variable", st);
-            scalarVariableDeclaration.add("variable_denotations", scope);
 
         } else if (isSimpleType(ve) || ve.getType() instanceof UserDefinedSimpleType) {
 
             st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
             st.add("type",
-                    visitTypeAttribute(ve.getType()));//ctx.problemPartDataAttribute().typeAttribute()));
+                    //visitTypeAttribute(ve.getType()));//ctx.problemPartDataAttribute().typeAttribute()));
+                    ve.getType().toST(m_group));
             if (ve.getInitializer() != null) {
                 st.add("init", getInitialiser(ve.getInitializer()));
             }
 
-            st.add("inv", ve.getType().hasAssignmentProtection());
-            scope.add("variable", st);
-            scalarVariableDeclaration.add("variable_denotations", scope);
-
-
         } else if (ve.getType() instanceof TypeSemaphore) {
-            ST sema_decl = m_group.getInstanceOf("sema_declaration");
-            sema_decl.add("name", getUserVariableWithoutNamespace(ve.getName()));
+            st = m_group.getInstanceOf("sema_declaration");
+            st.add("name", getUserVariableWithoutNamespace(ve.getName()));
             if (ve.getInitializer() != null) {
-                sema_decl.add("preset", getInitialiserForSema(ve.getInitializer()));
+                st.add("preset", getInitialiserForSema(ve.getInitializer()));
             }
-
-            scope.add("variable", sema_decl);
-
-            scalarVariableDeclaration.add("variable_denotations", scope);
 
 
         } else if (ve.getType() instanceof TypeBolt) {
 
-            ST bolt_decl = m_group.getInstanceOf("bolt_declaration");
-            bolt_decl.add("name",getUserVariableWithoutNamespace(ve.getName()));
-
-            scope.add("variable", bolt_decl);
-
-            scalarVariableDeclaration.add("variable_denotations", scope);
-
+            st = m_group.getInstanceOf("bolt_declaration");
+            st.add("name",getUserVariableWithoutNamespace(ve.getName()));
 
         } else if (ve.getType() instanceof TypeDation) {
-
-            TypeDation td = (TypeDation)(ve.getType());
-
-            ST dation_decl = visitDationDenotation(ve); //ctx.dationDenotation());
-
+           // TypeDation td = (TypeDation)(ve.getType());
+            ST dation_decl = visitDationDenotation(ve); 
             m_dationDeclarationInitializers.add("decl",dation_decl);
+            
         } else if (ve.getType() instanceof TypeReference) {
             st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
 
-            TypeReference tr = ((TypeReference)ve.getType());
-            ST ref = m_group.getInstanceOf("TypeReference");
-            TypeDefinition baseType = tr.getBaseType();
-            if (baseType instanceof TypeArraySpecification) {
-                ST array = m_group.getInstanceOf("ArrayType"); // type
-                baseType = ((TypeReference)ve.getType()).getBaseType();
-                ref.add("BaseType",array);
-                baseType = ((TypeArraySpecification)baseType).getBaseType();
-                array.add("type", baseType.toST(m_group));
-            } else if (baseType instanceof TypeRefChar){
-                // replace previous init value of ref
-                ref = m_group.getInstanceOf("refChar_type");
-            } else if (baseType instanceof TypeDation){
-                ref = m_group.getInstanceOf("TypeReferenceDation");
-                ref.add("BaseType", visitTypeAttribute(baseType));
-            } else {
-                ref.add("BaseType", visitTypeAttribute(baseType));
-            }
-            st.add("type",ref);
+            st.add("type", ve.getType().toST(m_group));
 
             if (ve.getInitializer() != null) {
                 st.add("init", getInitialiser(ve.getInitializer()));
             }
 
-            st.add("inv", ve.getType().hasAssignmentProtection());
-            String s= st.render();
-            scalarVariableDeclaration.add("variable_denotations", st);
 
         } else {
             ErrorStack.addInternal(ve.getCtx(), "CppCodeGen:visitVariableDenotation",
                     "missing alternative@744 " + ve.getName());
-
         }
-
+        
+        // TypeDation adds itself to the output vectors
+        // all other types deliver a string template, which
+        // need a final setting for the scope
+        if (st != null) {
+           scope.add("variable", st);
+           scalarVariableDeclaration.add("variable_denotations", scope);
+        }
 
         return scalarVariableDeclaration;
     }
@@ -936,7 +892,6 @@ implements OpenPearlVisitor<ST> {
                 st.add("value", generateLHS(nc, ri.getSymbolTable()));
 
             } else if (c instanceof OpenPearlParser.IdentifierContext) {
-                IdentifierContext ic =(IdentifierContext)c;
                 st.add("value", getUserVariable(ri.getSymbolTableEntry()));
 
             } else {
@@ -1060,149 +1015,149 @@ implements OpenPearlVisitor<ST> {
 
     // usually the method toST of the TypeDefinition works fine
     // except, if we have REF DATION, here we need a pointer
-    private ST visitTypeAttribute(TypeDefinition type) {
+//    private ST visitTypeAttribute(TypeDefinition type) {
+//
+//        if (type instanceof TypeReference) {
+//            if (((TypeReference)type).getBaseType() instanceof TypeDation) {
+//                ST st = m_group.getInstanceOf("TypeReferenceDation"); 
+//                st.add("BaseType", ((TypeReference)type).getBaseType().toST(m_group));
+//                return st;
+//            } else {
+//                ST st = m_group.getInstanceOf("TypeReference");
+//                st.add("BaseType", ((TypeReference)type).getBaseType().toST(m_group));
+//                return st;
+//            }
+//        }
+//        return type.toST(m_group);
+//    }
 
-        if (type instanceof TypeReference) {
-            if (((TypeReference)type).getBaseType() instanceof TypeDation) {
-                ST st = m_group.getInstanceOf("TypeReferenceDation"); 
-                st.add("BaseType", ((TypeReference)type).getBaseType().toST(m_group));
-                return st;
-            } else {
-                ST st = m_group.getInstanceOf("TypeReference");
-                st.add("BaseType", ((TypeReference)type).getBaseType().toST(m_group));
-                return st;
-            }
-        }
-        return type.toST(m_group);
-    }
-
-    @Override
-    public ST visitTypeAttribute(OpenPearlParser.TypeAttributeContext ctx) {
-        ST type = m_group.getInstanceOf("TypeAttribute");
-
-        if (ctx.simpleType() != null) {
-            type.add("Type", visitSimpleType(ctx.simpleType()));
-        } else if (ctx.typeReference() != null) {
-            type.add("Type", visitTypeReference(ctx.typeReference()));
-        } else if (ctx.typeStructure()!= null) {
-            type.add("Type", visitTypeStructure(ctx.typeStructure()));
-        } else {
-            ErrorStack.addInternal(ctx, "CppCodeGenerator", "missing alternative"+ctx.typeStructure().getText());
-        }
-
-        return type;
-    }
-
-    @Override
-    public ST visitSimpleType(OpenPearlParser.SimpleTypeContext ctx) {
-        ST simpleType = m_group.getInstanceOf("SimpleType");
-
-        if (ctx != null) {
-            if (ctx.typeInteger() != null) {
-                simpleType.add("TypeInteger", visitTypeInteger(ctx.typeInteger()));
-            } else if (ctx.typeDuration() != null) {
-                simpleType.add("TypeDuration", visitTypeDuration(ctx.typeDuration()));
-            } else if (ctx.typeBitString() != null) {
-                simpleType.add("TypeBitString", visitTypeBitString(ctx.typeBitString()));
-            } else if (ctx.typeFloatingPointNumber() != null) {
-                simpleType.add("TypeFloatingPointNumber",
-                        visitTypeFloatingPointNumber(ctx.typeFloatingPointNumber()));
-            } else if (ctx.typeClock() != null) {
-                simpleType.add("TypeTime", visitTypeClock(ctx.typeClock()));
-            } else if (ctx.typeCharacterString() != null) {
-                simpleType.add("TypeCharacterString",
-                        visitTypeCharacterString(ctx.typeCharacterString()));
-            }
-        }
-
-        return simpleType;
-    }
-
-    @Override
-    public ST visitTypeDuration(OpenPearlParser.TypeDurationContext ctx) {
-        ST st = m_group.getInstanceOf("TypeDuration");
-
-        if (ctx != null) {
-            st.add("code", 1);
-        }
-
-        return st;
-    }
-
-    @Override
-    public ST visitTypeClock(OpenPearlParser.TypeClockContext ctx) {
-        ST st = m_group.getInstanceOf("TypeClock");
-
-        if (ctx != null) {
-            st.add("code", 1);
-        }
-
-        return st;
-    }
-
-
-    @Override
-    public ST visitTypeInteger(OpenPearlParser.TypeIntegerContext ctx) {
-        ST st = m_group.getInstanceOf("TypeInteger");
-        int size = m_currentSymbolTable.lookupDefaultFixedLength();
-
-        if (ctx != null) {
-            for (ParseTree c : ctx.children) {
-                if (c instanceof OpenPearlParser.MprecisionContext) {
-                    size = Integer.parseInt(((OpenPearlParser.MprecisionContext) c).getText());
-                }
-            }
-        }
-
-        st.add("size", size);
-
-        return st;
-    }
-
-    @Override
-    public ST visitTypeBitString(OpenPearlParser.TypeBitStringContext ctx) {
-        ST st = m_group.getInstanceOf("TypeBitString");
-
-        int length = m_currentSymbolTable.lookupDefaultBitLength();
-
-        if (ctx.length() != null) {
-            length = Integer.parseInt(ctx.length().getText());
-        }
-
-        st.add("length", length);
-
-        return st;
-    }
-
-    @Override
-    public ST visitTypeCharacterString(OpenPearlParser.TypeCharacterStringContext ctx) {
-        ST st = m_group.getInstanceOf("TypeCharacterString");
-        Integer size = Defaults.CHARACTER_LENGTH;
-
-        if (ctx.length() != null) {
-            size = Integer.parseInt(ctx.length().getText());
-
-        }
-
-        st.add("size", size);
-
-        return st;
-    }
-
-    @Override
-    public ST visitTypeFloatingPointNumber(OpenPearlParser.TypeFloatingPointNumberContext ctx) {
-        ST st = m_group.getInstanceOf("TypeFloatingPointNumber");
-        int precision = Defaults.FLOAT_PRECISION;
-
-        if (ctx.length() != null) {
-            precision = Integer.parseInt(ctx.length().getText());
-        }
-
-        st.add("precision", precision);
-
-        return st;
-    }
-
+//    @Override
+//    public ST visitTypeAttribute(OpenPearlParser.TypeAttributeContext ctx) {
+//        ST type = m_group.getInstanceOf("TypeAttribute");
+//
+//        if (ctx.simpleType() != null) {
+//            type.add("Type", visitSimpleType(ctx.simpleType()));
+//        } else if (ctx.typeReference() != null) {
+//            type.add("Type", visitTypeReference(ctx.typeReference()));
+//        } else if (ctx.typeStructure()!= null) {
+//            type.add("Type", visitTypeStructure(ctx.typeStructure()));
+//        } else {
+//            ErrorStack.addInternal(ctx, "CppCodeGenerator", "missing alternative"+ctx.typeStructure().getText());
+//        }
+//
+//        return type;
+//    }
+//
+//    @Override
+//    public ST visitSimpleType(OpenPearlParser.SimpleTypeContext ctx) {
+//        ST simpleType = m_group.getInstanceOf("SimpleType");
+//
+//        if (ctx != null) {
+//            if (ctx.typeInteger() != null) {
+//                simpleType.add("TypeInteger", visitTypeInteger(ctx.typeInteger()));
+//            } else if (ctx.typeDuration() != null) {
+//                simpleType.add("TypeDuration", visitTypeDuration(ctx.typeDuration()));
+//            } else if (ctx.typeBitString() != null) {
+//                simpleType.add("TypeBitString", visitTypeBitString(ctx.typeBitString()));
+//            } else if (ctx.typeFloatingPointNumber() != null) {
+//                simpleType.add("TypeFloatingPointNumber",
+//                        visitTypeFloatingPointNumber(ctx.typeFloatingPointNumber()));
+//            } else if (ctx.typeClock() != null) {
+//                simpleType.add("TypeTime", visitTypeClock(ctx.typeClock()));
+//            } else if (ctx.typeCharacterString() != null) {
+//                simpleType.add("TypeCharacterString",
+//                        visitTypeCharacterString(ctx.typeCharacterString()));
+//            }
+//        }
+//
+//        return simpleType;
+//    }
+//
+//    @Override
+//    public ST visitTypeDuration(OpenPearlParser.TypeDurationContext ctx) {
+//        ST st = m_group.getInstanceOf("TypeDuration");
+//
+//        if (ctx != null) {
+//            st.add("code", 1);
+//        }
+//
+//        return st;
+//    }
+//
+//    @Override
+//    public ST visitTypeClock(OpenPearlParser.TypeClockContext ctx) {
+//        ST st = m_group.getInstanceOf("TypeClock");
+//
+//        if (ctx != null) {
+//            st.add("code", 1);
+//        }
+//
+//        return st;
+//    }
+//
+//
+//    @Override
+//    public ST visitTypeInteger(OpenPearlParser.TypeIntegerContext ctx) {
+//        ST st = m_group.getInstanceOf("TypeInteger");
+//        int size = m_currentSymbolTable.lookupDefaultFixedLength();
+//
+//        if (ctx != null) {
+//            for (ParseTree c : ctx.children) {
+//                if (c instanceof OpenPearlParser.MprecisionContext) {
+//                    size = Integer.parseInt(((OpenPearlParser.MprecisionContext) c).getText());
+//                }
+//            }
+//        }
+//
+//        st.add("size", size);
+//
+//        return st;
+//    }
+//
+//    @Override
+//    public ST visitTypeBitString(OpenPearlParser.TypeBitStringContext ctx) {
+//        ST st = m_group.getInstanceOf("TypeBitString");
+//
+//        int length = m_currentSymbolTable.lookupDefaultBitLength();
+//
+//        if (ctx.length() != null) {
+//            length = Integer.parseInt(ctx.length().getText());
+//        }
+//
+//        st.add("length", length);
+//
+//        return st;
+//    }
+//
+//    @Override
+//    public ST visitTypeCharacterString(OpenPearlParser.TypeCharacterStringContext ctx) {
+//        ST st = m_group.getInstanceOf("TypeCharacterString");
+//        Integer size = Defaults.CHARACTER_LENGTH;
+//
+//        if (ctx.length() != null) {
+//            size = Integer.parseInt(ctx.length().getText());
+//
+//        }
+//
+//        st.add("size", size);
+//
+//        return st;
+//    }
+//
+//    @Override
+//    public ST visitTypeFloatingPointNumber(OpenPearlParser.TypeFloatingPointNumberContext ctx) {
+//        ST st = m_group.getInstanceOf("TypeFloatingPointNumber");
+//        int precision = Defaults.FLOAT_PRECISION;
+//
+//        if (ctx.length() != null) {
+//            precision = Integer.parseInt(ctx.length().getText());
+//        }
+//
+//        st.add("precision", precision);
+//
+//        return st;
+//    }
+//
 
     @Override
     public ST visitProblem_part(OpenPearlParser.Problem_partContext ctx) {
@@ -3610,7 +3565,7 @@ implements OpenPearlVisitor<ST> {
                     lastElement.add("indices", indices);
 
                     temp.add("name",  tempVarName);
-                    temp.add("type", visitTypeAttribute(t));
+                    temp.add("type", t.toST(m_group)); //visitTypeAttribute(t));
                     temp.add("init",lastElement);
                     m_tempVariableList.lastElement().add("variable", temp);
 
@@ -4153,7 +4108,7 @@ implements OpenPearlVisitor<ST> {
 
                 ST temp = m_group.getInstanceOf("ArrayVariableDeclaration");
                 temp.add("name",  tempVarName);
-                temp.add("type", visitTypeAttribute(((TypeArray)(attr.getType())).getBaseType()));
+                temp.add("type", ((TypeArray)(attr.getType())).getBaseType().toST(m_group));//visitTypeAttribute(((TypeArray)(attr.getType())).getBaseType()));
                 temp.add("descriptor", getArrayDescriptor(attr.getType()));
                 temp.add("storage",visitAndDereference(expression));
                 temp.add("no_decoration", 1);
@@ -4989,7 +4944,7 @@ implements OpenPearlVisitor<ST> {
 
         LinkedList<VariableEntry> entries = m_currentSymbolTable.getVariableDeclarations();
         if (se.getResultType() != null) {
-            st.add("resultAttribute", visitTypeAttribute(se.getResultType()));
+            st.add("resultAttribute", se.getResultType().toST(m_group));//visitTypeAttribute(se.getResultType()));
 
         }
         m_resultType = se.getResultType(); // must be null is type void; resuired for visitName()

@@ -3,6 +3,13 @@ MODULE(proc_062);
 PROBLEM;
 DCL xsema SEMA PRESET(1);
 
+!! const as REF parameter
+refConst_01: PROC (x REF INV FIXED) RETURNS (FIXED);
+   x = 44(31);
+   RETURN (x+1);
+END;
+
+
 !! REF as parameter
 ref_01: PROC (x REF SEMA);
    RELEASE x;
@@ -150,7 +157,7 @@ END;
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 proc_009: PROC RETURNS(FIXED);
     DCL x FIXED INIT(42);
-    RETURN (42);
+    !RETURN (42);
     RETURN (x);
 END;
 
@@ -159,6 +166,7 @@ T1: TASK MAIN;
    DCL f FIXED INIT(0);
    DCL f15 FIXED(15);
    DCL af(10) FIXED;
+   DCL const INV FIXED INIT(42);
 
    CALL proc_001;
    CALL proc_002(f);
@@ -173,6 +181,7 @@ T1: TASK MAIN;
 
    f := proc_009;
 
+   f = refConst_01(const);
 END;
 
 

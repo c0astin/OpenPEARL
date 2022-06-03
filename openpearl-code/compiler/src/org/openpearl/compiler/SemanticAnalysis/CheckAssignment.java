@@ -127,7 +127,7 @@ implements OpenPearlVisitor<Void> {
         ASTAttribute rhsAttr = m_ast.lookup(ctx.expression());
 
 
-        TypeUtilities.mayBeAssignedTo(lhsType, lhsVariable, ctx.expression(),m_ast);
+        TypeUtilities.mayBeAssignedTo(lhsType, lhsVariable, ctx.expression(),m_ast, true);
 
         ErrorStack.leave();
         return null;

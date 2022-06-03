@@ -41,7 +41,13 @@ public class UserDefinedSimpleType extends TypeDefinition {
     }
     
     public ST toST(STGroup group) {
-       return m_simpleType.toST(group);    
+       ST st = m_simpleType.toST(group); 
+       if (hasAssignmentProtection()) {
+           ST inv = group.getInstanceOf("const_type");
+           inv.add("type", st);
+           st = inv;
+       }
+       return st;
     }
 
 }

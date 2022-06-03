@@ -23,7 +23,7 @@ public class UserDefinedTypeStructure extends TypeDefinition {
         m_structuredType = null;
     }
     
-    @Override
+
     public String toString4IMC(boolean isInStructure) {
         if (m_structuredType != null) {
             return ((TypeStructure)m_structuredType).toString4IMC(true);
@@ -31,6 +31,7 @@ public class UserDefinedTypeStructure extends TypeDefinition {
         return null;
     }
 
+ 
     public TypeDefinition getStructuredType() {
         return m_structuredType;
     }
@@ -40,12 +41,22 @@ public class UserDefinedTypeStructure extends TypeDefinition {
     }
     
     public ST toST(STGroup group) {
-        return m_structuredType.toST(group);    
+        ST st= m_structuredType.toST(group);
+        if (hasAssignmentProtection()) {
+            ST inv = group.getInstanceOf("const_type");
+            inv.add("type", st);
+            st = inv;
+        }
+        return st;
      }
 
     public String toErrorString() {
-            return getName() + " {aka: "+ ((TypeStructure) m_structuredType).toErrorString() +"}" ;
-          
+        String s = getName() + " {aka: ";
+        if (m_structuredType != null) {
+            s += ((TypeStructure)m_structuredType).toErrorString();
+        }
+        s += "}";
+        return s;
     }
     
     public boolean equals(Object other) {

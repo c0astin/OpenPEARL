@@ -333,9 +333,9 @@ ProblemPart(ScalarVariableDeclarations,
 /*********************** VARIABLE DECLARATION ***********************/
 // renamed variable_declaration to variable_denotation and
 // used for declaration and  specification
-variable_denotation(name,type,init,inv) ::= <%
+variable_denotation(name,type,init) ::= <%
 
-<if(inv)>const  <endif><type>  <name> 
+<type>  <name> 
 <if(init)><init><endif>
 ;
 
@@ -355,6 +355,9 @@ structOrArrayInit(initElements) ::= <<
 
 
 /*********************** TYPE DEFINITION ***********************/
+const_type(type) ::= <<
+const <type>
+>>
 
 type(simple_type,time_type) ::= <<
 <if(simple_type)><simple_type><elseif(time_type)><time_type><endif>
@@ -406,8 +409,11 @@ TypeReferenceDation(BaseType) ::= <<
 pearlrt::Ref \< <BaseType>* > 
 >>
 
-TypeReference(BaseType) ::= <<
-pearlrt::Ref \< <BaseType> > 
+/* needPointer is required for RFEF on DATION,since Dation objects
+   must be pointers due tp restrictions from the runtime system 
+*/   
+TypeReference(BaseType,needPointer) ::= <<
+pearlrt::Ref \< <BaseType> <if(needPointer)>* <endif> > 
 >>
 
 
@@ -1164,6 +1170,7 @@ TypeReferenceTaskType() ::= <<
 pearlrt::Task *
 >>
 
+/* obsolete? 2022-05-05
 TypeInteger(size) ::= "pearlrt::Fixed\<<size>>"
 
 TypeCharacterString(size) ::= "pearlrt::Character\<<size>>"
@@ -1183,10 +1190,12 @@ TypeBitString(length) ::= <<
 pearlrt::BitString\<<length>\>
 >>
 
+
 // TypeStructure for size calculation in DationRW and DationTS(?)
 TypeStructure(name) ::= <<
 <name>
 >>
+*/
 
 Constant(IntegerConstant,TimeConstant,DurationConstant,FloatingPointConstant,StringConstant,BitStringConstant) ::=  <%
 <if(IntegerConstant)><IntegerConstant><endif>
@@ -1275,7 +1284,7 @@ SemaRelease(names,nbrOfElements,array,localArrayname) ::= <<
 
 /* --------------------- BOLT -------------------------- */
 
-bolt_declaration(name,global) ::= <<
+bolt_declaration(name) ::= <<
 pearlrt::Bolt <name>("<name>");
 
 >>
@@ -1793,8 +1802,7 @@ FormalParameters(FormalParameter) ::= <%
 <FormalParameter: {param|<param>} ; separator=", ">
 %>
 
-FormalParameter(id,type,assignmentProtection,passIdentical,isArray) ::= <%
-  <if(assignmentProtection)>const <endif>
+FormalParameter(id,type,passIdentical,isArray) ::= <%
   <if(isArray)>pearlrt::Array \< <type> > <else><type><endif>
   <if(passIdentical)>&<endif> 
   <if(id)><user_argument(id)><endif>
@@ -1888,7 +1896,7 @@ ArrayVariableDeclarations(declarations) ::= <<
 >>
 
 
-ArrayStorageDeclaration(name,type,assignmentProtection,totalNoOfElements,initElements) ::= <%
+ArrayStorageDeclaration(name,type,totalNoOfElements,initElements) ::= <%
 <type> data_<name>[<totalNoOfElements>]<if(initElements)> <initElements><endif>;<\n>
 %>
 
@@ -1897,14 +1905,16 @@ pearlrt::Array\< <type> >
 %>
 
 ArrayVariableDeclaration(name,type,descriptor,storage,no_decoration) ::= <%
-pearlrt::Array\< <type> > 
+<type> 
 <if(no_decoration)><name><else><user_variable(name)><endif>
 ((pearlrt::ArrayDescriptor\<0> *)&<descriptor>, <storage>);<\n>
 %>
 
+/* obsolete? rm 2022-05-10
 ArrayVariableSpecification(name,type) ::= <%
 pearlrt::Array\< <type> > <user_variable(name)>;<\n>
 %>
+*/
 
 ArrayDescriptors(descriptors) ::= <<
 <descriptors: {descriptor|<descriptor>}; separator="\n">

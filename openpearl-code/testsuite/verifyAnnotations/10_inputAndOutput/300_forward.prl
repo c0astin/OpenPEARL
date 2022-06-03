@@ -32,20 +32,20 @@ t1: TASK MAIN;
 
   PUT 'hallo' TO stdout BY A,F(3),SKIP(-1);
 /*$                               ^
-error: PUT:SKIP-format: no backward positioning allowed
+error: PUT: SKIP-format: no backward positioning allowed
 */
   PUT 'hallo' TO stdout BY X(-1),SKIP, F(3),SKIP(-1);
 /*$   ^
-error: PUT:expression type match format: CHAR(5) does not apply to format
+error: PUT: expression type match format: CHAR(5) does not apply to format
 */
 /*$                        ^
-error: PUT:X-format: no backward positioning allowed
+error: PUT: X-format: no backward positioning allowed
 */
 /*$                                         ^
-error: PUT:SKIP-format: no backward positioning allowed
+error: PUT: SKIP-format: no backward positioning allowed
 */
 /*$                                    ^
-note: PUT:expression type match format: F(3)
+note: PUT: expression type match format: F(3)
 */ 
   PUT 'hallo' TO so;
 /*$

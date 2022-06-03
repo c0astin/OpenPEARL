@@ -1,6 +1,8 @@
 .PHONY: all
 #SUBDIRS =  04_ProgramStructure 10_inputAndOutput
-SUBDIRS =  $(sort $(wildcard */.))
+SUBDIRS =  $(dir $(sort $(wildcard */Makefile)))
+
+
 ERRORCHECKER = ../../errorChecker/errorParser ../../errorChecker/genExpectations
 export PRLFLAGS=-std=OpenPEARL
 
@@ -9,6 +11,7 @@ all: $(ERRORCHECKER) $(SUBDIRS)
 $(SUBDIRS):
 	@echo "entring "$@
 	@make -C $@ $(MAKECMDGOALS)
+
 
 $(ERRORCHECKER):
 	(cd ../../errorChecker; make)

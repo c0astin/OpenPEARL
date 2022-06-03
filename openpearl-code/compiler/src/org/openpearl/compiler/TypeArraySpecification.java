@@ -81,6 +81,14 @@ public class TypeArraySpecification extends TypeDefinition {
       return s;
     }
     
+    public String toErrorString() {
+        String s = "(";
+        for (int i=0; i<m_dimensions-1; i++) {
+          s+=",";
+        }
+        s += ") "+this.getBaseType();
+        return s;
+      }
     public String toString4IMC(boolean isInStructure) {
         String s = "(";
         for (int i=0; i<m_dimensions-1; i++) {
@@ -91,8 +99,16 @@ public class TypeArraySpecification extends TypeDefinition {
     }
     
     public ST toST(STGroup group) {
-      ST st = group.getInstanceOf("array_specification_type");
-      st.add("BaseType", m_baseType.toST(group));
+      //ST st = group.getInstanceOf("array_specification_type");
+      //  st.add("BaseType", m_baseType.toST(group));
+        
+      ST st = group.getInstanceOf("ArrayType");
+      st.add("type",m_baseType.toST(group));
+      if (hasAssignmentProtection()) {
+          ST inv = group.getInstanceOf("const_type");
+          inv.add("type", st);
+          st = inv;
+      }
       return st;
   }
 

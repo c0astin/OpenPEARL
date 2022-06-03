@@ -212,6 +212,8 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
             ReferenceInitializer ri =(ReferenceInitializer)(init);
             ctx = ri.getContext();
             attrInit = m_ast.lookup(ri.getContext());
+            //attrInit.setVariable((VariableEntry)(ri.getSymbolTableEntry()));
+            attrInit.setSymbolTableEntry((ri.getSymbolTableEntry()));
         } else if (init instanceof SimpleInitializer) {
             SimpleInitializer si =(SimpleInitializer)(init);
             ctx = si.getContext();
@@ -246,8 +248,11 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
                 }
             }
             if (!ok) {
-                ErrorStack.add(ctx, "type mismatch in REF INIT",
-                        "REF "+baseTypeOfVariableOrComponent.toString4IMC(true)  +" := " + attrInit.getType().toString4IMC(true));    
+                ErrorStack.enter(ctx);
+                CommonErrorMessages.typeMismatchInInit(typeOfVariableOrComponent.toErrorString(), attrInit.getType().toErrorString(), attrInit);
+//                ErrorStack.add(ctx, "type mismatch in REF INIT",
+//                        "REF "+baseTypeOfVariableOrComponent.toString4IMC(true)  +" := " + attrInit.getType().toString4IMC(true));
+                ErrorStack.leave();
             } 
 
         } else {
@@ -268,8 +273,11 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
                 ok = false;
             }
             if (!ok) {
-                ErrorStack.add(ctx,"type mismatch in REF INIT",
-                        "REF "+baseTypeOfVariableOrComponent.toString4IMC(true)  +" := " + attrInit.getType().toString4IMC(true));
+//                ErrorStack.add(ctx,"type mismatch in REF INIT",
+//                        "REF "+baseTypeOfVariableOrComponent.toString4IMC(true)  +" := " + attrInit.getType().toString4IMC(true));
+                ErrorStack.enter(ctx);
+                CommonErrorMessages.typeMismatchInInit(typeOfVariableOrComponent.toErrorString(), attrInit.getType().toErrorString(), attrInit);
+                ErrorStack.leave();
             }
         }
     }
@@ -293,48 +301,55 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
              checkTypeCompatibility(typeOfVariable, simpleInitializer.getConstant().getType(),ctx);
         }
         if (typeOfVariable instanceof TypeSemaphore) {
-            long value = ((ConstantFixedValue)(simpleInitializer.getConstant())).getValue();
-            if ( value < 0) {
-                ErrorStack.add(ctx,"PRESET","must be not negative");
+            if (simpleInitializer.getConstant().getType() instanceof TypeFixed) {
+                long value = ((ConstantFixedValue)(simpleInitializer.getConstant())).getValue();
+                if ( value < 0) {
+                    ErrorStack.add(ctx,"SEMA PRESET","must be not negative");
+                }
             }
         }
     }
 
     private boolean checkTypeCompatibility(TypeDefinition typeOfVariable, TypeDefinition typeOfInitializer, ParserRuleContext ctxOfInitElement) {
         TypeDefinition effectiveTypeOfvariable = typeOfVariable;
-        String typeOfVariable4Error = typeOfVariable.toString();
+        
+        ASTAttribute attrInit = m_ast.lookup(ctxOfInitElement);
+        
+        ErrorStack.enter(ctxOfInitElement);
+        
         if (typeOfVariable instanceof UserDefinedSimpleType) {
             effectiveTypeOfvariable = ((UserDefinedSimpleType)typeOfVariable).getSimpleType();
-            typeOfVariable4Error += " (aka: "+effectiveTypeOfvariable+")";
         }
+        
         if (effectiveTypeOfvariable instanceof TypeFixed && typeOfInitializer instanceof TypeFixed) {
             if (((TypeFixed)effectiveTypeOfvariable).getPrecision() < ((TypeFixed)typeOfInitializer).getPrecision()) {
-                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
+                CommonErrorMessages.typeMismatchInInit(typeOfVariable.toErrorString(), typeOfInitializer.toErrorString(),attrInit);
             }
         } else if (effectiveTypeOfvariable instanceof TypeFloat && typeOfInitializer instanceof TypeFloat) {
                 if (((TypeFloat)effectiveTypeOfvariable).getPrecision() < ((TypeFloat)typeOfInitializer).getPrecision()) {
-                    ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
+                    CommonErrorMessages.typeMismatchInInit(typeOfVariable.toErrorString(), typeOfInitializer.toErrorString(),attrInit);
                 }
         } else if (effectiveTypeOfvariable instanceof TypeFloat && typeOfInitializer instanceof TypeFixed) {
             if (((TypeFloat)effectiveTypeOfvariable).getPrecision() < ((TypeFixed)typeOfInitializer).getPrecision()) {
-                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
+                CommonErrorMessages.typeMismatchInInit(typeOfVariable.toErrorString(), typeOfInitializer.toErrorString(),attrInit);
             }
         } else if (effectiveTypeOfvariable instanceof TypeChar && typeOfInitializer instanceof TypeChar) {
             if (((TypeChar)effectiveTypeOfvariable).getPrecision() < ((TypeChar)typeOfInitializer).getPrecision()) {
-                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
+                CommonErrorMessages.typeMismatchInInit(typeOfVariable.toErrorString(), typeOfInitializer.toErrorString(),attrInit);
             }
         } else if (effectiveTypeOfvariable instanceof TypeBit && typeOfInitializer instanceof TypeBit) {
             if (((TypeBit)effectiveTypeOfvariable).getPrecision() < ((TypeBit)typeOfInitializer).getPrecision()) {
-                ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
+                CommonErrorMessages.typeMismatchInInit(typeOfVariable.toErrorString(), typeOfInitializer.toErrorString(),attrInit);
             }
         } else if (effectiveTypeOfvariable instanceof TypeSemaphore) {
            if (!(typeOfInitializer instanceof TypeFixed)) {  
-               ErrorStack.add(ctxOfInitElement,"type mismatch in PRESET",typeOfVariable4Error +" with " + typeOfInitializer);
+              CommonErrorMessages.typeMismatchInInit(typeOfVariable.toErrorString(), typeOfInitializer.toErrorString(),attrInit);
            }
         } else if (!effectiveTypeOfvariable.equals(typeOfInitializer) ) {
-            ErrorStack.add(ctxOfInitElement,"type mismatch in INIT",typeOfVariable4Error +" := " + typeOfInitializer);
+           CommonErrorMessages.typeMismatchInInit(typeOfVariable.toErrorString(), typeOfInitializer.toErrorString(),attrInit);
         } 
         
+        ErrorStack.leave();
         return false;
     }
     

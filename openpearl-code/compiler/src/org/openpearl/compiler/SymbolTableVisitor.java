@@ -296,17 +296,6 @@ implements OpenPearlVisitor<Void> {
         Log.debug("SymbolTableVisitor:visitTaskDeclaration:ctx" + CommonUtils.printContext(ctx));
 
         String s = ctx.nameOfModuleTaskProc().ID().toString();
-//        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(s);
-//        if (entry != null) {
-//            CommonErrorMessages.doubleDeclarationError(
-//                    s, ctx.nameOfModuleTaskProc(), entry.getCtx());
-//        } else {
-//            entry = this.m_currentSymbolTable.lookup(s);
-//            if (entry != null) {
-//                CommonErrorMessages.doubleDeclarationWarning(
-//                        "task definition ", s, ctx.nameOfModuleTaskProc(), entry.getCtx());
-//            }
-//        }
 
         isMain = ctx.task_main() != null;
         if (ctx.priority() != null) {
@@ -831,7 +820,7 @@ implements OpenPearlVisitor<Void> {
                             if (m_hasAllocationProtection && m_type instanceof TypeFixed) { 
                                 if (init instanceof SimpleInitializer && ((SimpleInitializer)init).getConstant() != null) {
                                     ConstantValue constant = ((SimpleInitializer)init).getConstant();
-                                    if (!( constant instanceof ConstantValue) || m_type.getPrecision() < ((ConstantFixedValue)constant).getPrecision()) {
+                                    if (!( constant instanceof ConstantFixedValue) || m_type.getPrecision() < ((ConstantFixedValue)constant).getPrecision()) {
 //                                        
 //                                if (constant != null &&(
 //                                        !(constant instanceof ConstantFixedValue) || 
@@ -839,8 +828,10 @@ implements OpenPearlVisitor<Void> {
                                     // error in case of initializer is not of type fixed
                                     // or precision of initializer is larger than variable
                                     // if the constant is null --> the error is reported already
-                                    ErrorStack.add(m_identifierDenotationContext.identifier(i),
-                                            "INIT","type mismatch "+m_type +" := " + constant.getType());               
+                                     
+                                    ErrorStack.enter(m_identifierDenotationContext.identifier(i));
+                                    CommonErrorMessages.typeMismatchInInit(m_type.toErrorString(), constant.getType().toErrorString(), null);
+                                    ErrorStack.leave();
                                 }
 
                             }
@@ -848,7 +839,7 @@ implements OpenPearlVisitor<Void> {
                     }
                 }
             }
-            if (m_hasAllocationProtection && init == null) {
+            if (m_hasAllocationProtection && init == null && m_isInSpecification==false) {
                 ErrorStack.add(
                         m_identifierDenotationContext.identifier(i), "DCL", "INV needs INIT");
             }
@@ -2047,10 +2038,14 @@ implements OpenPearlVisitor<Void> {
                 }
             } else {
                 if (m_isGlobal) {
-                    if (m_globalName != null) {
-                        ErrorStack.add(ctx, "GLOBAL", "no nameOfModule allowed in DCL");
+                    if (m_currentSymbolTable.m_level > 1) {
+                        ErrorStack.add(ctx, "GLOBAL", "not allowed in procedures or tasks");
                     } else {
-                        newEntry.setGlobalAttribute(m_currentModuleName);
+                        if (m_globalName != null) {
+                            ErrorStack.add(ctx, "GLOBAL", "no nameOfModule allowed in DCL");
+                        } else {
+                            newEntry.setGlobalAttribute(m_currentModuleName);
+                        }
                     }
                 }
             }

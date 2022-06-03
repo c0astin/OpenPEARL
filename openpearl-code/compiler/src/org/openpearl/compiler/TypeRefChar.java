@@ -31,6 +31,8 @@ public class TypeRefChar extends TypeDefinition {
     
     public ST toST(STGroup group) {
         ST st = group.getInstanceOf("refChar_type");
+        // hasAssignmentProtection may not be treated here, since
+        // the runtime system does not provide this feature 
         return st;
     }
     

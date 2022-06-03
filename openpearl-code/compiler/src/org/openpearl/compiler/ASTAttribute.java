@@ -165,6 +165,10 @@ public class ASTAttribute {
       return m_entry;
     }
 
+    public void setSymbolTableEntry(SymbolTableEntry e) {
+        m_entry = e;
+    }
+    
     public ConstantValue getConstant() { return this.m_constant; }
 
     public Void setConstant(ConstantValue val) {

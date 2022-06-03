@@ -20,8 +20,9 @@ p: PROC;
 error: print: type mismatch: cannot pass INV value to non INV formal parameter
 */
    print(invRefCharInit);
-/*$      ^
+/*       ^
 error: print: type mismatch: cannot pass INV value to non INV formal parameter
+the REF is INV, the data of the REF are not INV -- so it should be ok
 */
    print('Hallo');
 /*$      ^

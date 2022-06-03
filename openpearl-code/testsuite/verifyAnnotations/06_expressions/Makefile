@@ -1,5 +1,5 @@
 .PHONY: all
-SUBDIRS =  $(sort $(wildcard */.))
+SUBDIRS =  $(dir $(sort $(wildcard */Makefile)))
 
 all: $(SUBDIRS)
 

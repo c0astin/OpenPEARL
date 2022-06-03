@@ -361,7 +361,7 @@ implements OpenPearlVisitor<Void> {
 
     private void checkFormalParameter(FormalParameter formalParameter) {
         TypeDefinition type;
-        Boolean passIdentical = formalParameter.passIdentical;
+        Boolean passIdentical = formalParameter.passIdentical();
 
         type = formalParameter.getType();
         ParserRuleContext ctx = formalParameter.getCtx();

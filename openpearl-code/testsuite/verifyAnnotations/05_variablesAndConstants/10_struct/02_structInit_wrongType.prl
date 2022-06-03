@@ -2,10 +2,10 @@ MODULE(si);
 PROBLEM;
    DCL str1 STRUCT [(a,b) FIXED ] INIT('x',1 SEC);
 /*$                                    ^
-error: type mismatch in INIT: FIXED(31) := CHAR(1)
+error: type mismatch: cannot use constant of type CHAR(1) as initializer for object of type FIXED(31)
 */
 /*$                                        ^
-error: type mismatch in INIT: FIXED(31) := DURATION
+error: type mismatch: cannot use constant of type DURATION as initializer for object of type FIXED(31)
 */
 
 ! code from ticket 319

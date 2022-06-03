@@ -84,7 +84,7 @@ public class TypeStructure extends TypeDefinition {
         return line + " ] ";
     }
 
-
+   
     public int getTotalNoOfElements() {
         int nbr = 0;
         for (int i=0; i<m_listOfComponents.size(); i++) {
@@ -258,6 +258,11 @@ public class TypeStructure extends TypeDefinition {
     public ST toST(STGroup group) {
         ST st = group.getInstanceOf("StructureType");
         st.add("type", getStructureName());
+        if (hasAssignmentProtection()) {
+            ST inv = group.getInstanceOf("const_type");
+            inv.add("type", st);
+            st = inv;
+        }
         return st;
     }
     
@@ -338,18 +343,19 @@ public class TypeStructure extends TypeDefinition {
     }
 
     public String toErrorString() {
-        String line = "STRUCT [ ";
-
-        for (int i = 0; i < m_listOfComponents.size(); i++) {
-            String prefix = " ";
-            if ( i > 0 ) {
-                prefix = ",";
-            }
-
-            line += prefix + m_listOfComponents.get(i).toErrorString();
-        }
-
-        return line + " ] ";
+        return toString4IMC(true);
+//        String line = "STRUCT [ ";
+//
+//        for (int i = 0; i < m_listOfComponents.size(); i++) {
+//            String prefix = " ";
+//            if ( i > 0 ) {
+//                prefix = ",";
+//            }
+//
+//            line += prefix + m_listOfComponents.get(i).toErrorString();
+//        }
+//
+//        return line + " ] ";
  
     }
 }

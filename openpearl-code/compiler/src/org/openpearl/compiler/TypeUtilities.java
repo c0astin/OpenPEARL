@@ -19,6 +19,9 @@ public class TypeUtilities {
      * <ul>
      * <li>implicit dereference of REF elements
      * <li>invocation of procedures, if the result type fits 
+     * <li>if the destination is a formal parameter with attribute IDENT, we need
+     *     a LValue of the source side with the exact same type, thus  procedure results 
+     *     are not allowed  
      * </ul>
      * 
      * The rules are 
@@ -43,18 +46,18 @@ public class TypeUtilities {
      * apply the rules until no rule was applied in a loop 
      *
      * @param lhsType  the target type (lhs in assignment, formalParameter in function calls, input values ini/o statements
-     * @param lhsVariable really required??
      * @param expression the expression on the rhs
      * @param m_ast the AST
+     * @param isInAssignment TODO
+     * @param lhsVariable really required??
      * @return
      */
     public static  boolean mayBeAssignedTo( TypeDefinition lhsType, SymbolTableEntry lhs,
-            ExpressionContext expression, AST m_ast) {
+            ExpressionContext expression, AST m_ast, boolean isInAssignment) {
 
-  
-        boolean isFunctionCall = lhs instanceof FormalParameter;
       
         TypeDefinition rhsType = m_ast.lookupType(expression);
+               
         String rhsOriginalType = rhsType.toString4IMC(true);
         if (rhsType instanceof UserDefinedSimpleType) {
             rhsOriginalType = rhsType.toErrorString();
@@ -87,7 +90,7 @@ public class TypeUtilities {
         // CONT rc = charExpression ! fill the work zone
         if (lhsType instanceof TypeReference && (((TypeReference)lhsType).getBaseType() instanceof TypeRefChar)) { 
             if (rhsVariable != null && rhsVariable.getType() instanceof TypeChar) {
-                // ok: ref char assigment of work zone
+                // ok: ref char assignment of work zone
                 checkLifeCycle(lhs, rhsVariable);
                 return true;
             }
@@ -125,9 +128,11 @@ public class TypeUtilities {
                 break;
             }
 
-            // Part 1: lhsType is NOT TypeReference
+          
 
             if (!(lhsType instanceof TypeReference) ) {
+                // Part 1: lhsType is NOT TypeReference
+                
                 //-- lhs is not TypeReference; rhs is TypeReference with compatible baseType
                 if (rhsType instanceof TypeReference &&          
                         TypeUtilities.simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, ((TypeReference)rhsType).getBaseType())) {
@@ -146,7 +151,9 @@ public class TypeUtilities {
                     rhsAttr.setType(rhsType);
                     ruleApplied=true;
                 }
-                if ( rhsType instanceof TypeReference) {
+                
+                if ( rhsType instanceof TypeReference && 
+                        simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, ((TypeReference)rhsType).getBaseType())) {
                     rhsType = ((TypeReference)rhsType).getBaseType();
                     if (rhsType instanceof TypeSameStructure) {
                         rhsType = ((TypeSameStructure)rhsType).getContainerStructure().getStructuredType();
@@ -157,10 +164,10 @@ public class TypeUtilities {
                 }
 
             } else {
+                // Part 2: lhsType IS TypeReference
                 TypeDefinition lhsBaseType = ((TypeReference)lhsType).getBaseType();
                 
-                // Part 2: lhsType IS TypeReference
-                // -- lhs is reference; ths is Type Reference with compatible base type
+                // -- lhs is reference; rhs is TypeReference with compatible base type
                 if (rhsType instanceof TypeReference) {
                     TypeDefinition rhsBaseType = ((TypeReference)rhsType).getBaseType();
                     if (lhsBaseType.equals(rhsBaseType)) {
@@ -180,6 +187,16 @@ public class TypeUtilities {
                     ruleApplied=true;
                     break;
                 }
+                
+                // -- lhs is reference to INV ; rhs is constant of basetype of lhs
+                if (    rhsAttr.getConstant() != null && 
+                        (lhsBaseType.equals(rhsType) &&
+                        (lhsBaseType.hasAssignmentProtection()))) { 
+                    // checkLifeCycle(lhs, ...); not required since constants are defined in module level 
+                    ruleApplied=true;
+                    break;
+                }
+                
 
                 // -- lhs is reference to PROC; rhs is PROC of same type
                 if (lhsBaseType instanceof TypeProcedure &&
@@ -255,10 +272,10 @@ public class TypeUtilities {
                     
                     if (!ok) {
                         // emit special error message
-                        if (isFunctionCall) {
-                            ErrorStack.add("type mismatch: cannot pass expression of type "+ rhsType.toString4IMC(false)+" as " +lhsType.toString4IMC(true));
+                        if (!isInAssignment) {
+                            CommonErrorMessages.typeMismatchProcedureParameter(lhsType.toErrorString(), rhsType.toErrorString(), rhsAttr);
                         } else {
-                            ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := "+ rhsType.toString4IMC(false));
+                            CommonErrorMessages.typeMismatchInAssignment(lhsType.toErrorString(), rhsType.toErrorString(), rhsAttr);
                         }
                     }
                     checkLifeCycle(lhs, rhsVariable);
@@ -270,11 +287,16 @@ public class TypeUtilities {
                 if (rhsType instanceof TypeProcedure) {
                     if (!(lhsType.equals(resultType))) {
                         // emit special error message
-                        if (isFunctionCall) {
-                            ErrorStack.add("type mismatch: cannot pass expression of type "+ rhsType.toString4IMC(false)+" as " +lhsType.toString4IMC(true));
+                        if (!isInAssignment) {
+                            CommonErrorMessages.typeMismatchProcedureParameter(lhsType.toErrorString(), rhsType.toErrorString(), rhsAttr);
                         } else {
-                            ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := expression of type "+ rhsType.toString4IMC(false));
+                            CommonErrorMessages.typeMismatchInAssignment(lhsType.toErrorString(), rhsType.toErrorString(), rhsAttr);
                         }
+//                        if (isFunctionCall) {
+//                            ErrorStack.add("type mismatch: cannot pass expression of type "+ rhsType.toString4IMC(false)+" as " +lhsType.toString4IMC(true));
+//                        } else {
+//                            ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := expression of type "+ rhsType.toString4IMC(false));
+//                        }
                     }
 
                     rhsType = ((TypeProcedure)rhsType).getResultType();
@@ -302,33 +324,33 @@ public class TypeUtilities {
         if (ruleApplied == false) {
 
             if (rhsSymbol instanceof ProcedureEntry) {
-                if (isFunctionCall) {
-                    ErrorStack.add("type mismatch: cannot pass expression of type "+ ((ProcedureEntry)rhsSymbol).getType()+" as " +lhsType.toString4IMC(true));
+                if (!isInAssignment) {
+                    CommonErrorMessages.typeMismatchProcedureParameter(lhsType.toErrorString(), ((ProcedureEntry)rhsSymbol).getType().toErrorString(), rhsAttr);
                 } else {
-                    ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := "+ ((ProcedureEntry)rhsSymbol).getType());//  rhsType.toString4IMC(false));
+                    CommonErrorMessages.typeMismatchInAssignment(lhsType.toErrorString(), ((ProcedureEntry)rhsSymbol).getType().toErrorString(), rhsAttr);
                 }
                 return false;
             } else if (lhsType instanceof TypeReference && ((TypeReference)lhsType).getBaseType() instanceof TypeRefChar &&
                     rhsType instanceof TypeChar && rhsAttr.getConstant() != null) {
-                if (isFunctionCall) {
-                    ErrorStack.add("type mismatch: cannot pass constant of type "+ rhsOriginalType+" as " +lhsType.toString4IMC(false));
+                if (!isInAssignment) {
+                    CommonErrorMessages.typeMismatchProcedureParameter(lhsType.toErrorString(), rhsOriginalType, rhsAttr);
                 } else {
-                    ErrorStack.add("type mismatch: "+lhsType.toString4IMC(true) + " := constant of type "+ rhsOriginalType);//  rhsType.toString4IMC(false));
+                    CommonErrorMessages.typeMismatchInAssignment(lhsType.toErrorString(), rhsOriginalType, rhsAttr);
                 }
                 return false;
             } else {
-                if (isFunctionCall) {
-                    ErrorStack.add("type mismatch: cannot pass "+ rhsOriginalType+" as " +lhsOriginalType);
+                if (!isInAssignment) {
+                    CommonErrorMessages.typeMismatchProcedureParameter(lhsType.toErrorString(), rhsType.toErrorString(), rhsAttr);
                 } else {
-                    ErrorStack.add("type mismatch: "+lhsOriginalType + " := "+ rhsOriginalType);//  rhsType.toString4IMC(false));
+                    CommonErrorMessages.typeMismatchInAssignment(lhsType.toErrorString(), rhsType.toErrorString(), rhsAttr);
                 }
                 return false;
             }
             
         } else {
-            if (isFunctionCall) {
+            if (!isInAssignment) {
                 FormalParameter fp = (FormalParameter)lhs;
-                if (fp.passIdentical) {
+                if (fp.passIdentical()) {
                     if (fp.getType().hasAssignmentProtection()==false && rhsType.hasAssignmentProtection()==true) {
                         ErrorStack.add("type mismatch: formal parameter "+lhsOriginalType + " IDENT --- got "+ rhsOriginalType);
                         return false;
@@ -494,24 +516,24 @@ public class TypeUtilities {
 
     }
 
-    /**
-     * check if we can obtain a TypeFixed (of any size) with dereferencing or procedure calls
-     * 
-     * @param attr the ASTAttribute of an expression 
-     * @return TypeFixed if it was possible<br>
-     *         null, else 
-     */
-    public static TypeDefinition performImplicitDereferenceAndFunctioncallForTargetTypeFixed(ASTAttribute attr) {
-        TypeDefinition t = null;
-        do {
-            t = performImplicitDereferenceAndFunctioncall(attr);
-
-        } while (t instanceof TypeProcedure);
-        if (t instanceof TypeFixed) {
-            return t;
-        }
-        return null;
-    }
+//    /**
+//     * check if we can obtain a TypeFixed (of any size) with dereferencing or procedure calls
+//     * 
+//     * @param attr the ASTAttribute of an expression 
+//     * @return TypeFixed if it was possible<br>
+//     *         null, else 
+//     */
+//    public static TypeDefinition performImplicitDereferenceAndFunctioncallForTargetTypeFixed(ASTAttribute attr) {
+//        TypeDefinition t = null;
+//        do {
+//            t = performImplicitDereferenceAndFunctioncall(attr);
+//
+//        } while (t instanceof TypeProcedure);
+//        if (t instanceof TypeFixed) {
+//            return t;
+//        }
+//        return null;
+//    }
 
 
     public static TypeDefinition performImplicitDereferenceAndFunctioncall(ASTAttribute attr) {
@@ -525,15 +547,18 @@ public class TypeUtilities {
                 actionDone=true;
             }
             if (type instanceof TypeProcedure) {
-                type = ((TypeProcedure)type).getResultType();
+                if (((TypeProcedure)type).getFormalParameters() == null ||  ((TypeProcedure)type).getFormalParameters().size()== 0) {
+                    // perform implicit function call only if no parameters are required
+                    type = ((TypeProcedure)type).getResultType();
 
-                if (type instanceof TypeReference) {
-                    if (!((TypeReference)type).getBaseType().hasAssignmentProtection()) {
-                       attr.setIsLValue(true);
+                    if (type instanceof TypeReference) {
+                        if (!((TypeReference)type).getBaseType().hasAssignmentProtection()) {
+                            attr.setIsLValue(true);
+                        }
                     }
+                    attr.setType(type);
+                    actionDone=true;
                 }
-                attr.setType(type);
-                actionDone=true;
             }
         }
 
@@ -601,5 +626,77 @@ public class TypeUtilities {
             return true;
         }
         return false;
+    }
+
+    /**
+     * check type compatibility for pass by IDENT including
+     * <ul>
+     * <li> check for INV restrictions
+     * <li> check if a variable is passed
+     * </ul>
+     * 
+     * @param typeOfFormalParameter
+     * @param formalParameter
+     * @param expression
+     * @param m_ast
+     * @return true, if it is possible<br>fails, if it is not possible and an error message became emitted
+     */
+    public static boolean mayBePassedByIdent(TypeDefinition typeOfFormalParameter,
+            FormalParameter formalParameter, ExpressionContext expression, AST m_ast) {
+        boolean assignable = false;
+        final String breaksINV = " -- would break INV";
+        
+        TypeDefinition paramType = m_ast.lookupType(expression);
+        String paramOriginalType = paramType.toErrorString();
+        
+        if (paramType instanceof UserDefinedSimpleType) {
+            paramOriginalType = paramType.toErrorString();
+        }
+        
+        if (paramType instanceof UserDefinedTypeStructure) {
+            paramOriginalType = paramType.toErrorString();
+        }
+
+        String formalParamOriginalType = typeOfFormalParameter.toString4IMC(true);
+        if (typeOfFormalParameter instanceof UserDefinedSimpleType) {
+            formalParamOriginalType = typeOfFormalParameter.toErrorString();
+        }
+        
+        if (typeOfFormalParameter instanceof UserDefinedTypeStructure) {
+            formalParamOriginalType = typeOfFormalParameter.toErrorString();
+        }
+        
+        ASTAttribute attr = m_ast.lookup(expression);
+        if (attr.getVariable()==null && attr.getConstant() == null) {
+            CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr,"");
+            //ErrorStack.add(expression,"IDENT parameter","cannot pass expression result by IDENT");
+            return assignable;
+        }
+        
+        if (typeOfFormalParameter.equals(paramType)) {
+            if ((paramType.hasAssignmentProtection() || attr.isConstant()) && !typeOfFormalParameter.hasAssignmentProtection()) {
+                CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
+                 //ErrorStack.add(expression,"type mismatch","pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT would break INV");
+            } else {
+                 assignable = true;
+            }
+         } else if (paramType instanceof TypeReference) {
+             // maybe we may dereference the ref parameter
+             paramType = ((TypeReference)paramType).getBaseType();
+             if (typeOfFormalParameter.equals(paramType)) {
+                 if (paramType.hasAssignmentProtection() && !typeOfFormalParameter.hasAssignmentProtection()) {
+                     CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
+                     // ErrorStack.add(expression,"type mismatch","pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT would break INV");
+                 } else {
+                      assignable = true;
+                 }
+             } else {
+                 CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, null);
+             }
+         } else {
+             CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr,null);
+             // ErrorStack.add(expression,"type mismatch","cannot pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT");
+         }
+        return assignable;
     }
 }
