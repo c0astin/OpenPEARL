@@ -25,7 +25,7 @@ target=
 PPONLY=0
 noPP=0
 PPFLAGS=""
-
+    
 standard="-std=OpenPEARL"
 if [[ $PRLFLAGS =~ "-std=PEARL90" ]]; then
    standard="-std=PEARL90"
@@ -179,7 +179,17 @@ rm -f $target.out $target.log
    for inputFile in $INPUT; do
       #echo "-----------------------------  treat " $inputFile
       #echo "rm: " $intermediateFiles
-      inp_ext=${inputFile##*.}
+      case ${inputFile##*/} in
+	 (?*.*) inp_ext=${inputFile##*.};;
+	 (*) inp_ext=;;
+      esac
+       
+      if [ -z "$inp_ext" ]
+      then
+	  echo "terminate due to no file extension given."
+	  exit -1
+      fi
+          
       fn=${inputFile%.*}
       targetDir="${inputFile%/*}"
       if [[ "$fn" = "$inp_ext" ]] ; then
