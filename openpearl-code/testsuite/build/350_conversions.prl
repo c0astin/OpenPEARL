@@ -26,9 +26,8 @@ T1: TASK MAIN;
    DCL f50 FIXED(50) INIT(4000000000);
 
    f50 = 10000000000;
-   f50 = 10*1000*1000*1000;    ! <<<< this will cause an FixedOverflowSignal
-				! <<<< since constant FIXED expressions are not
-				! <<<< supported yet
+   f50 = 10*1000*1000*1000;    ! 2022-07-18: the expression is evaluated
+                               !             by the compiler!
    ch = TOCHAR (f15); 
    IF ch NE '0' THEN
        __cpp__("printf(\"fail at 1: ch = %x\\n\",_ch.data[0]);");
