@@ -1,0 +1,22 @@
+MODULE(mixedDCL);
+SYSTEM;
+   so: StdOut;
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC;
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+! example from language report 5.14
+  DCL tab(10,20) FIXED,
+      pi INV FLOAT INITIAL(3.1415),
+      r1 REF FLOAT,
+      r2 REF FIXED;
+
+   DCL x(10) FIXED INIT (1),
+      stdout2 DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so),
+       (y,z) FIXED INIT (2,3),
+       s1 SEMA PRESET (1),
+       (s2,s3) SEMA PRESET (2,3),
+       strWithRef STRUCT [ (re,im) REF FLOAT],
+       complex STRUCT [ (re,im) FLOAT ];
+
+MODEND; 
