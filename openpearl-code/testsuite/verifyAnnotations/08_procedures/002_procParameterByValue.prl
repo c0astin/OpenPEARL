@@ -580,6 +580,7 @@ t7i: TASK;
    DCL if INV FIXED INIT(42);
    DCL rf REF INV FIXED INIT(if);
    CALL q7i(rf);   
+   CALL q7i(if);
    CALL q7i(2); ! pass constant
 /*$         ^
 error: q7i: type mismatch: cannot pass constant of type FIXED(2) as REF INV FIXED(31)

@@ -3739,6 +3739,10 @@ implements OpenPearlVisitor<Void> {
         for (int i=0; i<Math.min(nbrOfActualParameters,nbrOfFormalParameters); i++) {
 
             ASTAttribute attr = m_ast.lookup(ctx.expression(i));
+            if (attr == null) {
+                // e.g. variable in expression not defined and error already emitted
+                return;
+            }
             TypeDefinition savedActualParameterType = attr.getType();
             FormalParameter fp = proc.getFormalParameters().get(i);
             TypeDefinition typeOfFormalParameter = fp.getType();

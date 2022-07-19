@@ -657,7 +657,7 @@ public class TypeUtilities {
             paramOriginalType = paramType.toErrorString();
         }
 
-        String formalParamOriginalType = typeOfFormalParameter.toString4IMC(true);
+        String formalParamOriginalType = typeOfFormalParameter.toErrorString();
         if (typeOfFormalParameter instanceof UserDefinedSimpleType) {
             formalParamOriginalType = typeOfFormalParameter.toErrorString();
         }
@@ -673,30 +673,63 @@ public class TypeUtilities {
             return assignable;
         }
         
+        // note: .equals does not look on INV 
         if (typeOfFormalParameter.equals(paramType)) {
+            
+          
             if ((paramType.hasAssignmentProtection() || attr.isConstant()) && !typeOfFormalParameter.hasAssignmentProtection()) {
                 CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
                  //ErrorStack.add(expression,"type mismatch","pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT would break INV");
             } else {
-                 assignable = true;
+                assignable = checkInvOfIdentParameter(typeOfFormalParameter, paramType);
+                if (!assignable) {
+                    CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
+                }
+                 
+                //assignable = true;
             }
-         } else if (paramType instanceof TypeReference) {
-             // maybe we may dereference the ref parameter
-             paramType = ((TypeReference)paramType).getBaseType();
-             if (typeOfFormalParameter.equals(paramType)) {
-                 if (paramType.hasAssignmentProtection() && !typeOfFormalParameter.hasAssignmentProtection()) {
-                     CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
-                     // ErrorStack.add(expression,"type mismatch","pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT would break INV");
-                 } else {
-                      assignable = true;
-                 }
-             } else {
-                 CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, null);
-             }
+//         } else if (paramType instanceof TypeReference) {
+//             // maybe we may dereference the ref parameter
+//             paramType = ((TypeReference)paramType).getBaseType();
+//             if (typeOfFormalParameter.equals(paramType)) {
+//                 if (paramType.hasAssignmentProtection() && !typeOfFormalParameter.hasAssignmentProtection()) {
+//                     CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
+//                     // ErrorStack.add(expression,"type mismatch","pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT would break INV");
+//                 } else {
+//                      assignable = true;
+//                 }
+//             } else {
+//                 CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, null);
+//             }
          } else {
              CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr,null);
              // ErrorStack.add(expression,"type mismatch","cannot pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT");
          }
         return assignable;
+    }
+
+    private static boolean checkInvOfIdentParameter(TypeDefinition formalParameter, TypeDefinition actualParameter) {
+        // initial state: both type match, but INV is not checked yet
+        // if actualParameterType has INV the formalParameter must have also the INV
+        // we must consider: INV REF INV type
+        if (actualParameter.hasAssignmentProtection() && !formalParameter.hasAssignmentProtection()) {
+            return false;
+        }
+        
+        while (actualParameter instanceof TypeReference || actualParameter instanceof TypeArray) {
+            if (actualParameter instanceof TypeReference) {
+                actualParameter = ((TypeReference)actualParameter).getBaseType();
+                formalParameter = ((TypeReference)formalParameter).getBaseType();
+            } else if (actualParameter instanceof TypeArray) {
+                actualParameter = ((TypeArray)actualParameter).getBaseType();
+                formalParameter = ((TypeArray)formalParameter).getBaseType();
+            }
+            if (actualParameter.hasAssignmentProtection() &&
+                    !(formalParameter.hasAssignmentProtection())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
