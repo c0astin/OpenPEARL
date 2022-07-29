@@ -1,0 +1,9 @@
+MODULE Comment;
+   /*  this should produce an error
+       line comment in block comment ! */
+       .. this terminates the comment */
+
+
+MODEND;
+
+
