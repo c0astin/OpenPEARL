@@ -1,0 +1,10 @@
+MODULE(x);
+PROBLEM;
+#DEFINE version = 1 ;
+#IF version = 1  ;
+  DCL f(10) FIXED;
+#ELSE;
+  DCL f(12) FIXED;
+#FIN;
+MODEND;
+
