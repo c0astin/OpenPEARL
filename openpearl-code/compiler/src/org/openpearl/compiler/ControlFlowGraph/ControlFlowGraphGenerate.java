@@ -301,7 +301,7 @@ public class ControlFlowGraphGenerate extends OpenPearlBaseVisitor<Void> impleme
             exitedAtBlock.get(block).forEach(exitControlFlowGraphNode -> {
                 OpenPearlParser.ExitStatementContext exitNodeCtx = ((OpenPearlParser.Unlabeled_statementContext) exitControlFlowGraphNode.getCtx()).exitStatement();
                 if (exitNodeCtx.ID() != null) {
-                    if(blockName.equals(exitNodeCtx.ID().getText())) {
+                    if( blockName != null && blockName.equals(exitNodeCtx.ID().getText())) {
                         cfg.addIfNotExist(exitControlFlowGraphNode, blockEndControlFlowGraphNode);
                     }
                 }
