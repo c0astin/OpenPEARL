@@ -1184,7 +1184,7 @@ implements OpenPearlVisitor<Void> {
                 ErrorStack.add(
                         "type mismatch: expected FIXED FIT FIXED or FLOAT FIT FLOAT -- got "
                                 + op1.getType().toString()
-                                + "//"
+                                + " FIT "
                                 + op2.getType().toString());
             }
         }

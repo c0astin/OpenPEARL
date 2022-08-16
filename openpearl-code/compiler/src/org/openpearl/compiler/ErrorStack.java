@@ -339,21 +339,33 @@ public class ErrorStack {
             errorLine += sourceLine.substring(stopColNumber + 1);
             System.err.println(errorLine);
         } else {
-            // token covers multiple lines
-            // print initial part
-            errorLine += sourceLine.substring(startColNumber);
+            errorLine += sourceLine.substring(startColNumber);//, stopColNumber + 1);
+            errorLine += errorOff;
             System.err.println(errorLine);
+//            // token covers multiple lines
+//            // print initial part
+//            errorLine += sourceLine.substring(startColNumber);
+//            System.err.println(errorLine);
+//            System.err.println("------1 "+expandedStartLineNumber+":"+startColNumber+" - "+expandedStopLineNumber+":"+stopColNumber);
+//            // print complete lines of the token
+//            for (int i =expandedStartLineNumber + 1; i < expandedStopLineNumber; i++) {
+//                System.err.println("------2a");
+//                sourceLine = expandTabs(getLineFromSourceFile(filename, i));
+//                System.err.println("------2b");
+//                System.err.println(sourceLine);
+//                System.err.println("------2");
+//            }
+//            
+//            // print last line
+//            System.err.println("------3a");
+//            sourceLine = getLineFromSourceFile(filename, expandedStopLineNumber);
+//            System.err.println("------3b "+stopColNumber+ " "+sourceLine.length());
+//            errorLine = expandTabs(sourceLine.substring(0, stopColNumber + 1)) + errorOff
+//                    + sourceLine.substring(stopColNumber + 1);
+//            System.err.println("------3c");
+//            System.err.println(errorLine);
+//            System.err.println("------3");
 
-            // print complete lines of the token
-            for (int i =expandedStartLineNumber + 1; i < expandedStopLineNumber; i++) {
-                sourceLine = expandTabs(getLineFromSourceFile(filename, i));
-                System.err.println(sourceLine);
-            }
-            // print last line
-            sourceLine = getLineFromSourceFile(filename, expandedStopLineNumber);
-            errorLine = expandTabs(sourceLine.substring(0, stopColNumber + 1)) + errorOff
-                    + sourceLine.substring(stopColNumber + 1);
-            System.err.println(errorLine);
         }
 
         /* print circumflex */
@@ -374,7 +386,7 @@ public class ErrorStack {
      * <ul>
      * <li>\t goes to the next tab pos 
      * <li>tabsize = 8
-     * <li>non ascii characaters are counted as 1 character
+     * <li>non ascii characters are counted as 1 character
      * <li>first position in line is 1
      * </ul>
      */
@@ -419,6 +431,7 @@ public class ErrorStack {
             readbuffer.close();
             readfile.close();
         } catch (IOException e) {
+            
             e.printStackTrace();
         }
 

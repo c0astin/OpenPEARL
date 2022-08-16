@@ -84,10 +84,11 @@ public class CheckDeclarationScope extends OpenPearlBaseVisitor<Void>
 
         Scope lastScope = m_currentScope;
 
-        if (m_currentScope != Scope.UNKNOWN) {
-            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
-        }
+// this case is excluded by the grammar        
+//        if (m_currentScope != Scope.UNKNOWN) {
+//            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
+//                    ctx.start.getCharPositionInLine());
+//        }
 
         org.openpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry =
                 m_currentSymbolTable.lookupLocal(ctx.nameOfModuleTaskProc().ID().getText());
@@ -104,12 +105,13 @@ public class CheckDeclarationScope extends OpenPearlBaseVisitor<Void>
         if (m_debug) {
             System.out.println("Semantic: Check Declaration Scope: visitProcedureDeclaration");
         }
-
+        
         Scope lastScope = m_currentScope;
 
         if (m_currentScope != Scope.MODULE) {
-            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
+            ErrorStack.add(ctx, "declaration scope", "a PROC may only be declared on MODUL level");
+//            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
+//                    ctx.start.getCharPositionInLine());
         }
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -131,8 +133,9 @@ public class CheckDeclarationScope extends OpenPearlBaseVisitor<Void>
         Scope lastScope = m_currentScope;
 
         if (m_currentScope != Scope.MODULE) {
-            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
+            ErrorStack.add(ctx, "declaration scope", "a TASK  may only be declared on MODULE level");
+           // throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
+           //         ctx.start.getCharPositionInLine());
         }
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -145,47 +148,49 @@ public class CheckDeclarationScope extends OpenPearlBaseVisitor<Void>
         return null;
     }
 
-    @Override
-    public Void visitBlock_statement(OpenPearlParser.Block_statementContext ctx) {
-        if (m_debug) {
-            System.out.println("Semantic: Check Declaration Scope: visitBlock_statement");
-        }
-
-        Scope lastScope = m_currentScope;
-
-        if (m_currentScope != Scope.PROCEDURE && m_currentScope != Scope.TASK
-                && m_currentScope != Scope.LOOP && m_currentScope != Scope.BLOCK) {
-            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
-        }
-
-        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-        this.m_currentScope = Scope.BLOCK;
-
-        visitChildren(ctx);
-
-        this.m_currentScope = lastScope;
-        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-        return null;
-    }
-
-    @Override
-    public Void visitLoopStatement(OpenPearlParser.LoopStatementContext ctx) {
-        if (m_debug) {
-            System.out.println("Semantic: Check Declaration Scope: visitLoopStatement");
-        }
-
-        Scope lastScope = m_currentScope;
-
-        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-        this.m_currentScope = Scope.LOOP;
-
-        visitChildren(ctx);
-
-        this.m_currentScope = lastScope;
-        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
-        return null;
-    }
+// these cases are excluded by the grammar
+//    @Override
+//    public Void visitBlock_statement(OpenPearlParser.Block_statementContext ctx) {
+//        if (m_debug) {
+//            System.out.println("Semantic: Check Declaration Scope: visitBlock_statement");
+//        }
+//
+//        Scope lastScope = m_currentScope;
+//
+//        if (m_currentScope != Scope.PROCEDURE && m_currentScope != Scope.TASK
+//                && m_currentScope != Scope.LOOP && m_currentScope != Scope.BLOCK) {
+//         
+//            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
+//                    ctx.start.getCharPositionInLine());
+//        }
+//
+//        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+//        this.m_currentScope = Scope.BLOCK;
+//
+//        visitChildren(ctx);
+//
+//        this.m_currentScope = lastScope;
+//        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+//        return null;
+//    }
+//
+//    @Override
+//    public Void visitLoopStatement(OpenPearlParser.LoopStatementContext ctx) {
+//        if (m_debug) {
+//            System.out.println("Semantic: Check Declaration Scope: visitLoopStatement");
+//        }
+//
+//        Scope lastScope = m_currentScope;
+//
+//        this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+//        this.m_currentScope = Scope.LOOP;
+//
+//        visitChildren(ctx);
+//
+//        this.m_currentScope = lastScope;
+//        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+//        return null;
+//    }
 
     @Override
     public Void visitDationDenotation(OpenPearlParser.DationDenotationContext ctx) {
@@ -196,31 +201,33 @@ public class CheckDeclarationScope extends OpenPearlBaseVisitor<Void>
         Scope lastScope = m_currentScope;
 
         if (m_currentScope != Scope.MODULE) {
-            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
+            ErrorStack.add(ctx, "declaration scope", "a DATION  may only be declared on MODULE level");
+        //    throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
+        //            ctx.start.getCharPositionInLine());
         }
 
         m_currentScope = lastScope;
         return null;
     }
 
-    @Override
-    public Void visitLabel_statement(OpenPearlParser.Label_statementContext ctx) {
-        if (m_debug) {
-            System.out.println("Semantic: Check Declaration Scope: visitLabel_statement");
-        }
-
-        Scope lastScope = m_currentScope;
-
-        if (m_currentScope != Scope.PROCEDURE && m_currentScope != Scope.TASK
-                && m_currentScope != Scope.LOOP && m_currentScope != Scope.BLOCK) {
-            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
-        }
-
-        m_currentScope = lastScope;
-        return null;
-    }
+// excluded by grammar    
+//    @Override
+//    public Void visitLabel_statement(OpenPearlParser.Label_statementContext ctx) {
+//        if (m_debug) {
+//            System.out.println("Semantic: Check Declaration Scope: visitLabel_statement");
+//        }
+//
+//        Scope lastScope = m_currentScope;
+//
+//        if (m_currentScope != Scope.PROCEDURE && m_currentScope != Scope.TASK
+//                && m_currentScope != Scope.LOOP && m_currentScope != Scope.BLOCK) {
+//            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
+//                    ctx.start.getCharPositionInLine());
+//        }
+//
+//        m_currentScope = lastScope;
+//        return null;
+//    }
 
     @Override
     public Void visitBoltDenotation(OpenPearlParser.BoltDenotationContext ctx) {
@@ -231,8 +238,9 @@ public class CheckDeclarationScope extends OpenPearlBaseVisitor<Void>
         Scope lastScope = m_currentScope;
 
         if (m_currentScope != Scope.MODULE) {
-            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
+            ErrorStack.add(ctx, "declaration scope", "a BOLT  may only be declared on MODULE level");
+           // throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
+           //         ctx.start.getCharPositionInLine());
         }
 
         m_currentScope = lastScope;
@@ -248,8 +256,9 @@ public class CheckDeclarationScope extends OpenPearlBaseVisitor<Void>
         Scope lastScope = m_currentScope;
 
         if (m_currentScope != Scope.MODULE) {
-            throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
+            ErrorStack.add(ctx, "declaration scope", "a SEMA  may only be declared on MODULE level");
+            //throw new DeclarationScopeException(ctx.getText(), ctx.start.getLine(),
+            //        ctx.start.getCharPositionInLine());
         }
 
         m_currentScope = lastScope;

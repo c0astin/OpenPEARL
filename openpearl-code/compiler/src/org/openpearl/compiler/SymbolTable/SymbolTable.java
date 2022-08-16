@@ -88,7 +88,7 @@ public class SymbolTable {
      * Allocate a new symtab and add it as a new m_level to this symtab.  The new
      * m_level is linked into the existing symtab via the scope field of the
      * given function entry, and the parent entry of this, as illustrated in
-     * the class documnentation.  The m_level field of the the new symtab is set
+     * the class documentation.  The m_level field of the the new symtab is set
      * to this.m_level+1.  The return value is a reference to the new m_level.
      */
     public SymbolTable newLevel(ModuleEntry moduleEntry) {
@@ -204,6 +204,7 @@ public class SymbolTable {
         if (lookupLocal(se.getName()) != null) {
             m_entries.remove(se.getName());
         }
+        se.setLevel(m_level);
         m_entries.put(se.getName(), se);
         return true;
     }
@@ -262,8 +263,12 @@ public class SymbolTable {
         int nextLevel = level + 1;
 
         for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
-            output += it.next().toString(nextLevel) + (it.hasNext() ? "\n" : "");
+            String s = it.next().toString(nextLevel) + (it.hasNext() ? "\n" : "");
+            //System.out.println("level="+level+" s="+s+"len(s)="+s.length()+"len(output)="+output.length());
+            output += s;
+            //System.out.println("-->"+output.length());
         }
+        
 
         return output;
     }

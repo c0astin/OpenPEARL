@@ -144,6 +144,9 @@ implements OpenPearlVisitor<Void> {
         ErrorStack.enter(ctx, "PROC");
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        
+        // step up one level to get the symbol table with the procedure declaration
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend(); 
 
         SymbolTableEntry entry =
                 this.m_currentSymbolTable.lookup(ctx.nameOfModuleTaskProc().ID().toString());
@@ -168,7 +171,6 @@ implements OpenPearlVisitor<Void> {
         // m_typeOfReturnExpression contains the type of the last RETURN statement
         // in the procedure body
         m_typeOfReturns = procedureEntry.getResultType();
- 
 
         visitChildren(ctx);
 

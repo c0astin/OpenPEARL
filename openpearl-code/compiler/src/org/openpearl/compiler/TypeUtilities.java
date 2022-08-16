@@ -48,8 +48,7 @@ public class TypeUtilities {
      * @param lhsType  the target type (lhs in assignment, formalParameter in function calls, input values ini/o statements
      * @param expression the expression on the rhs
      * @param m_ast the AST
-     * @param isInAssignment TODO
-     * @param lhsVariable really required??
+     * @param isInAssignment is true we are in an assignment, else we have a procedure call
      * @return
      */
     public static  boolean mayBeAssignedTo( TypeDefinition lhsType, SymbolTableEntry lhs,
@@ -364,9 +363,17 @@ public class TypeUtilities {
 
     private static void checkLifeCycle(SymbolTableEntry lhsVariable, VariableEntry rhsVariable) {
         if (rhsVariable != null) {
-            if (lhsVariable.getLevel() < rhsVariable.getLevel()) {
-                ErrorStack.add("life cycle of '" + rhsVariable.getName() + "' is shorter than '"
-                        + lhsVariable.getName() + "'");
+            // lhsVariable may be formalParameter, variableEntry,...
+            // attention FormalParameter is derived from VariableEntry --> must be checked first!
+            if (lhsVariable instanceof FormalParameter) {
+              // always ok, since we have no local procedures  
+            } else if (lhsVariable instanceof VariableEntry) {
+                if (lhsVariable.getLevel() < rhsVariable.getLevel()) {
+                    ErrorStack.add("life cycle of '" + rhsVariable.getName() + "' is shorter than '"
+                            + lhsVariable.getName() + "'");
+                }
+            } else {
+                ErrorStack.addInternal("untreeated alternative @ TypeUtilities:375");
             }
         } else {
             // rhs is NIL, TASK or PROC

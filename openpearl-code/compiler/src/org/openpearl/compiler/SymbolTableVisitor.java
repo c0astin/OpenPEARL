@@ -363,21 +363,7 @@ implements OpenPearlVisitor<Void> {
         //        if (ctx.globalAttribute() != null) {
         //            globalId = ctx.globalAttribute().ID().getText();
         //        }
-
-        String s = ctx.nameOfModuleTaskProc().ID().toString();
-        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(s);
-        if (entry != null) {
-            CommonErrorMessages.doubleDeclarationError(
-                    s, ctx.nameOfModuleTaskProc(), entry.getCtx());
-        } else {
-            entry = this.m_currentSymbolTable.lookup(s);
-            if (entry != null) {
-                CommonErrorMessages.doubleDeclarationWarning(
-                        "procedure definition ", s, ctx.nameOfModuleTaskProc(), entry.getCtx());
-            }
-        }
         
-
         ProcedureEntry procedureEntry =
                 new ProcedureEntry(
                         ctx.nameOfModuleTaskProc().getText(),m_type,
@@ -389,6 +375,25 @@ implements OpenPearlVisitor<Void> {
         if (m_isGlobal) {
             procedureEntry.setGlobalAttribute(m_currentModuleName);
         }
+        
+        String s = ctx.nameOfModuleTaskProc().ID().toString();
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookupLocal(s);
+        if (entry != null) {
+            boolean ok = differsOnlyInSpcDcl(procedureEntry, entry);
+            if (!ok) {
+               CommonErrorMessages.doubleDeclarationError(
+                    s, ctx.nameOfModuleTaskProc(), entry.getCtx());
+            }
+        } else {
+            entry = this.m_currentSymbolTable.lookup(s);
+            if (entry != null) {
+                CommonErrorMessages.doubleDeclarationWarning(
+                        "procedure definition ", s, ctx.nameOfModuleTaskProc(), entry.getCtx());
+            }
+        }
+        
+
+
         this.m_currentSymbolTable = this.m_currentSymbolTable.newLevel(procedureEntry);
 
         /* Enter formal parameter into the local symbol table of this procedure */
@@ -436,6 +441,7 @@ implements OpenPearlVisitor<Void> {
 
     private LinkedList<FormalParameter> getListOfFormalParameters(
             ListOfFormalParametersContext ctx) {
+        boolean warningIssued=false;
         LinkedList<FormalParameter> listOfFormalParameters = new LinkedList<FormalParameter>();
 
         Log.debug(
@@ -446,8 +452,11 @@ implements OpenPearlVisitor<Void> {
                 if (m_isInSpecification && 
                         ctx.formalParameter(i).getChild(0) instanceof TerminalNode &&
                         Compiler.isStdPEARL90() == true) {
-                  ErrorStack.warn(ctx.formalParameter(i),"SPC PROC","no list of identifiers allowed");
-                  break; // report error only once
+                  if (!warningIssued) {
+                      ErrorStack.warn(ctx.formalParameter(i),"SPC PROC","no list of identifiers allowed");
+                      warningIssued=true;   // report warning only once
+                  }
+                  
                 }
                
                 if ((!m_isInSpecification) && ctx.formalParameter(i).identifier().size()== 0) {
@@ -527,12 +536,6 @@ implements OpenPearlVisitor<Void> {
         Log.debug("SymbolTableVisitor:getParameterType:ctx" + CommonUtils.printContext(ctx));
 
         visitChildren(ctx);
-
-        // if (ctx.simpleType() != null) {
-        //     visitSimpleType(ctx.simpleType());
-        // } else if (ctx.typeStructure() != null) {
-        //     visitTypeStructure(ctx.typeStructure());
-        // }
 
         return null;
     }
@@ -1293,36 +1296,15 @@ implements OpenPearlVisitor<Void> {
 
     @Override
     public Void visitTypeDuration(TypeDurationContext ctx) {
-        if (m_type instanceof TypeArray) {
-            ((TypeArray) m_type).setBaseType(new TypeDuration());
-        } else {
-            m_type = new TypeDuration();
-        }
+        m_type = new TypeDuration();
         return null;
     }
 
     @Override
     public Void visitTypeClock(TypeClockContext ctx) {
-        if (m_type instanceof TypeArray) {
-            ((TypeArray) m_type).setBaseType(new TypeClock());
-        } else {
-            m_type = new TypeClock();
-        }
+        m_type = new TypeClock();
         return null;
     }
-
-//    private ArrayList<String> getIdentifierDenotation(
-//            IdentifierDenotationContext ctx) {
-//        ArrayList<String> identifierDenotationList = new ArrayList<String>();
-//
-//        if (ctx != null) {
-//            for (int i = 0; i < ctx.identifier().size(); i++) {
-//                identifierDenotationList.add(ctx.identifier(i).ID().toString());
-//            }
-//        }
-//
-//        return identifierDenotationList;
-//    }
 
 
     @Override
@@ -1414,11 +1396,14 @@ implements OpenPearlVisitor<Void> {
         if (ctx.loopStatement_end().ID() != null) {
             label = ctx.loopStatement_end().ID().getText();
 
-            SymbolTableEntry se = m_currentSymbolTable.lookup(label);
+            SymbolTableEntry se = m_currentSymbolTable.lookupLocal(label);
             if (se != null) {
                 ErrorStack.add(
                         ctx.loopStatement_end(), "LOOP", "duplicate name '" + label + "' in scope");
-
+                ErrorStack.note(
+                        se.getCtx(),
+                        "previous definion",
+                        "");
                 if (se instanceof LoopEntry) {
                     ErrorStack.note(
                             ((LoopStatementContext) (se.getCtx())).loopStatement_end(),
@@ -1426,7 +1411,7 @@ implements OpenPearlVisitor<Void> {
                             "");
                 }
                 if (se instanceof BlockEntry) {
-                    ErrorStack.note(se.getCtx(), "previous definion", "");
+                    ErrorStack.note(se.getCtx(), "previous definition", "");
                 }
             }
         }
@@ -2007,51 +1992,109 @@ implements OpenPearlVisitor<Void> {
 
     private void checkDoubleDefinitionAndEnterToSymbolTable(
             SymbolTableEntry newEntry, ParserRuleContext ctx) {
+        
         String s = newEntry.getName();
+        
+        // setup SPC/DCL and GLOBAL information
+        if (m_isInSpecification) {
+            newEntry.setIsSpecified();
+            // check: m_isGlobal may be false if symbol is username in system part
+            //        m_globalName my be null, in PEARL90Mode
+            //                                 in OpenPEARL: warning defaulted to 'm_currentModuleName'
+            if (m_isGlobal == false &&  m_currentSymbolTable.lookupSystemPartName(s) != null) {
+                newEntry.setGlobalAttribute(m_currentModuleName);
+            } else if (m_isGlobal == true && m_globalName == null) {
+                newEntry.setGlobalAttribute(m_currentModuleName);
+                SymbolTableEntry isSystemName = m_currentSymbolTable.lookupSystemPartName(s);
+                if (Compiler.isStdOpenPEARL() && isSystemName == null) {
+                    ErrorStack.warn(ctx,"SPC", "import module name defaulted to '"+m_currentModuleName+"'");
+                }
+            } else if (m_isGlobal == true && m_globalName != null) {
+                newEntry.setGlobalAttribute(m_globalName);
+            } else {
+                ErrorStack.add(ctx,"SPC","GLOBAL attribute required for import from other module");
+            }
+        } else {
+            if (m_isGlobal) {
+                if (m_currentSymbolTable.m_level > 1) {
+                    ErrorStack.add(ctx, "GLOBAL", "not allowed in procedures or tasks");
+                } else {
+                    if (m_globalName != null) {
+                        ErrorStack.add(ctx, "GLOBAL", "no nameOfModule allowed in DCL");
+                    } else {
+                        newEntry.setGlobalAttribute(m_currentModuleName);
+                    }
+                }
+            }
+        }
+        
+
+
         SymbolTableEntry entry = m_currentSymbolTable.lookupLocal(s);
         if (entry != null) {
-            CommonErrorMessages.doubleDeclarationError(s, ctx, entry.getCtx());
+            boolean ok = differsOnlyInSpcDcl(newEntry, entry);
+            if (!ok) CommonErrorMessages.doubleDeclarationError(s, ctx, entry.getCtx());
         } else {
             entry = m_currentSymbolTable.lookup(s);
-            if (entry != null) {
+            if (entry != null && !(entry instanceof ModuleEntry) ) {
                 CommonErrorMessages.doubleDeclarationWarning(
                         "redeclaration of ", s, ctx, entry.getCtx());
             }
-            // setup SPC/DCL and GLOBAL information
-            if (m_isInSpecification) {
-                newEntry.setIsSpecified();
-                // check: m_isGlobal may be false if symbol is username in system part
-                //        m_globalName my be null, in PEARL90Mode
-                //                                 in OpenPEARL: warning defaulted to 'm_currentModuleName'
-                if (m_isGlobal == false &&  m_currentSymbolTable.lookupSystemPartName(s) != null) {
-                    newEntry.setGlobalAttribute(m_currentModuleName);
-                } else if (m_isGlobal == true && m_globalName == null) {
-                    newEntry.setGlobalAttribute(m_currentModuleName);
-                    SymbolTableEntry isSystemName = m_currentSymbolTable.lookupSystemPartName(s);
-                    if (Compiler.isStdOpenPEARL() && isSystemName == null) {
-                        ErrorStack.warn(ctx,"SPC", "import module name defaulted to '"+m_currentModuleName+"'");
-                    }
-                } else if (m_isGlobal == true && m_globalName != null) {
-                    newEntry.setGlobalAttribute(m_globalName);
-                } else {
-                    ErrorStack.add(ctx,"SPC","GLOBAL attribute required for import from other module");
-                }
-            } else {
-                if (m_isGlobal) {
-                    if (m_currentSymbolTable.m_level > 1) {
-                        ErrorStack.add(ctx, "GLOBAL", "not allowed in procedures or tasks");
-                    } else {
-                        if (m_globalName != null) {
-                            ErrorStack.add(ctx, "GLOBAL", "no nameOfModule allowed in DCL");
-                        } else {
-                            newEntry.setGlobalAttribute(m_currentModuleName);
-                        }
-                    }
-                }
-            }
+
             m_currentSymbolTable.enter(newEntry);
         }
     }
-
-
+    
+    /* compare two symbol table entries with the same name
+     * 
+     * it is ok, if they have the same type but differs in SPC and DCL
+     * it is ok if one of them is ModuleEntry, or
+     * it is ok if only one is a BlockEntry/LabelEntry, UserDefinedType, LoopEntry
+     * 
+     */
+    private boolean differsOnlyInSpcDcl(SymbolTableEntry newEntry, SymbolTableEntry previousEntry) {
+       boolean ok=false;
+       
+       if (previousEntry instanceof ModuleEntry) ok = true;
+       
+       if (!ok && previousEntry.getClass().equals(newEntry.getClass()) && m_currentSymbolTable.m_level==1) {
+           // we have the same type of object; VariableEntry, ProcedureEntry must be checked for proper type
+           if (previousEntry instanceof VariableEntry) {
+               if (((VariableEntry)previousEntry).getType().equals(((VariableEntry)newEntry).getType())) {
+                   ok = true;
+               }
+           } else if (previousEntry instanceof ProcedureEntry) {
+               ProcedureEntry p = ((ProcedureEntry)previousEntry);
+               ProcedureEntry n = ((ProcedureEntry)newEntry);
+               boolean allTypesOk = true;
+               if (p.getFormalParameters().size() == n.getFormalParameters().size()) {
+                   
+                   for (int i=0; i< p.getFormalParameters().size(); i++) {
+                       if (!(p.getFormalParameters().get(i).getType().equals(n.getFormalParameters().get(i).getType()))) {
+                           allTypesOk = false;
+                       }
+                   }
+                   if (p.getResultType() != null 
+                           && !(p.getResultType().equals(n.getResultType()))) {
+                       allTypesOk = false;
+                   }
+               } else {
+                   allTypesOk = false;
+               }
+               ok = allTypesOk;
+           }
+     
+           if (ok && previousEntry.isSpecified()  !=  newEntry.isSpecified()) {
+               // we must remove the specification from the symbol table
+               if (previousEntry.isSpecified()) {
+                   m_currentSymbolTable.enterOrReplace(newEntry);
+               }
+               ok=true;
+           } else if (ok && previousEntry.isSpecified()  &&  newEntry.isSpecified()) {
+               ok = true;
+           }
+       }
+        return ok;
+    }
 }
+
