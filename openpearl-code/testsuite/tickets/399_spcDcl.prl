@@ -1,0 +1,39 @@
+MODULE(m);
+
+PROBLEM;
+
+SPC m FIXED GLOBAL;
+DCL m FIXED GLOBAL;
+
+SPC p PROC((a,b) FIXED ) GLOBAL;
+p: PROC( (a,b) FIXED) GLOBAL;
+END;
+
+SPC q PROC((a,b) FIXED ) GLOBAL;
+
+q: PROC( (a,b) FIXED) GLOBAL;
+    DCL q1 FIXED;
+
+!   TO 10 REPEAT
+!     EXIT exitLoop1 ;
+!
+!   END  exitLoop1;
+!
+BEGIN
+   TO 9 REPEAT ;
+    ; 
+     IF a > 0 THEN EXIT q1x;
+    ! ELSE EXIT be;
+     FIN;
+    
+END q1x;
+
+END;
+!
+
+
+END;
+
+SPC q PROC((a,b) FIXED ) GLOBAL;
+MODEND;
+
