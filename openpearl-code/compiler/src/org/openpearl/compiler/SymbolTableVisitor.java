@@ -2083,7 +2083,16 @@ implements OpenPearlVisitor<Void> {
                }
                ok = allTypesOk;
            }
-     
+           if (ok && (previousEntry.getGlobalAttribute() == null || newEntry.getGlobalAttribute() == null)) {
+               // spc/dcl need global attributes 
+               ok = false;
+           }
+           if (ok && (previousEntry.getGlobalAttribute() != null && newEntry.getGlobalAttribute() != null)) {
+               // spc/dcl needs same global attributes 
+               if (!previousEntry.getGlobalAttribute().equals(newEntry.getGlobalAttribute())) {
+                   ok = false;
+               }
+           }
            if (ok && previousEntry.isSpecified()  !=  newEntry.isSpecified()) {
                // we must remove the specification from the symbol table
                if (previousEntry.isSpecified()) {
@@ -2092,6 +2101,8 @@ implements OpenPearlVisitor<Void> {
                ok=true;
            } else if (ok && previousEntry.isSpecified()  &&  newEntry.isSpecified()) {
                ok = true;
+           } else if (ok && !(previousEntry.isSpecified()  ||  newEntry.isSpecified())) {
+               ok = false;
            }
        }
         return ok;
