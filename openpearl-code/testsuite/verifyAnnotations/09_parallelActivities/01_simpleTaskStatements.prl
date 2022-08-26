@@ -1,0 +1,212 @@
+MODULE(t);
+
+PROBLEM;
+   SPC i1 INTERRUPT GLOBAL(other);
+   DCL s0 SEMA PRESET(-1);
+/*$                   ^
+error: SEMA PRESET: must be not negative
+*/
+
+   DCL s1 SEMA PRESET(1);
+   DCL b BOLT;
+
+t1: TASK PRIO 0 MAIN;
+/*$           ^
+error: PRIO: must be in [1,255]
+*/
+END;
+
+t2: TASK PRIO 256 MAIN;
+/*$           ^
+error: PRIO: must be in [1,255]
+*/
+END;
+
+t3: TASK;
+  DCL delay INV DURATION INIT(-10 SEC);
+  DCL delay1 DURATION INIT(-10 SEC);
+  DCL fixed  FIXED INIT(42);
+  DCL clock  INV CLOCK INIT(12:00:00);
+  DCL bit BIT(1);
+ 
+!-------------------------------------
+! AFTER ... RESUME
+  AFTER 0 SEC RESUME;
+
+  AFTER -1 SEC RESUME;
+/*$     ^
+error: RESUME: AFTER: duration must be > 0 SEC
+*/
+
+  AFTER delay RESUME;
+/*$     ^
+error: RESUME: AFTER: duration must be > 0 SEC
+*/
+
+  AFTER fixed RESUME;
+/*$     ^
+error: RESUME: AFTER: expected type 'DURATION' --- got 'FIXED(31)'
+*/
+
+  AFTER delay1 RESUME;  ! no error expected sinve delay1 is not INV
+
+!---------------------------------------------
+! WHEN ... RESUME;
+
+  WHEN i1 RESUME;
+
+  WHEN fixed RESUME;
+/*$    ^
+error: RESUME: WHEN: expected type 'INTERRUPT' --- got 'FIXED(31)'
+*/
+
+
+!---------------------------------------------
+! AT ... RESUME;
+  AT clock RESUME;
+
+  AT fixed RESUME;
+/*$  ^
+error: RESUME: AT: expected type 'CLOCK' --- got 'FIXED(31)'
+*/
+
+
+! --------------------------------------------
+! WHEN AT/AFTER ALL  UNTIL/DURING ACTIVATE  PRIO
+ ACTIVATE dummy PRIO 0;
+/*$                  ^
+error: ACTIVATE: PRIO: must be in [1,255]
+*/
+
+
+  WHEN fixed ACTIVATE dummy;
+/*$    ^
+error: ACTIVATE: WHEN: expected type 'INTERRUPT' --- got 'FIXED(31)'
+*/
+
+  AFTER delay ACTIVATE dummy;
+/*$     ^
+error: ACTIVATE: AFTER: duration must be > 0 SEC
+*/
+
+  ALL delay DURING delay ACTIVATE dummy;
+/*$                ^
+error: ACTIVATE: DURING: duration must be > 0 SEC
+*/
+/*$   ^
+error: ACTIVATE: ALL: duration must be > 0 SEC
+*/
+
+  AFTER fixed ALL 1 SEC UNTIL fixed ACTIVATE dummy;
+/*$                           ^
+error: ACTIVATE: UNTIL: expected type 'CLOCK' --- got 'FIXED(31)'
+*/
+/*$     ^
+error: ACTIVATE: AFTER: expected type 'DURATION' --- got 'FIXED(31)'
+*/
+
+
+  WHEN fixed ALL fixed DURING fixed ACTIVATE dummy;
+/*$                           ^
+error: ACTIVATE: DURING: expected type 'DURATION' --- got 'FIXED(31)'
+*/
+/*$              ^
+error: ACTIVATE: ALL: expected type 'DURATION' --- got 'FIXED(31)'
+*/
+/*$    ^
+error: ACTIVATE: WHEN: expected type 'INTERRUPT' --- got 'FIXED(31)'
+*/
+
+ 
+!--------------------------------
+!  AT/AFTER/WHEN CONTINUE PRIO
+  CONTINUE dummy PRIO 0;
+/*$                   ^
+error: CONTINUE: PRIO: must be in [1,255]
+*/
+
+  AT fixed CONTINUE dummy;
+/*$  ^
+error: CONTINUE: AT: expected type 'CLOCK' --- got 'FIXED(31)'
+*/
+
+  AFTER fixed CONTINUE dummy;
+/*$     ^
+error: CONTINUE: AFTER: expected type 'DURATION' --- got 'FIXED(31)'
+*/
+
+  AFTER delay CONTINUE dummy;
+/*$     ^
+error: CONTINUE: AFTER: duration must be > 0 SEC
+*/
+
+  WHEN fixed CONTINUE dummy;
+/*$    ^
+error: CONTINUE: WHEN: expected type 'INTERRUPT' --- got 'FIXED(31)'
+*/
+
+!------------------------------------------------
+! SEMA-operations
+  REQUEST s1;
+  RELEASE s1;
+  bit = TRY s1;
+  ENTER b;
+  LEAVE b;
+  RESERVE b;
+  FREE b;
+
+  REQUEST b;
+/*$       ^
+error: REQUEST: expected type 'SEMA' --- got 'BOLT'
+*/
+  RELEASE b;
+/*$       ^
+error: RELEASE: expected type 'SEMA' --- got 'BOLT'
+*/
+  ! TRY s1;
+
+  ENTER s1;
+/*$     ^
+error: ENTER: expected type 'BOLT' --- got 'SEMA'
+*/
+
+  LEAVE s1;
+/*$     ^
+error: LEAVE: expected type 'BOLT' --- got 'SEMA'
+*/
+
+  RESERVE s1;
+/*$       ^
+error: RESERVE: expected type 'BOLT' --- got 'SEMA'
+*/
+
+  FREE s1;
+/*$    ^
+error: FREE: expected type 'BOLT' --- got 'SEMA'
+*/
+
+!--------------------------------
+! Interrupts
+   ENABLE i1;
+   TRIGGER i1;
+   DISABLE i1;
+
+   ENABLE fixed;
+/*$       ^
+error: ENABLE: expected type 'INTERRUPT' --- got 'FIXED(31)'
+*/
+   TRIGGER fixed;
+/*$        ^
+error: TRIGGER: expected type 'INTERRUPT' --- got 'FIXED(31)'
+*/
+   DISABLE fixed;
+/*$        ^
+error: DISABLE: expected type 'INTERRUPT' --- got 'FIXED(31)'
+*/
+
+END;
+ 
+dummy: TASK;
+END;
+MODEND;
+

@@ -1,0 +1,16 @@
+MODULE(s);
+
+PROBLEM;
+
+  DCL x0(0:10) FIXED;
+  DCL x1(0:0) FIXED;
+/*$      ^
+error: index range: lower index must be smaller than upper index
+*/
+  DCL x2(10:0) FIXED;
+/*$      ^
+error: index range: lower index must be smaller than upper index
+*/
+
+MODEND;
+

@@ -1,0 +1,36 @@
+
+MODULE(mfor);
+
+SYSTEM;
+   stdout: StdOut; 
+   	
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+    
+    DCL i FLOAT;
+    DCL von FLOAT;
+    DCL fuer FLOAT;
+    DCL bis FLOAT;
+    	
+
+for: TASK MAIN;
+
+	von := 1.5;
+	fuer := 1.5;
+	bis := 1.5;
+
+
+	FOR i FROM 1 BY fuer TO 5
+		REPEAT 
+			OPEN termout;
+   			PUT 'erste' TO termout BY A, SKIP;
+   			CLOSE termout;
+   			
+   				
+   		END;
+ 
+   	   		   		
+END;
+
+MODEND;

@@ -1,0 +1,54 @@
+MODULE(mcase);
+
+SYSTEM;
+   stdout: StdOut; 
+   	
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+    
+    DCL expression1 FIXED;
+    DCL expression2 FIXED;
+    DCL ausgabe CHAR;	
+ 
+
+case: TASK MAIN;
+
+    expression1 := 1;
+    expression2 := 1;
+    
+	CASE expression1
+		ALT (1)
+			OPEN termout;
+   			PUT 'alt1' TO termout BY A, SKIP;
+   			CLOSE termout;
+   			
+   			CASE expression2
+   				ALT (1)
+   					OPEN termout; 
+   					PUT 'alt 11' TO termout BY A, SKIP;
+   					CLOSE termout;
+   				ALT (2)
+   					OPEN termout; 
+   					PUT 'alt 22' TO termout BY A, SKIP;
+   					CLOSE termout;
+   				OUT
+   					OPEN termout; 
+   					PUT 'out2' TO termout BY A, SKIP;
+   					CLOSE termout;
+   			FIN;
+   			
+   		ALT (2)
+   			OPEN termout;
+   			PUT 'alt2' TO termout BY A, SKIP;
+   			CLOSE termout;
+   		
+   		OUT 
+   			OPEN termout;
+   			PUT 'out1' TO termout BY A, SKIP;
+	   		CLOSE termout;
+ 
+   	FIN;   		   		
+END;
+
+MODEND;

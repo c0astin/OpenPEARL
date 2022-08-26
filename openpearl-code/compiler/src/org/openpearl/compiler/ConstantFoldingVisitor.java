@@ -1041,15 +1041,4 @@ String s = ctx.getText();
         return null;
     }
 
-//    private int getIndexOfComponent(TypeStructure ts, OpenPearlParser.NameContext name) {
-//        String componentId = name.ID().toString();
-//        for (int i = 0; i < ts.m_listOfComponents.size(); i++) {
-//            String s = ts.m_listOfComponents.get(i).m_id;
-//            if (ts.m_listOfComponents.get(i).m_id.equals(componentId)) {
-//                return i;
-//            }
-//        }
-//        // component name not found - should be detected in expressionTypeVisitor
-//        return -1;
-//    }
 }

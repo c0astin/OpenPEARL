@@ -1,0 +1,69 @@
+MODULE(m);
+
+PROBLEM;
+
+TYPE Int16_t FIXED(15);
+
+proc2_ok: PROC;
+   DCL f15 FIXED(15);
+   DCL int16 Int16_t;
+
+   int16 = proc1(f15);
+   f15 = proc1(int16);
+END;
+
+proc2_fail: PROC;
+   DCL f16 FIXED(16);
+   TYPE Int17_t FIXED(16);
+   DCL f7 FIXED(7);
+   TYPE Int8_t FIXED(7);
+
+   DCL int17 Int17_t;
+   DCL int8 Int8_t;
+
+   int17 = proc1(f16);
+/*$              ^
+error: proc1: type mismatch: cannot pass FIXED(16) as Int16_t {aka: FIXED(15)}
+*/
+   f16 = proc1(int17);
+/*$            ^
+error: proc1: type mismatch: cannot pass Int17_t {aka: FIXED(16)} as Int16_t {aka: FIXED(15)}
+*/
+   int17 = proc1Ident(f16);
+/*$                   ^
+error: proc1Ident: type mismatch: cannot pass FIXED(16) as Int16_t {aka: FIXED(15)}
+*/
+   f16 = proc1Ident(int17);
+/*$                 ^
+error: proc1Ident: type mismatch: cannot pass Int17_t {aka: FIXED(16)} as Int16_t {aka: FIXED(15)}
+*/
+   int8 = proc1Ident(f7);
+/*$                   ^
+error: proc1Ident: type mismatch: cannot pass FIXED(7) as Int16_t {aka: FIXED(15)}
+*/
+   f16 = proc1Ident(int8);
+/*$                 ^
+error: proc1Ident: type mismatch: cannot pass Int8_t {aka: FIXED(7)} as Int16_t {aka: FIXED(15)}
+*/
+END;
+
+proc1Ident: PROC(x Int16_t IDENT) RETURNS(Int16_t);
+   RETURN(x);
+END;
+
+proc1: PROC(x Int16_t) RETURNS(Int16_t);
+   DCL y FIXED(7);
+
+   y = x; 
+   CASE x
+   ALT (1)
+     RETURN (y);
+   ALT (2)
+     RETURN ('c'); ! compiler aborts earlier
+   FIN;
+   RETURN(x);
+END;
+
+MODEND;
+
+

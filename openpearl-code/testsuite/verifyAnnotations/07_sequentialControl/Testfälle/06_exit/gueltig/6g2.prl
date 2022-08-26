@@ -1,0 +1,35 @@
+
+MODULE(mtest);
+
+SYSTEM;
+   stdout: StdOut; 
+   	
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+    
+    DCL i FLOAT(52);
+    	
+    	 
+
+
+test: TASK MAIN;
+
+
+	FOR i TO 10	
+		REPEAT	
+			OPEN termout;
+   			PUT 'test' TO termout BY A, SKIP;
+   			CLOSE termout;
+		
+			IF i == 3
+				THEN EXIT;
+			FIN;	
+			
+	END schleife;
+
+END;
+
+
+
+MODEND;

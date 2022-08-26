@@ -508,8 +508,8 @@ public class SymbolTable {
                     TypeStructure struct = (TypeStructure) entry.getType();
                     getStructureDeclarationsForStructure(struct.getStructureName(), struct,
                             structures);
-                } else if (entry.getType() instanceof TypeArray) {
-                    TypeArray array = (TypeArray) entry.getType();
+                } else if (entry.getType() instanceof TypeArrayDeclaration) {
+                    TypeArrayDeclaration array = (TypeArrayDeclaration) entry.getType();
                     if (array.getBaseType() instanceof TypeStructure) {
                         TypeStructure struct = (TypeStructure) array.getBaseType();
                         getStructureDeclarationsForStructure(struct.getStructureName(), struct,
@@ -530,8 +530,8 @@ public class SymbolTable {
                     TypeStructure struct = (TypeStructure) entry.getType();
                     getStructureDeclarationsForStructure(struct.getStructureName(), struct,
                             structures);
-                } else if (entry.getType() instanceof TypeArray) {
-                    TypeArray array = (TypeArray) entry.getType();
+                } else if (entry.getType() instanceof TypeArrayDeclaration) {
+                    TypeArrayDeclaration array = (TypeArrayDeclaration) entry.getType();
                     if (array.getBaseType() instanceof TypeStructure) {
                         TypeStructure struct = (TypeStructure) array.getBaseType();
                         getStructureDeclarationsForStructure(struct.getStructureName(), struct,
@@ -598,8 +598,8 @@ public class SymbolTable {
             if (structureComponent.m_type instanceof TypeStructure) {
                 TypeStructure struct = (TypeStructure) structureComponent.m_type;
                 getStructureDeclarationsForStructure(struct.getStructureName(), struct, structures);
-            } else if (structureComponent.m_type instanceof TypeArray) {
-                TypeArray array = (TypeArray) structureComponent.m_type;
+            } else if (structureComponent.m_type instanceof TypeArrayDeclaration) {
+                TypeArrayDeclaration array = (TypeArrayDeclaration) structureComponent.m_type;
 
                 if (array.getBaseType() instanceof TypeStructure) {
                     TypeStructure struct = (TypeStructure) array.getBaseType();
@@ -702,13 +702,13 @@ public class SymbolTable {
         return numberOfComponents;
     }
 
-    public int getNumberOfComponents(TypeArray typ) {
+    public int getNumberOfComponents(TypeArrayDeclaration typ) {
         return typ.getTotalNoOfElements() * getNumberOfComponents(typ.getBaseType());
     }
 
     public int getNumberOfComponents(TypeDefinition typ) {
-        if (typ instanceof TypeArray) {
-            return getNumberOfComponents((TypeArray) typ);
+        if (typ instanceof TypeArrayDeclaration) {
+            return getNumberOfComponents((TypeArrayDeclaration) typ);
         } else if (typ instanceof TypeStructure) {
             return getNumberOfComponents((TypeStructure) typ);
         } else {

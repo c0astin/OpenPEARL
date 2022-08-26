@@ -1,0 +1,149 @@
+MODULE(ref);
+PROBLEM;
+   SPC file DATION INOUT FIXED(15) DIM(10,10) DIRECT GLOBAL(xx);
+   SPC afile DATION INOUT ALPHIC DIM(10,10) DIRECT GLOBAL(xx);
+/*
+Check for 
+  * exact type
+  * lifetime
+  * INV of REF and referred object
+  * implicit derref on lhs and input statements cause errors
+  * implicit derref on rhs and output works
+  * as function parameter
+*/
+DCL refFixed REF FIXED;
+lifeTime: PROC;
+    DCL badLifeTime FIXED;
+    DCL goodLifeTime REF FIXED;
+     
+    goodLifeTime = badLifeTime;
+    refFixed = badLifeTime;
+/*$ ^
+error: assignment: life cycle of 'badLifeTime' is shorter than 'refFixed'
+*/
+
+    BEGIN
+        DCL refFixedInBlock REF FIXED;
+        DCL fixedInBlock FIXED;
+
+        refFixedInBlock = badLifeTime; ! ok
+        refFixedInBlock = fixedInBlock; ! ok
+        BEGIN
+           DCL otherFixedInBlock FIXED;
+           refFixedInBlock = otherFixedInBlock; ! fail
+/*$        ^
+error: assignment: life cycle of 'otherFixedInBlock' is shorter than 'refFixedInBlock'
+*/
+        END;
+    END;
+END;
+
+typeMatch: PROC;
+   DCL f5 FIXED(5);
+   DCL float FLOAT;
+   DCL myRefFixed REF FIXED(5);
+   DCL invF5 INV FIXED(5) INIT(2);
+  
+   ! Happy day scenarios
+   DCL myInvRefFixed INV REF FIXED(5) INIT(f5);
+   DCL myInvRefInvFixed INV REF INV FIXED(5) INIT(invF5);
+   ! ok, no write via REF
+   DCL myRefInvFixed REF INV FIXED(5) INIT(f5);
+   DCL myInvRefInvFixedFail INV REF INV FIXED(5) INIT(f5);
+
+
+   DCL myRefInvFixedOk INV REF FIXED(5) INIT(invF5);
+/*$                                          ^
+error: type mismatch: cannot use constant of type INV FIXED(5) as initializer for object of type INV REF FIXED(5)
+*/
+
+
+   DCL myRefFixedFail REF FIXED(5) INIT(invF5);
+/*$                                     ^
+error: type mismatch: cannot use constant of type INV FIXED(5) as initializer for object of type REF FIXED(5)
+*/
+
+   ! assignments: happy day
+   myRefFixed = f5;
+   myRefInvFixed = f5;
+   myRefInvFixed = invF5;
+    
+   refFixed = f5;
+/*$^
+error: assignment: type mismatch: cannot assign object of type FIXED(5) to REF FIXED(31)
+*/ 
+/*$^
+error: assignment: life cycle of 'f5' is shorter than 'refFixed'
+*/ 
+
+   ! let's try it with FLOAT, other types are treated equivalent
+   myRefFixed = float;
+/*$^
+error: assignment: type mismatch: cannot assign object of type FLOAT(23) to REF FIXED(5)
+*/ 
+   
+   myRefFixed = invF5;
+/*$^
+error: assignment: type mismatch: cannot assign constant of type INV FIXED(5) to REF FIXED(5)
+*/ 
+   
+END;
+
+illegalRefOnLhs: PROC;
+   DCL fixed FIXED(15);
+   DCL fl FLOAT;
+   DCL rfl REF FLOAT INIT(fl);
+
+   fl = fixed; ! possible; implicit type cast to larger type
+   rfl = fixed;
+/*$^
+error: assignment: type mismatch: cannot assign object of type FIXED(15) to REF FLOAT(23)
+*/ 
+END;
+
+
+illegalRefInIo: PROC;
+   DCL fixed FIXED(15);
+   DCL rf REF FIXED(15) INIT(fixed);
+   DCL ch CHAR(1);
+   DCL rch REF CHAR(1);
+
+   ! READ,WRITE,TAKE,SEND treat datalist identical 
+   ! all fixed-values in Format entries are treated identical
+   WRITE fixed TO file BY POS(rf,fixed); 
+   WRITE rf TO file; 
+   READ fixed FROM file BY POS(rf,fixed);
+   READ rf FROM file;
+/*$     ^
+error: READ: type mismatch: required: FIXED(15) --- got REF FIXED(15)
+*/
+
+   PUT ch,rch,p TO afile BY POS(rf,fixed),A,A,F(3); 
+   GET ch,rch,p FROM afile BY POS(rf,fixed),A,A; 
+/*$       ^
+error: GET: type mismatch: required: ALPHIC --- got REF CHAR(1)
+*/
+/*$           ^
+error: GET: type mismatch: required: ALPHIC --- got PROC RETURNS (FIXED(15))
+*/
+
+END;
+
+p: PROC RETURNS(FIXED(15));
+   RETURN (42);
+END;
+
+refAsParameter: PROC;
+   DCL f FIXED;
+   DCL rf REF FIXED;
+   f = p1(rf);
+   f = p1(f);
+END;
+
+p1: PROC(x REF FIXED) RETURNS (FIXED);
+   RETURN (x);
+END;
+
+
+MODEND;
+ 

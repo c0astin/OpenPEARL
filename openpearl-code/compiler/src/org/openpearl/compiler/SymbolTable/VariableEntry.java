@@ -37,6 +37,7 @@ public class VariableEntry extends SymbolTableEntry {
     private TypeDefinition    m_type;
     private Boolean           m_loopControlVariable;
     private Initializer  m_initializer;   // just memorize the location of the initializer in AST 
+    private Boolean m_isFormalParameter; // change 'var' to 'fp' in toString(); defaults to false
    
     public VariableEntry()
     {
@@ -44,6 +45,7 @@ public class VariableEntry extends SymbolTableEntry {
         this.m_type = null;
         this.m_loopControlVariable = false;
         this.m_initializer = null;
+        this.m_isFormalParameter = false;
     }
 
     public VariableEntry(String name)
@@ -54,6 +56,7 @@ public class VariableEntry extends SymbolTableEntry {
       //  this.m_hasAssigmentProtection = false;
         this.m_loopControlVariable = false;
         this.m_initializer = null;
+        this.m_isFormalParameter = false;
     }
 
     public VariableEntry(String name, TypeDefinition type,
@@ -63,10 +66,12 @@ public class VariableEntry extends SymbolTableEntry {
         this.m_type = type;
         this.m_loopControlVariable = false;
         this.m_initializer = null;
-
-
+        this.m_isFormalParameter = false;
     }
 
+    public void setIsFormalParameter() {
+        this.m_isFormalParameter = true;
+    }
 
     /**
      * 
@@ -84,6 +89,7 @@ public class VariableEntry extends SymbolTableEntry {
         this.m_type = type;
         this.m_loopControlVariable = false;
         this.m_initializer = init;
+        this.m_isFormalParameter = false;
     
 
     }
@@ -92,7 +98,7 @@ public class VariableEntry extends SymbolTableEntry {
         
         return indentString(level) +
                 super.toString(level) +
-                "var " +
+                (this.m_isFormalParameter ? "fp " : "var ") +
                 m_type + " " +
                 (this.m_loopControlVariable ? " LC" :"") +
                 (this.m_initializer != null ? "  INIT(" + m_initializer + ")" : "");

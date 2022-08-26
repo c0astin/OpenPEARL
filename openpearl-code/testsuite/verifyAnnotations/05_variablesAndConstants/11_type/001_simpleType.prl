@@ -1,0 +1,54 @@
+MODULE(m);
+
+PROBLEM;
+
+TYPE Int16_t FIXED(15);
+/*$  ^
+note: previous declaration: was here
+*/
+
+proc2_ok: PROC;
+   DCL f15 FIXED(15);
+   DCL int16 Int16_t;
+
+   int16 = proc(f15);
+   f15 = proc(int16);
+END;
+
+proc2_fail: PROC;
+   DCL f16 FIXED(16);
+   TYPE Int17_t FIXED(16);
+
+   DCL int17 Int17_t;
+
+   int17 = proc(f16);
+   f16 = proc(int17);
+END;
+
+proc1: PROC(x Int16_t) RETURNS(Int16_t);
+   DCL y FIXED(7);
+   DCL Int16_t FIXED(15);
+/*$    ^
+warning: redeclaration of Int16_t: hides previous declaraction
+*/
+/*$    ^
+note: previous definition of: Int16_t
+*/
+   DCL int16_t Int16_t;
+/*$            ^
+error: Int16_t should be user defined type
+*/
+
+   y = x;   ! compiler aborts earlier
+   CASE x
+   ALT (1)
+     RETURN (y);
+   ALT (2)
+     RETURN ('c'); ! compiler aborts earlier
+   FIN;
+   RETURN(x);
+END;
+
+MODEND;
+
+

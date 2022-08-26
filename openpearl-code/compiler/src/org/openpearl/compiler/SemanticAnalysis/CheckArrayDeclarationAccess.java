@@ -204,7 +204,7 @@ public class CheckArrayDeclarationAccess extends OpenPearlBaseVisitor<Void>
 
                 VariableEntry variable = (VariableEntry) entry;
 
-                if (variable.getType() instanceof TypeArray) {
+                if (variable.getType() instanceof TypeArrayDeclaration) {
                     Boolean checkIndexValue = true;
                     if (variable instanceof FormalParameter) {
                         checkIndexValue = false;
@@ -212,7 +212,7 @@ public class CheckArrayDeclarationAccess extends OpenPearlBaseVisitor<Void>
                     // expressionResult should be TypeArray if no indices are given
                     if (ctx.name().listOfExpression() != null
                             && ctx.name().listOfExpression().expression().size() > 0) {
-                        TypeArray ta = (TypeArray) variable.getType();
+                        TypeArrayDeclaration ta = (TypeArrayDeclaration) variable.getType();
                         checkIndices(ta, ctx.name().listOfExpression().expression(),
                                 checkIndexValue);
 
@@ -258,12 +258,12 @@ public class CheckArrayDeclarationAccess extends OpenPearlBaseVisitor<Void>
         SymbolTableEntry lhs = m_currentSymbolTable.lookup(id);
         if (lhs instanceof VariableEntry) {
             VariableEntry variable = (VariableEntry) lhs;
-            if (variable.getType() instanceof TypeArray) {
+            if (variable.getType() instanceof TypeArrayDeclaration) {
                 Boolean checkIndexValue = true;
                 if (variable instanceof FormalParameter) {
                     checkIndexValue = false;
                 }
-                TypeArray ta = (TypeArray) (variable.getType());
+                TypeArrayDeclaration ta = (TypeArrayDeclaration) (variable.getType());
 
                 if (ctx.name().listOfExpression() != null
                         && ctx.name().listOfExpression().expression().size() > 0) {
@@ -276,7 +276,7 @@ public class CheckArrayDeclarationAccess extends OpenPearlBaseVisitor<Void>
         return null;
     }
 
-    private void checkIndices(TypeArray ta, List<OpenPearlParser.ExpressionContext> expression,
+    private void checkIndices(TypeArrayDeclaration ta, List<OpenPearlParser.ExpressionContext> expression,
             Boolean checkIndexValue) {
         int arrayDimensions = ta.getNoOfDimensions();
 

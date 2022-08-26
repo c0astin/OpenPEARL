@@ -453,7 +453,7 @@ public class CommonUtils {
 
     public static String getArrayDescriptorName(VariableEntry entry) {
         String name = "ad_";
-        TypeArray type = ((TypeArray) entry.getType());
+        TypeArrayDeclaration type = ((TypeArrayDeclaration) entry.getType());
 
         return name;
     }

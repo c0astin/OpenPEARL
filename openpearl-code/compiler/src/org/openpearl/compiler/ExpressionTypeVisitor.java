@@ -2591,22 +2591,23 @@ implements OpenPearlVisitor<Void> {
                     if (type1 == null || type2 == null || type1.equals(type2)) {
                         typeMismatch = false;
                     } else if ((type1 instanceof TypeArray
-                            && type2 instanceof TypeArraySpecification)) {
+                            && type2 instanceof TypeArray)) {
                         if (((TypeArray) type1)
                                 .getBaseType()
-                                .equals(((TypeArraySpecification) type2).getBaseType())) {
+                                .equals(((TypeArray) type2).getBaseType())) {
                             typeMismatch = false;
                         }
                     }
                     if (typeMismatch) {
-                        if ((type2 instanceof TypeArray && type1 instanceof TypeArraySpecification)) {
+                        if ((type2 instanceof TypeArray && type1 instanceof TypeArray)) {
                             if (((TypeArray) type2)
                                     .getBaseType()
-                                    .equals(((TypeArraySpecification) type1).getBaseType())) {
+                                    .equals(((TypeArray) type1).getBaseType())) {
                                 typeMismatch = false;
                             }
-                        } else if ((type1 == null && type2 instanceof TypeArraySpecification)
-                                || (type2 == null && type1 instanceof TypeArraySpecification)
+                        } else 
+                            if ((type1 == null && type2 instanceof TypeArray)
+                                || (type2 == null && type1 instanceof TypeArray)
                                 || type1.equals(type2)) {
                             typeMismatch = false;
 
@@ -3884,7 +3885,7 @@ implements OpenPearlVisitor<Void> {
             t.setStartIndex(startIndex.getConstantFixedValue());
             t.setEndIndex(endIndex.getConstantFixedValue());
             if (t.getTotalNoOfElements() < 1) {
-                ErrorStack.add("must select at lease 1 element");
+                ErrorStack.add("must select at least 1 element");
             }
         }
         ErrorStack.leave();

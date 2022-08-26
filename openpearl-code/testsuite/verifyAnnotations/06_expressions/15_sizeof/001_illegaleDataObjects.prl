@@ -1,0 +1,49 @@
+MODULE(m);
+SYSTEM;
+  so: StdOut;
+  ctrl_c: UnixSignal(2);
+
+PROBLEM;
+   SPC so DATION OUT SYSTEM ALPHIC;
+   SPC ctrl_c INTERRUPT;
+   DCL stdOut DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+   DCL s1 SEMA;
+   DCL b1 BOLT;
+   DCL str STRUCT [ a FIXED, b REF TASK, c REF INTERRUPT ]; 
+
+p1: PROC;
+END;
+
+
+t1: TASK MAIN;
+   DCL f FIXED;
+   f = SIZEOF f;
+   f = SIZEOF str;
+
+   f = SIZEOF FIXED;
+   f = SIZEOF FIXED(3);
+   f = SIZEOF FLOAT;
+   f = SIZEOF FLOAT(52);
+   f = SIZEOF CHAR(3);
+   f = SIZEOF BIT(3);
+   f = SIZEOF DURATION;
+   f = SIZEOF CLOCK;
+
+   f = SIZEOF so;
+/*$    ^
+error: SIZEOF: may not be applied on type DATION
+*/
+
+   f = SIZEOF s1;
+/*$    ^
+error: SIZEOF: may not be applied on type SEMA
+*/
+
+   f = SIZEOF b1;
+/*$    ^
+error: SIZEOF: may not be applied on type BOLT
+*/
+
+END;
+MODEND;
+

@@ -1,0 +1,28 @@
+MODULE(s);
+PROBLEM;
+
+DCL x (10) FIXED;
+SPC ext() FIXED GLOBAL(other);
+
+p: PROC;
+   DCL y FIXED;
+   DCL i INV FIXED INIT(0);
+
+   y = ext(0);  /* no error, since index range is unknown */
+
+   y = x(0);
+/*$      ^
+error: array index: index out of range [1:10]
+*/
+
+!   y = x(i-1);
+!/*$      ^
+!error: array index: index out of range [1:10]
+!*/
+
+
+END;
+
+
+MODEND;
+

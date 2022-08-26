@@ -1,0 +1,35 @@
+
+MODULE(mtest);
+
+SYSTEM;
+   stdout: StdOut; 
+   	
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+    
+    DCL i FLOAT(52);
+    DCL zaehler FIXED;
+    DCL b FIXED;
+    	
+    	 
+
+
+test: TASK MAIN;
+
+
+	FOR i TO 10	
+		REPEAT	
+			zaehler := zaehler + b ;
+		
+			IF i == 3
+				THEN EXIT schleife;
+			FIN;	
+			
+	END schleife;
+
+END;
+
+
+
+MODEND;

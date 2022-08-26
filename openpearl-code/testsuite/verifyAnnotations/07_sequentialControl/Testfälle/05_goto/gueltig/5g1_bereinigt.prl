@@ -1,0 +1,30 @@
+
+MODULE(mtest);
+
+SYSTEM;
+   stdout: StdOut; 
+   	
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+    DCL i FLOAT(52);
+    DCL output CHAR(15);
+    DCL a FIXED;
+    
+       	 
+test: TASK MAIN;
+
+	i := a;
+		
+	IF i == a
+		THEN GOTO ausgabe;
+	FIN;
+		
+			
+		
+falsch:	output := 'falsch';
+
+ausgabe: 	output := 'richtig';
+
+END;					  	   		   	  	   		  
+MODEND;

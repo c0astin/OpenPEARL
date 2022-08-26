@@ -187,7 +187,7 @@ implements OpenPearlVisitor<Void> {
             StructureComponent comp = ((TypeStructure)typeOfTransmission).getFirstElement();
             do {
                 if ( comp.m_type instanceof TypeReference ||
-                        (comp.m_type instanceof TypeArray && ((TypeArray)(comp.m_type)).getBaseType() instanceof TypeReference)) {
+                        (comp.m_type instanceof TypeArrayDeclaration && ((TypeArrayDeclaration)(comp.m_type)).getBaseType() instanceof TypeReference)) {
                     ErrorStack.add("no REF allowed in TypeOfTransmissionData");
                     break;
                 }
@@ -853,32 +853,37 @@ implements OpenPearlVisitor<Void> {
                 if (ioDataList.ioListElement(i).arraySlice() != null) {
                     ASTAttribute attr = m_ast.lookup(ioDataList.ioListElement(i).arraySlice()); 
                     TypeArraySlice tas = (TypeArraySlice)(attr.getType());
-                    TypeArray ta = (TypeArray)(tas.getBaseType());
-                    ArrayDimension last = ta.getDimensions().get(ta.getNoOfDimensions()-1);
+                    
+                    // check if we know the limits of the base array, if the array was specified
+                    // we can not do any checks for the limits of the array
+                    if (tas.getBaseType() instanceof TypeArrayDeclaration) {
+                        TypeArrayDeclaration ta = (TypeArrayDeclaration)(tas.getBaseType());
+                        ArrayDimension last = ta.getDimensions().get(ta.getNoOfDimensions()-1);
 
-                    if (tas.getStartIndex() != null) {
-                        long start = tas.getStartIndex().getValue();                        
-                        if (start < last.getLowerBoundary() || start > last.getUpperBoundary()) {
-                            int indexCount = ioDataList.ioListElement(i).arraySlice().startIndex().listOfExpression().expression().size();
-                            ErrorStack.enter(ioDataList.ioListElement(i).arraySlice().startIndex().listOfExpression().expression(indexCount-1));
-                            ErrorStack.add("array slice violates array boundary");
+                        if (tas.getStartIndex() != null) {
+                            long start = tas.getStartIndex().getValue();                        
+                            if (start < last.getLowerBoundary() || start > last.getUpperBoundary()) {
+                                int indexCount = ioDataList.ioListElement(i).arraySlice().startIndex().listOfExpression().expression().size();
+                                ErrorStack.enter(ioDataList.ioListElement(i).arraySlice().startIndex().listOfExpression().expression(indexCount-1));
+                                ErrorStack.add("array slice violates array boundary");
+                                ErrorStack.leave();
+                            }
+                        }
+                        if (tas.getEndIndex() != null) {
+                            long end = tas.getEndIndex().getValue();                        
+                            if (end < last.getLowerBoundary() || end > last.getUpperBoundary()) {
+                                ErrorStack.enter(ioDataList.ioListElement(i).arraySlice().endIndex());
+                                ErrorStack.add("array slice violates array boundary");
+                                ErrorStack.leave();
+                            }
+                        }
+                    } 
+                        if (Compiler.isStdPEARL90() && forbiddenInPearl90) {
+                            ErrorStack.enter(ioDataList.ioListElement(i).arraySlice());
+                            ErrorStack.warn("array slice not allowed in PEARL90");
                             ErrorStack.leave();
                         }
-                    }
-                    if (tas.getEndIndex() != null) {
-                        long end = tas.getEndIndex().getValue();                        
-                        if (end < last.getLowerBoundary() || end > last.getUpperBoundary()) {
-                            ErrorStack.enter(ioDataList.ioListElement(i).arraySlice().endIndex());
-                            ErrorStack.add("array slice violates array boundary");
-                            ErrorStack.leave();
-                        }
-                    }
-
-                    if (Compiler.isStdPEARL90() && forbiddenInPearl90) {
-                        ErrorStack.enter(ioDataList.ioListElement(i).arraySlice());
-                        ErrorStack.warn("array slice not allowed in PEARL90");
-                        ErrorStack.leave();
-                    }
+                   
                 }
             }
         }
@@ -1243,9 +1248,9 @@ implements OpenPearlVisitor<Void> {
             }
 
             if (attr != null) {
-                if (attr.getType() instanceof TypeArray) {
-                    int nbrOfElements = ((TypeArray) (attr.getType())).getTotalNoOfElements();
-                    etc.setType(((TypeArray) (attr.getType())).getBaseType());
+                if (attr.getType() instanceof TypeArrayDeclaration) {
+                    int nbrOfElements = ((TypeArrayDeclaration) (attr.getType())).getTotalNoOfElements();
+                    etc.setType(((TypeArrayDeclaration) (attr.getType())).getBaseType());
                     for (int j = 0; j < nbrOfElements; j++) {
                         list.add(etc);
                     }
@@ -1255,7 +1260,7 @@ implements OpenPearlVisitor<Void> {
                         etc = new IODataListElementWithCtx(ctx);
                         TypeDefinition td =
                                 ((TypeStructure) (attr.getType())).m_listOfComponents.get(j).m_type;
-                        if (td instanceof TypeArray || td instanceof TypeStructure) {
+                        if (td instanceof TypeArrayDeclaration || td instanceof TypeStructure) {
                             // delegate missing
                         } else {
                             etc.setType(td);
@@ -1265,7 +1270,7 @@ implements OpenPearlVisitor<Void> {
                 } else if (attr.getType() instanceof TypeArraySlice) {
                     TypeArraySlice tas = (TypeArraySlice) (attr.getType());
                     if (tas.hasConstantSize()) {
-                        etc.setType(((TypeArray) (tas.getBaseType())).getBaseType());
+                        etc.setType(((TypeArrayDeclaration) (tas.getBaseType())).getBaseType());
                         for (long j = 0; j < tas.getTotalNoOfElements(); j++) {
                             list.add(etc);
                         }
@@ -2549,7 +2554,7 @@ implements OpenPearlVisitor<Void> {
                     ErrorStack.enter(factor);
 
                     VariableEntry ve = attr.getVariable();
-                    if (ve.getType() instanceof TypeArray) {
+                    if (ve.getType() instanceof TypeArrayDeclaration) {
                         ErrorStack.warn("treatment of ARRAY components missing");
                     } else if (ve.getType() instanceof TypeStructure) {
                         ErrorStack.warn("treatment of STRUCT components missing");

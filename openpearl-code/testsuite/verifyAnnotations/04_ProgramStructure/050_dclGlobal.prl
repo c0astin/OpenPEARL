@@ -1,0 +1,16 @@
+MODULE(dclGlobal);
+
+PROBLEM;
+
+   DCL x FIXED GLOBAL;  ! ok
+
+proc1: PROC;
+   DCL y FIXED GLOBAL; ! not ok!
+/*$    ^
+error: GLOBAL: not allowed in procedures or tasks
+*/
+END;
+
+MODEND;
+
+

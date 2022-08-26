@@ -105,8 +105,8 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
     
       
     private void checkInitializer(VariableEntry v) {
-        if (v.getType() instanceof TypeArray) {
-            TypeArray ta = (TypeArray)v.getType();
+        if (v.getType() instanceof TypeArrayDeclaration) {
+            TypeArrayDeclaration ta = (TypeArrayDeclaration)v.getType();
             int nbrOfArrayElements = ta.getTotalNoOfElements();
             if (ta.getBaseType() instanceof TypeStructure) {
                 int indexOfInitializer = 0;
@@ -116,9 +116,9 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
                     
                     do {
                         TypeDefinition typeOfElement = comp.m_type;
-                        if (typeOfElement instanceof TypeArray) {
-                            int localArraySize = ((TypeArray)typeOfElement).getTotalNoOfElements();
-                            TypeDefinition baseType = ((TypeArray)typeOfElement).getBaseType();
+                        if (typeOfElement instanceof TypeArrayDeclaration) {
+                            int localArraySize = ((TypeArrayDeclaration)typeOfElement).getTotalNoOfElements();
+                            TypeDefinition baseType = ((TypeArrayDeclaration)typeOfElement).getBaseType();
                             for (int j=0; j<localArraySize; j++) {
                                 indexOfInitializer = Math.min(indexOfInitializer, asi.getInitElementList().size()-1);
                                 Initializer init = asi.getInitElementList().get(indexOfInitializer++);
@@ -223,13 +223,13 @@ public class CheckVariableDeclaration extends OpenPearlBaseVisitor<Void>
             ErrorStack.addInternal(ctx, "CheckVariableDeclaration@155", "no ASTAttribute found");
             return ;
         }
-        if (baseTypeOfVariableOrComponent instanceof TypeArraySpecification ) {
-            TypeArraySpecification tas = (TypeArraySpecification)baseTypeOfVariableOrComponent;
+        if (baseTypeOfVariableOrComponent instanceof TypeArray ) {
+            TypeArray tas = (TypeArray)baseTypeOfVariableOrComponent;
             boolean ok = true;
             TypeDefinition typeOfInitializer = null;
-            if (attrInit.m_type instanceof TypeArray) {
-                typeOfInitializer = ((TypeArray)(attrInit.m_type)).getBaseType();
-                if (tas.getNoOfDimensions() != ((TypeArray)(attrInit.m_type)).getNoOfDimensions()) {
+            if (attrInit.m_type instanceof TypeArrayDeclaration) {
+                typeOfInitializer = ((TypeArrayDeclaration)(attrInit.m_type)).getBaseType();
+                if (tas.getNoOfDimensions() != ((TypeArrayDeclaration)(attrInit.m_type)).getNoOfDimensions()) {
                     ok = false;
                 }
             } else {

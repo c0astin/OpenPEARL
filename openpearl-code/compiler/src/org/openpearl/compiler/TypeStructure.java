@@ -91,8 +91,8 @@ public class TypeStructure extends TypeDefinition {
             StructureComponent sc = m_listOfComponents.get(i);
             if (sc.m_type instanceof TypeStructure) {
                 nbr += ((TypeStructure)(sc.m_type)).getTotalNoOfElements();
-            } else if (sc.m_type instanceof TypeArray) {
-                TypeArray ta = (TypeArray)(sc.m_type);
+            } else if (sc.m_type instanceof TypeArrayDeclaration) {
+                TypeArrayDeclaration ta = (TypeArrayDeclaration)(sc.m_type);
                 if (ta.getBaseType() instanceof TypeStructure) {
                   nbr += ta.getTotalNoOfElements()*((TypeStructure)(ta.getBaseType())).getTotalNoOfElements();
                 } else {
@@ -163,8 +163,8 @@ public class TypeStructure extends TypeDefinition {
         if ( type instanceof UserDefinedSimpleType) 
             return getDataTypeEncoding (((UserDefinedSimpleType)type).getSimpleType());
         
-        if ( type instanceof TypeArray ) {
-            TypeArray typeArray = (TypeArray) type;
+        if ( type instanceof TypeArrayDeclaration ) {
+            TypeArrayDeclaration typeArray = (TypeArrayDeclaration) type;
             String encoding =  Integer.toString(typeArray.getNoOfDimensions());
             ArrayList<ArrayDimension> dimensionList = typeArray.getDimensions();
 
@@ -301,17 +301,17 @@ public class TypeStructure extends TypeDefinition {
     public StructureComponent getNextElement() {
         StructureComponent sc=null;
         if (m_currentStructureComponent != null) {
-            if (m_currentStructureComponent.m_type instanceof TypeArray) {
+            if (m_currentStructureComponent.m_type instanceof TypeArrayDeclaration) {
                 // m_currentStructureComponent is only != null, if we have a
                 //  component of TypeStructure, or of array of TypeStructure. 
-                sc = ((TypeStructure )(((TypeArray)m_currentStructureComponent.m_type)).getBaseType()).getNextElement();
+                sc = ((TypeStructure )(((TypeArrayDeclaration)m_currentStructureComponent.m_type)).getBaseType()).getNextElement();
                 if (sc != null) {
                     return sc;
                 }
                 // end of TypeStructure reached!
                 m_nbrOfRemainingElementsInArray --;
                 if (m_nbrOfRemainingElementsInArray > 0) {
-                    return ((TypeStructure )(((TypeArray)m_currentStructureComponent.m_type)).getBaseType()).getFirstElement();
+                    return ((TypeStructure )(((TypeArrayDeclaration)m_currentStructureComponent.m_type)).getBaseType()).getFirstElement();
                  } else {
                      m_currentStructureComponent = null;
                  }
@@ -334,10 +334,10 @@ public class TypeStructure extends TypeDefinition {
             m_nbrOfRemainingElementsInArray=0;
             return comp.getFirstElement();
         }
-        if (td instanceof TypeArray && ((TypeArray)td).getBaseType() instanceof TypeStructure) {
-            m_nbrOfRemainingElementsInArray = ((TypeArray)td).getTotalNoOfElements();
+        if (td instanceof TypeArrayDeclaration && ((TypeArrayDeclaration)td).getBaseType() instanceof TypeStructure) {
+            m_nbrOfRemainingElementsInArray = ((TypeArrayDeclaration)td).getTotalNoOfElements();
             m_currentStructureComponent = comp;
-            return ((TypeStructure )(((TypeArray)comp.m_type)).getBaseType()).getFirstElement();
+            return ((TypeStructure )(((TypeArrayDeclaration)comp.m_type)).getBaseType()).getFirstElement();
         }
         return comp;
     }

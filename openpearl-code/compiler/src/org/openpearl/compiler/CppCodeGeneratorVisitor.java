@@ -369,8 +369,8 @@ implements OpenPearlVisitor<ST> {
                             stComponent.add("TypeAttribute",
                                     ((TypeStructure) component.m_type).getStructureName());
                             decl.add("components", stComponent);
-                        } else if (component.m_type instanceof TypeArray) {
-                            TypeArray array = (TypeArray) component.m_type;
+                        } else if (component.m_type instanceof TypeArrayDeclaration) {
+                            TypeArrayDeclaration array = (TypeArrayDeclaration) component.m_type;
 
                             if (array.getBaseType() instanceof TypeStructure ||
                                     array.getBaseType() instanceof UserDefinedTypeStructure) {
@@ -731,18 +731,18 @@ implements OpenPearlVisitor<ST> {
         // derive the scope form the SymbolTableEntry
         ST scope = getScope(ve);
 
-        if (ve.getType() instanceof TypeArray) {
+        if (ve.getType() instanceof TypeArrayDeclaration) {
             // Array declarations need special treatment for the creation of
             // the array storage 
             // (1) create the storage object
-            TypeDefinition t = ((TypeArray)(ve.getType())).getBaseType();
+            TypeDefinition t = ((TypeArrayDeclaration)(ve.getType())).getBaseType();
             ST storage = m_group.getInstanceOf("ArrayStorageDeclaration");
             storage.add("name", ve.getName());
             
 
             storage.add("type", t.toST(m_group));
 
-            storage.add("totalNoOfElements", ((TypeArray) ve.getType()).getTotalNoOfElements());
+            storage.add("totalNoOfElements", ((TypeArrayDeclaration) ve.getType()).getTotalNoOfElements());
             if (t instanceof TypeBolt) {
                 storage.add("initElements", boltArrayInitializer(ve));   
             } else {
@@ -912,7 +912,7 @@ implements OpenPearlVisitor<ST> {
         ArrayList<ST> initElementList = new ArrayList<ST>();
         ST st = m_group.getInstanceOf("structOrArrayInit");
 
-        TypeArray ta = (TypeArray)(variableEntry.getType());
+        TypeArrayDeclaration ta = (TypeArrayDeclaration)(variableEntry.getType());
         for (int i=0; i<ta.getTotalNoOfElements(); i++) {
             ST stValue = m_group.getInstanceOf("bolt_init");
             stValue.add("name", variableEntry.getName());
@@ -934,9 +934,9 @@ implements OpenPearlVisitor<ST> {
         if (variableEntry.getInitializer() != null) { 
             st =  m_group.getInstanceOf("structOrArrayInit");
 
-            if (variableEntry.getType() instanceof TypeArray) {
+            if (variableEntry.getType() instanceof TypeArrayDeclaration) {
                 fillWithLast = true;
-                baseType = ((TypeArray)variableEntry.getType()).getBaseType();
+                baseType = ((TypeArrayDeclaration)variableEntry.getType()).getBaseType();
             }
 
             ArrayOrStructureInitializer init = (ArrayOrStructureInitializer)(variableEntry.getInitializer());
@@ -982,7 +982,7 @@ implements OpenPearlVisitor<ST> {
             }
             if (fillWithLast) {
                 // arrays may require repetition of the last init-value
-                int remainingInitializers = ((TypeArray)(variableEntry.getType())).getTotalNoOfElements();
+                int remainingInitializers = ((TypeArrayDeclaration)(variableEntry.getType())).getTotalNoOfElements();
                 remainingInitializers -= initList.size();
                 for (int i=0; i< remainingInitializers; i++) {
                     initElementList.add(lastInitValue);
@@ -1013,151 +1013,7 @@ implements OpenPearlVisitor<ST> {
 
 
 
-    // usually the method toST of the TypeDefinition works fine
-    // except, if we have REF DATION, here we need a pointer
-//    private ST visitTypeAttribute(TypeDefinition type) {
-//
-//        if (type instanceof TypeReference) {
-//            if (((TypeReference)type).getBaseType() instanceof TypeDation) {
-//                ST st = m_group.getInstanceOf("TypeReferenceDation"); 
-//                st.add("BaseType", ((TypeReference)type).getBaseType().toST(m_group));
-//                return st;
-//            } else {
-//                ST st = m_group.getInstanceOf("TypeReference");
-//                st.add("BaseType", ((TypeReference)type).getBaseType().toST(m_group));
-//                return st;
-//            }
-//        }
-//        return type.toST(m_group);
-//    }
-
-//    @Override
-//    public ST visitTypeAttribute(OpenPearlParser.TypeAttributeContext ctx) {
-//        ST type = m_group.getInstanceOf("TypeAttribute");
-//
-//        if (ctx.simpleType() != null) {
-//            type.add("Type", visitSimpleType(ctx.simpleType()));
-//        } else if (ctx.typeReference() != null) {
-//            type.add("Type", visitTypeReference(ctx.typeReference()));
-//        } else if (ctx.typeStructure()!= null) {
-//            type.add("Type", visitTypeStructure(ctx.typeStructure()));
-//        } else {
-//            ErrorStack.addInternal(ctx, "CppCodeGenerator", "missing alternative"+ctx.typeStructure().getText());
-//        }
-//
-//        return type;
-//    }
-//
-//    @Override
-//    public ST visitSimpleType(OpenPearlParser.SimpleTypeContext ctx) {
-//        ST simpleType = m_group.getInstanceOf("SimpleType");
-//
-//        if (ctx != null) {
-//            if (ctx.typeInteger() != null) {
-//                simpleType.add("TypeInteger", visitTypeInteger(ctx.typeInteger()));
-//            } else if (ctx.typeDuration() != null) {
-//                simpleType.add("TypeDuration", visitTypeDuration(ctx.typeDuration()));
-//            } else if (ctx.typeBitString() != null) {
-//                simpleType.add("TypeBitString", visitTypeBitString(ctx.typeBitString()));
-//            } else if (ctx.typeFloatingPointNumber() != null) {
-//                simpleType.add("TypeFloatingPointNumber",
-//                        visitTypeFloatingPointNumber(ctx.typeFloatingPointNumber()));
-//            } else if (ctx.typeClock() != null) {
-//                simpleType.add("TypeTime", visitTypeClock(ctx.typeClock()));
-//            } else if (ctx.typeCharacterString() != null) {
-//                simpleType.add("TypeCharacterString",
-//                        visitTypeCharacterString(ctx.typeCharacterString()));
-//            }
-//        }
-//
-//        return simpleType;
-//    }
-//
-//    @Override
-//    public ST visitTypeDuration(OpenPearlParser.TypeDurationContext ctx) {
-//        ST st = m_group.getInstanceOf("TypeDuration");
-//
-//        if (ctx != null) {
-//            st.add("code", 1);
-//        }
-//
-//        return st;
-//    }
-//
-//    @Override
-//    public ST visitTypeClock(OpenPearlParser.TypeClockContext ctx) {
-//        ST st = m_group.getInstanceOf("TypeClock");
-//
-//        if (ctx != null) {
-//            st.add("code", 1);
-//        }
-//
-//        return st;
-//    }
-//
-//
-//    @Override
-//    public ST visitTypeInteger(OpenPearlParser.TypeIntegerContext ctx) {
-//        ST st = m_group.getInstanceOf("TypeInteger");
-//        int size = m_currentSymbolTable.lookupDefaultFixedLength();
-//
-//        if (ctx != null) {
-//            for (ParseTree c : ctx.children) {
-//                if (c instanceof OpenPearlParser.MprecisionContext) {
-//                    size = Integer.parseInt(((OpenPearlParser.MprecisionContext) c).getText());
-//                }
-//            }
-//        }
-//
-//        st.add("size", size);
-//
-//        return st;
-//    }
-//
-//    @Override
-//    public ST visitTypeBitString(OpenPearlParser.TypeBitStringContext ctx) {
-//        ST st = m_group.getInstanceOf("TypeBitString");
-//
-//        int length = m_currentSymbolTable.lookupDefaultBitLength();
-//
-//        if (ctx.length() != null) {
-//            length = Integer.parseInt(ctx.length().getText());
-//        }
-//
-//        st.add("length", length);
-//
-//        return st;
-//    }
-//
-//    @Override
-//    public ST visitTypeCharacterString(OpenPearlParser.TypeCharacterStringContext ctx) {
-//        ST st = m_group.getInstanceOf("TypeCharacterString");
-//        Integer size = Defaults.CHARACTER_LENGTH;
-//
-//        if (ctx.length() != null) {
-//            size = Integer.parseInt(ctx.length().getText());
-//
-//        }
-//
-//        st.add("size", size);
-//
-//        return st;
-//    }
-//
-//    @Override
-//    public ST visitTypeFloatingPointNumber(OpenPearlParser.TypeFloatingPointNumberContext ctx) {
-//        ST st = m_group.getInstanceOf("TypeFloatingPointNumber");
-//        int precision = Defaults.FLOAT_PRECISION;
-//
-//        if (ctx.length() != null) {
-//            precision = Integer.parseInt(ctx.length().getText());
-//        }
-//
-//        st.add("precision", precision);
-//
-//        return st;
-//    }
-//
+ 
 
     @Override
     public ST visitProblem_part(OpenPearlParser.Problem_partContext ctx) {
@@ -3551,7 +3407,7 @@ implements OpenPearlVisitor<ST> {
                     lastElement.add("name", a.getVariable().getName());
 
                     // get complete index of last element in array slice
-                    // use the first size-1 element from startindex and add the end index
+                    // use the first size-1 element from start index and add the end index
                     ST indices = m_group.getInstanceOf("ArrayIndices");
                     for (int indexOfExpression = 0; indexOfExpression < lastElementInList; indexOfExpression++) {
                         ST stIndex = m_group.getInstanceOf("ArrayIndex");
@@ -4108,7 +3964,7 @@ implements OpenPearlVisitor<ST> {
 
                 ST temp = m_group.getInstanceOf("ArrayVariableDeclaration");
                 temp.add("name",  tempVarName);
-                temp.add("type", ((TypeArray)(attr.getType())).getBaseType().toST(m_group));//visitTypeAttribute(((TypeArray)(attr.getType())).getBaseType()));
+                temp.add("type", ((TypeArrayDeclaration)(attr.getType())).getBaseType().toST(m_group));//visitTypeAttribute(((TypeArray)(attr.getType())).getBaseType()));
                 temp.add("descriptor", getArrayDescriptor(attr.getType()));
                 temp.add("storage",visitAndDereference(expression));
                 temp.add("no_decoration", 1);
@@ -5399,7 +5255,7 @@ implements OpenPearlVisitor<ST> {
         if (c instanceof OpenPearlParser.FormalParameterContext) {
             s = "ad_" + var.getName();
         } else {
-            TypeArray type = (TypeArray) var.getType();
+            TypeArrayDeclaration type = (TypeArrayDeclaration) var.getType();
             ArrayDescriptor array_descriptor =
                     new ArrayDescriptor(type.getNoOfDimensions(), type.getDimensions());
             s = array_descriptor.getName();
@@ -5409,8 +5265,8 @@ implements OpenPearlVisitor<ST> {
 
     private String getArrayDescriptor(TypeDefinition t) {
         String s = null;
-        if (t instanceof TypeArray) {
-            TypeArray type = (TypeArray) t;
+        if (t instanceof TypeArrayDeclaration) {
+            TypeArrayDeclaration type = (TypeArrayDeclaration) t;
             ArrayDescriptor array_descriptor =
                     new ArrayDescriptor(type.getNoOfDimensions(), type.getDimensions());
             s = array_descriptor.getName();
@@ -5437,7 +5293,7 @@ implements OpenPearlVisitor<ST> {
         if (ve != null) {
             if (ve.getType() instanceof TypeReference) {
                 if (((TypeReference) (ve.getType()))
-                        .getBaseType() instanceof TypeArraySpecification) {
+                        .getBaseType() instanceof TypeArray) {
                     if (ctx instanceof OpenPearlParser.BaseExpressionContext) {
                         OpenPearlParser.BaseExpressionContext bc = (OpenPearlParser.BaseExpressionContext) ctx;
                         if (bc.primaryExpression() != null
@@ -5561,13 +5417,13 @@ implements OpenPearlVisitor<ST> {
 
                 type = structureComponent.m_type;
 
-                if (type instanceof TypeArray) {
+                if (type instanceof TypeArrayDeclaration) {
                     ST structLHS = m_group.getInstanceOf("StructureComponent");
                     structLHS.add("component", structureComponent.m_alias);
                     lhs.add("expr", structLHS);
 
                     ST arrayLHS = m_group.getInstanceOf("ArrayLHSInStructure");
-                    TypeArray arrayType = (TypeArray) type;
+                    TypeArrayDeclaration arrayType = (TypeArrayDeclaration) type;
                     ArrayDescriptor array_descriptor = new ArrayDescriptor(
                             arrayType.getNoOfDimensions(), arrayType.getDimensions());
 
@@ -5630,7 +5486,6 @@ implements OpenPearlVisitor<ST> {
     private ST generateStructLHS(OpenPearlParser.NameContext ctx, VariableEntry var,
             String fromns, TypeStructure type) {
         ST structLHS = m_group.getInstanceOf("StructureLHS");
-        TypeStructure struct = type;
 
         structLHS.add("name", ctx.ID().getText());
         structLHS.add("fromns", fromns);

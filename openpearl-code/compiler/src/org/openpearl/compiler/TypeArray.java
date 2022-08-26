@@ -27,32 +27,39 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.openpearl.compiler;
 
-import java.util.ArrayList;
+package org.openpearl.compiler;
 
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
+/**
+this type is used for arrays of REF variables. It could also be used in the formatParamters
+
+*/
 public class TypeArray extends TypeDefinition {
     private TypeDefinition m_baseType;
-    private ArrayList<ArrayDimension> m_dimensions;
+    private int m_dimensions;
 
-
-    TypeArray() {
+    public TypeArray(String t) {
+        super(t);
+        this.m_baseType = null;
+        this.m_dimensions = 0;
+    }
+    public TypeArray() {
         super("ARRAY");
         this.m_baseType = null;
-        this.m_dimensions = new ArrayList<ArrayDimension>();
+        this.m_dimensions = 0;
     }
 
-    TypeArray(TypeDefinition type, ArrayList<ArrayDimension> dimensions) {
+    public TypeArray(TypeDefinition type, int dimensions) {
         super("ARRAY");
         this.m_baseType = type;
-        this.m_dimensions = new ArrayList<ArrayDimension>();
+        this.m_dimensions = dimensions;
     }
 
-    public Void addDimension(ArrayDimension dimension) {
-        m_dimensions.add(dimension);
+    public Void setDimension(int dimension) {
+        m_dimensions = dimension;
         return null;
     }
 
@@ -65,57 +72,50 @@ public class TypeArray extends TypeDefinition {
         return this.m_baseType;
     }
 
-    public ArrayList<ArrayDimension> getDimensions() {
+    public int getNoOfDimensions() {
         return m_dimensions;
     }
 
-    public int getNoOfDimensions() {
-        if ( m_dimensions != null ) {
-            return m_dimensions.size();
-        }
-        else {
-            return 0;
-        }
-    }
-
-    public boolean hasDimensions() {
-        if ( m_dimensions != null ) {
-            return !(m_dimensions.get(0).getLowerBoundary() == 0 && m_dimensions.get(0).getUpperBoundary() == 0);
-        }
-        else {
-            return false;
-        }
-    }
-
-    public int getTotalNoOfElements() {
-        int totalNoOfElements = 1;
-        for (int i = 0; i < m_dimensions.size(); i++) {
-            totalNoOfElements *= m_dimensions.get(i).getNoOfElements();
-        }
-
-
-        return totalNoOfElements;
-    }
-
     public String toString() {
-        return super.toString() + " " + this.m_dimensions + " " + this.m_baseType;
+      String s = super.toString() + "(";
+      for (int i=0; i<m_dimensions-1; i++) {
+        s+=",";
+      }
+      s += ") "+this.getBaseType();
+      return s;
     }
     
     public String toErrorString() {
-        return toString4IMC(true);
-    }
-    
-    public String toString4IMC(boolean isInStructure) {
-        String result="(";
-        for (int i=0; i< m_dimensions.size(); i++) {
-               if (i>0) result += ",";
-               result += m_dimensions.get(i).toString4IMC(isInStructure);
+        String s = "(";
+        for (int i=0; i<m_dimensions-1; i++) {
+          s+=",";
         }
-        
-        result += ") " + m_baseType.toString4IMC(isInStructure);
-        return result;
+        s += ") "+this.getBaseType();
+        return s;
+      }
+    public String toString4IMC(boolean isInStructure) {
+        String s = "(";
+        for (int i=0; i<m_dimensions-1; i++) {
+          s+=",";
+        }
+        s += ") "+this.getBaseType();
+        return s;
     }
     
+    public ST toST(STGroup group) {
+      //ST st = group.getInstanceOf("array_specification_type");
+      //  st.add("BaseType", m_baseType.toST(group));
+        
+      ST st = group.getInstanceOf("ArrayType");
+      st.add("type",m_baseType.toST(group));
+      if (hasAssignmentProtection()) {
+          ST inv = group.getInstanceOf("const_type");
+          inv.add("type", st);
+          st = inv;
+      }
+      return st;
+  }
+
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof TypeArray)) {
@@ -126,15 +126,5 @@ public class TypeArray extends TypeDefinition {
 
         // Custom equality check here.
         return this.m_baseType.equals(that.getBaseType());
-    }
-    public ST toST(STGroup group) {
-        ST st = group.getInstanceOf("ArrayType");
-        st.add("type",m_baseType.toST(group));
-        if (hasAssignmentProtection()) {
-            ST inv = group.getInstanceOf("const_type");
-            inv.add("type", st);
-            st = inv;
-        }
-        return st;
     }
 }

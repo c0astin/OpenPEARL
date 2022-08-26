@@ -1,0 +1,33 @@
+MODULE(structType);
+
+PROBLEM;
+
+TYPE Simple STRUCT [ (a,b) FIXED ];
+
+TYPE ListElement STRUCT [ payload FIXED, next REF ListElement];
+
+DCL head REF ListElement INIT (NIL);
+DCL liste(10) ListElement;
+DCL simple Simple;
+
+p: PROC;
+
+   simple = CONT head;
+/*$^
+error: assignment: type mismatch: cannot assign expression of type ListElement {aka: STRUCT [  FIXED(31),REF ListElement ] } to Simple {aka: STRUCT [  FIXED(31),FIXED(31) ] }
+*/
+
+   simple = head;
+/*$^
+error: assignment: type mismatch: cannot assign object of type REF ListElement {aka: STRUCT [  FIXED(31),REF ListElement ] } to Simple {aka: STRUCT [  FIXED(31),FIXED(31) ] }
+*/
+
+   head.payload=1.0;
+/*$^
+error: assignment: type mismatch: cannot assign constant of type FLOAT(23) to FIXED(31)
+*/
+
+END;
+
+
+MODEND;

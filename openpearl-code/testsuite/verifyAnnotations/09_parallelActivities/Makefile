@@ -1,0 +1,20 @@
+#TESTS=$(sort $(wildcard *.prl))
+SCRIPTDIR=..
+TESTS=$(shell $(SCRIPTDIR)/../getTestNumbers.sh *.prl)
+.PHONY: all clean $(TESTS)
+#$(warning tests= $(TESTS))
+
+all: $(TESTS)
+	$(SCRIPTDIR)/../../errorChecker/runTest.sh $(TESTS) 
+
+#$(TESTS):
+#	$(SCRIPTDIR)/../../errorChecker/runTest.sh $@
+
+clean:
+	@rm -f *.out
+	@rm -f *.xml
+	@rm -f *.cc
+	@rm -f *.log
+	@rm -f *.exp
+	@rm -f *.err
+	@rm -f system.cc 

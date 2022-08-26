@@ -512,12 +512,12 @@ implements OpenPearlVisitor<Void> {
 
                 
                 if (nbrDimensions > 0) {
-                    TypeArray array = new TypeArray();
-                    array.setBaseType(m_type);
-                    for (i = 0; i < nbrDimensions; i++) {
-                        // the real dimensions limits are passed via array descriptor
-                        array.addDimension(new ArrayDimension());
-                    }
+                    TypeArray array = new TypeArray(m_type, nbrDimensions);
+//                    array.setBaseType(m_type);
+//                    for (i = 0; i < nbrDimensions; i++) {
+//                        // the real dimensions limits are passed via array descriptor
+//                        array.addDimension(new ArrayDimension());
+//                    }
                     m_type = array;
                 }
                 m_type.setHasAssignmentProtection(assignmentProtection);
@@ -594,15 +594,15 @@ implements OpenPearlVisitor<Void> {
             // check if all variables are of type array
 
             if (ctx.dimensionAttribute() != null) {
-                // TypeDefinition baseType = m_type;
+               // TypeDefinition baseType = m_type;
                 if (ctx.dimensionAttribute().virtualDimensionList() != null) {
-                    m_type = new TypeArraySpecification();
+                    m_type = new TypeArray();
                 } else {
-                   m_type = new TypeArray();
+                   m_type = new TypeArrayDeclaration();
                 }
-                //                ((TypeArray) m_type).setBaseType(baseType);
+                //((TypeArray) m_type).setBaseType(baseType);
                 visitDimensionAttribute(ctx.dimensionAttribute());
-                ParserRuleContext c = ((TypeArray)m_type).getDimensions().get(0).getCtx();
+                ParserRuleContext c = ((TypeArrayDeclaration)m_type).getDimensions().get(0).getCtx();
                 if (c != null && m_isInSpecification) {
                     ErrorStack.add(ctx.dimensionAttribute(), "SPC", "need virtual dimension list");
                 }
@@ -611,10 +611,20 @@ implements OpenPearlVisitor<Void> {
                 }
                 if ( c!= null) {
                     // do not add virtual dimension lists to the array descriptors
+                    // check all index ranges
+                    TypeArrayDeclaration tad = ((TypeArrayDeclaration)m_type);
+                    
+                    for (int i=0; i<tad.getNoOfDimensions();i++) {
+                        if (tad.getDimensions().get(i).getLowerBoundary()>= tad.getDimensions().get(i).getUpperBoundary()) {
+                            ErrorStack.add(ctx.dimensionAttribute().dimensionAttributeDeclaration().boundaryDenotation(i),
+                                    "index range","lower index must be smaller than upper index");
+                        }
+                    }
+                    
                    addArrayDescriptor(
                         new ArrayDescriptor(
-                                ((TypeArray) m_type).getNoOfDimensions(),
-                                ((TypeArray) m_type).getDimensions()));
+                                ((TypeArrayDeclaration) m_type).getNoOfDimensions(),
+                                ((TypeArrayDeclaration) m_type).getDimensions()));
                 }
             }
 
@@ -663,8 +673,8 @@ implements OpenPearlVisitor<Void> {
         m_type.setHasAssignmentProtection(m_hasAllocationProtection);
        
 
-        if (safeType instanceof TypeArray) {
-            ((TypeArray) safeType).setBaseType(m_type);
+        if (safeType instanceof TypeArrayDeclaration) {
+            ((TypeArrayDeclaration) safeType).setBaseType(m_type);
             m_type = safeType;
         }
 
@@ -686,13 +696,13 @@ implements OpenPearlVisitor<Void> {
             int nbrOfVariables = m_identifierDenotationContext.identifier().size();
 
             // check number of required and given initializers
-            if (m_type instanceof TypeArray) {
+            if (m_type instanceof TypeArrayDeclaration) {
                 // need ArrayOrStructureInitialiser
                 int maxOfInitializers =
-                        nbrOfVariables * ((TypeArray) (m_type)).getTotalNoOfElements();
-                if (((TypeArray) m_type).getBaseType() instanceof TypeStructure) {
+                        nbrOfVariables * ((TypeArrayDeclaration) (m_type)).getTotalNoOfElements();
+                if (((TypeArrayDeclaration) m_type).getBaseType() instanceof TypeStructure) {
                     maxOfInitializers *=
-                            ((TypeStructure) ((TypeArray) m_type).getBaseType())
+                            ((TypeStructure) ((TypeArrayDeclaration) m_type).getBaseType())
                             .getTotalNoOfElements();
                     if (nbrOfInitializer< maxOfInitializers) {
                         ErrorStack.add(m_identifierDenotationContext,
@@ -753,12 +763,12 @@ implements OpenPearlVisitor<Void> {
             if (initElements != null) {
                 // create initializers
 
-                if (m_type instanceof TypeArray) {
+                if (m_type instanceof TypeArrayDeclaration) {
                     // need ArrayOrStructureInitialiser
-                    int maxOfInitializers = ((TypeArray) (m_type)).getTotalNoOfElements();
-                    if (((TypeArray) m_type).getBaseType() instanceof TypeStructure) {
+                    int maxOfInitializers = ((TypeArrayDeclaration) (m_type)).getTotalNoOfElements();
+                    if (((TypeArrayDeclaration) m_type).getBaseType() instanceof TypeStructure) {
                         maxOfInitializers *=
-                                ((TypeStructure) ((TypeArray) m_type).getBaseType())
+                                ((TypeStructure) ((TypeArrayDeclaration) m_type).getBaseType())
                                 .getTotalNoOfElements();
                     }
                     int remainingInitializers = nbrOfInitializer - nextInitializerIndex;
@@ -907,9 +917,9 @@ implements OpenPearlVisitor<Void> {
         if (ctx.preset() != null) {
             initElements = ctx.preset().initElement();
         }
-        if (m_type != null && m_type instanceof TypeArray) {
-            nbrOfInitializersPerName = ((TypeArray)m_type).getTotalNoOfElements();
-            ((TypeArray)m_type).setBaseType(new TypeSemaphore());
+        if (m_type != null && m_type instanceof TypeArrayDeclaration) {
+            nbrOfInitializersPerName = ((TypeArrayDeclaration)m_type).getTotalNoOfElements();
+            ((TypeArrayDeclaration)m_type).setBaseType(new TypeSemaphore());
             isArray = true;
         } else {
            m_type = new TypeSemaphore();
@@ -1028,7 +1038,7 @@ implements OpenPearlVisitor<Void> {
         if (m_type != null) {
             m_type.setHasAssignmentProtection(hasAssignmentProtection);
             if (hasVistualDimensionList) {
-                m_type = new TypeArraySpecification(m_type, dimensions);
+                m_type = new TypeArray(m_type, dimensions);
             }
             m_type = new TypeReference(m_type);
         }
@@ -1318,7 +1328,7 @@ implements OpenPearlVisitor<Void> {
             if (ctx.commas() != null) {
                 nbrDimensions += ctx.commas().getChildCount();
             }
-            TypeArray array = new TypeArray();
+            TypeArrayDeclaration array = new TypeArrayDeclaration();
             //array.setBaseType(m_type);
             for (int i = 0; i < nbrDimensions; i++) {
                 // the real dimensions limits are passed via array descriptor
@@ -1337,7 +1347,7 @@ implements OpenPearlVisitor<Void> {
                     CommonUtils.getConstantFixedExpression(
                             ctx.constantFixedExpression(0), m_currentSymbolTable);
 
-            ((TypeArray) m_type)
+            ((TypeArrayDeclaration) m_type)
             .addDimension(new ArrayDimension(Defaults.DEFAULT_ARRAY_LWB, upb, ctx));
         } else {
             int lwb =
@@ -1346,7 +1356,7 @@ implements OpenPearlVisitor<Void> {
             int upb =
                     CommonUtils.getConstantFixedExpression(
                             ctx.constantFixedExpression(1), m_currentSymbolTable);
-            ((TypeArray) m_type).addDimension(new ArrayDimension(lwb, upb, ctx));
+            ((TypeArrayDeclaration) m_type).addDimension(new ArrayDimension(lwb, upb, ctx));
         }
 
         return null;
@@ -1940,14 +1950,14 @@ implements OpenPearlVisitor<Void> {
 
         if (ctx.dimensionAttribute() != null) {
             Log.debug("SymbolTableVisitor:visitStructureComponent: ARRAY");
-            TypeArray ta = new TypeArray();
+            TypeArrayDeclaration ta = new TypeArrayDeclaration();
             ta.setBaseType(m_type);
             m_type = ta;
             visitDimensionAttribute(ctx.dimensionAttribute());
             addArrayDescriptor(
                     new ArrayDescriptor(
-                            ((TypeArray) m_type).getNoOfDimensions(),
-                            ((TypeArray) m_type).getDimensions()));
+                            ((TypeArrayDeclaration) m_type).getNoOfDimensions(),
+                            ((TypeArrayDeclaration) m_type).getDimensions()));
         }
 
         m_typeStructure = saved_typeStructure;

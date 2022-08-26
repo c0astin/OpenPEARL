@@ -34,7 +34,8 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.openpearl.compiler.OpenPearlParser;
 import org.openpearl.compiler.TypeArray;
-import org.openpearl.compiler.TypeArraySpecification;
+import org.openpearl.compiler.TypeArrayDeclaration;
+
 
 public class FormalParameter extends VariableEntry {
 
@@ -52,14 +53,15 @@ public class FormalParameter extends VariableEntry {
     	super(name, type, //assignmentProtection,
     	        ctx);
     	this.passIdentical = passIdentical;
+    	super.setIsFormalParameter();
         
     }
 
     public String toString() {
         //return (super.getAssigmentProtection() ? " INV " : " " ) + super.getType() +(passIdentical ? " IDENT" : "");
       return super.getType() +(passIdentical ? " IDENT" : "");
-        
     }
+    
     public Boolean passIdentical() {
         return passIdentical;
     }
@@ -75,7 +77,7 @@ public class FormalParameter extends VariableEntry {
        TypeDefinition t = super.getType();
        String s = t.toST(group).render();
        st.add("type", super.getType().toST(group));
-       if (super.getType() instanceof TypeArraySpecification) st.add("isArray", "");
+       //if (super.getType() instanceof TypeArray) st.add("isArray", "");
        
        //if (super.getType().hasAssignmentProtection()) st.add("assignmentProtection","");
        if (passIdentical)st.add("passIdentical","");

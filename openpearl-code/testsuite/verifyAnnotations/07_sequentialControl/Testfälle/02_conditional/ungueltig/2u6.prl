@@ -1,0 +1,28 @@
+
+MODULE(mtest);
+
+SYSTEM;
+   stdout: StdOut; 
+   	
+PROBLEM;
+    SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+    
+    DCL a FIXED;
+    DCL b FLOAT(52);
+    
+
+test: TASK MAIN;
+
+    b := 3.5;
+
+	 IF b
+		THEN a := 3;
+		ELSE a := 2;
+		
+	FIN;
+ 
+   	   		   		
+END;
+
+MODEND;
