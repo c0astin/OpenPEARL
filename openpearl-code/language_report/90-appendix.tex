@@ -72,24 +72,23 @@ passed on by means of identification (\code{IDENT}) as procedure parameters.
 
 This appendix describes the functions known to the PEARL
 % compiler
-System. They
-can be used in the single modules 
-%%%without
-by
-%%% ^^added
- specifying them before. 
-%%%If one 
-%%%of the functions is specified in a module, no object may exist with the 
-%%%functions' name at module level.
+System.
+They can be used in the single modules without specifying them before. 
+
+If one of the functions is specified in a module, no object may exist with the 
+functions' name at module level.
+
 %%%\begin{added}
-A user supplied global function with the same signature substitutes
-the predefined function in the whole program.
+A user supplied symbol with the same name of a predefined function hides the predefined function for the complete module.
+
+The specification of a predefined function is possible for compatibility 
+reasons. In this case the \kw{GLOBAL} element must not provide a module name.
 %%%\end{added}
 
 \subsection{The Function NOW}    % A 2.1
 \label{sec_function_now}
 
-The function procedure NOW passes back the actual time or system time, resp., 
+The function procedure \code{NOW} passes back the actual time or system time, resp., 
 as value of type \code{CLOCK}. The specification of the function looks like this:\\
 
 \kw{SPC}\code{ NOW }\kw{PROC RETURNS ( CLOCK ) GLOBAL}\code{ ;} 
@@ -108,6 +107,12 @@ the date in the form ``year--month--day''. Here an example for December 5,
 \kw{SPC}\code{ DATE }\kw{PROC RETURNS ( CHAR(10) ) GLOBAL}\code{ ;}
 \index{Predefined Functions!\textbf{DATE}}
 \index{DATE@\textbf{DATE}}
+
+%%%\begin{added}
+\subsection{ The Functions TASK and PRIO}
+The predefined functions \kw{TASK} and \kw{PRIO} may not be specified
+ or overwritten, since these names a reserved keywords in PEARL90.
+%%%\end{added}
 
 %%%\begin{added}
 \section{CPP-Insertions}
