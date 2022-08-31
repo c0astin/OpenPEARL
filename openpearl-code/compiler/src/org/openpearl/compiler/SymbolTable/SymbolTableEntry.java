@@ -68,6 +68,10 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
 
     // the symbol is specified, default is declared
     private static final int const_isSpecified = 0x08;
+    
+    // the symbol is predefined like DATE and NOW
+    private static final int const_isPredefined = 0x10;
+    
 
     SymbolTableEntry() {
         m_name = null;
@@ -106,6 +110,9 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
                } else {
                   s += " DCL("+m_globalAttribute+") "; 
                }
+            }
+            if (isPredefined()) {
+                s += "<predefined> ";
             }
             return s;
         }
@@ -196,6 +203,12 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
         m_flags |= const_isSpecified;
     }
       
+    public void setIsPredefined() {
+        m_flags |= const_isPredefined;
+    }
+    public boolean isPredefined() {
+           return ((m_flags & const_isPredefined)!= 0);
+    }
    
     public String getGlobalAttribute() {
         return m_globalAttribute;
@@ -204,4 +217,5 @@ public abstract class SymbolTableEntry  implements Comparable<SymbolTableEntry> 
     public void setGlobalAttribute(String moduleName) {
         this.m_globalAttribute = moduleName;
     }
+    
 }

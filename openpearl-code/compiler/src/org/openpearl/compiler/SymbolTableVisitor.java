@@ -101,6 +101,13 @@ implements OpenPearlVisitor<Void> {
     private LinkedList<FormalParameter> m_formalParameters;
     private UserDefinedType m_currentUserdefinedType = null;
 
+    // default entry for predefined procedure NOW
+    private final  TypeDefinition resultTypeForNow = new TypeClock();
+    private final TypeProcedure typeProcedureForNow = new TypeProcedure(null, new TypeClock());
+    
+    private final  TypeDefinition resultTypeForDate= new  TypeChar(20);
+    private final TypeProcedure typeProcedureForDate = new TypeProcedure(null, new TypeChar(20));   
+    
     public SymbolTableVisitor(int verbose, ConstantPool constantPool) {
         m_debug = false;
         m_verbose = verbose;
@@ -128,9 +135,29 @@ implements OpenPearlVisitor<Void> {
         this.m_currentSymbolTable = this.symbolTable.newLevel(moduleEntry);
         this.m_symboltablePerContext.put(ctx, this.m_currentSymbolTable);
         m_currentModuleName = ctx.nameOfModuleTaskProc().ID().getText();
+        
         visitChildren(ctx);
-
+        
+        // check if there are predefined functions specified/overwritten,...
+        SymbolTableEntry predefined = m_currentSymbolTable.lookupLocal("NOW");
+        if (predefined == null) {
+            // let' add the default specification for NOW
+            ASTAttribute resultAttr = new ASTAttribute(resultTypeForNow);
+            ProcedureEntry now = new ProcedureEntry("NOW",typeProcedureForNow, null, resultAttr,null,null, null); //m_currentSymbolTable);
+            now.setIsPredefined();
+            m_currentSymbolTable.enter(now);
+        }
+        predefined = m_currentSymbolTable.lookupLocal("DATE");
+        if (predefined == null) {
+            // let' add the default specification of DATE
+            ASTAttribute resultAttr = new ASTAttribute(resultTypeForDate);
+            ProcedureEntry date = new ProcedureEntry("DATE",typeProcedureForDate, null, resultAttr,null,null, null); //m_currentSymbolTable);
+            date.setIsPredefined();
+            m_currentSymbolTable.enter(date);
+        }
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
+       
+
         return null;
     }
 
@@ -602,15 +629,14 @@ implements OpenPearlVisitor<Void> {
                 }
                 //((TypeArray) m_type).setBaseType(baseType);
                 visitDimensionAttribute(ctx.dimensionAttribute());
-                ParserRuleContext c = ((TypeArrayDeclaration)m_type).getDimensions().get(0).getCtx();
-                if (c != null && m_isInSpecification) {
+                ParserRuleContext c = ctx.dimensionAttribute().virtualDimensionList();
+                if (c == null && m_isInSpecification) {
                     ErrorStack.add(ctx.dimensionAttribute(), "SPC", "need virtual dimension list");
                 }
-                if (c == null && ! m_isInSpecification) {
+                if (c != null && ! m_isInSpecification) {
                     ErrorStack.add(ctx.dimensionAttribute(), "DCL", "need real dimension list");
                 }
-                if ( c!= null) {
-                    // do not add virtual dimension lists to the array descriptors
+                if ( c== null) {
                     // check all index ranges
                     TypeArrayDeclaration tad = ((TypeArrayDeclaration)m_type);
                     
@@ -673,10 +699,12 @@ implements OpenPearlVisitor<Void> {
         m_type.setHasAssignmentProtection(m_hasAllocationProtection);
        
 
-        if (safeType instanceof TypeArrayDeclaration) {
-            ((TypeArrayDeclaration) safeType).setBaseType(m_type);
+        if (safeType instanceof TypeArray) {
+            ((TypeArray) safeType).setBaseType(m_type);
             m_type = safeType;
-        }
+        } 
+
+        
 
         if (initElements != null && m_isInSpecification) {
             ErrorStack.add(ctx, "SPC", "no INIT allowed");
@@ -917,9 +945,13 @@ implements OpenPearlVisitor<Void> {
         if (ctx.preset() != null) {
             initElements = ctx.preset().initElement();
         }
-        if (m_type != null && m_type instanceof TypeArrayDeclaration) {
-            nbrOfInitializersPerName = ((TypeArrayDeclaration)m_type).getTotalNoOfElements();
-            ((TypeArrayDeclaration)m_type).setBaseType(new TypeSemaphore());
+        if (m_type != null && m_type instanceof TypeArray) {
+            ((TypeArray)m_type).setBaseType(new TypeSemaphore());
+            isArray = true;
+            if (m_type instanceof TypeArrayDeclaration) {
+                nbrOfInitializersPerName = ((TypeArrayDeclaration)m_type).getTotalNoOfElements();
+            }
+            ((TypeArray)m_type).setBaseType(new TypeSemaphore());
             isArray = true;
         } else {
            m_type = new TypeSemaphore();
@@ -978,7 +1010,11 @@ implements OpenPearlVisitor<Void> {
                             m_identifierDenotationContext.identifier(i),
                             init);
             } else {
-                ArrayOrStructureInitializer aInit = new ArrayOrStructureInitializer(ctx.preset(), arrayInit);
+                ArrayOrStructureInitializer aInit = null;
+                
+                if (initElements != null) {
+                    aInit = new ArrayOrStructureInitializer(ctx.preset(), arrayInit);
+                }
                 
                ve =
                         new VariableEntry(
@@ -1328,13 +1364,7 @@ implements OpenPearlVisitor<Void> {
             if (ctx.commas() != null) {
                 nbrDimensions += ctx.commas().getChildCount();
             }
-            TypeArrayDeclaration array = new TypeArrayDeclaration();
-            //array.setBaseType(m_type);
-            for (int i = 0; i < nbrDimensions; i++) {
-                // the real dimensions limits are passed via array descriptor
-                array.addDimension(new ArrayDimension());
-            }
-            m_type = array;
+            ((TypeArray)m_type).setDimension(nbrDimensions);
         }
         return null;
     }
@@ -2004,6 +2034,28 @@ implements OpenPearlVisitor<Void> {
             SymbolTableEntry newEntry, ParserRuleContext ctx) {
         
         String s = newEntry.getName();
+        Boolean specifyPredefinedFunction = false;
+        
+        // check if we have a specificati0on of a predefined function (DATE/NOW)
+        if (newEntry instanceof ProcedureEntry) {
+            ProcedureEntry pe = (ProcedureEntry)newEntry; 
+            if (pe.getFormalParameters() == null) {
+                // both predefined function have no formal parameters
+                if (m_isGlobal && m_isInSpecification && m_globalName == null) {
+                 // let's check if there is a single GLOBAL in specification
+                    if (pe.getName().equals("NOW")){
+                        if (pe.getResultType().equals(resultTypeForNow)) {
+                       // ok NOW is specified
+                       specifyPredefinedFunction = true;                    }
+                   } else if (pe.getName().equals("DATE")) {
+                       if (pe.getResultType().equals(resultTypeForDate)) {
+                      // ok DATE is specified
+                           specifyPredefinedFunction = true; 
+                      }  
+                   }
+               }
+            }
+        }
         
         // setup SPC/DCL and GLOBAL information
         if (m_isInSpecification) {
@@ -2014,13 +2066,22 @@ implements OpenPearlVisitor<Void> {
             if (m_isGlobal == false &&  m_currentSymbolTable.lookupSystemPartName(s) != null) {
                 newEntry.setGlobalAttribute(m_currentModuleName);
             } else if (m_isGlobal == true && m_globalName == null) {
-                newEntry.setGlobalAttribute(m_currentModuleName);
+                if (!specifyPredefinedFunction) {
+                    newEntry.setGlobalAttribute(m_currentModuleName);
+                } else {
+                    newEntry.setGlobalAttribute(null);
+                    newEntry.setIsPredefined();
+                }
+               
                 SymbolTableEntry isSystemName = m_currentSymbolTable.lookupSystemPartName(s);
-                if (Compiler.isStdOpenPEARL() && isSystemName == null) {
+                if (Compiler.isStdOpenPEARL() && isSystemName == null && !specifyPredefinedFunction) {
                     ErrorStack.warn(ctx,"SPC", "import module name defaulted to '"+m_currentModuleName+"'");
                 }
+                
             } else if (m_isGlobal == true && m_globalName != null) {
-                newEntry.setGlobalAttribute(m_globalName);
+                
+                   newEntry.setGlobalAttribute(m_globalName);
+          
             } else {
                 ErrorStack.add(ctx,"SPC","GLOBAL attribute required for import from other module");
             }

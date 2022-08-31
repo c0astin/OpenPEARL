@@ -58,7 +58,8 @@ public class ArrayDimension  {
             return Integer.toString(this.m_lowerBoundary) + ":" + Integer.toString(this.m_upperBoundary);
         } else {
             // virtual dimension list - suppress 0:0 output
-            return "";
+            ErrorStack.addInternal( m_ctx,"ArrayDimension@61","should never be reached");
+            return "???";  //should no longer occur, since TypeArray ist used for SPC and TypeArrayDeclaration has boundaries
         }
     }
     

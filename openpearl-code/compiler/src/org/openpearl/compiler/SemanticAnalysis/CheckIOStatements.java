@@ -1248,7 +1248,13 @@ implements OpenPearlVisitor<Void> {
             }
 
             if (attr != null) {
-                if (attr.getType() instanceof TypeArrayDeclaration) {
+                if (attr.getType() instanceof TypeProcedure) {
+                    // if we have no parameters --> get result type
+                    TypeProcedure tp = (TypeProcedure)(attr.getType());
+                    attr.setType(tp.getResultType());
+                    etc.setType(tp.getResultType());
+                    list.add(etc);
+                } else if (attr.getType() instanceof TypeArrayDeclaration) {
                     int nbrOfElements = ((TypeArrayDeclaration) (attr.getType())).getTotalNoOfElements();
                     etc.setType(((TypeArrayDeclaration) (attr.getType())).getBaseType());
                     for (int j = 0; j < nbrOfElements; j++) {

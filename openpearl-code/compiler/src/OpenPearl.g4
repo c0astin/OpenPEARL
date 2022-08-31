@@ -1926,6 +1926,8 @@ indices:
 // All monadic standard operators have rank 1.
 ////////////////////////////////////////////////////////////////////////////////
 
+//   | op='NOW'                                              # nowFunction
+ //   | op='DATE'                                             # dateFunction
 expression:													
     primaryExpression                                       # baseExpression
     | op='ATAN' expression                                  # atanExpression
@@ -1950,8 +1952,7 @@ expression:
     | op='CONT' expression                                  # CONTExpression
     | op='LWB' expression                                   # lwbMonadicExpression
     | op='UPB' expression                                   # upbMonadicExpression
-    | op='NOW'                                              # nowFunction
-    | op='DATE'                                             # dateFunction
+ 
     | op='TASK' ( '(' expression ')' )?                     # taskFunction
     | op='PRIO' ( '(' expression ')' )?                     # prioFunction
     | <assoc=right> expression op='**'  expression          # exponentiationExpression

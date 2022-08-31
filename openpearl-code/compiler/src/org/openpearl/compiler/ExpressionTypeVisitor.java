@@ -1981,16 +1981,16 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visitNowFunction(OpenPearlParser.NowFunctionContext ctx) {
-        Log.debug("ExpressionTypeVisitor:visitNowFunction:ctx" + CommonUtils.printContext(ctx));
-
-        TypeClock type = new TypeClock();
-        ASTAttribute expressionResult = new ASTAttribute(type);
-        m_ast.put(ctx, expressionResult);
-
-        return null;
-    }
+//    @Override
+//    public Void visitNowFunction(OpenPearlParser.NowFunctionContext ctx) {
+//        Log.debug("ExpressionTypeVisitor:visitNowFunction:ctx" + CommonUtils.printContext(ctx));
+//
+//        TypeClock type = new TypeClock();
+//        ASTAttribute expressionResult = new ASTAttribute(type);
+//        m_ast.put(ctx, expressionResult);
+//
+//        return null;
+//    }
 
     @Override
     public Void visitSizeofExpression(OpenPearlParser.SizeofExpressionContext ctx) {

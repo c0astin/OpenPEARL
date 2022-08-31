@@ -342,7 +342,7 @@ implements OpenPearlVisitor<ST> {
                 } else if (component.m_type instanceof UserDefinedTypeStructure) {
                     TypeStructure innerStruct = (TypeStructure)(((UserDefinedTypeStructure)(component.m_type)).getStructuredType());
                     graph.addDependency(name, innerStruct.getStructureName());
-          
+
                 }
             }
         }
@@ -376,9 +376,9 @@ implements OpenPearlVisitor<ST> {
                                     array.getBaseType() instanceof UserDefinedTypeStructure) {
                                 TypeStructure arraystruct=null;
                                 if (array.getBaseType() instanceof TypeStructure) {
-                                 arraystruct = (TypeStructure) array.getBaseType();
+                                    arraystruct = (TypeStructure) array.getBaseType();
                                 } else {
-                                     arraystruct = (TypeStructure) (((UserDefinedTypeStructure)(array.getBaseType())).getStructuredType());
+                                    arraystruct = (TypeStructure) (((UserDefinedTypeStructure)(array.getBaseType())).getStructuredType());
                                 }
                                 ST declaration =
                                         m_group.getInstanceOf("StructureArrayComponentDeclaration");
@@ -395,20 +395,20 @@ implements OpenPearlVisitor<ST> {
                                 ST declaration =
                                         m_group.getInstanceOf("StructureArrayComponentDeclaration");
                                 ST typeST = type.toST(m_group);
-//                                if (type instanceof UserDefinedSimpleType) {
-//                                    type = ((UserDefinedSimpleType)type).getSimpleType();
-//                                }
-//                                // TODO: (MS) Are here the other types like e.g. CLOCK are missing???
-//                                if (type instanceof TypeFixed) {
-//                                    typeST = m_group.getInstanceOf("fixed_type");
-//                                    typeST.add("size", type.getPrecision());
-//                                } else if (type instanceof TypeFloat) {
-//                                    typeST = m_group.getInstanceOf("float_type");
-//                                    typeST.add("size", type.getPrecision());
-//                                } else if (type instanceof TypeChar) {
-//                                    typeST = m_group.getInstanceOf("char_type");
-//                                    typeST.add("size", type.getSize());
-//                                }
+                                //                                if (type instanceof UserDefinedSimpleType) {
+                                //                                    type = ((UserDefinedSimpleType)type).getSimpleType();
+                                //                                }
+                                //                                // TODO: (MS) Are here the other types like e.g. CLOCK are missing???
+                                //                                if (type instanceof TypeFixed) {
+                                //                                    typeST = m_group.getInstanceOf("fixed_type");
+                                //                                    typeST.add("size", type.getPrecision());
+                                //                                } else if (type instanceof TypeFloat) {
+                                //                                    typeST = m_group.getInstanceOf("float_type");
+                                //                                    typeST.add("size", type.getPrecision());
+                                //                                } else if (type instanceof TypeChar) {
+                                //                                    typeST = m_group.getInstanceOf("char_type");
+                                //                                    typeST.add("size", type.getSize());
+                                //                                }
 
                                 declaration.add("name", component.m_alias);
                                 declaration.add("type", typeST);
@@ -600,31 +600,31 @@ implements OpenPearlVisitor<ST> {
 
         ST scope = getScope(ve);
         if (t instanceof TypeArray || t instanceof TypeStructure ||
-            t instanceof TypeSemaphore || t instanceof TypeBolt ||
-            t instanceof TypeReference || isSimpleType(t)) {
+                t instanceof TypeSemaphore || t instanceof TypeBolt ||
+                t instanceof TypeReference || isSimpleType(t)) {
 
             ST st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
             st.add("type", t.toST(m_group));
             scope.add("variable", st);
-            
+
             dationSpecifications.add("decl", scope);
-//        } else if (ve.getType() instanceof TypeStructure) {
-//            ST st = m_group.getInstanceOf("variable_denotation");
-//            st.add("name", getUserVariableWithoutNamespace(ve.getName()));
-//            st.add("type",
-//                   // visitTypeAttribute(ve.getType()));
-//                    t.toST(m_group));
-//            scope.add("variable", st);
-//            dationSpecifications.add("decl", scope);
-//
-//        } else if (ve.getType() instanceof TypeSemaphore ||
-//                ve.getType() instanceof TypeBolt) {
-//            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
-//            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-//            specifyVariable.add("type",t.toST(m_group));
-//            scope.add("variable", specifyVariable);
-//            dationSpecifications.add("decl",  scope);
+            //        } else if (ve.getType() instanceof TypeStructure) {
+            //            ST st = m_group.getInstanceOf("variable_denotation");
+            //            st.add("name", getUserVariableWithoutNamespace(ve.getName()));
+            //            st.add("type",
+            //                   // visitTypeAttribute(ve.getType()));
+            //                    t.toST(m_group));
+            //            scope.add("variable", st);
+            //            dationSpecifications.add("decl", scope);
+            //
+            //        } else if (ve.getType() instanceof TypeSemaphore ||
+            //                ve.getType() instanceof TypeBolt) {
+            //            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
+            //            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
+            //            specifyVariable.add("type",t.toST(m_group));
+            //            scope.add("variable", specifyVariable);
+            //            dationSpecifications.add("decl",  scope);
         } else if (t instanceof TypeDation) {
             ST specifyDation = null;
             ST initializer = null;
@@ -663,19 +663,19 @@ implements OpenPearlVisitor<ST> {
             scope.add("variable", specifyDation);
             dationSpecifications.add("decl", scope);
 
-//        } else if (isSimpleType(t)) {
-//            // scopeXXX adds the extern/static/ ...
-//            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
-//            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-//            specifyVariable.add("type",t.toST(m_group));
-//            scope.add("variable", specifyVariable);
-//            dationSpecifications.add("decl",  scope);
-//        } else if (t instanceof TypeReference) {
-//            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
-//            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-//            specifyVariable.add("type",t.toST(m_group));
-//            scope.add("variable", specifyVariable);
-//            dationSpecifications.add("decl",  scope);
+            //        } else if (isSimpleType(t)) {
+            //            // scopeXXX adds the extern/static/ ...
+            //            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
+            //            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
+            //            specifyVariable.add("type",t.toST(m_group));
+            //            scope.add("variable", specifyVariable);
+            //            dationSpecifications.add("decl",  scope);
+            //        } else if (t instanceof TypeReference) {
+            //            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
+            //            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
+            //            specifyVariable.add("type",t.toST(m_group));
+            //            scope.add("variable", specifyVariable);
+            //            dationSpecifications.add("decl",  scope);
         } else {
             ErrorStack.add("CppCodeGenerator:generateSpecification @865: missing alternative");
         }
@@ -694,7 +694,9 @@ implements OpenPearlVisitor<ST> {
             }
             if (ve.isSpecified()) {
                 scope = m_group.getInstanceOf("externVariable");
-                if (!ve.getGlobalAttribute().equals(m_module.getName())) {
+                if (ve.getGlobalAttribute() == null) {
+                    // scope.add("fromNs", "pearlrt");
+                } else if (!ve.getGlobalAttribute().equals(m_module.getName())) {
                     // namespace switch only required of namespace changes to another module
                     scope.add("fromNs", ve.getGlobalAttribute());
                     if (m_useNamespaceForGlobals) {
@@ -711,7 +713,7 @@ implements OpenPearlVisitor<ST> {
         return scope;
     }
 
-    
+
     private ST generateVariableDeclaration(VariableEntry ve) {
 
         ST variableDeclaration = m_group.getInstanceOf("variable_denotation");
@@ -738,7 +740,7 @@ implements OpenPearlVisitor<ST> {
             TypeDefinition t = ((TypeArrayDeclaration)(ve.getType())).getBaseType();
             ST storage = m_group.getInstanceOf("ArrayStorageDeclaration");
             storage.add("name", ve.getName());
-            
+
 
             storage.add("type", t.toST(m_group));
 
@@ -806,10 +808,10 @@ implements OpenPearlVisitor<ST> {
             st.add("name",getUserVariableWithoutNamespace(ve.getName()));
 
         } else if (ve.getType() instanceof TypeDation) {
-           // TypeDation td = (TypeDation)(ve.getType());
+            // TypeDation td = (TypeDation)(ve.getType());
             ST dation_decl = visitDationDenotation(ve); 
             m_dationDeclarationInitializers.add("decl",dation_decl);
-            
+
         } else if (ve.getType() instanceof TypeReference) {
             st = m_group.getInstanceOf("variable_denotation");
             st.add("name", getUserVariableWithoutNamespace(ve.getName()));
@@ -825,13 +827,13 @@ implements OpenPearlVisitor<ST> {
             ErrorStack.addInternal(ve.getCtx(), "CppCodeGen:visitVariableDenotation",
                     "missing alternative@744 " + ve.getName());
         }
-        
+
         // TypeDation adds itself to the output vectors
         // all other types deliver a string template, which
         // need a final setting for the scope
         if (st != null) {
-           scope.add("variable", st);
-           scalarVariableDeclaration.add("variable_denotations", scope);
+            scope.add("variable", st);
+            scalarVariableDeclaration.add("variable_denotations", scope);
         }
 
         return scalarVariableDeclaration;
@@ -903,7 +905,7 @@ implements OpenPearlVisitor<ST> {
         return st;
     }
 
- 
+
 
     /*
      * Bolts should be initializes with their name and array-index
@@ -954,7 +956,7 @@ implements OpenPearlVisitor<ST> {
                 } else {
                     stValue = m_group.getInstanceOf("expression");
                     if (initList.get(i) instanceof SimpleInitializer) {
-                       stValue.add("code", ((SimpleInitializer)(initList.get(i))).getConstant() );
+                        stValue.add("code", ((SimpleInitializer)(initList.get(i))).getConstant() );
                     }
                     if (initList.get(i) instanceof ReferenceInitializer) {
                         ReferenceInitializer ri = (ReferenceInitializer)initList.get(i);
@@ -1013,7 +1015,7 @@ implements OpenPearlVisitor<ST> {
 
 
 
- 
+
 
     @Override
     public ST visitProblem_part(OpenPearlParser.Problem_partContext ctx) {
@@ -1257,7 +1259,7 @@ implements OpenPearlVisitor<ST> {
     }
 
 
-    
+
 
     @Override
     public ST visitTaskFunction(OpenPearlParser.TaskFunctionContext ctx) {
@@ -1709,9 +1711,9 @@ implements OpenPearlVisitor<ST> {
 
         stmt = m_group.getInstanceOf("assignment_statement");
 
-//        if (ctx.dereference() != null) {
-//            derefLhs = true;
-//        }
+        //        if (ctx.dereference() != null) {
+        //            derefLhs = true;
+        //        }
 
         // check if we have a deref and/or a type Reference
         if (ctx.bitSelectionSlice() != null) {
@@ -1727,7 +1729,7 @@ implements OpenPearlVisitor<ST> {
             stmt = m_group.getInstanceOf("AssignStorageToRefChar");
             stmt.add("id", visitName(ctx.name()));
             stmt.add("expr", visit(ctx.expression()));
-        
+
         } else if (attrLhs.getType() instanceof TypeReference && derefLhs == false) {
             // we have a reference assignment; rhs may only be a name
             stmt.add("lhs", visit(ctx.name()));
@@ -1742,7 +1744,7 @@ implements OpenPearlVisitor<ST> {
             stmt.add("expr", visit(ctx.expression()));
         } else if  (attrLhs.getType() instanceof TypeChar &&
                 ((attrRhs.getType() instanceof TypeReference && 
-                ((TypeReference)attrRhs.getType()).getBaseType() instanceof TypeRefChar) ||
+                        ((TypeReference)attrRhs.getType()).getBaseType() instanceof TypeRefChar) ||
                         (attrRhs.getType() instanceof TypeRefChar) ) ){
             stmt = m_group.getInstanceOf("AssignRefCharToChar");
             stmt.add("id", visitName(ctx.name()));
@@ -1847,16 +1849,16 @@ implements OpenPearlVisitor<ST> {
         //System.out.println(ctx.getText());
         TypeDefinition currentType= null;
         ST stOfName = null;
-        ST stOfReference=null;
         ASTAttribute attr = m_ast.lookup(ctx);
         SymbolTableEntry entry = m_currentSymbolTable.lookup(ctx.ID().getText());
         boolean isStructComponent=false;  // required for different array access 
-              
+
         // vfromNamespace(name,fromNs) ::= <%   <if(fromNs)>ns_<fromNs>::<endif><name> %>
         stOfName = m_group.getInstanceOf("user_variable");
         stOfName.add("name", entry.getName());
         if (entry.isSpecified()) {
-            if (!entry.getGlobalAttribute().equals(m_module.getName())) {
+
+            if (!entry.isPredefined() && !entry.getGlobalAttribute().equals(m_module.getName())) {
                 ST fromNs = m_group.getInstanceOf("fromNamespace");
                 fromNs.add("fromNs",entry.getGlobalAttribute());
                 fromNs.add("name", stOfName);
@@ -1881,6 +1883,7 @@ implements OpenPearlVisitor<ST> {
             currentType=((ProcedureEntry)entry).getType();
         } else if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry && ctx.listOfExpression() == null) {
             // just the name of a procedure
+            
             currentType=((ProcedureEntry)entry).getType();
         } else if (entry instanceof FormalParameter) {
             int x=0;
@@ -1941,56 +1944,49 @@ implements OpenPearlVisitor<ST> {
             } 
             if (ctx.name() != null) {
                 isStructComponent=false;
-                // we have a further .name() --> maybe we must deref and/or perform function call without parameters
-                // possible currentTypes: TypeStructure -> no nothing
-                //                        TypeReference with base Type TypeStructure  --> use -> operator
-                //                        TypeProcedure or REF TypeProcedure-> add function call 
-                stOfReference = null;
                 if (currentType instanceof TypeReference) {
                     if (((TypeReference)currentType).getBaseType() instanceof TypeProcedure) {
                         stOfName=dereference(stOfName);
                         currentType = ((TypeReference)currentType).getBaseType();
                     } else if (((TypeReference)currentType).getBaseType() instanceof TypeStructure) {
-                        stOfReference = stOfName;
                         stOfName=dereference(stOfName);
                         currentType = ((TypeReference)currentType).getBaseType();
                     } else if (((TypeReference)currentType).getBaseType() instanceof TypeSameStructure) {
-                        stOfReference = stOfName;
                         stOfName = dereference(stOfName);
                         currentType = ((TypeSameStructure)((TypeReference)currentType).getBaseType()).getContainerStructure().getStructuredType();
                     } else if (((TypeReference)currentType).getBaseType() instanceof UserDefinedTypeStructure) {
-                        stOfReference = stOfName;
                         stOfName = dereference(stOfName);
                         currentType = ((UserDefinedTypeStructure)((TypeReference)currentType).getBaseType()).getStructuredType();
                     }
                 }
                 if (currentType instanceof TypeProcedure) {
                     // add function call without parameters
-                    ST st = m_group.getInstanceOf("FunctionCall");
+                  ST st = m_group.getInstanceOf("FunctionCall");
                     st.add("callee",stOfName);
                     currentType = ((TypeProcedure)currentType).getResultType();
                     stOfName = st;
+                 
                 }
                 if (currentType instanceof TypeStructure || currentType instanceof UserDefinedTypeStructure) {
                     TypeStructure ts = null;
-               
+
                     if (currentType instanceof TypeStructure) {
-                       ts = (TypeStructure)currentType;
+                        ts = (TypeStructure)currentType;
                     } else {
                         ts =(TypeStructure)( ((UserDefinedTypeStructure)currentType).getStructuredType());
                     }
-                    
+
                     String componentName = ctx.name().ID().getText();
                     StructureComponent component = ts.lookup(componentName);
                     // System.out.println(component.m_alias);
                     ST st = m_group.getInstanceOf("addStructComponent");
                     // nameIsReference does not work for REF STRUCT --> use (* ...).comp 
-                   // if (stOfReference != null) {
-                   //     st.add("name", stOfReference);
-                   //     st.add("nameIsReference", true);
-                   // } else {
-                        st.add("name", stOfName);
-                   // }
+                    // if (stOfReference != null) {
+                    //     st.add("name", stOfReference);
+                    //     st.add("nameIsReference", true);
+                    // } else {
+                    st.add("name", stOfName);
+                    // }
                     st.add("component", component.m_alias);
 
                     stOfName = st;
@@ -2004,30 +2000,45 @@ implements OpenPearlVisitor<ST> {
 
             }
         } while (ctx.name() != null);    
-        
+
         int loopCounter=0;
-        
+
         while (currentType != null && !currentType.equals(attr.m_type)) {
 
-           if (currentType instanceof TypeReference) {
-               stOfName = dereference(stOfName);
-               currentType = ((TypeReference)currentType).getBaseType();
-           }
-           if (currentType instanceof TypeProcedure) {
-               ST st = m_group.getInstanceOf("FunctionCall");
-               st.add("callee",stOfName);
-               currentType = ((TypeProcedure)currentType).getResultType();
-               stOfName = st; 
-           }
-           if (currentType instanceof TypeSameStructure) 
-               break;
-           if (loopCounter++ > 10) {
-               ErrorStack.addInternal(ctx, "CppCodeGen@2244", "loopCounter too large");
-               break;
-           }
-           
+            if (currentType instanceof TypeReference) {
+                stOfName = dereference(stOfName);
+                currentType = ((TypeReference)currentType).getBaseType();
+            }
+            if (currentType instanceof TypeProcedure) {
+                if (entry.isPredefined()) {
+                    // we have a predefined function
+                    if (entry.getName().equals("NOW")) {
+                        ST st = m_group.getInstanceOf("NOW");
+                        stOfName = st;
+                    } else if (entry.getName().equals("DATE")) {
+                        ST st = m_group.getInstanceOf("DATE");
+                        stOfName = st;
+                    } else {
+                        ErrorStack.addInternal(ctx, "CppCodeGen@1870", entry.getName()+" is not a predefined function" );
+                        return null;
+                    }
+                } else {
+                ST st = m_group.getInstanceOf("FunctionCall");
+                st.add("callee",stOfName);
+                
+                stOfName = st;
+                }
+                currentType = ((TypeProcedure)currentType).getResultType();
+            }
+            if (currentType instanceof TypeSameStructure) 
+                break;
+            if (loopCounter++ > 10) {
+                ErrorStack.addInternal(ctx, "CppCodeGen@2244", "loopCounter too large");
+                break;
+            }
+
         } 
-       
+
         return stOfName;
     }
 
@@ -2085,7 +2096,7 @@ implements OpenPearlVisitor<ST> {
             if (ctx.charSelectionSlice().IntegerConstant() != null) {
                 st.add("offset", ctx.charSelectionSlice().IntegerConstant().getText());
             }
-            
+
         }
         return st;
     }
@@ -2832,15 +2843,15 @@ implements OpenPearlVisitor<ST> {
                 if (ta.getBaseType() instanceof TypeReference) {
                     listIsConstant=false;
                 } else {
-                int dimensions = ta.getNoOfDimensions();
-                for (int dim=0; dim<dimensions; dim++) {
-                    ASTAttribute indexAttr = m_ast.lookup(ctx.name(i).listOfExpression().expression(dim));
-                    if (indexAttr.getVariable() != null) {
-                        listIsConstant = false;
-                    } else {
-                        name += "_" + indexAttr.getConstantFixedValue().getValue();
+                    int dimensions = ta.getNoOfDimensions();
+                    for (int dim=0; dim<dimensions; dim++) {
+                        ASTAttribute indexAttr = m_ast.lookup(ctx.name(i).listOfExpression().expression(dim));
+                        if (indexAttr.getVariable() != null) {
+                            listIsConstant = false;
+                        } else {
+                            name += "_" + indexAttr.getConstantFixedValue().getValue();
+                        }
                     }
-                }
                 }
                 if (listIsConstant) {
 
@@ -2856,9 +2867,9 @@ implements OpenPearlVisitor<ST> {
         }
 
         currentOperation.add("nbrOfElements", ctx.name().size());
-        
 
-        
+
+
         if (listIsConstant) {
             // remark: the list is never constant if struct components are used
             //         if array elements are used with constant indices they are added to the name
@@ -3287,7 +3298,7 @@ implements OpenPearlVisitor<ST> {
                             // get ST according base type
                             ST t = attr.m_type.toST(m_group);
                             if (t == null) {
-                                System.out.println("untreated type " + attr.m_type);
+                                ErrorStack.addInternal(ctx, "CppCodeGen@3301", "untreated type " + attr.m_type);
                             }
 
                             // let's see if the expression is of type CharSelectionContext
@@ -3439,6 +3450,9 @@ implements OpenPearlVisitor<ST> {
 
         if (type instanceof TypeReference) {
             type = ((TypeReference) type).getBaseType();
+        }
+        if (type instanceof TypeProcedure) {
+            type =((TypeProcedure)type).getResultType();
         }
 
         if (type instanceof TypeFixed) {
@@ -3904,7 +3918,7 @@ implements OpenPearlVisitor<ST> {
     public ST visitCallStatement(OpenPearlParser.CallStatementContext ctx) {
         ST call = m_group.getInstanceOf("CallStatement");
         call.add("callee",  visitName(ctx.name()));
- 
+
         return call;
     }    
 
@@ -3985,7 +3999,7 @@ implements OpenPearlVisitor<ST> {
                 ST temp = m_group.getInstanceOf("TempCharVariable");
 
                 String tempVarName = nextTempVarName();
-              
+
                 temp.add("char_size", formalParameter.getType().getPrecision());
                 temp.add("variable", tempVarName);
                 temp.add("expr", visitAndDereference(expression));
@@ -4004,7 +4018,7 @@ implements OpenPearlVisitor<ST> {
                     } else {
                         param.add("ActualParameter", visit(expression));
                     }
-                    
+
                 } else if (formalParameter.getType() instanceof TypeReference) {
                     param.add("ActualParameter", visit(expression)); 
                 } else {
@@ -4419,11 +4433,11 @@ implements OpenPearlVisitor<ST> {
         return st;
     }
 
-    @Override
-    public ST visitNowFunction(OpenPearlParser.NowFunctionContext ctx) {
-        ST st = m_group.getInstanceOf("NOW");
-        return st;
-    }
+    //    @Override
+    //    public ST visitNowFunction(OpenPearlParser.NowFunctionContext ctx) {
+    //        ST st = m_group.getInstanceOf("NOW");
+    //        return st;
+    //    }
 
     private ST visitDationDenotation(VariableEntry ve) {
         ErrorStack.enter(ve.getCtx());
@@ -4431,7 +4445,7 @@ implements OpenPearlVisitor<ST> {
         TypeDation td = (TypeDation)(ve.getType());
         int tfuRecord = -1;
         ST typeDation = m_group.getInstanceOf("TypeDation");
-        
+
         typeDation =  getTypeDation(td);
 
         ST typology = m_group.getInstanceOf("Typology");
@@ -4608,12 +4622,12 @@ implements OpenPearlVisitor<ST> {
         return st;
     }
 
-//    private ST getSTforType(TypeDefinition t) {
-//       
-//        return t.toST(m_group);
-//
-//
-//    }
+    //    private ST getSTforType(TypeDefinition t) {
+    //       
+    //        return t.toST(m_group);
+    //
+    //
+    //    }
 
 
     @Override
@@ -4803,7 +4817,7 @@ implements OpenPearlVisitor<ST> {
             st.add("resultAttribute", se.getResultType().toST(m_group));//visitTypeAttribute(se.getResultType()));
 
         }
-        m_resultType = se.getResultType(); // must be null is type void; resuired for visitName()
+        m_resultType = se.getResultType(); // must be null if type void; required for visitName()
         List<FormalParameter> formalParameters = ((ProcedureEntry)se).getFormalParameters();
         if (formalParameters != null) {
             ST stFormalParams = m_group.getInstanceOf("FormalParameters");
@@ -5274,7 +5288,7 @@ implements OpenPearlVisitor<ST> {
         return s;
     }
 
- 
+
 
     /*
      * this method obtains the ST of the given context
@@ -5474,7 +5488,7 @@ implements OpenPearlVisitor<ST> {
         return lhs;
     }
 
- 
+
     /*
      * This method generates a given name context a StructLHS ST
      *
