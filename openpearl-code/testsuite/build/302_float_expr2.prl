@@ -29,8 +29,8 @@ testMonadic: PROC;
    DCL (f,g, sin,cos,tan,atan,ln,sqrt) FLOAT(23);
    DCL f15 FIXED(15);
    FOR i FROM -1000 BY 1 TO 1000 REPEAT
-      f15 := i;
-      f := (TOFLOAT i)/10;
+      f15 := i FIT f15;
+      f := ((TOFLOAT i)/10) FIT f;
       IF (i < 0 AND (SIGN f) NE -1) THEN
          PUT 'testMonadic@1: SIGN mismatch: i=',f15,'  f=',f, '  sign=',SIGN f
          TO so BY A,F(4),A,F(5,2),A,F(2),SKIP; 
@@ -68,8 +68,8 @@ testMonadic: PROC;
      FIN;
    END;
    FOR i FROM -3141 BY 1 TO 3141 REPEAT
-      f15 := i;
-      f := (TOFLOAT i)/1000;
+      f15 := i FIT f15;
+      f := ((TOFLOAT i)/1000) FIT f;
       atan = ATAN f;
       g := TAN atan;
       IF (ABS(f-g)  > 1.0E-4) THEN
@@ -79,8 +79,8 @@ testMonadic: PROC;
      FIN;
    END;
    FOR i FROM 1  BY 1 TO 31410 REPEAT
-      f15 := i;
-      f := (TOFLOAT i)/1000;
+      f15 := i FIT f15;
+      f := ((TOFLOAT i)/1000) FIT f;
       ln = LN f;
       g := EXP ln;
       IF (ABS(f-g)  > 1.0E-4) THEN
@@ -105,9 +105,9 @@ powFloat: PROC;
    DCL result FLOAT(23);
  
    FOR i FROM 1 BY 10 TO 101 REPEAT
-      base = (TOFLOAT i)/10;
+      base = ((TOFLOAT i)/10) FIT base;
       FOR j FROM -4 TO 4 REPEAT
-         expo = j;
+         expo = j FIT expo;
          IF base EQ 0 AND expo LE 0 THEN
             PUT base,' **', expo ,' : skipped FixedDivideByZero ' 
             TO so BY F(4), A, F(4),A, SKIP;

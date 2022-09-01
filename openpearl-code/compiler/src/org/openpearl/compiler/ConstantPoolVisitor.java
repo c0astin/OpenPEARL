@@ -76,6 +76,8 @@ public class ConstantPoolVisitor extends OpenPearlBaseVisitor<Void>
         m_constantPool.add(new ConstantFixedValue(0, Defaults.FIXED_LENGTH));
         m_constantPool.add(new ConstantFixedValue(1, Defaults.FIXED_LENGTH));
         m_constantPool.add(new ConstantFixedValue(-1, Defaults.FIXED_LENGTH));
+        m_constantPool.add(new ConstantFixedValue(0, 1));  // used as default values in loops
+        m_constantPool.add(new ConstantFixedValue(1, 1));  // used as default values in loops
     }
 
     public Void add(ConstantValue value) {

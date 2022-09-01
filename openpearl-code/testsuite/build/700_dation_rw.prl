@@ -20,7 +20,7 @@ writeSmallerFloat: PROC(errors FIXED(15) IDENT);
 
    OPEN tableFloat BY ANY,IDF('file1.txt');
    FOR i TO 10 REPEAT
-      f7 = i;
+      f7 = i FIT f7;
       WRITE f7 TO tableFloat;
    END;
    CLOSE tableFloat;
@@ -45,7 +45,7 @@ writeSmallerFixed: PROC(errors FIXED(15) IDENT);
 
    OPEN tableAS BY ANY,IDF('file1.txt');
    FOR i TO 10 REPEAT
-      f7 = i;
+      f7 = i FIT f7;
       WRITE f7 TO tableAS;
    END;
    CLOSE tableAS;

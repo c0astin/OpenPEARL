@@ -1792,8 +1792,8 @@ implements OpenPearlVisitor<Void> {
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
 
-        // check the precision of loop expressions and loop control variable
-        int precisionFor = 1; // FROM defaults to 1 which is FIXED(1)
+ 
+        int precisionFor = m_currentSymbolTable.lookupDefaultFixedLength(); 
 
         if (ctx.loopStatement_from() != null) {
             visit(ctx.loopStatement_from());
@@ -1818,12 +1818,7 @@ implements OpenPearlVisitor<Void> {
                         "type must be FIXED - but is " + attr.getType().toString());
             }
             precisionFor = Math.max(precisionFor, attr.getType().getPrecision());
-        } else {
-            // if no TO is present, the loop is indefinite
-            // --> let's use the current fixed length for loop variable as long as
-            //     the FROM expression was not larger
-            precisionFor = Math.max(precisionFor, m_currentSymbolTable.lookupDefaultFixedLength());
-        }
+        } 
 
         if (ctx.loopStatement_by() != null) {
             visit(ctx.loopStatement_by());

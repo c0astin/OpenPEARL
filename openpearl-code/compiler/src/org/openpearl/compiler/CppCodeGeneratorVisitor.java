@@ -558,6 +558,7 @@ implements OpenPearlVisitor<ST> {
     }
 
     private ST generateSpecification(ProcedureEntry ve) {
+        if (ve.isPredefined()) return null;
         ST st = m_group.getInstanceOf("ProcedureSpecifications");
         ST spec = m_group.getInstanceOf("ProcedureSpecification");
         ST scope = getScope(ve);
@@ -4670,7 +4671,18 @@ implements OpenPearlVisitor<ST> {
         TypeDefinition toType = null;
         TypeDefinition byType = null;
         Integer rangePrecision = 0;
+        
+        /*
+         * loopCounterNeeded?
+         * FOR i ... -> yes
+         * FROM 1 REPEAT --> yes, must emit exception if no TO is present
+         * TO x REPEAT -> yes, independent of FROM and BY
+         * BY x REPEAT -> same as FROM
+         * WHILE -> no effect
+         */
         Boolean loopCounterNeeded = false;
+        
+        
         LoopEntry le = (LoopEntry) (m_currentSymbolTable.lookupLoopBlock(ctx));
         ASTAttribute attr = m_ast.lookup(ctx);
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -4694,6 +4706,7 @@ implements OpenPearlVisitor<ST> {
             m_map_to_const = true;
             st.add("from", visitAndDereference(ctx.loopStatement_from().expression()));
             m_map_to_const = old_map_to_const;
+            loopCounterNeeded = true;
         }
 
         if (ctx.loopStatement_to() != null) {
@@ -4714,27 +4727,22 @@ implements OpenPearlVisitor<ST> {
             m_map_to_const = true;
             st.add("by", visitAndDereference(ctx.loopStatement_by().expression()));
             m_map_to_const = old_map_to_const;
-
             loopCounterNeeded = true;
-        }
 
+        }
+        if (loopCounterNeeded) {
+            st.add("GenerateLoopCounter", 1);
+        }
+        
+        
         if (rangePrecision == 0) {
             // we have no loop control variable!
             // derive the precision from from/to and by
-
-            if (fromType != null && toType != null) {
-                rangePrecision = Math.max(((TypeFixed) fromType).getPrecision(),
-                        ((TypeFixed) toType).getPrecision());
-                //  st.add("fromPrecision", rangePrecision);
-                //  st.add("toPrecision", rangePrecision);
-                loopCounterNeeded = true;
-            } else if (fromType != null && toType == null) {
-                rangePrecision = ((TypeFixed) fromType).getPrecision();
-                //   st.add("fromPrecision", ((TypeFixed) fromType).getPrecision());
-            } else if (fromType == null && toType != null) {
-                rangePrecision = ((TypeFixed) toType).getPrecision();
-                //  st.add("toPrecision", ((TypeFixed) toType).getPrecision());
-                loopCounterNeeded = true;
+            if (fromType != null) {
+                rangePrecision = Math.max(rangePrecision, ((TypeFixed) fromType).getPrecision());
+            }
+            if (toType != null) {
+                rangePrecision = Math.max(rangePrecision, ((TypeFixed) toType).getPrecision());
             }
             if (byType != null) {
                 rangePrecision = Math.max(rangePrecision, ((TypeFixed) byType).getPrecision());
@@ -4764,14 +4772,14 @@ implements OpenPearlVisitor<ST> {
         }
 
 
-        if ((ctx.loopStatement_to() != null) || (ctx.loopStatement_for() != null)
-                || (ctx.loopStatement_by() != null)) {
-            st.add("countLoopPass", 1);
-        }
+//        obsolete: is covered by generateLoopCounter
+//        if ((ctx.loopStatement_to() != null) || (ctx.loopStatement_for() != null)
+//                || (ctx.loopStatement_from() != null)
+//                || (ctx.loopStatement_by() != null)) {
+//            st.add("countLoopPass", 1);
+//        }
 
-        if (loopCounterNeeded) {
-            st.add("GenerateLoopCounter", 1);
-        }
+
 
         if (le.isUsed()) {
             st.add("label_end", le.getName());

@@ -8,7 +8,7 @@ T1: TASK MAIN;
   DCL f3 FIXED(15) INIT(3);
 
   FOR i TO 0 REPEAT
-     f1 := f1 + i + 1;
+     f1 := f1 + 1;
   END;
   IF f1 ==  0 THEN
      __cpp__("printf(\"success\\n\");");

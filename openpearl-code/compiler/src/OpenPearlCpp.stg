@@ -1654,14 +1654,15 @@ user_argument(name) ::= <%
 
 /* --------------------- LOOPS -------------------------- */
 // all control elements have the same precision to avoid type conversions during loop execution  
-LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoopPass,while_cond,body,label_end,isUserLabel) ::= <<
+// 2022-09-01 (rm) countLoopPass is identical to GenerateLoopCounter
+LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,while_cond,body,label_end,isUserLabel) ::= <<
 {   // REPEAT <label_end>
     <if(from)>
     pearlrt::Fixed\<<precision>\> a_value;
     a_value = <from>;
     <else>
     <if(GenerateLoopCounter)>
-    pearlrt::Fixed\<<precision>\> a_value(CONST_FIXED_P_1_<precision>);
+    pearlrt::Fixed\<<precision>\> a_value(CONST_FIXED_P_1_1);
     <endif>
     <endif>
 
@@ -1675,7 +1676,7 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoo
     s_value = <by>;
     <else>
     <if(GenerateLoopCounter)>
-    pearlrt::Fixed\<<precision>\> s_value(CONST_FIXED_P_1_<precision>);
+    pearlrt::Fixed\<<precision>\> s_value(CONST_FIXED_P_1_1);
     <endif>
     <endif>
 
@@ -1685,9 +1686,9 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoo
     <endif>
 
     <if(to)>
-        while ((((s_value > CONST_FIXED_P_0_<precision>).getBoolean()) &&
+        while ((((s_value > CONST_FIXED_P_0_1).getBoolean()) &&
                 ((a_value \<= e_value).getBoolean())) ||
-                (((s_value \< CONST_FIXED_P_0_<precision>).getBoolean()) &&
+                (((s_value \< CONST_FIXED_P_0_1).getBoolean()) &&
                 ((a_value >= e_value).getBoolean())))
         {<\n>
             <if(variable)>
@@ -1702,18 +1703,18 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoo
             <if (body)> 
                <body>
             <else>
-                /* empty body needs a set_location as a memory barriers */
+                /* empty body needs a set_location as a execution barrier ( invoke: scheduleCallback()) */
                 me->setLocation(<srcLine>, filename);
             <endif>
 
             me->setLocation(<srcLine>, filename);
-
-            try {
-                a_value = a_value + s_value;
+			try {
+               a_value = a_value + s_value;
             }
             catch(pearlrt::FixedRangeSignal &ex) {
                 break;
             }
+ 
         }
     <else>
         while ( 1 )
@@ -1731,17 +1732,21 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,countLoo
             <if (body)> 
                <body>
             <else>
-               /* empty body needs a set_location as a memory barriers */
+                /* empty body needs a set_location as a execution barrier ( invoke: scheduleCallback()) */
                me->setLocation(<srcLine>, filename);
             <endif>
 
-            <if(countLoopPass)>
+            <if(GenerateLoopCounter)>
+            <if(to)>
             try {
+            <endif>
                 a_value = a_value + s_value;
+            <if(to)>
             }
             catch(pearlrt::FixedRangeSignal &ex) {
                 break;
             }
+            <endif>
             <endif>
         } 
     <endif>

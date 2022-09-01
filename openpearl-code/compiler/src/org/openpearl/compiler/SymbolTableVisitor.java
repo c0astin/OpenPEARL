@@ -1364,6 +1364,11 @@ implements OpenPearlVisitor<Void> {
             if (ctx.commas() != null) {
                 nbrDimensions += ctx.commas().getChildCount();
             }
+            if (m_type == null) {
+                // required for eg. DCL REF() FIXED; which is a REF to an ARRAY of typew FIXED,
+                // since we have no TypeArray created yet
+                m_type = new TypeArray();
+            }
             ((TypeArray)m_type).setDimension(nbrDimensions);
         }
         return null;
@@ -1468,7 +1473,8 @@ implements OpenPearlVisitor<Void> {
             VariableEntry controlVariable =
                     new VariableEntry(
                             ctx.loopStatement_for().ID().getText(),
-                            new TypeFixed(Defaults.FIXED_LENGTH),
+                            //new TypeFixed(Defaults.FIXED_LENGTH),
+                            new TypeFixed(m_currentSymbolTable.lookupDefaultFixedLength()), // use the current default length
                             //true,
                             ctx.loopStatement_for(),
                             null);
