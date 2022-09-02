@@ -1249,10 +1249,15 @@ implements OpenPearlVisitor<Void> {
 
             if (attr != null) {
                 if (attr.getType() instanceof TypeProcedure) {
-                    // if we have no parameters --> get result type
-                    TypeProcedure tp = (TypeProcedure)(attr.getType());
-                    attr.setType(tp.getResultType());
-                    etc.setType(tp.getResultType());
+                    etc.setType(attr.getType());
+                    // if we have no parameters --> get result type, as long as we are in direction output
+                    if (!m_directionInput) {
+                        TypeProcedure tp = (TypeProcedure)(attr.getType());
+                        if (tp.getResultType() != null) {
+                            attr.setType(tp.getResultType());
+                            etc.setType(tp.getResultType());
+                        } 
+                    }
                     list.add(etc);
                 } else if (attr.getType() instanceof TypeArrayDeclaration) {
                     int nbrOfElements = ((TypeArrayDeclaration) (attr.getType())).getTotalNoOfElements();
@@ -1267,7 +1272,7 @@ implements OpenPearlVisitor<Void> {
                         TypeDefinition td =
                                 ((TypeStructure) (attr.getType())).m_listOfComponents.get(j).m_type;
                         if (td instanceof TypeArrayDeclaration || td instanceof TypeStructure) {
-                            // delegate missing
+                            ErrorStack.addInternal(ctx,"CheckIOStatements@1272","missing alternative");
                         } else {
                             etc.setType(td);
                             list.add(etc);
