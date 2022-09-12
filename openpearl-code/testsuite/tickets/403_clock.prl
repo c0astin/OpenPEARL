@@ -1,0 +1,12 @@
+MODULE(clk);
+
+PROBLEM;
+
+   DCL c CLOCK;
+  
+x: PROC;
+   c = c - c + c;
+END;
+
+MODEND;
+
