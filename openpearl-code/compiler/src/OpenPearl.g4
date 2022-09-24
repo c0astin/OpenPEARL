@@ -831,8 +831,7 @@ dereference
 ////////////////////////////////////////////////////////////////////////////////
 
 stringSelection:
-  	  bitSelection
-   	| charSelection
+  	name (  bitSelectionSlice | charSelectionSlice )
    	;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -840,9 +839,9 @@ stringSelection:
 //		x.BIT(3:5).BIT(2) is not allowed
 //bitSelection:
 //    name bitSelectionSlice+
-bitSelection:
-    name bitSelectionSlice
-    ;
+//bitSelection:
+//     bitSelectionSlice
+//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -861,9 +860,9 @@ bitSelectionSlice:
 //		x.CHAR(3:5).CHAR(2) is not allowed
 //charSelection:
 //    name charSelectionSlice+
-charSelection:
-    name charSelectionSlice    
-    ;
+//charSelection:
+//    name charSelectionSlice    
+//    ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1967,7 +1966,7 @@ expression:
     | expression op='//' expression                         # divideIntegerExpression
     | expression op='REM' expression                        # remainderExpression
     | expression op=('CAT'|'><') expression                 # catExpression
-    | expression op='+' expression                          # additiveExpression
+    | expression op='+'expression                          # additiveExpression
     | expression op='-' expression                          # subtractiveExpression
     | expression op=('CSHIFT'|'<>') expression              # cshiftExpression
     | expression op='SHIFT' expression                      # shiftExpression

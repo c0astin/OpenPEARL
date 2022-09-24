@@ -641,9 +641,9 @@ implements OpenPearlVisitor<Void> {
                     TypeArrayDeclaration tad = ((TypeArrayDeclaration)m_type);
                     
                     for (int i=0; i<tad.getNoOfDimensions();i++) {
-                        if (tad.getDimensions().get(i).getLowerBoundary()>= tad.getDimensions().get(i).getUpperBoundary()) {
+                        if (tad.getDimensions().get(i).getLowerBoundary()> tad.getDimensions().get(i).getUpperBoundary()) {
                             ErrorStack.add(ctx.dimensionAttribute().dimensionAttributeDeclaration().boundaryDenotation(i),
-                                    "index range","lower index must be smaller than upper index");
+                                    "index range","lower index must not be larger than upper index");
                         }
                     }
                     

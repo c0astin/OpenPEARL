@@ -208,10 +208,7 @@ TEST(CHAR,set_get_charAt) {
       src.setCharAt(11, k);
       EXPECT_TRUE((src == res).getBoolean());
 }
-TEST(CHAR, toFixed) {
-      pearlrt::Character<1> h(1, (char*)" ");
-      EXPECT_TRUE((h.toFixed() == (pearlrt::Fixed<8>)32).getBoolean());
-}
+
 TEST(Char, throw) {
    {
       ASSERT_THROW(
@@ -261,17 +258,33 @@ TEST(Char, throw) {
 TEST(Char,toChar) {
    pearlrt::Character<1> h;
    pearlrt::Fixed<7> f7(65);
-   pearlrt::Fixed<15> f15(300);
-   pearlrt::Fixed<15> fm1(-1);
+   pearlrt::Fixed<15> f15(128);
+   pearlrt::Fixed<15> fm1(-129);
 
    h = pearlrt::toChar(f7);
    ASSERT_EQ(h.data[0],'A');
 
    ASSERT_THROW( h = pearlrt::toChar(f15),
-                 pearlrt::CharacterNotValidSignal);
+                 pearlrt::FixedRangeSignal);
    ASSERT_THROW( h = pearlrt::toChar(fm1),
-                 pearlrt::CharacterNotValidSignal);
+                 pearlrt::FixedRangeSignal);
 
+}
+
+TEST(Char,toFixed) {
+   {
+      pearlrt::Character<1> h(1, (char*)" ");
+      EXPECT_TRUE((h.toFixed() == (pearlrt::Fixed<8>)32).getBoolean());
+   }
+   {
+      pearlrt::Character<1> h(1,(char*)"A");;
+      pearlrt::Fixed<7> f7;
+      f7 = h.toFixed();
+      ASSERT_EQ(f7.x, 65);
+      h.data[0] = 0x80;
+      f7 = h.toFixed();
+      ASSERT_EQ(f7.x, -128);
+   }
 }
 
 

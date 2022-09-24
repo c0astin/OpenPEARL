@@ -87,5 +87,36 @@ error: assignment: type mismatch: cannot assign object of type REF DATION OUT AL
 
 END;
 
+
+bitToFixed: PROC;
+   DCL f15 FIXED(15);
+   DCL b14 BIT(15);
+   DCL b15 BIT(15);
+   DCL b16 BIT(16);
+   f15 = TOFIXED b14;
+   f15 = TOFIXED b15;
+   f15 = TOFIXED b16;
+/*$^
+error: assignment: type mismatch: cannot assign expression of type FIXED(16) to FIXED(15)
+*/
+ 
+END;
+
+charToFixed: PROC;
+
+   DCL f6 FIXED(6);
+   DCL f7 FIXED(7);
+   DCL f8 FIXED(8);
+
+   f6 = TOFIXED 'a';
+/*$^
+error: assignment: type mismatch: cannot assign expression of type FIXED(7) to FIXED(6)
+*/
+
+   f7 = TOFIXED 'a';
+   f8 = TOFIXED 'a';
+!   f8 = TOFIXED 'ab';
+END;
+
 MODEND;
 

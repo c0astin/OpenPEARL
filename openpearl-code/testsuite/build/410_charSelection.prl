@@ -502,6 +502,7 @@ writeTo: PROC;
    OPEN file BY IDF('writeCharSelection.txt'), OLD;
    READ char1 FROM file;
    CLOSE file;
+PUT 'wrote ', data.CHAR(2),'  read ', char1 TO so BY A,A,A,A,SKIP;
 
    IF char1 NE '2' THEN
       PUT error,testNbr TO so BY A,F(3),SKIP;

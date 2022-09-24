@@ -231,11 +231,23 @@ test toBit function
 */
 TEST(BitTests, toBit) {
    pearlrt::BitString<3> x3;
-   pearlrt::Fixed<3> f;
+   pearlrt::Fixed<3> f3;
    pearlrt::Fixed<7> f7;
-   f = 2;
-   x3 = pearlrt::BitString<3>(f.x);
+   f3 = 2;
+   x3 = pearlrt::BitString<3>(f3);
    EXPECT_TRUE((x3 == (pearlrt::BitString<3>(0x02))).getBoolean());
+
+   f3 = 7;
+   x3 = pearlrt::BitString<3>(f3);
+   EXPECT_TRUE((x3 == (pearlrt::BitString<3>(0x07))).getBoolean());
+
+   f3 = -2;
+   EXPECT_THROW(x3 = pearlrt::BitString<3>(f3), pearlrt::FixedRangeSignal);
+
+   EXPECT_THROW(x3 = pearlrt::BitString<3>(f7), pearlrt::InternalSignal);
+
+   printf("Fixed2->Bit<3>\n");
+   EXPECT_THROW(x3 = pearlrt::BitString<3>(f7), pearlrt::InternalSignal);
 }
 
 /**

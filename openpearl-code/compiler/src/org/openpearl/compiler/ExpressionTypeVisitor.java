@@ -1399,10 +1399,12 @@ implements OpenPearlVisitor<Void> {
             TypeDefinition type1 =  TypeUtilities.performImplicitDereferenceAndFunctioncall(op);
 
             if (type1 instanceof TypeBit) {
-                res =
-                        new ASTAttribute(
-                                new TypeFixed(((TypeBit) op.getType()).getPrecision() - 1),
-                                isConstant);
+                int prec = ((TypeBit) op.getType()).getPrecision();
+                if ( prec > Defaults.FIXED_MAX_LENGTH) {
+                    ErrorStack.add("result would by FIXED("+ prec +")");
+                    prec = Defaults.FIXED_MAX_LENGTH; // easy solution for further type checks
+                }
+                res = new ASTAttribute(new TypeFixed(prec), isConstant);
                 m_ast.put(ctx, res);
 
                 Log.debug("ExpressionTypeVisitor: TOFIXED: rule#1");
@@ -1418,7 +1420,7 @@ implements OpenPearlVisitor<Void> {
                     ErrorStack.add("only single CHAR allowed");
                 }
 
-                res = new ASTAttribute(new TypeFixed(1));  // isConstant missing??
+                res = new ASTAttribute(new TypeFixed(7));  
                 m_ast.put(ctx, res);
             } else {
                 ErrorStack.add("only BIT and CHAR are allowed -- got " + op.getType().toString());
@@ -1465,8 +1467,6 @@ implements OpenPearlVisitor<Void> {
                 Log.debug("ExpressionTypeVisitor: TOFLOAT: rule#1");
             } else {
                 ErrorStack.add("only type FIXED allowed -- got " + op.getType().toString());
-                // throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(),
-                // ctx.start.getCharPositionInLine());
             }
         }
         ErrorStack.leave();
@@ -1490,13 +1490,17 @@ implements OpenPearlVisitor<Void> {
             Boolean isConstant = op.isConstant();
 
             if (type1 instanceof TypeFixed) {
-                res = new ASTAttribute(new TypeBit(type1.getPrecision()), isConstant);
+                int prec = type1.getPrecision();
+                if (type1.getPrecision() < Defaults.BIT_MIN_LENGTH) {
+                   ErrorStack.add("result would be BIT("+prec+")");
+                   // enshure at least BIT(1) for further checks
+                   prec = Defaults.BIT_MIN_LENGTH;
+                }
+                res = new ASTAttribute(  new TypeBit(prec), isConstant);
                 m_ast.put(ctx, res);
                 Log.debug("ExpressionTypeVisitor: TOBIT: rule#1");
             } else {
                 ErrorStack.add("only type FIXED allowed -- got " + op.getType().toString());
-                //   throw new IllegalExpressionException(ctx.getText(), ctx.start.getLine(),
-                // ctx.start.getCharPositionInLine());
             }
         }
         ErrorStack.leave();
@@ -1908,47 +1912,65 @@ implements OpenPearlVisitor<Void> {
         String s = ctx.getText();
         ASTAttribute attrName = null;
         ASTAttribute selection = null;
-        visitChildren(ctx);
+      
+        
         Log.debug(
                 "ExpressionTypeVisitor:visitAssignment_statement:ctx"
                         + CommonUtils.printContext(ctx));
+        
+        visit(ctx.expression());
+        ASTAttribute a = m_ast.lookup(ctx.expression());
+        
         ErrorStack.enter(ctx, "assignment");
-
-        // visit(ctx.name());
-
+       
+        visit(ctx.name());
+        
         attrName = m_ast.lookup(ctx.name());
         if (attrName == null) {
             // lhs not found --> error already issued --> just leave check
             ErrorStack.leave();
             return null;
         }
+        if (ctx.dereference() != null) {
+            if (!(attrName.getType() instanceof TypeReference) ) {
+                ErrorStack.add("CONT needs type reference -- got " + attrName.getType().toErrorString());
+                ErrorStack.leave();   // abort checks
+                return null;
+            } 
+        }
 
         if (ctx.charSelectionSlice() != null) {
             //  visit(ctx.charSelectionSlice());
+            makeExpressionToType(ctx.name(), new TypeChar());
+            m_type = attrName.getType();
+            visit(ctx.charSelectionSlice());
             selection = m_ast.lookup(ctx.charSelectionSlice());
-            if (attrName.getType() instanceof TypeReference &&
-                    ((TypeReference)attrName.getType()).getBaseType() instanceof TypeChar) {
-                    attrName.setType(((TypeReference)attrName.getType()).getBaseType());
-            }
-            if (!(attrName.getType() instanceof TypeChar)) {
-                ErrorStack.add(
-                        ".CHAR must be applied on variable of type CHAR -- used with "
-                                + attrName.getType());
-            }
+//            if (attrName.getType() instanceof TypeReference &&
+//                    ((TypeReference)attrName.getType()).getBaseType() instanceof TypeChar) {
+//                    attrName.setType(((TypeReference)attrName.getType()).getBaseType());
+//            }
+//            if (!(attrName.getType() instanceof TypeChar)) {
+//                ErrorStack.add(
+//                        ".CHAR must be applied on variable of type CHAR -- used with "
+//                                + attrName.getType());
+//            }
         } else if (ctx.bitSelectionSlice() != null) {
-            // visit(ctx.bitSelectionSlice());
+            makeExpressionToType(ctx.name(), new TypeBit());
+            m_type = attrName.getType();
+            visit(ctx.bitSelectionSlice());
             selection = m_ast.lookup(ctx.bitSelectionSlice());
-            if (attrName.getType() instanceof TypeReference &&
-                ((TypeReference)attrName.getType()).getBaseType() instanceof TypeBit) {
-                attrName.setType(((TypeReference)attrName.getType()).getBaseType());
-            }
-            if (!(attrName.getType() instanceof TypeBit)) {
-                ErrorStack.add(
-                        ".BIT must be applied on variable of type BIT -- used with "
-                                + attrName.getType());
-            }
+//            // visit(ctx.bitSelectionSlice());
+//            selection = m_ast.lookup(ctx.bitSelectionSlice());
+//            if (attrName.getType() instanceof TypeReference &&
+//                ((TypeReference)attrName.getType()).getBaseType() instanceof TypeBit) {
+//                attrName.setType(((TypeReference)attrName.getType()).getBaseType());
+//            }
+//            if (!(attrName.getType() instanceof TypeBit)) {
+//                ErrorStack.add(
+//                        ".BIT must be applied on variable of type BIT -- used with "
+//                                + attrName.getType());
+//            }
         }
-
         if (selection != null && selection.getConstantSelection() != null) {
             long lower = selection.getConstantSelection().getLowerBoundary().getValue();
             long upper = selection.getConstantSelection().getUpperBoundary().getValue();
@@ -1968,8 +1990,7 @@ implements OpenPearlVisitor<Void> {
             }
         }
 
-        //visit(ctx.expression());
-        ASTAttribute a = m_ast.lookup(ctx.expression());
+
 
         ErrorStack.leave();
 
@@ -2654,24 +2675,31 @@ implements OpenPearlVisitor<Void> {
         Log.debug("ExpressionTypeVisitor:visitStringSelection:ctx" + CommonUtils.printContext(ctx));
 
         ASTAttribute attr = null;
-        //        ASTAttribute attrName = null;
-        visitChildren(ctx);
+
+        visit(ctx.name());
 
 
-        if (ctx.bitSelection() != null) {
-            attr = m_ast.lookup(ctx.bitSelection().name());
-            TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
+        if (ctx.bitSelectionSlice() != null) {
+            //attr = m_ast.lookup(ctx.bitSelection().name());
+            makeExpressionToType(ctx.name(), new TypeBit());
+            m_type = m_ast.lookup(ctx.name()).getType();
+            visit(ctx.bitSelectionSlice());
+           // TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
 
-            attr = m_ast.lookup(ctx.bitSelection().bitSelectionSlice());
+            attr = m_ast.lookup(ctx.bitSelectionSlice());
             //          attrName = m_ast.lookup(ctx.bitSelection().name());
-            m_ast.put(ctx.bitSelection(), attr);
-        } else if (ctx.charSelection() != null) {
-            attr = m_ast.lookup(ctx.charSelection().name());
-            TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
+            //m_ast.put(ctx, attr);
+        } else if (ctx.charSelectionSlice() != null) {
+            makeExpressionToType(ctx.name(), new TypeChar());
+            m_type = m_ast.lookup(ctx.name()).getType();
+            visit(ctx.charSelectionSlice());
 
-            attr = m_ast.lookup(ctx.charSelection().charSelectionSlice());
+//            attr = m_ast.lookup(ctx.name());
+//            TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
+
+            attr = m_ast.lookup(ctx.charSelectionSlice());
             //          attrName = m_ast.lookup(ctx.charSelection().name());
-            m_ast.put(ctx.charSelection(), attr);
+            m_ast.put(ctx, attr);
         }
         m_ast.put(ctx, attr);
         return null;
@@ -3351,40 +3379,43 @@ implements OpenPearlVisitor<Void> {
     }
 
 
-    @Override
-    public Void visitCharSelection(OpenPearlParser.CharSelectionContext ctx) {
-        Log.debug("ExpressionTypeVisitor:visitCharSelection:ctx" + CommonUtils.printContext(ctx));
-        visitName(ctx.name());
-        visitCharSelectionSlice(ctx.charSelectionSlice());
+//    @Override
+//    public Void visitCharSelection(OpenPearlParser.CharSelectionContext ctx) {
+//        Log.debug("ExpressionTypeVisitor:visitCharSelection:ctx" + CommonUtils.printContext(ctx));
+//        visitName(ctx.name());
+//        visitCharSelectionSlice(ctx.charSelectionSlice());
+//
+//        ASTAttribute attrSelection = m_ast.lookup(ctx.charSelectionSlice());
+//        if (attrSelection.getType() instanceof TypeVariableChar) {
+//            // in the code generation we need the size of the char variable
+//            ASTAttribute attrName = m_ast.lookup(ctx.name());
+//            ((TypeVariableChar) attrSelection.getType()).setBaseType(attrName.getType());
+//        }
+//
+//        m_ast.put(ctx.charSelectionSlice(), attrSelection);
+//
+//        return null;
+//    }
 
-        ASTAttribute attrSelection = m_ast.lookup(ctx.charSelectionSlice());
-        if (attrSelection.getType() instanceof TypeVariableChar) {
-            // in the code generation we need the size of the char variable
-            ASTAttribute attrName = m_ast.lookup(ctx.name());
-            ((TypeVariableChar) attrSelection.getType()).setBaseType(attrName.getType());
-        }
-
-        m_ast.put(ctx.charSelectionSlice(), attrSelection);
-
-        return null;
-    }
-
-    @Override
-    public Void visitBitSelection(OpenPearlParser.BitSelectionContext ctx) {
-        Log.debug("ExpressionTypeVisitor:visitBitSelection:ctx" + CommonUtils.printContext(ctx));
-        visitChildren(ctx);
-        ASTAttribute attrName = m_ast.lookup(ctx.name());
-        if (attrName.getType() instanceof TypeReference) {
-            attrName.setType(((TypeReference)attrName.getType()).getBaseType());
-        }
-
-        ASTAttribute attrSelection = m_ast.lookup(ctx.bitSelectionSlice());
-
-
-        m_ast.put(ctx.bitSelectionSlice(), attrSelection);
-
-        return null;
-    }
+//    @Override
+//    public Void visitBitSelection(OpenPearlParser.BitSelectionContext ctx) {
+//        Log.debug("ExpressionTypeVisitor:visitBitSelection:ctx" + CommonUtils.printContext(ctx));
+//        visitChildren(ctx);
+//        ASTAttribute attrName = m_ast.lookup(ctx.name());
+//        
+//        //makeExpressionToType(ctx.name(), new TypeBit());
+//        //m_type = attrName.getType();           hier fehlt noch was!!!!
+////        if (attrName.getType() instanceof TypeReference) {
+////            attrName.setType(((TypeReference)attrName.getType()).getBaseType());
+////        }
+//
+//        ASTAttribute attrSelection = m_ast.lookup(ctx.bitSelectionSlice());
+//
+//
+//        m_ast.put(ctx.bitSelectionSlice(), attrSelection);
+//
+//        return null;
+//    }
     /*
      bitSelectionSlice:
     '.' 'BIT' '('
@@ -3404,6 +3435,7 @@ implements OpenPearlVisitor<Void> {
         ASTAttribute attr0 = null;
         ASTAttribute attr1 = null;
         ASTAttribute result = null;
+        TypeDefinition typeOfBit = m_type;
 
         String expr0 = null;
         String expr1 = null;
@@ -3413,79 +3445,112 @@ implements OpenPearlVisitor<Void> {
 
         ErrorStack.enter(ctx, ".BIT()");
 
-        // we must consider 3 cases for .BIT(expr0:expr1+CONST_FIXED)
-        //   expr0 present; expr1 missing (implied CONST_FIXED missing)
-        //     --> result: BIT(1);
-        //         ConstantSlice will become set if expr1 is constant
-        //   expr0 and expr1 present; CONST_FIXED missing
-        //     --> both expressions must be constant
-        //         --> result is calculated from the constants
-        //             ConstantSlice will be set
-        //   all 3 present
-        //     --> both expressions must be equal
-        //        --> result is derived form the CONST_FIXED
-        //           ConstantSlice may be set if expr0/1 are constant, but
-        //           difficult to calculate
+        if (typeOfBit instanceof TypeBit) {
+            // we must consider 3 cases for .BIT(expr0:expr1+CONST_FIXED)
+            //   expr0 present; expr1 missing (implied CONST_FIXED missing)
+            //     --> result: BIT(1);
+            //         ConstantSlice will become set if expr1 is constant
+            //   expr0 and expr1 present; CONST_FIXED missing
+            //     --> both expressions must be constant
+            //         --> result is calculated from the constants
+            //             ConstantSlice will be set
+            //   all 3 present
+            //     --> both expressions must be equal
+            //        --> result is derived form the CONST_FIXED
+            //           ConstantSlice may be set if expr0/1 are constant, but
+            //           difficult to calculate
 
-        if (ctx.expression(0) != null) {
-            attr0 = m_ast.lookup(ctx.expression(0));
-            expr0 = ctx.expression(0).getText();
+            if (ctx.expression(0) != null) {
+                makeExpressionToType(ctx.expression(0), new TypeFixed());
+                attr0 = m_ast.lookup(ctx.expression(0));
+                expr0 = ctx.expression(0).getText();
+                if (! expressionIsFixedWithImplicitDereference(attr0)) {
+                    ErrorStack.add(ctx.expression(0),"type mismatch","expected FIXED --- got "+attr0.getType());
+                }
 
-        } else {
-            ErrorStack.addInternal("visitBitSelectionSlice: missing first expression");
-        }
-
-        if (ctx.expression(1) != null) {
-            attr1 = m_ast.lookup(ctx.expression(1));
-            expr1 = ctx.expression(1).getText();
-        }
-
-        if (ctx.IntegerConstant() != null) {
-            intValue = Integer.parseInt(ctx.IntegerConstant().getText());
-        }
-
-        if (expr1 == null) {
-            result = new ASTAttribute(new TypeBit(1));
-            if (attr0.getConstant() != null) {
-                ConstantSelection slice =
-                        new ConstantSelection(
-                                attr0.getConstantFixedValue(), attr0.getConstantFixedValue());
-                result.setConstantSelection(slice);
+            } else {
+                ErrorStack.addInternal("visitBitSelectionSlice: missing first expression");
             }
-        } else {
-            if (intValue == -1) {
-                if (attr0.getConstant() != null && attr1.getConstant() != null) {
+
+            if (ctx.expression(1) != null) {
+                makeExpressionToType(ctx.expression(1), new TypeFixed());
+                attr1 = m_ast.lookup(ctx.expression(1));
+                expr1 = ctx.expression(1).getText();
+                if (! expressionIsFixedWithImplicitDereference(attr1)) {
+                    ErrorStack.add(ctx.expression(1),"type mismatch","expected FIXED --- got "+attr0.getType());
+                }
+            }
+
+            if (ctx.IntegerConstant() != null) {
+                intValue = Integer.parseInt(ctx.IntegerConstant().getText());
+            }
+
+            if (expr1 == null) {
+                result = new ASTAttribute(new TypeBit(1));
+                if (attr0.getConstant() != null) {
+
                     long start = attr0.getConstantFixedValue().getValue();
-                    long end = attr1.getConstantFixedValue().getValue();
-
-                    long size = end - start + 1;
-                    if (size <= 0) {
-                        ErrorStack.add("must select at least 1 bit");
-                        size = 1; // for easy method completion
+                    if (start > m_type.getPrecision()) {
+                        ErrorStack.add("start index out of range (1.."+typeOfBit.getPrecision()+")");
                     }
-                    result = new ASTAttribute(new TypeBit((int) size));
-
                     ConstantSelection slice =
                             new ConstantSelection(
-                                    attr0.getConstantFixedValue(), attr1.getConstantFixedValue());
+                                    attr0.getConstantFixedValue(), attr0.getConstantFixedValue());
                     result.setConstantSelection(slice);
-                } else {
-                    if (expr0.equals(expr1)) {
-                        result = new ASTAttribute(new TypeBit(1));
-                    }
                 }
             } else {
-                if (!expr0.equals(expr1)) {
-                    ErrorStack.add(".BIT(expr1:expr2+FIXED_CONST need identical expressions");
-                    result =
-                            new ASTAttribute(
-                                    new TypeBit(1)); // dummy value for easy method completion
+                if (intValue == -1) {
+                    // no constant given .BIT(x:x+constant) -> both expressions must be constant
+                    if (attr0.getConstant() != null && attr1.getConstant() != null) {
+                        long start = attr0.getConstantFixedValue().getValue();
+                        long end = attr1.getConstantFixedValue().getValue();
+                        long size = end - start + 1;
+
+                        if (start < 1) {
+                            ErrorStack.add("start index must be at least 1");
+                            size = 1;
+                        } else if (start > end) {
+                            ErrorStack.add("start index must not be larger than end index");
+                            size = 1;
+                        }
+                        if (end > typeOfBit.getPrecision()) {
+                            ErrorStack.add("end index out of range (1.."+typeOfBit.getPrecision()+")");
+                        }
+                        result = new ASTAttribute(new TypeBit((int) size));
+
+                        ConstantSelection slice =
+                                new ConstantSelection(
+                                        attr0.getConstantFixedValue(), attr1.getConstantFixedValue());
+                        result.setConstantSelection(slice);
+                    } else {
+                        if (expr0.equals(expr1)) {
+                            result = new ASTAttribute(new TypeBit(1));
+                        } else {
+                            ErrorStack.add("(expr1:expr2+constant) need identical expressions");
+                            result =
+                                    new ASTAttribute(
+                                            new TypeBit(1)); // dummy value for easy method completion
+                        }
+                    }
                 } else {
-                    result = new ASTAttribute(new TypeBit(intValue + 1));
+                    if (!expr0.equals(expr1)) {
+                        ErrorStack.add("(expr1:expr2+constant) need identical expressions");
+                        result =
+                                new ASTAttribute(
+                                        new TypeBit(1)); // dummy value for easy method completion
+                    } else {
+                        if (intValue+1 > typeOfBit.getPrecision()) {
+                            ErrorStack.add("selection is larger than BIT("+typeOfBit.getPrecision()+") variable");
+                        }
+                        result = new ASTAttribute(new TypeBit(intValue + 1));
+                    }
                 }
             }
+            m_ast.put(ctx, result);
+        } else {
+            ErrorStack.add("must be applied of type BIT -- got "+typeOfBit.toErrorString());
+            m_ast.put(ctx, new ASTAttribute(new TypeBit(1))); // easy solution for continuation
         }
-        m_ast.put(ctx, result);
 
         ErrorStack.leave();
         return null;
@@ -3497,6 +3562,10 @@ implements OpenPearlVisitor<Void> {
 
         if (savedActualIndexType instanceof TypeReference) {
             savedActualIndexType = ((TypeReference)savedActualIndexType).getBaseType();
+        }
+        if (savedActualIndexType instanceof TypeProcedure && ((TypeProcedure)savedActualIndexType).getFormalParameters() == null &&
+                ((TypeProcedure)savedActualIndexType).getResultType() != null) {
+            savedActualIndexType = ((TypeProcedure)savedActualIndexType).getResultType();
         }
         return ((savedActualIndexType instanceof TypeFixed));
 
@@ -3514,75 +3583,95 @@ implements OpenPearlVisitor<Void> {
         String expr0 = null; // we need both expressions to detect .CHAR(x:x+3)
         String expr1 = null;
         int intValue = -1; // impossible value, since the Fixed-const is always >= 0
-
-        visitChildren(ctx);
-
+        TypeDefinition typeOfChar = m_type;
         ErrorStack.enter(ctx, ".CHAR()");
 
-        if (ctx.IntegerConstant() != null) {
-            intValue = Integer.parseInt(ctx.IntegerConstant().getText());
-        }
+        if (m_type instanceof TypeChar)  {
 
-        if (ctx.expression(0) != null) {
-            attr0 = m_ast.lookup(ctx.expression(0));
-            if (! expressionIsFixedWithImplicitDereference(attr0)) {
-                ErrorStack.add(ctx.expression(0),"type mismatch","expected FIXED --- got "+attr0.getType());
-            }
-            expr0 = ctx.expression(0).getText();
+            visitChildren(ctx);
 
-        } else {
-            ErrorStack.addInternal("visitCharSelectionSlice: missing alternative@3521");
-        }
-
-        if (ctx.expression(1) != null) {
-            attr1 = m_ast.lookup(ctx.expression(1));
-            if (! expressionIsFixedWithImplicitDereference(attr1)) {
-                ErrorStack.add(ctx.expression(0),"type mismatch","expected FIXED --- got "+attr1.getType());
-            }
-            expr1 = ctx.expression(1).getText();
-        } else {
-            ASTAttribute attr = new ASTAttribute(new TypeChar(1));
-
-            if (attr0.getConstant() != null) {
-                ConstantSelection slice =
-                        new ConstantSelection(
-                                attr0.getConstantFixedValue(), attr0.getConstantFixedValue());
-                attr.setConstantSelection(slice);
+            if (ctx.IntegerConstant() != null) {
+                intValue = Integer.parseInt(ctx.IntegerConstant().getText());
             }
 
-            m_ast.put(ctx, attr);
-        }
-
-        if (attr1 != null) {
-            // check if we have 2 constants
-            if (attr0.getConstant() != null && attr1.getConstant() != null) {
-
-                long start = attr0.getConstantFixedValue().getValue();
-                long end = attr1.getConstantFixedValue().getValue();
-
-                long size = end - start + 1;
-                if (intValue >= 0) {
-                    size += intValue;
+            if (ctx.expression(0) != null) {
+                attr0 = m_ast.lookup(ctx.expression(0));
+                if (! expressionIsFixedWithImplicitDereference(attr0)) {
+                    ErrorStack.add(ctx.expression(0),"type mismatch","expected FIXED --- got "+attr0.getType());
                 }
-                if (size <= 0) {
-                    ErrorStack.add("must select at least 1 character");
-                }
+                expr0 = ctx.expression(0).getText();
 
-                ConstantSelection slice =
-                        new ConstantSelection(
-                                attr0.getConstantFixedValue(), attr1.getConstantFixedValue());
-
-                ASTAttribute attr = new ASTAttribute(new TypeChar((int) size));
-                attr.setConstantSelection(slice);
-                m_ast.put(ctx, attr);
             } else {
-                // we have 2 expressions + intValue
-                if (expr0.equals(expr1) && intValue >= 0) {
-                    m_ast.put(ctx, new ASTAttribute(new TypeChar(intValue + 1)));
+                ErrorStack.addInternal("visitCharSelectionSlice: missing alternative@3521");
+            }
+
+            if (ctx.expression(1) != null) {
+                attr1 = m_ast.lookup(ctx.expression(1));
+                if (! expressionIsFixedWithImplicitDereference(attr1)) {
+                    ErrorStack.add(ctx.expression(0),"type mismatch","expected FIXED --- got "+attr1.getType());
+                }
+                expr1 = ctx.expression(1).getText();
+            } else {
+                ASTAttribute attr = new ASTAttribute(new TypeChar(1));
+
+                if (attr0.getConstant() != null) {
+                    ConstantSelection slice =
+                            new ConstantSelection(
+                                    attr0.getConstantFixedValue(), attr0.getConstantFixedValue());
+                    attr.setConstantSelection(slice);
+                }
+
+                m_ast.put(ctx, attr);
+            }
+
+            if (attr1 != null) {
+                // check if we have 2 constants
+                if (attr0.getConstant() != null && attr1.getConstant() != null) {
+
+
+                    long start = attr0.getConstantFixedValue().getValue();
+                    long end = attr1.getConstantFixedValue().getValue();
+                    long size = end - start + 1;
+
+                    if (start < 1) {
+                        ErrorStack.add("start index must be at least 1");
+                        size = 1;
+                    } else if (start > end) {
+                        ErrorStack.add("start index must not be larger than end index");
+                        size = 1;
+                    }
+                    if (end > typeOfChar.getPrecision()) {
+                        ErrorStack.add("end index out of range (1.."+typeOfChar.getPrecision()+")");
+                    }
+
+                    ConstantSelection slice =
+                            new ConstantSelection(
+                                    attr0.getConstantFixedValue(), attr1.getConstantFixedValue());
+
+                    ASTAttribute attr = new ASTAttribute(new TypeChar((int) size));
+                    attr.setConstantSelection(slice);
+                    m_ast.put(ctx, attr);
                 } else {
-                    m_ast.put(ctx, new ASTAttribute(new TypeVariableChar()));
+                    // we have 2 expressions + intValue
+                    if (expr0.equals(expr1)) {
+                        if (intValue >= 0) {
+                            if (intValue + 1 > typeOfChar.getPrecision()) {
+                                ErrorStack.add("selection is larger than CHAR("+typeOfChar.getPrecision()+") variable");
+                            }
+                            m_ast.put(ctx, new ASTAttribute(new TypeChar(intValue + 1)));
+                        } else {
+                            m_ast.put(ctx, new ASTAttribute(new TypeChar(1)));
+                        }
+                    } else {
+                        TypeVariableChar tvc = new TypeVariableChar();
+                        tvc.setBaseType(typeOfChar);
+                        m_ast.put(ctx, new ASTAttribute(tvc));
+                    }
                 }
             }
+        } else {
+            ErrorStack.add("must be applied of type CHAR -- got "+typeOfChar.toErrorString());
+            m_ast.put(ctx, new ASTAttribute(new TypeChar(1))); // easy solution for continuation
         }
         ErrorStack.leave();
 
@@ -3703,15 +3792,44 @@ implements OpenPearlVisitor<Void> {
         return true;
     }
 
+    /*
+     * make the AST-attribute of the context to fixed if this is possible by
+     * dereferening or perform function calls
+     * if this is not possible, leave the AST-attribute as it was 
+     */
+    private void makeExpressionToType(ParserRuleContext ctx, TypeDefinition targetType) {
+        ASTAttribute attr = m_ast.lookup(ctx);
+        TypeDefinition savedActualType = attr.getType();
+        Boolean anyThingDone;
+        
+        do {
+            anyThingDone = false;
+
+            if (savedActualType instanceof TypeReference) {
+                savedActualType = ((TypeReference)savedActualType).getBaseType();
+                anyThingDone = true;
+            }
+            if (savedActualType instanceof TypeProcedure && 
+                    ((TypeProcedure)savedActualType).getFormalParameters() == null &&
+                    ((TypeProcedure)savedActualType).getResultType() != null) {
+                savedActualType =  ((TypeProcedure)savedActualType).getResultType() ;
+                anyThingDone = true;
+            }
+        } while (anyThingDone);
+        
+        if (savedActualType.getName().equals(targetType.getName())) {
+            attr.setType(savedActualType);
+        }
+
+    }
 
     private void checkListOfExpressionAsIndices(ListOfExpressionContext ctx) {
         for (int i=0; i<ctx.expression().size(); i++) {
             ASTAttribute attr = m_ast.lookup(ctx.expression(i));
             TypeDefinition savedActualIndexType = attr.getType();
-            if (savedActualIndexType instanceof TypeReference) {
-                savedActualIndexType = ((TypeReference)savedActualIndexType).getBaseType();
-                attr.setType(savedActualIndexType);
-            }
+            
+            makeExpressionToType(ctx.expression(i), new TypeFixed());
+            
             if (savedActualIndexType instanceof TypeFixed) {
                 if (((TypeFixed)(savedActualIndexType)).getPrecision() <= 31 ) {
                     continue;

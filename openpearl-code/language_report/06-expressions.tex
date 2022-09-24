@@ -398,10 +398,10 @@ conversion of the type of objects.
 
 \kw{TOFIXED} a
 \index{TOFIXED@\textbf{TOFIXED}|textbf}
-        & \code{CHARACTER(1)}  & \code{FIXED(8)} & internal representation\\
+        & \code{CHARACTER(1)}  & \code{FIXED(7)} & internal representation\\
         &                      &                 & for operand character\\
         & \code{BIT(lg)}       & \code{FIXED(g)} & interpreting the bit pattern of the\\
-        &                      &                 & operand as an integer, with g = lg-1\\ \hline
+        &                      &                 & operand as an integer, with g = lg\\ \hline
 
 \kw{TOFLOAT} a
 \index{TOFLOAT@\textbf{TOFLOAT}|textbf}
@@ -411,7 +411,7 @@ conversion of the type of objects.
 \kw{TOBIT} a
 \index{TOBIT@\textbf{TOBIT}|textbf}
         & \code{FIXED(g)}      & \code{BIT(lg)}   & interpreting the operand as bit\\
-        &                      &                  & pattern, with lg = g+1\\ \hline
+        &                      &                  & pattern, with lg = g\\ \hline
 
 \kw{TOCHAR} a
 \index{TOCHAR@\textbf{TOCHAR}|textbf}
@@ -436,11 +436,25 @@ conversion of the type of objects.
 \end{table}
 
 %%%\begin{added}
-In \OpenPEARL{} the conversions from \code{FLOAT} to \code{FIXED} produce a 
+In \OpenPEARL{} the conversions from 
+\begin{itemize}
+\item \code{FLOAT} to \code{FIXED} produce a 
 \code{FixedRangeSignal}, if the
 data values exeed the value range of the \code{FIXED} type.
-The conversion from \code{FIXED} to \code{CHAR} produce a \code{CharacterNotValidSignal},
-if the value of the \code{FIXED} expression ist outside the range of 0 to 255.
+\item \code{FIXED} to \code{CHAR} produces a \code{FixedRangeSignal},
+if the value of the \code{FIXED} expression is not
+in the range of -128 to 127.
+\item \code{FIXED} to \code{BIT} produces 
+  \begin{itemize}
+   \item a compilation error if the result would be \code{BIT(0)}
+   \item a \code{FixedRangeSignal}, if the fixed value is negative, since
+    the treatment of the sign bit would be not comprehensive.
+  \end{itemize}
+\item \code{BIT} to \code{FIXED} produces a compilation error, if the result 
+would exeed the maximum size of \code{FIXED}, which is 63.
+
+\end{itemize}
+
 %%%\end{added}
 
 Examples (Table \ref{tab_monadic_type}):
@@ -450,9 +464,9 @@ DCL a  FIXED(31),
     x  FLOAT(23),
     a1 FIXED(31),
     b  BIT(15),
-    c  BIT(32);
+    c  BIT(31);
 
-a1 := ENTIER x//2;    /* corresponds to a := (ENTIER x)//2; */ 
+a1 := ENTIER x//2;    /* corresponds to a1 := (ENTIER x)//2; */ 
 a1 := ENTIER (x/2.0);  /* with float division */
 a1 := ENTIER 3.4;     /* delivers 3 */ 
 a1 := ENTIER 3.5;     /* delivers 3 */ 
@@ -657,11 +671,12 @@ Example:
 DCL (a, b) FIXED(15),
         c FIXED(31);
 DCL d  BIT(16); 
+DCL d15  BIT(15); 
 a := 32767;           
 b := 4;              
 c := (a FIT c)*b;         /* c obtains value 131068 */ 
 a := a FIT c;             /* assignment not permitted */ 
-a := C FIT a;             /* OK, but may induce FixedOverflowSignal*/ 
+a := c FIT a;             /* OK, but may induce FixedOverflowSignal*/ 
 a := (-5) REM (-3);      /* delivers -2 */
 a := (-5) REM (+3);      /* delivers -2 */ 
 a := (+5) REM (-3);      /* delivers +2 */ 
@@ -669,9 +684,17 @@ a := (+5) REM (+3);      /* delivers +2 */
 
 /* conversion of FIXED and BIT objects  */ 
 /* without conversion of the internal presentation */ 
-a := TOFIXED d;           /* ok */
-a := (TOFIXED d) FIT a;   /* ok; FIT A is obsolete! */
-d := TOBIT (a FIT 1(16)); /* error assign BIT(17) to BIT(16) not ok */  
+a := TOFIXED d15;         /* ok */
+a := TOFIXED d;           /* fail: TOFIXED d is FIXED(16) */
+a := (TOFIXED d) FIT a;   /* ok; may produce FixedRangeSignal */
+                          /* if d if d.BIT(1) is set */
+d := TOBIT 1(16);        /* ok; d is '0001'B4 */
+d := TOBIT(-1(15));       /* ok; d is 'FFFF'B4 */
+
+a := -1;
+d15 := TOBIT a;          /* fail: the sign bit would be lost */
+                          /*     a FixedRangeSignal becomes emitted     */
+
 d := TOBIT a;             /* ok */
 \end{lstlisting}
 

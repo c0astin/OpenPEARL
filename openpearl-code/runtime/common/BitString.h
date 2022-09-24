@@ -263,10 +263,21 @@ namespace pearlrt {
 
        \param y the preset value, given as a Fixed<S-1> type
       */
-      BitString(Fixed < S - 1 > y) NOSTACKCHECK {
-         x = y.x;
-         x <<= shiftSize;
-         x &= mask;
+      template <int F> 
+      BitString(Fixed < F > y) NOSTACKCHECK {
+      //BitString(Fixed < S > y) NOSTACKCHECK {
+         printf("F= %d\n", F);
+         if (S == 64) {
+            Log::error("Fixed 64 not supported");
+            throw theInternalSignal;
+         }
+           if (y.x < 0) {
+                Log::error("TOBIT: sign would be lost"); 
+                throw theFixedRangeSignal;
+            }
+            x = y.x;
+            x <<= shiftSize;
+            x &= mask;
       }
 
       /**
@@ -416,7 +427,8 @@ namespace pearlrt {
                const BitString<P> slice) {
          if (start.x - 1 + P > S || start.x < 1 ||
                end.x - start.x + 1 < P) {
-            Log::error("index out of range BIT(%d).setBit(%d:%d) := BIT(%d)",S,start.x,start.x+P-1,P); 
+            Log::error("index out of range BIT(%d).setBit(%d:%d) := BIT(%d)",
+		S,start.x,start.x+P-1,P); 
             throw theBitIndexOutOfRangeSignal;
          }
 
@@ -503,8 +515,8 @@ namespace pearlrt {
 
       \returns the bits as (signed) Fixed<S> value
       */
-      Fixed < S - 1 > toFixed() const {
-         Fixed < S - 1 > returnValue;
+      Fixed < S > toFixed() const {
+         Fixed < S > returnValue;
          returnValue.x = ((SignedDataType)x) >> shiftSize;
          return returnValue;
       }

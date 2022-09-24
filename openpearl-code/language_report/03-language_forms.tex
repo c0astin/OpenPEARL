@@ -10,8 +10,14 @@ comments may contain any character that is allowed by ISO 646 and
 national variants of ISO 646.
 
 %%%% begin added
-\OpenPEARL{} does not check input data for data of type \code{CHAR} and the \code{TOCHAR}
-operator to result in values according ISO 646. 
+\OpenPEARL{} does not check input data and character string literals 
+for compliance with ISO-646. 
+Since TOFIXED applied to a character delivers \code{FIXED(7)}, which produces
+ negative FIXED values for characters outside ISO-646 character set.
+The operator \code{TOCHAR} may be applied of integer values in the 
+range -128 to 127.
+The programmers must be aware about the internal length of character string,
+ if they allow e.g. UTF-8.
 %%%% end added
 
 \section{Character Set}   % 3.1

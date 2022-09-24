@@ -116,10 +116,10 @@ public class TypeUtilities {
                 resultType = tp.getResultType();
 
             }
-            if (rhsType instanceof TypeProcedure) {
+            if (rhsType instanceof TypeProcedure &&
+                    ((TypeProcedure)rhsType).getResultType() != null  ) {
                 resultType = ((TypeProcedure)rhsType).getResultType();
             }
-            // resultType is != null, if it may be a procedure call
 
             //-- easiest case; simple variable assignment
             if (simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, rhsType)) {
@@ -144,7 +144,8 @@ public class TypeUtilities {
                 }
 
                 //-- lhs is not TypeReference; rhs may be PROC or REF PROC --> create function call
-                if ( (rhsType instanceof TypeProcedure) ){
+                if ( (rhsType instanceof TypeProcedure) &&
+                        ((TypeProcedure)rhsType).getResultType() != null  ){
                     // function call on rhs
                     rhsType = ((TypeProcedure)rhsType).getResultType();
                     rhsAttr.setType(rhsType);
@@ -322,7 +323,8 @@ public class TypeUtilities {
 
         if (ruleApplied == false) {
 
-            if (rhsSymbol instanceof ProcedureEntry) {
+            //if (rhsSymbol instanceof ProcedureEntry) {
+            if (rhsType instanceof TypeProcedure) {
                 if (!isInAssignment) {
                     CommonErrorMessages.typeMismatchProcedureParameter(lhsType.toErrorString(), ((ProcedureEntry)rhsSymbol).getType().toErrorString(), rhsAttr);
                 } else {

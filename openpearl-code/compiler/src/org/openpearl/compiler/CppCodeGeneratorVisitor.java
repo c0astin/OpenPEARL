@@ -2050,12 +2050,32 @@ implements OpenPearlVisitor<ST> {
     }
 
 
+
     @Override
-    public ST visitCharSelection(OpenPearlParser.CharSelectionContext ctx) {
+    public ST visitStringSelection(OpenPearlParser.StringSelectionContext ctx) {
+        ASTAttribute attr = m_ast.lookup(ctx.name());
+
+        if (m_verbose > 0) {
+            System.out.println("CppCodeGeneratorVisitor: visitStringSelection");
+        }
+
+        ST st = null;
+        if (attr.getType() instanceof TypeChar) {
+            st = makeST_forCharSelection(ctx.charSelectionSlice());
+           
+        } else if (attr.getType() instanceof TypeBit) {
+            st = makeST_forBitSelection(ctx.bitSelectionSlice());
+        }
+        st.add("id", visit(ctx.name()));
+        return st;
+    }
+    
+  
+    private ST makeST_forCharSelection(OpenPearlParser.CharSelectionSliceContext ctx) {
         ASTAttribute attr = m_ast.lookup(ctx);
 
         if (m_verbose > 0) {
-            System.out.println("CppCodeGeneratorVisitor: visitCharSelection");
+            System.out.println("CppCodeGeneratorVisitor: makeST_forCharSelection");
         }
 
         ST st = null;
@@ -2063,51 +2083,51 @@ implements OpenPearlVisitor<ST> {
             st = m_group.getInstanceOf("MakeCharacterFromStringSelection");
 
             //            st.add("id", getUserVariable(ctx.name().ID().getText()));
-            st.add("id", visitName(ctx.name()));
+            //st.add("id", visitName(ctx.name()));
             st.add("size", attr.getType().getPrecision());
 
             if (attr.getConstantSelection() != null) {
                 st.add("lwb", attr.getConstantSelection().getLowerBoundary());
                 st.add("upb", attr.getConstantSelection().getUpperBoundary());
             } else {
-                st.add("lwb", visitAndDereference(ctx.charSelectionSlice().expression(0)));
-                if (ctx.charSelectionSlice().expression(1) != null) {
-                    st.add("upb", visitAndDereference(ctx.charSelectionSlice().expression(1)));
+                st.add("lwb", visitAndDereference(ctx.expression(0)));
+                if (ctx.expression(1) != null) {
+                    st.add("upb", visitAndDereference(ctx.expression(1)));
                 } else {
-                    st.add("upb", visitAndDereference(ctx.charSelectionSlice().expression(0)));
+                    st.add("upb", visitAndDereference(ctx.expression(0)));
                 }
-                if (ctx.charSelectionSlice().IntegerConstant() != null) {
-                    st.add("offset", ctx.charSelectionSlice().IntegerConstant().getText());
+                if (ctx.IntegerConstant() != null) {
+                    st.add("offset", ctx.IntegerConstant().getText());
                 }
             }
         } else if (attr.getType() instanceof TypeVariableChar) {
             st = m_group.getInstanceOf("RhsCharSelection");
 
             // st.add("id", getUserVariable(ctx.name().ID().getText()));
-            st.add("id", visitName(ctx.name()));
+            //st.add("id", visitName(ctx.name()));
 
             //expr.add("id", s1);
-            st.add("lwb", visitAndDereference(ctx.charSelectionSlice().expression(0)));
-            if (ctx.charSelectionSlice().expression(1) != null) {
-                st.add("upb", visitAndDereference(ctx.charSelectionSlice().expression(1)));
+            st.add("lwb", visitAndDereference(ctx.expression(0)));
+            if (ctx.expression(1) != null) {
+                st.add("upb", visitAndDereference(ctx.expression(1)));
             } else {
-                st.add("upb", visitAndDereference(ctx.charSelectionSlice().expression(0)));
+                st.add("upb", visitAndDereference(ctx.expression(0)));
             }
             String s = st.render();
-            if (ctx.charSelectionSlice().IntegerConstant() != null) {
-                st.add("offset", ctx.charSelectionSlice().IntegerConstant().getText());
+            if (ctx.IntegerConstant() != null) {
+                st.add("offset", ctx.IntegerConstant().getText());
             }
 
         }
         return st;
     }
 
-    @Override
-    public ST visitBitSelection(OpenPearlParser.BitSelectionContext ctx) {
+    //Override
+    private ST makeST_forBitSelection(OpenPearlParser.BitSelectionSliceContext ctx) {
         ASTAttribute attr = m_ast.lookup(ctx);
 
         if (m_verbose > 0) {
-            System.out.println("CppCodeGeneratorVisitor: visitBitSelection");
+            System.out.println("CppCodeGeneratorVisitor: visitBitSelectionSlice");
         }
 
         // we have different situations
@@ -2116,27 +2136,27 @@ implements OpenPearlVisitor<ST> {
         if (attr.getType().getPrecision() == 1) {
             ST st = m_group.getInstanceOf("MakeBitString1FromStringSelection");
             //st.add("id", getUserVariable(ctx.name().ID().getText()));
-            st.add("id", visitName(ctx.name()));
+            //st.add("id", visitName(ctx.name()));
             if (attr.getConstantSelection() != null) {
-                ASTAttribute a = m_ast.lookup(ctx.bitSelectionSlice().expression(0));
+                ASTAttribute a = m_ast.lookup(ctx.expression(0));
                 st.add("lwb", a.getConstant()); //attr.getConstantSelection().getLowerBoundary());
             } else {
-                st.add("lwb", visitAndDereference(ctx.bitSelectionSlice().expression(0)));
+                st.add("lwb", visitAndDereference(ctx.expression(0)));
             }
             return st;
         } else {
             ST st = m_group.getInstanceOf("MakeBitStringNFromStringSelection");
 
             //st.add("id", getUserVariable(ctx.name().ID().getText()));
-            st.add("id", visitName(ctx.name()));
+           // st.add("id", visitName(ctx.name()));
 
             st.add("size", attr.getType().getPrecision());
 
             if (attr.getConstantSelection() != null) {
-                ASTAttribute a = m_ast.lookup(ctx.bitSelectionSlice().expression(0));
+                ASTAttribute a = m_ast.lookup(ctx.expression(0));
                 st.add("lwb", a.getConstant());
             } else {
-                st.add("lwb", visitAndDereference(ctx.bitSelectionSlice().expression(0)));
+                st.add("lwb", visitAndDereference(ctx.expression(0)));
             }
             return st;
         }
@@ -3248,9 +3268,9 @@ implements OpenPearlVisitor<ST> {
                         OpenPearlParser.ExpressionContext e = ctx.ioListElement(i).expression();
 
                         if (attr.getType() instanceof TypeVariableChar) {
-                            OpenPearlParser.CharSelectionContext ssc =
-                                    (OpenPearlParser.CharSelectionContext) (e.getChild(0).getChild(0).getChild(0));
-                            data.add("variable", visitName(ssc.name()));
+                            OpenPearlParser.StringSelectionContext ssc =
+                                    (OpenPearlParser.StringSelectionContext) (e.getChild(0).getChild(0));
+                            data.add("variable", visit(ssc.name()));
                             data.add("nbr_of_elements", "1");
                             data.add("lwb",
                                     visitAndDereference(ssc.charSelectionSlice().expression(0)));
@@ -3303,15 +3323,14 @@ implements OpenPearlVisitor<ST> {
                             }
 
                             // let's see if the expression is of type CharSelectionContext
-                            OpenPearlParser.CharSelectionContext ssc = null;
+                            OpenPearlParser.StringSelectionContext ssc = null;
                             try {
-                                ssc = (OpenPearlParser.CharSelectionContext) (e.getChild(0).getChild(0)
-                                        .getChild(0));
+                                ssc = (OpenPearlParser.StringSelectionContext) (e.getChild(0).getChild(0));
                             } catch (ClassCastException ex) {
                             } catch (NullPointerException ex) {
                             } ;
 
-                            if (ssc != null) {
+                            if (ssc != null && ssc.charSelectionSlice()!=null) {
                                 // fixed size char selection
                                 data.remove("type");
                                 data.add("type", "CHARSLICE");
@@ -3319,7 +3338,8 @@ implements OpenPearlVisitor<ST> {
                                 ASTAttribute attribName = m_ast.lookup(ssc.name());
                                 data.add("size", attribName.getType().getPrecision());
                                 data.add("nbr_of_elements", "1");
-                                data.add("variable", visitName(ssc.name()));
+                                data.add("variable", visit(ssc.name()));
+                                
                                 if (attr.getConstantSelection() != null) {
                                     data.add("lwb", attr.getConstantSelection().getLowerBoundary());
                                     data.add("upb", attr.getConstantSelection().getUpperBoundary());
@@ -3340,6 +3360,7 @@ implements OpenPearlVisitor<ST> {
                             } else {
                                 // expression, which needs a temporary variable to store the result
                                 // since we pass a pointer to the formatting routines
+                                // this section treats also bit-selection!
                                 ST variable_declaration =
                                         m_group.getInstanceOf("variable_denotation");
                                 variable_declaration.add("name", "tempVar" + i);
@@ -3359,7 +3380,7 @@ implements OpenPearlVisitor<ST> {
                                 data.add("nbr_of_elements", "1");
                             }
                         }
-
+                        String s = data.render();
                         //   addVariableConstantOrExpressionToDatalist(dataList,data,attr,ctx.expression(i),i);
                         dataList.add("dataelement", data);
                     }
@@ -5078,7 +5099,7 @@ implements OpenPearlVisitor<ST> {
         st.add("operand", visitAndDereference(ctx.expression()));
 
         if (op instanceof TypeFixed) {
-            st.add("noOfBits", ((TypeFixed) op).getPrecision() + 1);
+            st.add("noOfBits", ((TypeFixed) op).getPrecision());
         } else {
             throw new InternalCompilerErrorException(ctx.getText(), ctx.start.getLine(),
                     ctx.start.getCharPositionInLine());

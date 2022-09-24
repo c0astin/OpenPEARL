@@ -1306,8 +1306,8 @@ convertArraySliceToFixedF: PROC;
   !----------------
   testNbr = testNbr + 1;
   CONVERT x(end:start) TO buffer BY RST(error),F(3);
-  IF error NE 326  THEN
-     PUT errorText,testNbr, 'expected error: 226 --  got:', error TO stdout 
+  IF error NE 325  THEN
+     PUT errorText,testNbr, 'expected error: 325 --  got:', error TO stdout 
        BY A,F(3),A,F(6),SKIP;
   FIN;
 
@@ -3378,8 +3378,8 @@ convertArraySliceFromFixedF: PROC;
      x(i) := 0;
   END;
   CONVERT x(end:start) FROM '  2  3  4 ' BY RST(error),F(3);
-  IF error NE 326 THEN
-     PUT errorText,testNbr, 'expected: error 326 -- got:', error TO stdout 
+  IF error NE 325 THEN
+     PUT errorText,testNbr, 'expected: error 325 -- got:', error TO stdout 
 	BY A,F(3),A,F(3),SKIP;
      failed = failed + 1;
   FIN;

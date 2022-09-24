@@ -121,18 +121,32 @@ END;
 
 p3: PROC;
    DCL (b15,c15) BIT(15);
-   DCL f14 FIXED(14);
+   DCL f15 FIXED(15);
 
    b15 := '011'B CAT 'FFF'B4;
-   f14 = TOFIXED b15;
-   IF f14 NE 2047 THEN
-      PUT 'error#13 with TOFIXED; result=',f14 TO console BY A,F(6), SKIP;
+   f15 = TOFIXED b15;
+   IF f15 NE 2047 THEN
+      PUT 'error#13 with TOFIXED; result=',f15 TO console BY A,F(6), SKIP;
       success = '0'B1;
    FIN; 
 
-   c15 := TOBIT f14;
+   c15 := TOBIT f15;
    IF (b15 NE c15) THEN
       PUT 'error#14 with TOBIT ' ,b15,' NE ', c15 TO console
+        BY A,B1(15),A,B1(15), SKIP;
+      success = '0'B1;
+   FIN;
+
+   b15 := '111'B CAT 'FFF'B4;
+   f15 = TOFIXED b15;
+   IF f15 NE 4095 THEN
+      PUT 'error#15 with TOFIXED; result=',f15 TO console BY A,F(6), SKIP;
+      success = '0'B1;
+   FIN; 
+
+   c15 := TOBIT f15;
+   IF (b15 NE c15) THEN
+      PUT 'error#16 with TOBIT ' ,b15,' NE ', c15 TO console
         BY A,B1(15),A,B1(15), SKIP;
       success = '0'B1;
    FIN;

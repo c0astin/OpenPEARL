@@ -320,13 +320,14 @@ namespace pearlrt {
       \returns ASCII value of the Character(1) value
 
       */
-      Fixed<8> toFixed() {
+      Fixed<7> toFixed() {
          if (length > 1) {
             //printf("Character::toFixed: illegal length (%d)", length);
             throw theCharacterTooLongSignal;
          }
-
-         return (Fixed<8>)data[0];
+         Fixed<7> result;
+         result.x = data[0]; // ignore sign
+         return result;
       }
 
       /**
@@ -409,7 +410,7 @@ namespace pearlrt {
            c.data[0] = x.x;
            return c;
        }
-       throw theCharacterNotValidSignal;
+       throw theFixedRangeSignal;
    }
 
 }
