@@ -1,0 +1,50 @@
+MODULE(b);
+/* tests with TOFIXED are included in 01_fixed
+*/
+PROBLEM;
+
+/*
+test for 
+  * proper type of variable
+  * types in selection
+  * selection ranges
+
+*/
+bitSelection: PROC;
+   DCL b15 BIT(15);
+   DCL b7 BIT(7);
+   DCL b6 BIT(6);
+   DCL (start,end) BIT;
+   DCL f FIXED;
+
+   b6 = b15.BIT(start:end);
+/*$             ^
+error: .BIT(): type mismatch: expected FIXED --- got BIT(1)
+*/
+/*$                   ^
+error: .BIT(): type mismatch: expected FIXED --- got BIT(1)
+*/
+/*$        ^
+error: .BIT(): (expr1:expr2+constant) need identical expressions
+*/
+
+   b6 = b15.BIT(start:start+16);
+/*$             ^
+error: .BIT(): type mismatch: expected FIXED --- got BIT(1)
+*/
+/*$                   ^
+error: .BIT(): type mismatch: expected FIXED --- got BIT(1)
+*/
+/*$        ^
+error: .BIT(): selection is larger than BIT(15) variable
+*/
+
+   b6 = b15.BIT(f:f+15);
+/*$        ^
+error: .BIT(): selection is larger than BIT(15) variable
+*/
+END;
+
+
+
+MODEND;

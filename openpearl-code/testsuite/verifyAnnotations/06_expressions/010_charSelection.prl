@@ -1,0 +1,17 @@
+MODULE(ss);
+
+PROBLEM;
+
+ttt: TASK MAIN;
+  DCL c10 CHAR(10) INIT('1234567890');
+  DCL c6 CHAR(6);
+  DCL (one,four,six,seven) FIXED INIT(1,4,6,7);
+  c6 = c10.CHAR(1:4); ! CAT c10.CHAR(6:7);
+  c6 = c10.CHAR(one:four) CAT c10.CHAR(six:seven);
+
+
+
+END;
+
+
+MODEND;

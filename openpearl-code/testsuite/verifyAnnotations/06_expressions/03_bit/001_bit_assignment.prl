@@ -1,0 +1,44 @@
+MODULE(b);
+
+PROBLEM;
+
+toBit: PROC;
+   DCL b7 BIT(7);
+   DCL b6 BIT(6);
+   DCL f6 FIXED(6);
+   DCL f7 FIXED(7);
+   DCL f15 FIXED(15);
+   DCL f8 FIXED(8);
+
+   b7 = TOBIT f6;
+   b7 = TOBIT f7;
+   b7 = TOBIT f8;
+/*$^
+error: assignment: type mismatch: cannot assign expression of type BIT(8) to BIT(7)
+*/
+
+END;
+
+bitSelection: PROC;
+   DCL b15 BIT(15);
+   DCL b7 BIT(7);
+   DCL b6 BIT(6);
+   DCL (f,g) FIXED;
+   b6 = b15.BIT(1:7);
+/*$^
+error: assignment: type mismatch: cannot assign expression of type BIT(7) to BIT(6)
+*/
+
+   b6 = b15.BIT(f:f);
+   b6 = b15.BIT(f:f+0);
+   b6 = b15.BIT(f:f+1);
+   b6 = b15.BIT(f:f+5);
+
+   b6 = b15.BIT(f:f+6);
+/*$^
+error: assignment: type mismatch: cannot assign expression of type BIT(7) to BIT(6)
+*/
+
+
+END;
+MODEND;

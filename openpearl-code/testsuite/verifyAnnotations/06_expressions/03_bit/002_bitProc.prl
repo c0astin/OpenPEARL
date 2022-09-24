@@ -1,0 +1,51 @@
+MODULE(b);
+
+PROBLEM;
+
+fProc:PROC RETURNS(FIXED);
+   RETURN(1);
+END;
+
+fProcp: PROC(x FIXED) RETURNS(FIXED);
+   RETURN(x);
+END;
+
+pB8p: PROC (x FIXED(15) ) RETURNS(BIT(8));
+   DCL b8 BIT(8);
+   b8 = TOBIT (x FIT 0(8));
+   RETURN (b8);
+END;
+
+pB8: PROC RETURNS(BIT(8));
+   DCL b8 BIT(8) INIT('55'B4) ;
+   RETURN (b8);
+END;
+
+t: TASK MAIN;
+   DCL b4 BIT(4);
+   DCL b8 BIT(8);
+   DCL f FIXED;
+   f = fProc;
+   f = fProcp(1);
+
+   b4 = b8.BIT(fProcp(1):fProcp(1)+3);
+   b4 = b8.BIT(fProc:fProc+3);
+
+   b8 = pB8;
+   b4 = pB8.BIT(1:4);
+   b4 = pB8.BIT(1:5);
+/*$^
+error: assignment: type mismatch: cannot assign expression of type BIT(5) to BIT(4)
+*/
+
+   b4 = pB8p(42).BIT(1:4);
+   b4 = pB8p(42).BIT(1:5);
+/*$^
+error: assignment: type mismatch: cannot assign expression of type BIT(5) to BIT(4)
+*/
+
+END;
+
+MODEND;
+ 
+

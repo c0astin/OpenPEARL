@@ -1,0 +1,17 @@
+MODULE(m1);
+PROBLEM;
+
+
+charToFixed: PROC;
+
+   DCL f8 FIXED(8);
+
+   f8 = TOFIXED 'ab';
+/*$     ^
+error: TOFIXED: only single CHAR allowed
+*/
+
+END;
+
+MODEND;
+
