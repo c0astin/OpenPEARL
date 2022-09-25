@@ -30,9 +30,6 @@ package org.openpearl.preprocessor;
  */
 
 
-import org.antlr.v4.runtime.tree.ParseTreeProperty;
-import org.openpearl.compiler.ASTAttribute;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -76,9 +73,12 @@ public class Preprocessor {
     static List<String> m_seenIncludes = new ArrayList<>();
     static Stack<SourceFile> m_sourcefiles = new Stack<>();
     static int m_ifdef_level = 0;
-    static Pattern m_pattern = Pattern.compile("^#(.+?)([ \t]+(.*))?;(.*)$");
+    static Pattern m_pattern = Pattern.compile("^#(.+?)([ \t]+)(.*)$");
     static PrintStream m_outputStream = null;
     static PrintStream m_console = System.out;
+    static int m_commentNestingLevel = 0;
+    static boolean m_insideSingleQuotes = false;
+    static boolean m_insideDoubleQuotes = false;
 
     public enum Statement
     {
@@ -230,7 +230,6 @@ public class Preprocessor {
         HashSet<Statement> stopSet = new HashSet<>();
 
         if ( m_defines.get(args) == null ) {
-
             stopSet.add(Statement.ELSE);
             stopSet.add(Statement.FIN);
             Statement lastStatement = processLines(stopSet,currentLevel);
@@ -268,8 +267,6 @@ public class Preprocessor {
         return res;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     private static void printHelp() {
         System.err.println("java org.openpearl.preprocessor                            \n"
                 + " Options:                                                           \n"
@@ -284,8 +281,6 @@ public class Preprocessor {
                 + "  --output <filename>         Filename of the generated code        \n"
                 + "  infile                                                            \n");
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static boolean checkAndProcessArguments(String[] args) {
         int i = 0;
@@ -333,8 +328,6 @@ public class Preprocessor {
         return true;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     static String getStackTrace(Throwable t) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw, true);
@@ -343,8 +336,6 @@ public class Preprocessor {
         sw.flush();
         return sw.toString();
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     static String getBaseName(String filename) {
         String basename = "";
@@ -362,13 +353,9 @@ public class Preprocessor {
         return basename;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     static void addIncludeSearchPath(String path) {
         m_includeDirs.add(path);
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static void addDefine(String variable) {
         Pattern pattern = Pattern.compile("^(.+?)(?:=(.+))?$");
@@ -393,17 +380,12 @@ public class Preprocessor {
         }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     private static void removeDefine(String variable) {
             m_defines.remove(variable.trim());
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     private static Statement processLines(HashSet stopset, int level) {
         boolean directiveFound = false;
-        boolean inComment = false;
         Pattern pattern;
         Matcher matcher;
         try {
@@ -411,15 +393,16 @@ public class Preprocessor {
             SourceFile sourceFile = m_sourcefiles.peek();
             while ((line = sourceFile.getNextLine()) != null) {
                 line = skipComment(line);
-                if (!inComment) {
+                if (m_commentNestingLevel == 0) {
+                    // Because RTOS-UH does not mandate a ending semicolon, we ignore it here.
                     // checkForTerminatingSemicolon(line);
                     Matcher m_matcher;
                     m_matcher = m_pattern.matcher(line);
                     while (m_matcher.find()) {
                         if (m_matcher.group(1).equals("INCLUDE")) {
                             directiveFound = true;
-                            handleInclude(m_matcher.group(2));
-                            m_seenIncludes.add(m_matcher.group(2));
+                            handleInclude(m_matcher.group(3));
+                            m_seenIncludes.add(m_matcher.group(3));
                         } else if (m_matcher.group(1).equals("DEFINE")) {
                             directiveFound = true;
                             handleDefine(m_matcher.group(2));
@@ -483,26 +466,18 @@ public class Preprocessor {
                     }
                 }
 
-                pattern = Pattern.compile("^(.*?)(/\\*(.*))$");
-                matcher = pattern.matcher(line);
-                if (matcher.find()) {
-                    inComment = true;
-                }
-
-                if (inComment) {
-                    pattern = Pattern.compile("^.*?\\*/(.*)$");
-                    matcher = pattern.matcher(line);
-                    if (matcher.find()) {
-                        inComment = false;
-                    }
-                }
-
                 if (!directiveFound) {
                     line = replaceDefine(line);
                     outputLine(line);
                 } else {
                     directiveFound = false;
                 }
+            }
+
+            if ( m_commentNestingLevel != 0 ) {
+                System.err.println(
+                        "ERROR: Block comment not closed properly.");
+                System.exit(-1);
             }
         }
         catch (Exception e)
@@ -564,51 +539,73 @@ public class Preprocessor {
         int i = 0;
         char lch = ' ';
         char ch = ' ';
+
         while(!done && i < line.length()) {
             ch = line.charAt(i);
-            switch(state) {
-                case 0:
-                    switch (ch) {
-                        case '"':
-                            str += ch;
-                            state = 1;
+
+            switch (ch) {
+                case '\'':
+                    if ( m_commentNestingLevel == 0 ) {
+                        if (!m_insideDoubleQuotes && !m_insideDoubleQuotes) {
+                            m_insideSingleQuotes = !m_insideSingleQuotes;
+                        }
+                        res += ch;
+                    }
+                    break;
+                case '\"':
+                    if ( m_commentNestingLevel == 0 ) {
+                        if (!m_insideSingleQuotes && !m_insideDoubleQuotes) {
+                            m_insideDoubleQuotes = !m_insideDoubleQuotes;
+                        }
+                        res += ch;
+                    }
+                    break;
+                case '!':
+                    if (( m_commentNestingLevel == 0 ) && (m_insideSingleQuotes || m_insideDoubleQuotes)) {
+                        res += ch;
+                    } else {
+                        done = m_commentNestingLevel == 0;
+                    }
+                    break;
+                case '/':
+                    if (m_insideSingleQuotes || m_insideDoubleQuotes) {
+                        res += ch;
+                    } else {
+                        if (lch == '*') {
+                            m_commentNestingLevel--;
                             break;
-                        case '\'':
-                            str += ch;
-                            state = 2;
-                            break;
-                        case '!':
-                            state = 4;
-                            break;
-                        default:
+                        }
+                        i++;
+                        if (i < line.length()) {
+                            lch = ch;
+                            ch = line.charAt(i);
+                            if ( ch == '*') {
+                                m_commentNestingLevel++;
+                            }
+                            else {
+                                if (m_commentNestingLevel == 0) {
+                                    res += lch;
+                                    res += ch;
+                                }
+                            }
+                        }
+                        else {
                             res += ch;
-                            break;
+                        }
                     }
                     break;
-                case 1:
-                    str += ch;
-                    if ( ch == '"' && lch != '\\') {
-                        res += str;
-                        str = "";
-                        state = 0;
+                default:
+                    if (m_commentNestingLevel == 0) {
+                        res += ch;
                     }
-                    break;
-                case 2:
-                    str += ch;
-                    if ( ch == '\'' && lch != '\\') {
-                        res += str;
-                        str = "";
-                        state = 0;
-                    }
-                    break;
-                case 3:
-                    done = true;
                     break;
             }
+
             lch = ch;
             i++;
         }
 
+        // System.out.println("skipComment(" + m_commentNestingLevel + ":" +  m_insideSingleQuotes + ":" + m_insideDoubleQuotes + "):" + line + " -> " + res);
         return res;
     }
 
@@ -640,12 +637,12 @@ public class Preprocessor {
         return m_sourceFilename;
     }
 
-    public static double eval(final String str) {
+    public static int evalXConstExpr(final String expr) {
         return new Object() {
             int pos = -1, ch;
 
             void nextChar() {
-                ch = (++pos < str.length()) ? str.charAt(pos) : -1;
+                ch = (++pos < expr.length()) ? expr.charAt(pos) : -1;
             }
 
             boolean eat(int charToEat) {
@@ -657,10 +654,10 @@ public class Preprocessor {
                 return false;
             }
 
-            double parse() {
+            int parse() {
                 nextChar();
-                double x = parseExpression();
-                if (pos < str.length()) throw new RuntimeException("Unexpected: " + (char)ch);
+                int x = parseExpression();
+                if (pos < expr.length()) throw new RuntimeException("Unexpected: " + (char)ch);
                 return x;
             }
 
@@ -671,8 +668,8 @@ public class Preprocessor {
             //        | functionName `(` expression `)` | functionName factor
             //        | factor `^` factor
 
-            double parseExpression() {
-                double x = parseTerm();
+            int parseExpression() {
+                int x = parseTerm();
                 for (;;) {
                     if      (eat('+')) x += parseTerm(); // addition
                     else if (eat('-')) x -= parseTerm(); // subtraction
@@ -680,8 +677,8 @@ public class Preprocessor {
                 }
             }
 
-            double parseTerm() {
-                double x = parseFactor();
+            int parseTerm() {
+                int x = parseFactor();
                 for (;;) {
                     if      (eat('*')) x *= parseFactor(); // multiplication
                     else if (eat('/')) x /= parseFactor(); // division
@@ -689,21 +686,21 @@ public class Preprocessor {
                 }
             }
 
-            double parseFactor() {
+            int parseFactor() {
                 if (eat('+')) return +parseFactor(); // unary plus
                 if (eat('-')) return -parseFactor(); // unary minus
 
-                double x;
+                int x;
                 int startPos = this.pos;
                 if (eat('(')) { // parentheses
                     x = parseExpression();
                     if (!eat(')')) throw new RuntimeException("Missing ')'");
                 } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
                     while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
-                    x = Double.parseDouble(str.substring(startPos, this.pos));
+                    x = Integer.parseInt(expr.substring(startPos, this.pos));
                 } else if (ch >= 'a' && ch <= 'z') { // functions
                     while (ch >= 'a' && ch <= 'z') nextChar();
-                    String func = str.substring(startPos, this.pos);
+                    String func = expr.substring(startPos, this.pos);
                     if (eat('(')) {
                         x = parseExpression();
                         if (!eat(')')) throw new RuntimeException("Missing ')' after argument to " + func);
@@ -814,7 +811,7 @@ class SourceFile {
         return m_curChar;
     }
 
-        public void getNextChar() {
+    public void getNextChar() {
         int state = 0;
         boolean done = false;
 

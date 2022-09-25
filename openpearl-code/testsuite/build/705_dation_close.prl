@@ -11,6 +11,7 @@ __cpp__(
      'static pearlrt::Disc s_disc("/tmp/", 10);'
      'pearlrt::Device * d_disc = & s_disc;'
 );
+*/
 
 /* expected c++ code form SPC in problem part 
 __cpp__(
@@ -19,7 +20,7 @@ __cpp__(
     'static pearlrt::SystemDationNB *_disc = '
     '      static_cast<pearlrt::SystemDationNB*>(d_disc);'
 );
-  */
+*/
 
 PROBLEM;
    SPC disc DATION INOUT SYSTEM  ALL;
