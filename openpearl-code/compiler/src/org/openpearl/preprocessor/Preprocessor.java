@@ -401,8 +401,9 @@ public class Preprocessor {
                     while (m_matcher.find()) {
                         if (m_matcher.group(1).equals("INCLUDE")) {
                             directiveFound = true;
-                            handleInclude(m_matcher.group(3));
-                            m_seenIncludes.add(m_matcher.group(3));
+                            String fname = sourceFile.stripSemicolon(m_matcher.group(3));
+                            handleInclude(fname);
+                            m_seenIncludes.add(fname);
                         } else if (m_matcher.group(1).equals("DEFINE")) {
                             directiveFound = true;
                             handleDefine(m_matcher.group(2));
@@ -777,6 +778,14 @@ class SourceFile {
                 /* ensure close happens */
             }
         }
+    }
+
+    public String stripSemicolon(String s) {
+        String res = s.trim();
+        if ( res.charAt(res.length()-1) == ';') {
+            return res.substring(0,res.length()-1);
+        }
+        return res;
     }
 
     public String getNextLine() {
