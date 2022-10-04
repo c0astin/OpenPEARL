@@ -120,8 +120,8 @@ writeArraySlice: PROC (errors FIXED(15) IDENT);
    OPEN tableAS BY ANY,IDF('file1.txt');
    WRITE data(end:start) TO tableAS BY RST(f);
    CLOSE tableAS;
-   IF f NE 326 THEN
-      PUT 'writeArraySlice failed @3' TO stdOut BY A,SKIP;
+   IF f NE 325 THEN
+      PUT 'writeArraySlice failed @3 -- got ', f TO stdOut BY A,F(4),SKIP;
       errors = errors + 1;
    FIN;
 END;
@@ -166,8 +166,8 @@ readArraySlice: PROC (errors FIXED(15) IDENT);
    !---
    OPEN tableAS BY ANY,IDF('file1.txt');
    READ data(end:start) FROM tableAS BY RST(f);
-   IF f NE 326  THEN
-      PUT 'readArraySlice failed @3' TO stdOut BY A,SKIP;
+   IF f NE 325  THEN
+      PUT 'readArraySlice failed @3 -- got ',f TO stdOut BY A,F(3),SKIP;
       errors = errors + 1;
    FIN;
    CLOSE tableAS;

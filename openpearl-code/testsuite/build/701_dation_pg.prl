@@ -138,7 +138,7 @@ putArraySlice: PROC;
    OPEN table BY ANY, IDF('file1.txt');
    PUT data(end:start) TO table BY RST(error),F(3);
    CLOSE table;
-   IF error NE 326 THEN
+   IF error NE 325 THEN
       PUT 'putArraySlice failed @3' TO term BY A, SKIP;
    FIN; 
 
@@ -183,7 +183,7 @@ getArraySlice: PROC;
    OPEN table BY ANY, IDF('file1.txt');
    GET data(end:start) FROM table BY RST(error),F(3);
    CLOSE table;
-   IF error NE 326 THEN
+   IF error NE 325 THEN
       PUT 'getArraySlice failed @3' TO term BY A, SKIP;
    FIN; 
 
