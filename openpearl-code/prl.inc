@@ -213,13 +213,12 @@ rm -f $target.out $target.log
                intermediateFiles+=" $outputPrlCC"
             fi
 	    imcoutput=$fn
-	    
+
 	    # --------------------
 	    # run preprocessor
 	    if [[ "$noPP" != "1" ]] ; then
 		outputPrlPP=`mktemp -t openpearl.XXXXXXX --suffix=".prl"` || exit 1
 		intermediateFiles+=" $outputPrlPP"
-		echo ">>> /usr/local/bin/prlpp --quiet $PPFLAGS $fn.prl --output $outputPrlPP"
 		/usr/local/bin/prlpp --quiet $PPFLAGS $fn.prl --output $outputPrlPP
 		rc=$?
 		if [ $rc -ne 0 ]
@@ -227,12 +226,13 @@ rm -f $target.out $target.log
 		    echo "terminate due to errors in stage 1a (pp)" 1>>$fn.log
 		    exit $rc
 		fi
-		prlccinput="/tmp/"`basename $outputPrlPP .prl`		
+		prlccinput="/tmp/"`basename $outputPrlPP .prl`
+	    else
+		prlccinput=$fn
 	    fi
 
             if [ $DEBUG -ne 0 ] ; then    
 		echo ">>> prl: fn=" $fn 
-		echo ">>> prl: prlccinput=" $prlccinput
 		echo ">>> prl: prlccinput=" $prlccinput
 	    fi
 	    

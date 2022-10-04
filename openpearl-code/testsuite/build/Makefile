@@ -127,7 +127,7 @@ doesnotrun:
 
 clean:
 	find . -maxdepth 1 -type f -executable -delete
-	rm -f *.cc *.out *.xml *.log *.o *.elf *.bin *.dot
+	rm -f *.cc *.out *.xml *.log *.o *.elf *.bin *.dot 
 	rm -f pearl_log.txt 
 	rm -f system.cc 
 	rm -f .log
