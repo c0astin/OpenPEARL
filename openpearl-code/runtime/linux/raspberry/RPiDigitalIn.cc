@@ -62,9 +62,9 @@ namespace pearlrt {
    RPiDigitalIn::~RPiDigitalIn() {
    }
 
-   SystemDationB* RPiDigitalIn::dationOpen(const char * idf, int openParam) {
+   SystemDationB* RPiDigitalIn::dationOpen(const RefCharacter * idf, int openParam) {
       if (idf != 0) {
-         Log::error("IDF not allowed for RPi digital out device");
+         Log::error("IDF not allowed for RPi digital input device");
          throw theDationParamSignal;
       }
 
@@ -145,7 +145,7 @@ namespace pearlrt {
    }
 
    int RPiDigitalIn::capabilities() {
-      int cap = IN | ANY;
+      int cap = IN | ANY | PRM;
       return cap;
    }
 

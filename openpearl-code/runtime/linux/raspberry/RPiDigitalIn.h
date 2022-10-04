@@ -38,6 +38,7 @@
 #include "SystemDationB.h"
 #include "Fixed.h"
 #include "Character.h"
+#include "RefCharacter.h"
 #include "Signals.h"
 #include "Log.h"
 
@@ -90,7 +91,7 @@ namespace pearlrt {
       \throws OpenFailedSignal, if  dation is not closed and rst is not given
       \returns the pointer to the object
       */
-      SystemDationB* dationOpen(const char * idf = 0, int openParam = 0);
+      SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
 
       /**
       Close the DigitalOut

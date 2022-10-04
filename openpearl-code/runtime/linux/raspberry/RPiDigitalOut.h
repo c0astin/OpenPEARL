@@ -40,6 +40,7 @@
 #include "Character.h"
 #include "Signals.h"
 #include "Log.h"
+#include "RefCharacter.h"
 
 
 namespace pearlrt {
@@ -91,7 +92,7 @@ namespace pearlrt {
 
       \returns a pointer to this object
       */
-      SystemDationB* dationOpen(const char * idf = 0, int openParam = 0);
+      SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
 
       /**
       Close the DigitalOut
