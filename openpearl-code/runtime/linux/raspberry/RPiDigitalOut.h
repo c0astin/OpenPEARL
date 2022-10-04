@@ -40,7 +40,7 @@
 #include "Character.h"
 #include "Signals.h"
 #include "Log.h"
-#include "RefCharacter.h"
+#include "RefChar.h"
 
 
 namespace pearlrt {

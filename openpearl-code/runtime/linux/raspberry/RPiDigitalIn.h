@@ -38,7 +38,7 @@
 #include "SystemDationB.h"
 #include "Fixed.h"
 #include "Character.h"
-#include "RefCharacter.h"
+#include "RefChar.h"
 #include "Signals.h"
 #include "Log.h"
 
