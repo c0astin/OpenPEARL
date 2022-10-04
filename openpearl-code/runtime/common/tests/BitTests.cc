@@ -244,10 +244,8 @@ TEST(BitTests, toBit) {
    f3 = -2;
    EXPECT_THROW(x3 = pearlrt::BitString<3>(f3), pearlrt::FixedRangeSignal);
 
-   EXPECT_THROW(x3 = pearlrt::BitString<3>(f7), pearlrt::InternalSignal);
-
-   printf("Fixed2->Bit<3>\n");
-   EXPECT_THROW(x3 = pearlrt::BitString<3>(f7), pearlrt::InternalSignal);
+   // the compiler enschures that only FIXED(s)->BIT(s) occurs
+   //EXPECT_THROW(x3 = pearlrt::BitString<3>(f7), pearlrt::InternalSignal);
 }
 
 /**

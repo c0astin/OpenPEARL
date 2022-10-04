@@ -405,7 +405,7 @@ namespace pearlrt {
    */
    template <int T>
    Character<1>  toChar(Fixed<T> x) {
-       if (x.x >= 0 && x.x <= 255) {
+       if (x.x >= -128 && x.x <= 127) { 
            Character<1> c;
            c.data[0] = x.x;
            return c;

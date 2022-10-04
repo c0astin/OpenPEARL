@@ -255,7 +255,7 @@ namespace pearlrt {
 
        In OpenPEARL, the operations TOFIXED and TOBIT operate as
        direct copy of the internal operation. Thus TOBIT converts
-       a FIXED(S) into an BIT(S+1) type and TOFIXED vice versa.
+       a FIXED(S) into an BIT(S) type and TOFIXED vice versa.
 
        Due to class depedency problems there is no toBit() method
        in the Fixed-class. This operation must be mapped by the compiler
@@ -265,8 +265,7 @@ namespace pearlrt {
       */
       template <int F> 
       BitString(Fixed < F > y) NOSTACKCHECK {
-      //BitString(Fixed < S > y) NOSTACKCHECK {
-         printf("F= %d\n", F);
+         //printf("F= %d\n", F);
          if (S == 64) {
             Log::error("Fixed 64 not supported");
             throw theInternalSignal;
@@ -275,6 +274,8 @@ namespace pearlrt {
                 Log::error("TOBIT: sign would be lost"); 
                 throw theFixedRangeSignal;
             }
+          // the compiler checks that only FIXED(x)->BIT(x) is used
+          // printf("FIXED->BIT: mask=%x shiftsize=%d\n", mask, shiftSize); 
             x = y.x;
             x <<= shiftSize;
             x &= mask;

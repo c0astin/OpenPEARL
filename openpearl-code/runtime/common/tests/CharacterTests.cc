@@ -274,7 +274,7 @@ TEST(Char,toChar) {
 TEST(Char,toFixed) {
    {
       pearlrt::Character<1> h(1, (char*)" ");
-      EXPECT_TRUE((h.toFixed() == (pearlrt::Fixed<8>)32).getBoolean());
+      EXPECT_TRUE((h.toFixed() == (pearlrt::Fixed<7>)32).getBoolean());
    }
    {
       pearlrt::Character<1> h(1,(char*)"A");;
