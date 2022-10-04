@@ -2979,11 +2979,28 @@ implements OpenPearlVisitor<ST> {
 
         if (ctx.close_parameterlist() != null) {
             stmt.add("paramlist", visitClose_parameterlist(ctx.close_parameterlist()));
+            OpenPearlParser.OpenClosePositionRSTContext rstVar = null;
+
+            for (int i = 0; i < ctx.close_parameterlist().close_parameter().size(); i++) {
+
+
+
+                if (ctx.close_parameterlist().close_parameter(i).openClosePositionRST() != null) {
+                    rstVar = ctx.close_parameterlist().close_parameter(i).openClosePositionRST();
+                }
+            }
+
+
+            if (rstVar != null) {
+                stmt.add("rst_var", visitAndDereference(rstVar.name()));
+            }
+
+
         } else {
             ST st = m_group.getInstanceOf("close_parameterlist");
             st.add("parameter", m_group.getInstanceOf("close_parameter_none"));
             stmt.add("paramlist", st);
-            stmt.add("rst_var", m_group.getInstanceOf("close_parameter_no_rst"));
+            //stmt.add("rst_var", m_group.getInstanceOf("close_parameter_no_rst"));
         }
 
         return stmt;
