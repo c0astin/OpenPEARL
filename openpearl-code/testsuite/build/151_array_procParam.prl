@@ -20,8 +20,11 @@ t1: TASK MAIN;
    IF data(3) NE 0 THEN
       PUT '**ERROR: data(3) is not 0; it is ', data(3) TO so BY A, F(6), SKIP;
    FIN;
-   !y = sum(data);
-   !PUT 'sum of all elements: ' , y  TO so BY A, F(6), SKIP;
+   y = sum(data);
+   PUT 'sum of all elements: ' , y  TO so BY A, F(6), SKIP;
+!   y = sum(data(1:5));
+!   PUT 'sum of data(1:5): ' , y  TO so BY A, F(6), SKIP;
+   PUT 'data(1:5) is:', data(1:5) TO so BY A, 5F(6),SKIP;
    PUT 'data array is now' TO so BY A, SKIP;
    FOR i  TO 100 REPEAT
       PUT data(i) TO so BY F(5);
