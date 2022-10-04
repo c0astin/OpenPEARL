@@ -60,19 +60,28 @@ namespace pearlrt {
    }
    void DationTS::internalDationOpen(int p,
                                      RefCharacter * rc) {
-      // open system dation
-      if (p & IDF) {
-         // pass filename if specified by IDF
-         work = system->dationOpen(rc, dationParams);
-      } else {
-         // no filename specified by IDF --> pass NULL as name
-         work = system->dationOpen(NULL, dationParams);
-      }
+      static Fixed<31> one(1);
 
-      systemDation = work;
+      checkParametersAndIncrementCounter(p, rc, system);
 
-      internalOpen();
-      dationStatus = OPENED;
+      if (counter.x == 0) {
+          // first open --> open system dation
+          // open system dation
+          if (p & IDF) {
+             // pass filename if specified by IDF
+             work = system->dationOpen(rc, dationParams);
+          } else {
+             // no filename specified by IDF --> pass NULL as name
+             work = system->dationOpen(NULL, dationParams);
+          }
+
+          systemDation = work;
+
+          internalOpen();
+          dationStatus = OPENED;
+
+          counter = one;
+       }
    }
 
    void DationTS::closeSystemDation(int dationParams) {

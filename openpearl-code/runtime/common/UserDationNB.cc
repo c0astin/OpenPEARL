@@ -827,6 +827,7 @@ namespace pearlrt {
    void UserDationNB::internalDationOpen(int p,
                                          RefCharacter * rc) {
       static Fixed<31> one(1);
+#if 0
       int mask;
 
       // enshure default open parameter
@@ -837,9 +838,10 @@ namespace pearlrt {
       // this test must be done before the PRM/CAN are moved into OPENPRM/OPENCAN
       mask = OPENMASK | CAN  | PRM; // we must not delete CAN+PRM flags 
 
+
       if ((parent->capabilities() & mask & p) !=
             (p & mask)) {
-         Log::error("UserDationNB: open parameter not supported "
+         Log::error("UserDation: open parameter not supported "
                     "by system device");
          throw theDationParamSignal;
       }
@@ -876,14 +878,17 @@ namespace pearlrt {
          Log::error("UserDationNB: ether CAN or PRM allowed");
          throw theInternalDationSignal;
       }
-
+#endif
       // if several OPEN statement occur on the same user dation
       // we must check if the parameters are ok
       checkParametersAndIncrementCounter(p,rc, parent);
 
+#if 0
       // save params in dationparams
       dationParams &= ~(OPENMASK | CLOSEMASK);
       dationParams |= (p & OPENMASK);
+#endif
+
       if (counter.x == 0) {
          // first open --> open system dation
          // open system dation

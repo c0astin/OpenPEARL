@@ -283,6 +283,55 @@ namespace pearlrt {
            RefCharacter * rc, SystemDation * parent) {
       static Fixed<31> one(1);
       bool parametersOk = true;
+     int mask;
+
+      // enshure default open parameter
+      if ((p & (ANY | OLD | NEW)) == 0) {
+         p |= ANY;
+      }
+
+      // this test must be done before the PRM/CAN are moved into OPENPRM/OPENCAN
+      mask = OPENMASK | CAN  | PRM; // we must not delete CAN+PRM flags
+
+      if ((parent->capabilities() & mask & p) !=
+            (p & mask)) {
+         Log::error("UserDation: open parameter not supported "
+                    "by system device");
+         throw theDationParamSignal;
+      }
+
+      // move PRM,CAN to the OPEN* bits  to enshure same OPEN-Params
+      // for multiple dation open/close
+      if (p & CAN) {
+         p |= OPENCAN;
+         p &= ~ CAN;
+      }
+
+      if (p & PRM) {
+         p |= OPENPRM;
+         p &= ~ PRM;
+      }
+
+      if ((parent->capabilities() & IDF) && !(p & IDF) && !(p & ANY)) {
+         Log::error("UserDation: system dation requires IDF");
+         throw theDationParamSignal;
+      }
+     if (!(parent->capabilities() & IDF) && (p & IDF)) {
+         Log::error("UserDation: system dation does not support IDF");
+         throw theDationParamSignal;
+      }
+
+
+      if (!(p & IDF) && (!!(p & NEW) + !!(p & OLD)) > 0) {
+         Log::error("UserDation: OLD/NEW requires IDF");
+         throw theDationParamSignal;
+      }
+
+      if ((!!(p & OPENCAN) + !!(p & OPENPRM)) > 1) {
+         Log::error("UserDation: ether CAN or PRM allowed");
+         throw theInternalDationSignal;
+      }
+
 
       if (dationStatus == OPENED) {
          // check if the current open parameters differ from the
@@ -301,12 +350,16 @@ namespace pearlrt {
              }
          }
          if (!parametersOk) {
-             Log::error((char*)"UserDationNB: Dation is already open and parameters differ");
+             Log::error((char*)"UserDation: Dation is already open and parameters differ");
              throw theOpenFailedSignal;
          }
 
          // fine, the dation is opened again with the same parameters
          counter = counter + one;
+      } else {
+         // save params in dationparams
+          dationParams &= ~(OPENMASK | CLOSEMASK);
+          dationParams |= (p & OPENMASK);
       }
 
    } 

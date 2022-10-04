@@ -51,10 +51,10 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      if (params & ~(RST | IN | OUT | INOUT)) {
-         Log::error("SampleBasicDation: only RST allowed");
-         throw theDationParamSignal;
-      }
+//      if (params & ~(RST | IN | OUT | INOUT)) {
+//         Log::error("SampleBasicDation: only RST allowed");
+//         throw theDationParamSignal;
+//      }
 
       if (dationStatus != CLOSED) {
          Log::error("SampleBasicDation: Dation already open");
@@ -71,10 +71,10 @@ namespace pearlrt {
          throw theDationNotOpenSignal;
       }
 
-      if (params & ~(RST | IN | OUT | INOUT)) {
-         Log::error("SampleBasicDation: only RST allowed");
-         throw theDationParamSignal;
-      }
+//      if (params & ~(RST | IN | OUT | INOUT)) {
+//         Log::error("SampleBasicDation: only RST allowed");
+//         throw theDationParamSignal;
+//      }
 
       dationStatus = CLOSED;
    }
@@ -123,6 +123,7 @@ namespace pearlrt {
 
    int SampleBasicDation::capabilities() {
       int cap =  IN  | OUT | INOUT;
+      cap |= PRM | ANY;
       return cap;
    }
 

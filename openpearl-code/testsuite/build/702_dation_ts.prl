@@ -19,14 +19,27 @@ TakeSendTest: TASK MAIN;
    DCL error FIXED(31);
 
    OPEN so;   
+PUT 'open user with RST' TO so BY A, SKIP;
 
    OPEN user BY RST(error);
+   PUT 'open user --> RST: ', error TO so BY A, F(4), SKIP;
+PUT 'try to close' TO so BY A, SKIP;
    CLOSE user;
 
+PUT 'open user 2th' TO so BY A, SKIP;
    OPEN user;
+   PUT 'open user --> RST: ', error TO so BY A, F(4), SKIP;
    SEND f TO user;
+   OPEN user;
+   PUT 'open user --> RST: ', error TO so BY A, F(4), SKIP;
    TAKE f1 FROM user;
+PUT 'try to close 1' TO so BY A, SKIP;
    CLOSE user;
+PUT 'try to close 2' TO so BY A, SKIP;
+   CLOSE user;
+PUT 'try to close 3' TO so BY A, SKIP;
+   CLOSE user BY RST(error);
+   PUT 'close user --> RST: ', error TO so BY A, F(4), SKIP;
 
    arraySliceTakeSend;
  
