@@ -44,8 +44,14 @@ public class ConstantDurationValue extends ConstantValue
     }
 
     public ConstantDurationValue(long hours, int minutes, double seconds, int sign) {
-        m_hours = hours;
-        m_minutes = minutes;
+        long lSec = (long)(seconds);
+        m_hours = hours + minutes / 60 + lSec / 3600;
+        m_minutes = minutes%60;
+        
+        if (seconds >=60) {
+            m_minutes += lSec / 60;
+            seconds -= (lSec/60)*60;
+        }
         m_seconds = seconds;
         m_sign = sign;
         checkValue();     // check range

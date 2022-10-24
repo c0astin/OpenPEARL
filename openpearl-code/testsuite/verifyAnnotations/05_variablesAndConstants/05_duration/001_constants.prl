@@ -1,0 +1,35 @@
+MODULE(dur);
+
+PROBLEM;
+
+DCL d DURATION;
+
+t: TASK;
+   ! happy day scenarios
+!   d = 1 HRS 1 MIN 1 SEC;
+!   d = 100 HRS 1 MIN 1 SEC;
+!   d = 1 HRS ;
+!   d = 1 HRS 1 SEC;
+!   d = 1 MIN 1 SEC;
+!   d = 1 MIN;
+!   d = 1 SEC;
+!   d = 1.455 SEC;
+
+    d = 1000 SEC;
+    d = 1000 MIN;
+
+   d = 1.2E-3 SEC;
+/*$    ^
+error: seconds must not contain an exponent
+*/
+
+   d = 10HRS 66 MIN 75 SEC;
+/*$    ^
+warning: strange value: minutes should be less than 60
+*/
+/*$    ^
+warning: strange value: seconds should be less than 60
+*/
+END;
+
+MODEND;

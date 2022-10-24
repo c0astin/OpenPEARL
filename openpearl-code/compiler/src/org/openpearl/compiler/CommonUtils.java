@@ -1155,25 +1155,38 @@ public class CommonUtils {
         long hours = 0;
         int minutes = 0;
         double seconds = 0.0;
+        boolean hrsGiven = false;
+        boolean minGiven = false;
+        boolean secGiven = false;
 
         if (ctx != null) {
             if (ctx.hours() != null) {
                 hours = getHours(ctx.hours());
+                hrsGiven = true;
             }
 
             if (ctx.minutes() != null) {
                 minutes = getMinutes(ctx.minutes());
+                minGiven = true;
             }
 
             if (ctx.seconds() != null) {
                 seconds = getSeconds(ctx.seconds());
+                secGiven=true;
             }
-            if (minutes > 59) {
-                ErrorStack.add(ctx,"illegal value","minutes must be less than 60");
-            }
-            if (!(seconds < 60)) {
-                ErrorStack.add(ctx,"illegal value","seconds must be less than 60");
-            }
+//            if (minutes > 59) {
+//                ErrorStack.add(ctx,"illegal value","minutes must be less than 60");
+//            }
+//            if (!(seconds < 60)) {
+//                ErrorStack.add(ctx,"illegal value","seconds must be less than 60");
+//            }
+            if (hrsGiven && minutes> 59) {
+                ErrorStack.warn(ctx,"strange value","minutes should be less than 60");
+            } 
+            if ((hrsGiven || minGiven) && seconds > 59) {
+                ErrorStack.warn(ctx,"strange value","seconds should be less than 60");
+            } 
+            
         }
 
         ConstantDurationValue c = null;
@@ -1209,6 +1222,7 @@ public class CommonUtils {
                 ErrorStack.enter(ctx);
                 ErrorStack.add("value for hours too large");
                 ErrorStack.leave();
+                hours = (long)-1; // set illegal value for superior procedure
             }
         }
 
@@ -1227,15 +1241,16 @@ public class CommonUtils {
         if (ctx.IntegerConstant() != null) {
             try {
                 minutes = Integer.parseInt(ctx.IntegerConstant().getText());
-                if (minutes < 0 || minutes > 59) {
-                    ErrorStack.enter(ctx);
-                    ErrorStack.add("minutes must be in range [0..59]");
-                    ErrorStack.leave();
-                }
+//                if (minutes < 0 || minutes > 59) {
+//                    ErrorStack.enter(ctx);
+//                    ErrorStack.add("minutes must be in range [0..59]");
+//                    ErrorStack.leave();
+//                }
             } catch (NumberFormatException e) {
                 ErrorStack.enter(ctx);
                 ErrorStack.add("value for minutes too large");
                 ErrorStack.leave();
+                minutes = -1; // set illegal value for superior procedure
             }
         }
 
@@ -1265,6 +1280,7 @@ public class CommonUtils {
                 ErrorStack.enter(ctx);
                 ErrorStack.add("value for seconds too large");
                 ErrorStack.leave();
+                seconds = -1.0;   //set illegal value for calling procedure
             }
         } else if (ctx.floatingPointConstant() != null) {
             String s = ctx.floatingPointConstant().getText();
@@ -1280,11 +1296,11 @@ public class CommonUtils {
             }
             seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
 
-            if (seconds < 0 || seconds >= 60) {
-                ErrorStack.enter(ctx);
-                ErrorStack.add("seconds must be in range [0..59]");
-                ErrorStack.leave();
-            }
+//            if (seconds < 0 || seconds >= 60) {
+//                ErrorStack.enter(ctx);
+//                ErrorStack.add("seconds must be in range [0..59]");
+//                ErrorStack.leave();
+//            }
         }
 
         return seconds;
