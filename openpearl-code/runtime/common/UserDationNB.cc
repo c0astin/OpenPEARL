@@ -824,77 +824,23 @@ namespace pearlrt {
       }
    }
 
-   void UserDationNB::internalDationOpen(int p,
-                                         RefCharacter * rc) {
+   void UserDationNB::internalDationOpen(int p, RefCharacter* newFilename) {
       static Fixed<31> one(1);
-#if 0
-      int mask;
 
-      // enshure default open parameter
-      if ((p & (ANY | OLD | NEW)) == 0) {
-         p |= ANY;
-      }
-
-      // this test must be done before the PRM/CAN are moved into OPENPRM/OPENCAN
-      mask = OPENMASK | CAN  | PRM; // we must not delete CAN+PRM flags 
-
-
-      if ((parent->capabilities() & mask & p) !=
-            (p & mask)) {
-         Log::error("UserDation: open parameter not supported "
-                    "by system device");
-         throw theDationParamSignal;
-      }
-
-      // move PRM,CAN to the OPEN* bits  to enshure same OPEN-Params
-      // for multiple dation open/close
-      if (p & CAN) {
-         p |= OPENCAN;
-         p &= ~ CAN;
-      }
-
-      if (p & PRM) {
-         p |= OPENPRM;
-         p &= ~ PRM;
-      }
-
-      if ((parent->capabilities() & IDF) && !(p & IDF) && !(p & ANY)) {
-         Log::error("UserDationNB: system dation requires IDF");
-         throw theDationParamSignal;
-      }
-
-      if (!(parent->capabilities() & IDF) && (p & IDF)) {
-         Log::error("UserDationNB: system dation does not support IDF");
-         throw theDationParamSignal;
-      }
-
-
-      if (!(p & IDF) && (!!(p & NEW) + !!(p & OLD)) > 0) {
-         Log::error("UserDationNB: OLD/NEW requires IDF");
-         throw theDationParamSignal;
-      }
-
-      if ((!!(p & OPENCAN) + !!(p & OPENPRM)) > 1) {
-         Log::error("UserDationNB: ether CAN or PRM allowed");
-         throw theInternalDationSignal;
-      }
-#endif
       // if several OPEN statement occur on the same user dation
       // we must check if the parameters are ok
-      checkParametersAndIncrementCounter(p,rc, parent);
+      checkOpenParametersAndIncrementCounter(p, newFilename, parent);
 
-#if 0
       // save params in dationparams
-      dationParams &= ~(OPENMASK | CLOSEMASK);
-      dationParams |= (p & OPENMASK);
-#endif
+//      dationParams &= ~(OPENMASK | CLOSEMASK);
+//      dationParams |= (p & OPENMASK);
 
-      if (counter.x == 0) {
+      if (counter.x == 1) {
          // first open --> open system dation
          // open system dation
          if (p & IDF) {
             // pass filename if specified by IDF
-            systemDation = parent->dationOpen(rc, dationParams);
+            systemDation = parent->dationOpen(&idfName, dationParams);
          } else {
             // no filename specified by IDF --> pass NULL as name
             systemDation = parent->dationOpen(NULL, dationParams);
@@ -903,7 +849,6 @@ namespace pearlrt {
          // do dation (RW/PG) specific stuff
          internalOpen();
          dationStatus = OPENED;
-         counter=one;
          dim->reset();
       }
       return;

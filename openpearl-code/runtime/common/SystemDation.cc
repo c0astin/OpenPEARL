@@ -65,7 +65,4 @@ printf("SystemDation:: triggerWaitingTask called\n");
       ioPerformingTask->doAsyncTerminate();
    }
 
-   RefCharacter * SystemDation::getIDFName() {
-      return NULL;
-   }
 }

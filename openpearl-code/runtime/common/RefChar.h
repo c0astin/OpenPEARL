@@ -182,6 +182,18 @@ namespace pearlrt {
       void setWork(void * s, size_t len);
 
       /**
+      compare the content of two RefCharacters
+ 
+      two RefCharacters are equal, if their current length are equal
+      and their content are equal
+
+      \param rhs the othe RefCharacter object
+      \returns true, if they are equal<br>
+               false, else
+      */
+      bool equal(const RefCharacter* const rhs) const;
+
+      /**
         getCharAt
 
         retrieve the data element at the given index
@@ -190,7 +202,7 @@ namespace pearlrt {
         \returns the selected character of the data string
         \throws CharacterIndexOutOfRangeSignal, if the index i out of range
       */
-      char getCharAt(size_t index) ;
+      char getCharAt(size_t index) const;
 
       /**
        getNextChar
@@ -257,7 +269,7 @@ namespace pearlrt {
          get current content size
          \returns current size of the content
       */
-      Fixed<31> getCurrent();
+      Fixed<31> getCurrent() const;
 
       /**
          get the current data pointer 

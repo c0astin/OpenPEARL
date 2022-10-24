@@ -206,7 +206,7 @@ namespace pearlrt {
       // setup objects data
       Disc::DiscFile * o = object[f];
 
-      if (openParams & ANY && ((openParams & IDF)) == 0) {
+      if ( (openParams & ANY) && ((openParams & IDF) == 0)) {
          // create temp file name
          struct timeval tv;
          gettimeofday(&tv, NULL);
@@ -478,15 +478,4 @@ namespace pearlrt {
       // do nothing
    }
 
-   /* attention: we return a reference of a static variable
-      This is ok, since the operation is exectuted while the
-      userdation is locked
-   */
-   RefCharacter* Disc::DiscFile::getIDFName() {
-      static RefCharacter rc;
-      rc = rcFn;
-      rc.data += myDisc->pathLength; 
-      rc.current -= myDisc->pathLength; 
-      return & rc;
-   }
 }

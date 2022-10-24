@@ -87,7 +87,7 @@ static pearlrt::Device* _myPipe = &myPipe;
 
 /**
 test for multiple open/close on the same userdation
-* expect error message if open/close parameters duiffer (except RST)
+* expect error message if open/close parameters differ (except RST)
 * expect error if too many close operations occur
 * expect error messages if too many (>2^31 -1) OPEN operations occur
 */
@@ -106,17 +106,20 @@ TEST(UserDationNB,MultipleOpenClose) {
                                 pearlrt::Dation::NOCYCL,
                                 &dim,
                                 pearlrt::Fixed<15>(1));
-
+printf("MultipleOpenClose: 1\n");
+   ASSERT_NO_THROW(
+      logbuch.dationOpen(
+         pearlrt::Dation::IDF | pearlrt::Dation::ANY | pearlrt::Dation::RST ,
+         &filename,&error));
+printf("MultipleOpenClose: 2\n");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::IDF | pearlrt::Dation::ANY | pearlrt::Dation::RST ,
          &filename,&error));
    ASSERT_NO_THROW(
-      logbuch.dationOpen(
-         pearlrt::Dation::IDF | pearlrt::Dation::ANY | pearlrt::Dation::RST ,
-         &filename,&error));
-   ASSERT_NO_THROW(
+printf("MultipleOpenClose: 3\n");
    logbuch.dationClose(0, (pearlrt::Fixed<15>*)0));
+printf("MultipleOpenClose: 4\n");
    ASSERT_NO_THROW(
    logbuch.dationClose(0, (pearlrt::Fixed<15>*)0));
    ASSERT_THROW(
@@ -124,19 +127,24 @@ TEST(UserDationNB,MultipleOpenClose) {
       pearlrt::DationNotOpenSignal);
 
 // ---- check with automatic filename
-
+printf("---- check with auto file name\n");
+printf("ttt@1\n");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::ANY | pearlrt::Dation::RST ,
          (pearlrt::Character<1>*)NULL,&error));
+printf("ttt@2\n");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::ANY | pearlrt::Dation::RST ,
          (pearlrt::Character<1>*)NULL,&error));
+printf("ttt@3\n");
    ASSERT_NO_THROW(
    logbuch.dationClose(0, (pearlrt::Fixed<15>*)0));
+printf("ttt@4\n");
    ASSERT_NO_THROW(
    logbuch.dationClose(0, (pearlrt::Fixed<15>*)0));
+printf("ttt@5\n");
    ASSERT_THROW(
       logbuch.dationClose(0, (pearlrt::Fixed<15>*)0),
       pearlrt::DationNotOpenSignal);
@@ -324,6 +332,8 @@ TEST(UserDationNB, OPEN) {
          (pearlrt::Fixed<15>*)NULL));
    logbuch.dationClose(0, (pearlrt::Fixed<15>*)0);
 
+/* 2022-10-24 obsolete: the compiler enshures that ether CAN or PRM is set
+ 
    pearlrt::Log::info("*** CAN+PRM  ***");
    ASSERT_THROW(
       logbuch.dationOpen(
@@ -334,7 +344,8 @@ TEST(UserDationNB, OPEN) {
          &filename,
          (pearlrt::Fixed<15>*)NULL),
       pearlrt::InternalDationSignal);
-   pearlrt::Log::info("*** successful open  ***");
+*/
+
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::IDF |
@@ -392,13 +403,16 @@ TEST(UserDationNB, OpenClose) {
                              &dim,
                              pearlrt::Fixed<15>(1));
    // make file to be not present
+printf("aaaa:0\n");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::IDF |
          pearlrt::Dation::ANY ,
          & filename,
          (pearlrt::Fixed<15>*)NULL));
+printf("aaaa:0.1\n");
    logbuch.dationClose(pearlrt::Dation::CAN, (pearlrt::Fixed<15>*)0);
+printf("aaaa:1\n");
    ASSERT_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::IDF |
@@ -407,6 +421,7 @@ TEST(UserDationNB, OpenClose) {
          (pearlrt::Fixed<15>*)NULL),
       pearlrt::OpenFailedSignal);
    pearlrt::Log::info("*** check if CAN works in OPEN ***");
+printf("aaaa:2\n");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::IDF |
@@ -416,8 +431,10 @@ TEST(UserDationNB, OpenClose) {
          (pearlrt::Fixed<15>*)NULL));
 
 
+printf("aaaa:3\n");
    logbuch.dationClose(0,(pearlrt::Fixed<15>*)0);
 
+printf("aaaa:4\n");
    pearlrt::Log::info("*** check if CAN superseeds in OPEN ***");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
@@ -426,20 +443,8 @@ TEST(UserDationNB, OpenClose) {
          pearlrt::Dation::PRM,
          & filename,
          (pearlrt::Fixed<15>*)NULL));
-   // dation opened with PRM, close tries to delete
-   ASSERT_THROW(logbuch.dationClose(pearlrt::Dation::CAN,(pearlrt::Fixed<15>*)0),
-      pearlrt::DationParamSignal);
-   // close dation to allow further tests
-   ASSERT_NO_THROW(logbuch.dationClose(0,(pearlrt::Fixed<15>*)0));
-   // ----- reopen with can and close it to remove file
-   ASSERT_NO_THROW(
-      logbuch.dationOpen(
-         pearlrt::Dation::IDF |
-         pearlrt::Dation::CAN |
-         pearlrt::Dation::OLD ,
-         & filename,
-         (pearlrt::Fixed<15>*)NULL));
-   ASSERT_NO_THROW(logbuch.dationClose(0,(pearlrt::Fixed<15>*)0));
+   // dation opened with PRM, close tries to delete; CLOSE should dominate
+   ASSERT_NO_THROW(logbuch.dationClose(pearlrt::Dation::CAN,(pearlrt::Fixed<15>*)0));
    // --- file should no longer exist
    pearlrt::Log::info("*** check close params ***");
    ASSERT_NO_THROW(
@@ -449,14 +454,18 @@ TEST(UserDationNB, OpenClose) {
          pearlrt::Dation::PRM,
          & filename,
          (pearlrt::Fixed<15>*)NULL));
+/* obsolete 2022-10-24: close CAN and PRM is avoided by the compiler
    ASSERT_THROW(
       logbuch.dationClose(pearlrt::Dation::CAN |
                           pearlrt::Dation::PRM, (pearlrt::Fixed<15>*)0),
       pearlrt::DationParamSignal);
+*/
+/* obsolete CLOSE CAN dominate OPEN PRM
    ASSERT_THROW(
    logbuch.dationClose(pearlrt::Dation::CAN, (pearlrt::Fixed<15>*)0),
       pearlrt::DationParamSignal);
      // close file and reopen with CAN abnd close again to remove the file
+*/
    logbuch.dationClose(0, (pearlrt::Fixed<15>*)0),
 
       logbuch.dationOpen(

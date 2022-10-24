@@ -58,18 +58,17 @@ namespace pearlrt {
 
       dationParams = params;
    }
-   void DationTS::internalDationOpen(int p,
-                                     RefCharacter * rc) {
+   void DationTS::internalDationOpen(int p, RefCharacter* newFilename) {
       static Fixed<31> one(1);
 
-      checkParametersAndIncrementCounter(p, rc, system);
+      checkOpenParametersAndIncrementCounter(p, newFilename, system);
 
-      if (counter.x == 0) {
+      if (counter.x == 1) {
           // first open --> open system dation
           // open system dation
           if (p & IDF) {
              // pass filename if specified by IDF
-             work = system->dationOpen(rc, dationParams);
+             work = system->dationOpen(&idfName, dationParams);
           } else {
              // no filename specified by IDF --> pass NULL as name
              work = system->dationOpen(NULL, dationParams);

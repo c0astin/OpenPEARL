@@ -53,11 +53,13 @@ BEGIN
 
     DCL user DATION INOUT BASIC FIXED(15) CREATED(dat);
     OPEN user;
+    OPEN user;
        SEND f TO user;
        TAKE f1 FROM user;
        IF f /= f1 THEN
           ! error
        FIN; 
+     CLOSE user;
      CLOSE user;
 END
 MODEND.
@@ -81,7 +83,7 @@ extern pearlrt::Device* d_dat;
 static pearlrt::SystemDationB* _dat = (pearlrt::SystemDationB*)d_dat;
 
 //execute function for working thread 1
-DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
+DCLTASK(_TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    pearlrt::Fixed<15> f(13);
    pearlrt::Fixed<15> f1(1);
 
@@ -89,11 +91,13 @@ DCLTASK(TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
    pearlrt::DationTS user(_dat,pearlrt::Dation::INOUT);
 
     user.dationOpen(0,(pearlrt::Character<1>*)0, (pearlrt::Fixed<31>*)0);
+    user.dationOpen(0,(pearlrt::Character<1>*)0, (pearlrt::Fixed<31>*)0);
     user.dationWrite(&f, sizeof(f));
     user.dationRead(&f1, sizeof(f1));
     if ((f != f1).getBoolean()) {
         cout << " read failed: got " << f1.x << " instead of "<< f.x << endl;
     }
+    user.dationClose(0, (pearlrt::Fixed<15>*)0);
     user.dationClose(0, (pearlrt::Fixed<15>*)0);
 
    if (success) {

@@ -79,10 +79,10 @@ namespace pearlrt {
      the call of beginSequence().
    */
    class UserDation : public Dation, public Rst {
-
+   
    protected:
      /**
-      this mutex enhures that only one PEARL io statement is
+      this mutex enshures that only one PEARL i/o statement is
       executed at the same time on the same user dation.
 
       There may be several user dations created upon the same system
@@ -95,9 +95,10 @@ namespace pearlrt {
       */
       DationParams currentDirection;
 
-      /** the system dation which performs the io processing
+      /** the system dation which performs the i/o processing
       */
       SystemDation * systemDation;
+
       /**
       queue of waiting tasks for operations on this user dation
 
@@ -110,7 +111,7 @@ namespace pearlrt {
       /**
       flag if this user dation has an operation in progress
 
-      This value ist true, if an operation is in progress. The next
+      This value is true, if an operation is in progress. The next
       jobs will be added in the waitQueue. At the end of a job, the next
       (best priority) task will be taken from the waitQueue
       */
@@ -118,13 +119,22 @@ namespace pearlrt {
 
       /** counter for multiple OPEN/CLOSE statement calls
 
-        the dation is opened if the counter is 0. Subsequent OPEN calls just increment
-        the counter.
+        the dation is opened if the counter is 0. Subsequent OPEN calls with the same open parameters
+        just increment the counter.
 
-        Note thate all Fixed-variables are initialized with 0
+        Note that all Fixed-variables are initialized with 0
       */
       Fixed<31> counter;
 
+   private:
+      static const int maxLengthIdfName = 64;
+      Character<maxLengthIdfName> idfNameStorage;
+      bool idfNameGiven;
+
+   protected:
+      RefCharacter idfName;
+
+       
    public:
       /**
       ctor presets the attributes
@@ -136,19 +146,17 @@ namespace pearlrt {
        Implementation of the internal Open-interface.
 
        \param p specified open parameters
-       \param rc RefChar with file name
 
        \note throws various exceptions
       */
-      virtual void internalDationOpen(int p,
-                                      RefCharacter* rc) = 0;
+      virtual void internalDationOpen(int p, RefCharacter * newFilename) = 0;
 
    public:
 
       /**
         Implementation of the Open-interface.
 
-        If nether OLD,NEW,ANY or PRM,CAN is given the default is set,
+        If nether OLD,NEW,ANY or PRM,CAN is given the default is used,
         which is ANY + PRM
 
 
@@ -180,18 +188,16 @@ namespace pearlrt {
                throw theInternalDationSignal;
             }
 
-            if (S > 64) {
-               Log::error("filename exceeds 64 characters");
+            if (S > maxLengthIdfName) {
+               Log::error("filename exceeds %d characters",maxLengthIdfName);
                throw theDationParamSignal;
             }
 
-            RefCharacter rc;
 
-            if (p & Dation::IDF) {
-               rc.setWork(idf->get(),S);
-            }
+            RefCharacter currentFilename;
+            currentFilename.setWork(*idf);
 
-            internalDationOpen(p, &rc);
+            internalDationOpen(p, &currentFilename );
 
          } catch (Signal & s) {
             if (rst) {
@@ -219,7 +225,7 @@ namespace pearlrt {
         from UserDation Basic-class
 
        \param p close parameters if given, else 0
-       \param rst pointer to rst-variabla; required, if RST is set in p
+       \param rst pointer to rst-variable; required, if RST is set in p
 
         \note throws various exceptions if no RST-Variable is set
 
@@ -369,7 +375,7 @@ namespace pearlrt {
       */
       void terminate(TaskCommon * ioPerformingTask);
 
-      /** obtain the current i/0 directiontransfer direction.
+      /** obtain the current i/o transfer direction.
 
           \return the current transfer direction.
           This is either Dation::IN or Dation::OUT
@@ -377,13 +383,26 @@ namespace pearlrt {
       DationParams getCurrentDirection();
 
       /**
-      check new dation parameters with previous setting
-      if the dation is openend again
-
-      increments the counter of open opereations or throws an exception
+      check given dation parameters with 
+      <ul> 
+      <li> required and possible flags concerning the system dation
+      <li> previous setting, if the dation is opened again
+      </ul>
+      increments the counter of open operations if the parameters are ok
+      or throws an exception
       */
-      void checkParametersAndIncrementCounter(int p, RefCharacter * rc,
-           SystemDation * parent);
+      void checkOpenParametersAndIncrementCounter(int p, RefCharacter * newFilename, SystemDation * parent);
+
+      /**
+      check given dation parameters (here only PRM and CAN)  with 
+      <ul> 
+      <li> required and possible flags concerning the system dation
+      <li> PRM/CAN flag previous setting from previous close statements
+      </ul>
+      decrements the counter if the parameters are ok or throws an exception
+      */
+      void checkCloseParametersAndDecrementCounter(int p, SystemDation * parent);
+
    };
 }
 #endif

@@ -95,6 +95,10 @@ namespace pearlrt {
       CAN: Delete the Dation after closing
 
       \note default is PRM
+
+      The flags OPEN... and CLOSE... are used to verify that all 
+      OPEN and CLOSE statements upon a dation with multiple OPEN statements
+      are consistent
       */
       enum DationParams {
          /** direction: only input */
@@ -154,7 +158,35 @@ namespace pearlrt {
 
          /** OPEN parameters CAN 
          */
-         OPENCAN = 0x40000
+         OPENCAN = 0x40000,
+
+         /** OPEN parameters OLD 
+         */
+         OPENOLD = 0x80000,
+
+         /** OPEN parameters NEW 
+         */
+         OPENNEW = 0x100000,
+
+         /** OPEN parameters ANY 
+         */
+         OPENANY = 0x200000,
+
+         /** OPEN parameters IDF
+         */
+         OPENIDF = 0x400000,
+
+         /** OPEN parameters without IDF
+         */
+         OPENNOIDF = 0x800000,
+
+         /** CLOSE parameters PRM 
+         */
+         CLOSEPRM = 0x1000000,
+
+         /** CLOSE parameters CAN 
+         */
+         CLOSECAN = 0x2000000
       };
 
       /**
@@ -167,13 +199,16 @@ namespace pearlrt {
       mask to select the opening concerning bits from
       a parameter or capability value
       */
-      static const int OPENMASK = IDF | ANY | OLD | NEW | OPENCAN | OPENPRM;
+      static const int OPENMASK = IDF | ANY | OLD | NEW | 
+                                  OPENIDF | OPENNOIDF | OPENOLD | OPENNEW | OPENANY |
+ 				  CAN | PRM |
+				  OPENCAN | OPENPRM ;
 
       /**
       mask to select the closing concerning bits from
       a parameter or capability value
       */
-      static const int CLOSEMASK = PRM | CAN;
+      static const int CLOSEMASK = PRM | CAN | CLOSEPRM | CLOSECAN;
 
 
       /**

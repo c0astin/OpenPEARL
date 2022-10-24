@@ -164,12 +164,10 @@ namespace pearlrt {
        Implementation of the internal Open-interface.
 
        \param p open parameters (with default setting
-       \param rc RefChar with file name
 
        \note throws various exceptions if no RST-Variable is set
       */
-      void internalDationOpen(int p,
-                              RefCharacter* rc);
+      void internalDationOpen(int p, RefCharacter* newFilename);
 
    public:
 

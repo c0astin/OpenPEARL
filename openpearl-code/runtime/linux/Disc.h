@@ -114,7 +114,7 @@ namespace pearlrt {
          /**
           open method
 
-         \param fileName   the file name as C string
+         \param fileName   the file name as RefChar*
          \param openParams  the PEARL parameters for file open
          \returns pointer to working object to do the subsequent
                   dation operations.
@@ -196,10 +196,6 @@ namespace pearlrt {
          */
          void translateNewLine(bool doNewLineTranslation);
 
-         /**
-         deliver the name of the file name
-         */
-         RefCharacter* getIDFName();
       };
 
    private:

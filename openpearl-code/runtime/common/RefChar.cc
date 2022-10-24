@@ -63,6 +63,23 @@ namespace pearlrt {
       charIsINV = true;
    }
 
+   bool RefCharacter::equal(const RefCharacter* const rhs) const {
+      printf("RefCharacter::equals: \n");
+      dump();
+      rhs->dump();
+      if (current != rhs->getCurrent().x) {
+          return false;
+      }
+
+      for (size_t i=0; i<current; i++) {
+          if (data[i] != rhs->getCharAt(i)) {
+             return false;
+          }
+      }
+      printf("are equal\n");
+      return true;
+   }
+
    void RefCharacter::rewind() {
       current = 0;
    }
@@ -73,7 +90,7 @@ namespace pearlrt {
        current=len;
    }
 
-   char RefCharacter::getCharAt(size_t index) {
+   char RefCharacter::getCharAt(size_t index) const {
       // size-t is unsigned; max -1 become very large if max = 0
       // if index was given wrong (negative) the other clause  works
       if (index > max - 1 || index + 1 > max) {
@@ -163,7 +180,7 @@ namespace pearlrt {
       return Fixed<31>(max);
    }
 
-   Fixed<31> RefCharacter::getCurrent() {
+   Fixed<31> RefCharacter::getCurrent() const {
       return Fixed<31>(current);
    }
 

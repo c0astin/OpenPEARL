@@ -412,8 +412,6 @@ implements OpenPearlVisitor<Void> {
 
         visitDationName(ctx.dationName());
 
-        //	lookupDation(ctx.dationName().name().getText().toString());
-
         if (ctx.open_parameterlist() != null && ctx.open_parameterlist().open_parameter() != null) {
 
             for (int i = 0; i < ctx.open_parameterlist().open_parameter().size(); i++) {
@@ -488,14 +486,14 @@ implements OpenPearlVisitor<Void> {
                                     .open_parameter(i).open_close_parameter_can_prm());
                     if (c.getText().equals("CAN")) {
                         if (hasCAN)
-                            ErrorStack.add("multiple CAN attributes");
+                            ErrorStack.warn("multiple CAN attributes");
                         hasCAN = true;
                     }
 
 
                     if (c.getText().equals("PRM")) {
                         if (hasPRM)
-                            ErrorStack.add("multiple PRM attributes");
+                            ErrorStack.warn("multiple PRM attributes");
                         hasPRM = true;
                     }
                 }
@@ -506,6 +504,7 @@ implements OpenPearlVisitor<Void> {
                 ErrorStack.add("ether CAN or PRM allowed");
             }
 
+
             int nbrOfPreviousStati = 0;
             if (hasOLD)
                 nbrOfPreviousStati++;
@@ -515,6 +514,23 @@ implements OpenPearlVisitor<Void> {
                 nbrOfPreviousStati++;
             if (nbrOfPreviousStati > 1)
                 ErrorStack.add("only one of OLD/NEW/ANY allowed");
+            
+            if ( hasOLD  & !hasIDF ) {
+                ErrorStack.add("OLD requires IDF");
+            }
+            
+            if ( hasNEW & !hasIDF ) {
+                ErrorStack.add("NEW requires IDF");
+            }
+            
+            if ( hasPRM & !hasIDF ) {
+                ErrorStack.add("PRM requires IDF");
+            }
+            
+            if ( hasCAN & !hasIDF ) {
+                ErrorStack.add("CAN requires IDF");
+            }
+
         }
 
         ErrorStack.leave();
@@ -553,14 +569,14 @@ implements OpenPearlVisitor<Void> {
                                     .close_parameter(i).open_close_parameter_can_prm());
                     if (c.getText().equals("CAN")) {
                         if (hasCAN)
-                            ErrorStack.add("multiple CAN attributes");
+                            ErrorStack.warn("multiple CAN attributes");
                         hasCAN = true;
                     }
 
 
                     if (c.getText().equals("PRM")) {
                         if (hasPRM)
-                            ErrorStack.add("multiple PRM attributes");
+                            ErrorStack.warn("multiple PRM attributes");
                         hasPRM = true;
                     }
                 }
@@ -2351,10 +2367,10 @@ implements OpenPearlVisitor<Void> {
             TypeFixed type = (TypeFixed) (td);
             if (((TypeFixed)td).getPrecision() < 15) {
                 ErrorStack.add(
-                        "must be at least FIXED(15) -- got FIXED(" + type.getPrecision() + ")");
+                        "RST variable must be at least FIXED(15) -- got FIXED(" + type.getPrecision() + ")");
             }
         } else {
-            ErrorStack.add("variable must be FIXED");
+            ErrorStack.add("RST variable must be FIXED -- got "+td.toErrorString());
         }
         return;
     }

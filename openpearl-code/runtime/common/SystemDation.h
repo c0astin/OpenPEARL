@@ -186,16 +186,6 @@ namespace pearlrt {
       */
       void terminate(TaskCommon * ioPerformingTask);
 
-      /**
-      retrieve the current IDF name of an opened dation 
-
-      For checks with multiple open statements on an userdation, there
-      should be a check if the current filename differs from the filename
-      of the first OPEN statement.
-
-      The default implementation returns NULL.
-      */
-      virtual RefCharacter *  getIDFName();
    };
 }
 #endif

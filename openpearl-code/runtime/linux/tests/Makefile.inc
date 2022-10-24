@@ -53,11 +53,11 @@ targets +=  \
 	tests/DationTests
 #	tests/DationSuspendTerminateTests 
 
-$(warning $(targets))
-$(warning $(CXX_COMMON_TEST_PROGS))
+#$(warning $(targets))
+#$(warning $(CXX_COMMON_TEST_PROGS))
 
 targets +=  $(addprefix tests/, $(basename $(CXX_COMMON_TEST_PROGS)))
-$(warning $(targets))
+#$(warning $(targets))
 
 GTEST_SRCS = tests/gtest_main.cc 
 GTEST_DATION_SRCS = tests/gtest_main.cc 
