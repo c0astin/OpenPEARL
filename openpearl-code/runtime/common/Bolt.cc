@@ -79,8 +79,26 @@ namespace pearlrt {
    }
 
 
-   void Bolt::setState(int newState) {
+   void Bolt::setState(int newState, TaskCommon* taskCommon, int oldState) {
       state = newState;
+      if (state == FREE)
+      {
+         DeadlockOperation deadlockOperation;
+         deadlockOperation.codeFilename = taskCommon->getLocationFile();
+         deadlockOperation.codeLineNumber = taskCommon->getLocationLine();
+         deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_BOLT;
+         // leave -> entered
+         // free -> reserved
+         if (oldState == ENTERED) {
+            deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_LEAVE;
+         } else if (oldState == RESERVED) {
+            deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_FREE;
+         }
+         deadlockOperation.executingTaskIdentifier = taskCommon->getName();
+         deadlockOperation.addResourceIdentifierWithValue(this->getName(), 0);
+         HfujkControl::performDeadlockOperation(deadlockOperation);
+      }
+
    }
 
    int Bolt::check(BlockReason r, BlockData::BlockReasons::BlockBolt *bd) {
@@ -176,9 +194,25 @@ namespace pearlrt {
 
       wouldBlock = check(operation, &(bd.u.bolt));
 
+      if (operation == RESERVE)
+      {
+         DeadlockOperation deadlockOperation;
+         deadlockOperation.codeFilename = me->getLocationFile();
+         deadlockOperation.codeLineNumber = me->getLocationLine();
+         deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_BOLT;
+         deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_RESERVE;
+         deadlockOperation.executingTaskIdentifier = me->getName();
+         for (i = 0; i < nbrOfBolts; i++) {
+            deadlockOperation.addResourceIdentifierWithValue(bolts[i]->getName(), 0);
+         }
+         deadlockOperation.reserveBoltOperationsPossible = (wouldBlock == 0);
+         HfujkControl::performDeadlockOperation(deadlockOperation);
+         bool isInDeadlockSituation = HfujkControl::getDeadlockSituation();
+      }
+
       if (! wouldBlock) {
          for (i = 0; i < nbrOfBolts; i++) {
-            bolts[i]->setState(newState);
+            bolts[i]->setState(newState, me);
 
             if (operation == ENTER) {
                bolts[i]->incrementEnter();
@@ -242,7 +276,7 @@ namespace pearlrt {
             bolts[i]->decrementEnter();
 
             if (bolts[i]->getNbrOfEnterOperations() == 0) {
-               bolts[i]->setState(FREE);
+               bolts[i]->setState(FREE, me, oldState);
                Log::debug("   bolt: %s is now %s",
                           bolts[i]->getName(), bolts[i]->getStateName());
             } else {
@@ -252,7 +286,7 @@ namespace pearlrt {
             }
          } else {
             // RESERVED
-            bolts[i]->setState(FREE);
+            bolts[i]->setState(FREE, me, oldState);
             Log::debug("%s: BOLT is now %s",
                        bolts[i]->getName(), bolts[i]->getStateName());
          }
@@ -268,7 +302,7 @@ namespace pearlrt {
          if (bd.reason == RESERVE)  {
             if (!wouldBlock) {
                for (i = 0; i < bd.u.bolt.nbolts; i++) {
-                  bd.u.bolt.bolts[i]->setState(RESERVED);
+                  bd.u.bolt.bolts[i]->setState(RESERVED, me, oldState);
                }
 
                waiters.remove(t);
@@ -289,7 +323,7 @@ namespace pearlrt {
             if (bd.reason == ENTER)  {
                if (!wouldBlock) {
                   for (i = 0; i < bd.u.bolt.nbolts; i++) {
-                     bd.u.bolt.bolts[i]->setState(ENTERED);
+                     bd.u.bolt.bolts[i]->setState(ENTERED, me, oldState);
                      bd.u.bolt.bolts[i]->incrementEnter();
                   }
 
@@ -319,9 +353,9 @@ namespace pearlrt {
       if (!wouldBlock)  {
          for (int i = 0; i < bd.u.bolt.nbolts; i++) {
             if (bd.reason == ENTER) {
-               bd.u.bolt.bolts[i]->setState(ENTERED);
+               bd.u.bolt.bolts[i]->setState(ENTERED, t);
             } else {
-               bd.u.bolt.bolts[i]->setState(RESERVED);
+               bd.u.bolt.bolts[i]->setState(RESERVED, t);
             }
          }
 

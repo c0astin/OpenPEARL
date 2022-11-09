@@ -255,6 +255,8 @@ List of commands:
 #include "LogFile.h"
 #include "Disc.h"
 
+//#include "../common/hfujk/HfujkControl.h"
+
 /**
 The namespace pearlrt is introduced to collect all symbols of the
 runtime system apart from the user symbols coming from the PEARL source

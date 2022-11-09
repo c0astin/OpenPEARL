@@ -24,15 +24,20 @@ objects=
 target=
 PPONLY=0
 noPP=0
+noSDD=0
 PPFLAGS=""
+compilerFlags=""
     
 standard="-std=OpenPEARL"
-if [[ $PRLFLAGS =~ "-std=PEARL90" ]]; then
-   standard="-std=PEARL90"
-fi
-if [[ $PRLFLAGS =~ "-std=OpenPEARL" ]]; then
-   standard="-std=OpenPEARL"
-fi
+# PRLFLAGS comes from the intension that a environment variable may set 
+# some options for the prl-script
+# --> not complete
+#if [[ $PRLFLAGS =~ "-std=PEARL90" ]]; then
+#   standard="-std=PEARL90"
+#fi
+#if [[ $PRLFLAGS =~ "-std=OpenPEARL" ]]; then
+#   standard="-std=OpenPEARL"
+#fi
 
 while [ "$1" != "" ] ; do
     #echo "input: " $INPUT
@@ -48,6 +53,7 @@ while [ "$1" != "" ] ; do
 	-D)             PPFLAGS+=" -D$2";              shift 2;;
 	-U)             PPFLAGS+=" -U$2";              shift 2;;
 	-E)             PPONLY=1;                      shift;;
+        -noSDD)         noSDD=1;                       shift;;
 	-nopp)          noPP=1;                        shift;;
         -r)             RUN=1;                         shift;;
         -v)             VERBOSE=1;                     shift;;
@@ -61,7 +67,12 @@ while [ "$1" != "" ] ; do
         *) INPUT="$INPUT $1";        shift;;
      esac
 done
+compilerFlags+=" "$standard;
+if [[ "noSDD" -eq "0" ]] ; then
+  compilerFlags+=" --SDD";
+fi;
 
+#echo "compilerFlags=" $compilerFlags 
 #echo "HELP=" $HELP 
 #echo PLATFORM = $PLATFORM
 #echo COMPILEONLY = $COMPILEONLY
@@ -72,7 +83,7 @@ done
 
 if [ -n "$HELP" ]
 then
-#        ==============================================================================
+#  ============================================================================
    echo "Usage $0 [options] file file ..."
    echo "   Parameters: " 
    echo "    -std=OpenPEARL             (default) "
@@ -88,6 +99,7 @@ then
    echo "    -D name                    Predefine name as a macro with a definition of 1"
    echo "    -D name=definition         Predefine name as a macro with value of definition"
    echo "    -E                         preprocess only"
+   echo "    -noSDD                     no static deadlock detection"
    echo "    -I dir                     add the directory dir to the list of directories"
    echo "                               to be searched by the preprocessor"
    echo "    -r                         run application on MCU" 
@@ -240,12 +252,24 @@ rm -f $target.out $target.log
 	    #include "compiler/prl_cc.inc"
 	    
             rc=$?
+            
 
             if [[ "$StopBeforeCpp" = "0" && "$COMPILEONLY" = "0" ]] ; then
                intermediateFiles+=" $fn.xml"
             fi 
 
             intermediateFiles+=" $fn.log $fn.out"
+
+            # treat dot-files in /tmp
+	    if [[ "noSDD" -eq "0" ]] ; then
+                #echo "move dot file: " $prlccinput 
+                #echo $fn
+		#echo "mv $prlccinput"_d_cfg.dot "$fn"_d_cfg.dot
+		if [ -f "$prlccinput"_d_cfg.dot ]; then
+		   mv "$prlccinput"_d_cfg.dot "$fn"_d_cfg.dot
+ 		fi
+            fi;
+
 
             if [ $rc -ne 0 ] ; then
               echo "terminate due to errors in stage 1" 1>>$fn.log
@@ -312,6 +336,23 @@ rm -f $target.out $target.log
       fi
       exit;
    fi
+ 
+   # --------------------
+   # run static analyzer 
+   if [[ "noSDD" -eq "0" ]] ; then
+     # echo "SDD: gets: "  $imcInputFiles "  or fn: " $fn
+     if [ -f "$fn"_d_cfg.dot ]; then
+
+         #include "static_analyzer/run_static_analyzer.inc"
+         rc=$?
+         if [ $rc -ne 0 ]
+         then
+            echo "terminate due to errors in stage 1c (staticAnalyzer)" >>$fn.log
+            exit $rc
+         fi
+         intermediateFiles+=" $fn"_d_cfg.dot
+      fi
+   fi
    	
    # --------------------
    # run imc
@@ -369,6 +410,7 @@ rm -f $target.out $target.log
    fi
 
    if [[ "$keepFiles" != "1" ]] ; then
+      #echo "remove intermediate files: " $intermediateFiles
       rm -f $intermediateFiles
    fi
 

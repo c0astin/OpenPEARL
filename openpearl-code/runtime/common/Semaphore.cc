@@ -41,6 +41,8 @@ locking pattern
 #include "TaskCommon.h"
 #include "Semaphore.h"
 #include "Log.h"
+#include "DeadlockOperation.h"
+#include "HfujkControl.h"
 
 namespace pearlrt {
 
@@ -72,7 +74,7 @@ namespace pearlrt {
       value ++;
    }
 
-   int Semaphore::internalDoTry(BlockData::BlockReasons::BlockSema *bd) {
+   int Semaphore::internalDoTry(TaskCommon * taskCommon, BlockData::BlockReasons::BlockSema *bd) {
       int wouldBlock = 0;
       int i;
 
@@ -80,6 +82,18 @@ namespace pearlrt {
          Log::debug("   Semaphore %s is %d",
                     bd->semas[i]->getName(), (int)bd->semas[i]->getValue());
       }
+
+      DeadlockOperation deadlockOperation;
+      deadlockOperation.codeFilename = taskCommon->getLocationFile();
+      deadlockOperation.codeLineNumber = taskCommon->getLocationLine();
+      deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_SEMAPHORE;
+      deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_REQUEST;
+      deadlockOperation.executingTaskIdentifier = taskCommon->getName();
+      for (i = 0; i < bd->nsemas; i++) {
+         deadlockOperation.addResourceIdentifierWithValue(bd->semas[i]->getName(), (int)bd->semas[i]->getValue());
+      }
+      HfujkControl::performDeadlockOperation(deadlockOperation);
+      bool isInDeadlockSituation = HfujkControl::getDeadlockSituation();
 
       for (i = 0; i < bd->nsemas; i++) {
          if (bd->semas[i]->getValue() == 0) {
@@ -94,6 +108,8 @@ namespace pearlrt {
          }
 
       }
+
+      // task could claim the resources
 
       return wouldBlock;
    }
@@ -113,14 +129,17 @@ namespace pearlrt {
       Log::debug("request from task %s for %d semaphores", me->getName(),
                 nbrOfSemas);
 
-      wouldBlock = internalDoTry(&(bd.u.sema));
+      wouldBlock = internalDoTry(me, &(bd.u.sema));
 
       if (! wouldBlock) {
          // critical region end
+         // task could claim the resources
          TaskCommon::mutexUnlock();
       } else {
          Log::debug("   task: %s going to blocked", me->getName());
          waiters.insert(me);
+         // task must wait for at least one resource
+
          // critical region ends in block()
          me->block(&bd);
          me->scheduleCallback();
@@ -139,9 +158,21 @@ namespace pearlrt {
       Log::debug("release from task %s for %d semaphores", me->getName(),
                  nbrOfSemas);
 
+      DeadlockOperation deadlockOperation;
+      deadlockOperation.codeFilename = me->getLocationFile();
+      deadlockOperation.codeLineNumber = me->getLocationLine();
+      deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_SEMAPHORE;
+      deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_RELEASE;
+      deadlockOperation.executingTaskIdentifier = me->getName();
+      for (i = 0; i < nbrOfSemas; i++) {
+         deadlockOperation.addResourceIdentifierWithValue(semas[i]->getName(), semas[i]->getValue());
+      }
+      HfujkControl::performDeadlockOperation(deadlockOperation);
+
       try {
          for (i = 0; i < nbrOfSemas; i++) {
             semas[i]->increment();
+            // resource released
          }
       } catch (SemaOverflowSignal x) {
          Log::error("SemaOverflowSignal for %s",
@@ -149,6 +180,9 @@ namespace pearlrt {
          TaskCommon::mutexUnlock();
          throw;
       }
+
+      // all resources released
+
       for (i = 0; i < nbrOfSemas; i++) {
          Log::debug("   Semaphore %s is now %u",
                        semas[i]->getName(), (int)semas[i]->getValue());
@@ -158,12 +192,14 @@ namespace pearlrt {
 
       while (t != 0) {
          t->getBlockingRequest(&bd);
-         wouldBlock = internalDoTry(&(bd.u.sema));
+         wouldBlock = internalDoTry(t, &(bd.u.sema));
 
          if (!wouldBlock)  {
             //for (i = 0; i < bd.u.sema.nsemas; i++) {
             //   bd.u.sema.semas[i]->decrement();
             //}
+
+            // task could claim requested resources
 
             waiters.remove(t);
             t->unblock();
@@ -191,7 +227,7 @@ namespace pearlrt {
       TaskCommon::mutexLock();
       Log::debug("try from task %s for %d semaphores", me->getName(),
                  nbrOfSemas);
-      wouldBlock = internalDoTry(&(bd.u.sema));
+      wouldBlock = internalDoTry(me, &(bd.u.sema));
 
       //if (! wouldBlock) {
       //   for (i = 0; i < nbrOfSemas; i++) {
@@ -217,7 +253,7 @@ namespace pearlrt {
       int wouldBlock;
 
       t->getBlockingRequest(&bd);
-      wouldBlock = internalDoTry(&(bd.u.sema));
+      wouldBlock = internalDoTry(t, &(bd.u.sema));
 
       if (!wouldBlock)  {
       //   for (int i = 0; i < bd.u.sema.nsemas; i++) {

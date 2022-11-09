@@ -38,13 +38,14 @@ Prologue( src,
           taskSpecifierList,
           ConstantPoolList,
           StructureForwardDeclarationList,
-          StructureDeclarationList) ::= <<
+          StructureDeclarationList,
+          resourceAllocationGraphNodeCount) ::= <<
 
-
+/* resourceAllocationGraphNodeCount */ 
+bool hfujkControlConfigured = pearlrt::HfujkControl::configure(<resourceAllocationGraphNodeCount>);
 
 
 static const char* filename = (char*) "<src>";
-
 
 
 <if(headerfiles)> <headerfiles:headerfile(); separator="\n"> <endif>
@@ -1516,14 +1517,43 @@ DationDeclarations(decl) ::= <<
 <decl>
 >>
 
-DationInitialiser(decl, specs) ::= <<
+DationInitialiser(decl, specs, deadlockOperations) ::= <<
 static void setupDationsAndPointers() {
    <specs>
    <decl>
+
+   <deadlockOperations>
 } 
 
 static pearlrt::Control::Initializer init={setupDationsAndPointers,NULL};
 int dummy = pearlrt::Control::addInitializer(&init);
+>>
+DeadlockOperations(deadlockOperation) ::= <<
+<deadlockOperation>
+//pearlrt::HfujkControl::printDeadlockOperations();
+>>
+
+DeadlockOperation(operationVariableIdentifier, contextType, contextIdentifier, deadlockOperationResourceIdentifiers, deadlockOperationExecutingTaskIdentifiers, resourcesType, actionType, codeFilename, codeLineNumber) ::= <<
+pearlrt::DeadlockOperation <operationVariableIdentifier>;
+<operationVariableIdentifier>.contextType = "<contextType>";
+<operationVariableIdentifier>.contextIdentifier = "<contextIdentifier>";
+<operationVariableIdentifier>.actionType = "<actionType>";
+<operationVariableIdentifier>.resourcesType = "<resourcesType>";
+<operationVariableIdentifier>.codeFilename = "<codeFilename>";
+<operationVariableIdentifier>.codeLineNumber = <codeLineNumber>;
+<deadlockOperationResourceIdentifiers><deadlockOperationExecutingTaskIdentifiers>pearlrt::HfujkControl::registerDeadlockOperation(<operationVariableIdentifier>);
+
+
+>>
+
+DeadlockOperationResourceIdentifier(operationVariableIdentifier, resourceIdentifier) ::= <<
+<operationVariableIdentifier>.addResourceIdentifier("<resourceIdentifier>");
+
+>>
+
+DeadlockOperationExecutingTaskIdentifier(operationVariableIdentifier, executingTaskIdentifier) ::= <<
+<operationVariableIdentifier>.addExecutingTaskIdentifier("<executingTaskIdentifier>");
+
 >>
 
 DationInitialisierSpecs(spec) ::= <<

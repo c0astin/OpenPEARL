@@ -4,7 +4,7 @@ USERID=$(shell id -u)
 
 -include configuration/.config
 
-.PHONY: prl install runtime compiler help build all menuconfig
+.PHONY: prl install runtime compiler help build all menuconfig static_analyzer
 
 help:
 	@echo "*************************************"
@@ -32,7 +32,7 @@ help:
 all:	build install
 
 build: configuration/include/autoconf.h  configuration/include/auto.conf \
-	 runtime compiler errorChecker
+	 runtime compiler errorChecker static_analyzer
 
 runtime:
 	(cd runtime; make all; )
@@ -43,11 +43,15 @@ compiler:
 errorChecker:
 	(cd errorChecker/src; make ; )
 
+static_analyzer:
+	(cd static_analyzer; make ; )
+
 prepare: configuration/include/autoconf.h
 ifeq ($(USERID),0)
 	   (cd runtime; make prepare; )
 	   (cd imc3; make prepare; )
 	   (cd compiler; make prepare; )
+	   (cd static_analyzer; make prepare; )
 	   touch $(CONFIG_INSTALL_Target)/bin/prl
 	   chmod 777 $(CONFIG_INSTALL_Target)/bin/prl
 else
@@ -64,6 +68,8 @@ install: configuration/include/autoconf.h  flashinterface.inc
 	(cd runtime; make install; )
 	(cd compiler/src; make clean; )
 	(cd compiler/src; make install; )
+	(cd static_analyzer; make clean; )
+	(cd static_analyzer; make install; )
 	runtime/includeComposer/ic  <prl.inc >prl
 ifeq ($(CONFIG_DOC_PREPORT),y)
 	(cd language_report; make clean; )

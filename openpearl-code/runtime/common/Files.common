@@ -84,7 +84,13 @@ CXX_COMMON = \
 	ConsoleCommon.cc \
 	FullDuplexDationAbortNB.cc\
 	SampleBasicDation.cc  \
-	SendXML.cc
+	SendXML.cc \
+	hfujk/HfujkControl.cc \
+	hfujk/DeadlockOperation.cc \
+	hfujk/PerformedDeadlockOperation.cc \
+	hfujk/Graph.cc \
+	hfujk/ResourceAllocationGraph.cc
+
 
 #CONFIG_HAC_I2C must be set manually by the makefile of
 # the platform, which is build now

@@ -34,7 +34,8 @@ include ../../configuration/.config
 # this makefile is only called from the superior makefile
 # if CONFIG_LINUX is set to y
 
-INCLUDES = -I . -I ../common
+INCLUDES = -I . -I ../common -I ../common/hfujk
+
 CXXFLAGS = -Wall -g  -fstack-protector
 CXXFLAGS += -pthread
 CXXFLAGS+= -O2

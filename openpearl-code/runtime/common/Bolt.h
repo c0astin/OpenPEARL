@@ -45,6 +45,7 @@ namespace pearlrt {
 #include "Task.h"   // intermediate BlockData
 #include "TaskCommon.h"
 #include "PriorityQueue.h"
+#include "hfujk/HfujkControl.h"
 
 namespace pearlrt {
    /**
@@ -88,7 +89,7 @@ namespace pearlrt {
       \param newState one of FREE, ENTERED, RESERVED
 
       */
-      void setState(int newState);
+      void setState(int newState, TaskCommon* taskCommon, int oldState = 0);
 
       /**
          get the state of the bolt

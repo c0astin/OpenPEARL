@@ -48,6 +48,10 @@ OUTPUT_PP_DIR = ../pp-out
 ##JAVAC_FLAGS = -Xlint:unchecked
 JAVAC_FLAGS =
 
+# libs for deadlock detection
+#MINIMALJSON= ../minimal-json-0.9.5.jar
+#APACHE_LANG3= ../commons-lang3-3.12.0.jar
+
 ###############################################################################
 
 .PHONY: gen prl pp
@@ -77,6 +81,7 @@ gen ./check_cmds.sh $(ANTLR_GENERATED_FILES) : OpenPearl.g4
 
 prl:
 	test -d $(OUTPUT_PRL_DIR) || mkdir $(OUTPUT_PRL_DIR)
+	#javac -cp .:$(CONFIG_COMPILER_ANTLR):$(MINIMALJSON):$(APACHE_LANG3) -d $(OUTPUT_PRL_DIR) $(JAVAC_FLAGS) org/openpearl/compiler/Compiler.java
 	javac -cp .:$(CONFIG_COMPILER_ANTLR) -d $(OUTPUT_PRL_DIR) $(JAVAC_FLAGS) org/openpearl/compiler/Compiler.java
 	rm -f openpearl_compiler.jar
 	cp OpenPearlCpp.stg $(OUTPUT_PRL_DIR)
@@ -88,6 +93,9 @@ prl:
 	                            org/openpearl/compiler/SemanticAnalysis/*.class \
 	                            org/openpearl/compiler/Exception/*.class \
 	                            org/openpearl/compiler/Graph/*.class \
+	                            org/openpearl/compiler/DeadLockDetection/*.class \
+	                            org/openpearl/compiler/DeadLockDetection/ControlFlowGraphEntities/*.class \
+	                            org/openpearl/compiler/DeadLockDetection/GraphUtils/*.class \
 				    OpenPearlCpp.stg IMC.stg
 
 ##############################################################################
@@ -127,7 +135,8 @@ install: gen prl pp prl_cc.inc
 prl_cc.inc:
 	echo "##### auto generated  start " > ../prl_cc.inc
 	echo 'java -cp $(CONFIG_INSTALL_Target)/bin/openpearl_compiler.jar:$(CONFIG_COMPILER_ANTLR)  org/openpearl/compiler/Compiler \' >> ../prl_cc.inc
-	echo '   $$standard $$PRLFLAGS $$prlccinput.prl \' >> ../prl_cc.inc
+	echo '   $$compilerFlags $$prlccinput.prl \' >> ../prl_cc.inc
+	# echo '   $$compilerFlags $$PRLFLAGS $$prlccinput.prl \' >> ../prl_cc.inc
 	echo '   --imc-output $$fn.xml \' >> ../prl_cc.inc
 	echo '   --output $$outputPrlCC ' >> ../prl_cc.inc	
 	echo "##### auto generated end " >> ../prl_cc.inc
@@ -145,7 +154,10 @@ clean:
 	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/SymbolTable/*.class
 	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/SemanticAnalysis/*.class
 	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/AST/*.class
+	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/ControlFlowGraph/*.class
+	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/DeadLockDetection/*.class
 	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/Exception/*.class
+	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/Graph/*.class
 	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/preprocessor/*.class
 	$(RM) $(OUTPUT_PP_DIR)/*.jar
 	$(RM) $(OUTPUT_PRL_DIR)/*.jar

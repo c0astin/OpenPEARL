@@ -46,6 +46,7 @@ namespace pearlrt {
 #include "Task.h"   // intermediate BlockData
 #include "TaskCommon.h"
 #include "PriorityQueue.h"
+//#include "hfujk/HfujkControl.h"
 
 namespace pearlrt {
    /**
@@ -80,7 +81,8 @@ namespace pearlrt {
       uint32_t value;           // the internal semaphore value
       const char * name;
       static PriorityQueue waiters;
-      static int internalDoTry(BlockData::BlockReasons::BlockSema *bd);
+      static int internalDoTry(TaskCommon * taskCommon, 
+                               BlockData::BlockReasons::BlockSema *bd);
 
    public:
       /**

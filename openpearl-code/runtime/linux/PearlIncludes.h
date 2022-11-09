@@ -145,3 +145,10 @@ Only this file mus be included.
 
 #include "TcpIpServer.h"
 #include "IOJob.h"
+
+#include "hfujk/DeadlockOperation.h"
+#include "hfujk/PerformedDeadlockOperation.h"
+#include "hfujk/Graph.h"
+#include "hfujk/ResourceAllocationGraph.h"
+#include "hfujk/HfujkControl.h"
+
