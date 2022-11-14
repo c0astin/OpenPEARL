@@ -124,3 +124,9 @@ Only this file mus be included.
 #include "PCF8574In.h"
 #include "PCF8574Out.h"
 
+#include "DynamicDeadlockDetection/DeadlockOperation.h"
+#include "DynamicDeadlockDetection/PerformedDeadlockOperation.h"
+#include "DynamicDeadlockDetection/Graph.h"
+#include "DynamicDeadlockDetection/ResourceAllocationGraph.h"
+#include "DynamicDeadlockDetection/DynamicDeadlockDetection.h"
+

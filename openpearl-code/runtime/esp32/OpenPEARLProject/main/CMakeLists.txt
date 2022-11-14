@@ -80,6 +80,12 @@ set(srcs
     common/SampleBasicDation.cc
     common/LM75.cc
     common/SendXML.cc
+    common/DynamicDeadlockDetection/DynamicDeadlockDetection.cc 
+    common/DynamicDeadlockDetection/DeadlockOperation.cc 
+    common/DynamicDeadlockDetection/PerformedDeadlockOperation.cc 
+    common/DynamicDeadlockDetection/Graph.cc 
+    common/DynamicDeadlockDetection/ResourceAllocationGraph.cc
+
     # ---
     addOns/timer.c
     addOns/service.c
