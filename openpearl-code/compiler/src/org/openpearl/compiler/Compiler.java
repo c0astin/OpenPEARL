@@ -109,6 +109,7 @@ public class Compiler {
      
 
     public static void main(String[] args) {
+        boolean containsRefTaskProcSemaBolt = false;
         int i;
 
         if (args.length < 1) {
@@ -310,20 +311,9 @@ public class Compiler {
                     new CheckUnreachableStatements(cfgs).check();
                 }
                 
-                if (ErrorStack.getTotalErrorCount() <= 0) {
-                    CppGenerate(SourceLocations.getTopFileName(), tree, symbolTableVisitor,
-                            expressionTypeVisitor, constantExpressionVisitor, ast, stdOpenPEARL);
-                }
-
-                if (ErrorStack.getTotalErrorCount() <= 0 && imc) {
-                    String filename = SourceLocations.getTopFileName();
-                    if ( filename == null ) {
-                        filename = lexer.getSourceName();
-                    }
-                    SystemPartExport(filename, tree, symbolTableVisitor, ast, stdOpenPEARL);
-                }
-                
-                if(makeStaticDeadlockDetection) {
+               
+                // check if deadlock detection is possible
+                    containsRefTaskProcSemaBolt = false;
                     // check if there are REFs used on TASK,PROC,SEMA or BOLT
                     SymbolTable symbolTable = symbolTableVisitor.symbolTable;
                     LinkedList<VariableEntry> vars= symbolTable.getAllVariableDeclarations();
@@ -331,8 +321,8 @@ public class Compiler {
                         if (v instanceof FormalParameter ) {
                            if ( ((FormalParameter)v).passIdentical() ) {
                                if (v.getType() instanceof TypeSemaphore || v.getType() instanceof TypeBolt ) {
-                                   ErrorStack.warn(v.getCtx(), "static deadlock detection disabled", "not possible with parameter "+v.getType().toErrorString()+" IDENT");
-                                   makeStaticDeadlockDetection = false;
+                                   ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with parameter "+v.getType().toErrorString()+" IDENT");
+                                   containsRefTaskProcSemaBolt = true;
                                    break;
                                    
                                }
@@ -345,27 +335,41 @@ public class Compiler {
                                     td instanceof TypeProcedure ||
                                     td instanceof TypeSemaphore ||
                                     td instanceof TypeBolt) {
-                                ErrorStack.warn(v.getCtx(), "static deadlock detection disabled", "not possible with REF "+td.toErrorString());
-                                makeStaticDeadlockDetection = false;
+                                ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with REF "+td.toErrorString());
+                                containsRefTaskProcSemaBolt = true;
                                 break;
                             } else if (td instanceof TypeStructure || td instanceof UserDefinedTypeStructure) {
-                                    if (containsIllegalRefForSDD(td)) {
-                                        ErrorStack.warn(v.getCtx(), "static deadlock detection disabled", "not possible with REF "+td.toErrorString());
-                                        makeStaticDeadlockDetection = false;
+                                    if (containsIllegalRefForDD(td)) {
+                                        ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with REF "+td.toErrorString());
+                                        containsRefTaskProcSemaBolt = true;
                                     }
                             }
                         } else if (td instanceof TypeStructure || td instanceof UserDefinedTypeStructure) {
-                            if (containsIllegalRefForSDD(td)) {
-                                ErrorStack.warn(v.getCtx(), "static deadlock detection disabled", "not possible with REF "+td.toErrorString());
-                                makeStaticDeadlockDetection = false;
+                            if (containsIllegalRefForDD(td)) {
+                                ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with REF "+td.toErrorString());
+                                containsRefTaskProcSemaBolt = true;
                             }
                         }
                     }
-                   
-                    if (makeStaticDeadlockDetection) {
-                       String filePath = m_sourceFilename.substring(0, m_sourceFilename.lastIndexOf(".")) + "_d_cfg.dot";
-                       DeadlockControlFlowGraph.generate(cfgs, filePath);
+              
+                
+                if (ErrorStack.getTotalErrorCount() <= 0) {
+                    CppGenerate(SourceLocations.getTopFileName(), tree, symbolTableVisitor,
+                            expressionTypeVisitor, constantExpressionVisitor, ast, stdOpenPEARL, containsRefTaskProcSemaBolt);
+                }
+
+                if (ErrorStack.getTotalErrorCount() <= 0 && imc) {
+                    String filename = SourceLocations.getTopFileName();
+                    if ( filename == null ) {
+                        filename = lexer.getSourceName();
                     }
+                    SystemPartExport(filename, tree, symbolTableVisitor, ast, stdOpenPEARL);
+                }
+                
+               
+               if (makeStaticDeadlockDetection && !containsRefTaskProcSemaBolt) {
+                   String filePath = m_sourceFilename.substring(0, m_sourceFilename.lastIndexOf(".")) + "_d_cfg.dot";
+                   DeadlockControlFlowGraph.generate(cfgs, filePath);
                 }
 
 
@@ -448,7 +452,7 @@ public class Compiler {
         }
     }
 
-    private static boolean containsIllegalRefForSDD(TypeDefinition td) {
+    private static boolean containsIllegalRefForDD(TypeDefinition td) {
         if (td instanceof UserDefinedTypeStructure) {
             td = ((UserDefinedTypeStructure) td).getStructuredType();
         }
@@ -621,11 +625,11 @@ public class Compiler {
     private static Void CppGenerate(String sourceFileName, ParserRuleContext tree,
             SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
             ConstantExpressionEvaluatorVisitor constantExpressionEvaluatorVisitor, AST ast,
-            boolean useNameSpaceForGlobals) {
+            boolean useNameSpaceForGlobals, boolean suppressDeadlockDetection) {
 
         CppCodeGeneratorVisitor cppCodeGenerator = new CppCodeGeneratorVisitor(sourceFileName,
                 groupFile, verbose, debug, symbolTableVisitor, expressionTypeVisitor,
-                constantExpressionEvaluatorVisitor, ast, useNameSpaceForGlobals);
+                constantExpressionEvaluatorVisitor, ast, useNameSpaceForGlobals, suppressDeadlockDetection);
 
         ST code = cppCodeGenerator.visit(tree);
 
