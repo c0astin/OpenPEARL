@@ -8,7 +8,7 @@
 # test is the prefix number of the test files
 # e.g.
 # ./run-compile.sh 0 linux 023 024
-# try to build 023*.prl  and 024*.prl to targert 023 and 024
+# try to build 023*.prl  and 024*.prl to target 023 and 024
 
 PARAM=$1
 shift
