@@ -1,21 +1,49 @@
-// hfujk
+/*
+ * [A "BSD license"]
+ *  Copyright (c) 2022 Jan Knoblauch
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. The name of the author may not be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-#include "HfujkControl.h"
+
+#include "DynamicDeadlockDetection.h"
 
 namespace pearlrt {
 
-   int HfujkControl::resourceAllocationGraphNodeCount = 0;
-   HfujkControl* HfujkControl::instance = nullptr;
-   std::mutex HfujkControl::instanceMutex;
+   int DynamicDeadlockDetection::resourceAllocationGraphNodeCount = 0;
+   DynamicDeadlockDetection* DynamicDeadlockDetection::instance = nullptr;
+   std::mutex DynamicDeadlockDetection::instanceMutex;
 
-   bool HfujkControl::configure(int setResourceAllocationGraphNodeCount)
+   bool DynamicDeadlockDetection::configure(int setResourceAllocationGraphNodeCount)
    {
       // public, Not critical
-      HfujkControl::resourceAllocationGraphNodeCount = setResourceAllocationGraphNodeCount;
+      DynamicDeadlockDetection::resourceAllocationGraphNodeCount += setResourceAllocationGraphNodeCount;
       return true;
    }
 
-   void HfujkControl::registerDeadlockOperation(const DeadlockOperation& deadlockOperation)
+   void DynamicDeadlockDetection::registerDeadlockOperation(const DeadlockOperation& deadlockOperation)
    {
       // public
       instanceMutex.lock();
@@ -23,7 +51,7 @@ namespace pearlrt {
       instanceMutex.unlock();
    }
 
-   void HfujkControl::printDeadlockOperations()
+   void DynamicDeadlockDetection::printDeadlockOperations()
    {
       // public
       instanceMutex.lock();
@@ -31,7 +59,7 @@ namespace pearlrt {
       instanceMutex.unlock();
    }
 
-   bool HfujkControl::getDeadlockSituation()
+   bool DynamicDeadlockDetection::getDeadlockSituation()
    {
       // public
       instanceMutex.lock();
@@ -40,14 +68,14 @@ namespace pearlrt {
       return result;
    }
 
-   unsigned long long HfujkControl::getCurrentTimestamp()
+   unsigned long long DynamicDeadlockDetection::getCurrentTimestamp()
    {
       // public, Not critical
       using namespace std::chrono;
       return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
    }
 
-   string HfujkControl::formatTimestamp(unsigned long long timestamp, bool inMilliseconds)
+   string DynamicDeadlockDetection::formatTimestamp(unsigned long long timestamp, bool inMilliseconds)
    {
       // public, Not critical
       unsigned long long timestampSeconds = timestamp;
@@ -83,7 +111,7 @@ namespace pearlrt {
       return result;
    }
 
-   string HfujkControl::formatIdentifier(const string& identifier)
+   string DynamicDeadlockDetection::formatIdentifier(const string& identifier)
    {
       // public, Not critical
       if (identifier.at(0) == '_')
@@ -94,7 +122,7 @@ namespace pearlrt {
       return identifier;
    }
 
-   void HfujkControl::performDeadlockOperation(DeadlockOperation& deadlockOperation)
+   void DynamicDeadlockDetection::performDeadlockOperation(DeadlockOperation& deadlockOperation)
    {
       // public
       instanceMutex.lock();

@@ -85,11 +85,11 @@ CXX_COMMON = \
 	FullDuplexDationAbortNB.cc\
 	SampleBasicDation.cc  \
 	SendXML.cc \
-	hfujk/HfujkControl.cc \
-	hfujk/DeadlockOperation.cc \
-	hfujk/PerformedDeadlockOperation.cc \
-	hfujk/Graph.cc \
-	hfujk/ResourceAllocationGraph.cc
+	DynamicDeadlockDetection/DynamicDeadlockDetection.cc \
+	DynamicDeadlockDetection/DeadlockOperation.cc \
+	DynamicDeadlockDetection/PerformedDeadlockOperation.cc \
+	DynamicDeadlockDetection/Graph.cc \
+	DynamicDeadlockDetection/ResourceAllocationGraph.cc
 
 
 #CONFIG_HAC_I2C must be set manually by the makefile of
