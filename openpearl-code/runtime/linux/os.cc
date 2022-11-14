@@ -255,7 +255,7 @@ List of commands:
 #include "LogFile.h"
 #include "Disc.h"
 
-//#include "../common/hfujk/HfujkControl.h"
+//#include "../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h"
 
 /**
 The namespace pearlrt is introduced to collect all symbols of the
