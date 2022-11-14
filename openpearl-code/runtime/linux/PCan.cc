@@ -73,7 +73,7 @@ namespace pearlrt {
 
    }
 
-   SystemDationB* PCan::dationOpen(const char * idf, int params) {
+   SystemDationB* PCan::dationOpen(const RefCharacter * idf, int params) {
       int ret;
 
       if (idf) {

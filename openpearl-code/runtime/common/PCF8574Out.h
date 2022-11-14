@@ -89,7 +89,7 @@ namespace pearlrt {
 
       \throws OpenFailedSignal, if  dation is not closed and rst is not given
       */
-      PCF8574Out* dationOpen(const char* idf = 0, int openParam = 0);
+      PCF8574Out* dationOpen(const RefCharacter* idf = 0, int openParam = 0);
 
       /**
       Close the dation

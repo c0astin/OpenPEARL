@@ -93,7 +93,7 @@ namespace pearlrt {
 
   
 
-   TcpIpServer* TcpIpServer::dationOpen(const char * idfValue, int openParams) {
+   TcpIpServer* TcpIpServer::dationOpen(const RefCharacter * idfValue, int openParams) {
       unsigned int len;
       mutex.lock();
 

@@ -140,7 +140,7 @@ namespace pearlrt {
 
       \throws OpenFailedSignal, if  dation is not closed and rst is not given
       */
-      BME280* dationOpen(const char* idf = 0, int openParam = 0);
+      BME280* dationOpen(const RefCharacter* idf = 0, int openParam = 0);
 
       /**
       Close the sample basic dation

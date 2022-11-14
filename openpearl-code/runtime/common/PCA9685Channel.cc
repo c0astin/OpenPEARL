@@ -59,15 +59,15 @@ namespace pearlrt {
       // leave the device unchanged
    }
 
-   PCA9685Channel* PCA9685Channel::dationOpen(const char * idf, int params) {
+   PCA9685Channel* PCA9685Channel::dationOpen(const RefCharacter * idf, int params) {
 
       if (idf) {
          Log::error("PCA9685Channel: no IDF allowed");
          throw theDationParamSignal;
       }
 
-      if (params & ~(RST | IN | OUT | INOUT)) {
-         Log::error("PCA9685Channel: only RST allowed");
+      if (params & CAN) {
+         Log::error("PCA9685Channel: CAN not allowed");
          throw theDationParamSignal;
       }
 

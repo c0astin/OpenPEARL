@@ -53,7 +53,7 @@ namespace pearlrt {
       this->provider = provider;
    }
 
-   ADS1015SE* ADS1015SE::dationOpen(const char * idf, int params) {
+   ADS1015SE* ADS1015SE::dationOpen(const RefCharacter * idf, int params) {
 
       if (idf) {
          Log::error("ADS1015SE: no IDF allowed");

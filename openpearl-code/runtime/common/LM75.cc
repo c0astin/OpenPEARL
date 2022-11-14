@@ -54,7 +54,7 @@ namespace pearlrt {
       this->addr = addr;
    }
 
-   LM75* LM75::dationOpen(const char * idf, int params) {
+   LM75* LM75::dationOpen(const RefCharacter * idf, int params) {
       static uint8_t defaultValue[] = {1, 0};
       static uint8_t selectTempReg[] = {0};
 
@@ -63,8 +63,8 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      if (params & ~(RST | IN | OUT | INOUT)) {
-         Log::error("LM75: only RST allowed");
+      if (params & CAN) {
+         Log::error("LM75: CAN not allowed");
          throw theDationParamSignal;
       }
 

@@ -17,8 +17,9 @@ PROBLEM;
 readTemp_0: TASK MAIN ;
   DCL t FIXED(15);
   OPEN console;
-  OPEN thermometer_0;
   PUT 'i2ctest@lm75 start' TO console BY A,SKIP;
+AFTER 1 SEC RESUME;
+  OPEN thermometer_0;
   PUT 'lm75@0x48' TO console BY A,SKIP;
   AFTER 0.5 SEC RESUME;
   REPEAT

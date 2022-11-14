@@ -104,7 +104,7 @@ namespace pearlrt {
       \throws OpenFailedSignal, if  dation is not closed or the device
         may not be opened
       */
-      SystemDationB* dationOpen(const char* idf = 0, int openParam = 0);
+      SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
 
       /**
       Close the dation

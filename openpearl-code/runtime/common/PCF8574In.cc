@@ -56,7 +56,7 @@ namespace pearlrt {
 
    }
 
-   PCF8574In* PCF8574In::dationOpen(const char * idf, int params) {
+   PCF8574In* PCF8574In::dationOpen(const RefCharacter * idf, int params) {
 
       if (idf) {
          Log::error("PCF8574In: no IDF allowed");

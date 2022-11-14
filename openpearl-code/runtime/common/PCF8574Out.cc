@@ -56,15 +56,15 @@ namespace pearlrt {
 
    }
 
-   PCF8574Out* PCF8574Out::dationOpen(const char * idf, int params) {
+   PCF8574Out* PCF8574Out::dationOpen(const RefCharacter * idf, int params) {
 
       if (idf) {
          Log::error("PCF8574Out: no IDF allowed");
          throw theDationParamSignal;
       }
 
-      if (params & ~(RST | IN | OUT | INOUT)) {
-         Log::error("PCF8574Out: only RST allowed");
+      if (params & CAN) {
+         Log::error("PCF8574Out: CAN not allowed");
          throw theDationParamSignal;
       }
 

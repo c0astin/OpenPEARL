@@ -89,7 +89,7 @@ namespace pearlrt {
 
       \throws DationNotOpenSignal, if  dation is not closed and rst is not given
       */
-      ADS1015SE* dationOpen(const char* idf = 0, int openParam = 0);
+      ADS1015SE* dationOpen(const RefCharacter* idf = 0, int openParam = 0);
 
       /**
       Close the dation

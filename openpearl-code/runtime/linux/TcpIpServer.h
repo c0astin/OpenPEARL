@@ -129,7 +129,7 @@ namespace pearlrt {
       \throws DationParamSignal in case of errors
       \throws DationParamSignal in case of errors
       */
-      TcpIpServer* dationOpen(const char * fileName, int openParams);
+      TcpIpServer* dationOpen(const RefCharacter * fileName, int openParams);
 
       /**
        close method.

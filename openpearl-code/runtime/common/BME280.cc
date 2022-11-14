@@ -133,7 +133,7 @@ printf("fake dev %d bytes\n", sizeof(dev));
    }
   }
 
-   BME280* BME280::dationOpen(const char * idf, int params) {
+   BME280* BME280::dationOpen(const RefCharacter * idf, int params) {
       int8_t rslt = BME280_OK;
 
       struct bme280_dev *bme = (struct bme280_dev*)&dev;
@@ -143,8 +143,8 @@ printf("fake dev %d bytes\n", sizeof(dev));
          throw theDationParamSignal;
       }
 
-      if (params & ~(RST | IN | OUT | INOUT)) {
-         Log::error("BME280: only RST allowed");
+      if (params & CAN) {
+         Log::error("BME280: CAN not allowed");
          throw theDationParamSignal;
       }
 
