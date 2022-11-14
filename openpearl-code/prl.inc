@@ -24,23 +24,13 @@ objects=
 target=
 PPONLY=0
 noPP=0
-noSDD=0
+noSDD=1
 PPFLAGS=""
 compilerFlags=""
-    
-standard="-std=OpenPEARL"
-# PRLFLAGS comes from the intension that a environment variable may set 
-# some options for the prl-script
-# --> not complete
-#if [[ $PRLFLAGS =~ "-std=PEARL90" ]]; then
-#   standard="-std=PEARL90"
-#fi
-#if [[ $PRLFLAGS =~ "-std=OpenPEARL" ]]; then
-#   standard="-std=OpenPEARL"
-#fi
 
-while [ "$1" != "" ] ; do
-    #echo "input: " $INPUT
+treatOptions() {
+  while [ "$1" ]
+  do
     case $1 in
         -std=OpenPEARL) standard=$1;                   shift;;
         -std=PEARL90)   standard=$1;                   shift;;
@@ -49,24 +39,35 @@ while [ "$1" != "" ] ; do
         -i)             INTERFACE=$2;                  shift 2;;
         -cc)            StopBeforeCpp=1;               shift;;
         -c)             COMPILEONLY=1;                 shift;;
-	-I)             PPFLAGS+=" -I$2";              shift 2;;
-	-D)             PPFLAGS+=" -D$2";              shift 2;;
-	-U)             PPFLAGS+=" -U$2";              shift 2;;
-	-E)             PPONLY=1;                      shift;;
+        -I)             PPFLAGS+=" -I$2";              shift 2;;
+        -D)             PPFLAGS+=" -D$2";              shift 2;;
+        -U)             PPFLAGS+=" -U$2";              shift 2;;
+        -E)             PPONLY=1;                      shift;;
         -noSDD)         noSDD=1;                       shift;;
-	-nopp)          noPP=1;                        shift;;
+        -nopp)          noPP=1;                        shift;;
         -r)             RUN=1;                         shift;;
         -v)             VERBOSE=1;                     shift;;
         -noimc)         noIMC=1;                       shift;;
         -nosys)         NOSYSTEMPART=1;                shift;;
         -h)             HELP=1;                        shift;;
         -keep)          keepFiles=1;                   shift;;
-	 -*) echo "unknown option " $1; 
+         -*) echo "unknown option " $1;
                shift;
-	       exit 1;;
-        *) INPUT="$INPUT $1";        shift;;
+               exit 1;;
+        *) INPUT="$INPUT $1";      shift;;
      esac
-done
+   done
+}
+
+    
+standard="-std=OpenPEARL"
+# PRLFLAGS comes from the intension that a environment variable may set 
+# some options for the prl-script
+
+treatOptions $PRLFLAGS
+
+treatOptions $@
+
 compilerFlags+=" "$standard;
 if [[ "noSDD" -eq "0" ]] ; then
   compilerFlags+=" --SDD";
