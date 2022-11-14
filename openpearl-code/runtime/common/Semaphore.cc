@@ -41,8 +41,8 @@ locking pattern
 #include "TaskCommon.h"
 #include "Semaphore.h"
 #include "Log.h"
-#include "DeadlockOperation.h"
-#include "HfujkControl.h"
+#include "DynamicDeadlockDetection/DeadlockOperation.h"
+#include "DynamicDeadlockDetection/DynamicDeadlockDetection.h"
 
 namespace pearlrt {
 
@@ -83,17 +83,19 @@ namespace pearlrt {
                     bd->semas[i]->getName(), (int)bd->semas[i]->getValue());
       }
 
-      DeadlockOperation deadlockOperation;
-      deadlockOperation.codeFilename = taskCommon->getLocationFile();
-      deadlockOperation.codeLineNumber = taskCommon->getLocationLine();
-      deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_SEMAPHORE;
-      deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_REQUEST;
-      deadlockOperation.executingTaskIdentifier = taskCommon->getName();
-      for (i = 0; i < bd->nsemas; i++) {
-         deadlockOperation.addResourceIdentifierWithValue(bd->semas[i]->getName(), (int)bd->semas[i]->getValue());
+      if (DynamicDeadlockDetection::isEnabled() ) {
+          DeadlockOperation deadlockOperation;
+          deadlockOperation.codeFilename = taskCommon->getLocationFile();
+          deadlockOperation.codeLineNumber = taskCommon->getLocationLine();
+          deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_SEMAPHORE;
+          deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_REQUEST;
+          deadlockOperation.executingTaskIdentifier = taskCommon->getName();
+          for (i = 0; i < bd->nsemas; i++) {
+             deadlockOperation.addResourceIdentifierWithValue(bd->semas[i]->getName(), (int)bd->semas[i]->getValue());
+          }
+          DynamicDeadlockDetection::performDeadlockOperation(deadlockOperation);
+          /* bool isInDeadlockSituation = */ DynamicDeadlockDetection::getDeadlockSituation();
       }
-      HfujkControl::performDeadlockOperation(deadlockOperation);
-      bool isInDeadlockSituation = HfujkControl::getDeadlockSituation();
 
       for (i = 0; i < bd->nsemas; i++) {
          if (bd->semas[i]->getValue() == 0) {
@@ -158,17 +160,18 @@ namespace pearlrt {
       Log::debug("release from task %s for %d semaphores", me->getName(),
                  nbrOfSemas);
 
-      DeadlockOperation deadlockOperation;
-      deadlockOperation.codeFilename = me->getLocationFile();
-      deadlockOperation.codeLineNumber = me->getLocationLine();
-      deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_SEMAPHORE;
-      deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_RELEASE;
-      deadlockOperation.executingTaskIdentifier = me->getName();
-      for (i = 0; i < nbrOfSemas; i++) {
-         deadlockOperation.addResourceIdentifierWithValue(semas[i]->getName(), semas[i]->getValue());
+      if (DynamicDeadlockDetection::isEnabled() ) {
+          DeadlockOperation deadlockOperation;
+          deadlockOperation.codeFilename = me->getLocationFile();
+          deadlockOperation.codeLineNumber = me->getLocationLine();
+          deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_SEMAPHORE;
+          deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_RELEASE;
+          deadlockOperation.executingTaskIdentifier = me->getName();
+          for (i = 0; i < nbrOfSemas; i++) {
+             deadlockOperation.addResourceIdentifierWithValue(semas[i]->getName(), semas[i]->getValue());
+          }
+          DynamicDeadlockDetection::performDeadlockOperation(deadlockOperation);
       }
-      HfujkControl::performDeadlockOperation(deadlockOperation);
-
       try {
          for (i = 0; i < nbrOfSemas; i++) {
             semas[i]->increment();

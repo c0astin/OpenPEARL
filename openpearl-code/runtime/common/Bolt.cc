@@ -43,6 +43,8 @@ locking pattern
 #include "Bolt.h"
 #include "Signals.h"
 #include "Log.h"
+#include "DynamicDeadlockDetection/DeadlockOperation.h"
+#include "DynamicDeadlockDetection/DynamicDeadlockDetection.h"
 
 namespace pearlrt {
 
@@ -83,22 +85,23 @@ namespace pearlrt {
       state = newState;
       if (state == FREE)
       {
-         DeadlockOperation deadlockOperation;
-         deadlockOperation.codeFilename = taskCommon->getLocationFile();
-         deadlockOperation.codeLineNumber = taskCommon->getLocationLine();
-         deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_BOLT;
-         // leave -> entered
-         // free -> reserved
-         if (oldState == ENTERED) {
-            deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_LEAVE;
-         } else if (oldState == RESERVED) {
-            deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_FREE;
-         }
-         deadlockOperation.executingTaskIdentifier = taskCommon->getName();
-         deadlockOperation.addResourceIdentifierWithValue(this->getName(), 0);
-         HfujkControl::performDeadlockOperation(deadlockOperation);
+         if (DynamicDeadlockDetection::isEnabled() ) {
+             DeadlockOperation deadlockOperation;
+             deadlockOperation.codeFilename = taskCommon->getLocationFile();
+             deadlockOperation.codeLineNumber = taskCommon->getLocationLine();
+             deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_BOLT;
+             // leave -> entered
+             // free -> reserved
+             if (oldState == ENTERED) {
+                deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_LEAVE;
+             } else if (oldState == RESERVED) {
+                deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_FREE;
+             }
+             deadlockOperation.executingTaskIdentifier = taskCommon->getName();
+             deadlockOperation.addResourceIdentifierWithValue(this->getName(), 0);
+             DynamicDeadlockDetection::performDeadlockOperation(deadlockOperation);
+          }
       }
-
    }
 
    int Bolt::check(BlockReason r, BlockData::BlockReasons::BlockBolt *bd) {
@@ -196,18 +199,20 @@ namespace pearlrt {
 
       if (operation == RESERVE)
       {
-         DeadlockOperation deadlockOperation;
-         deadlockOperation.codeFilename = me->getLocationFile();
-         deadlockOperation.codeLineNumber = me->getLocationLine();
-         deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_BOLT;
-         deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_RESERVE;
-         deadlockOperation.executingTaskIdentifier = me->getName();
-         for (i = 0; i < nbrOfBolts; i++) {
-            deadlockOperation.addResourceIdentifierWithValue(bolts[i]->getName(), 0);
-         }
-         deadlockOperation.reserveBoltOperationsPossible = (wouldBlock == 0);
-         HfujkControl::performDeadlockOperation(deadlockOperation);
-         bool isInDeadlockSituation = HfujkControl::getDeadlockSituation();
+         if (DynamicDeadlockDetection::isEnabled() ) {
+             DeadlockOperation deadlockOperation;
+             deadlockOperation.codeFilename = me->getLocationFile();
+             deadlockOperation.codeLineNumber = me->getLocationLine();
+             deadlockOperation.resourcesType = DeadlockOperation::RESOURCE_TYPE_BOLT;
+             deadlockOperation.actionType = DeadlockOperation::ACTION_TYPE_RESERVE;
+             deadlockOperation.executingTaskIdentifier = me->getName();
+             for (i = 0; i < nbrOfBolts; i++) {
+                deadlockOperation.addResourceIdentifierWithValue(bolts[i]->getName(), 0);
+             }
+             deadlockOperation.reserveBoltOperationsPossible = (wouldBlock == 0);
+             DynamicDeadlockDetection::performDeadlockOperation(deadlockOperation);
+             /* bool isInDeadlockSituation = */ DynamicDeadlockDetection::getDeadlockSituation();
+          }
       }
 
       if (! wouldBlock) {
