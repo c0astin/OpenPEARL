@@ -41,8 +41,11 @@ Prologue( src,
           StructureDeclarationList,
           resourceAllocationGraphNodeCount) ::= <<
 
-/* resourceAllocationGraphNodeCount */ 
-bool hfujkControlConfigured = pearlrt::HfujkControl::configure(<resourceAllocationGraphNodeCount>);
+<if(resourceAllocationGraphNodeCount)>
+/* increment resourceAllocationGraphNodeCount */
+static bool hfujkControlConfigured = 
+pearlrt::DynamicDeadlockDetection::configure(<resourceAllocationGraphNodeCount>);
+<endif>
 
 
 static const char* filename = (char*) "<src>";
@@ -1530,7 +1533,7 @@ int dummy = pearlrt::Control::addInitializer(&init);
 >>
 DeadlockOperations(deadlockOperation) ::= <<
 <deadlockOperation>
-//pearlrt::HfujkControl::printDeadlockOperations();
+//pearlrt::DynamicDeadlockDetection::printDeadlockOperations();
 >>
 
 DeadlockOperation(operationVariableIdentifier, contextType, contextIdentifier, deadlockOperationResourceIdentifiers, deadlockOperationExecutingTaskIdentifiers, resourcesType, actionType, codeFilename, codeLineNumber) ::= <<
@@ -1541,7 +1544,7 @@ pearlrt::DeadlockOperation <operationVariableIdentifier>;
 <operationVariableIdentifier>.resourcesType = "<resourcesType>";
 <operationVariableIdentifier>.codeFilename = "<codeFilename>";
 <operationVariableIdentifier>.codeLineNumber = <codeLineNumber>;
-<deadlockOperationResourceIdentifiers><deadlockOperationExecutingTaskIdentifiers>pearlrt::HfujkControl::registerDeadlockOperation(<operationVariableIdentifier>);
+<deadlockOperationResourceIdentifiers><deadlockOperationExecutingTaskIdentifiers>pearlrt::DynamicDeadlockDetection::registerDeadlockOperation(<operationVariableIdentifier>);
 
 
 >>
