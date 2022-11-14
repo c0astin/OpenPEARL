@@ -146,9 +146,9 @@ Only this file mus be included.
 #include "TcpIpServer.h"
 #include "IOJob.h"
 
-#include "hfujk/DeadlockOperation.h"
-#include "hfujk/PerformedDeadlockOperation.h"
-#include "hfujk/Graph.h"
-#include "hfujk/ResourceAllocationGraph.h"
-#include "hfujk/HfujkControl.h"
+#include "DynamicDeadlockDetection/DeadlockOperation.h"
+#include "DynamicDeadlockDetection/PerformedDeadlockOperation.h"
+#include "DynamicDeadlockDetection/Graph.h"
+#include "DynamicDeadlockDetection/ResourceAllocationGraph.h"
+#include "DynamicDeadlockDetection/DynamicDeadlockDetection.h"
 
