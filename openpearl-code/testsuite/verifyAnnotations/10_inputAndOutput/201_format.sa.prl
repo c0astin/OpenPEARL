@@ -15,7 +15,7 @@ otherDataOutByF: PROC;
    DCL ch  CHAR(1);
    DCL rt REF TASK;
 /*$    ^
-warning: static deadlock detection disabled: not possible with REF TASK
+warning: deadlock detection disabled: not possible with REF TASK
 */
 
    DCL rp REF PROC;

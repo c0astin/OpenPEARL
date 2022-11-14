@@ -22,7 +22,7 @@ p: PROC;
    DCL bit1 BIT(1);
    DCL rt REF TASK;
 /*$    ^
-warning: static deadlock detection disabled: not possible with REF TASK
+warning: deadlock detection disabled: not possible with REF TASK
 */
    DCL rc REF CHAR();
    DCL rc1 REF CHAR(1);
