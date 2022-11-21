@@ -1,0 +1,14 @@
+MODULE(m);
+
+PROBLEM;
+
+p1: PROC (x FIXED);
+END;
+
+p2: PROC;
+   DCL x FIXED;
+   x = p1(1)+1; ! causes NullPointerException in ExpressionTypeVisitor
+   x = p1(1);   ! causes NullPointerException in checkAssignments
+END;
+
+MODEND;
