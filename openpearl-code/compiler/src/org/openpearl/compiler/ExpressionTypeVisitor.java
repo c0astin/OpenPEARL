@@ -3783,7 +3783,9 @@ implements OpenPearlVisitor<Void> {
             }
 
             checkListOfExpressionAsParameters(ctx.listOfExpression(),(TypeProcedure)m_type);
-
+            ASTAttribute attr = m_ast.lookup(ctx);
+            attr.setIsFunctionCall(true);
+                    
             m_type = ((TypeProcedure)m_type).getResultType();
         } else {
             ErrorStack.add("cannot apply indices or parameters on type "+ safeType);
@@ -3892,6 +3894,7 @@ implements OpenPearlVisitor<Void> {
             }
             ErrorStack.leave();
         }
+       
     }
 
 
@@ -3919,6 +3922,7 @@ implements OpenPearlVisitor<Void> {
                 }
 
                 m_type = ((TypeProcedure)m_type).getResultType();
+                
             } else  if (m_type instanceof TypeStructure || m_type instanceof UserDefinedTypeStructure) {
                 m_type = treatStructComponent(ctx.name());
             }

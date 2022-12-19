@@ -79,7 +79,15 @@ public class ASTAttribute {
      * flag is set if the expression is a lValue
      */
     private static final int isLValue = 0x04;
-    
+   
+    /**
+     * flag is set if the expression requires a function call
+     * 
+     * this flag is necessary for simple detection of function calls in expressions
+     * for the ControlGraphGenerator
+     * 
+     */
+    private static final int bitIsFunctionCall = 0x08;
     
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
@@ -254,6 +262,21 @@ public class ASTAttribute {
       return getFlag(bitIsInternal);
     }
 
+    /**
+     * check if there is a function call 
+     * 
+     * @return
+     */
+    public boolean isFunctionCall() {
+      return getFlag(bitIsFunctionCall);
+    }
+    
+    /**
+     * indicate that there is a function call 
+     */
+    public void setIsFunctionCall(boolean newValue) {
+      setFlag(bitIsFunctionCall, newValue);
+    }
     
   
     public boolean isLValue() {
