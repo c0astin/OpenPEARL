@@ -1,0 +1,28 @@
+MODULE(arith);
+
+SYSTEM;
+  so: StdOut;	! Terminal Ausgabe bei OpenPEARL
+
+PROBLEM;	
+  SPC so DATION OUT SYSTEM ALPHIC;
+  DCL stdOut DATION OUT ALPHIC DIM(*,80) FORWARD CREATED (so);
+  DCL (testPassed, testFailed) FIXED INIT(0,0);
+
+main: TASK MAIN;
+  DCL i1      FIXED(15);
+  DCL i2      FIXED(15);
+  DCL i3      FIXED(15);  
+
+  __cpp__ ("bool ok = 1;");
+  
+  OPEN stdOut;
+
+  i1 = 20 - 10 + 5;
+  __cpp__("ok &= _i1.x == (20 - 10 + 5);");
+  PUT '20-10+5       => ',i1 TO stdOut BY A,F(10), SKIP;
+
+  CLOSE stdOut;
+  __cpp__("pearlrt::Control::setExitCode(ok==0);");
+END;
+
+MODEND;
