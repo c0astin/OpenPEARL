@@ -3,9 +3,13 @@ MODULE(clk);
 PROBLEM;
 
    DCL c CLOCK;
-  
+   DCL d DURATION;
+
 x: PROC;
    c = c - c + c;
+   c = c - c + c + d;
+   c = c - c + c - d;
+   c = c - c + c + d - d;
 END;
 
 MODEND;
