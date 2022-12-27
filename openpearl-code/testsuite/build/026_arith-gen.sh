@@ -134,7 +134,7 @@ cat <<EOF >> 026_arith.prl
   printFooter;
 
   CLOSE stdOut;
-  __cpp__("pearlrt::Control::setExitCode(tf==0);");
+  __cpp__("pearlrt::Control::setExitCode(tf!=0);");
 END;
 
 MODEND;
