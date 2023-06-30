@@ -489,10 +489,10 @@ if_statement(rhs, then_block, else_block) ::= <<
 
 
 statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList) ::= <<
+<if(label)><label><endif>
 <if(srcFilename)>
 me->setLocation(<srcLine>, <srcFilename>);
 <endif>
-<if(label)><label><endif>
 <if(tempVariableList)>{<tempVariableList><endif>
 <if(cpp)>
 <cpp_inline(cpp)>
@@ -502,7 +502,7 @@ me->setLocation(<srcLine>, <srcFilename>);
 >>
 
 label_statement(label) ::= <%
-	<user_label(label)>:<\n>
+	<user_label(label)>:
 %>
 
 goto_statement(label) ::= <<
@@ -1529,7 +1529,7 @@ static void setupDationsAndPointers() {
 } 
 
 static pearlrt::Control::Initializer init={setupDationsAndPointers,NULL};
-int dummy = pearlrt::Control::addInitializer(&init);
+static int dummy = pearlrt::Control::addInitializer(&init);
 >>
 DeadlockOperations(deadlockOperation) ::= <<
 <deadlockOperation>

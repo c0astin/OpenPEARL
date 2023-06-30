@@ -213,38 +213,55 @@ public class SymbolTable {
         return parent != null ? parent : this;
     }
 
-    public SymbolTable descend(String name) {
-        SymbolTableEntry se = lookupLocal(name);
+    // obsolete - never used
+    // class comaprison does not work
+//    public SymbolTable descend(String name) {
+//        SymbolTableEntry se = lookupLocal(name);
+//       
+//        try {
+//            if (se == null) {
+//                return this;
+//            }
+//            
+//            if (se.getClass() != Class.forName("ModuleEntry")) {
+//               return ((ModuleEntry) se).scope;
+//            }
+//
+//            if (se.getClass() != Class.forName("ProcedureEntry")) {
+//                return ((ProcedureEntry) se).scope;
+//            }
+//
+//            if (se.getClass() != Class.forName("TaskEntry")) {
+//                return ((TaskEntry) se).scope;
+//            }
+//
+//            if (se.getClass() != Class.forName("BlockEntry")) {
+//                return ((BlockEntry) se).scope;
+//            }
+//
+//            return this;
+//        } catch (Exception e) {
+//            System.out.println(e);
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
 
-        try {
-            if (se == null) {
-                return this;
-            }
-
-            if (se.getClass() != Class.forName("ModuleEntry")) {
-                return ((ModuleEntry) se).scope;
-            }
-
-            if (se.getClass() != Class.forName("ProcedureEntry")) {
-                return ((ProcedureEntry) se).scope;
-            }
-
-            if (se.getClass() != Class.forName("TaskEntry")) {
-                return ((TaskEntry) se).scope;
-            }
-
-            if (se.getClass() != Class.forName("BlockEntry")) {
-                return ((BlockEntry) se).scope;
-            }
-
-            return this;
-        } catch (Exception e) {
-            System.out.println(e);
-            e.printStackTrace();
-            return null;
+    public SymbolTable getModuleTable() {
+       
+        if  (m_level>0) {
+         ErrorStack.addInternal("SymboleTable.getModuleTable must be called from top layer table");
         }
+        
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
+            SymbolTableEntry symbolTableEntry = it.next();
+            if (symbolTableEntry instanceof ModuleEntry) {
+                return ((ModuleEntry) symbolTableEntry).scope;
+            }
+        }
+        return null;
     }
-
+    
     public void dump() {
         System.out.println();
         System.out.println("Symboltable:");
@@ -286,6 +303,7 @@ public class SymbolTable {
          
         return listOfTaskEntries;
     }
+    
     public LinkedList<ProcedureEntry> getProcedureDeclarationsAndSpecifications() {
         LinkedList<ProcedureEntry> listOfProcedureEntries = new LinkedList<ProcedureEntry>();
 
@@ -407,14 +425,16 @@ public class SymbolTable {
 //        return listOfArrayDeclarations;
 //    }
 
-    public LinkedList<SemaphoreEntry> getSemaphoreDeclarations() {
-        LinkedList<SemaphoreEntry> listOfSemaEntries = new LinkedList<SemaphoreEntry>();
+    public LinkedList<VariableEntry> getSemaphoreDeclarations() {
+        LinkedList<VariableEntry> listOfSemaEntries = new LinkedList<VariableEntry>();
    
         for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
-            if (symbolTableEntry instanceof SemaphoreEntry) {
-                SemaphoreEntry semaEntry = (SemaphoreEntry) symbolTableEntry;
-                listOfSemaEntries.add(semaEntry);
+            if (symbolTableEntry instanceof VariableEntry) {
+                VariableEntry ve = (VariableEntry)symbolTableEntry;
+                if (ve.getType()  instanceof TypeSemaphore) {
+                    listOfSemaEntries.add(ve);
+                }
             }
         }
 
@@ -422,14 +442,16 @@ public class SymbolTable {
     }
 
     
-    public LinkedList<BoltEntry> getBoltDeclarations() {
-        LinkedList<BoltEntry> listOfBoltEntries = new LinkedList<BoltEntry>();
+    public LinkedList<VariableEntry> getBoltDeclarations() {
+        LinkedList<VariableEntry> listOfBoltEntries = new LinkedList<VariableEntry>();
    
         for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
             SymbolTableEntry symbolTableEntry = it.next();
-            if (symbolTableEntry instanceof BoltEntry) {
-                BoltEntry boltEntry = (BoltEntry) symbolTableEntry;
-                listOfBoltEntries.add(boltEntry);
+            if (symbolTableEntry instanceof VariableEntry) {
+                VariableEntry ve = (VariableEntry)symbolTableEntry;
+                if (ve.getType()  instanceof TypeBolt) {
+                    listOfBoltEntries.add(ve);
+                }
             }
         }
 
@@ -465,6 +487,7 @@ public class SymbolTable {
         return listOfVariableDeclarationsEntries;
     }
     
+      
     public LinkedList<ModuleEntry> getModules() {
         LinkedList<ModuleEntry> listOfModules = new LinkedList<ModuleEntry>();
 

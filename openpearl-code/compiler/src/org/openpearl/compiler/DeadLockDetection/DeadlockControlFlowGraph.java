@@ -35,10 +35,10 @@ package org.openpearl.compiler.DeadLockDetection;
 import javax.json.*;
 
 import org.openpearl.compiler.Compiler;
-import org.openpearl.compiler.ControlFlowGraph.ControlFlowGraph;
-import org.openpearl.compiler.ControlFlowGraph.ControlFlowGraphNode;
+import org.openpearl.compiler.Options;
 import org.openpearl.compiler.DeadLockDetection.ControlFlowGraphEntities.*;
-
+import org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph.ControlFlowGraph;
+import org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph.ControlFlowGraphNode;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -61,9 +61,10 @@ public class DeadlockControlFlowGraph
     {
         int uniqueId = 0;
         Map<ControlFlowGraphNode, Integer> nodeIdMap = new HashMap<>();
-        //if (verbose > 0) {
+        if (Options.getVerbose() > 0) {
             System.out.println("Generating DeadlockControlGraph file " + outputFilePath);
-        //}
+        }
+        
         try
         {
             FileWriter writer = new FileWriter(outputFilePath);
@@ -79,6 +80,7 @@ public class DeadlockControlFlowGraph
                 writer.write("    subgraph cluster" + (uniqueId++) + " {\n");
 
                 writer.write("        label = \"" + cfg.getName() + "\"\n");
+    System.out.println(cfg.getName());
 
                 if (cfg.getName().startsWith("Module: "))
                 {
@@ -119,7 +121,7 @@ public class DeadlockControlFlowGraph
                         nodeIdMap.put(controlFlowGraphNode, uniqueId);
 
                         String statement = controlFlowGraphNode.getStatement();
-
+System.out.println(statement);
                         String tokenIdentifier = "";
 
                         String defaultFilename = Compiler.getSourceFilename();

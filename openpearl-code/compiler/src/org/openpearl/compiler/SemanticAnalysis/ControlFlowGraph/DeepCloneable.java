@@ -26,15 +26,8 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.openpearl.compiler.ControlFlowGraph;
+package org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph;
 
-public enum ControlFlowGraphNodeType {
-    OTHER,
-    ENTRY, END,
-    BLOCK_START, BLOCK_END,
-    LOOP_START, LOOP_BLOCK_START, LOOP_REPEAT, LOOP_END,
-    IF_START, THEN_START, THEN_END, ELSE_START, ELSE_END, IF_END,
-    CASE_START, CASE_END, ALT_START, ALT_END, OUT_START, OUT_END,
-    RETURN, EXIT, TERMINATE,
-    GOTO, JUMP_LABEL
+public interface DeepCloneable {
+    Object deepClone();
 }

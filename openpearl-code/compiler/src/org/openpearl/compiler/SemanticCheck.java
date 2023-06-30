@@ -29,10 +29,18 @@
 
 package org.openpearl.compiler;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.openpearl.compiler.SymbolTable.ModuleEntry;
 import org.openpearl.compiler.SymbolTable.SymbolTable;
 import org.openpearl.compiler.SemanticAnalysis.*;
+//import org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph.ControlFlowGraph;
+//import org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph.ControlFlowGraphNode;
+//import org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph.NotImplementedException;
 
 public class SemanticCheck {
 
@@ -46,6 +54,7 @@ public class SemanticCheck {
     private ModuleEntry m_module;
     private ParserRuleContext m_parseTree;
     private AST m_ast = null;
+//    ControlFlowGraphGenerate cfgGenerate = null;
 
     public SemanticCheck(String sourceFileName,
                          int verbose,
@@ -81,9 +90,113 @@ public class SemanticCheck {
         new CheckDeclarationScope(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckArrayDeclarationAccess(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckIOStatements(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        new GenerateControlFlowGraph(sourceFileName, symbolTableVisitor, ast).visit(tree);
         
+        if (ErrorStack.getTotalErrorCount()<=0) {
+            new CheckUnreachableStatements2(sourceFileName, verbose, debug, symbolTableVisitor, expressionTypeVisitor, ast).visit(m_parseTree);
+        }
+//        cfgGenerate = new ControlFlowGraphGenerate(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast);
+//        cfgGenerate.visit(tree);
+//        
+//        List<ControlFlowGraph> cfgs = cfgGenerate.getControlFlowGraphs();
+        if(ErrorStack.getTotalErrorCount() <= 0) {
+
+//            // this does not work properly yet for all testcases in testsuite/build
+//            if (Options.isCheckControlFlowGraphExpressions()) {
+//              
+//                // Creating List of all procedures
+//                Map<String, ParserRuleContext> procedureMap = new HashMap<>();
+//                procedureMap.put("NOW", null); // add predefined procedures
+//                procedureMap.put("DATE", null);
+//                cfgs.forEach(cfg -> {
+//              
+//                    ControlFlowGraphNode node = cfg.getEntryNode();
+//                    if(node.getCtx() instanceof OpenPearlParser.ProcedureDeclarationContext) {
+//                        OpenPearlParser.ProcedureDeclarationContext procCtx = (OpenPearlParser.ProcedureDeclarationContext) node.getCtx();
+//                        procedureMap.put(procCtx.nameOfModuleTaskProc().ID().toString(), procCtx);
+//                    }
+//
+//                });
+//
+//                // Finding the ControlFlowGraph of the Module
+//                ControlFlowGraph moduleGraph = null;
+//                for(ControlFlowGraph cfg : cfgs) {
+//                    if(cfg.getName().contains("Module: ")) {
+//                        moduleGraph = cfg;
+//                        break;
+//                    }
+//                }
+//                // Generating a Stack for the Module
+//                if(moduleGraph != null) {
+//                    moduleGraph.createVariableStack(procedureMap, null);
+//                }
+//
+//                // The Variable Stack of the Module is passed to all other ControlFlowGraphs,
+//                // since the Variables can be accessed from Procedures and Tasks
+//                ControlFlowGraph finalModuleGraph = moduleGraph;
+//                cfgs.forEach(cfg -> {
+//                    try {
+//                    if(cfg != finalModuleGraph) {
+//                        if(finalModuleGraph != null)
+//                            cfg.createVariableStack(procedureMap, finalModuleGraph.getEndNode().getOutputNodes().iterator().next().getVariableStack());
+//                        else
+//                            cfg.createVariableStack(procedureMap, null);
+//                    }
+//                    } catch (NotImplementedException e) {
+//                        System.err.println("CFD creation aborted");
+//                    }
+//                });
+//            }
+//            // outputs a .dot file, when compiler option is turned on, which can be turned into a picture of the ControlFlowGraph with GraphViz
+//            Log.info( "debugControlGraph" + Options.isDebugControlFlowGraph());
+//            if(Options.isDebugControlFlowGraph()) {
+//                outputCFG(cfgs);
+//            }
+
+            // Checks the ControlFlowGraphs for unreachable nodes
+//            new CheckUnreachableStatements(cfgs).check();
+        }
         // CheckUnusedElements must run after CheckGotoExit, maybe later other
         // dependencies may be added
         new CheckUnusedElements(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
     }
+    
+//    public List<ControlFlowGraph> getControlFlowGraphs() {
+//        return cfgGenerate.getControlFlowGraphs();
+//    }
+//    
+//    public  void outputCFG(List<ControlFlowGraph> cfgs) {
+//        int uniqueId = 0;
+//        Map<ControlFlowGraphNode, Integer> nodeIdMap = new HashMap<>();
+//        String outputFilePath = m_sourceFileName.substring(0, m_sourceFileName.lastIndexOf(".")) + "_cfg.dot";
+//        if (Options.getVerbose()>0) {
+//            System.out.println("SemanticCheck: Generating ControlGraph file " + outputFilePath);
+//        }
+//        try {
+//            FileWriter writer = new FileWriter(outputFilePath);
+//            writer.write("digraph G {\n");
+//            for (ControlFlowGraph cfg : cfgs) {
+//                writer.write("\tsubgraph cluster" + (uniqueId++) + " {\n");
+//                writer.write("\t\tlabel = \"" + cfg.getName() + "\"\n");
+//                for(ControlFlowGraphNode controlFlowGraphNode : cfg.getGraph()) {
+//                    nodeIdMap.put(controlFlowGraphNode, uniqueId);
+//                    //controlFlowGraphNode.setVariableStack(null);
+//                    if(controlFlowGraphNode.getVariableStack() != null)
+//                        writer.write("\t\tnode" + (uniqueId++) + " [ label=\"" + controlFlowGraphNode.getStatement() + "\nStack:\n" + controlFlowGraphNode.getVariableStack().toString() + "\" ]\n");
+//                    else
+//                        writer.write("\t\tnode" + (uniqueId++) + " [ label=\"" + controlFlowGraphNode.getStatement() + "\" ]\n");
+//                }
+//                for(ControlFlowGraphNode controlFlowGraphNode : cfg.getGraph()) {
+//                    for(ControlFlowGraphNode inputControlFlowGraphNode : controlFlowGraphNode.getInputNodes()) {
+//                        writer.write("\t\tnode" + nodeIdMap.get(controlFlowGraphNode) + " -> node" +  nodeIdMap.get(inputControlFlowGraphNode) + "\n");
+//                    }
+//                }
+//                writer.write("\t}\n");
+//            }
+//            writer.write("}");
+//            writer.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }

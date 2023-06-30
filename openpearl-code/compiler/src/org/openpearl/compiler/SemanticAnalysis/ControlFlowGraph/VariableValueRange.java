@@ -26,8 +26,25 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.openpearl.compiler.ControlFlowGraph;
+package org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph;
 
-public interface DeepCloneable {
-    Object deepClone();
+public class VariableValueRange<T extends Comparable<T>> {
+    private T from;
+    private T to;
+
+    public VariableValueRange(T value) {
+        this.from = value;
+        this.to = value;
+    }
+
+    public VariableValueRange(T from, T to) {
+        this.from = from;
+        this.to = to;
+    }
+
+    public T getFrom() { return from; }
+    public T getTo() { return to; }
+
+    public void setFrom(T from) { this.from = from; }
+    public void setTo(T to) { this.to = to; }
 }

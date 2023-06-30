@@ -26,10 +26,9 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.openpearl.compiler.ControlFlowGraph;
+package org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph;
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.HashSet;
 import java.util.Set;
 

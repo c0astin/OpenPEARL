@@ -212,6 +212,7 @@ implements OpenPearlVisitor<Void> {
         ASTAttribute attr = m_ast.lookup(ctx.name());
         TypeDefinition tp=attr.getType();
 
+        attr.setIsFunctionCall(true);
         SymbolTableEntry entry = attr.getSymbolTableEntry();
         if (entry instanceof ProcedureEntry) {
             tp = ((ProcedureEntry)entry).getType();

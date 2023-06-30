@@ -171,7 +171,7 @@ public class CheckRealTimeStatements extends OpenPearlBaseVisitor<Void>
 
         ErrorStack.enter(ctx, "TRY");
         checkListOfNames(ctx.listOfNames(), new TypeSemaphore());
-        if (Compiler.isStdPEARL90()) {
+        if (Options.isStdPEARL90()) {
             if (ctx.listOfNames().name().size()> 1) {
                 ErrorStack.add("no list of semaphores allowed");
             }

@@ -188,6 +188,8 @@ public class CheckSwitchCase extends OpenPearlBaseVisitor<Void>
                 ErrorStack.addInternal(ctx, "no AST attributes found for expression", "");
                 return null; // abort further checks
             }
+            
+            TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
             if (attr.m_type instanceof TypeFixed) {
                 m_currentCaseDataSet = new CaseDataSet(attr.m_type);
             } else {

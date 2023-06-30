@@ -86,7 +86,7 @@ public class ConstantBitValue extends ConstantValue
         String b = Long.toBinaryString(l);
         String bres = "";
 
-        int l1 = b.length();
+        //int l1 = b.length();
 
         if (numberOfBits < b.length())
 

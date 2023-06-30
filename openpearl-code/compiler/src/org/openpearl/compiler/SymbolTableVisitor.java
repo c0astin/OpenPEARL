@@ -478,7 +478,7 @@ implements OpenPearlVisitor<Void> {
             for (int i = 0; i < ctx.formalParameter().size(); i++) {
                 if (m_isInSpecification && 
                         ctx.formalParameter(i).getChild(0) instanceof TerminalNode &&
-                        Compiler.isStdPEARL90() == true) {
+                        Options.isStdPEARL90() == true) {
                   if (!warningIssued) {
                       ErrorStack.warn(ctx.formalParameter(i),"SPC PROC","no list of identifiers allowed");
                       warningIssued=true;   // report warning only once
@@ -1551,7 +1551,7 @@ implements OpenPearlVisitor<Void> {
 
         treatGlobalAttribute(ctx.globalAttribute(), d);
         if (ctx.typeDation().controlAttribute() != null) {
-            if (Compiler.isStdOpenPEARL()) {
+            if (Options.isStdOpenPEARL()) {
                 Log.warn("deprecated: CONTROL(ALL)");
             }
         }
@@ -2080,7 +2080,7 @@ implements OpenPearlVisitor<Void> {
                 }
                
                 SymbolTableEntry isSystemName = m_currentSymbolTable.lookupSystemPartName(s);
-                if (Compiler.isStdOpenPEARL() && isSystemName == null && !specifyPredefinedFunction) {
+                if (Options.isStdOpenPEARL() && isSystemName == null && !specifyPredefinedFunction) {
                     ErrorStack.warn(ctx,"SPC", "import module name defaulted to '"+m_currentModuleName+"'");
                 }
                 

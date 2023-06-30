@@ -86,17 +86,19 @@ prl:
 	rm -f openpearl_compiler.jar
 	cp OpenPearlCpp.stg $(OUTPUT_PRL_DIR)
 	cp IMC.stg $(OUTPUT_PRL_DIR)
-	cd $(OUTPUT_PRL_DIR) && jar cf  openpearl_compiler.jar \
-				    org/openpearl/compiler/*.class \
-	                            org/openpearl/compiler/SymbolTable/*.class \
-	                            org/openpearl/compiler/ControlFlowGraph/*.class \
-	                            org/openpearl/compiler/SemanticAnalysis/*.class \
-	                            org/openpearl/compiler/Exception/*.class \
-	                            org/openpearl/compiler/Graph/*.class \
-	                            org/openpearl/compiler/DeadLockDetection/*.class \
-	                            org/openpearl/compiler/DeadLockDetection/ControlFlowGraphEntities/*.class \
-	                            org/openpearl/compiler/DeadLockDetection/GraphUtils/*.class \
-				    OpenPearlCpp.stg IMC.stg
+
+	cd $(OUTPUT_PRL_DIR) && jar cf  openpearl_compiler.jar .
+#	cd $(OUTPUT_PRL_DIR) && jar cf  openpearl_compiler.jar \
+#				    org/openpearl/compiler/*.class \
+#	                            org/openpearl/compiler/SymbolTable/*.class \
+#	                            org/openpearl/compiler/ControlFlowGraph/*.class \
+#	                            org/openpearl/compiler/SemanticAnalysis/*.class \
+#	                            org/openpearl/compiler/Exception/*.class \
+#	                            org/openpearl/compiler/Graph/*.class \
+#	                            org/openpearl/compiler/DeadLockDetection/*.class \
+#	                            org/openpearl/compiler/DeadLockDetection/ControlFlowGraphEntities/*.class \
+#	                            org/openpearl/compiler/DeadLockDetection/GraphUtils/*.class \
+#				    OpenPearlCpp.stg IMC.stg
 
 ##############################################################################
 
@@ -135,7 +137,7 @@ install: gen prl pp prl_cc.inc
 prl_cc.inc:
 	echo "##### auto generated  start " > ../prl_cc.inc
 	echo 'java -cp $(CONFIG_INSTALL_Target)/bin/openpearl_compiler.jar:$(CONFIG_COMPILER_ANTLR)  org/openpearl/compiler/Compiler \' >> ../prl_cc.inc
-	echo '   $$compilerFlags $$prlccinput.prl \' >> ../prl_cc.inc
+	echo '   $$compilerFlags $$prlccinput.prl $$sourceOption \' >> ../prl_cc.inc
 	# echo '   $$compilerFlags $$PRLFLAGS $$prlccinput.prl \' >> ../prl_cc.inc
 	echo '   --imc-output $$fn.xml \' >> ../prl_cc.inc
 	echo '   --output $$outputPrlCC ' >> ../prl_cc.inc	

@@ -35,8 +35,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.openpearl.compiler.OpenPearlParser.IdentifierContext;
 import org.openpearl.compiler.OpenPearlParser.NameContext;
-import org.openpearl.compiler.ControlFlowGraph.ControlFlowGraph;
-import org.openpearl.compiler.ControlFlowGraph.ControlFlowGraphGenerate;
 import org.openpearl.compiler.Exception.*;
 import org.openpearl.compiler.SymbolTable.*;
 import org.openpearl.compiler.Graph.Graph;
@@ -45,10 +43,10 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
-import org.openpearl.compiler.DeadLockDetection.*;
-import org.openpearl.compiler.DeadLockDetection.ControlFlowGraphEntities.*;
-import org.openpearl.compiler.DeadLockDetection.ControlFlowGraphEntities.ProcedureCall;
-import org.openpearl.compiler.DeadLockDetection.GraphUtils.GraphNode;
+//import org.openpearl.compiler.DeadLockDetection.*;
+//import org.openpearl.compiler.DeadLockDetection.ControlFlowGraphEntities.*;
+//import org.openpearl.compiler.DeadLockDetection.ControlFlowGraphEntities.ProcedureCall;
+//import org.openpearl.compiler.DeadLockDetection.GraphUtils.GraphNode;
 
 import java.util.*;
 
@@ -144,21 +142,21 @@ implements OpenPearlVisitor<ST> {
     private String currentCallContextType = "";
     private void registerDeadlockOperation(String resourcesType, String actionType, ParserRuleContext ctx, OpenPearlParser.ListOfNamesContext ctxListOfNames)
     {
-        if (!m_suppressDeadlockDetection) {
-            SourceLocation sourceLocation = SourceLocations.getSourceLoc(ctx.start.getLine());
-            DeadlockOperation deadlockOperation = new DeadlockOperation();
-            deadlockOperation.contextType = currentCallContextType;
-            deadlockOperation.contextIdentifier = currentCallContextIdentifier;
-            deadlockOperation.resourcesType = resourcesType;
-            deadlockOperation.actionType = actionType;
-            deadlockOperation.codeFilename = sourceLocation.filename();//m_sourceFileName;
-            deadlockOperation.codeLineNumber = ctx.start.getLine();
-            for (int i = 0; i < ctxListOfNames.name().size(); i++) {
-                deadlockOperation.resourceIdentifiers.add(ctxListOfNames.name().get(i).getText());
-            }
-            DeadlockControlFlowGraph.setTokenData(DeadlockControlFlowGraph.getTokenIdentifier(ctx.start), deadlockOperation);
-            Compiler.deadlockOperations.add(deadlockOperation);
-        }
+//        if (!m_suppressDeadlockDetection) {
+//            SourceLocation sourceLocation = SourceLocations.getSourceLoc(ctx.start.getLine());
+//            DeadlockOperation deadlockOperation = new DeadlockOperation();
+//            deadlockOperation.contextType = currentCallContextType;
+//            deadlockOperation.contextIdentifier = currentCallContextIdentifier;
+//            deadlockOperation.resourcesType = resourcesType;
+//            deadlockOperation.actionType = actionType;
+//            deadlockOperation.codeFilename = sourceLocation.filename();//m_sourceFileName;
+//            deadlockOperation.codeLineNumber = ctx.start.getLine();
+//            for (int i = 0; i < ctxListOfNames.name().size(); i++) {
+//                deadlockOperation.resourceIdentifiers.add(ctxListOfNames.name().get(i).getText());
+//            }
+//            DeadlockControlFlowGraph.setTokenData(DeadlockControlFlowGraph.getTokenIdentifier(ctx.start), deadlockOperation);
+//            Compiler.deadlockOperations.add(deadlockOperation);
+//        }
     }
 
     private Void ReadTemplate(String filename) {
@@ -221,10 +219,10 @@ implements OpenPearlVisitor<ST> {
 
         prologue.add("StructureForwardDeclarationList", generateStructureForwardDeclarationList());
         prologue.add("StructureDeclarationList", generateStructureDeclarationList());
-        if (!m_suppressDeadlockDetection) {
-           int resourceAllocationGraphNodeCount = Compiler.taskIdentifiers.size() + Compiler.deadlockResourceDeclarations.size();
-           prologue.add("resourceAllocationGraphNodeCount", resourceAllocationGraphNodeCount);
-        }
+//        if (!m_suppressDeadlockDetection) {
+//           int resourceAllocationGraphNodeCount = Compiler.taskIdentifiers.size() + Compiler.deadlockResourceDeclarations.size();
+//           prologue.add("resourceAllocationGraphNodeCount", resourceAllocationGraphNodeCount);
+//        }
 
 
         return prologue;
@@ -469,33 +467,34 @@ implements OpenPearlVisitor<ST> {
 
 
 
-    /*
-     * Time/Clock example: 11:30:00 means 11.30 15:45:3.5 means 15.45 and 3.5
-     * seconds 25:00:00 means 1.00
-     */
-    private Double getTime(OpenPearlParser.TimeConstantContext ctx) {
-        Integer hours = 0;
-        Integer minutes = 0;
-        Double seconds = 0.0;
-
-        hours = (Integer.valueOf(ctx.IntegerConstant(0).toString()) % 24);
-        minutes = Integer.valueOf(ctx.IntegerConstant(1).toString());
-
-        if (ctx.IntegerConstant().size() == 3) {
-            seconds = Double.valueOf(ctx.IntegerConstant(2).toString());
-        }
-
-        if (ctx.floatingPointConstant() != null) {
-            seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
-        }
-
-        if (hours < 0 || minutes < 0 || minutes > 59) {
-            throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(),
-                    ctx.start.getCharPositionInLine());
-        }
-
-        return hours * 3600 + minutes * 60 + seconds;
-    }
+// 2022-12-29 (rm) obsolete    
+//    /*
+//     * Time/Clock example: 11:30:00 means 11.30 15:45:3.5 means 15.45 and 3.5
+//     * seconds 25:00:00 means 1.00
+//     */
+//    private Double getTime(OpenPearlParser.TimeConstantContext ctx) {
+//        Integer hours = 0;
+//        Integer minutes = 0;
+//        Double seconds = 0.0;
+//
+//        hours = (Integer.valueOf(ctx.IntegerConstant(0).toString()) % 24);
+//        minutes = Integer.valueOf(ctx.IntegerConstant(1).toString());
+//
+//        if (ctx.IntegerConstant().size() == 3) {
+//            seconds = Double.valueOf(ctx.IntegerConstant(2).toString());
+//        }
+//
+//        if (ctx.floatingPointConstant() != null) {
+//            seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
+//        }
+//
+//        if (hours < 0 || minutes < 0 || minutes > 59) {
+//            throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(),
+//                    ctx.start.getCharPositionInLine());
+//        }
+//
+//        return hours * 3600 + minutes * 60 + seconds;
+//    }
 
     @Override
     public ST visitModule(OpenPearlParser.ModuleContext ctx) {
@@ -839,18 +838,18 @@ implements OpenPearlVisitor<ST> {
                 Log.warn("CppCodeGenerator: Sema without initializer may bother deadlock detection");
             }
 
-            if (!m_suppressDeadlockDetection) {
-                DeadlockResourceDeclaration deadlockResourceDeclaration = new DeadlockResourceDeclaration();
-                deadlockResourceDeclaration.resourceIdentifier = ve.getName();
-                deadlockResourceDeclaration.presetValue = getInitialiserForSema(ve.getInitializer());
-                SourceLocation sourceLocation = SourceLocations.getSourceLoc(ve.getCtx().getStart().getLine());
-                deadlockResourceDeclaration.codeFilename = sourceLocation.filename();//Compiler.getSourceFilename();
-                deadlockResourceDeclaration.codeLineNumber = sourceLocation.getLineNo(ve.getCtx().getStart().getLine());
-                deadlockResourceDeclaration.resourceType = DeadlockOperation.RESOURCE_TYPE_SEMAPHORE;
-                //deadlockResourceDeclaration.global = Objects.equals(sema_decl.getAttribute("global"), 1);
-                deadlockResourceDeclaration.global = (ve.getGlobalAttribute() != null);
-                Compiler.deadlockResourceDeclarations.add(deadlockResourceDeclaration);
-            }
+//            if (!m_suppressDeadlockDetection) {
+//                DeadlockResourceDeclaration deadlockResourceDeclaration = new DeadlockResourceDeclaration();
+//                deadlockResourceDeclaration.resourceIdentifier = ve.getName();
+//                deadlockResourceDeclaration.presetValue = getInitialiserForSema(ve.getInitializer());
+//                SourceLocation sourceLocation = SourceLocations.getSourceLoc(ve.getCtx().getStart().getLine());
+//                deadlockResourceDeclaration.codeFilename = sourceLocation.filename();//Compiler.getSourceFilename();
+//                deadlockResourceDeclaration.codeLineNumber = sourceLocation.getLineNo(ve.getCtx().getStart().getLine());
+//                deadlockResourceDeclaration.resourceType = DeadlockOperation.RESOURCE_TYPE_SEMAPHORE;
+//                //deadlockResourceDeclaration.global = Objects.equals(sema_decl.getAttribute("global"), 1);
+//                deadlockResourceDeclaration.global = (ve.getGlobalAttribute() != null);
+//                Compiler.deadlockResourceDeclarations.add(deadlockResourceDeclaration);
+//            }
             
 
         } else if (ve.getType() instanceof TypeBolt) {
@@ -858,18 +857,18 @@ implements OpenPearlVisitor<ST> {
             st = m_group.getInstanceOf("bolt_declaration");
             st.add("name",getUserVariableWithoutNamespace(ve.getName()));
 
-            if (!m_suppressDeadlockDetection) {
-                DeadlockResourceDeclaration deadlockResourceDeclaration = new DeadlockResourceDeclaration();
-                deadlockResourceDeclaration.resourceIdentifier = ve.getName();
-                deadlockResourceDeclaration.presetValue = 0;
-                SourceLocation sourceLocation = SourceLocations.getSourceLoc(ve.getCtx().getStart().getLine());
-                deadlockResourceDeclaration.codeFilename = sourceLocation.filename();
-                deadlockResourceDeclaration.codeLineNumber = sourceLocation.getLineNo(ve.getCtx().getStart().getLine());
-                deadlockResourceDeclaration.resourceType = DeadlockOperation.RESOURCE_TYPE_BOLT;
-                //deadlockResourceDeclaration.global = Objects.equals(bolt_decl.getAttribute("global"), 1);
-                deadlockResourceDeclaration.global = (ve.getGlobalAttribute() != null);
-                Compiler.deadlockResourceDeclarations.add(deadlockResourceDeclaration);
-            }
+//            if (!m_suppressDeadlockDetection) {
+//                DeadlockResourceDeclaration deadlockResourceDeclaration = new DeadlockResourceDeclaration();
+//                deadlockResourceDeclaration.resourceIdentifier = ve.getName();
+//                deadlockResourceDeclaration.presetValue = 0;
+//                SourceLocation sourceLocation = SourceLocations.getSourceLoc(ve.getCtx().getStart().getLine());
+//                deadlockResourceDeclaration.codeFilename = sourceLocation.filename();
+//                deadlockResourceDeclaration.codeLineNumber = sourceLocation.getLineNo(ve.getCtx().getStart().getLine());
+//                deadlockResourceDeclaration.resourceType = DeadlockOperation.RESOURCE_TYPE_BOLT;
+//                //deadlockResourceDeclaration.global = Objects.equals(bolt_decl.getAttribute("global"), 1);
+//                deadlockResourceDeclaration.global = (ve.getGlobalAttribute() != null);
+//                Compiler.deadlockResourceDeclarations.add(deadlockResourceDeclaration);
+//            }
             
 
         } else if (ve.getType() instanceof TypeDation) {
@@ -1205,79 +1204,79 @@ implements OpenPearlVisitor<ST> {
         dationInitializer.add("specs", m_dationSpecificationInitializers);
         dationInitializer.add("decl", m_dationDeclarationInitializers);
         
-        if (!m_suppressDeadlockDetection) {
-            // deadlock detection start
-            org.openpearl.compiler.DeadLockDetection.GraphUtils.Graph<GraphNode> taskProcedureCallPaths = new org.openpearl.compiler.DeadLockDetection.GraphUtils.Graph<>();
-            ListMap<String, String> taskProcedureCalls = new ListMap<>();
-
-            for (ProcedureCall procedureCall : Compiler.procedureCalls)
-            {
-                taskProcedureCallPaths.addEdge(new GraphNode(procedureCall.contextIdentifier), new GraphNode(procedureCall.identifier), null);
-            }
-
-            for (String currentTask : Compiler.taskIdentifiers)
-            {
-                GraphNode taskGraphNode = new GraphNode(currentTask);
-
-                List<List<GraphNode>> paths = taskProcedureCallPaths.getPathsByLabel(taskGraphNode, null);
-
-                for (List<GraphNode> outer : paths)
-                {
-                    for (GraphNode inner : outer)
-                    {
-                        if (taskGraphNode.getId().equals(inner.getId()))
-                        {
-                            continue;
-                        }
-
-                        taskProcedureCalls.add(taskGraphNode.getId(), inner.getId(), false);
-                    }
-                }
-            }
-
-
-            for (DeadlockOperation deadlockOperation : Compiler.deadlockOperations)
-            {
-                if (deadlockOperation.contextType.equals(DeadlockOperation.CONTEXT_TYPE_TASK))
-                {
-                    deadlockOperation.executingTasks.add(deadlockOperation.contextIdentifier);
-                }
-                else if (deadlockOperation.contextType.equals(DeadlockOperation.CONTEXT_TYPE_PROCEDURE))
-                {
-                    deadlockOperation.executingTasks.addAll(taskProcedureCalls.getKeysContainingValue(deadlockOperation.contextIdentifier));
-                }
-            }
-
-            ST deadlockOperations = m_group.getInstanceOf("DeadlockOperations");
-            int currentDeadlockOperationIndex = 0;
-            for (DeadlockOperation deadlockOperation : Compiler.deadlockOperations) {
-                ST deadlockOperationEntry = m_group.getInstanceOf("DeadlockOperation");
-                String operationVariableIdentifier = "dlOp_" + currentDeadlockOperationIndex;
-                deadlockOperationEntry.add("operationVariableIdentifier", operationVariableIdentifier);
-                deadlockOperationEntry.add("contextType", deadlockOperation.contextType);
-                deadlockOperationEntry.add("contextIdentifier", deadlockOperation.contextIdentifier);
-                deadlockOperationEntry.add("resourcesType", deadlockOperation.resourcesType);
-                deadlockOperationEntry.add("actionType", deadlockOperation.actionType);
-                deadlockOperationEntry.add("codeFilename", deadlockOperation.codeFilename);
-                deadlockOperationEntry.add("codeLineNumber", deadlockOperation.codeLineNumber);
-                for (String deadlockOperationResourceIdentifier : deadlockOperation.resourceIdentifiers) {
-                    ST deadlockOperationResourceIdentifierTemplate = m_group.getInstanceOf("DeadlockOperationResourceIdentifier");
-                    deadlockOperationResourceIdentifierTemplate.add("operationVariableIdentifier", operationVariableIdentifier);
-                    deadlockOperationResourceIdentifierTemplate.add("resourceIdentifier", deadlockOperationResourceIdentifier);
-                    deadlockOperationEntry.add("deadlockOperationResourceIdentifiers", deadlockOperationResourceIdentifierTemplate);
-                }
-                for (String deadlockOperationExecutingTaskIdentifier : deadlockOperation.executingTasks) {
-                    ST deadlockOperationResourceIdentifierTemplate = m_group.getInstanceOf("DeadlockOperationExecutingTaskIdentifier");
-                    deadlockOperationResourceIdentifierTemplate.add("operationVariableIdentifier", operationVariableIdentifier);
-                    deadlockOperationResourceIdentifierTemplate.add("executingTaskIdentifier", deadlockOperationExecutingTaskIdentifier);
-                    deadlockOperationEntry.add("deadlockOperationExecutingTaskIdentifiers", deadlockOperationResourceIdentifierTemplate);
-                }
-                deadlockOperations.add("deadlockOperation", deadlockOperationEntry);
-                currentDeadlockOperationIndex++;
-            }
-            dationInitializer.add("deadlockOperations", deadlockOperations);
-            // deadlock detection end
-        }
+//        if (!m_suppressDeadlockDetection) {
+//            // deadlock detection start
+//            org.openpearl.compiler.DeadLockDetection.GraphUtils.Graph<GraphNode> taskProcedureCallPaths = new org.openpearl.compiler.DeadLockDetection.GraphUtils.Graph<>();
+//            ListMap<String, String> taskProcedureCalls = new ListMap<>();
+//
+//            for (ProcedureCall procedureCall : Compiler.procedureCalls)
+//            {
+//                taskProcedureCallPaths.addEdge(new GraphNode(procedureCall.contextIdentifier), new GraphNode(procedureCall.identifier), null);
+//            }
+//
+//            for (String currentTask : Compiler.taskIdentifiers)
+//            {
+//                GraphNode taskGraphNode = new GraphNode(currentTask);
+//
+//                List<List<GraphNode>> paths = taskProcedureCallPaths.getPathsByLabel(taskGraphNode, null);
+//
+//                for (List<GraphNode> outer : paths)
+//                {
+//                    for (GraphNode inner : outer)
+//                    {
+//                        if (taskGraphNode.getId().equals(inner.getId()))
+//                        {
+//                            continue;
+//                        }
+//
+//                        taskProcedureCalls.add(taskGraphNode.getId(), inner.getId(), false);
+//                    }
+//                }
+//            }
+//
+//
+//            for (DeadlockOperation deadlockOperation : Compiler.deadlockOperations)
+//            {
+//                if (deadlockOperation.contextType.equals(DeadlockOperation.CONTEXT_TYPE_TASK))
+//                {
+//                    deadlockOperation.executingTasks.add(deadlockOperation.contextIdentifier);
+//                }
+//                else if (deadlockOperation.contextType.equals(DeadlockOperation.CONTEXT_TYPE_PROCEDURE))
+//                {
+//                    deadlockOperation.executingTasks.addAll(taskProcedureCalls.getKeysContainingValue(deadlockOperation.contextIdentifier));
+//                }
+//            }
+//
+//            ST deadlockOperations = m_group.getInstanceOf("DeadlockOperations");
+//            int currentDeadlockOperationIndex = 0;
+//            for (DeadlockOperation deadlockOperation : Compiler.deadlockOperations) {
+//                ST deadlockOperationEntry = m_group.getInstanceOf("DeadlockOperation");
+//                String operationVariableIdentifier = "dlOp_" + currentDeadlockOperationIndex;
+//                deadlockOperationEntry.add("operationVariableIdentifier", operationVariableIdentifier);
+//                deadlockOperationEntry.add("contextType", deadlockOperation.contextType);
+//                deadlockOperationEntry.add("contextIdentifier", deadlockOperation.contextIdentifier);
+//                deadlockOperationEntry.add("resourcesType", deadlockOperation.resourcesType);
+//                deadlockOperationEntry.add("actionType", deadlockOperation.actionType);
+//                deadlockOperationEntry.add("codeFilename", deadlockOperation.codeFilename);
+//                deadlockOperationEntry.add("codeLineNumber", deadlockOperation.codeLineNumber);
+//                for (String deadlockOperationResourceIdentifier : deadlockOperation.resourceIdentifiers) {
+//                    ST deadlockOperationResourceIdentifierTemplate = m_group.getInstanceOf("DeadlockOperationResourceIdentifier");
+//                    deadlockOperationResourceIdentifierTemplate.add("operationVariableIdentifier", operationVariableIdentifier);
+//                    deadlockOperationResourceIdentifierTemplate.add("resourceIdentifier", deadlockOperationResourceIdentifier);
+//                    deadlockOperationEntry.add("deadlockOperationResourceIdentifiers", deadlockOperationResourceIdentifierTemplate);
+//                }
+//                for (String deadlockOperationExecutingTaskIdentifier : deadlockOperation.executingTasks) {
+//                    ST deadlockOperationResourceIdentifierTemplate = m_group.getInstanceOf("DeadlockOperationExecutingTaskIdentifier");
+//                    deadlockOperationResourceIdentifierTemplate.add("operationVariableIdentifier", operationVariableIdentifier);
+//                    deadlockOperationResourceIdentifierTemplate.add("executingTaskIdentifier", deadlockOperationExecutingTaskIdentifier);
+//                    deadlockOperationEntry.add("deadlockOperationExecutingTaskIdentifiers", deadlockOperationResourceIdentifierTemplate);
+//                }
+//                deadlockOperations.add("deadlockOperation", deadlockOperationEntry);
+//                currentDeadlockOperationIndex++;
+//            }
+//            dationInitializer.add("deadlockOperations", deadlockOperations);
+//            // deadlock detection end
+//        }
 
 
         // add dation initializer only if at least one dation is used
@@ -1300,7 +1299,7 @@ implements OpenPearlVisitor<ST> {
 
         treatListOfSemaOrBoltNames(m_listOfBoltArrays, constantBoltArrays, operation,
                 newSemaOrBoltArray, ctx.listOfNames());
-        registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_BOLT, DeadlockOperation.ACTION_TYPE_RESERVE, ctx, ctx.listOfNames());
+        //registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_BOLT, DeadlockOperation.ACTION_TYPE_RESERVE, ctx, ctx.listOfNames());
 
         return operation;
     }
@@ -1313,7 +1312,7 @@ implements OpenPearlVisitor<ST> {
         treatListOfSemaOrBoltNames(m_listOfBoltArrays, constantBoltArrays, operation,
                 newSemaOrBoltArray, ctx.listOfNames());
         
-        registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_BOLT, DeadlockOperation.ACTION_TYPE_FREE, ctx, ctx.listOfNames());
+//        registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_BOLT, DeadlockOperation.ACTION_TYPE_FREE, ctx, ctx.listOfNames());
 
         return operation;
     }
@@ -1326,7 +1325,7 @@ implements OpenPearlVisitor<ST> {
 
         treatListOfSemaOrBoltNames(m_listOfBoltArrays, constantBoltArrays, operation,
                 newSemaOrBoltArray, ctx.listOfNames());
-        registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_BOLT, DeadlockOperation.ACTION_TYPE_ENTER, ctx, ctx.listOfNames());
+//        registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_BOLT, DeadlockOperation.ACTION_TYPE_ENTER, ctx, ctx.listOfNames());
 
         return operation;
     }
@@ -1339,7 +1338,7 @@ implements OpenPearlVisitor<ST> {
 
         treatListOfSemaOrBoltNames(m_listOfBoltArrays, constantBoltArrays, operation,
                 newSemaOrBoltArray, ctx.listOfNames());
-        registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_BOLT, DeadlockOperation.ACTION_TYPE_LEAVE, ctx, ctx.listOfNames());
+//        registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_BOLT, DeadlockOperation.ACTION_TYPE_LEAVE, ctx, ctx.listOfNames());
 
         return operation;
     }
@@ -1367,16 +1366,16 @@ implements OpenPearlVisitor<ST> {
         taskdecl.add("priority", priority);
         taskdecl.add("main", main);
 
-        Compiler.taskIdentifiers.add(ctx.nameOfModuleTaskProc().ID().toString());
-        DeadlockControlFlowGraphTask deadlockControlFlowGraphTask = new DeadlockControlFlowGraphTask();
-        deadlockControlFlowGraphTask.taskIdentifier = ctx.nameOfModuleTaskProc().ID().toString();
-        deadlockControlFlowGraphTask.runAtStartup = (main == 1);
-        deadlockControlFlowGraphTask.codeFilename = Compiler.getSourceFilename();
-        deadlockControlFlowGraphTask.codeLineNumber = ctx.start.getLine();
-        deadlockControlFlowGraphTask.global = (ctx.globalAttribute() != null);
-        DeadlockControlFlowGraph.setTokenData(DeadlockControlFlowGraph.getTokenIdentifier(ctx.start), deadlockControlFlowGraphTask);
-        currentCallContextType = DeadlockOperation.CONTEXT_TYPE_TASK;
-        currentCallContextIdentifier = deadlockControlFlowGraphTask.taskIdentifier;
+//        Compiler.taskIdentifiers.add(ctx.nameOfModuleTaskProc().ID().toString());
+//        DeadlockControlFlowGraphTask deadlockControlFlowGraphTask = new DeadlockControlFlowGraphTask();
+//        deadlockControlFlowGraphTask.taskIdentifier = ctx.nameOfModuleTaskProc().ID().toString();
+//        deadlockControlFlowGraphTask.runAtStartup = (main == 1);
+//        deadlockControlFlowGraphTask.codeFilename = Compiler.getSourceFilename();
+//        deadlockControlFlowGraphTask.codeLineNumber = ctx.start.getLine();
+//        deadlockControlFlowGraphTask.global = (ctx.globalAttribute() != null);
+//        DeadlockControlFlowGraph.setTokenData(DeadlockControlFlowGraph.getTokenIdentifier(ctx.start), deadlockControlFlowGraphTask);
+//        currentCallContextType = DeadlockOperation.CONTEXT_TYPE_TASK;
+//        currentCallContextIdentifier = deadlockControlFlowGraphTask.taskIdentifier;
 
         
         if (ctx != null) {
@@ -1413,12 +1412,13 @@ implements OpenPearlVisitor<ST> {
         return taskbody;
     }
 
-    @Override
-    public ST visitTimeConstant(OpenPearlParser.TimeConstantContext ctx) {
-        ST st = m_group.getInstanceOf("TimeConstant");
-        st.add("value", getTime(ctx));
-        return st;
-    }
+// obsolete 2022-12-29 (rm)    
+//    @Override
+//    public ST visitTimeConstant(OpenPearlParser.TimeConstantContext ctx) {
+//        ST st = m_group.getInstanceOf("TimeConstant");
+//        st.add("value", getTime(ctx));
+//        return st;
+//    }
 
 
 
@@ -1460,9 +1460,19 @@ implements OpenPearlVisitor<ST> {
                     stmt.add("label", visitLabel_statement(ctx.label_statement(i)));
                 }
             }
+            
+            // first attempt to remove unreachable code from compiler output
+            ASTAttribute attr = m_ast.lookup(ctx);
+            if (attr != null && attr.isUnreachableStatement()) {
+                // remove entry srcFilename to suppress me->setLocation();
+                stmt.remove("srcFilename");
+                return stmt;
+            }
 
             if (ctx.children != null) {
                 for (ParseTree c : ctx.children) {
+                    
+
                     if (c instanceof OpenPearlParser.Unlabeled_statementContext) {
                         stmt.add("code", visitUnlabeled_statement(
                                 (OpenPearlParser.Unlabeled_statementContext) c));
@@ -2018,6 +2028,12 @@ implements OpenPearlVisitor<ST> {
         // vfromNamespace(name,fromNs) ::= <%   <if(fromNs)>ns_<fromNs>::<endif><name> %>
         stOfName = m_group.getInstanceOf("user_variable");
         stOfName.add("name", entry.getName());
+
+        if (entry instanceof TaskEntry) {
+            ST st = m_group.getInstanceOf("TaskName");
+            st.add("name", stOfName);
+            stOfName = st;
+        }
         if (entry.isSpecified()) {
 
             if (!entry.isPredefined() && !entry.getGlobalAttribute().equals(m_module.getName())) {
@@ -2030,9 +2046,9 @@ implements OpenPearlVisitor<ST> {
 
         // first level 
         if (entry instanceof TaskEntry) {
-            ST st = m_group.getInstanceOf("TaskName");
-            st.add("name", stOfName);
-            stOfName = st;
+//            ST st = m_group.getInstanceOf("TaskName");
+//            st.add("name", stOfName);
+//            stOfName = st;
             currentType = new TypeTask();
         } else if (entry instanceof InterruptEntry) {
             // nothing to do here 
@@ -2045,7 +2061,10 @@ implements OpenPearlVisitor<ST> {
             currentType=((ProcedureEntry)entry).getType();
         } else if (entry instanceof org.openpearl.compiler.SymbolTable.ProcedureEntry && ctx.listOfExpression() == null) {
             // just the name of a procedure
-            
+            if (entry.isPredefined()) {
+                ST st = m_group.getInstanceOf(entry.getName());
+                return st;
+            }
             currentType=((ProcedureEntry)entry).getType();
         } else if (entry instanceof FormalParameter) {
             int x=0;
@@ -2972,7 +2991,7 @@ implements OpenPearlVisitor<ST> {
 
         treatListOfSemaOrBoltNames(m_listOfSemaphoreArrays, constantSemaphoreArrays, operation,
                 newSemaOrBoltArray, ctx.listOfNames());
-        registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_SEMAPHORE, DeadlockOperation.ACTION_TYPE_RELEASE, ctx, ctx.listOfNames());
+ //       registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_SEMAPHORE, DeadlockOperation.ACTION_TYPE_RELEASE, ctx, ctx.listOfNames());
         
         return operation;
     }
@@ -2984,7 +3003,7 @@ implements OpenPearlVisitor<ST> {
 
         treatListOfSemaOrBoltNames(m_listOfSemaphoreArrays, constantSemaphoreArrays, operation,
                 newSemaOrBoltArray, ctx.listOfNames());
-        registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_SEMAPHORE, DeadlockOperation.ACTION_TYPE_REQUEST, ctx, ctx.listOfNames());
+ //       registerDeadlockOperation(DeadlockOperation.RESOURCE_TYPE_SEMAPHORE, DeadlockOperation.ACTION_TYPE_REQUEST, ctx, ctx.listOfNames());
 
         return operation;
     }
@@ -4121,18 +4140,19 @@ implements OpenPearlVisitor<ST> {
         ST call = m_group.getInstanceOf("CallStatement");
         call.add("callee",  visitName(ctx.name()));
 
-        ProcedureCall procedureCall = new ProcedureCall();
-        procedureCall.codeFilename = Compiler.getSourceFilename();
-        procedureCall.codeLineNumber = ctx.start.getLine();
-        procedureCall.identifier = ctx.getText();
-
-        // TODO Explizit testen!
-        // TODO Oder das nach der semantischen Analyse durchfuehren, damit nicht erreichbarer Code nicht verwendet wird
-
-        procedureCall.contextType = currentCallContextType;
-        procedureCall.contextIdentifier = currentCallContextIdentifier;
-        Compiler.procedureCalls.add(procedureCall);
-        DeadlockControlFlowGraph.setTokenData(DeadlockControlFlowGraph.getTokenIdentifier(ctx.start), procedureCall);
+//        ProcedureCall procedureCall = new ProcedureCall();
+//        procedureCall.codeFilename = Compiler.getSourceFilename();
+//        procedureCall.codeLineNumber = ctx.start.getLine();
+//        //procedureCall.identifier = ctx.getText();
+//        procedureCall.identifier = ctx.name().ID().getText();
+//
+//        // TODO Explizit testen!
+//        // TODO Oder das nach der semantischen Analyse durchfuehren, damit nicht erreichbarer Code nicht verwendet wird
+//
+//        procedureCall.contextType = currentCallContextType;
+//        procedureCall.contextIdentifier = currentCallContextIdentifier;
+//        Compiler.procedureCalls.add(procedureCall);
+//        DeadlockControlFlowGraph.setTokenData(DeadlockControlFlowGraph.getTokenIdentifier(ctx.start), procedureCall);
 
         return call;
     }    
@@ -5054,15 +5074,15 @@ implements OpenPearlVisitor<ST> {
             visit(ctx.globalAttribute());
         }
         
-        DeadlockControlFlowGraphProcedure dcfgProcedure = new DeadlockControlFlowGraphProcedure();
-        dcfgProcedure.codeFilename = Compiler.getSourceFilename();;
-        dcfgProcedure.codeLineNumber = ctx.start.getLine();
-        dcfgProcedure.procedureIdentifier = ctx.nameOfModuleTaskProc().ID().toString();
-        dcfgProcedure.global = (ctx.globalAttribute() != null);
-        Compiler.procedureDeclarations.add(dcfgProcedure);
-        // DeadlockControlFlowGraph.setTokenData(DeadlockControlFlowGraph.getTokenIdentifier(ctx.start), dcfgProcedure);
-        currentCallContextType = DeadlockOperation.CONTEXT_TYPE_PROCEDURE;
-        currentCallContextIdentifier = dcfgProcedure.procedureIdentifier;
+//        DeadlockControlFlowGraphProcedure dcfgProcedure = new DeadlockControlFlowGraphProcedure();
+//        dcfgProcedure.codeFilename = Compiler.getSourceFilename();;
+//        dcfgProcedure.codeLineNumber = ctx.start.getLine();
+//        dcfgProcedure.procedureIdentifier = ctx.nameOfModuleTaskProc().ID().toString();
+//        dcfgProcedure.global = (ctx.globalAttribute() != null);
+//        Compiler.procedureDeclarations.add(dcfgProcedure);
+//        // DeadlockControlFlowGraph.setTokenData(DeadlockControlFlowGraph.getTokenIdentifier(ctx.start), dcfgProcedure);
+//        currentCallContextType = DeadlockOperation.CONTEXT_TYPE_PROCEDURE;
+//        currentCallContextIdentifier = dcfgProcedure.procedureIdentifier;
  
         if (ctx.procedureBody()!= null) {
             st.add("body", visit(ctx.procedureBody()));

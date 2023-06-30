@@ -1,7 +1,6 @@
 package org.openpearl.compiler;
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.openpearl.compiler.SymbolTable.FormalParameter;
 import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
 /**
  * some error messages, which are emitted at different source locations 

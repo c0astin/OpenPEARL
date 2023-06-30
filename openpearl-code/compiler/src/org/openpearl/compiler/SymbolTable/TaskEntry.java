@@ -32,11 +32,13 @@ package org.openpearl.compiler.SymbolTable;
 import org.openpearl.compiler.Defaults;
 import org.openpearl.compiler.Log;
 import org.openpearl.compiler.OpenPearlParser;
+import org.openpearl.compiler.SemanticAnalysis.PlainControlFlowGraph.ControlFlowGraph;
 
 public class TaskEntry extends SymbolTableEntry {
 
     private Boolean m_isMain;
     private OpenPearlParser.PriorityContext m_priority;
+    private ControlFlowGraph m_controlFlowGraph;
 
     public TaskEntry() {}
     
@@ -48,12 +50,14 @@ public class TaskEntry extends SymbolTableEntry {
     public TaskEntry(String name, OpenPearlParser.IdentifierContext ctx) {
         super(name);
         this.m_ctx = ctx;
+        m_controlFlowGraph = null;
     }
 
     public TaskEntry(String name, OpenPearlParser.PriorityContext priority, Boolean isMain,
              OpenPearlParser.TaskDeclarationContext ctx, SymbolTable scope) {
         super(name);
 
+        m_controlFlowGraph = null;
         m_priority = priority;
         m_isMain = isMain;
         Log.warn("TaskEntry@64: global treatment still incomplete");
@@ -81,6 +85,13 @@ public class TaskEntry extends SymbolTableEntry {
         return scope == null ? "" : "\n" + scope.toString(m_level);
     }
 
+    public void setControlFlowGraph(ControlFlowGraph cfg) {
+        m_controlFlowGraph = cfg;
+    }
+    
+    public ControlFlowGraph getControlFlowGraph() {
+        return m_controlFlowGraph;
+    }
 
     public SymbolTable scope;
 

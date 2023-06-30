@@ -453,7 +453,7 @@ public class CommonUtils {
 
     public static String getArrayDescriptorName(VariableEntry entry) {
         String name = "ad_";
-        TypeArrayDeclaration type = ((TypeArrayDeclaration) entry.getType());
+        //TypeArrayDeclaration type = ((TypeArrayDeclaration) entry.getType());
 
         return name;
     }
@@ -1447,7 +1447,7 @@ public class CommonUtils {
             }
 
             while (lctx != null) {
-                String s = lctx.ID().toString();
+                //String s = lctx.ID().toString();
                 StructureComponent structureComponent = struct.lookup(lctx.ID().toString());
 
                 // Note: This should be handled by the new error reporting mechanism.

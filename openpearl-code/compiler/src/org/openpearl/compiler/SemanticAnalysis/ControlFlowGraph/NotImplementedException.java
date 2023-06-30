@@ -1,6 +1,6 @@
 /*
  * [A "BSD license"]
- *  Copyright (c) 2021 Ilja Mascharow
+ *  Copyright (c) 2021 Rainer Müller
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,25 +26,12 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.openpearl.compiler.ControlFlowGraph;
+package org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph;
 
-public class VariableValueRange<T extends Comparable<T>> {
-    private T from;
-    private T to;
+import org.openpearl.compiler.ErrorStack;
 
-    public VariableValueRange(T value) {
-        this.from = value;
-        this.to = value;
+public class NotImplementedException extends RuntimeException {
+    public NotImplementedException() {
+       ErrorStack.addInternal(null,null,"CFD: operation or data type not yet implemented");
     }
-
-    public VariableValueRange(T from, T to) {
-        this.from = from;
-        this.to = to;
-    }
-
-    public T getFrom() { return from; }
-    public T getTo() { return to; }
-
-    public void setFrom(T from) { this.from = from; }
-    public void setTo(T to) { this.to = to; }
 }

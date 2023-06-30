@@ -54,7 +54,7 @@ public class TypeUtilities {
     public static  boolean mayBeAssignedTo( TypeDefinition lhsType, SymbolTableEntry lhs,
             ExpressionContext expression, AST m_ast, boolean isInAssignment) {
 
-      
+        ASTAttribute rhsAttr = m_ast.lookup(expression);
         TypeDefinition rhsType = m_ast.lookupType(expression);
                
         String rhsOriginalType = rhsType.toString4IMC(true);
@@ -77,7 +77,7 @@ public class TypeUtilities {
             //lhsType = ((UserDefinedTypeStructure)lhsType).getStructuredType();
         }
 
-        ASTAttribute rhsAttr = m_ast.lookup(expression);
+        
         VariableEntry rhsVariable = rhsAttr.getVariable();
         SymbolTableEntry rhsSymbol = rhsAttr.getSymbolTableEntry();
 
@@ -114,19 +114,26 @@ public class TypeUtilities {
             if (rhsType instanceof TypeReference && (((TypeReference)rhsType).getBaseType() instanceof TypeProcedure)) {
                 TypeProcedure tp= (TypeProcedure)(((TypeReference)rhsType).getBaseType());
                 resultType = tp.getResultType();
+                rhsAttr.setIsFunctionCall(true);
+                rhsAttr.setType(resultType);
 
             }
-            if (rhsType instanceof TypeProcedure &&
-                    ((TypeProcedure)rhsType).getResultType() != null  ) {
-                resultType = ((TypeProcedure)rhsType).getResultType();
-            }
+//            if (rhsType instanceof TypeProcedure &&
+//                    ((TypeProcedure)rhsType).getResultType() != null  ) {
+//                resultType = ((TypeProcedure)rhsType).getResultType();
+//                rhsAttr.setIsFunctionCall(true);
+//                rhsAttr.setType(resultType);
+//            }
 
             //-- easiest case; simple variable assignment
-            if (simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, rhsType)) {
+            if (simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, resultType)) {
+                ruleApplied=true;
+                //rhsAttr.setIsFunctionCall(true);
+                break;
+            } else if (simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, rhsType)) {
                 ruleApplied=true;
                 break;
             }
-
           
 
             if (!(lhsType instanceof TypeReference) ) {
@@ -150,13 +157,14 @@ public class TypeUtilities {
                     rhsType = ((TypeProcedure)rhsType).getResultType();
                     rhsAttr.setType(rhsType);
                     ruleApplied=true;
-                }
-                
-                if ( rhsType instanceof TypeReference && 
+                    rhsAttr.setIsFunctionCall(true);
+                } else if ( rhsType instanceof TypeReference && 
                         simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, ((TypeReference)rhsType).getBaseType())) {
                     rhsType = ((TypeReference)rhsType).getBaseType();
                     if (rhsType instanceof TypeSameStructure) {
                         rhsType = ((TypeSameStructure)rhsType).getContainerStructure().getStructuredType();
+                    }  else {
+                        ErrorStack.addInternal(expression, "TypeUtlities@165", "missing alternative");
                     }
                     rhsAttr.setType(rhsType);
                  
@@ -209,20 +217,20 @@ public class TypeUtilities {
                 }
 
                 // -- lhs is reference; rhs PROC returning basetype of lhs with same INV-setting
-                if (  (rhsSymbol != null) && rhsSymbol instanceof ProcedureEntry &&  
-                        resultType!= null &&
-                        resultType.hasAssignmentProtection()==lhsType.hasAssignmentProtection()) {
-                        
-                    if (lhsBaseType.equals(resultType)) {
-                        //  checkLifeCycle(lhsVariable, rhsVariable);
-                        // not required, since PROC RETURNS(REF ...) may only return
-                        // objects at module level
-                        ruleApplied=true;
-                       break;
-                    } else {
-                        rhsType = resultType;
-                        rhsAttr.setType(rhsType);
-                        ruleApplied=true;
+                if (  (rhsSymbol != null) && rhsSymbol instanceof ProcedureEntry) {
+                    resultType = ((ProcedureEntry)rhsSymbol).getResultType();
+
+                    if (resultType != null &&
+                            resultType.hasAssignmentProtection()==lhsType.hasAssignmentProtection()) {
+
+                        if (lhsBaseType.equals(resultType)) {
+                            //  checkLifeCycle(lhsVariable, rhsVariable);
+                            // not required, since PROC RETURNS(REF ...) may only return
+                            // objects at module level
+                            rhsAttr.setIsFunctionCall(true);
+                            ruleApplied=true;
+                            break;
+                        }
                     }
                 }
                 // -- lhs is reference; rhs is a symbol; 
@@ -292,15 +300,11 @@ public class TypeUtilities {
                         } else {
                             CommonErrorMessages.typeMismatchInAssignment(lhsType.toErrorString(), rhsType.toErrorString(), rhsAttr);
                         }
-//                        if (isFunctionCall) {
-//                            ErrorStack.add("type mismatch: cannot pass expression of type "+ rhsType.toString4IMC(false)+" as " +lhsType.toString4IMC(true));
-//                        } else {
-//                            ErrorStack.add("type mismatch: "+lhsType.toString4IMC(false)+" := expression of type "+ rhsType.toString4IMC(false));
-//                        }
                     }
 
                     rhsType = ((TypeProcedure)rhsType).getResultType();
                     rhsAttr.setType(rhsType);
+                    rhsAttr.setIsFunctionCall(true);
                     ruleApplied=true;
                 }
 
@@ -566,6 +570,7 @@ public class TypeUtilities {
                         }
                     }
                     attr.setType(type);
+                    attr.setIsFunctionCall(true);
                     actionDone=true;
                 }
             }

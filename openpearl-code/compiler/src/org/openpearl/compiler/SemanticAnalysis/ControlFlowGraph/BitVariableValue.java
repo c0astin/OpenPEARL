@@ -27,7 +27,7 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.openpearl.compiler.ControlFlowGraph;
+package org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph;
 
 import org.openpearl.compiler.ConstantBitValue;
 //import sun.reflect.generics.reflectiveObjects.NotImplementedException;

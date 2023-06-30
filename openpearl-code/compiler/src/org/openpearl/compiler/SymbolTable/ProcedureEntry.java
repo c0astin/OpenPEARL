@@ -32,16 +32,19 @@ package org.openpearl.compiler.SymbolTable;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.openpearl.compiler.ASTAttribute;
 import org.openpearl.compiler.TypeDefinition;
+import org.openpearl.compiler.SemanticAnalysis.PlainControlFlowGraph.ControlFlowGraph;
 import java.util.LinkedList;
 
 public class ProcedureEntry extends SymbolTableEntry {
 
     private LinkedList<FormalParameter> m_formalParameters;
     private ASTAttribute m_resultType;
-    private TypeDefinition m_type;
+    private TypeDefinition m_type;    
+    private ControlFlowGraph m_controlFlowGraph;
 
     public ProcedureEntry() {
         this.m_formalParameters = null;
+        m_controlFlowGraph=null;
     }
 
     public ProcedureEntry(String name, TypeDefinition type, LinkedList<FormalParameter> formalParameters,
@@ -53,6 +56,7 @@ public class ProcedureEntry extends SymbolTableEntry {
         this.scope = scope;
         this.m_type = type;
         this.m_resultType = resultType;
+        m_controlFlowGraph=null;
     }
 
     public String toString(int m_level) {
@@ -102,4 +106,13 @@ public class ProcedureEntry extends SymbolTableEntry {
     public TypeDefinition getType() {
         return m_type;
     }
+    
+    public void setControlFlowGraph(ControlFlowGraph cfg) {
+        m_controlFlowGraph = cfg;
+    }
+
+    public ControlFlowGraph getControlFlowGraph() {
+        return(m_controlFlowGraph);
+    }
+
 }

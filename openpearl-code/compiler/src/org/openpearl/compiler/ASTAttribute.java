@@ -89,6 +89,13 @@ public class ASTAttribute {
      */
     private static final int bitIsFunctionCall = 0x08;
     
+    /**
+     * flag is set in CheckUnreachableCode, if the statement is not reachable
+     * 
+     */
+    private static final int statementIsUnreachable = 0x010;
+    
+    
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
         m_flags = 0;
@@ -287,7 +294,15 @@ public class ASTAttribute {
         setFlag(isLValue,set);
     }
     
-  
+    public boolean isUnreachableStatement() {
+        return (getFlag(statementIsUnreachable));
+    }
+    
+    public void setIsUnreachableStatement(boolean set ) {
+        setFlag(statementIsUnreachable,set);
+    }
+    
+    
     
     private boolean getFlag(int whichFlag) {
       return ((m_flags & whichFlag) == whichFlag);

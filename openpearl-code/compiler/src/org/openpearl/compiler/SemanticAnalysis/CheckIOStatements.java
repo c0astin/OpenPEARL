@@ -894,7 +894,7 @@ implements OpenPearlVisitor<Void> {
                             }
                         }
                     } 
-                        if (Compiler.isStdPEARL90() && forbiddenInPearl90) {
+                        if (Options.isStdPEARL90() && forbiddenInPearl90) {
                             ErrorStack.enter(ioDataList.ioListElement(i).arraySlice());
                             ErrorStack.warn("array slice not allowed in PEARL90");
                             ErrorStack.leave();
@@ -1188,6 +1188,7 @@ implements OpenPearlVisitor<Void> {
         }
         if (!m_directionInput && td instanceof TypeProcedure) {
             td = ((TypeProcedure)td).getResultType();
+            attr.setIsFunctionCall(true);
         }
 
         if (m_directionInput && (td instanceof TypeReference || td instanceof TypeProcedure) ) {
@@ -1271,6 +1272,7 @@ implements OpenPearlVisitor<Void> {
                         TypeProcedure tp = (TypeProcedure)(attr.getType());
                         if (tp.getResultType() != null) {
                             attr.setType(tp.getResultType());
+                            attr.setIsFunctionCall(true);
                             etc.setType(tp.getResultType());
                         } 
                     }

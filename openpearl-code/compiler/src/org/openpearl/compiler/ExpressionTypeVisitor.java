@@ -1842,7 +1842,7 @@ implements OpenPearlVisitor<Void> {
             TypeUtilities.performImplicitDereferenceAndFunctioncall(attr);
             if (!(attr.getType() instanceof TypeBit) || attr.getType().getPrecision() != 1) {
                 ErrorStack.add(
-                        ctx.loopStatement_by().expression(),
+                        ctx.loopStatement_while().expression(),
                         "WHILE",
                         "type must be BIT(1) - but is " + attr.getType().toString());
             }
@@ -3566,6 +3566,7 @@ implements OpenPearlVisitor<Void> {
         if (savedActualIndexType instanceof TypeProcedure && ((TypeProcedure)savedActualIndexType).getFormalParameters() == null &&
                 ((TypeProcedure)savedActualIndexType).getResultType() != null) {
             savedActualIndexType = ((TypeProcedure)savedActualIndexType).getResultType();
+            attr.setIsFunctionCall(true);
         }
         return ((savedActualIndexType instanceof TypeFixed));
 
@@ -3815,6 +3816,7 @@ implements OpenPearlVisitor<Void> {
                     ((TypeProcedure)savedActualType).getFormalParameters() == null &&
                     ((TypeProcedure)savedActualType).getResultType() != null) {
                 savedActualType =  ((TypeProcedure)savedActualType).getResultType() ;
+                attr.setIsFunctionCall(true);
                 anyThingDone = true;
             }
         } while (anyThingDone);

@@ -28,10 +28,14 @@
  */
  
 /* changelog
+2023-04-05 (rm) the DeadlockControlFlowGraph needs the context of the 'FIN' of IF and CASE
+2023-03-02 (rm) the DeadlockControlFlowGraph needs the context of the 'END' of TASK and PROC
+  added rule
+ endOfBlockLoopProcOrTask: 'END' ;
+ 
 2020-05-50 (rm): loopStatement: loopBody now as separate rule to  simplify the 
    treatment in the ExpressionTypeVisitor 
-   
-   
+      
 2021-10-03 (rm):
    DCL and SPC with mixed types in one DCL/SPC
    task/proc usage with list of identifiers
@@ -543,9 +547,13 @@ preset :
 procedureDeclaration:
 	 nameOfModuleTaskProc ':' typeProcedure globalAttribute? ';'
         procedureBody
-      'END' ';'
+      endOfBlockLoopProcOrTask ';'
     ;
 
+endOfBlockLoopProcOrTask:
+	'END'
+	;
+	
 procedureDenotation:
 	 identifierDenotation  typeProcedure globalAttribute? 
     ;
@@ -691,7 +699,7 @@ resultType :
 
 taskDeclaration :
     nameOfModuleTaskProc ':' 'TASK' priority? task_main? globalAttribute? ';'
-        taskBody 'END' ';' cpp_inline?
+        taskBody endOfBlockLoopProcOrTask ';' cpp_inline?
     ;
 
 taskDenotation :
@@ -891,7 +899,7 @@ sequential_control_statement:
 ////////////////////////////////////////////////////////////////////////////////
 
 if_statement
-    : 'IF' expression then_block else_block? 'FIN' ';'
+    : 'IF' expression then_block else_block? fin_if_case ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -906,13 +914,18 @@ else_block
     : 'ELSE' statement+
     ;
 
+fin_if_case
+	: 'FIN'
+    ;
+    
 ////////////////////////////////////////////////////////////////////////////////
 // CaseStatement ::=
 //   StatementSelection1 | StatementSelection2
 ////////////////////////////////////////////////////////////////////////////////
 
 case_statement
-    : 'CASE' ( case_statement_selection1 | case_statement_selection2 ) 'FIN' ';'
+    : 'CASE' ( case_statement_selection1 | case_statement_selection2 )  fin_if_case ';'
+//    : 'CASE' expression ( case_statement_selection1 | case_statement_selection2 ) case_statement_selection_out? 'FIN' ';'
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -925,6 +938,7 @@ case_statement
 
 case_statement_selection1
     : expression case_statement_selection1_alt+ case_statement_selection_out?
+//    :  case_statement_selection1_alt+
     ;
 
 case_statement_selection1_alt
@@ -948,6 +962,7 @@ case_statement_selection_out
 
 case_statement_selection2
     : expression case_statement_selection2_alt+ case_statement_selection_out?
+//    : case_statement_selection2_alt+ 
     ;
 
 case_statement_selection2_alt
@@ -989,7 +1004,7 @@ block_statement:
     'BEGIN'
     ( variableDeclaration | lengthDefinition | typeDefinition )*
     statement*
-    'END' blockId? ';'
+    endOfBlockLoopProcOrTask blockId? ';'
     ;
     
 blockId:
@@ -1039,7 +1054,7 @@ loopStatement_while:
     ;
 
 loopStatement_end:
-    'END' ID?
+    endOfBlockLoopProcOrTask ID?
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
