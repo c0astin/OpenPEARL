@@ -64,9 +64,9 @@ public class CheckSpcDcl {
         for (Module m : modules) {
             currentModule = m;
             String modName = m.getModuleName();
-            if (moduleNames.contains(modName))
-                continue;
-            moduleNames.add(modName);
+            if (!moduleNames.contains(modName)) {
+                moduleNames.add(modName);
+            }
             for (SpcProblemPart spc : m.getSpcProblemPart()) {
                 String userName = spc.getUserName();
                 boolean dclFound = false;
@@ -94,7 +94,7 @@ public class CheckSpcDcl {
                     // search only in modules with the same name and ignore the current module
                     if (m1 == m)
                         continue;
-                    if (m1.getModuleName().equals(m.getModuleName()))
+                    if (!m1.getModuleName().equals(spc.getGlobal()))
                         continue;
                     int indexInProblemPart = isDefinedInProblemPart(m1, spc.getGlobal(), userName);
                     if (indexInProblemPart >= 0) {
@@ -103,6 +103,8 @@ public class CheckSpcDcl {
                         Log.info(userName + " index in problempart " + indexInProblemPart + " of module "
                                 + m1.getModuleName());
                         checkType(spc, m1.getDclProblemPart().get(indexInProblemPart));
+                    } else {
+                        Log.info(userName + "  is not in problem part of " + m1.getSourceFileName());
                     }
                 }
                 if (!dclFound) {
