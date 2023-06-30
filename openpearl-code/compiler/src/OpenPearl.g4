@@ -105,7 +105,7 @@ ID :   Letter ( Letter | Digit | '_' )* ;
 ////////////////////////////////////////////////////////////////////////////////
 
 module:
-  'MODULE' ( '(' nameOfModuleTaskProc ')' 
+  'MODULE' ( '(' nameOfModuleTaskProc ')'
              | nameOfModuleTaskProc ) ';' 
 	cpp_inline* system_part? problem_part? 'MODEND' ';'
   ;
@@ -1966,7 +1966,6 @@ expression:
     | op='CONT' expression                                  # CONTExpression
     | op='LWB' expression                                   # lwbMonadicExpression
     | op='UPB' expression                                   # upbMonadicExpression
- 
     | op='TASK' ( '(' expression ')' )?                     # taskFunction
     | op='PRIO' ( '(' expression ')' )?                     # prioFunction
     | <assoc=right> expression op='**'  expression          # exponentiationExpression
@@ -1980,9 +1979,9 @@ expression:
     | expression op='/' expression                          # divideExpression
     | expression op='//' expression                         # divideIntegerExpression
     | expression op='REM' expression                        # remainderExpression
+    | <assoc=left> expression op='-' expression             # subtractiveExpression
+    | <assoc=left> expression op='+' expression             # additiveExpression
     | expression op=('CAT'|'><') expression                 # catExpression
-    | expression op='+'expression                          # additiveExpression
-    | expression op='-' expression                          # subtractiveExpression
     | expression op=('CSHIFT'|'<>') expression              # cshiftExpression
     | expression op='SHIFT' expression                      # shiftExpression
     | expression op=( '<'|'LT') expression                  # ltRelationalExpression
@@ -1991,8 +1990,8 @@ expression:
     | expression op=( '>='|'GE') expression                 # geRelationalExpression
     | expression op=( '=='|'EQ') expression                 # eqRelationalExpression
     | expression op=( '/='|'NE') expression                 # neRelationalExpression
-    | expression op='IS' expression                      # isRelationalExpression
-    | expression op='ISNT' expression               # isntRelationalExpression
+    | expression op='IS' expression                         # isRelationalExpression
+    | expression op='ISNT' expression                       # isntRelationalExpression
     | expression op='AND' expression                        # AndExpression
     | expression op='OR' expression                         # OrExpression
     | expression op='EXOR' expression                       # ExorExpression
@@ -2124,7 +2123,7 @@ constantFixedExpressionTerm
 ////////////////////////////////////////////////////////////////////////////////
 
 multiplicationConstantFixedExpressionTerm
-    : op='*' constantFixedExpressionFactor
+    :  op='*' constantFixedExpressionFactor
     ;
 
 ////////////////////////////////////////////////////////////////////////////////
