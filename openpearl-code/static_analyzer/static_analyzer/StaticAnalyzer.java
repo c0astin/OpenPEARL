@@ -38,13 +38,16 @@ import java.util.*;
 
 public class StaticAnalyzer
 {
-    public static String RELEASE_DATE = "18.02.2022";
+    //public static String RELEASE_DATE = "18.02.2022";
 
-    public static String inputFile = "";
-    public static String pearlFilename = "";
-    public static String baseDirectory = "";
+    public static Vector<String> inputFiles = new Vector<String>();
+    //public static String pearlFilename = "";
+    //public static String baseDirectory = "";
+    
+    public static boolean verbose=false;   // verbose option
 
-    PlainDotGraph dotGraph;
+    static PlainDotGraph dotGraph;
+    
     ApplicationControlFlowGraph applicationControlFlowGraph;
 
     public static MessageStack messageStack = new MessageStack();
@@ -90,7 +93,7 @@ public class StaticAnalyzer
 
     public static void main(String[] args)
     {
-        System.out.println("StaticAnalyzer " + RELEASE_DATE + "\n");
+        //System.out.println("StaticAnalyzer " + RELEASE_DATE + "\n");
 
         if (args.length < 1) {
             printHelp();
@@ -103,31 +106,35 @@ public class StaticAnalyzer
             return;
         }
 
-        if (Objects.equals(inputFile, "")) {
+        if (inputFiles.isEmpty()) {
             System.err.println("No input file specified");
             System.exit(1);
         }
 
-        pearlFilename = inputFile
-                .replace(".prl", "")
-                .replace("_d_cfg.dot", "")
-                .replace("_cfg.dot", "")
-                .replace(".dot", "");
+//        pearlFilename = inputFile
+//                .replace(".prl", "")
+//                .replace("_d_cfg.dot", "")
+//                .replace("_cfg.dot", "")
+//                .replace(".dot", "");
 
-        baseDirectory = System.getProperty("user.dir").replace("\\", "/");
+        //baseDirectory = System.getProperty("user.dir").replace("\\", "/");
 
-        inputFile = baseDirectory + "/" + pearlFilename + "_d_cfg.dot";
-
-        if (!FileSystemUtils.fileExists(inputFile))
-        {
-            System.err.println("Input file not found: " + inputFile);
-            System.exit(1);
-        }
+        //inputFile = baseDirectory + "/" + pearlFilename + "_d_cfg.dot";
 
         StaticAnalyzer staticAnalyzer = new StaticAnalyzer();
-        staticAnalyzer.readDotGraphInput();
-
-        staticAnalyzer.performTests();
+        dotGraph = new PlainDotGraph();
+        
+        // static deadlock detection id only possible if all input files 
+        // indicate that SDD is possible
+        boolean sddPossible = true;
+        for (String fileName: inputFiles) {
+           sddPossible &= staticAnalyzer.readDotGraphInput(fileName);
+        }
+        dotGraph.checkForMissingsNodes();
+        
+        if (sddPossible) {
+           staticAnalyzer.performTests();
+        }
     }
 
     private static boolean checkAndProcessArguments(String[] args)
@@ -143,10 +150,17 @@ public class StaticAnalyzer
             if (arg.equals("--help"))
             {
                 printHelp();
+            } else if (arg.equals("-v")) {
+            	verbose=true;
             }
             else if (arg.charAt(0) != '-')
             {
-                inputFile = arg;
+            	if (arg.endsWith("_d_cfg.dot")) {
+                   inputFiles.add(arg);
+            	} else {
+            		System.err.println("wrong input file "+arg+" (must end with _d_cfg.dot)");
+            		return false;
+            	}
             }
             else
             {
@@ -161,32 +175,48 @@ public class StaticAnalyzer
     private static void printHelp() {
 
         System.err.println(
-                  "java static-analyzer (" + RELEASE_DATE + ")\n"
+   //               "java static-analyzer (" + RELEASE_DATE + ")\n"
+                   "java static-analyzer <options> <input files>\n"
                 + " Options:\n"
-                + "  --help                      Print this help message\n"
-                + "  inputFile                   OpenPEARL .prl input file in working directory\n"
+                + "  --help                     Print this help message\n"
+                + "  -v                         verbose\n"
+//                + "  inputFile                   OpenPEARL .prl input file in working directory\n"
+                + "  input files                deadlock control flow graph files <xx>_d_cfg.dot\n"
         );
     }
 
-    private boolean readDotGraphInput()
+    private boolean readDotGraphInput(String inputFile)
     {
-        dotGraph = PlainDotGraph.fromGraphDotFile(inputFile);
-
-        if (dotGraph == null)
+        if (!FileSystemUtils.fileExists(inputFile))
         {
-            return false;
+            System.err.println("input file not found: " + inputFile);
+            System.exit(1);
         }
+        
+		if (!dotGraph.addDeadlockControlFlowGraph(inputFile)) {
+			return false;
+		}
 
-        String plainGraphFilename = baseDirectory + "/" + pearlFilename + "_cfg_01.dot";
+        //dotGraph = PlainDotGraph.fromGraphDotFile(inputFile);
+
+//        if (dotGraph == null)
+//        {
+//            return false;
+//        }
+
+        //String plainGraphFilename = baseDirectory + "/" + pearlFilename + "_cfg_01.dot";
+        String plainGraphFilename = "staticAnalyzer_cfg_01.dot";
         FileSystemUtils.writeStringToFile(plainGraphFilename, dotGraph.generateDotFile(), false);
 
         applicationControlFlowGraph = dotGraph.generateApplicationFlowGraph();
 
-        String applicationGraphFilename = baseDirectory + "/" + pearlFilename + "_cfg_02.dot";
+        String applicationGraphFilename = "staticAnalyzer_cfg_02.dot";
         FileSystemUtils.writeStringToFile(applicationGraphFilename, applicationControlFlowGraph.generateDotFile(), false);
 
         return true;
     }
+    
+
 
     private boolean performTests()
     {

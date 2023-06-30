@@ -37,6 +37,6 @@ public class FlowControl extends AbstractControlFlowGraphEntity
 
     public String getNodeLabel()
     {
-        return "n_" + nodeId.replace("node", "") + "_" + type.trim().replace(" ", "_");
+        return "\"n_" + nodeId.replace("\"", "") + "_" + type.trim().replace(" ", "_")+'"';
     }
 }

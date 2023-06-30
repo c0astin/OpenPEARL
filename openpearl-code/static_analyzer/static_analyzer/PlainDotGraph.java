@@ -200,6 +200,7 @@ public class PlainDotGraph {
 			}
 		}
 
+		dotWriter.writeLine("// write edges ");
 		for (Edge edge : edges) {
 			writeEdge(edge);
 		}
@@ -212,7 +213,7 @@ public class PlainDotGraph {
 	private void prepareGraphExport() {
 		removeDuplicateEdges();
 		removeDeclarations();
-
+	
 		exportedEdges.clear();
 
 		dotWriter = new DotWriter();
@@ -620,6 +621,10 @@ public class PlainDotGraph {
 		}
 
 		String currentLine = getNodeLabel(edge.source) + " -> " + getNodeLabel(edge.target);
+		//System.out.println("edge:"+currentLine);
+		if (currentLine.startsWith("l_12_ACTIVATE_co")) {
+			int xx=1;
+		}
 
 		if (!edge.label.equals("")) {
 			currentLine += " [ label=\"" + edge.label + "\" ]";
@@ -661,8 +666,13 @@ public class PlainDotGraph {
 
 	public String getNodeLabel(IGraphNode graphNode) {
 		if (irrelevantNodes.containsKey(graphNode.getId())) {
-			return "l_" + irrelevantNodes.get(graphNode.getId()).codeLineNumber + "_irrelevant_"
+			String result = "l_" + irrelevantNodes.get(graphNode.getId()).codeLineNumber + "_irrelevant_"
 					+ graphNode.getId().replace("node", "");
+			if (result.indexOf("\"") >= 0) {
+				result = result.replace("\"", "");
+				result = '"' + result + '"';
+			}
+			return result;
 		}
 
 		String nodeLabel = nodeLabels.get(graphNode.getId());
@@ -705,7 +715,11 @@ public class PlainDotGraph {
 		return applicationGraphNode;
 	}
 
-	private boolean constructPlainGraph(String filePath) {
+	//private boolean constructPlainGraph(String filePath) {
+	public boolean addDeadlockControlFlowGraph(String filePath) {
+		if (StaticAnalyzer.verbose) {
+			System.out.println("read deadlock control flow graph "+filePath);
+		}
 		String content = FileSystemUtils.readFileAsString(filePath);
 
 		if ((content == null) || (content.equals(""))) {
@@ -723,6 +737,8 @@ public class PlainDotGraph {
 		String currentProcedureName = "";
 
 		for (String currentLine : lines) {
+			//System.out.println(currentLine);
+			
 			currentLine = currentLine.trim();
 
 			if (currentLine.equals("")) {
@@ -854,8 +870,13 @@ public class PlainDotGraph {
 							MyJsonObject jsonObject = new MyJsonObject(decoded);
 
 							String jsonClass = jsonObject.getString("class", "");
-
-							if (jsonClass.equals("DeadlockOperation")) {
+							if (jsonClass.equals("compilation")) {
+								if (!jsonObject.getBoolean("sddPossible", false) ) {
+									System.err.println(jsonObject.getString("codeFilename", "???")+
+								         ": static deadlock detection not enabled or disabled due to compilation issues");
+									return(false);
+								}
+							} else if (jsonClass.equals("DeadlockOperation")) {
 								DeadlockOperation deadlockOperation = new DeadlockOperation();
 								deadlockOperation.id = nodeId;
 								deadlockOperation.resourcesType = jsonObject.getString("resourcesType", "");
@@ -882,13 +903,13 @@ public class PlainDotGraph {
 									currentTaskData.runAtStartup = jsonObject.getBoolean("runAtStartup", false);
 									currentTaskData.global = jsonObject.getBoolean("global", false);
 
-									if (currentTaskData.global) {
-										Message globalTaskMessage = new Message(Message.Severity.WARNING);
-										globalTaskMessage.problem = "global task " + taskIdentifier;
-										globalTaskMessage.content = "The task " + taskIdentifier
-												+ " is global. At the moment, the analysis considers all modules separately and does not take into account control of the task in other modules";
-										StaticAnalyzer.messageStack.add(globalTaskMessage);
-									}
+//									if (currentTaskData.global) {
+//										Message globalTaskMessage = new Message(Message.Severity.WARNING);
+//										globalTaskMessage.problem = "global task " + taskIdentifier;
+//										globalTaskMessage.content = "The task " + taskIdentifier
+//												+ " is global. At the moment, the analysis considers all modules separately and does not take into account control of the task in other modules";
+//										StaticAnalyzer.messageStack.add(globalTaskMessage);
+//									}
 
 									pathNodeMetadata.task = currentTaskData;
 								}
@@ -906,22 +927,28 @@ public class PlainDotGraph {
 									deadlockResource.global = jsonObject.getBoolean("global", false);
 									deadlockResources.put(deadlockResource.resourceIdentifier, deadlockResource);
 
-									if (deadlockResource.global) {
-										Message globalResourceMessage = new Message(Message.Severity.WARNING);
-										globalResourceMessage.problem = "global resource "
-												+ deadlockResource.resourceType + " "
-												+ deadlockResource.resourceIdentifier;
-										globalResourceMessage.content = "The resource " + deadlockResource.resourceType
-												+ " " + deadlockResource.resourceIdentifier
-												+ " is global. At the moment, the analysis considers all modules separately and does not take into account usages of the resource in other modules";
-										StaticAnalyzer.messageStack.add(globalResourceMessage);
-									}
+//									if (deadlockResource.global) {
+//										Message globalResourceMessage = new Message(Message.Severity.WARNING);
+//										globalResourceMessage.problem = "global resource "
+//												+ deadlockResource.resourceType + " "
+//												+ deadlockResource.resourceIdentifier;
+//										globalResourceMessage.content = "The resource " + deadlockResource.resourceType
+//												+ " " + deadlockResource.resourceIdentifier
+//												+ " is global. At the moment, the analysis considers all modules separately and does not take into account usages of the resource in other modules";
+//										StaticAnalyzer.messageStack.add(globalResourceMessage);
+//									}
 
 									pathNodeMetadata.deadlockResource = deadlockResource;
 								}
 							} else if (jsonClass.equals("DeadlockControlFlowGraphProcedure")) {
 								String procedureIdentifier = jsonObject.getString("procedureIdentifier", null);
-
+								if (StaticAnalyzer.verbose) {
+									System.out.println("found procedure declaration "+procedureIdentifier);
+								}
+								boolean noDeadlockOperation = jsonObject.getBoolean("noDeadlockOperation", false);
+								if (noDeadlockOperation && StaticAnalyzer.verbose) {
+									System.out.println("PROC with noDeadlockOperation marker found: calls must be removed");
+								}
 								Procedure procedure = procedures.get(procedureIdentifier);
 
 								if (procedure == null) {
@@ -934,13 +961,13 @@ public class PlainDotGraph {
 									procedure.codeLineNumber = jsonObject.getInt("codeLineNumber", -1);
 									procedure.global = jsonObject.getBoolean("global", false);
 
-									if (procedure.global) {
-										Message globalProcedureMessage = new Message(Message.Severity.WARNING);
-										globalProcedureMessage.problem = "global procedure " + procedure.procedureName;
-										globalProcedureMessage.content = "The procedure " + procedure.procedureName
-												+ " is global. At the moment, the analysis considers all modules separately and does not consider calls of the procedure in other modules";
-										StaticAnalyzer.messageStack.add(globalProcedureMessage);
-									}
+//									if (procedure.global) {
+//										Message globalProcedureMessage = new Message(Message.Severity.WARNING);
+//										globalProcedureMessage.problem = "global procedure " + procedure.procedureName;
+//										globalProcedureMessage.content = "The procedure " + procedure.procedureName
+//												+ " is global. At the moment, the analysis considers all modules separately and does not consider calls of the procedure in other modules";
+//										StaticAnalyzer.messageStack.add(globalProcedureMessage);
+//									}
 
 									procedures.put(procedure.procedureName, procedure);
 
@@ -1059,13 +1086,26 @@ public class PlainDotGraph {
 		return true;
 	}
 
-	public static PlainDotGraph fromGraphDotFile(String filePath) {
-		PlainDotGraph dotGraph = new PlainDotGraph();
-
-		if (!dotGraph.constructPlainGraph(filePath)) {
-			return null;
-		}
-
-		return dotGraph;
+//	public static PlainDotGraph fromGraphDotFile(String filePath) {
+//		PlainDotGraph dotGraph = new PlainDotGraph();
+//
+//		if (!dotGraph.constructPlainGraph(filePath)) {
+//			return null;
+//		}
+//
+//		return dotGraph;
+//	}
+	public void checkForMissingsNodes() {
+	//for (Map.Entry<String, Procedure> procedureEntry : procedures.entrySet()) {
+		//for (String callNode : procedureEntry.getValue().callNodes) {
+			for (Edge edge : edges) {
+				if (edge.target.getId().equals("")) {
+					System.out.println("missing source node found");
+				} else if (edge.source.getId().equals("")) {
+					System.out.println("missing target node found");
+				}
 	}
+
+	}
+
 }

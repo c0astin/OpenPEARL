@@ -99,10 +99,12 @@ public class PathNodeMetadata
             statement = unknownStatement.statement;
         }
 
-        if ((codeFilename == null) || (codeFilename.isEmpty()))
-        {
-            codeFilename = StaticAnalyzer.pearlFilename + ".prl";
-        }
+// 2023-03-06 (rm) the filename is set by default in the new export of the deadlock-CFG        
+//        if ((codeFilename == null) || (codeFilename.isEmpty()))
+//        {
+//        	System.err.println("codeFilename not given");
+////            codeFilename = StaticAnalyzer.pearlFilename + ".prl";
+//        }
 
         statement = statement.replace(";", "");
     }

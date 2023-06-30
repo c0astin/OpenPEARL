@@ -73,7 +73,7 @@ install: build run_static_analyzer.inc
 run_static_analyzer.inc:
 	echo "##### auto generated  start " > run_static_analyzer.inc
 	echo 'java -cp $(CONFIG_INSTALL_Target)/bin/static_analyzer.jar  static_analyzer/StaticAnalyzer \' >> run_static_analyzer.inc
-	echo '    $$imcInputFiles \' >> run_static_analyzer.inc
+	echo '    $$sddInputFiles \' >> run_static_analyzer.inc
 	echo "##### auto generated end " >> run_static_analyzer.inc
 
 ###############################################################################

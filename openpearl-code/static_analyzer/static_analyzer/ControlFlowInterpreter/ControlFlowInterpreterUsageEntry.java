@@ -35,13 +35,11 @@ import java.util.TreeSet;
 
 public class ControlFlowInterpreterUsageEntry
 {
-    private String level;
     private final Set<String> requestedResources = new TreeSet<>();
     private final Set<String> releasedResources = new TreeSet<>();
 
     public ControlFlowInterpreterUsageEntry(String level)
     {
-        this.level = level;
     }
 
     public void reset()
