@@ -20,10 +20,13 @@ RUN=
 HELP=
 INPUT=
 imcInputFiles=
+sddInputFiles=
 objects=
 target=
 PPONLY=0
 noPP=0
+# SDD switched off by default until ticket 390 is finished
+#noSDD=0
 noSDD=1
 PPFLAGS=""
 compilerFlags=""
@@ -215,6 +218,10 @@ rm -f $target.out $target.log
 #echo "treat object"
         objects="$objects $fn.o"
         imcInputFiles="$imcInputFiles $fn"
+        sourceOption=" --source $fn"
+# echo "sourceOption" $sourceOption
+        sddInputFiles="$sddInputFiles $fn"_d_cfg.dot
+#echo "sddInputFiles" $sddInputFiles
      elif [[ "$inp_ext" = "prl" ||  "$inp_ext" = "cc" ]] ; then
 #echo "treat prl or cc"
          if [ "$inp_ext" = "prl" ] ; then
@@ -226,7 +233,10 @@ rm -f $target.out $target.log
                intermediateFiles+=" $outputPrlCC"
             fi
 	    imcoutput=$fn
-
+            sourceOption=" --source $fn"
+# echo "sourceOption" $sourceOption
+            sddInputFiles="$sddInputFiles $fn"_d_cfg.dot
+#echo "sddInputFiles" $sddInputFiles
 	    # --------------------
 	    # run preprocessor
 	    if [[ "$noPP" != "1" ]] ; then
@@ -296,6 +306,9 @@ rm -f $target.out $target.log
                linkerFiles+=" $outputCcO"
                intermediateFiles+=" $outputCcO"
                objects="$objects $outputCcO"
+#echo "sourceOption" $sourceOption
+               sddInputFiles="$sddInputFiles $fn"_d_cfg.dot
+#echo "sddInputFiles" $sddInputFiles
             fi
             if [[ "$outputPrlCC" = "" ]] ; then
                outputPrlCC=$fn.cc
@@ -341,7 +354,7 @@ rm -f $target.out $target.log
    # --------------------
    # run static analyzer 
    if [[ "noSDD" -eq "0" ]] ; then
-     # echo "SDD: gets: "  $imcInputFiles "  or fn: " $fn
+     # echo "SDD: gets: "  $sddInputFiles 
      if [ -f "$fn"_d_cfg.dot ]; then
 
          #include "static_analyzer/run_static_analyzer.inc"
@@ -351,7 +364,7 @@ rm -f $target.out $target.log
             echo "terminate due to errors in stage 1c (staticAnalyzer)" >>$fn.log
             exit $rc
          fi
-         intermediateFiles+=" $fn"_d_cfg.dot
+         # intermediateFiles+=" $fn"_d_cfg.dot
       fi
    fi
    	
