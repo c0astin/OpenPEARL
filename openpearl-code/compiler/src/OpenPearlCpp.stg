@@ -970,6 +970,12 @@ iojob_position_page(element,direction) ::= <<
 }
 >>
 
+iojob_position_eof() ::= <<
+{
+   .format=pearlrt::IOFormatEntry::EOFPOS
+}
+>>
+
 iojob_position_adv(expression1,expression2,expression3,direction,dimensions) ::= <<
 {
    .format=pearlrt::IOFormatEntry::ADV<dimensions>,
