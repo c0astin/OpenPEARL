@@ -56,7 +56,7 @@ lineColFill: PROC;
    OPEN dataFile BY IDF('dataFile.bin'), ANY;
    FOR i TO size REPEAT
       FOR j TO size REPEAT
-         data = 10*i+j;
+         data = (10*i+j) FIT data;
          WRITE data TO dataFile BY POS(i,j);
       END;
    END;
@@ -69,7 +69,7 @@ colLineFill: PROC;
    OPEN dataFile BY IDF('dataFile.bin'), ANY;
    FOR i TO size REPEAT
       FOR j TO size REPEAT
-         data = 10*i+j;
+         data = (10*i+j) FIT data;
          WRITE data TO dataFile BY POS(j,i);
       END;
    END;
