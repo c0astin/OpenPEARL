@@ -227,6 +227,7 @@ namespace pearlrt {
          int openParams) {
       struct stat attribut;
       char * fileName;
+      int nonWhiteSpaceCharactersInFn = 0;
 
       // setup open mode
       //            IN      OUT      INOUT  precondition
@@ -238,7 +239,23 @@ namespace pearlrt {
       rcFn.setWork(completeFileName);
       rcFn.rewind();
       rcFn.add(myDisc->devicePath);
-      rcFn.add(*fn);
+
+      //rcFn.add(*fn);
+      // remove white space characters from given filename
+      // this is nexessary, since PEARL CHAR-values are filled with spaces
+      // and white space characters in filenames are a very bad style
+      for (unsigned int i=0; i< fn->current; i++) {
+          if (!std::isspace(fn->getCharAt(i))) {
+             nonWhiteSpaceCharactersInFn ++;
+             rcFn.add(fn->getCharAt(i));
+          }
+      } 
+      if (nonWhiteSpaceCharactersInFn == 0) {
+         Log::error("Disc: filename contains only white space characters");
+         myDisc->mutex.unlock();
+         throw theDationParamSignal;
+      }
+
       fileName = rcFn.getCstring();
 
       // easy case: NEW+IN is ridiculous
