@@ -4,3 +4,6 @@ sched_demo: illustrate some task activations
 arrayDemo: illustrates usage of arrays in procedures
 fakultaet: illustrates recursive function call
 evelator: program for the elevator model of the hs furtangen
+loggingExample: example how to create an application log
+hanoi: the towers of hanoi with character graphics and ANSI codes
+
