@@ -1,0 +1,189 @@
+/*               Tower of Hanoi
+
+The wellknown problem with the transport of a tower
+from one place to another
+
+The tower has n floors
+1) Only one disk may be moved at a time.
+2) Each move consists of taking the upper disk from
+   one of the stacks and placing it on top of another
+   stack or on an empty rod.
+3) No disk may be placed on top of a disk that is smaller than it.
+
+
+
+
+          |                 |                 |                  
+          X                 |                 |           
+         XXX                |                 |           
+        XXXXX               |                 |           
+       XXXXXXX              |                 |           
+   ---------------   ---------------   ---------------   
+       start              buffer             target
+       stack 1            stack 2            stack 3
+
+solution by recursion
+transport(nFloors,start,buffer,target) :=
+   transportTower(nFloors-1,start,buffer)
+   moveDisc(start,target)
+   transportTower(nFloors-1,buffer,target)
+
+setup:
+   transportTower(n,1,2,3);
+*/
+
+MODULE(m_hanoi);
+SYSTEM;
+   stdout: StdOut;
+   stdin: StdIn;
+
+PROBLEM;
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+   SPC stdin  DATION IN  SYSTEM ALPHIC;
+
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdout);
+   DCL si DATION IN  ALPHIC DIM(*,80) FORWARD STREAM CREATED(stdin);
+
+   DCL numberOfDiscs(3) FIXED INIT(0);
+   DCL vLine  CHAR(1)  INIT('|');
+   DCL disc CHAR(20) INIT('XXXXXXXXXXXXXXXXXXXX');
+   DCL delay DURATION INIT(0.1 SEC);
+
+transportTower: PROC(n FIXED, start FIXED, puffer FIXED, ziel FIXED);
+   IF n>0 THEN
+      transportTower(n-1,start,ziel,puffer);
+      moveDisc(n, start,ziel);
+      transportTower(n-1,puffer,start,ziel);
+   FIN; 
+END;
+
+moveDisc: PROC(n FIXED, start FIXED, target FIXED);
+    setPos(19,1);
+    PUT 'action: moveDisc ',n, ' from ',start, ' to ',target TO so BY 
+      A,F(2),A,F(1), A,F(1),SKIP; 
+    removeTopDisc(start);
+    addDisc(target,n);
+END;
+
+DCL digit(0:9) CHAR INIT('0','1','2','3','4','5','6','7','8','9');
+
+/* set the cursor position th (line,columns)
+   use ANSI codes which are supported by almost each terminal
+   both position start with 1 in upper left corner
+   ESC [l;cH  l=line number starting with 0; c=column number starting with 0
+   eg. ESC[12;34H set position to line 13 and column 35
+   refer manual of eg. DEC VT100 terminal
+*/
+setPos: PROC((line,column) FIXED);
+   
+    DCL h FIXED;
+    DCL pos CHAR(8);
+    pos.CHAR(1) = ''\1B\'';   ! ESC
+    pos.CHAR(2) = '[';
+    IF line < 10 THEN
+      pos.CHAR(3) = '0';
+    ELSE
+      h = (line-1) // 10 ;
+      pos.CHAR(3) = digit(h); !TOCHAR (48+h);
+    FIN;
+    h = (line-1) REM 10;
+    pos.CHAR(4) = digit(h); !TOCHAR (48+h);
+    pos.CHAR(5) = ';';
+    IF column <= 10 THEN
+      pos.CHAR(6) = '0';
+    ELSE
+      h = (column-1) // 10;
+      pos.CHAR(6) = digit(h); ! TOCHAR (48+h);
+    FIN;
+    h = (column-1) REM 10;
+    pos.CHAR(7) = digit(h);    !TOCHAR (48+h);
+    pos.CHAR(8) = 'H';
+    PUT pos TO so BY A;
+END;
+
+/*
+   send control code to clear monitor output
+   ESC[2J
+*/
+clear: PROC;
+    PUT ''\1B\'[2J' TO so BY A;
+END;
+
+showStart: PROC;
+   DCL baseLine CHAR(23) INIT('-----------------------');
+
+   numberOfDiscs(1) = 10;
+   numberOfDiscs(2) = 10;
+   numberOfDiscs(3) = 10;
+
+   FOR i TO 10 REPEAT
+      removeTopDisc(1);
+      removeTopDisc(2);
+      removeTopDisc(3);
+   END;
+   setPos(15,6);  PUT baseLine TO so BY A;
+   setPos(15,31); PUT baseLine TO so BY A;
+   setPos(15,56); PUT baseLine TO so BY A;
+
+END;
+
+addDisc: PROC(stack FIXED, e FIXED);
+   DCL (line,column) FIXED;
+   numberOfDiscs(stack) := numberOfDiscs(stack) + 1;
+
+   line := 15-numberOfDiscs(stack);
+   column := 7+(stack-1)*25 + 11 - e;
+   setPos(line,column);
+   PUT disc TO so BY A(2*e-1),SKIP;
+   AFTER delay RESUME;
+END;
+
+removeTopDisc: PROC(stack FIXED);
+   DCL (line,column) FIXED;
+   line := 15-numberOfDiscs(stack);
+   numberOfDiscs(stack) := numberOfDiscs(stack) - 1;
+   column := 6+(stack-1)*25  ;
+   setPos(line,column);
+   PUT '           |           ' TO so BY A, SKIP;
+   AFTER delay*0.5 RESUME;
+END;
+
+hanoi: TASK MAIN;
+   DCL n FIXED;
+   DCL m FIXED;
+   OPEN si;
+   OPEN so;
+
+   clear;
+   showStart;
+
+   setPos(17,1);
+   PUT 'enter tower height' TO so BY A,SKIP;
+   GET n FROM si BY F(6),SKIP;
+   PUT 'enter delay between moves (eg. 2 SEC)' TO so BY A,SKIP;
+   GET delay FROM si BY D(8),SKIP;
+
+   ! clear input section
+   FOR i FROM 17 TO 20 REPEAT
+      setPos(i,1);
+      PUT TO so BY X(66),SKIP;
+   END;
+
+   ! show current settings
+   setPos(17,1);
+   PUT 'tower height: ', n ,' delay between actions:' , delay TO so
+   BY  A,               F(2), A,                        D(8), SKIP;
+ 
+   ! setup of initial state 
+   FOR disc FROM n BY -1 TO 1 REPEAT
+      addDisc(1,disc);
+      AFTER 0.2 SEC RESUME;
+   END;
+
+   setPos(19,1);
+   transportTower(n,1,2,3);
+   setPos(19,1);
+   CLOSE si;
+   CLOSE so;
+END;
+MODEND;

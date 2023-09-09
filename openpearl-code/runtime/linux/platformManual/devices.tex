@@ -92,6 +92,11 @@ Supported attributes: FORWARD, DIRECT, IN, OUT, INOUT
 
 Multiple dations may by declared on the same path.
 
+CHAR variables in PEARL are filled with spaces to the end.
+Thus trailing spaces should become removed.
+White space characters in a filename are wellknown obstacles in UNIX 
+systems. Thus all white space characters are removed for the IDF parameter.
+
 
 Sample Usage:
 \begin{PEARLCode}
