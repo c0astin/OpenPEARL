@@ -11,14 +11,14 @@ PROBLEM;
    SPC homeFolder DATION INOUT SYSTEM ALL ;
    DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED(so);
    DCL logFile DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED(homeFolder);
-   DCL logFileName /* INV */ CHAR(20) INIT ('logFile.txt');
+   DCL fileName CHAR(20) INIT('logFile.txt');
 
 test: TASK MAIN;
    DCL message CHAR(40);
    OPEN terminal;
-   PUT 'Example for a log file with name ', logFileName TO terminal 
+   PUT 'Example for a log file with name ', fileName TO terminal 
    BY   A, A, SKIP;
-   openLogfile('1'B1);
+   openLogfile(fileName,'1'B1);
    addMessage('application starts');
 
    PUT 'emit 10 log messages' TO terminal BY A, SKIP;
@@ -32,19 +32,22 @@ test: TASK MAIN;
    closeLogfile;
 END;
 
-openLogfile: PROC(addToExistingFile BIT(1));
+openLogfile: PROC(logFileName REF INV CHAR(), addToExistingFile BIT(1));
+   DCL fn CHAR(30); ! workarround since REF CHAR() is not accepted as IDF
+   fn = logFileName;! see ticket #414
+
    IF addToExistingFile THEN
-      OPEN logFile BY IDF(logFileName), ANY;
+      OPEN logFile BY IDF(fn), ANY;
       PUT TO logFile BY EOF;
    ELSE
       ! we want a new log file for each execution
       ! --> just open with ANY and close with CAN
-      OPEN logFile BY IDF(logFileName), ANY;
+      OPEN logFile BY IDF(fn), ANY;
       CLOSE logFile BY CAN;
       ! previous log file deleted
 
       ! create a new file
-      OPEN logFile BY IDF(logFileName), NEW;
+      OPEN logFile BY IDF(fn), NEW;
       addMessage('new log file created');
    FIN;
 END;
