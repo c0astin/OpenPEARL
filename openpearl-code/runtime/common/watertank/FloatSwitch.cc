@@ -1,6 +1,6 @@
 /*
  [A "BSD license"]
- Copyright (c) 2023      Marcel Schaible
+ Copyright (c) 2023  Marcel Schaible
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -27,122 +27,97 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-#include "Dation.h"
-#include "SimFloatSwitch.h"
 #include "Log.h"
 #include "Signals.h"
-#include "Fixed.h"
-#include <iostream>
+#include "FloatSwitch.h"
+#include "WatertankInt.h"
 
 /**
- \brief Implementation of the lm75 i2c-device  basic  systemdation
+ \brief Implementation of FloatSwitch Systemdation
 
 
 */
 namespace pearlrt {
 
-   SimFloatSwitch::SimFloatSwitch(I2CProvider * provider, int addr) {
+   FloatSwitch::FloatSwitch(int start, int width) :
+      start(start), width(width) {
       dationStatus = CLOSED;
-      this->provider = provider;
-
-      if (addr < 0x48 || addr > 0x4f) {
-         Log::error("SimFloatSwitch: illegal addres (%x)", addr);
-         throw theDationParamSignal;
-      }
-
-      this->addr = addr;
    }
 
-   SimFloatSwitch* SimFloatSwitch::dationOpen(const RefCharacter * idf, int params) {
-      static uint8_t defaultValue[] = {1, 0};
-      static uint8_t selectTempReg[] = {0};
+   FloatSwitch::~FloatSwitch() {
+   }
 
-      if (idf) {
-         Log::error("SimFloatSwitch: no IDF allowed");
+   SystemDationB* FloatSwitch::dationOpen(const RefCharacter * idf, int openParam) {
+      if (idf != 0) {
+         Log::error("IDF not allowed for FloatSwitch device");
          throw theDationParamSignal;
       }
 
-      if (params & CAN) {
-         Log::error("SimFloatSwitch: CAN not allowed");
+      if ((openParam & IN) != IN) {
+         Log::error("FloatSwitch must be an input device (%x)", openParam);
          throw theDationParamSignal;
       }
 
       if (dationStatus != CLOSED) {
-         Log::error("SimFloatSwitch: Dation already open");
+         Log::error("FloatSwitch: Dation already open");
          throw theOpenFailedSignal;
       }
 
-
-      // set configuration register to default (0)
-      // and switsch back to default read register
-      try {
-         provider->writeData(addr, 2, defaultValue);
-         provider->writeData(addr, 1, selectTempReg);
-      } catch (WritingFailedSignal s) {
-         Log::error("SimFloatSwitch: Dation not ready");
-         throw theOpenFailedSignal;
-      }
-
+      ns_SimWatertank::WatertankInt::instance()->start_simulation(pearlrt::Task::currentTask());
       dationStatus = OPENED;
       return this;
    }
 
-   void SimFloatSwitch::dationClose(int params) {
+   void FloatSwitch::dationClose(int closeParam) {
+      // if (closeParam != 0) {
+      //    Log::error("No close parameters allowed for FloatSwitch device");
+      //    throw theDationParamSignal;
+      // }
 
       if (dationStatus != OPENED) {
-         Log::error("SimFloatSwitch: Dation not open");
+         Log::error("FloatSwitch: Dation not open");
          throw theDationNotOpenSignal;
       }
 
-      if (params & ~(RST | IN | OUT | INOUT)) {
-         Log::error("SimFloatSwitch: only RST allowed");
-         throw theDationParamSignal;
-      }
-
+      ns_SimWatertank::WatertankInt::instance()->stop_simulation(Task::currentTask());
       dationStatus = CLOSED;
    }
 
-   void SimFloatSwitch::dationWrite(void* data, size_t size) {
-      Log::error("SimFloatSwitch: no write supported");
+
+   void FloatSwitch::dationWrite(void* data, size_t size) {
       throw theInternalDationSignal;
    }
 
-   void SimFloatSwitch::dationRead(void* data, size_t size) {
-      int8_t tempValFromLm75[2];
-      int temp;
-
+   void FloatSwitch::dationRead(void* data, size_t size) {
+      int d;
+      static char value = 0;
+      
       //check size of parameter!
-      // it is expected that a Fixed<15> object is passed
-      // with a maximum of 16 bits. This fits into 2 byte.
-      // Therefore size must be 2
-      if (size != sizeof(Fixed<15>)) {
-         Log::error("SimFloatSwitch: Fixed<15> expected (got %d byte data)", (int)size);
+      // it is expected that a BitString<width> object is passed
+      // with a maximum of 32 bits. This fits into 4 byte.
+      // Therefore size must be less than 4
+      if (size > 4) {
+         Log::error("FloatSwitch: max 32 bits expected");
          throw theDationParamSignal;
       }
 
       if (dationStatus != OPENED) {
-         Log::error("SimFloatSwitch: Dation not open");
-         throw theDationNotOpenSignal;
+         Log::error("FloatSwitch: Dation not open");
+         throw theDationParamSignal;
       }
 
-      // write data to application memory
-      // i2cproder expects unsigned int8 data - we pass int8 for conventient
-      // calculation of the 16 bit temperature value from the 9 bit of
-      // the sensor
-      provider->readData(addr, 2, (uint8_t*)tempValFromLm75);
-      temp = (tempValFromLm75[0] << 1) | ((tempValFromLm75[1] >> 7) & 0x01);
+      pearlrt::Float<23> level = ns_SimWatertank::WatertankInt::instance()->get_level(pearlrt::Task::currentTask());
 
-      temp *= 5; // 10th of degree
-//      printf("--> %d\n", temp);
-      Fixed<15> returnValue(temp);
+      if ( (level >= ns_SimWatertank::WatertankInt::instance()->get_watertank_capacity(pearlrt::Task::currentTask())).getBoolean()) {
+	value = 0x80;
+      }
 
-      *(Fixed<15>*)data = returnValue;
+      *(char*)data = value;
    }
 
-   int SimFloatSwitch::capabilities() {
-      int cap =  IN;
+   int FloatSwitch::capabilities() {
+      int cap = IN | ANY | PRM;
       return cap;
    }
-}
 
+}

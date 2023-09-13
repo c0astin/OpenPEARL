@@ -26,3 +26,42 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#ifndef PUMP_H_INCLUDED
+#define PUMP_H_INCLUDED
+
+#include <cstdint> 
+
+#include "SystemDationB.h"
+#include "Fixed.h"
+#include "Character.h"
+#include "RefChar.h"
+#include "Signals.h"
+#include "Log.h"
+
+namespace pearlrt {
+
+  constexpr float PUMP_MIN_REVOLUTION    =  100.0f; // [revolution/min]
+  constexpr float PUMP_MAX_REVOLUTION    = 2000.0f; // [revolution/min]
+  constexpr float PUMP_CYLINDER_CAPACITY = 0.001f;  // [m^3]
+  constexpr float RAMP_UP                = 200.0f;  // [revolution/s]
+  constexpr float RAMP_DOWN              = 600.0f;  // [revolution/s]
+    
+  class Pump: public SystemDationB {
+
+   public:
+      Pump(int start, int width);
+      ~Pump();
+      SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
+      void dationClose(int closeParam = 0);
+      void dationWrite(void * data, size_t size);
+      void dationRead(void * data, size_t size);
+      int capabilities();
+
+   private:
+      const int start, width;
+      uint16_t m_rpm;
+      bool m_enabled;
+  };
+}
+
+#endif

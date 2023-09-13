@@ -1,0 +1,412 @@
+MODULE(SimWatertank);
+
+SYSTEM;
+  homeFolder: Disc('./',1);
+
+PROBLEM;
+
+SPC homeFolder DATION INOUT SYSTEM ALL ;
+DCL logFile DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED(homeFolder);
+DCL fileName CHAR(7) INIT('sim.log');
+DCL message CHAR(80);
+
+! ==========================================================================
+DCL pi INV FLOAT INIT(3.1415926);
+
+! ==========================================================================
+! 
+DCL simulation_is_running BIT(1) INIT('0'B1);
+
+! ==========================================================================
+! 
+DCL step FIXED INIT(0);
+
+! ==========================================================================
+! Density of water in [kg/m^3]
+DCL rho INV FLOAT INIT(1000.0); 
+
+! ==========================================================================
+! Dimensions of the tanks in [m]
+DCL tank_length INV FLOAT INIT(2.0);
+DCL tank_width  INV FLOAT INIT(2.0);
+DCL tank_height INV FLOAT INIT(2.0);
+
+! ==========================================================================
+! Current watertank fill level [m^3]
+DCL tank_fill_level FLOAT INIT(0.0);
+
+! ==========================================================================
+! pipe diameter [m]
+DCL pipe_diameter FLOAT INIT(0.06); ! pipe diameter set to 60mm
+
+! ==========================================================================
+! Pump
+! ==========================================================================
+
+! maximum revolution per min
+DCL pump_max_rpm FIXED INIT(2000); 
+
+! if pump is switched on and no rpm is requested, pump will run with this rpm
+DCL pump_idle_rpm FIXED(15) INIT(100); 
+
+! Pump motor spinup time in [rpm]
+DCL pump_spin_up_speed FLOAT INIT(300.0); 
+
+! Pump motor spindown time in [rpm]
+DCL pump_spin_down_speed FLOAT INIT(1000.0); 
+
+! requested rpm [revolution/min]
+DCL pump_requested_rpm FIXED(15) INIT(0); 
+
+! current rpm [revolution/min]
+DCL pump_current_rpm FLOAT INIT(0.0); 
+
+! pump switch on/off
+! 0, if the pump is switched off
+! 1, if the pump is switched on
+DCL pump_enabled BIT(1) INIT('0'B1); 
+
+! count how many time the pump has been switched on and off
+DCL pump_activations FIXED(31) INIT(0);
+
+! current flow rate thru the pipes
+DCL pump_output_flow_rate FLOAT INIT(0.0); ! flow rate in [m^3/s]
+
+! pressure sensor #1 [PA}
+DCL pressure_sensor_1 FLOAT INIT(0.0); 
+
+! pressure sensor #2 [PA}
+DCL pressure_sensor_2 FLOAT INIT(0.0); 
+
+! valve on/off
+! 0, if the valve is closed
+! 1, if the pump is open
+DCL valve_enabled BIT(1) INIT('0'B1); 
+
+! float switch on/off
+! 0, if the pump is switched off
+! 1, if the pump is switched on
+DCL float_switch_enabled BIT(1) INIT('0'B1); 
+
+! ==========================================================================
+start_simulation: PROC GLOBAL;
+  log('Starting simulation');
+  simulation_is_running = '1'B1;
+  ACTIVATE log_status;
+  ACTIVATE simulation;
+  ACTIVATE check_tank_status;
+END;
+
+! ==========================================================================
+stop_simulation: PROC GLOBAL;
+  log('Request stopping simulation');
+  simulation_is_running = '0'B1;
+END;
+
+! ==========================================================================
+openLogfile: PROC(logFileName REF INV CHAR(), addToExistingFile BIT(1));
+   DCL fn CHAR(30); ! workarround since REF CHAR() is not accepted as IDF
+   fn = logFileName;! see ticket #414
+
+   IF addToExistingFile THEN
+      OPEN logFile BY IDF(fn), ANY;
+      PUT TO logFile BY EOF;
+   ELSE
+      ! we want a new log file for each execution
+      ! --> just open with ANY and close with CAN
+      OPEN logFile BY IDF(fn), ANY;
+      CLOSE logFile BY CAN;
+      ! previous log file deleted
+
+      ! create a new file
+      OPEN logFile BY IDF(fn), NEW;
+   FIN;
+END;
+
+! ==========================================================================
+closeLogfile: PROC;
+   CLOSE logFile; 
+END;
+
+! ==========================================================================
+log: PROC(line  REF INV CHAR() );
+   PUT NOW,' SIM: ', line TO logFile BY T(12,3),A,A,SKIP;
+END;
+
+! ==========================================================================
+! Consumer
+! ==========================================================================
+
+! Minimal water consumption of consumer in [m^3/s]
+DCL min_consumer_dissipation INV FLOAT INIT(0.0);
+
+! Maximal water consumption of consumer in [m^3/s]
+DCL max_consumer_dissipation INV FLOAT INIT(0.1);
+
+! Current water consumption of consumer in [m^3/s]
+DCL current_consumer_dissipation FLOAT INIT(0.0);
+
+! time of the last update cycle
+DCL last_update CLOCK;
+
+! Defines the activation times of the consumer
+DCL consumer_activations (1:5) FIXED INIT(10,15,25,5,30);
+DCL consumer_current_activation FIXED(15) INIT(1);
+
+! Returns the current water level in the tank in [m]
+get_level: PROC RETURNS (FLOAT) GLOBAL;
+  RETURN (tank_fill_level);
+END;
+
+! Returns the current rotation speed of the pump in [revolutions/min]
+get_pump_rotational_speed: PROC RETURNS (FIXED) GLOBAL;
+  RETURN (ENTIER pump_current_rpm);
+END;
+
+! Request the rpm of the pump in [rpm]
+set_pump_rotational_speed: PROC(rpm FIXED(15)) GLOBAL;
+  pump_requested_rpm := rpm;
+END;
+
+! Switch the pump on
+pump_switch_on: PROC GLOBAL;
+   IF NOT pump_enabled 
+   THEN
+     pump_activations := pump_activations + 1;
+   FIN;
+
+   log('pump switched on');	
+   pump_enabled := '1'B1;
+END;
+
+! Switch the pump off 
+pump_switch_off: PROC GLOBAL;
+  log('pump switched off');
+  pump_enabled := '0'B1;
+  pump_requested_rpm := 0;		
+END;
+
+! Returns the pressure directly after the pump in [PA]
+get_pump_pressure: PROC RETURNS (FLOAT) GLOBAL;
+   RETURN (45.0);
+END;
+
+! Open the valve
+open_valve: PROC GLOBAL;
+    valve_enabled := '1'B1;
+END;
+
+! Close the valve
+close_valve: PROC GLOBAL;
+    valve_enabled := '0'B1;
+END;
+
+! Calculate the maximum tank capacity in [m^3]
+get_watertank_capacity: PROC RETURNS(FLOAT) GLOBAL;
+    RETURN (tank_length * tank_width * tank_height);
+END;
+
+! Returns the pressure on the tank floor in [PA]
+get_watertank_pressure: PROC RETURNS (FLOAT) GLOBAL;
+  RETURN (46.0);
+END;
+
+!
+consumer: TASK;
+!    current_consumer_dissipation
+END;
+
+!
+log_status: TASK;
+   DCL line CHAR(80);
+
+   WHILE simulation_is_running
+   REPEAT
+     CONVERT '|',
+             simulation_is_running, '|',
+             pump_enabled, '|',
+             pump_current_rpm, '|',
+             pump_activations, '|',
+             pressure_sensor_1, '|',
+             valve_enabled, '|',
+             pressure_sensor_2, '|',
+     	     float_switch_enabled, '|',	
+             current_consumer_dissipation, '|',
+             tank_fill_level, '|',
+             pump_output_flow_rate, '|'  
+	     TO line BY A,
+ 	                B(1),A,
+	                B(1),A,
+			F(8,2),A,
+                        F(4),A,
+			F(10,4),A,
+			B(1),A,
+			F(10,4),A,
+			B(1),A,
+			F(10,4),A,
+   			F(10,4),A,  
+           	        F(10,4),A;
+     log(line);
+     AFTER 1 SEC RESUME;
+   END;
+END;
+
+!
+pump_update: PROC (dt FLOAT /* [ms] */);
+  DCL msg CHAR(80);
+  
+  IF pump_enabled 
+  THEN
+      pump_current_rpm := pump_current_rpm + dt * pump_spin_up_speed / 1000;
+
+      IF pump_current_rpm > pump_requested_rpm
+      THEN
+        pump_current_rpm = pump_requested_rpm;
+      FIN;
+  ELSE
+      IF pump_current_rpm > 0.0
+      THEN
+         pump_current_rpm := pump_current_rpm - dt * pump_spin_down_speed / 1000;
+
+         IF pump_current_rpm < 0.0
+         THEN
+            pump_current_rpm = 0.0;
+         FIN;
+      FIN;
+  FIN;
+
+  !--------------------------------------------
+  !                           PI * D^2   RPM
+  ! pump_output_flow_rate Q = -------- * ---
+  !                              4       60
+  !--------------------------------------------
+  
+  pump_output_flow_rate := ( pi * pipe_diameter**2 / 4) * (pump_current_rpm / 60);
+END;
+
+!
+pressure_sensor_1_update: PROC (dt FLOAT /* [ms] */);
+    DCL a FLOAT INIT (0.0);
+    DCL v FLOAT INIT (0.0);
+    
+    !---------------------------------------------------------------------------
+    !      H * rho * g   rho * v^2
+    !  P = ----------- + ---------
+    !         1000        2000
+    !
+    ! with P is the pressure [Pa]
+    !      H is the pump head [m]. We set this arbitrarly to 20m.
+    !    rho is the fluid density [kg/m^3].
+    !        For water we assume rho to approximately 1000 kg/m^3
+    !      g is the acceleration due to gravity (approximately 9.81 m/s²)
+    !      v is the fluid velocity [m/s]
+    !
+    !       Q
+    !  v = ---
+    !       A
+    !
+    !  Q is the pump flow rate (see procedure pump_update)
+    !  A is the area of the pump outlet in [m^2]
+    !---------------------------------------------------------------------------
+
+    a := pi * pipe_diameter**2 / 4;
+    v := pump_output_flow_rate / a;
+
+    IF pump_current_rpm > 0
+    THEN
+        pressure_sensor_1 := ( 20 * 1000 * 9.81 ) / 1000 + ( 1000 * v**2) / pump_current_rpm;
+    ELSE
+        pressure_sensor_1 := 0.0;
+    FIN;
+END;
+
+pressure_sensor_2_update: PROC (dt FLOAT /* [ms] */);
+    !---------------------------------------------------------------------------
+    !      
+    !  P = rho * g * h
+
+    !
+    ! with P is the pressure [Pa]
+    !    rho is the fluid density [kg/m^3].
+    !        For water we assume rho to approximately 1000 kg/m^3
+    !      g is the acceleration due to gravity (approximately 9.81 m/s²)
+    !      h is the height of the water head [m]
+    !
+    !---------------------------------------------------------------------------
+
+    pressure_sensor_2 := 1000 * 9.81 * 10;;
+END;
+
+!
+tank_update: PROC (dt FLOAT /* [ms] */);
+  IF valve_enabled THEN
+      tank_fill_level := tank_fill_level +
+                         pump_output_flow_rate / 60 -
+			 current_consumer_dissipation;
+      IF tank_fill_level >= get_watertank_capacity
+      THEN
+         tank_fill_level := get_watertank_capacity;
+      FIN;
+  FIN;
+END;
+
+!
+check_tank_status: TASK;
+  WHILE simulation_is_running
+  REPEAT
+      IF tank_fill_level >= get_watertank_capacity
+      THEN
+         log('ALERT: WATERTANK OVERRUN!');
+      FIN;
+      AFTER 5 SEC RESUME;
+  END;
+END;
+
+!
+simulation: TASK PRIO 100;
+  DCL current_clock CLOCK;
+  DCL dt FLOAT;
+  DCL msg CHAR(80);
+  DCL err FIXED;
+  
+  WHILE simulation_is_running
+  REPEAT
+      current_clock = NOW;
+      dt := (current_clock - last_update) / 0.001 SEC; ! [ms]
+
+      pump_update(dt);
+      pressure_sensor_1_update(dt);
+      pressure_sensor_2_update(dt);		
+      tank_update(dt);
+
+      last_update = current_clock;
+      AFTER 0.01 SEC RESUME;
+  END; ! WHILE .. REPEAT
+
+  log('simulation task stopped');
+END;
+
+!
+test: TASK MAIN;
+   openLogfile(fileName, '0'B1);
+
+   start_simulation;
+
+   REPEAT
+      AFTER 3 SEC RESUME;
+      pump_switch_on;
+      set_pump_rotational_speed(5000);	
+      AFTER 10 SEC RESUME;
+      pump_switch_off;
+      AFTER 3 SEC RESUME;
+      open_valve;
+    END;
+
+   AFTER 10 SEC RESUME;   
+   stop_simulation;
+   AFTER 2 SEC RESUME;
+   log('Simulation stopped.');
+   closeLogfile;	  
+END;
+
+MODEND;
