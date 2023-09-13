@@ -108,10 +108,31 @@ ifeq ($(CONFIG_HAS_I2C),y)
    XML_COMMON += PCA9685.xml PCA9685Channel.xml
 endif
 
+#CONFIG_SIMWATERTANK must be set manually by the makefile of
+# the platform, which is build now
+ifeq ($(CONFIG_SIMWATERTANK),y)
+   HDR_COMMON += watertank/FloatSwitch.h
+   CXX_COMMON += watertank/FloatSwitch.cc
+   XML_COMMON += watertank/FloatSwitch.xml
+   HDR_COMMON += watertank/Pump.h
+   CXX_COMMON += watertank/Pump.cc
+   XML_COMMON += watertank/Pump.xml
+   HDR_COMMON += watertank/PressureSensor.h
+   CXX_COMMON += watertank/PressureSensor.cc
+   XML_COMMON += watertank/PressureSensor.xml
+   HDR_COMMON += watertank/Valve.h
+   CXX_COMMON += watertank/Valve.cc
+   XML_COMMON += watertank/Valve.xml
+   HDR_COMMON += watertank/SimWatertank.h
+   CXX_COMMON += watertank/SimWatertank.cc
+   HDR_COMMON += watertank/WatertankInt.h
+   CXX_COMMON += watertank/WatertankInt.cc  
+endif
+
 XML_COMMON += Log.xml LogFile.xml SampleBasicDation.xml SoftInt.xml
 XML_COMMON += SendXML.xml
 
-HDR_COMMON = $(CXX_COMMON:%.cc=%.h) \
+HDR_COMMON += $(CXX_COMMON:%.cc=%.h) \
 	BitString.h \
 	BitSlice.h \
 	GetBitString.h \

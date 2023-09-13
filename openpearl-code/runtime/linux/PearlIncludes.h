@@ -143,6 +143,10 @@ Only this file mus be included.
 #endif
 #endif
 
+#ifdef CONFIG_SIMWATERTANK
+#include "watertank/Watertank.h"
+#endif
+
 #include "TcpIpServer.h"
 #include "IOJob.h"
 
