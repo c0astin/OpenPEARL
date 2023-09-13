@@ -94,6 +94,7 @@ start_simulation: PROC GLOBAL;
   simulation_is_running = '1'B1;
   ACTIVATE log_status;
   ACTIVATE simulation;
+  AFTER 10 SEC ACTIVATE consumer;
   ACTIVATE check_tank_status;
 END;
 
@@ -194,11 +195,13 @@ END;
 ! Open the valve
 open_valve: PROC GLOBAL;
     valve_enabled := '1'B1;
+    log('valve opened');		
 END;
 
 ! Close the valve
 close_valve: PROC GLOBAL;
     valve_enabled := '0'B1;
+    log('valve closed');		
 END;
 
 ! Calculate the maximum tank capacity in [m^3]
@@ -211,9 +214,14 @@ get_watertank_pressure: PROC RETURNS (FLOAT) GLOBAL;
   RETURN (46.0);
 END;
 
-!
 consumer: TASK;
-!    current_consumer_dissipation
+   DCL step FIXED(15) INIT(0);
+   WHILE simulation_is_running
+   REPEAT
+       current_consumer_dissipation := ABS(SIN(2*step)*COS(3*step)/100);
+       step := step +1;
+       AFTER 1 SEC RESUME;
+   END;
 END;
 
 !
@@ -227,24 +235,24 @@ log_status: TASK;
              pump_enabled, '|',
              pump_current_rpm, '|',
              pump_activations, '|',
+             pump_output_flow_rate, '|',
              pressure_sensor_1, '|',
              valve_enabled, '|',
              pressure_sensor_2, '|',
      	     float_switch_enabled, '|',	
              current_consumer_dissipation, '|',
-             tank_fill_level, '|',
-             pump_output_flow_rate, '|'  
+             tank_fill_level, '|'
 	     TO line BY A,
  	                B(1),A,
 	                B(1),A,
 			F(8,2),A,
                         F(4),A,
+  			F(10,4),A,  
 			F(10,4),A,
 			B(1),A,
 			F(10,4),A,
 			B(1),A,
 			F(10,4),A,
-   			F(10,4),A,  
            	        F(10,4),A;
      log(line);
      AFTER 1 SEC RESUME;
@@ -343,10 +351,19 @@ tank_update: PROC (dt FLOAT /* [ms] */);
       tank_fill_level := tank_fill_level +
                          pump_output_flow_rate / 60 -
 			 current_consumer_dissipation;
-      IF tank_fill_level >= get_watertank_capacity
-      THEN
-         tank_fill_level := get_watertank_capacity;
-      FIN;
+  ELSE
+      tank_fill_level := tank_fill_level -
+			 current_consumer_dissipation;
+  FIN;
+  
+  IF tank_fill_level >= get_watertank_capacity
+  THEN
+     tank_fill_level := get_watertank_capacity;
+  FIN;
+      
+  IF tank_fill_level < 0.0
+  THEN
+     tank_fill_level := 0.0;
   FIN;
 END;
 
@@ -358,6 +375,12 @@ check_tank_status: TASK;
       THEN
          log('ALERT: WATERTANK OVERRUN!');
       FIN;
+
+      IF tank_fill_level == 0.0 AND current_consumer_dissipation > 0.0
+      THEN
+         log('ALERT: WATERTANK UNDERRUN!');
+      FIN;
+
       AFTER 5 SEC RESUME;
   END;
 END;
@@ -392,19 +415,20 @@ test: TASK MAIN;
 
    start_simulation;
 
-   REPEAT
-      AFTER 3 SEC RESUME;
-      pump_switch_on;
-      set_pump_rotational_speed(5000);	
-      AFTER 10 SEC RESUME;
-      pump_switch_off;
-      AFTER 3 SEC RESUME;
-      open_valve;
-    END;
+   AFTER 1 SEC RESUME;
 
-   AFTER 10 SEC RESUME;   
-   stop_simulation;
-   AFTER 2 SEC RESUME;
+   pump_switch_on;
+   set_pump_rotational_speed(5000);
+   open_valve;
+
+   AFTER 20 SEC RESUME;
+   pump_switch_off;
+   close_valve;
+   
+   REPEAT
+      AFTER 1 SEC RESUME;
+   END;
+
    log('Simulation stopped.');
    closeLogfile;	  
 END;
