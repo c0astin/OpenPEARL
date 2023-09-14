@@ -19,6 +19,11 @@ DCL simulation_is_running BIT(1) INIT('0'B1);
 
 ! ==========================================================================
 ! 
+DCL sema SEMA PRESET(1);
+
+
+! ==========================================================================
+! 
 DCL step FIXED INIT(0);
 
 ! ==========================================================================
@@ -171,20 +176,26 @@ END;
 
 ! Switch the pump on
 pump_switch_on: PROC GLOBAL;
+   REQUEST sema;
+
    IF NOT pump_enabled 
    THEN
      pump_activations := pump_activations + 1;
    FIN;
 
+   RELEASE sema;
+   
    log('pump switched on');	
    pump_enabled := '1'B1;
 END;
 
 ! Switch the pump off 
 pump_switch_off: PROC GLOBAL;
+  REQUEST sema;
   log('pump switched off');
   pump_enabled := '0'B1;
-  pump_requested_rpm := 0;		
+  pump_requested_rpm := 0;
+  RELEASE sema;
 END;
 
 ! Returns the pressure directly after the pump in [PA]
@@ -194,14 +205,18 @@ END;
 
 ! Open the valve
 open_valve: PROC GLOBAL;
-    valve_enabled := '1'B1;
-    log('valve opened');		
+   REQUEST sema;
+   valve_enabled := '1'B1;
+   log('valve opened');
+   RELEASE sema;
 END;
 
 ! Close the valve
 close_valve: PROC GLOBAL;
+    REQUEST sema;
     valve_enabled := '0'B1;
-    log('valve closed');		
+    log('valve closed');
+    RELEASE sema;
 END;
 
 ! Calculate the maximum tank capacity in [m^3]
@@ -211,15 +226,19 @@ END;
 
 ! Returns the pressure on the tank floor in [PA]
 get_watertank_pressure: PROC RETURNS (FLOAT) GLOBAL;
+  REQUEST sema;
   RETURN (46.0);
+  RELEASE sema;
 END;
 
 consumer: TASK;
    DCL step FIXED(15) INIT(0);
    WHILE simulation_is_running
    REPEAT
+       REQUEST sema;
        current_consumer_dissipation := ABS(SIN(2*step)*COS(3*step)/100);
        step := step +1;
+       RELEASE sema;
        AFTER 1 SEC RESUME;
    END;
 END;
@@ -230,6 +249,7 @@ log_status: TASK;
 
    WHILE simulation_is_running
    REPEAT
+     REQUEST sema;
      CONVERT '|',
              simulation_is_running, '|',
              pump_enabled, '|',
@@ -254,6 +274,7 @@ log_status: TASK;
 			B(1),A,
 			F(10,4),A,
            	        F(10,4),A;
+     RELEASE sema;
      log(line);
      AFTER 1 SEC RESUME;
    END;
@@ -371,6 +392,7 @@ END;
 check_tank_status: TASK;
   WHILE simulation_is_running
   REPEAT
+      REQUEST sema;
       IF tank_fill_level >= get_watertank_capacity
       THEN
          log('ALERT: WATERTANK OVERRUN!');
@@ -380,7 +402,8 @@ check_tank_status: TASK;
       THEN
          log('ALERT: WATERTANK UNDERRUN!');
       FIN;
-
+      RELEASE sema;
+      
       AFTER 5 SEC RESUME;
   END;
 END;
@@ -394,6 +417,7 @@ simulation: TASK PRIO 100;
   
   WHILE simulation_is_running
   REPEAT
+      REQUEST sema;
       current_clock = NOW;
       dt := (current_clock - last_update) / 0.001 SEC; ! [ms]
 
@@ -401,8 +425,10 @@ simulation: TASK PRIO 100;
       pressure_sensor_1_update(dt);
       pressure_sensor_2_update(dt);		
       tank_update(dt);
-
+      RELEASE sema;
+      
       last_update = current_clock;
+
       AFTER 0.01 SEC RESUME;
   END; ! WHILE .. REPEAT
 
