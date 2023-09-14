@@ -227,8 +227,9 @@ END;
 ! Returns the pressure on the tank floor in [PA]
 get_watertank_pressure: PROC RETURNS (FLOAT) GLOBAL;
   REQUEST sema;
-  RETURN (46.0);
   RELEASE sema;
+
+  RETURN (46.0);
 END;
 
 consumer: TASK;
@@ -247,6 +248,20 @@ END;
 log_status: TASK;
    DCL line CHAR(80);
 
+  log('Fields:');
+  log('|#1|#2|#3|#4|#5|#6|#7|#8|#9|#10|#11|');
+  log('# 1: simulation_is_running');
+  log('# 2: pump_enabled');
+  log('# 3: pump_current_rpm');
+  log('# 4: pump_activations');
+  log('# 5: pump_output_flow_rate');
+  log('# 6: pressure_sensor_1');
+  log('# 7: valve_enabled');
+  log('# 8: pressure_sensor_2');
+  log('# 9: float_switch_enabled');
+  log('#10: current_consumer_dissipation');
+  log('#11: tank_fill_level');
+  log('----------------------------------------------------------------------------');
    WHILE simulation_is_running
    REPEAT
      REQUEST sema;
