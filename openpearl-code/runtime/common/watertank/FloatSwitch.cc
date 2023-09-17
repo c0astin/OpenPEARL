@@ -39,8 +39,7 @@
 */
 namespace pearlrt {
 
-   FloatSwitch::FloatSwitch(int start, int width) :
-      start(start), width(width) {
+   FloatSwitch::FloatSwitch() {
       dationStatus = CLOSED;
    }
 
@@ -69,11 +68,6 @@ namespace pearlrt {
    }
 
    void FloatSwitch::dationClose(int closeParam) {
-      // if (closeParam != 0) {
-      //    Log::error("No close parameters allowed for FloatSwitch device");
-      //    throw theDationParamSignal;
-      // }
-
       if (dationStatus != OPENED) {
          Log::error("FloatSwitch: Dation not open");
          throw theDationNotOpenSignal;
@@ -96,8 +90,8 @@ namespace pearlrt {
       // it is expected that a BitString<width> object is passed
       // with a maximum of 32 bits. This fits into 4 byte.
       // Therefore size must be less than 4
-      if (size > 4) {
-         Log::error("FloatSwitch: max 32 bits expected");
+      if (size > 1) {
+         Log::error("FloatSwitch: max 8 bits expected");
          throw theDationParamSignal;
       }
 
@@ -106,12 +100,9 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      pearlrt::Float<23> level = ns_SimWatertank::WatertankInt::instance()->get_level(pearlrt::Task::currentTask());
+      pearlrt::BitString<1> state = ns_SimWatertank::WatertankInt::instance()->get_float_switch_state(pearlrt::Task::currentTask());
 
-      if ( (level >= ns_SimWatertank::WatertankInt::instance()->get_watertank_capacity(pearlrt::Task::currentTask())).getBoolean()) {
-	value = 0x80;
-      }
-
+      value = state.x;
       *(char*)data = value;
    }
 

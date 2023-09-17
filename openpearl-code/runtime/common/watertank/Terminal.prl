@@ -1,0 +1,80 @@
+MODULE(Terminal);
+
+SYSTEM;
+  so: StdOut;
+  si: StdIn;	
+
+PROBLEM;
+
+SPC so DATION OUT SYSTEM ALPHIC;
+SPC si DATION IN  SYSTEM ALPHIC;
+
+DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED(so);
+DCL message CHAR(80);
+
+DCL digit(0:9) CHAR INIT('0','1','2','3','4','5','6','7','8','9');
+
+! ==========================================================================
+! Print a string at position
+print_str_at_pos: PROC (line FIXED, column FIXED, msg CHAR(80));
+    setPos(line,column);
+    PUT msg TO terminal BY A,SKIP;
+END;
+
+! ==========================================================================
+cursor_off: PROC;
+    DCL pos CHAR(8);
+    pos = ''\1B\'[l';   ! ESC [ 25 l
+    PUT pos TO terminal BY A;
+END;
+
+! ==========================================================================
+cursor_on: PROC;
+    DCL pos CHAR(8);
+    pos = ''\1B\'[h';   ! ESC [ 25 h
+    PUT pos TO terminal BY A;
+END;
+
+! ==========================================================================
+/* set the cursor position th (line,columns)
+   use ANSI codes which are supported by almost each terminal
+   both position start with 1 in upper left corner
+   ESC [l;cH  l=line number starting with 0; c=column number starting with 0
+   eg. ESC[12;34H set position to line 13 and column 35
+   refer manual of eg. DEC VT100 terminal
+*/
+setPos: PROC((line,column) FIXED);  
+    DCL h FIXED;
+    DCL pos CHAR(8);
+    pos.CHAR(1) = ''\1B\'';   ! ESC
+    pos.CHAR(2) = '[';
+    IF line < 10 THEN
+      pos.CHAR(3) = '0';
+    ELSE
+      h = (line-1) // 10 ;
+      pos.CHAR(3) = digit(h); !TOCHAR (48+h);
+    FIN;
+    h = (line-1) REM 10;
+    pos.CHAR(4) = digit(h); !TOCHAR (48+h);
+    pos.CHAR(5) = ';';
+    IF column <= 10 THEN
+      pos.CHAR(6) = '0';
+    ELSE
+      h = (column-1) // 10;
+      pos.CHAR(6) = digit(h); ! TOCHAR (48+h);
+    FIN;
+    h = (column-1) REM 10;
+    pos.CHAR(7) = digit(h);    !TOCHAR (48+h);
+    pos.CHAR(8) = 'H';
+    PUT pos TO terminal BY A;
+END;
+
+/*
+   send control code to clear monitor output
+   ESC[2J
+*/
+clear: PROC;
+    PUT ''\1B\'[2J' TO terminal BY A;
+END;
+
+MODEND;

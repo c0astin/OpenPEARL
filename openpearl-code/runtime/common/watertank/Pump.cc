@@ -27,35 +27,6 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*
-
- Volumenstrom einer Außen-Zahnradpumpe - zweirädrig, gleiche Zähnezahl
-
-V = 2 * pi * d * m *b * n
-
-V  = Volumenstrom (m3/s)
-d  = Teilkreisdurchmesser (m)
-m  = Modul
-b  = Zahnradbreite (m)
-n  = Drehzahl (1/s)
-
-Kolbenpumpe 
-Bestimmung der Fördermenge Q
-
-Mit der Fördermenge Q wird errechnet, wie viel Volumen die 
-Pumpe durchschleusen muss. Die Formel dazu ist:
-
-Q = (Vg x n) / 1000
-
-Vg = Füllvolumen der Pumpe
-n = Anzahl der Umdrehungen
-
-
-
-Pumpe fördert pro Umdrehung 
-
-*/
-
 #include "Log.h"
 #include "Signals.h"
 #include "Pump.h"
@@ -110,13 +81,9 @@ namespace pearlrt {
    }
 
    void Pump::dationWrite(void* data, size_t size) {
-     uint32_t value;
-      //check size of parameter!
-      // it is expected that a BitString<width> object is passed
-      // with a maximum of 32 bits. This fits into 4 byte.
-      // Therefore size must be less than 4
-      if (size > 4) {
-         Log::error("Pump: max 32 bits expected");
+     uint16_t value;
+      if (size > 2) {
+         Log::error("Pump: max 16 bits expected");
          throw theDationParamSignal;
       }
 
@@ -125,14 +92,20 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      value = *(uint32_t*)data;
+      pearlrt::Fixed<15> rpm;
+      value = *(uint16_t*)data;
 
-      if ( (value & 0x80) == 0x80) {
-	//	printf("Pump: ** SWITCH ON\n"); fflush(stdout);
-      }
-      else {
-	//	printf("Pump: *** SWITCH OFF\n"); fflush(stdout);
-      }
+            // expect BitString<width> as data
+      // bits are left adjusted in data, thus the data must be
+      // shifted according the concrete size of data
+      if (size == 1)
+         value = (*(char*)data) << 16;
+      else
+	value = (*(int16_t*)data);
+
+      rpm = value;
+
+      ns_SimWatertank::WatertankInt::instance()->set_pump_rotational_speed(pearlrt::Task::currentTask(), rpm);
    }
   
    void Pump::dationRead(void* data, size_t size) {

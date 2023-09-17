@@ -2144,9 +2144,18 @@ implements OpenPearlVisitor<Void> {
                ProcedureEntry p = ((ProcedureEntry)previousEntry);
                ProcedureEntry n = ((ProcedureEntry)newEntry);
                boolean allTypesOk = true;
-               if (p.getFormalParameters().size() == n.getFormalParameters().size()) {
-                   
-                   for (int i=0; i< p.getFormalParameters().size(); i++) {
+
+               if (p.getFormalParameters() == null && n.getFormalParameters() !=null) {
+                   allTypesOk = false;
+               }
+               else if (p.getFormalParameters() != null && n.getFormalParameters() == null) {
+                   allTypesOk = false;
+               }
+               else if (p.getFormalParameters() == null && n.getFormalParameters() == null) {
+                   allTypesOk = true;
+               }
+               else if (p.getFormalParameters().size() == n.getFormalParameters().size()) {
+                  for (int i=0; i< p.getFormalParameters().size(); i++) {
                        if (!(p.getFormalParameters().get(i).getType().equals(n.getFormalParameters().get(i).getType()))) {
                            allTypesOk = false;
                        }

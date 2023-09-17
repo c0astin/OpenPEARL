@@ -31,6 +31,7 @@
 
 #include "SystemDationB.h"
 #include "Fixed.h"
+#include "BitString.h"
 #include "Character.h"
 #include "RefChar.h"
 #include "Signals.h"
@@ -40,11 +41,8 @@
 namespace pearlrt {
    class FloatSwitch: public SystemDationB {
 
-   private:
-      const int start, width;
-
    public:
-      FloatSwitch(int start, int width);
+      FloatSwitch();
       ~FloatSwitch();
       SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
       void dationClose(int closeParam = 0);

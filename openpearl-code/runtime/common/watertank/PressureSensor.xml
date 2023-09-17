@@ -1,0 +1,9 @@
+<dation name="PressureSensor">
+  <parameters>
+    <FIXED length="15" name="addr">
+      <VALUES>0,1</VALUES>
+    </FIXED>
+  </parameters>
+  <attributes> IN, SYSTEM, BASIC</attributes>
+  <data>FLOAT(23)</data>
+</dation>

@@ -57,4 +57,54 @@ namespace ns_SimWatertank {
     return ns_SimWatertank::_get_watertank_capacity(me);
   }
 
+  pearlrt::Float<23> WatertankInt::get_pump_pressure(pearlrt::Task *me) {
+    std::cout << "WatertankInt: get_pump_pressure=" << ns_SimWatertank::_get_pump_pressure(me).x << "\n";
+    return ns_SimWatertank::_get_pump_pressure(me);
+  }
+  
+  pearlrt::Fixed<31> WatertankInt::get_pump_rotational_speed(pearlrt::Task *me) {
+    std::cout << "WatertankInt: get_pump_rotational_speed=" << ns_SimWatertank::_get_pump_rotational_speed(me).x << "\n";
+    return ns_SimWatertank::_get_pump_rotational_speed(me);
+  }
+  
+  void WatertankInt::set_pump_rotational_speed(pearlrt::Task *me, pearlrt::Fixed<15> rpm) {
+    std::cout << "WatertankInt: set_pump_rotational_speed=" << rpm.x << "\n";
+    return ns_SimWatertank::_set_pump_rotational_speed(me,rpm);
+  }
+
+  void WatertankInt::pump_switch_on(pearlrt::Task *me) {
+    std::cout << "WatertankInt: pump_switch_on" "\n";
+    return ns_SimWatertank::_pump_switch_on(me);
+  }
+  
+  void WatertankInt::pump_switch_off(pearlrt::Task *me) {
+    std::cout << "WatertankInt: pump_switch_off" "\n";
+    return ns_SimWatertank::_pump_switch_off(me);
+  }
+  
+  pearlrt::BitString<1> WatertankInt::get_float_switch_state(pearlrt::Task *me) {
+    std::cout << "WatertankInt: get_float_switch_state=" << ns_SimWatertank::_get_float_switch_state(me).x << "\n";
+    return ns_SimWatertank::_get_float_switch_state(me);
+  }
+
+  pearlrt::Float<23> WatertankInt::get_pressure_sensor_1(pearlrt::Task *me) {
+    std::cout << "WatertankInt: get_pressure_sensor_1=" << ns_SimWatertank::_get_pressure_sensor_1(me).x << "\n";
+    return ns_SimWatertank::_get_pressure_sensor_1(me);
+  }
+
+  pearlrt::Float<23> WatertankInt::get_pressure_sensor_2(pearlrt::Task *me) {
+    std::cout << "WatertankInt: get_pressure_sensor_2=" << ns_SimWatertank::_get_pressure_sensor_2(me).x << "\n";
+    return ns_SimWatertank::_get_pressure_sensor_2(me);
+  }
+  
+  void WatertankInt::open_valve(pearlrt::Task *me) {
+    std::cout << "WatertankInt: open_valve" "\n";
+    return ns_SimWatertank::_open_valve(me);
+  }
+
+  void WatertankInt::close_valve(pearlrt::Task *me) {
+    std::cout << "WatertankInt: close_valve" "\n";
+    return ns_SimWatertank::_close_valve(me);
+  }
+
 }

@@ -26,3 +26,33 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#ifndef PRESSURESENSOR_H_INCLUDED
+#define PRESSURESENSOR_H_INCLUDED
+
+#include "SystemDationB.h"
+#include "Fixed.h"
+#include "BitString.h"
+#include "Character.h"
+#include "RefChar.h"
+#include "Signals.h"
+#include "Log.h"
+
+
+namespace pearlrt {
+   class PressureSensor: public SystemDationB {
+
+   private:
+     const int addr;
+
+   public:
+      PressureSensor(int addr);
+      ~PressureSensor();
+      SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
+      void dationClose(int closeParam = 0);
+      void dationWrite(void * data, size_t size);
+      void dationRead(void * data, size_t size);
+      int capabilities();
+   };
+}
+
+#endif

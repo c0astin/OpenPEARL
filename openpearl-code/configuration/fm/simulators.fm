@@ -1,0 +1,10 @@
+menu "Simulators"
+     depends on LINUX
+
+config SIMWATERTANK
+        boolean  "Select the Watertank Simulator"
+	default n
+	help
+	This configuration enables the virtual devices for simulating a watertank.
+	
+endmenu	
