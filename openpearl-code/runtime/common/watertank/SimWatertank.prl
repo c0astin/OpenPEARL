@@ -1,3 +1,34 @@
+/*
+ Simulation of a water reservoir, which is filled by a pump.
+
+ [A "BSD license"]
+ Copyright (c) 2023 Marcel Schaible
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 MODULE(SimWatertank);
 
 SYSTEM;
@@ -21,7 +52,6 @@ DCL simulation_is_running BIT(1) INIT('0'B1);
 ! 
 DCL sema SEMA PRESET(1);
 
-
 ! ==========================================================================
 ! 
 DCL step FIXED INIT(0);
@@ -29,6 +59,10 @@ DCL step FIXED INIT(0);
 ! ==========================================================================
 ! Density of water in [kg/m^3]
 DCL rho INV FLOAT INIT(1000.0); 
+
+! ==========================================================================
+! Accelaration of gravity 
+DCL gravity INV FLOAT INIT(9.81); ! [m/s^2]
 
 ! ==========================================================================
 ! Dimensions of the tanks in [m]
@@ -66,11 +100,6 @@ DCL pump_requested_rpm FIXED(15) INIT(0);
 ! current rpm [revolution/min]
 DCL pump_current_rpm FLOAT INIT(0.0); 
 
-! pump switch on/off
-! 0, if the pump is switched off
-! 1, if the pump is switched on
-DCL pump_enabled BIT(1) INIT('0'B1); 
-
 ! count how many time the pump has been switched on and off
 DCL pump_activations FIXED(31) INIT(0);
 
@@ -95,7 +124,8 @@ DCL float_switch_enabled BIT(1) INIT('0'B1);
 
 ! ==========================================================================
 start_simulation: PROC GLOBAL;
-  log('Starting simulation');
+  openLogfile(fileName, '0'B1);
+  log('STARTING SIMULATION');
   simulation_is_running = '1'B1;
   ACTIVATE log_status;
   ACTIVATE simulation;
@@ -105,8 +135,9 @@ END;
 
 ! ==========================================================================
 stop_simulation: PROC GLOBAL;
-  log('Request stopping simulation');
+  log('REQUEST STOPPING SIMULATION');
   simulation_is_running = '0'B1;
+  closeLogfile;	  
 END;
 
 ! ==========================================================================
@@ -166,35 +197,17 @@ END;
 
 ! Returns the current rotation speed of the pump in [revolutions/min]
 get_pump_rotational_speed: PROC RETURNS (FIXED) GLOBAL;
-  RETURN (ENTIER pump_current_rpm);
+  DCL rpm FIXED;
+  REQUEST sema;
+  rpm := ENTIER pump_current_rpm;
+  RELEASE sema;
+  RETURN (rpm);
 END;
 
 ! Request the rpm of the pump in [rpm]
 set_pump_rotational_speed: PROC(rpm FIXED(15)) GLOBAL;
-  pump_requested_rpm := rpm;
-END;
-
-! Switch the pump on
-pump_switch_on: PROC GLOBAL;
-   REQUEST sema;
-
-   IF NOT pump_enabled 
-   THEN
-     pump_activations := pump_activations + 1;
-   FIN;
-
-   RELEASE sema;
-   
-   log('pump switched on');	
-   pump_enabled := '1'B1;
-END;
-
-! Switch the pump off 
-pump_switch_off: PROC GLOBAL;
   REQUEST sema;
-  log('pump switched off');
-  pump_enabled := '0'B1;
-  pump_requested_rpm := 0;
+  pump_requested_rpm := rpm;
   RELEASE sema;
 END;
 
@@ -207,16 +220,16 @@ END;
 open_valve: PROC GLOBAL;
    REQUEST sema;
    valve_enabled := '1'B1;
-   log('valve opened');
    RELEASE sema;
+   log('VALVE OPENED');
 END;
 
 ! Close the valve
 close_valve: PROC GLOBAL;
     REQUEST sema;
     valve_enabled := '0'B1;
-    log('valve closed');
     RELEASE sema;
+    log('VALVE CLOSED');
 END;
 
 ! Calculate the maximum tank capacity in [m^3]
@@ -226,12 +239,44 @@ END;
 
 ! Returns the pressure on the tank floor in [PA]
 get_watertank_pressure: PROC RETURNS (FLOAT) GLOBAL;
+  DCL p FLOAT INIT(0.0);
   REQUEST sema;
+  p := pressure_sensor_2;
   RELEASE sema;
 
-  RETURN (46.0);
+  RETURN (p);
 END;
 
+! Returns the current state of the float switch:
+! 0: float switch off
+! 1: float switch on
+get_float_switch_state: PROC RETURNS (BIT(1)) GLOBAL;
+  DCL state BIT(1);
+  REQUEST sema;
+  state := float_switch_enabled;
+  RELEASE sema;
+  RETURN(state);
+END;
+
+! Returns the current pressure reading of pressure sensor #1 in [Pa]
+get_pressure_sensor_1: PROC RETURNS (FLOAT) GLOBAL;
+  DCL pressure FLOAT;
+  REQUEST sema;
+  pressure := pressure_sensor_1;
+  RELEASE sema;
+  RETURN(pressure);
+END;
+
+! Returns the current pressure reading of pressure sensor #2 in [Pa]
+get_pressure_sensor_2: PROC RETURNS (FLOAT) GLOBAL;
+  DCL pressure FLOAT;
+  REQUEST sema;
+  pressure := pressure_sensor_2;
+  RELEASE sema;
+  RETURN(pressure);
+END;
+
+! 
 consumer: TASK;
    DCL step FIXED(15) INIT(0);
    WHILE simulation_is_running
@@ -249,25 +294,23 @@ log_status: TASK;
    DCL line CHAR(80);
 
   log('Fields:');
-  log('|#1|#2|#3|#4|#5|#6|#7|#8|#9|#10|#11|');
+  log('|#1|#2|#3|#4|#5|#6|#7|#8|#9|#10|');
   log('# 1: simulation_is_running');
-  log('# 2: pump_enabled');
-  log('# 3: pump_current_rpm');
-  log('# 4: pump_activations');
-  log('# 5: pump_output_flow_rate');
-  log('# 6: pressure_sensor_1');
-  log('# 7: valve_enabled');
-  log('# 8: pressure_sensor_2');
-  log('# 9: float_switch_enabled');
-  log('#10: current_consumer_dissipation');
-  log('#11: tank_fill_level');
+  log('# 2: pump_current_rpm');
+  log('# 3: pump_activations');
+  log('# 4: pump_output_flow_rate');
+  log('# 5: pressure_sensor_1');
+  log('# 6: valve_enabled');
+  log('# 7: pressure_sensor_2');
+  log('# 8: float_switch_enabled');
+  log('# 9: current_consumer_dissipation');
+  log('#10: tank_fill_level');
   log('----------------------------------------------------------------------------');
    WHILE simulation_is_running
    REPEAT
      REQUEST sema;
      CONVERT '|',
              simulation_is_running, '|',
-             pump_enabled, '|',
              pump_current_rpm, '|',
              pump_activations, '|',
              pump_output_flow_rate, '|',
@@ -279,7 +322,6 @@ log_status: TASK;
              tank_fill_level, '|'
 	     TO line BY A,
  	                B(1),A,
-	                B(1),A,
 			F(8,2),A,
                         F(4),A,
   			F(10,4),A,  
@@ -297,9 +339,13 @@ END;
 
 !
 pump_update: PROC (dt FLOAT /* [ms] */);
-  DCL msg CHAR(80);
-  
-  IF pump_enabled 
+  IF pump_current_rpm == 0 AND pump_requested_rpm > 0.0
+  THEN
+      pump_activations := pump_activations + 1;
+  FIN;
+
+
+  IF pump_current_rpm < pump_requested_rpm
   THEN
       pump_current_rpm := pump_current_rpm + dt * pump_spin_up_speed / 1000;
 
@@ -307,16 +353,16 @@ pump_update: PROC (dt FLOAT /* [ms] */);
       THEN
         pump_current_rpm = pump_requested_rpm;
       FIN;
-  ELSE
-      IF pump_current_rpm > 0.0
-      THEN
-         pump_current_rpm := pump_current_rpm - dt * pump_spin_down_speed / 1000;
+  FIN;
 
-         IF pump_current_rpm < 0.0
-         THEN
-            pump_current_rpm = 0.0;
-         FIN;
-      FIN;
+  IF pump_current_rpm > pump_requested_rpm
+  THEN
+     pump_current_rpm := pump_current_rpm - dt * pump_spin_down_speed / 1000;
+
+     IF pump_current_rpm < 0.0
+     THEN
+        pump_current_rpm = 0.0;
+     FIN;
   FIN;
 
   !--------------------------------------------
@@ -358,7 +404,7 @@ pressure_sensor_1_update: PROC (dt FLOAT /* [ms] */);
 
     IF pump_current_rpm > 0
     THEN
-        pressure_sensor_1 := ( 20 * 1000 * 9.81 ) / 1000 + ( 1000 * v**2) / pump_current_rpm;
+        pressure_sensor_1 := ( 20 * rho * gravity) / 1000 + ( 1000 * v**2) / pump_current_rpm;
     ELSE
         pressure_sensor_1 := 0.0;
     FIN;
@@ -378,7 +424,7 @@ pressure_sensor_2_update: PROC (dt FLOAT /* [ms] */);
     !
     !---------------------------------------------------------------------------
 
-    pressure_sensor_2 := 1000 * 9.81 * 10;;
+    pressure_sensor_2 := tank_fill_level / (tank_width * tank_length) * gravity * rho;
 END;
 
 !
@@ -401,6 +447,11 @@ tank_update: PROC (dt FLOAT /* [ms] */);
   THEN
      tank_fill_level := 0.0;
   FIN;
+END;
+
+!
+float_switch_update: PROC (dt FLOAT /* [ms] */);
+    float_switch_enabled := tank_fill_level >= get_watertank_capacity;
 END;
 
 !
@@ -440,6 +491,8 @@ simulation: TASK PRIO 100;
       pressure_sensor_1_update(dt);
       pressure_sensor_2_update(dt);		
       tank_update(dt);
+      float_switch_update(dt);
+      
       RELEASE sema;
       
       last_update = current_clock;
@@ -447,23 +500,19 @@ simulation: TASK PRIO 100;
       AFTER 0.01 SEC RESUME;
   END; ! WHILE .. REPEAT
 
-  log('simulation task stopped');
+  log('SIMULATION TASK STOPPED');
 END;
 
-!
 test: TASK MAIN;
-   openLogfile(fileName, '0'B1);
-
    start_simulation;
 
    AFTER 1 SEC RESUME;
 
-   pump_switch_on;
    set_pump_rotational_speed(5000);
    open_valve;
 
    AFTER 20 SEC RESUME;
-   pump_switch_off;
+   set_pump_rotational_speed(0);	
    close_valve;
    
    REPEAT
@@ -471,7 +520,6 @@ test: TASK MAIN;
    END;
 
    log('Simulation stopped.');
-   closeLogfile;	  
 END;
 
 MODEND;

@@ -1,0 +1,70 @@
+MODULE(watertank);
+
+SYSTEM;
+stdout: StdOut;
+
+floatswitch: FloatSwitch(1,1);
+
+pump: Pump(1,1);
+!pressure_sensor1
+!pressure_sensor2
+!valve
+
+PROBLEM;
+SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+SPC floatswitch DATION IN SYSTEM BASIC BIT(1);
+DCL switch DATION IN BASIC BIT(1) CREATED(floatswitch);
+
+SPC pump DATION INOUT SYSTEM BASIC BIT(1);
+DCL foerderpumpe DATION INOUT BASIC BIT(1) CREATED(pump);
+
+print_separator: PROC;
+   PUT '===================================================' TO terminal BY A, SKIP;	
+END;
+
+
+t1: TASK MAIN;
+   DCL b BIT(1);
+   DCL step FIXED INIT(0);
+   
+   OPEN terminal;
+   PUT 'WATERTANK: Hello' TO terminal BY A, SKIP;
+
+   OPEN switch;
+   PUT 'WATERTANK: Switch open' TO terminal BY A, SKIP;
+
+   OPEN foerderpumpe;
+
+   print_separator;
+   PUT 'WATERTANK: Förderpumpe open' TO terminal BY A, SKIP;
+
+   FOR i FROM 0 BY 1 TO 100
+   REPEAT
+      IF i REM 3 == 0
+      THEN
+            SEND '0'B1 TO foerderpumpe;
+      ELSE
+            SEND '1'B1 TO foerderpumpe;
+      FIN;
+	    
+      TAKE b FROM switch;
+      print_separator;	
+      PUT 'WATERTANK: FloatSwitch',b TO terminal BY A,X,B1,SKIP;
+      AFTER 1 SEC RESUME;
+   END;
+   
+   CLOSE switch;
+   print_separator;
+   PUT 'WATERTANK: Switch closed' TO terminal BY A, SKIP;
+
+   CLOSE foerderpumpe;	
+   print_separator;
+   PUT 'WATERTANK: Förderpumpe closed' TO terminal BY A, SKIP;
+
+   CLOSE terminal;
+END;
+
+MODEND;
+ 
