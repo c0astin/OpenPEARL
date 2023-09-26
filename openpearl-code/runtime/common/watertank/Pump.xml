@@ -4,6 +4,6 @@
     </FIXED>
     <FIXED length="31" name="width"> <FIXEDGT>0</FIXEDGT></FIXED>
   </parameters>
-  <attributes> IN, SYSTEM, BASIC</attributes>
+  <attributes> OUT, SYSTEM, BASIC</attributes>
   <data>FIXED($width)</data>
 </dation>

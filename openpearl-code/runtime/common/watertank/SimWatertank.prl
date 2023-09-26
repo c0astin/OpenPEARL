@@ -36,7 +36,7 @@ SYSTEM;
 
 PROBLEM;
 
-SPC homeFolder DATION INOUT SYSTEM ALL ;
+SPC homeFolder DATION INOUT SYSTEM ALL;
 DCL logFile DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED(homeFolder);
 DCL fileName CHAR(7) INIT('sim.log');
 DCL message CHAR(80);
