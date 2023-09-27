@@ -482,9 +482,14 @@ public class CheckSpcDcl {
     private int isDefinedInProblemPart(Module m, String globalOfUserName, String userName) {
         List<DclProblemPart> dclList = m.getDclProblemPart();
         for (int i = 0; i < dclList.size(); i++) {
+        	String globalOfDclElement = dclList.get(i).getGlobal(); 
+            if (globalOfDclElement == null) {
+            	continue;  // ignore non global objects
+            }
             if (useNameSpace) {
-                if (!dclList.get(i).getGlobal().equals(globalOfUserName))
-                    continue;
+                if (!globalOfDclElement.equals(globalOfUserName)) {
+                    continue;	// ignore different name
+                }
             }
             if (dclList.get(i).getUserName().equals(userName))
                 return i;
