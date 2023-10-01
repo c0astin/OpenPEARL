@@ -278,12 +278,12 @@ END;
 
 ! 
 consumer: TASK;
-   DCL step FIXED(15) INIT(0);
+   DCL cstep FIXED(15) INIT(0);
    WHILE simulation_is_running
    REPEAT
        REQUEST sema;
-       current_consumer_dissipation := ABS(SIN(2*step)*COS(3*step)/100);
-       step := step +1;
+       current_consumer_dissipation := ABS(SIN(2*cstep)*COS(3*cstep)/100);
+       cstep := cstep +1;
        RELEASE sema;
        AFTER 1 SEC RESUME;
    END;
@@ -429,7 +429,7 @@ END;
 
 !
 tank_update: PROC (dt FLOAT /* [ms] */);
-  IF valve_enabled THEN
+   IF valve_enabled THEN
       tank_fill_level := tank_fill_level +
                          pump_output_flow_rate / 60 -
 			 current_consumer_dissipation;
