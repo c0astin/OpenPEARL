@@ -371,7 +371,7 @@ rm -f $target.out $target.log
    # --------------------
    # run imc
    if [[ "$noIMC" != "1" && "$imcInputFiles" != "" ]] ; then
-       java -cp "/usr/local"/bin/imc.jar imc/main/InterModuleChecker $standard -b $PLATTFORM  -I "/usr/local" -o system.cc $imcInputFiles
+       java -cp "/usr/local"/bin/imc.jar imc/main/InterModuleChecker $standard -b $PLATTFORM  -I "/usr/local" -o system.cc /usr/local/include/SimWatertank $imcInputFiles 
    
        rc=$?
        if [ $rc -ne 0 ]
