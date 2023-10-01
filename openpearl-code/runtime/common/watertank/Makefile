@@ -47,13 +47,13 @@ build: SimWatertank.cc
 ##############################################################################
 
 prepare:
-	touch $(CONFIG_INSTALL_Target)/include/SimWatertank.xml
-	chmod 777 $(CONFIG_INSTALL_Target)/include/SimWatertank.xml
+	touch $(CONFIG_INSTALL_Target)/lib/SimWatertank/SimWatertank.xml
+	chmod 777 $(CONFIG_INSTALL_Target)/lib/SimWatertank/SimWatertank.xml
 
 ###############################################################################
 
-install: SimWatertank.cc
-	cp SimWatertank.xml $(CONFIG_INSTALL_Target)/include
+install: SimWatertankSystem.xml SimWatertank.cc
+	cp SimWatertank.xml $(CONFIG_INSTALL_Target)/lib/SimWatertank
 
 
 ###############################################################################
@@ -62,10 +62,14 @@ install: SimWatertank.cc
 SimWatertank.cc:
 	prl -cc SimWatertank.prl
 
+.PHONY: SimWatertankSystem.xml
+SimWatertankSystem.xml:
+	prl -cc SimWatertankSystem.prl
+
 ###############################################################################
 
 clean:
-	$(RM) SimWatertank.cc
+	$(RM) SimWatertank.cc SimWatertankSystem.cc SimWatertank.xml SimWatertankSystem.xml
 
 ###############################################################################
 

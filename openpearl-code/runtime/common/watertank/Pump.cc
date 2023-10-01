@@ -50,10 +50,10 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-       if ((openParam & INOUT) != INOUT) {
-         Log::error("Pump must be an output device (%x)", openParam);
-         throw theDationParamSignal;
-      }
+     //  if ((openParam & INOUT) != INOUT) {
+     //    Log::error("Pump must be an output device (%x)", openParam);
+     //    throw theDationParamSignal;
+     // }
 
       if (dationStatus != CLOSED) {
          Log::error("Pump: Dation already open");

@@ -6,4 +6,5 @@
   </parameters>
   <attributes> IN, SYSTEM, BASIC</attributes>
   <data>FLOAT(23)</data>
+  <requiresModule fileName="SimWatertank/SimWatertankSystem" />
 </dation>

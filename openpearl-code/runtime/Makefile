@@ -66,6 +66,9 @@ all: $(targets)
 prepare:
 	touch $(INSTALL_PEARLINCLUDES)
 	chmod 777 $(INSTALL_PEARLINCLUDES)
+ifeq ($(CONFIG_SIMWATERTANK),y)
+	@(cd common/watertank; make prepare;)
+endif
 ifeq ($(CONFIG_LINUX),y) 
 	@(cd linux; make prepare;)
 endif
@@ -74,9 +77,6 @@ ifeq ($(CONFIG_LPC1768),y)
 endif
 ifeq ($(CONFIG_ESP32),y) 
 	@(cd esp32; make prepare;)
-endif
-ifeq ($(CONFIG_SIMWATERTANK),y)
-	@(cd common/watertank; make prepare;)
 endif
 
 linux:
@@ -108,6 +108,10 @@ install: cc_o.inc o_bin.inc run_bin.inc targets.inc
 	@echo "[install] runtime "
 	@(cd $(IC_DIR); make;)
 	@cat LICENSE.BSD >$(INSTALL_PEARLINCLUDES)
+ifeq ($(CONFIG_SIMWATERTANK),y) 
+	@(cd common/watertank; make install;)
+	#cp "common/watertank/SimWatertank.xml" /usr/local/include
+endif
 ifeq ($(CONFIG_LINUX),y) 
 	@(cd linux; make -B install;)
 	@echo "#define LINUX	1" >>$(INSTALL_PEARLINCLUDES)
@@ -128,9 +132,6 @@ ifeq ($(CONFIG_ESP32),y)
 	@echo "#if TARGET == ESP32" >> $(INSTALL_PEARLINCLUDES)
 	@cat esp32/pearl.h >>$(INSTALL_PEARLINCLUDES)
 	@echo "#endif" >> $(INSTALL_PEARLINCLUDES)
-endif
-ifeq ($(CONFIG_SIMWATERTANK),y) 
-	cp "common/watertank/SimWatertank.xml" /usr/local/include
 endif
 
 .PHONY: cc_o.inc

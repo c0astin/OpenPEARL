@@ -31,12 +31,13 @@
 
 MODULE(SimWatertank);
 
-SYSTEM;
-  homeFolder: Disc('./',1);
+! moved into SimWatertankSystem.prl
+!SYSTEM;
+!  homeFolder: Disc('./',1);
 
 PROBLEM;
 
-SPC homeFolder DATION INOUT SYSTEM ALL;
+SPC homeFolder DATION INOUT SYSTEM ALL GLOBAL(SimWatertank);
 DCL logFile DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED(homeFolder);
 DCL fileName CHAR(7) INIT('sim.log');
 DCL message CHAR(80);
@@ -475,7 +476,7 @@ check_tank_status: TASK;
 END;
 
 !
-simulation: TASK PRIO 100;
+simulation: TASK PRIO 90;
   DCL current_clock CLOCK;
   DCL dt FLOAT;
   DCL msg CHAR(80);

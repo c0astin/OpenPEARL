@@ -7,4 +7,5 @@
   </parameters>
   <attributes> OUT, SYSTEM, BASIC</attributes>
   <data>BIT($width)</data>
+  <requiresModule fileName="SimWatertank/SimWatertankSystem" />
 </dation>

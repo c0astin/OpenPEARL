@@ -6,4 +6,5 @@
   </parameters>
   <attributes> OUT, SYSTEM, BASIC</attributes>
   <data>FIXED($width)</data>
+  <requiresModule fileName="SimWatertank/SimWatertankSystem" />
 </dation>

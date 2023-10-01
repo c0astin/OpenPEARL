@@ -1,4 +1,5 @@
 <dation name="FloatSwitch">
   <attributes> IN, SYSTEM, BASIC</attributes>
   <data>BIT(1)</data>
+  <requiresModule fileName="SimWatertank/SimWatertankSystem" />
 </dation>
