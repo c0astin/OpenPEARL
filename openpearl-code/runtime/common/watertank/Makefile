@@ -53,7 +53,7 @@ prepare:
 ###############################################################################
 
 install: SimWatertankSystem.xml SimWatertank.cc
-	cp SimWatertank.xml $(CONFIG_INSTALL_Target)/lib/SimWatertank
+	cp SimWatertankSystem.xml $(CONFIG_INSTALL_Target)/lib/SimWatertank
 
 
 ###############################################################################
