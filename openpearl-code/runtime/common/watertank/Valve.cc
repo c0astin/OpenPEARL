@@ -96,11 +96,6 @@ namespace pearlrt {
          Log::error("Valve: Dation not open");
          throw theDationParamSignal;
       }
-
-      if ( *(char*)data == 0x80)
-	ns_SimWatertank::WatertankInt::instance()->pump_switch_on(pearlrt::Task::currentTask());
-      else
-	ns_SimWatertank::WatertankInt::instance()->pump_switch_off(pearlrt::Task::currentTask());
    }
 
    void Valve::dationRead(void* data, size_t size) {

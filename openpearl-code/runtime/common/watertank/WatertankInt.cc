@@ -72,16 +72,6 @@ namespace ns_SimWatertank {
     return ns_SimWatertank::_set_pump_rotational_speed(me,rpm);
   }
 
-  void WatertankInt::pump_switch_on(pearlrt::Task *me) {
-    std::cout << "WatertankInt: pump_switch_on" "\n";
-    return ns_SimWatertank::_pump_switch_on(me);
-  }
-  
-  void WatertankInt::pump_switch_off(pearlrt::Task *me) {
-    std::cout << "WatertankInt: pump_switch_off" "\n";
-    return ns_SimWatertank::_pump_switch_off(me);
-  }
-  
   pearlrt::BitString<1> WatertankInt::get_float_switch_state(pearlrt::Task *me) {
     std::cout << "WatertankInt: get_float_switch_state=" << ns_SimWatertank::_get_float_switch_state(me).x << "\n";
     return ns_SimWatertank::_get_float_switch_state(me);

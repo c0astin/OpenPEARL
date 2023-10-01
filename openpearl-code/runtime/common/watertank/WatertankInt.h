@@ -27,9 +27,6 @@ namespace ns_SimWatertank {
     pearlrt::Fixed<31> get_pump_rotational_speed(pearlrt::Task *me);
     void set_pump_rotational_speed(pearlrt::Task *me, pearlrt::Fixed<15> rpm);
 
-    void pump_switch_on(pearlrt::Task *me);
-    void pump_switch_off(pearlrt::Task *me);
-  
     pearlrt::BitString<1> get_float_switch_state(pearlrt::Task *me);
 
     pearlrt::Float<23> get_pressure_sensor_1(pearlrt::Task *me);
