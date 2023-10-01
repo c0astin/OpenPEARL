@@ -59,10 +59,6 @@ IC_DIR = ./includeComposer
 # various variable for easy usage in makefile
 INSTALL_PEARLINCLUDES = $(CONFIG_INSTALL_Target)/include/PearlIncludes.h
 
-ifeq ($(CONFIG_SIMWATERTANK),y)
-INSTALL_SIMULATOR_XMLS = $(CONFIG_INSTALL_Target)/include/SimWatertank.xml
-endif
-
 .PHONY: clean depend help all $(targets)
 
 all: $(targets)
@@ -80,11 +76,8 @@ ifeq ($(CONFIG_ESP32),y)
 	@(cd esp32; make prepare;)
 endif
 ifeq ($(CONFIG_SIMWATERTANK),y)
-	touch $(INSTALL_SIMULATOR_XMLS)
-	chmod 777 $(INSTALL_SIMULATOR_XMLS)
+	@(cd common/watertank; make prepare;)
 endif
-
-
 
 linux:
 	(cd linux; make -B;)
