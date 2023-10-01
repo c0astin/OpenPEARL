@@ -404,6 +404,35 @@ specified in separate syystem part definitions.
 The treatment of these interrupts requires a single thread to receive the 
 interrupt events.
 
+Note: this feature was never used and should be removed
+
+\subsection{requiresModule}
+For cases like a simulation of a external system, which should be written in PEARL,
+the code of the simulation may define system part elements.
+The simulation would interact with the application code via simulated devices, which 
+communicate with simulation code via global function exported by the simulation.
+If such a device is used, the simulation will be added by the linker to the application.
+
+The IMC must add in this case the system part elements to the application.
+
+\begin{verbatim}
+<dation name="SimulatedPressureSensor">
+  <parameters>
+    <FIXED length="15" name="channel">
+      <VALUES>0,1</VALUES>
+    </FIXED>
+  </parameters>
+  <attributes> IN, SYSTEM, BASIC</attributes>
+  <data>FLOAT(23)</data>
+  <requiresModule fileName="simulation1/SystemPartOfSimulation1" />
+</dation>
+\end{verbatim}
+
+The tag \texttt{requiresModule} will add the related xml-file to the IMC.
+The file is expected to reside in the installation path of the OpenPEARL project 
+(usually \texttt{/usr/local/lib/}). The file is added only once, even if the tag 
+occurs in multiple device definitions.:w
+
  
 \section{Platform File}
 Each system part elements is represented by a driver in the OpenPEARL 

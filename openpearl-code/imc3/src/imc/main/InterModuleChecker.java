@@ -161,6 +161,7 @@ public class InterModuleChecker {
 
     }
 
+    
     private static boolean checkAndProcessArguments(String[] args) {
         int i = 0;
         boolean returnValue = true;
@@ -210,5 +211,16 @@ public class InterModuleChecker {
                 + "                              (defaults to /usr/local)        \n"
                 + "  infile ...                  input files					 \n");
     }
+    
+    public static String getInstallationPath() {
+    	return installationPath;
+	}
+    
+    public static boolean isVerbose() {
+    	return verbose;
+	}
 
+    public static boolean useNameSpace() {
+    	return useNameSpace;
+    }
 }

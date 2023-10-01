@@ -1,6 +1,7 @@
 package imc.checks;
 
 
+import imc.main.InterModuleChecker;
 import imc.types.Association;
 import imc.types.Module;
 import imc.types.ModuleEntrySystemPart;
@@ -21,9 +22,9 @@ import org.w3c.dom.NodeList;
 
 
 public class CheckSystempart {
-    private static Module module;
     private static List<ModuleEntrySystemPart> newItems;
     private static int autoNumber = 0;
+    private static List<String> requiredModules;
 
     /**
      * check the system elements of a module
@@ -55,34 +56,56 @@ public class CheckSystempart {
         Log.setLocation("-", -1, -1);
 
         Log.info("start checking checkSystemelementsForSystemParts...");
+        requiredModules = new ArrayList<String>();
         for (Module m : modules) {
-            newItems = new ArrayList<ModuleEntrySystemPart>();
-            module = m;
-            for (ModuleEntrySystemPart se : module.getSystemElements()) {
-
-                Node systemNode = checkSystemNameExists(se, module.getSourceFileName());
-                if (systemNode != null) {
-                    // Node inModule = se.getNode();
-                    // get node which contains the parameters
-                    Node seSystem = NodeUtils.getChildByName(se.getNode(), "sysname");
-                    Log.info("   check illegal autoInstanciate usage");
-                    checkAutoInstanciate(se, seSystem, systemNode);
-
-                    treatNeedItem(se, seSystem, systemNode);
-                    Log.info("   check ParameterTypes ..");
-                    compareParameterTypes(se, seSystem, systemNode);
-                    Log.info("   check Associations ..");
-                    checkAssociation(se, seSystem, systemNode);
-                }
-            }
-            for (ModuleEntrySystemPart me : newItems) {
-                m.getSystemElements().add(me);
-            }
-
+        	checkApplicationModule(m);
+            
+        }
+        
+        // treat required modules...
+        for (String s: requiredModules) {
+        	 Module mXml = new Module(InterModuleChecker.getInstallationPath()+"/lib/"+s + ".xml", 
+        			 InterModuleChecker.isVerbose(),
+        			 InterModuleChecker.useNameSpace());
+        	 checkApplicationModule(mXml);
+             modules.add(mXml);
         }
 
     }
 
+    private static void checkApplicationModule(Module m) { 
+    	// if needItems is used, we may not add system part objects to the list
+    	// while we iterate over the list
+    	// thus let's gather items to be added and add them after the iteration is complete
+    	newItems = new ArrayList<ModuleEntrySystemPart>();
+    	
+    	for (ModuleEntrySystemPart se : m.getSystemElements()) {
+
+    		Node systemNode = checkSystemNameExists(se, m.getSourceFileName());
+    		if (systemNode != null) {
+    			// Node inModule = se.getNode();
+    			// get node which contains the parameters
+    			Node seSystem = NodeUtils.getChildByName(se.getNode(), "sysname");
+    			Log.info("  check illegal autoInstanciate usage");
+    			checkAutoInstanciate(se, seSystem, systemNode);
+
+    			treatNeedItem(se, seSystem, systemNode);
+
+    			// check, if we need external system part definitions
+    			Log.info("  check if external module information are required");
+    			treatRequiresModule(systemNode);
+
+    			Log.info("  check ParameterTypes ..");
+    			compareParameterTypes(se, seSystem, systemNode);
+    			Log.info("  check Associations ..");
+    			checkAssociation(m,se, seSystem, systemNode);
+    		}
+    	}
+    	for (ModuleEntrySystemPart me : newItems) {
+    		m.getSystemElements().add(me);
+    	}
+
+    }
 
     private static void checkAutoInstanciate(ModuleEntrySystemPart se, Node seSystem,
             Node systemNode) {
@@ -125,17 +148,39 @@ public class CheckSystempart {
         return;
     }
 
+    /**
+     * the tag requiresModule announces that the given fileName from the installation folder 
+     * should be added to the application module list
+     * 
+     * @param se the system part element
+     * @param seSystem
+     * @param systemNode
+     */
+    private static void treatRequiresModule(Node systemNode) {
+        Node requiresModule = NodeUtils.getChildByName(systemNode, "requiresModule");
+        if (requiresModule != null) {
+            String neededFileName = NodeUtils.getAttributeByName(requiresModule, "fileName");
+        	if (requiredModules.contains(neededFileName)) {
+        		Log.debug(neededFileName+ " already in module list");
+        	} else {
+               Log.debug(neededFileName+" found to be required");
+               requiredModules.add(neededFileName);
+        	}
+        }
+        return;
+    }
 
     /**
      * check if associations are valid 1) if se has no association, the systemNode must not require an
      * association 2) if se has an association, the systemNode must require an association and the
      * type of requested associationProvider must be provided by the systemNode 3) the check is
      * continued recursively until the end of the association chain is reached
+     * @param m 
      * 
      * @param se the element in the system part of the module
      * @param systemNodeInPlatform is the node in the platform definition
      */
-    private static void checkAssociation(ModuleEntrySystemPart se, Node systemNodeInModule,
+    private static void checkAssociation(Module module, ModuleEntrySystemPart se, Node systemNodeInModule,
             Node systemNodeInPlatform) {
 
         Node seAssoc = NodeUtils.getChildByName(systemNodeInModule, "association");
@@ -237,7 +282,7 @@ public class CheckSystempart {
 
             Node nodeInPlatform = pse.getNode();
             compareParameterTypes(anonymousModuleEntrySystemPart, seAssoc, nodeInPlatform);
-            checkAssociation(anonymousModuleEntrySystemPart, seAssoc, nodeInPlatform);
+            checkAssociation(module, anonymousModuleEntrySystemPart, seAssoc, nodeInPlatform);
             // add anonymousModuleSystemElement to systemElements is not allowed
             // thus add it to another list and integrate this new list at the end in systemElements
             newItems.add(anonymousModuleEntrySystemPart);
@@ -475,8 +520,8 @@ public class CheckSystempart {
 
         Log.info("start checking checkAssociationTypes...");
         for (Module m : modules) {
-            module = m;
-            for (ModuleEntrySystemPart se : module.getSystemElements()) {
+           
+            for (ModuleEntrySystemPart se : m.getSystemElements()) {
 
 
                 // get provided association types
@@ -515,7 +560,7 @@ public class CheckSystempart {
                     }
                 }
                 if (!found) {
-                    Log.setLocation(module.getSourceFileName(), se.getLine(), se.getCol());
+                    Log.setLocation(m.getSourceFileName(), se.getLine(), se.getCol());
                     Log.error("type of requested association not supported" + "\n\t" + systemName
                             + " requests: " + requiredAssociation + "\n\t" + systemDevice + " supports: "
                             + providedAssociations);
