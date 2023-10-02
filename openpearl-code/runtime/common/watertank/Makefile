@@ -42,13 +42,13 @@ all:  install
 
 ###############################################################################
 
-build: SimWatertank.cc
+build: SimWatertank.cc SimWatertankSystem.xml
 
 ##############################################################################
 
 prepare:
-	touch $(CONFIG_INSTALL_Target)/lib/SimWatertank/SimWatertank.xml
-	chmod 777 $(CONFIG_INSTALL_Target)/lib/SimWatertank/SimWatertank.xml
+	mkdir $(CONFIG_INSTALL_Target)/lib/SimWatertank
+	chmod 777 $(CONFIG_INSTALL_Target)/lib/SimWatertank
 
 ###############################################################################
 
