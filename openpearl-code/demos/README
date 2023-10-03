@@ -7,3 +7,4 @@ evelator: program for the elevator model of the hs furtangen
 loggingExample: example how to create an application log
 hanoi: the towers of hanoi with character graphics and ANSI codes
 
+linux/ contains demo applications which run only on linux systems
