@@ -1,0 +1,94 @@
+/* sample usage of the system device Pipe
+
+write sone formatted text to the pipe /tmp/pipefile and 
+read the content of the pipe in another task ether in raw format
+until end of line, or formatted into a CHR(10) variable until SKIP.
+
+
+test with different situations:
+a) consumerI is started and consumerA stays terminated
+b) consumerA is started and consumerI stays terminated
+c) consumerI and consumerA will be started
+d) emit messages vie echo 'xxx' >/tmp/pupefile into the pipe
+e) /tmp/pipefile is a normal file
+
+*/
+
+MODULE(PipeDemo);
+
+SYSTEM;
+   pipe: Pipe('/tmp/pipefile', 3, 'OPEN1 ANY CAN');
+   so: StdOut;
+
+PROBLEM;
+   SPC pipe DATION INOUT SYSTEM ALL;
+   SPC so   DATION OUT SYSTEM ALPHIC;
+   DCL writeFormatted DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(pipe);
+   DCL readInternal   DATION IN  ALL    DIM(*,80) FORWARD CREATED(pipe);
+   DCL readAlphic     DATION IN  ALPHIC DIM(*,80) FORWARD CREATED(pipe);
+   DCL terminal       DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+start: TASK MAIN;
+   OPEN terminal;
+!   ACTIVATE consumerInternal;
+   ACTIVATE consumerAlphic;
+   ACTIVATE producer;
+END;
+
+
+producer: TASK;
+   DCL floatVal FLOAT INIT(3.1415);
+   PUT 'send formatted data to pipe' TO terminal BY A, SKIP;
+
+   OPEN writeFormatted;
+   TO 10 REPEAT
+      PUT 'send ', floatVal, ' to pipe' TO terminal BY A, F(6,3), A, SKIP; 
+      PUT  'f= ',floatVal TO writeFormatted BY A,F(6,3), SKIP;
+      floatVal = floatVal + 1.0;
+      AFTER 0.5 SEC RESUME;
+   END;
+
+END;
+
+/* consumer reads raw data (type ALL)
+   so we must gather each character until we reach the SKIP (\n)
+*/ 
+consumerInternal: TASK;
+   DCL line CHAR(10);
+   DCL char CHAR;
+   OPEN readInternal;
+   TO 10 REPEAT
+   !AFTER 1 SEC RESUME;
+      PUT 'try to read from pipe' TO terminal BY A, SKIP;
+
+      ! read a character until we read the SKIP 
+      char = ' ';
+      line = ' ';
+      FOR i TO 10 
+      WHILE TOFIXED(char) /= 10 REPEAT
+         READ char FROM readInternal;
+         IF TOFIXED(char) /= 10 THEN
+            line.CHAR(i) = char;
+         FIN;
+      END; 
+      PUT 'gotI >',line,'<' TO terminal BY A,A,A,SKIP;
+   END;
+
+END;
+
+/* consumerAlphic reads formatted data here CHAR(10)
+*/
+consumerAlphic: TASK;
+   DCL line CHAR(10);
+   OPEN readAlphic;
+   TO 10 REPEAT
+   !AFTER 1 SEC RESUME;
+      PUT 'try to read from pipe' TO terminal BY A, SKIP;
+
+      GET line FROM readAlphic BY A,SKIP;
+      PUT 'gotA >',line,'<' TO terminal BY A,A,A,SKIP;
+   END;
+END;
+
+MODEND;
+

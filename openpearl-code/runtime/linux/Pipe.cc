@@ -286,11 +286,13 @@ namespace pearlrt {
    }
 
    int Pipe::capabilities() {
+//printf("Pipe:capabilities: %x\n", cap);
       return cap;
    }
 
    int Pipe::PipeFile::capabilities() {
-      return 0;
+//printf("PipeFile:capabilities: %x\n", myPipe->cap);
+      return myPipe->cap;
    }
 
    Pipe::PipeFile *  Pipe::dationOpen(const RefCharacter * idfValue, int openParams) {
