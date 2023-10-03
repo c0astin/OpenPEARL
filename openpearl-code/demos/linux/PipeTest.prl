@@ -1,0 +1,65 @@
+/* sample usage of the system device Pipe
+
+write sone formatted text to the pipe /tmp/pipefile and 
+read the content of the pipe in another task.
+
+Currently this reading on the same pipe does not work.
+
+1) start the application
+2) run 'cat /tmp/pipefile' in another text console
+
+Note: if '/tmp/pipefile' already exists you should start the cat command first
+*/
+MODULE(PipeTest);
+
+SYSTEM;
+   pipe: Pipe('/tmp/pipefile', 2, 'OPEN1 ANY CAN');
+   so: StdOut;
+
+PROBLEM;
+   SPC pipe DATION INOUT SYSTEM ALL;
+   SPC so   DATION OUT SYSTEM ALPHIC;
+   DCL writeFormatted DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(pipe);
+   DCL readInternal   DATION IN  CHAR(80)   DIM(*,80) FORWARD CREATED(pipe);
+   DCL terminal       DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+start: TASK MAIN;
+!   ACTIVATE consumer;
+   ACTIVATE producer;
+END;
+
+
+producer: TASK;
+   DCL floatVal FLOAT INIT(3.1415);
+   OPEN terminal;
+   PUT 'send formatted data to pipe' TO terminal BY A, SKIP;
+
+   OPEN writeFormatted;
+   TO 10 REPEAT
+      PUT  floatVal TO writeFormatted BY F(6,3), SKIP;
+      AFTER 1 SEC RESUME;
+   END;
+
+END;
+
+/* consumer in PEARL not working, yet
+   use cat /tmp/pipefile to monitor the pipe content
+ 
+consumer: TASK;
+   DCL line CHAR(80);
+   OPEN readInternal;
+   TO 10 REPEAT
+   AFTER 1 SEC RESUME;
+   READ line FROM readInternal;
+     IF line ==' 3.142' THEN
+        PUT 'ok' TO terminal BY A, SKIP;
+     ELSE
+        PUT 'wrong format' TO terminal BY A, SKIP;
+     FIN;
+   END;
+
+END;
+*/
+
+MODEND;
+
