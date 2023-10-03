@@ -439,7 +439,7 @@ public class CheckSystempart {
                         return true;
                     }
                 }
-                Log.error("parameter " + parameterNumber + 1 + " has illegal value: " + p.getValue());
+                Log.error("parameter " + (parameterNumber + 1) + " has illegal value: " + p.getValue());
                 Log.note("allowed values: " + ruleContent.trim());
                 return false;
             } else if (rule.equals("ConsistsOf")) {
@@ -447,17 +447,21 @@ public class CheckSystempart {
                 boolean found = false;
                 boolean ok = true;
                 String[] ruleItems = ruleContent.split(",");
-                String[] paramItems = p.getValue().split(" ");
+                String[] paramItems = p.getValue().substring(1,p.length()-2).split(" ");
                 for (int pi = 0; pi < paramItems.length; pi++) {
+                	paramItems[pi] = "'"+paramItems[pi] + "'"; 
                     found = false;
                     for (int ri = 0; ri < ruleItems.length && found == false; ri++) {
-                        if (paramItems[pi].trim().equals(ruleItems[ri].trim())) {
+                    	String r = ruleItems[ri].trim();
+                    	String pa = paramItems[pi].trim();
+                    	//System.out.println("p: >"+pa+"< "+"r: >"+r+"< equal "+r.equals(pa));
+                        if (pa.equals(r)) {
                             found = true;
                         }
                     }
                     if (!found) {
                         Log.error(
-                                "parameter " + parameterNumber + 1 + " value " + paramItems[i] + " not supported");
+                                "parameter " + (parameterNumber + 1) + " value " + paramItems[i] + " not supported");
                         Log.note("allowed values: " + ruleContent.trim());
                         ok = false;
                     }
