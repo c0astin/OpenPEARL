@@ -84,9 +84,15 @@ implements OpenPearlVisitor<Void> {
                 boolean noWarn = false;
                 if (n instanceof PseudoNode) {
                     PseudoNode pseudo = (PseudoNode)n;
+                    // END of PROC is normally not reached if the PROC has RETURN
+                    // END of REPEAT is not reached if the loop is ended by EXIT, GOTO, RETURN, TERMINATE
                     if (pseudo.getNodeType() == PseudoNode.procEnd ||
-                            pseudo.getNodeType() == PseudoNode.repeatEnd) {
+                            pseudo.getNodeType() == PseudoNode.repeatBodyEnd) {
                         noWarn=true;
+                    }
+                    // if the END of the loop is no reachen, warn with the next statement 
+                    if (pseudo.getNodeType() == PseudoNode.repeatEnd) {
+                        n = pseudo.getNext();
                     }
                 }
                 if (!noWarn) { 
