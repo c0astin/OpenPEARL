@@ -447,9 +447,16 @@ public class CheckSystempart {
                 boolean found = false;
                 boolean ok = true;
                 String[] ruleItems = ruleContent.split(",");
-                String[] paramItems = p.getValue().substring(1,p.length()-2).split(" ");
+                
+                // remove surrounding single quotes and split into words
+                String parameter = p.getValue();
+                parameter = parameter.substring(1,parameter.length()-1);
+                String[] paramItems = parameter.split(" ");
+                
                 for (int pi = 0; pi < paramItems.length; pi++) {
+                	// rule items are wrapped in single quotes
                 	paramItems[pi] = "'"+paramItems[pi] + "'"; 
+                	
                     found = false;
                     for (int ri = 0; ri < ruleItems.length && found == false; ri++) {
                     	String r = ruleItems[ri].trim();
