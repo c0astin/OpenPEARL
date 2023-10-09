@@ -212,7 +212,7 @@ public class CodeGenerator {
         if (se.getUserName() != null) {
             userName = se.getPrefix() + se.getUserName();
         } else {
-            userName = "configurarion_" + autoNumber++;
+            userName = "configuration_" + autoNumber++;
         }
 
         String s = se.getNameOfSystemelement();
