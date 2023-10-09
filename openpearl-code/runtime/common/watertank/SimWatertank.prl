@@ -31,11 +31,12 @@
 
 MODULE(SimWatertank);
 
-! moved into SimWatertankSystem.prl
-!SYSTEM;
-!  homeFolder: Disc('./',1);
-
 PROBLEM;
+
+SPC pipe DATION INOUT SYSTEM ALL GLOBAL(SimWatertank);
+DCL writeFormatted DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(pipe);
+DCL readInternal   DATION IN  CHAR   DIM(*,80) FORWARD CREATED(pipe);
+
 
 SPC homeFolder DATION INOUT SYSTEM ALL GLOBAL(SimWatertank);
 DCL logFile DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED(homeFolder);
@@ -73,7 +74,7 @@ DCL tank_height INV FLOAT INIT(2.0);
 
 ! ==========================================================================
 ! Current watertank fill level [m^3]
-DCL tank_fill_level FLOAT INIT(0.0);
+DCL tank_fill_level FLOAT INIT(3.0);
 
 ! ==========================================================================
 ! pipe diameter [m]
@@ -474,6 +475,31 @@ check_tank_status: TASK;
       AFTER 5 SEC RESUME;
   END;
 END;
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+/*
+pipe_producer: TASK;
+   DCL floatVal FLOAT INIT(3.1415);
+
+   OPEN writeFormatted;
+   PUT  floatVal TO writeFormatted BY F(6,3), SKIP;
+END;
+
+pipe_consumer: TASK;
+   DCL line CHAR(80);
+   OPEN readInternal;
+   READ line FROM readInternal;
+   IF line ==' 3.142' THEN
+      PUT 'ok' TO console BY A, SKIP;
+   ELSE
+      PUT 'wrong format' TO console BY A, SKIP;
+   FIN;
+END;
+*/
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 !
 simulation: TASK PRIO 90;

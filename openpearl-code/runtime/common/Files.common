@@ -111,6 +111,7 @@ endif
 #CONFIG_SIMWATERTANK must be set manually by the makefile of
 # the platform, which is build now
 ifeq ($(CONFIG_SIMWATERTANK),y)
+   XML_COMMON += watertank/Simulator.xml
    HDR_COMMON += watertank/FloatSwitch.h
    CXX_COMMON += watertank/FloatSwitch.cc
    XML_COMMON += watertank/FloatSwitch.xml

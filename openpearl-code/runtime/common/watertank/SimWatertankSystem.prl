@@ -33,5 +33,6 @@ MODULE(SimWatertank);
 
 SYSTEM;
   homeFolder: Disc('./',1);
+  pipe: Pipe('/tmp/simulator', 2, 'OPEN1');
 
 MODEND;

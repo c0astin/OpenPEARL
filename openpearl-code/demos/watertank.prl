@@ -1,11 +1,12 @@
 MODULE(watertank);
 
 SYSTEM;
+Simulator('A');
 stdout: StdOut;
 
 floatswitch: FloatSwitch;
-
 pump: Pump(0,15);
+
 !pressure_sensor1
 !pressure_sensor2
 !valve
@@ -38,30 +39,30 @@ t1: TASK MAIN;
    OPEN foerderpumpe;
 
    print_separator;
-   PUT 'WATERTANK: Förderpumpe open' TO terminal BY A, SKIP;
+   PUT 'WATERTANK: Foerderpumpe geoeffnet' TO terminal BY A, SKIP;
 
-   ! FOR i FROM 0 BY 1 TO 100
-   ! REPEAT
-   !    IF i REM 3 == 0
-   !    THEN
-   !          SEND '0'B1 TO foerderpumpe;
-   !    ELSE
-   !          SEND '1'B1 TO foerderpumpe;
-   !    FIN;
+   FOR i FROM 0 BY 1 TO 10
+   REPEAT
+      IF i REM 3 == 0
+      THEN
+            SEND 0 TO foerderpumpe;
+      ELSE
+            SEND 1000 TO foerderpumpe;
+      FIN;
 	    
-   !    TAKE b FROM switch;
-   !    print_separator;	
-   !    PUT 'WATERTANK: FloatSwitch',b TO terminal BY A,X,B1,SKIP;
-   !    AFTER 1 SEC RESUME;
-   ! END;
+      TAKE b FROM switch;
+      print_separator;	
+      PUT 'WATERTANK: FloatSwitch',b TO terminal BY A,X,B1,SKIP;
+      AFTER 1 SEC RESUME;
+   END;
    
    CLOSE switch;
    print_separator;
    PUT 'WATERTANK: Switch closed' TO terminal BY A, SKIP;
 
-   CLOSE foerderpumpe;	
-   print_separator;
-   PUT 'WATERTANK: Förderpumpe closed' TO terminal BY A, SKIP;
+!   CLOSE foerderpumpe;	
+!   print_separator;
+!   PUT 'WATERTANK: Förderpumpe closed' TO terminal BY A, SKIP;
 
    CLOSE terminal;
 END;
