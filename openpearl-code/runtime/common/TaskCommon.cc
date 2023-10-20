@@ -41,7 +41,7 @@
 
 #include "Task.h"
 #include "Prio.h"
-#include "PrioMapper.h"
+//#include "PrioMapper.h"
 #include "BitString.h"
 #include "CSema.h"
 #include "Log.h"
@@ -326,20 +326,23 @@ namespace pearlrt {
       if ((condition & ~ PRIO) != 0) {
          DEBUG("task %s: delayed activate task %s", me->getName(), name);
 
-         try {
-            // test calculation of system priority.
-            // the return value is discarded - just test if calculation
-            // is possible
-            // This may throw an exception if the priority is not
-            // mappable to the system priorities
-            PrioMapper::getInstance()->fromPearl(p);
-
-            scheduledActivate(condition, p, at, after,
-                              all, until, during, when);
-         } catch (Signal s) {
-            mutexUnlock();
-            throw;
-         }
+// no longer required due to solved ticket #416
+//         try {
+//            // test calculation of system priority.
+//            // the return value is discarded - just test if calculation
+//            // is possible
+//            // This may throw an exception if the priority is not
+//            // mappable to the system priorities
+//            PrioMapper::getInstance()->fromPearl(p);
+//
+//            scheduledActivate(condition, p, at, after,
+//                              all, until, during, when);
+//         } catch (Signal s) {
+//            mutexUnlock();
+//            throw;
+//         }
+             scheduledActivate(condition, p, at, after,
+                               all, until, during, when);
 
          mutexUnlock();
          return;
@@ -530,7 +533,7 @@ namespace pearlrt {
          case BLOCKED:
             try {
                terminateFromOtherTask();
-            } catch (Signal s) {
+            } catch (Signal &s) {
                mutexUnlock();
                throw;
             }
@@ -828,12 +831,13 @@ namespace pearlrt {
 
       if (condition & (AT | AFTER | WHEN )) {
 
-         // test calculation of system priority.
-         // the return value is discarded - just test if calculation
-         // is possible
-         // This may throw an exception if the priority is not
-         // mappable to the system priorities
-         PrioMapper::getInstance()->fromPearl(p);
+// no longer required due to solved ticket #416
+//         // test calculation of system priority.
+//         // the return value is discarded - just test if calculation
+//         // is possible
+//         // This may throw an exception if the priority is not
+//         // mappable to the system priorities
+//         PrioMapper::getInstance()->fromPearl(p);
 
 
          if (schedContinueData.whenRegistered) {
