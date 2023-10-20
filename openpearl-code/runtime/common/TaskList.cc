@@ -71,9 +71,15 @@ namespace pearlrt {
    static bool comparePrio(Task * i, Task * j) {
       bool diff = (i->getPrio() < j->getPrio()).getBoolean();
 
+      /*
+       sort only by priority, since sort by name would cost cpu time during
+       execution of the application, if priority mapping changes
+
+
       if (diff == 0) {
          diff = i->getName() < j-> getName();
       }
+      */
 
       return diff;
    }
