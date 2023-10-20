@@ -50,16 +50,18 @@ TEST(PrioMapper, Values) {
    pearlrt::Fixed<15> prl;
 
    pearlrt::PrioMapper * pm = pearlrt::PrioMapper::getInstance();
-   prl = 1;
-   ASSERT_NO_THROW(pm->fromPearl(prl));
-   prl = 97;
-   ASSERT_NO_THROW(pm->fromPearl(prl));
-   prl = 255;
-   ASSERT_NO_THROW(pm->fromPearl(prl));
-   prl = 98;
-   ASSERT_THROW(pm->fromPearl(prl), pearlrt::PriorityNotMapableSignal);
-   prl = 254;
-   ASSERT_THROW(pm->fromPearl(prl), pearlrt::PriorityNotMapableSignal);
+   for (int i=1; i<=255; i++) {
+      prl = i;
+      ASSERT_NO_THROW(pm->fromPearl(prl));
+   }
+//   prl = 97;
+//   ASSERT_NO_THROW(pm->fromPearl(prl));
+//   prl = 255;
+//   ASSERT_NO_THROW(pm->fromPearl(prl));
+//   prl = 98;
+//   ASSERT_THROW(pm->fromPearl(prl), pearlrt::PriorityNotMapableSignal);
+//   prl = 254;
+//   ASSERT_THROW(pm->fromPearl(prl), pearlrt::PriorityNotMapableSignal);
 
    sys = pm->getSystemPrio();
    printf("SystemPriority=       %3d\n", sys);

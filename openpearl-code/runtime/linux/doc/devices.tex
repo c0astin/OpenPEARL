@@ -22,6 +22,12 @@ Supported attributes: FORWARD, DIRECT, IN, OUT, INOUT
 
 Multiple dations may by defined on the same path.
 
+White space characters in the IDF parameter are removed.
+CHAR-variables are filled with spaces to the end. Thus trailing spaces 
+should be removed before opening a file.
+White space characters in the mid of a file name are wellknown 
+obstacles in UNIX systems. Thus all white space characters are removed.
+
 \subsection{Standard Streams: StdIn, StdOut, StdError}
 The system devices \verb|StdIn|,
 \verb|StdOut| an \verb|StdError| allows the access of UNIX standard streams

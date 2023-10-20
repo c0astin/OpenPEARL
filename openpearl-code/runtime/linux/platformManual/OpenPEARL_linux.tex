@@ -146,17 +146,17 @@ described in the language report.
 This version does not support:\footnote{The numbers in braces refer the ticket numbers.}
 
 \begin{itemize}
-\item STRUCT
-\item TYPE
+%%%\item STRUCT
+%%%\item TYPE
 \item no SIGNAL treatment (\#127)
 %%% \item no INTERRUPT support (\#122)
 %%% \item operator SIZEOF not supported (\#109)
 %\item length of float constants must be clearified and is subject of 
 %		change(\#120)
-\item REF CHAR
-\item REF used upon inititialized references does not throw a signal (\#217)
-\item REF on TASK,DATION,SIGNAL,INTERRUPT not tested (\#196,\#197)
-\item no support for multi modules (\#193)
+%%%\item REF CHAR
+%%%\item REF used upon inititialized references does not throw a signal (\#217)
+%%%\item REF on TASK,DATION,SIGNAL,INTERRUPT not tested (\#196,\#197)
+%%%\item no support for multi modules (\#193)
 \item I/O-related
    \begin{itemize}
    %\item no warning if multiple positions formats are inside a READ/WRITE statement (\#126)
@@ -165,54 +165,69 @@ This version does not support:\footnote{The numbers in braces refer the ticket n
    %\item additional X-elements in some PUT statements (\#221)
    %\item format elements PAGE,ADV,LINE,COL,POS,SOP,EOF not supported(\#216,\#222)
    \item CYCLIC only available on system dations of type DIRECT (\#226)
-   \item repetition factor in i/o formats and variable array slices 
-      does not work in i/o statements(\#232)
-   \item TFU not supported (\#232,\#237)
+%%%   \item repetition factor in i/o formats and variable array slices 
+%%%      does not work in i/o statements(\#232)
+%%%   \item TFU not supported (\#232,\#237)
 %   \item loop index not accessible in i/o statements (\#239)
 %   \item type of dation element in i/o statements not checked (\#251)
-   \item no array slices as i/o element are supported (\#223,\#252)
+%%%   \item no array slices as i/o element are supported (\#223,\#252)
    \item no R-Format (\#254)
    \end{itemize}
 %\item no constants expressions treated by the compiler (\#248)
-\item BIT-slices with size 1 do not work with variable slice index (\#243)
-\item BIT and CHAR-slices not allowed on left hand side and in input statements
-    (\#224)
+%%%\item BIT-slices with size 1 do not work with variable slice index (\#243)
+%%%\item BIT and CHAR-slices not allowed on left hand side and in input statements
+%%%    (\#224)
 %\item control characters in string constants does not work if 
 %    there is a newline in the control character sequence(\#203) 
 
-\item Semantic analysis for good diagnostic error messages.
-     In case of problems error messages from the c++ compiler may appear. 
+%%%\item Semantic analysis for good diagnostic error messages.
+%%%     In case of problems error messages from the c++ compiler may appear. 
 \item Semantic analysis for program quality analysis (e.g. unused variables)
 \end{itemize}
 
 \section{Restrictions for privileged and unprivileded users}
 \begin{itemize}
 \item The priority based scheduler of the linux system is not
-   accessible for normal users. Thus application will operate for 
-   normal users with
+   accessible for unpriviledged users. Thus application will operate for 
+   unpriviledged users with
    the usual completely fair scheduler. The priority values are 
-   not regarded in the scheduling.
-   It is possible by system configuation to allow normal users
+   not regarded in the scheduling but in all queue operations.
+   It is possible by system configuation to allow unpriviledged users
    the access to real-time priorities. Just modify the file
    \verb|/etc/security/limits.conf| by a line like\newline
-   \verb|*  - rtprio 99|\newline
-   This allows all users to use real-time priorities.
+   \verb|*  - rtprio 49|\newline
+   This allows all users to use real-time priorities from 1 to 49 in combination of 
+   the round-robin scheduler.
+   Higher values should not be used by OpenPEARL, since this may 
+   slow down kernel threads of some device drivers.
    \newline
    If you work via remote desktop protocol you must force pam to
    recognize the limits.conf by adding the next line to \verb|/etc/pam.d/common-session|
    \newline
    \verb|session    required   pam_limits.so|
 \item If the application is run with root priviledges, the socalled 
-  round-robin scheduler is used. This provides only 100 priority values.
-  For administrative reasons, some priorities are clipped by the OpenPEARL
-  system.
-  The remaining priorities are: 1-97 and 255
+  round-robin scheduler is used. This provides only 100 priority values but
+  only the lower 49 priorities will be used to avoid conflicts with
+  kernel threads of device drivers running at realtime priority 50.
+  The configuration item (see menuconfig) limits the real-time priorities for
+  OpenPEAL to 49.
+\item If the real-time priorities are used by OpenPEARL, there may be a conflict with the
+  mapping of  
+  PEARL priorities from 1 to 255 to the available real-time priorities, if many PEARL tasks 
+  with different priorities are in the application. As long as there are less than 48 tasks 
+  defined all priorities are mapable to the real-time priorities, even if the tasks change the 
+  requested priority dynamically with ACTIVATE or CONTINUE.
+  If more than 48 tasks with different priorities are in an application, 
+  a merge of neighbored priorities become merged and an error message is emitted once 
+  to the application log. At the end of a task the merging becomes revoked as far as possible.
+
+
 \end{itemize}
 
 \section{Tuning Information}
 \begin{itemize}
 \item The current version uses only one processor core.
-     There is an option to use other cores but this is not tested yet.
+     There is an option to use other cores.  
 \item There is no memory locking used.
      This would increase the execution speed but effect the overall
      behavior of the linux machine.

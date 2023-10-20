@@ -275,7 +275,7 @@ namespace pearlrt {
      int value;
    } entries[] = {
       {"LogLevel   %x", -1},
-      {"MaxCpuTime %d", 300},
+      {"MaxCpuTime %d", -1},
       {"UseCores   %d", 1}
    };
    // cpu_set for task with no explicit  'Cores' statement
@@ -476,14 +476,18 @@ namespace pearlrt {
    static void setLimits() {
       struct rlimit l;
       getrlimit(RLIMIT_CPU, &l);
-      Log::info("old RLIMIT_CPU (soft/hard)=(%d,%d) sec",
+      Log::info("RLIMIT_CPU (soft/hard)=(%d,%d) sec",
                 (int)l.rlim_cur,
                 (int)l.rlim_max);
-      l.rlim_cur = entries[MAXCPUTIME].value;
-      l.rlim_max = l.rlim_cur + 1;
-      setrlimit(RLIMIT_CPU, &l);
-      Log::info("   set to (soft/hard)=(%d,%d) sec",
+
+      if (entries[MAXCPUTIME].value != -1) {
+         l.rlim_cur = entries[MAXCPUTIME].value;
+         l.rlim_max = l.rlim_cur + 1;
+         setrlimit(RLIMIT_CPU, &l);
+         Log::info("   set to (soft/hard)=(%d,%d) sec",
                 (int)l.rlim_cur, (int)l.rlim_max);
+      }
+
    }
 }  // of name space
 
@@ -514,24 +518,10 @@ int main() {
    int max, min;
    char line[80];
    int numberOfCpus;
+   bool useDefaultScheduler = true;
 
    Control::initModules();
-/*
-   int nbrOfCtorFails = pearlrt::createSystemElements();
-   if (nbrOfCtorFails > 0) {
-      Log::error("*** %d system element(s) failed to initialize --> exit",
-        nbrOfCtorFails);
-      exit(1);
-   }
-  
-   // initialize all modules
-   for (pearlrt::Control::InitFunction i=pearlrt::Control::getNextInitializer(); i!=NULL;
-        i=pearlrt::Control::getNextInitializer()) {
-      if (i) {
-         (*i)(); 
-      }
-   }
-*/ 
+
    // setup default log file as defined in linux/Log.cc
    // or use system part setting for Log
    bool logFromSystemPart = pearlrt::Log::getInstance()->
@@ -578,7 +568,7 @@ int main() {
 
    numberOfCpus = sysconf(_SC_NPROCESSORS_ONLN);
    Log::info("PEARL system startup");
-   sprintf(line, "number of CPUs: %d", numberOfCpus);
+   sprintf(line, "detected number of CPUs: %d", numberOfCpus);
    Log::info(line);
 
    if (numberOfCpus >= entries[CORES].value) {
@@ -611,8 +601,6 @@ int main() {
       exit(Control::getExitCode());
    }
 
-   param.sched_priority = max;
-   Task::setThreadPrioMax(max);
 
    if (pthread_attr_init(&attr) != 0) {
       perror("init scheduling attributes");
@@ -624,12 +612,26 @@ int main() {
    }
 
 
-   //set prio and schedulingpolicy for the main thread
+//printf("min=%d  max=%d  CONFIG_MAX=%d\n", min,max,CONFIG_LINUX_PriorityMapper_MaxPrio);
+
+   if (max > CONFIG_LINUX_PriorityMapper_MaxPrio) {
+      max = CONFIG_LINUX_PriorityMapper_MaxPrio;
+   }
+   if (CONFIG_LINUX_PriorityMapper_MaxPrio > 49) {
+      Log::warn("RT-Prio of %d (above 49) may slow device driver operations", 
+       CONFIG_LINUX_PriorityMapper_MaxPrio);
+   }
+
+   param.sched_priority = max;
+   Task::setThreadPrioMax(max);
+
+   //set prio and schedulingpolicy for the main thread as RR with max priority
    if (pthread_setschedparam(pthread_self(), SCHED_RR, &param) != 0) {
-      Task::useNormalScheduler();
+      Task::useDefaultScheduler();
       Log::warn("error setting SCHED_RR --> using normal scheduler");
       TaskTimer::init(-1);  // setup timer thread
    } else {
+       useDefaultScheduler = false;
       if (pthread_attr_setschedpolicy(&attr, SCHED_RR) == 0) {
          // ok we have access to SCHED_RR
          param.sched_priority = max; // schedPrioMax;
@@ -670,6 +672,11 @@ int main() {
               (t->getPrio()).x,
               t->getIsMain(), cores);
       Log::info(line);
+
+      // inform the priority mapper about the used priority
+      if (!useDefaultScheduler) {
+          PrioMapper::getInstance()->fromPearl(t->getPrio());
+      }
    }
 
    if (TaskList::Instance().size() == 0) {
