@@ -84,6 +84,7 @@ extern pearlrt::Task task_R2;
 pearlrt::Fixed<15> n;
 
 char buffer[100];
+pearlrt::Fixed<15> exitCode;
 
 DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
 
@@ -112,6 +113,7 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
       }
       if (ok==0) {
          printf("*** fail got no BoltStateSignal\n");
+         exitCode.x = 1;
       }
    }
 
@@ -125,12 +127,14 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
       printf("*** multiple enter is ok\n");
    } else {
       printf("*** multiple enter failed\n");
+      exitCode.x = 1;
    }
   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(3,0),0);
    if (n.x == 0) {
       printf("*** multiple leave is ok\n");
    } else {
       printf("*** multiple leave failed\n");
+      exitCode.x = 1;
    }
    printf("sequence: %s\n", buffer);
 
@@ -144,30 +148,46 @@ DCLTASK(_T1, pearlrt::Prio(10), pearlrt::BitString<1>(1)) {
       printf("*** multiple reserve is ok\n");
    } else {
       printf("*** multiple reserve failed\n");
+      exitCode.x = 1;
    }
   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(3,0),0);
    if (n.x == 0) {
       printf("*** multiple free is ok\n");
    } else {
       printf("*** multiple free failed\n");
+      exitCode.x = 1;
    }
    printf("sequence: %s\n", buffer);
 
    // test priority of reserve before enter
    printf("test reserve priority \n");
-   n = 0;
-   *buffer = 0;
-   task_R1.activate(me);
-   task_T2.activate(me);
-   task_R2.activate(me);
+   pearlrt::Log::error("test reserve priority");
+      
+       n = 0;
+       *buffer = 0;
+       task_R1.activate(me);
+       // wait until all R1 reached the RESERVE 
+       me->resume(pearlrt::Task::AFTER, 
+		pearlrt::Clock(), 
+		pearlrt::Duration(0,200000),0);
+       // wait until all T2 reached the ENTER 
+       task_T2.activate(me);
+       me->resume(pearlrt::Task::AFTER, 
+		pearlrt::Clock(), 
+		pearlrt::Duration(0,200000),0);
+       task_R2.activate(me);
+       
   me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(5,0),0);
    if (strcmp(buffer,"R1 R2 T2 ") == 0) {
       printf("*** reserve has priority is ok\n");
    } else {
-      printf("*** reserve has priority failed\n");
+      printf("*** reserve has priority failed (expected R1 R2 T2 )\n");
+      exitCode.x = 1;
    }
    printf("sequence: %s\n", buffer);
 
+
+   pearlrt::Control::setExitCode(exitCode);
 }
 
 DCLTASK(_T2, pearlrt::Prio(20), pearlrt::BitString<1>(0)) {
@@ -176,7 +196,7 @@ DCLTASK(_T2, pearlrt::Prio(20), pearlrt::BitString<1>(0)) {
   pearlrt::Bolt::enter(me, 2, s); 
   n.x++;
   strcat(buffer,"T2 ");
-  me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(2,0),0);
+  me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(1,0),0);
   pearlrt::Bolt::leave(me, 2, s); 
   n.x--;
 }
@@ -187,7 +207,7 @@ DCLTASK(_T3, pearlrt::Prio(30), pearlrt::BitString<1>(0)) {
   pearlrt::Bolt::enter(me, 2, s); 
   n.x++;
   strcat(buffer,"T3 ");
-  me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(2,0),0);
+  me->resume(pearlrt::Task::AFTER, pearlrt::Clock(), pearlrt::Duration(1,0),0);
   pearlrt::Bolt::leave(me, 2, s); 
   n.x--;
 }

@@ -485,6 +485,7 @@ DCLTASK(_TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
       printf("success\n");
    } else {
       printf("fail\n");
+      pearlrt::Control::setExitCode(1);
    }
 
 }
