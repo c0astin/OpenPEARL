@@ -37,7 +37,7 @@ include ../../configuration/.config
 INCLUDES = -I . -I ../common 
 # -I ../common/DynamicDeadlockDetection
 
-CXXFLAGS = -Wall -g  -fstack-protector
+CXXFLAGS = -Wall -g  -fstack-protector -fexceptions
 CXXFLAGS += -pthread
 CXXFLAGS+= -O2
 CXXFLAGS += -fno-non-call-exceptions

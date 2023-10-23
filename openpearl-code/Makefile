@@ -54,6 +54,8 @@ ifeq ($(USERID),0)
 	   (cd static_analyzer; make prepare; )
 	   touch $(CONFIG_INSTALL_Target)/bin/prl
 	   chmod 777 $(CONFIG_INSTALL_Target)/bin/prl
+	   touch $(CONFIG_INSTALL_Target)/bin/prlpp
+	   chmod 777 $(CONFIG_INSTALL_Target)/bin/prlpp
 else
 	   $(error You must be root to execute this command)
 endif
@@ -62,12 +64,12 @@ prl:
 	runtime/includeComposer/ic  <prl.inc >prl
 
 install: configuration/include/autoconf.h  flashinterface.inc 
+	(cd compiler/src; make clean; )
+	(cd compiler/src; make install; )
 	(cd runtime; make clean; )
 	(cd imc3; make clean; )
 	(cd imc3; make install; )
 	(cd runtime; make install; )
-	(cd compiler/src; make clean; )
-	(cd compiler/src; make install; )
 	(cd static_analyzer; make clean; )
 	(cd static_analyzer; make install; )
 	runtime/includeComposer/ic  <prl.inc >prl
