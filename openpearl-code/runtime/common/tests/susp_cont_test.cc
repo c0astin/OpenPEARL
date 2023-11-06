@@ -190,9 +190,9 @@ DCLTASK(SUSP_CONT_TEST,pearlrt::Prio(1),pearlrt::BitString<1>(1))
            0);
    me->setLocation(__LINE__,fn);
    if (d.compare(Duration(0,100000)) < 0) {
-      printf("SUSP_CONT_TEST: not preemptied: ok\n");
+      printf("SUSP_CONT_TEST: not preempted: ok\n");
    } else {
-      printf("SUSP_CONT_TEST: preemptied by other task - fail\n");
+      printf("SUSP_CONT_TEST: preempted by other task - fail\n");
   }
 
    me->setLocation(__LINE__,fn);
@@ -306,7 +306,7 @@ printf("CONTINUER: continue SUSPENDED_TASK\n");
 printf("CONTINUER: continue SUSPENDED_TASK done\n");
 
    me->setLocation(__LINE__,fn);
-   while ((s+Duration(3,0)).compare(Clock::now()) > 0) {
+   while ((s+Duration(2,0)).compare(Clock::now()) > 0) {
 //      me->setLocation(__LINE__,fn);
    }
 Log::info("CONTINUER: end of code\n");

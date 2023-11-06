@@ -169,8 +169,8 @@ T2suspendRunning: TASK PRIO 30; ! prio must be worse than the prio of START
 END;
 
 suspendSuspended: PROC;
-   __cpp__("int ts;");
    DCL ok BIT(1) INIT ('0'B1);
+   __cpp__("int ts;");
    PUT 'suspendSuspended' TO so BY A, SKIP;
 
       ACTIVATE T2suspended;

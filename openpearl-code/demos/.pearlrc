@@ -19,7 +19,7 @@
 !     define the maximum cpu time allowed for the application.
 !     The time is given in seconds
 !     The value (-1) defines eternal execution
-!     Default value is 300
+!     Default value is -1 (eternal execution)
 !
 ! UseCores (dec)
 !     defines the number of used cores for the application.
@@ -40,6 +40,5 @@
 !  
 ! -------------------------------------
 !LogLevel    0x0e   (1=debug, 2=info, 4=warn, 8=error)
-!MaxCpuTime 300
-!UseCores 1
-!
+!MaxCpuTime -1
+!UseCores      1

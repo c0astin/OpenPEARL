@@ -75,10 +75,10 @@ namespace pearlrt {
       mutexOfInterrupt.lock();
 
       if (isEnabled) {
-if (!headContinueTaskQueue) {
-   Log::info("trigger: no task waits for continue");
-}
-         while (headContinueTaskQueue) {
+          if (!headContinueTaskQueue) {
+              Log::info("trigger: no task waits for continue");
+          }
+          while (headContinueTaskQueue) {
             current = headContinueTaskQueue;
             headContinueTaskQueue = headContinueTaskQueue->getNextContinue();
             Log::info("%s: trigger: waiting task triggered",

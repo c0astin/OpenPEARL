@@ -1,0 +1,30 @@
+MODULE(m);
+
+PROBLEM;
+
+DCL name CHAR(10);
+DCL invName INV CHAR(10) INIT('Hallo');
+DCL refName REF CHAR();
+DCL refInvName REF INV CHAR();
+DCL invRefName INV REF CHAR() INIT(name);
+! invRefNameFailure with INIT is detected
+! DCL invRefNameFailure INV REF CHAR() INIT(invName); ! breaks INV
+DCL invRefInvName1 INV REF INV CHAR() INIT(name);
+DCL invRefInvName2 INV REF INV CHAR() INIT(invName);
+
+
+p: PROC;
+
+    refName = name;
+
+    ! refName = invName;  ! <<:  causes c++ error message
+    ! this should be detected by the compiler that this would break INV
+
+    refInvName = name;
+
+    refInvName = invName; ! <<: causes c++ error message
+    ! this should be ok, since the INV CHAR object is still protected be REF INV CHAR()
+    
+END;
+
+MODEND;

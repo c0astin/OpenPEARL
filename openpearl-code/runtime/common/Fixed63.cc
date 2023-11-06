@@ -38,6 +38,7 @@
 #include "Fixed63.h"
 #include "Signals.h"
 #include <stdio.h>
+#include <cinttypes>  // formats for int64_t, etc
 
 namespace pearlrt {
 
@@ -93,8 +94,11 @@ namespace pearlrt {
       //                                 - result >= lhs or error
       // 3) lhs negative, rhs positive - check result <= lhs
       // 4) lhs negative, rhs negative - overflow not possible
-      Fixed63_t tmp = (Fixed63_t)(
-                         (unsigned Fixed63_t)x - (unsigned Fixed63_t)rhs.x);
+      UFixed63_t ux = *(UFixed63_t*)&x;
+      UFixed63_t ur = *(UFixed63_t*)&rhs.x;
+      ux = ux - ur; 
+      Fixed63_t tmp = *(Fixed63_t*)(&ux);
+
 
       // Note - ideally, we can order these so that true conditionals
       // lead to success, which enables better pipelining
@@ -166,16 +170,22 @@ namespace pearlrt {
    void Fixed63::regMultiply(const UFixed63_t& a,
                              const UFixed63_t& b, UFixed63_t *ret) {
       __uint32 aHigh, aLow, bHigh, bLow;
+//printf("Fixed63::regMultiply called sizeof(uFixed63)=%d\n", sizeof(UFixed63_t));
+//printf("   a=%" PRIx64 " b=%" PRIx64 "\n", a,b);
+
       // Consider that a*b can be broken up into:
       // (aHigh * 2^32 + aLow) * (bHigh * 2^32 + bLow)
       // => (aHigh * bHigh * 2^64) +
       //          (aLow * bHigh * 2^32) + (aHigh * bLow * 2^32) +
       //          (aLow * bLow)
       // Note - same approach applies for 128 bit math on a 64-bit system
+
       aHigh = (__uint32)(a >> 32);
       aLow  = (__uint32)a;
       bHigh = (__uint32)(b >> 32);
       bLow  = (__uint32)b;
+//printf("aHigh=%08x aLow=%08x bHigh=%08x bLow=%08x\n", aHigh,aLow,bHigh,bLow);
+
       *ret = 0;
 
       if (aHigh == 0) {
@@ -188,6 +198,7 @@ namespace pearlrt {
          }
       } else {
          // both operands have an non 0 high part --> this crashes
+//printf("Fixed63::mult:@1 throw ArithmetricOverflowSignal\n");
          throw theArithmeticOverflowSignal;
       }
 
@@ -210,6 +221,7 @@ namespace pearlrt {
          if (*ret < tmp) {
             // if this addition results in a smaller value 
             // we had an overflow! 
+//printf("Fixed63::mult:@2 throw ArithmetricOverflowSignal\n");
             throw theArithmeticOverflowSignal;
          }
 
@@ -227,30 +239,45 @@ namespace pearlrt {
       bool lhsNegative = false;
       bool rhsNegative = false;
 
+//printf("*= called:   this=%" PRIx64 " rhs=%" PRIx64 " y=%" PRIx64 "\n", x,rhs.x ,y);
+//printf("             this=%" PRId64 " rhs=%" PRId64 " y=%" PRId64 "\n", x,rhs.x ,y);
       if (x < 0) {
          lhsNegative = true;
 
          if (x == MinInt && y != 1) {
+//printf("Fixed63::*=:@1 throw ArithmetricOverflowSignal\n");
             throw theArithmeticOverflowSignal;
          }
 
          x = -x;
+//printf(" x= -x; -->    this=%" PRId64 "\n", x);
       }
 
       if (y < 0) {
          rhsNegative = true;
 
          if (y == MinInt && x != 1) {
+//printf("Fixed63::*=:@2 throw ArithmetricOverflowSignal\n");
             throw theArithmeticOverflowSignal;
          }
 
          y = -y;
+//printf(" y= -y; -->    y=%" PRId64 "\n", y);
       }
 
-      regMultiply((unsigned Fixed63_t)x, (unsigned Fixed63_t)y, &tmp);
+//printf("call regMultiply   ()x=%" PRIx64 " ()y=%" PRIx64 "\n", 
+//                  (unsigned Fixed63_t)x, *(UFixed63_t*)&y);
+//printf("             this=%" PRIx64 " rhs=%" PRIx64 " y=%" PRIx64 "\n", x,rhs.x ,y);
+      UFixed63_t ux = *(UFixed63_t*)&x;
+      UFixed63_t uy = *(UFixed63_t*)&y;
+//printf("             ux=%" PRIx64 " uy=%" PRIx64 "\n", ux,uy);
+
+      regMultiply(ux, uy, &tmp);
+      //regMultiply(*(unsigned Fixed63_t*)&x, *(unsigned Fixed63_t*)&y, &tmp);
       x = (Fixed63_t)tmp;
 
       if (x < 0) {
+//printf("Fixed63::*=:@3 throw ArithmetricOverflowSignal\n");
          throw theArithmeticOverflowSignal;
       }
 

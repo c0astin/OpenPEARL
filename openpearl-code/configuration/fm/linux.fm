@@ -10,6 +10,14 @@ config LINUX
 menu "Linux system specific options"
 	depends on LINUX
 
+config LINUX_PriorityMapper_MaxPrio
+	int "upper range priority limit"
+	default 49 
+	help
+	best real time priority for the OpenPEARL applications
+	note that some linux device drives use rt threads at priorty 50
+	which should not become delayed by OpenPEARL tasks
+
 config LINUX_Raspberry
 	boolean "Target is Raspberry Pi"
 	default n

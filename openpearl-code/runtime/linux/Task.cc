@@ -75,6 +75,10 @@ namespace pearlrt {
    Task::Task() : TaskCommon(NULL, Prio(), BitString<1>(0)) {
       Log::error("task %s: illegal call to default constructor of Task::",
                  name);
+
+      // make eclipse happy --> should never be called!!
+      cpuset = NULL;
+      threadPid = 0;
       throw theInternalTaskSignal;
    }
 
@@ -86,6 +90,7 @@ namespace pearlrt {
       int ret;
 
       this->body = body;   // the task body
+      this->threadPid = 0; // initialize to make eclipse happy. Will be set at ACTIVATE
 
       schedActivateData.taskTimer = &activateTaskTimer;
       schedContinueData.taskTimer = &continueTaskTimer;
@@ -141,7 +146,7 @@ namespace pearlrt {
       }
 
       // clear some fields for multicore support
-      cpuset = NULL;  // may use each core
+      cpuset = NULL;  // may use each core; may be modified by .pearlrc
 
       TaskList::Instance().add(this);
    }
@@ -293,24 +298,20 @@ namespace pearlrt {
    void Task::setPearlPrio(const Fixed<15>& prio) {
       int p;
 
-      if (! useNormalSchedulerFlag) {
-         try {
-            p = PrioMapper::getInstance()->fromPearl(prio);
-         } catch (PriorityNotMapableSignal s) {
-            mutexUnlock();
-            return;
-         }
+      if (! useDefaultSchedulerFlag) {
 
+         p = PrioMapper::getInstance()->fromPearl(prio);
          setThreadPrio(p);
       }
    }
 
    void Task::setThreadPrio(int p) {
-      DEBUG("%s: set ThreadPrio for '%s' to %d", getCallingTaskName(), name, p);
 
-      if (! useNormalSchedulerFlag) {
+      if (! useDefaultSchedulerFlag) {
          struct sched_param sp;
          int error;
+
+         DEBUG("%s: set ThreadPrio for '%s' to %d", getCallingTaskName(), name, p);
 
          param.sched_priority = p;
          sp.sched_priority = p;
@@ -402,13 +403,14 @@ static void* taskFunction (void* m) {
       char cores[40];
 
       //set up the new scheduling policies for preemptive priority
-      if (!useNormalSchedulerFlag) {
-         // the task will be activate with best priority. After
-         // finished initialization it will fall back to currentPrio.
-         // This happens in entry(). A non mapable priority must
-         // give a signal to the executing task. Thats why we test
-         // whether priority is mapable now.
-         PrioMapper::getInstance()->fromPearl(currentPrio);
+      if (!useDefaultSchedulerFlag) {
+// no longer required due to solved ticket #416
+//         // the task will be activate with best priority. After
+//         // finished initialization it will fall back to currentPrio.
+//         // This happens in entry(). A non mapable priority must
+//         // give a signal to the executing task. Thats why we test
+//         // whether priority is mapable now.
+//         PrioMapper::getInstance()->fromPearl(currentPrio);
 
          // the possibility of setting SCHED_RR is detected at
          // system start. Therefore this attribute is not set
@@ -591,25 +593,26 @@ static void* taskFunction (void* m) {
       schedPrioMax = p;
    }
 
+   int Task::getThreadPrioMax() {
+      return schedPrioMax;
+   }
+
    int Task::numberOfCores = 1;
 
    void Task::setNumberOfCores(int n) {
        numberOfCores = n;
    }
 
-   int Task::useNormalSchedulerFlag = 0;
+   int Task::useDefaultSchedulerFlag = 0;
 
-   void Task::useNormalScheduler() {
-      useNormalSchedulerFlag = 1;
+   void Task::useDefaultScheduler() {
+      useDefaultSchedulerFlag = 1;
    }
 
    pthread_t Task::getPid() {
       return threadPid;
    }
 
-//   Task::TaskEntry Task::getEntry() {
-//      return entryPoint;
-//   }
 
    Task* Task::currentTask(void) {
       return mySelf;

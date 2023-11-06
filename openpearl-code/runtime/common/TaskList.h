@@ -101,7 +101,7 @@ namespace pearlrt {
       void add(Task* t);
 
       /**
-         sort list according the tasks default priority
+         sort list according the tasks current priority
       */
       void sort();
 

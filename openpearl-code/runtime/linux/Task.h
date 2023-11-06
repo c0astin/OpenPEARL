@@ -91,7 +91,7 @@ namespace pearlrt {
    class Task : public TaskCommon {
 
    private:
-      static int useNormalSchedulerFlag;
+      static int useDefaultSchedulerFlag;
       static int schedPrioMax;
       static int numberOfCores;
       Task();
@@ -110,11 +110,11 @@ namespace pearlrt {
 
    private:
 #if 0
-      /** Semaphor for completion of suspend call (inits by default to 0)   */
+      /** Semaphore for completion of suspend call (inits by default to 0)   */
       CSema suspendDone;
       int suspendWaiters;
 
-      /** Semaphor for completion of continue call (inits by default to 0)   */
+      /** Semaphore for completion of continue call (inits by default to 0)   */
       CSema continueDone;
       int continueWaiters;
 
@@ -158,7 +158,11 @@ namespace pearlrt {
       This method is needed to resume normal operation after priority
       ceiling to OS-level to run tasking call completly.
       */
-      void setNormalPriority();
+      /* obsolete
+
+       void setNormalPriority();
+      */
+
 
       /**
       set the threads priority to maximum.
@@ -166,7 +170,9 @@ namespace pearlrt {
       This method is needed to complete a tasking method call without
        disturbance of other threads.
       */
+      /* obsolete
       void setOSPriority();
+      */
 
    public:
 
@@ -284,11 +290,11 @@ namespace pearlrt {
 
          In case of starting the system without root priviledges,
          there is currently no possibility
-         to use the realtime scheduler of linux.
+         to use the real-time scheduler of linux.
          For many applications normal scheduling policy
          is sufficient. This is set by this method.
       */
-      static void useNormalScheduler();
+      static void useDefaultScheduler();
 
       /**
         set the number of cores to use according the setting 
@@ -308,6 +314,7 @@ namespace pearlrt {
                   representation
       */
       static void setThreadPrioMax(int p);
+      static int getThreadPrioMax();
 
       /**
          set the threads priority to the best priority in the system
