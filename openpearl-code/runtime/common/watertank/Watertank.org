@@ -2,9 +2,13 @@
 #+AUTHOR: Marcel Schaible
 #+LANGUAGE: de
 #+STARTUP: overview inlineimages
-#   +OPTIONS: toc:nil
-#+OPTIONS: ^:nil
+#+OPTIONS: toc:nil
+# +OPTIONS: ^:nil
 #+OPTIONS: \n:t
+#+OPTIONS: author:nil
+#+OPTIONS: date:nil
+#+OPTIONS: title:nil
+#+OPTIONS: num:nil
 #+SETUPFILE: /home/marcel/sciebo/org-html-themes-master/org/theme-readtheorg-local.setup
 #+TODO: WICHTIG(w)
 #+TODO: TODO(t) | DONE(d)
@@ -20,105 +24,453 @@
 #+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/readtheorg/js/readtheorg.js"></script>
 # Change the background of source block.
 #+HTML_HEAD: <style>pre.src{background:#343131;color:white;} </style>
+#+LATEX_HEADER: \usepackage{awesomebox}
+#+LATEX_HEADER: \usepackage[nopar]{lipsum}
 
-** Wasserspeicher
-
-
-
-#+CAPTION: Wasserspeicher
-#+NAME: fig:wasserspeicher
-[[./wasserSpeicher.pdf][Wasserspeicher]]
-
-- Wassertank
-- Aktoren:
-  1x Pumpe, Drehzahlgesteuert
-  1x Ventil, Offen/Geschlossen
-  2x Drucksensoren
-- Verbraucher
-
-[[https://www.leifiphysik.de/mechanik/druck-und-auftrieb/grundwissen/schweredruck][Schweredruck am Boden einer Wassersäule]]
-
-Es sei ein Wassertank mit folgenden Abmessungen gegeben
-
-| Länge  | 5m |
-| Breite | 2m |
-| Höhe   | 3m |
-
-Der Druck ist allgemein definiert als Kraft pro Fläche
-$p =\frac{F_G}{A}$
-
-
-
-Damit sind Echtzeitsysteme digitale Datenverarbeitungsanlagen bei
-denen der Nutzen eines Berechnungsergebnisses nicht nur vom Ergebnis
-selbst, sondern auch vom Zeitpunkt der Auslieferung abhängt.
-
-Als Beispiel für eine typische Prozessautomatisierung ist In Abbildung
-\ref{fig:pumpstation} eine schematische Darstellung einer Pumpstation
-mit folgenden Komponenten dargestellt:
-
-\begin{itemize}
-    \item Pumpe
-    \item Manometer
-    \item Stellventil
-    \item Reservoir
-\end{itemize}
-
-F"ur einen Wasserturm, vom dem fortw"ahrend Verbraucher alleine durch
-die Schwerkraft Wasser entnehmen k"onnen, zu betreiben muss das Reservoir 
-stets hinreichend 
-gef"ullt sein. Wenn der Wasserstand unter der \textit{leer} Marke ist
-dann muss die Pumpe gestartet werde.
-Um die Pumpe einzuschalten muss zuerst der Pumpenmotor über das
-Steuersignal \textit{ein/aus} eingeschaltet werden.  Die Spezifikation
-der Pumpe bestimmt das Zeitdauer bis ein vorher festgelegter Druck am
-Ventil anliegt.  Dieser Druck kann mittels des Manometers
-kontinuierlich am Signal \textit{Druck} gemessen werden.  Falls der
-gemessene Druck niedriger als der Solldruck ist, kann unter
-Zuhilfenahme des Drehzahlgebers überprüft werden ob  die Pumpe defekt ist
-oder keine Flüssigkeit in der Leitung zur Verfügung steht.
-Erreicht der Druck den Solldruck wird das Ventil durch
-einschalten des Stellmotors (Signale \textit{oeffnen} und \textit{schliessen})
-geöffnet. Damit wird unzul"assiger ein R"uckflu"s aus dem Reservoir in das
-prim"are  Versorgungsnetz vermieden.
-Dies benötigt je nach Bauweise
-des Ventils eine genau definierte Zeit.  Der Ventilstatus kann durch
-die Signale \textit{offen} und \textit{zu} kontrolliert werden.
-Um den Pumpprozess zu beenden muss zuerst das Ventil geschlossen werden.
-Dies kann wiederum über den Ventilstatus abgefragt werden. 
-Danach kann der Pumpenmotor ausgeschaltet werden.
-
-#+CAPTION: Wasserspeicher
-#+NAME:   fig:wasserspeicher
-[[./wasserspeicher.png]]
+* Echtzeitfähige Steuerung eines Wasserspeichers
 
 \begin{figure}[!htbp]
 \centering
   % Requires \usepackage{graphicx}
   \includegraphics[width=1.0\textwidth]{wasserspeicher.png}\\
-   \caption{Wasserspeicher}
-  \label{fig:Wasserspeicher}
 \end{figure}
 
+** Aufgabe
 
-#+begin_src shell
-tail -f --follow=name --retry sim.log
- #+end_src
+Es soll eine echtzeitfähige Steuerung eines Wasserspeichers
+implementiert werden. Hierzu wird der OpenPEARL Compiler und die dazu
+passende Laufzeitumgebung unter Linux auf dem Server der LG
+Kommunikationsnetze bereitgestellt.
+
+Der Wasserspeicher wird mit allen Sensoren, Aktoren und Verbraucher
+mit einem in OpenPEARL erstellten Programm simuliert. 
+
+Die simulierte Anlage besteht aus folgenden Teilen:
+
+- Wassertank
+- Aktoren:
+  eine Pumpe, drehzahlgesteuert
+  einem Ventil, offen/geschlossen
+  zwei Drucksensoren
+- ein Verbraucher
+  
+Für einen Wassertank, vom dem fortwährend ein Verbraucher alleine
+durch die Schwerkraft Wasser entnehmen kann, muss das Reservoir stets
+hinreichend gefüllt sein. Wenn der Wasserstand unter die \textit{leer}
+Marke zu fallen droht, dann muss die Pumpe gestartet werden.
+
+Die Pumpe startet automatisch, falls eine Drehzahl >0 gesendet wird.
+Die Spezifikation der Pumpe bestimmt die Zeitdauer bis ein vorher
+festgelegter Druck am Ventil anliegt.
+
+Dieser Druck kann mittels des ersten Drucksensors kontinuierlich am
+Signal \textit{Druck} gemessen werden.  Falls der gemessene Druck zu
+niedrig ist, kann unter Zuhilfenahme des Drehzahlgebers überprüft
+werden ob die Pumpe defekt ist oder keine Flüssigkeit in der Leitung
+zur Verfügung steht.  Erreicht der Druck den Solldruck wird das Ventil
+durch einschalten des Stellmotors (Signale \textit{oeffnen} und
+\textit{schliessen}) geöffnet. Damit wird unzulässiger ein Rückfluß
+aus dem Reservoir in das primäre Versorgungsnetz vermieden.  Dies
+benötigt je nach Bauweise des Ventils eine genau definierte Zeit.  Der
+Ventilstatus kann durch die Signale \textit{offen} und \textit{zu}
+kontrolliert werden.
+
+Um den Pumpprozess zu beenden sollte zuerst das Ventil geschlossen
+werden.  Dies kann wiederum über den Ventilstatus abgefragt werden.
+Danach kann der Pumpenmotor mittels des Setzens der Drehzahl von
+\textit{0 rpm} ausgeschaltet werden.
+
+Folgende Teilaufgaben sollen bearbeitet werden:
+
+- Erstellung eines Konzeptes mit allen Anforderungen
+- Sinnvolle Verteilung der Aufgaben auf unterschiedliche Tasks
+- Erkennung von Fehlerzuständen und deren Behandlung
+
+** Technische Daten
+
+|               |                             |        <r> |
+| Wassertank    | Volumen                     |      8 m^3 |
+|               | Startvolumen                |    1.0 m^3 |
+| Förderpumpe   | Max. Umdrehungen per Minute |   2000 rpm |
+|               | Leerlauf                    |    100 rpm |
+| Drucksensor#1 | Druck in Pascal             |            |
+| Drucksensor#2 | Druck in Pascal             |            |
+| Ventil        |                             |            |
+| Verbraucher   | Min. Verbrauch              |  0.0 m^3/s |
+|               | Max. Verbrauch              | 0.01 m^3/s |
+
+** Ansteuerung
+
+*** Förderpumpe
+
+Die Pumpe wird folgendermaßen angesprochen:
 
 
- \begin{table}[h!]
-\begin{tabular}{p{20pt} p{20pt} p{20pt} p{20pt} p{20pt} p{20pt} p{20pt} p{20pt} p{20pt} p{20pt} p{20pt} p{20pt} p{20pt} p{20pt} p{20pt}  >{\centering\arraybackslash}m{20pt}}
-\centering 15 & \centering 14 & \centering 13 & \centering 12 & \centering 11 & \centering 10 & \centering 9 & \centering 8 & \centering 7 & \centering 6 & \centering 5 & \centering 4 & \centering 3 & \centering 2 & \centering 1 & 0\\\hline
-\multicolumn{1}{|c|}{Sim} & 
-\multicolumn{1}{c|}{Pump} & 
-\multicolumn{1}{c|}{Pump rpm} & 
-\multicolumn{5}{|c|}{\cellcolor{gray!25}} & 
-\multicolumn{1}{c|}{DIR} & 
-\multicolumn{7}{c|}{PWM} \\\hline
-\end{tabular}
-\end{table}
+#+BEGIN_SRC
+SYSTEM;
+pump: Pump(0);
+...
 
- #+BEGIN_QUOTE
+PROBLEM;
+SPC pump DATION INOUT SYSTEM BASIC FIXED(31);
+DCL foerderpumpe DATION INOUT BASIC FIXED(31) CREATED(pump);
+...
+#+END_SRC
+
+Die eigentliche Ansteuerung der Pumpe könnte folgendermaßen aussehen:
+
+#+BEGIN_SRC
+...
+task1: TASK MAIN;
+  DCL drehzahl FIXED INIT(1000);
+   OPEN foerderpumpe;
+   SEND drehzahl TO foerderpumpe;
+   ...  
+   CLOSE foerderpumpe;	
+END;
+#+END_SRC
+
+Die Förderpumpe wird mit folgendem Kommando ausgeschaltet:
+
+#+BEGIN_SRC
+   SEND 0 TO foerderpumpe;
+#+END_SRC
+
+*** Drucksensoren
+
+Die Drucksensoren werden folgendermaßen angesprochen:
+
+#+BEGIN_SRC
+SYSTEM;
+pressure_sensor1: PressureSensor(0);
+pressure_sensor2: PressureSensor(1);	
+...
+
+PROBLEM;
+SPC pressure_sensor1 DATION IN SYSTEM BASIC FLOAT;
+DCL sensor1 DATION IN BASIC FLOAT CREATED(pressure_sensor1);
+
+SPC pressure_sensor2 DATION IN SYSTEM BASIC FLOAT;
+DCL sensor2 DATION IN BASIC FLOAT CREATED(pressure_sensor2);
+...
+#+END_SRC
+
+Die eigentliche Ansteuerung der Pumpe könnte folgendermaßen aussehen:
+
+#+BEGIN_SRC
+...
+DCL druck FLOAT;
+...
+TAKE druck FROM sensor1;
+...
+#+END_SRC
+
+*** Ventil
+
+Das Ventil wird folgendermaßen angesprochen:
+
+#+BEGIN_SRC
+SYSTEM;
+valve: Valve;
+...
+
+PROBLEM;
+SPC valve DATION INOUT SYSTEM BASIC FIXED(15);
+DCL ventil DATION INOUT BASIC FIXED(15) CREATED(valve);
+...
+#+END_SRC
+
+Die eigentliche Ansteuerung des Ventils könnte folgendermaßen aussehen:
+
+#+BEGIN_SRC
+...
+DCL status FIXED(15);
+...
+SEND 1 TO ventil; ! Oeffne Ventil
+...
+SEND 0 TO ventil; ! Schliesse Ventil
+...
+TAKE status FROM ventil; > Lese Ventilstatus
+...
+#+END_SRC
+
+*** Schwimmerschalter
+
+
+Der Schwimmerschalter wird folgendermaßen angesprochen:
+
+#+BEGIN_SRC
+SYSTEM;
+floatswitch: FloatSwitch;
+...
+
+PROBLEM;
+SPC floatswitch DATION IN SYSTEM BASIC BIT(1);
+DCL schwimmerschalter DATION IN BASIC BIT(1) CREATED(floatswitch);
+...
+#+END_SRC
+
+Die eigentliche Ansteuerung des Schwimmerschalters könnte folgendermaßen aussehen:
+
+#+BEGIN_SRC
+...
+DCL schalterstellung BIT(1);
+...
+TAKE schalterstellung FROM schwimmerschalter; ! Lese Schalterstellung
+! 0 entspricht Schalter offen
+! 1 entspricht Schalter geschlossen
+...
+#+END_SRC
+
+** Beispiel
+
+#+BEGIN_SRC
+MODULE(watertank);
+
+SYSTEM;
+stdout: StdOut;
+
+floatswitch: FloatSwitch;
+pump: Pump(0);
+valve: Valve;
+
+pressure_sensor1: PressureSensor(0);
+pressure_sensor2: PressureSensor(1);	
+
+PROBLEM;
+SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+SPC floatswitch DATION IN SYSTEM BASIC BIT(1);
+DCL schwimmerschalter DATION IN BASIC BIT(1) CREATED(floatswitch);
+
+SPC pump DATION INOUT SYSTEM BASIC FIXED(31);
+DCL foerderpumpe DATION INOUT BASIC FIXED(31) CREATED(pump);
+
+SPC valve DATION INOUT SYSTEM BASIC FIXED(15);
+DCL ventil DATION INOUT BASIC FIXED(15) CREATED(valve);
+
+SPC pressure_sensor1 DATION IN SYSTEM BASIC FLOAT;
+DCL sensor1 DATION IN BASIC FLOAT CREATED(pressure_sensor1);
+
+SPC pressure_sensor2 DATION IN SYSTEM BASIC FLOAT;
+DCL sensor2 DATION IN BASIC FLOAT CREATED(pressure_sensor2);
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+print_separator: PROC;
+   PUT '===================================================' TO terminal BY A, SKIP;	
+END;
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+test_pumpe: PROC;
+   DCL rpm           FIXED(31);
+
+   print_separator;
+   PUT 'WATERTANK: Test Foerderpumpe:' TO terminal BY A, SKIP;
+   print_separator;	
+
+   TAKE rpm FROM foerderpumpe;
+   PUT 'WATERTANK: Aktuelle Drehzahl = ', rpm TO terminal BY A,F(4),SKIP;
+   
+   PUT 'WATERTANK: Pumpe ausschalten' TO terminal BY A, SKIP;
+   SEND 0 TO foerderpumpe;	   
+
+   AFTER 3 SEC RESUME;
+
+   TAKE rpm FROM foerderpumpe;
+   PUT 'WATERTANK: Aktuelle Drehzahl = ', rpm TO terminal BY A,F(4),SKIP;
+   
+   PUT 'WATERTANK: Pumpe einschalten mit einer Drehzahl von 500 rpm' TO terminal BY A, SKIP;
+   SEND 500 TO foerderpumpe;	   
+
+   AFTER 3 SEC RESUME;
+
+   TAKE rpm FROM foerderpumpe;
+   PUT 'WATERTANK: Aktuelle Drehzahl = ', rpm TO terminal BY A,F(4),SKIP;
+
+   PUT 'WATERTANK: Drehzahl von 1500 rpm setzen' TO terminal BY A, SKIP;
+   SEND 1500 TO foerderpumpe;	   
+
+   AFTER 3 SEC RESUME;
+
+   TAKE rpm FROM foerderpumpe;
+   PUT 'WATERTANK: Aktuelle Drehzahl = ', rpm TO terminal BY A,F(4),SKIP;
+
+   PUT 'WATERTANK: Max. Drehzahl von 2000 rpm setzen' TO terminal BY A, SKIP;
+   SEND 2000 TO foerderpumpe;	   
+
+   AFTER 3 SEC RESUME;
+
+   TAKE rpm FROM foerderpumpe;
+   PUT 'WATERTANK: Aktuelle Drehzahl = ', rpm TO terminal BY A,F(4),SKIP;	
+
+   PUT 'WATERTANK: Versuche eine zu hohen Drehzahl zu setzen (kein Effekt)' TO terminal BY A, SKIP;	
+   SEND 2500 TO foerderpumpe;	   
+
+   AFTER 3 SEC RESUME;
+
+   TAKE rpm FROM foerderpumpe;
+   PUT 'WATERTANK: Aktuelle Drehzahl = ', rpm TO terminal BY A,F(4),SKIP;	
+
+   AFTER 3 SEC RESUME;
+   
+   TAKE rpm FROM foerderpumpe;
+   PUT 'WATERTANK: Aktuelle Drehzahl = ', rpm TO terminal BY A,F(4),SKIP;
+
+   PUT 'WATERTANK: Pumpe ausschalten' TO terminal BY A, SKIP;
+   SEND 0 TO foerderpumpe;	   
+
+   AFTER 3 SEC RESUME;
+
+   TAKE rpm FROM foerderpumpe;
+   PUT 'WATERTANK: Aktuelle Drehzahl = ', rpm TO terminal BY A,F(4),SKIP;
+END;
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+test_ventil: PROC;
+   DCL status FIXED(15);
+
+print_separator;
+   PUT 'WATERTANK: Teste Ventil:' TO terminal BY A, SKIP;
+   print_separator;
+
+   ! Öffne Ventil
+   PUT 'WATERTANK: Öffne das Ventil ' TO terminal BY A,SKIP;
+   
+   SEND 1 TO ventil;
+   AFTER 1 SEC RESUME;
+   TAKE status FROM ventil;
+   PUT 'WATERTANK: Status des Ventils = ', status TO terminal BY A,F(4),SKIP;
+
+   ! Schliesse Ventil
+   PUT 'WATERTANK: Schliesse das Ventil ' TO terminal BY A,SKIP;
+   SEND 0 TO ventil;
+   AFTER 1 SEC RESUME;
+
+   TAKE status FROM ventil;
+   PUT 'WATERTANK: Status des Ventils = ', status TO terminal BY A,F(4),SKIP;
+
+   AFTER 3 SEC RESUME;
+END;
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+test_schwimmerschalter: PROC;
+   DCL schalterstellung BIT(1);
+
+   print_separator;
+   PUT 'WATERTANK: Teste Schwimmerschalter:' TO terminal BY A, SKIP;
+   print_separator;
+
+   TAKE schalterstellung FROM schwimmerschalter;
+   PUT 'WATERTANK: Schwimmerschalter aktuelle Stellung',schalterstellung TO terminal BY A,X,B1,SKIP;
+
+   ! Tank voll laufen lassen:
+   SEND 1 TO ventil;
+   SEND 2000 TO foerderpumpe;	   
+   AFTER 70 SEC RESUME;
+   SEND 0 TO foerderpumpe;		
+   SEND 0 TO ventil;
+
+   TAKE schalterstellung FROM schwimmerschalter;
+   PUT 'WATERTANK: Schwimmerschalter aktuelle Stellung',schalterstellung TO terminal BY A,X,B1,SKIP;
+END;
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+test_drucksensor1: PROC;
+   DCL druck FLOAT;
+   print_separator;
+   PUT 'WATERTANK: Teste Drucksensor#1:' TO terminal BY A, SKIP;
+   print_separator;
+   OPEN sensor1;
+   TAKE druck FROM sensor1;
+   PUT 'WATERTANK: Drucksensor#1 = ', druck TO terminal BY A,F(8,4),SKIP;  
+   CLOSE sensor1;	
+END;
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+test_drucksensor2: PROC;
+   print_separator;
+   PUT 'WATERTANK: Teste Drucksensor#2:' TO terminal BY A, SKIP;
+   print_separator;
+   OPEN sensor2;
+   CLOSE sensor2;	
+END;
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+test: TASK PRIO 100 MAIN;
+   DCL ventil_status FIXED(15);
+
+   OPEN terminal;
+   PUT 'WATERTANK: Öffne alle DATIONS' TO terminal BY A, SKIP;
+
+   OPEN foerderpumpe;
+   PUT 'WATERTANK: DATION Foerderpumpe geoeffnet' TO terminal BY A, SKIP;
+
+   OPEN schwimmerschalter;
+   PUT 'WATERTANK: DATION Schwimmerschalter geöffnet' TO terminal BY A, SKIP;
+
+   OPEN ventil;
+   PUT 'WATERTANK: DATION Ventil geoeffnet' TO terminal BY A, SKIP;
+
+   print_separator;
+   
+   PUT 'WATERTANK: Starte test' TO terminal BY A, SKIP;
+
+   test_ventil;
+   
+!   test_drucksensor1;
+!   test_drucksensor2;
+   
+   test_pumpe;
+
+   test_schwimmerschalter;
+
+   PUT 'WATERTANK: Test beended' TO terminal BY A, SKIP;
+
+   CLOSE ventil;
+   PUT 'WATERTANK: DATION ventil geschlossen' TO terminal BY A, SKIP;
+
+   CLOSE schwimmerschalter;
+   PUT 'WATERTANK: DATION schwimmerschalter geschlossen' TO terminal BY A, SKIP;
+   
+   CLOSE foerderpumpe;
+   PUT 'WATERTANK: DATION foerderpumpe geschlossen' TO terminal BY A, SKIP;
+
+   OPEN foerderpumpe;
+   AFTER 600 SEC RESUME;
+   CLOSE foerderpumpe;
+
+   CLOSE terminal;
+END;
+
+MODEND;
+#+END_SRC
+
+\importantbox{Task können explizit Prioritäten zugewiesen werden.}
+
+** Tipps und Tricks
+
+Der Simulator schreibt in dem Verzeichnis in welchem Sie Ihr Programm
+starten eine Logdatei.
+
+Unter Linux können Sie die Logdatei permanent mit folgedem Kommanda in
+einem eigenen Terminalfenster anzeigen lassen:
+
+#+BEGIN_EXAMPLE
+tail -f --follow=name --retry sim.log  
+#+END_EXAMPLE
+
+
+Die Logdatei ist wie folgt aufgebaut:
+
+ #+BEGIN_EXAMPLE
       simulation_is_running, 
       pump_enabled, 
       pump_current_rpm
@@ -126,14 +478,18 @@ tail -f --follow=name --retry sim.log
       valve_enabled
       pressure_sensor_2
       current_consumer_dissipation
-#+END_QUOTE
-
-#+begin_note
-This is a useful note.
-#+end_note
-
-
+#+END_EXAMPLE
  
 #+BEGIN_EXAMPLE
 12:00:01.157 SIM: |1|1| 500|    0.0000|0|    0.0000|    0.0000|
 #+END_EXAMPLE
+
+
+ 
+* Temp                                                 :noexport:
+\notebox{\lipsum[2]}
+\warningbox{\lipsum[4]}
+
+\cautionbox{\lipsum[5]}
+
+\importantbox{\lipsum[6]}
