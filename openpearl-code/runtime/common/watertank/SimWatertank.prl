@@ -290,8 +290,8 @@ get_pressure_sensor_2: PROC RETURNS (FLOAT) GLOBAL;
 END;
 
 ! 
-consumer: TASK;
-   DCL cstep FIXED(15) INIT(0);
+consumer: TASK PRIO 20;
+DCL cstep FIXED(15) INIT(0);
    WHILE simulation_is_running
    REPEAT
        REQUEST sema;
@@ -303,7 +303,7 @@ consumer: TASK;
 END;
 
 !
-log_status: TASK;
+log_status: TASK PRIO 20;
    DCL line CHAR(80);
 
   log('Fields:');
@@ -471,7 +471,7 @@ float_switch_update: PROC (dt FLOAT /* [ms] */);
 END;
 
 !
-check_tank_status: TASK;
+check_tank_status: TASK PRIO 20;
   WHILE simulation_is_running
   REPEAT
       REQUEST sema;

@@ -453,7 +453,7 @@ END;
 MODEND;
 #+END_SRC
 
-\importantbox{Task können explizit Prioritäten zugewiesen werden.}
+\cautionbox{Task können explizit Prioritäten zugewiesen werden. Sie dürfen in Ihren Programmen nur Prioritäten größer 40 verwenden!}
 
 ** Tipps und Tricks
 
@@ -466,7 +466,6 @@ einem eigenen Terminalfenster anzeigen lassen:
 #+BEGIN_EXAMPLE
 tail -f --follow=name --retry sim.log  
 #+END_EXAMPLE
-
 
 Die Logdatei ist wie folgt aufgebaut:
 
@@ -483,7 +482,6 @@ Die Logdatei ist wie folgt aufgebaut:
 #+BEGIN_EXAMPLE
 12:00:01.157 SIM: |1|1| 500|    0.0000|0|    0.0000|    0.0000|
 #+END_EXAMPLE
-
 
  
 * Temp                                                 :noexport:

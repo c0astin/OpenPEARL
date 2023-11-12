@@ -85,7 +85,6 @@ namespace pearlrt {
    }
 
    void PressureSensor::dationRead(void* data, size_t size) {
-      int d;
       static char value = 0;
       
       //check size of parameter!
