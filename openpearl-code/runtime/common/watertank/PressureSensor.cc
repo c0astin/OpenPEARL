@@ -42,7 +42,7 @@ namespace pearlrt {
    PressureSensor::PressureSensor(int addr) :
       addr(addr){
       dationStatus = CLOSED;
-      std::cout << "***** PressureSensor: addr=" << addr << std::endl;
+      // std::cout << "***** PressureSensor: addr=" << addr << std::endl;
    }
 
    PressureSensor::~PressureSensor() {
@@ -106,7 +106,7 @@ namespace pearlrt {
       else
 	f = ns_SimWatertank::WatertankInt::getInstance()->get_pressure_sensor_2(Task::currentTask());
       
-      *(char*)data = f.x;
+      *(char*)data = 0;
    }
 
    int PressureSensor::capabilities() {
