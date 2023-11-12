@@ -34,17 +34,16 @@
 
 /**
  \brief Implementation of Valve Systemdation
-
-
 */
+
 namespace pearlrt {
 
-   Valve::Valve(int start, int width) :
-      start(start), width(width) {
+  Valve::Valve() {
       dationStatus = CLOSED;
    }
 
    Valve::~Valve() {
+     dationStatus = CLOSED;
    }
 
    SystemDationB* Valve::dationOpen(const RefCharacter * idf, int openParam) {
@@ -53,8 +52,8 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      if ((openParam & OUT) != OUT) {
-         Log::error("Valve must be an output device (%x)", openParam);
+      if ((openParam & INOUT) != INOUT) {
+         Log::error("Valve must be an input/output device (%x)", openParam);
          throw theDationParamSignal;
       }
 
@@ -63,7 +62,7 @@ namespace pearlrt {
          throw theOpenFailedSignal;
       }
 
-      ns_SimWatertank::WatertankInt::instance()->start_simulation(pearlrt::Task::currentTask());
+      ns_SimWatertank::WatertankInt::getInstance()->start_simulation(pearlrt::Task::currentTask());
       dationStatus = OPENED;
       return this;
    }
@@ -74,21 +73,16 @@ namespace pearlrt {
          throw theDationNotOpenSignal;
       }
 
-      ns_SimWatertank::WatertankInt::instance()->stop_simulation(Task::currentTask());
+      ns_SimWatertank::WatertankInt::getInstance()->stop_simulation(Task::currentTask());
       dationStatus = CLOSED;
    }
 
-
    void Valve::dationWrite(void* data, size_t size) {
-      int d;
       static char value = 0;
-      
+
       //check size of parameter!
-      // it is expected that a BitString<width> object is passed
-      // with a maximum of 32 bits. This fits into 4 byte.
-      // Therefore size must be less than 4
-      if (size > 4) {
-         Log::error("Valve: max 32 bits expected");
+      if (size > 2) {
+         Log::error("Valve: max 16 bits expected");
          throw theDationParamSignal;
       }
 
@@ -96,14 +90,49 @@ namespace pearlrt {
          Log::error("Valve: Dation not open");
          throw theDationParamSignal;
       }
+
+      value = *(uint16_t*)data;
+
+      // expect BitString<width> as data
+      // bits are left adjusted in data, thus the data must be
+      // shifted according the concrete size of data
+      if (size == 1)
+         value = (*(char*)data) << 16;
+      else
+	value = (*(int16_t*)data);
+
+      if ( value == 1 )
+	ns_SimWatertank::WatertankInt::getInstance()->open_valve(pearlrt::Task::currentTask());
+      else
+	ns_SimWatertank::WatertankInt::getInstance()->close_valve(pearlrt::Task::currentTask());
    }
 
    void Valve::dationRead(void* data, size_t size) {
-     throw theInternalDationSignal;
+      static char value = 0;
+
+      //check size of parameter!
+      if (size > 2) {
+         Log::error("Valve: max 16 bits expected");
+         throw theDationParamSignal;
+      }
+
+      if (dationStatus != OPENED) {
+         Log::error("Valve: Dation not open");
+         throw theDationParamSignal;
+      }
+
+      pearlrt::BitString<1> state;
+      state = ns_SimWatertank::WatertankInt::getInstance()->get_valve_state(pearlrt::Task::currentTask());
+
+      value = state.x;
+      if ( value == 0 )
+	*(int16_t*)data = 0;
+      else
+	*(int16_t*)data = 1;
    }
 
-   int Valve::capabilities() {
-      int cap = OUT | ANY | PRM;
+int Valve::capabilities() {
+      int cap = INOUT | ANY | PRM;
       return cap;
    }
 

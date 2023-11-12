@@ -34,14 +34,12 @@
 
 namespace pearlrt {
 
-   Pump::Pump(int start, int width) :
-     start(start), width(width), m_rpm(0), m_enabled(false) {
+   Pump::Pump(int start) :
+     start(start) {
       dationStatus = CLOSED;
    }
 
    Pump::~Pump() {
-     m_rpm = 0;
-     m_enabled = false;
    }
 
    SystemDationB* Pump::dationOpen(const RefCharacter * idf, int openParam) {
@@ -60,7 +58,7 @@ namespace pearlrt {
          throw theOpenFailedSignal;
       }
 
-      ns_SimWatertank::WatertankInt::instance()->start_simulation(pearlrt::Task::currentTask());
+      ns_SimWatertank::WatertankInt::getInstance()->start_simulation(pearlrt::Task::currentTask());
       dationStatus = OPENED;
       return this;
    }
@@ -76,26 +74,31 @@ namespace pearlrt {
          throw theDationNotOpenSignal;
       }
 
-      ns_SimWatertank::WatertankInt::instance()->stop_simulation(Task::currentTask());
+      pearlrt::Fixed<15> rpm;
+      rpm = 0;
+
+      ns_SimWatertank::WatertankInt::getInstance()->set_pump_rotational_speed(pearlrt::Task::currentTask(), rpm);
+
+      ns_SimWatertank::WatertankInt::getInstance()->stop_simulation(Task::currentTask());
       dationStatus = CLOSED;
    }
 
    void Pump::dationWrite(void* data, size_t size) {
      uint16_t value;
-      if (size > 2) {
-         Log::error("Pump: max 16 bits expected");
-         throw theDationParamSignal;
-      }
+     if (size > 4) {
+       Log::error("Pump: max 32 bits expected");
+       throw theDationParamSignal;
+     }
+     
+     if (dationStatus != OPENED) {
+       Log::error("Pump: Dation not open");
+       throw theDationParamSignal;
+     }
+     
+     pearlrt::Fixed<15> rpm;
+     value = *(uint16_t*)data;
 
-      if (dationStatus != OPENED) {
-         Log::error("Pump: Dation not open");
-         throw theDationParamSignal;
-      }
-
-      pearlrt::Fixed<15> rpm;
-      value = *(uint16_t*)data;
-
-            // expect BitString<width> as data
+      // expect BitString<width> as data
       // bits are left adjusted in data, thus the data must be
       // shifted according the concrete size of data
       if (size == 1)
@@ -105,16 +108,29 @@ namespace pearlrt {
 
       rpm = value;
 
-      ns_SimWatertank::WatertankInt::instance()->set_pump_rotational_speed(pearlrt::Task::currentTask(), rpm);
+      ns_SimWatertank::WatertankInt::getInstance()->set_pump_rotational_speed(pearlrt::Task::currentTask(), rpm);
    }
   
    void Pump::dationRead(void* data, size_t size) {
-     throw theInternalDationSignal;
+      if (size > 4) {
+         Log::error("Pump: max 31 bits expected");
+         throw theDationParamSignal;
+      }
+
+      if (dationStatus != OPENED) {
+         Log::error("Pump: Dation not open");
+         throw theDationParamSignal;
+      }
+
+      pearlrt::Fixed<31> rpm;
+
+      rpm = ns_SimWatertank::WatertankInt::getInstance()->get_pump_rotational_speed(pearlrt::Task::currentTask());
+
+      (*(uint16_t*)data) = rpm.x;
    }
 
    int Pump::capabilities() {
-      int cap = OUT | ANY | PRM;
+      int cap = INOUT | ANY | PRM;
       return cap;
    }
-
 }

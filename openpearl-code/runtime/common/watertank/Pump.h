@@ -40,16 +40,10 @@
 
 namespace pearlrt {
 
-  constexpr float PUMP_MIN_REVOLUTION    =  100.0f; // [revolution/min]
-  constexpr float PUMP_MAX_REVOLUTION    = 2000.0f; // [revolution/min]
-  constexpr float PUMP_CYLINDER_CAPACITY = 0.001f;  // [m^3]
-  constexpr float RAMP_UP                = 200.0f;  // [revolution/s]
-  constexpr float RAMP_DOWN              = 600.0f;  // [revolution/s]
-    
   class Pump: public SystemDationB {
 
    public:
-      Pump(int start, int width);
+      Pump(int start);
       ~Pump();
       SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
       void dationClose(int closeParam = 0);
@@ -58,9 +52,7 @@ namespace pearlrt {
       int capabilities();
 
    private:
-      const int start, width;
-      uint16_t m_rpm;
-      bool m_enabled;
+      const int start;
   };
 }
 

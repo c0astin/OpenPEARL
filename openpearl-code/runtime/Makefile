@@ -29,6 +29,7 @@
 
 # pearl runtime system
 
+export MAKEFLAGS += "-j 8"
 targets :=
 
 SIGNALS_HH = common/Signals.hh

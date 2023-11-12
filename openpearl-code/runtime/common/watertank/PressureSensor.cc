@@ -42,6 +42,7 @@ namespace pearlrt {
    PressureSensor::PressureSensor(int addr) :
       addr(addr){
       dationStatus = CLOSED;
+      std::cout << "***** PressureSensor: addr=" << addr << std::endl;
    }
 
    PressureSensor::~PressureSensor() {
@@ -63,7 +64,7 @@ namespace pearlrt {
          throw theOpenFailedSignal;
       }
 
-      ns_SimWatertank::WatertankInt::instance()->start_simulation(pearlrt::Task::currentTask());
+      ns_SimWatertank::WatertankInt::getInstance()->start_simulation(pearlrt::Task::currentTask());
       dationStatus = OPENED;
       return this;
    }
@@ -74,7 +75,7 @@ namespace pearlrt {
          throw theDationNotOpenSignal;
       }
 
-      ns_SimWatertank::WatertankInt::instance()->stop_simulation(Task::currentTask());
+      ns_SimWatertank::WatertankInt::getInstance()->stop_simulation(Task::currentTask());
       dationStatus = CLOSED;
    }
 
@@ -88,9 +89,6 @@ namespace pearlrt {
       static char value = 0;
       
       //check size of parameter!
-      // it is expected that a BitString<width> object is passed
-      // with a maximum of 32 bits. This fits into 4 byte.
-      // Therefore size must be less than 4
       if (size > 4) {
          Log::error("PressureSensor: max 32 bits expected");
          throw theDationParamSignal;
@@ -101,7 +99,14 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      *(char*)data = value;
+      pearlrt::Float<23> f;
+
+      if (addr == 0)
+	f = ns_SimWatertank::WatertankInt::getInstance()->get_pressure_sensor_1(Task::currentTask());
+      else
+	f = ns_SimWatertank::WatertankInt::getInstance()->get_pressure_sensor_2(Task::currentTask());
+      
+      *(char*)data = f.x;
    }
 
    int PressureSensor::capabilities() {

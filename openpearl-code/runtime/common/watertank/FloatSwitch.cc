@@ -62,7 +62,7 @@ namespace pearlrt {
          throw theOpenFailedSignal;
       }
 
-      ns_SimWatertank::WatertankInt::instance()->start_simulation(pearlrt::Task::currentTask());
+      ns_SimWatertank::WatertankInt::getInstance()->start_simulation(Task::currentTask());
       dationStatus = OPENED;
       return this;
    }
@@ -73,7 +73,7 @@ namespace pearlrt {
          throw theDationNotOpenSignal;
       }
 
-      ns_SimWatertank::WatertankInt::instance()->stop_simulation(Task::currentTask());
+      ns_SimWatertank::WatertankInt::getInstance()->stop_simulation(Task::currentTask());
       dationStatus = CLOSED;
    }
 
@@ -100,7 +100,7 @@ namespace pearlrt {
          throw theDationParamSignal;
       }
 
-      pearlrt::BitString<1> state = ns_SimWatertank::WatertankInt::instance()->get_float_switch_state(pearlrt::Task::currentTask());
+      pearlrt::BitString<1> state = ns_SimWatertank::WatertankInt::getInstance()->get_float_switch_state(pearlrt::Task::currentTask());
 
       value = state.x;
       *(char*)data = value;

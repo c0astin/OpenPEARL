@@ -37,15 +37,10 @@
 #include "Signals.h"
 #include "Log.h"
 
-
 namespace pearlrt {
-   class Valve: public SystemDationB {
-
-   private:
-      const int start, width;
-
+  class Valve: public SystemDationB {
    public:
-      Valve(int start, int width);
+      Valve();
       ~Valve();
       SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
       void dationClose(int closeParam = 0);

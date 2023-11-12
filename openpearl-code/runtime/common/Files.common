@@ -118,12 +118,12 @@ ifeq ($(CONFIG_SIMWATERTANK),y)
    HDR_COMMON += watertank/Pump.h
    CXX_COMMON += watertank/Pump.cc
    XML_COMMON += watertank/Pump.xml
-   HDR_COMMON += watertank/PressureSensor.h
-   CXX_COMMON += watertank/PressureSensor.cc
-   XML_COMMON += watertank/PressureSensor.xml
    HDR_COMMON += watertank/Valve.h
    CXX_COMMON += watertank/Valve.cc
    XML_COMMON += watertank/Valve.xml
+   HDR_COMMON += watertank/PressureSensor.h
+   CXX_COMMON += watertank/PressureSensor.cc
+   XML_COMMON += watertank/PressureSensor.xml
    HDR_COMMON += watertank/SimWatertank.h
    CXX_COMMON += watertank/SimWatertank.cc
    HDR_COMMON += watertank/WatertankInt.h

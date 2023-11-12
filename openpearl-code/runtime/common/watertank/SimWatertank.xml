@@ -8,7 +8,7 @@
     <userdation name="readInternal" line="38" col="5" >
       <systemdation name="pipe" />
     </userdation>
-    <userdation name="logFile" line="42" col="5" >
+    <userdation name="logFile" line="41" col="5" >
       <systemdation name="homeFolder" />
     </userdation>
 
@@ -25,27 +25,28 @@
     <attributes>IN,FORWARD,NOCYCL,STREAM,DIM(*,80)</attributes>
     <data>CHAR(1)</data>
   </dcl>
-  <spc type="dation" name="homeFolder" line="41" col="5" global="SimWatertank" >
+  <spc type="dation" name="homeFolder" line="40" col="5" global="SimWatertank" >
     <attributes>INOUT,SYSTEM</attributes>
     <data>ALL</data>
   </spc>
-  <dcl type="dation" name="logFile" line="42" col="5"   >
+  <dcl type="dation" name="logFile" line="41" col="5"   >
     <attributes>OUT,FORWARD,NOCYCL,STREAM,DIM(*,80)</attributes>
     <data>ALPHIC</data>
   </dcl>
-  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_watertank_pressure" line="243" col="1" global="SimWatertank" />
-  <dcl type="PROC" name="open_valve" line="222" col="1" global="SimWatertank" />
-  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_watertank_capacity" line="238" col="1" global="SimWatertank" />
-  <dcl type="PROC" name="stop_simulation" line="139" col="1" global="SimWatertank" />
-  <dcl type="PROC ( FIXED(15) )" name="set_pump_rotational_speed" line="210" col="1" global="SimWatertank" />
-  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_level" line="196" col="1" global="SimWatertank" />
-  <dcl type="PROC RETURNS ( FIXED(31))" name="get_pump_rotational_speed" line="201" col="1" global="SimWatertank" />
-  <dcl type="PROC" name="start_simulation" line="128" col="1" global="SimWatertank" />
-  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_pressure_sensor_1" line="264" col="1" global="SimWatertank" />
-  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_pressure_sensor_2" line="273" col="1" global="SimWatertank" />
-  <dcl type="PROC RETURNS ( BIT(1))" name="get_float_switch_state" line="255" col="1" global="SimWatertank" />
-  <dcl type="PROC" name="close_valve" line="230" col="1" global="SimWatertank" />
-  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_pump_pressure" line="217" col="1" global="SimWatertank" />
+  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_watertank_pressure" line="254" col="1" global="SimWatertank" />
+  <dcl type="PROC" name="open_valve" line="221" col="1" global="SimWatertank" />
+  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_watertank_capacity" line="249" col="1" global="SimWatertank" />
+  <dcl type="PROC" name="stop_simulation" line="138" col="1" global="SimWatertank" />
+  <dcl type="PROC ( FIXED(15) )" name="set_pump_rotational_speed" line="209" col="1" global="SimWatertank" />
+  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_level" line="195" col="1" global="SimWatertank" />
+  <dcl type="PROC RETURNS ( FIXED(31))" name="get_pump_rotational_speed" line="200" col="1" global="SimWatertank" />
+  <dcl type="PROC" name="start_simulation" line="127" col="1" global="SimWatertank" />
+  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_pressure_sensor_1" line="275" col="1" global="SimWatertank" />
+  <dcl type="PROC RETURNS ( BIT(1))" name="get_valve_state" line="239" col="1" global="SimWatertank" />
+  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_pressure_sensor_2" line="284" col="1" global="SimWatertank" />
+  <dcl type="PROC RETURNS ( BIT(1))" name="get_float_switch_state" line="266" col="1" global="SimWatertank" />
+  <dcl type="PROC" name="close_valve" line="229" col="1" global="SimWatertank" />
+  <dcl type="PROC RETURNS ( FLOAT(23))" name="get_pump_pressure" line="216" col="1" global="SimWatertank" />
 
 </problem>
 </module>

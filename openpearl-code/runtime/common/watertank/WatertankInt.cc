@@ -2,7 +2,7 @@
 
 #include "WatertankInt.h"
 
-#define DEBUG 1
+//#define DEBUG 0
 
 namespace ns_SimWatertank {
 
@@ -16,20 +16,18 @@ namespace ns_SimWatertank {
   WatertankInt::~WatertankInt() {
   }
 
-  WatertankInt* WatertankInt::instance() {
-    static WatertankInt* _instance = 0;
-  
-    if (!_instance) {
-      _instance = new WatertankInt();
-    }
-  
-    return _instance;
+  WatertankInt* WatertankInt::getInstance() {
+#ifdef DEBUG
+    std::cout << "WatertankInt::getInstance\n";
+#endif
+
+    return (!m_instanceSingleton) ? m_instanceSingleton = new WatertankInt : m_instanceSingleton;
   }
 
   void WatertankInt::start_simulation(pearlrt::Task *me) {
     if ( m_connections == 0) {
 #ifdef DEBUG    
-    std::cout << "WatertankInt: start simulator\n";
+    std::cout << "WatertankInt: start simulation\n";
 #endif        
 		      
       ns_SimWatertank::_start_simulation(me);
@@ -37,19 +35,18 @@ namespace ns_SimWatertank {
 #ifdef DEBUG    
     std::cout << "WatertankInt: simulator already running\n";
 #endif        
-	
-      m_connections++;
     }
-
+    	
+     m_connections++;
+     
 #ifdef DEBUG    
-    std::cout << "WatertankInt: start_simulation: conn=[";
-    std::cout << m_connections << "]\n";
+    std::cout << "WatertankInt: start_simulation: conn=[" << m_connections << "]\n";
 #endif
   }
   
   void WatertankInt::stop_simulation(pearlrt::Task *me) {
-    m_connections--;
-    if ( m_connections == 0) {
+    this->m_connections--;
+    if ( this->m_connections == 0) {
 #ifdef DEBUG    
     std::cout << "WatertankInt: stop simulator, because no more connections left\n";
 #endif        
@@ -86,7 +83,7 @@ namespace ns_SimWatertank {
     return ns_SimWatertank::_get_pump_rotational_speed(me);
   }
   
-  void WatertankInt::set_pump_rotational_speed(pearlrt::Task *me, pearlrt::Fixed<15> rpm) {
+  void WatertankInt::set_pump_rotational_speed(pearlrt::Task *me, pearlrt::Fixed<31> rpm) {
 #ifdef DEBUG    
     std::cout << "WatertankInt: set_pump_rotational_speed=" << rpm.x << "\n";
 #endif        
@@ -113,7 +110,7 @@ namespace ns_SimWatertank {
 #endif        
     return ns_SimWatertank::_get_pressure_sensor_2(me);
   }
-  
+
   void WatertankInt::open_valve(pearlrt::Task *me) {
 #ifdef DEBUG    
     std::cout << "WatertankInt: open_valve" "\n";
@@ -127,4 +124,13 @@ namespace ns_SimWatertank {
 #endif    
     return ns_SimWatertank::_close_valve(me);
   }
+
+  pearlrt::BitString<1> WatertankInt::get_valve_state(pearlrt::Task *me) {
+#ifdef DEBUG    
+    std::cout << "WatertankInt: get_valve_state=" << ns_SimWatertank::_get_valve_state(me).x << "\n";
+#endif        
+    return ns_SimWatertank::_get_valve_state(me);
+  }
+
+  WatertankInt* WatertankInt::m_instanceSingleton = nullptr;
 }

@@ -35,6 +35,7 @@ help:
 	@echo "      make build    - build simulator"
 	@echo "      make install  - install simulator"
 	@echo "      make prepare  - prepare installation location"
+	@echo "      make clean    - remove generated files"
 	@echo "      ---------------------------------------------------"
 
 
@@ -60,7 +61,8 @@ install: SimWatertankSystem.xml SimWatertank.cc
 
 .PHONY: SimWatertank.cc
 SimWatertank.cc:
-	prl -cc SimWatertank.prl
+	prl -cc SimWatertankControl.prl
+	prl -cc SimWatertank.prl 
 
 .PHONY: SimWatertankSystem.xml
 SimWatertankSystem.xml:
@@ -69,7 +71,7 @@ SimWatertankSystem.xml:
 ###############################################################################
 
 clean:
-	$(RM) SimWatertank.cc SimWatertankSystem.cc SimWatertank.xml SimWatertankSystem.xml
+	$(RM) SimWatertank.cc SimWatertankSystem.cc SimWatertank.xml SimWatertankSystem.xml SimWatertankControl.cc SimWatertankControl.xml
 
 ###############################################################################
 

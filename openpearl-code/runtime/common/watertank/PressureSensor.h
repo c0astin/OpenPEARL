@@ -37,7 +37,6 @@
 #include "Signals.h"
 #include "Log.h"
 
-
 namespace pearlrt {
    class PressureSensor: public SystemDationB {
 

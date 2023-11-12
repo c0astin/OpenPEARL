@@ -1,10 +1,11 @@
 <dation name="Pump">
   <parameters>
-    <FIXED length="15" name="rpm">
+    <FIXED length="31" name="rpm">
     </FIXED>
-    <FIXED length="31" name="width"> <FIXEDGT>0</FIXEDGT></FIXED>
   </parameters>
-  <attributes> OUT, SYSTEM, BASIC</attributes>
-  <data>FIXED($width)</data>
+  <attributes> INOUT,SYSTEM,BASIC</attributes>
+  <data>FIXED(31)</data>
   <requiresModule fileName="SimWatertank/SimWatertankSystem" />
 </dation>
+
+

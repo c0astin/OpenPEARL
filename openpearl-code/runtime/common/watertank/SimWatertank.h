@@ -26,4 +26,6 @@ namespace ns_SimWatertank {
   
   void _open_valve(pearlrt::Task *me);
   void _close_valve(pearlrt::Task *me);
+  pearlrt::BitString<1> _get_valve_state(pearlrt::Task *me);
+
 }

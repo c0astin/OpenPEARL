@@ -1,10 +1,10 @@
-   <configuration name="Simulator">
-      <parameters>
-         <CHAR length="1" name="config">
-           <NotEmpty/>
-         </CHAR>
-      </parameters>
-      <checks>
- 	<check instances="oncePerSet" set="Simulator"/>
-      </checks>
-   </configuration>
+<configuration name="Simulator">
+  <parameters>
+    <CHAR length="1" name="config">
+      <NotEmpty/>
+    </CHAR>
+  </parameters>
+  <checks>
+    <check instances="oncePerSet" set="Simulator"/>
+  </checks>
+</configuration>

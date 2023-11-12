@@ -1,6 +1,7 @@
 # super makefile for OpenPEARL
 # 
 USERID=$(shell id -u)
+export MAKEFLAGS += "-j 8"
 
 -include configuration/.config
 
