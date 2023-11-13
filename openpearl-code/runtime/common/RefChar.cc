@@ -64,9 +64,9 @@ namespace pearlrt {
    }
 
    bool RefCharacter::equal(const RefCharacter* const rhs) const {
-      printf("RefCharacter::equals: \n");
-      dump();
-      rhs->dump();
+      //printf("RefCharacter::equals: \n");
+      //dump();
+      //rhs->dump();
       if (current != rhs->getCurrent().x) {
           return false;
       }
@@ -76,7 +76,7 @@ namespace pearlrt {
              return false;
           }
       }
-      printf("are equal\n");
+      //printf("are equal\n");
       return true;
    }
 
