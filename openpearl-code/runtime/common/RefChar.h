@@ -140,13 +140,6 @@ namespace pearlrt {
          charIsINV = true;
       }
 
-/*
-      template<size_t S>
-      RefCharacter& operator=(Character<S> & rhs) {
-         setWork(rhs);
-         return *this;
-      }
-*/
 
       /**
        setWork(rhs)
@@ -156,15 +149,21 @@ namespace pearlrt {
        container variable.
 
        \param rhs the string which should be used as working compound
-       \tparam Tcharr the type  the string which should be used as working
+       \tparam S char<S> is the type of the string which should be used as working
               compound
-               <br> This parameter is expected to be of type Character<x>
       */
       template<size_t S>
-      void setWork(Character<S> & rhs) {
+      void setWork(const Character<S> & rhs) {
          max = rhs.upb().x;
          current = max;
-         data = &rhs.data[0];
+
+         // the compiler should check if no write access to CONST working
+         // storage is used
+         // to enable const Character<x> and non const Characater<x> as
+         // working storage, the interface is with const and interally
+         // the const becomes removed
+         data = (char*)&rhs.data[0];
+         //     ^^^^^^^
       }
 
       /** for testing purpose only */
