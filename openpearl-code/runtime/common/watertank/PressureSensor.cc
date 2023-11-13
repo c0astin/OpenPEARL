@@ -85,11 +85,11 @@ namespace pearlrt {
    }
 
    void PressureSensor::dationRead(void* data, size_t size) {
-      static char value = 0;
+//      static char value = 0;
       
       //check size of parameter!
-      if (size > 4) {
-         Log::error("PressureSensor: max 32 bits expected");
+      if (size != 4) {
+         Log::error("PressureSensor: data with type float expected");
          throw theDationParamSignal;
       }
 
@@ -104,8 +104,8 @@ namespace pearlrt {
 	f = ns_SimWatertank::WatertankInt::getInstance()->get_pressure_sensor_1(Task::currentTask());
       else
 	f = ns_SimWatertank::WatertankInt::getInstance()->get_pressure_sensor_2(Task::currentTask());
-      
-      *(char*)data = 0;
+
+      *(float*)data = f.x;
    }
 
    int PressureSensor::capabilities() {
