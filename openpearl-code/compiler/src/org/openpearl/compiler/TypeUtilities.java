@@ -6,7 +6,7 @@ import org.openpearl.compiler.SymbolTable.FormalParameter;
 import org.openpearl.compiler.SymbolTable.ProcedureEntry;
 import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.openpearl.compiler.SymbolTable.VariableEntry;
-import org.w3c.dom.Attr;
+
 
 /**
  * Class with utilities for type checks, which are used at more than one location
@@ -49,7 +49,7 @@ public class TypeUtilities {
      * @param expression the expression on the rhs
      * @param m_ast the AST
      * @param isInAssignment is true we are in an assignment, else we have a procedure call
-     * @return
+     * @return true, if ok, else false
      */
     public static  boolean mayBeAssignedTo( TypeDefinition lhsType, SymbolTableEntry lhs,
             ExpressionContext expression, AST m_ast, boolean isInAssignment) {
@@ -87,9 +87,36 @@ public class TypeUtilities {
         // RefChar() assignment this differs from
         // rc = charVariable; ! setup the work zone
         // CONT rc = charExpression ! fill the work zone
-        if (lhsType instanceof TypeReference && (((TypeReference)lhsType).getBaseType() instanceof TypeRefChar)) { 
-            if (rhsVariable != null && rhsVariable.getType() instanceof TypeChar) {
+        if (lhsType instanceof TypeReference && (((TypeReference)lhsType).getBaseType() instanceof TypeRefChar)) {
+
+            // check for implicit dereference on rhs REF CHAR(x)
+            if (rhsVariable != null && rhsType instanceof TypeReference) {
+                TypeDefinition td = ((TypeReference)(rhsType)).getBaseType();
+                if (!(td instanceof TypeChar  || td instanceof TypeRefChar )) {
+                    if (isInAssignment) {
+                        CommonErrorMessages.typeMismatchInAssignment(lhsOriginalType, rhsOriginalType, rhsAttr);
+                    } else {
+                        CommonErrorMessages.typeMismatchProcedureParameterIdent(lhsOriginalType, rhsOriginalType, rhsAttr,null);
+                    }
+                    return false;
+                }
+                rhsType = ((TypeReference)(rhsType)).getBaseType();
+            }
+            if (rhsVariable != null && (rhsType instanceof TypeChar || rhsType instanceof TypeRefChar)) {
                 // ok: ref char assignment of work zone
+                
+                if (rhsType.hasAssignmentProtection()) {
+                    TypeRefChar trc = (TypeRefChar)(((TypeReference)(lhsType)).getBaseType());
+                    if(!trc.hasAssignmentProtection()) {
+                        if (isInAssignment) {
+                            CommonErrorMessages.typeMismatchInAssignment(lhsOriginalType, rhsOriginalType, rhsAttr);
+                        } else {
+                            CommonErrorMessages.typeMismatchProcedureParameter(lhsOriginalType, rhsOriginalType, rhsAttr);
+                        }
+                        return false;
+                    }
+                }
+                        
                 checkLifeCycle(lhs, rhsVariable);
                 return true;
             }
@@ -116,7 +143,6 @@ public class TypeUtilities {
                 resultType = tp.getResultType();
                 rhsAttr.setIsFunctionCall(true);
                 rhsAttr.setType(resultType);
-
             }
 //            if (rhsType instanceof TypeProcedure &&
 //                    ((TypeProcedure)rhsType).getResultType() != null  ) {
@@ -126,9 +152,8 @@ public class TypeUtilities {
 //            }
 
             //-- easiest case; simple variable assignment
-            if (simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, resultType)) {
+            if (resultType != null && simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, resultType)) {
                 ruleApplied=true;
-                //rhsAttr.setIsFunctionCall(true);
                 break;
             } else if (simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, rhsType)) {
                 ruleApplied=true;
@@ -185,18 +210,33 @@ public class TypeUtilities {
                     }
                 }
                 
+                // -- lhs is reference; rhs is a symbol; 
                 // -- lhs is reference; rhs is variable of the same type and INV setting
                 // -- lhs is reference; rhs PROC returning basetype of lhs with same INV-setting
+                // REF points to INV type & variable on rhs is INV  & ok
+                //       0                &            0            & yes
+                //       0                &            1            & no
+                //       1                &            0            & yes
+                //       1                &            1            & yes
 
                 if (    (rhsSymbol != null) && rhsSymbol instanceof VariableEntry &&  
-                        (lhsBaseType.equals(rhsType) &&
-                        (lhsBaseType.hasAssignmentProtection() == rhsType.hasAssignmentProtection()))) { 
-                    checkLifeCycle(lhs, rhsVariable);
-                    ruleApplied=true;
-                    break;
+                        (lhsBaseType.equals(rhsType) )) {
+                    if ( (lhsBaseType.hasAssignmentProtection() == rhsType.hasAssignmentProtection()) ||
+                            (lhsBaseType.hasAssignmentProtection() &&  rhsType.hasAssignmentProtection()==false)) { 
+                        checkLifeCycle(lhs, rhsVariable);
+                        ruleApplied=true;
+                        break;
+                    } else {
+                        if (!isInAssignment) {
+                            CommonErrorMessages.typeMismatchProcedureParameter(lhsType.toErrorString(), rhsType.toErrorString(), rhsAttr);
+                        } else {
+                            CommonErrorMessages.typeMismatchInAssignment(lhsType.toErrorString(), rhsType.toErrorString(), rhsAttr);
+                        }
+                        return  false;
+                    }
                 }
                 
-                // -- lhs is reference to INV ; rhs is constant of basetype of lhs
+                // -- lhs is reference to INV ; rhs is constant of base type of lhs
                 if (    rhsAttr.getConstant() != null && 
                         (lhsBaseType.equals(rhsType) &&
                         (lhsBaseType.hasAssignmentProtection()))) { 
@@ -233,18 +273,8 @@ public class TypeUtilities {
                         }
                     }
                 }
-                // -- lhs is reference; rhs is a symbol; 
-                //
-                if ((rhsSymbol != null) &&
-                        !(rhsSymbol instanceof ProcedureEntry) &&
-                        rhsType.hasAssignmentProtection()==lhsType.hasAssignmentProtection()) {
-                     if (lhsBaseType.equals(rhsAttr.getType())) {
-                        // pointer assignment from SymbolTableEntry
-                        checkLifeCycle(lhs, rhsVariable);
-                        ruleApplied=true;
-                        break;
-                    }
-                }
+
+
 
                 // NIL assignment
                 if (rhsType instanceof TypeReference && ((TypeReference)rhsType).getBaseType() == null ) {
@@ -256,6 +286,11 @@ public class TypeUtilities {
                 // -- lhs is REF TASK; rhs is TASK ; special treatment since we have no symbol table entry here 
                 if ( ((TypeReference)lhsType).getBaseType() instanceof TypeTask &&
                         rhsType instanceof TypeTask) {
+                    ruleApplied=true;
+                    break;
+                }
+                
+                if ( ((TypeReference)lhsType).getBaseType().equals(rhsType)) {
                     ruleApplied=true;
                     break;
                 }

@@ -1,6 +1,7 @@
 .PHONY: all
 #SUBDIRS =  04_ProgramStructure 10_inputAndOutput
-SUBDIRS =  $(dir $(sort $(wildcard */Makefile)))
+#SUBDIRS =  $(dir $(sort $(wildcard */Makefile)))
+SUBDIRS =  $(dir $(sort $(wildcard [0..9]*/Makefile)))
 
 
 ERRORCHECKER = ../../errorChecker/errorParser ../../errorChecker/genExpectations

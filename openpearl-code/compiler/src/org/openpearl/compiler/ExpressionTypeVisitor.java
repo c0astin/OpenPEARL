@@ -2053,7 +2053,6 @@ implements OpenPearlVisitor<Void> {
                     } else {
                         ErrorStack.add("may not be applied on type "+attrName.getType().getName());
                     }
-                    // visitName(ctx.name(); already invoked
                 }
             } else if (ctx.simpleType() != null) {
 //                SymbolTableEntry entry = this.m_currentSymbolTable.lookup(ctx.name().ID().getText());
@@ -2422,15 +2421,6 @@ implements OpenPearlVisitor<Void> {
             TypeDefinition type2 = TypeUtilities.performImplicitDereferenceAndFunctioncall(op2);
             Boolean isConstant = op1.isConstant() && op2.isConstant();
 
-//            if (type1 instanceof TypeProcedure) {
-//                type1 = ((TypeProcedure)type1).getResultType();
-//                isConstant = false;
-//            }
-//
-//            if (type2 instanceof TypeProcedure) {
-//                type2 = ((TypeProcedure)type2).getResultType();
-//                isConstant = false;
-//            }
 
             if (type1 instanceof TypeFixed && type2 instanceof TypeFixed) {
                 res = new ASTAttribute(new TypeBit(1), isConstant);
@@ -2489,7 +2479,12 @@ implements OpenPearlVisitor<Void> {
                     Log.debug(
                             "ExpressionTypeVisitor: visit\"+relation+\"RelationalExpression: rule#7");
 
-
+            } else if (type1 instanceof TypeRefChar || type2 instanceof TypeRefChar) {
+                res = new ASTAttribute(new TypeBit(1), isConstant);
+                
+                ErrorStack.add(
+                        "REF CHAR() not supported in expressions, yet");
+                
             } else {
                 ErrorStack.add(
                         "type mismatch: '"
@@ -3670,6 +3665,10 @@ implements OpenPearlVisitor<Void> {
                     }
                 }
             }
+        } else if (m_type instanceof TypeReference && 
+                ((TypeReference)m_type).getBaseType() instanceof TypeRefChar)  {
+            ErrorStack.add("REF CHAR() not supported in expressions, yet");
+            m_ast.put(ctx, new ASTAttribute(new TypeChar(1))); // easy solution for continuation
         } else {
             ErrorStack.add("must be applied of type CHAR -- got "+typeOfChar.toErrorString());
             m_ast.put(ctx, new ASTAttribute(new TypeChar(1))); // easy solution for continuation

@@ -17,7 +17,7 @@ p: PROC;
    print(rc);
    print(refInvChar);
 /*$      ^
-error: print: type mismatch: cannot pass INV value to non INV formal parameter
+error: print: type mismatch: cannot pass object of type REF INV CHAR() as REF CHAR()
 */
    print(invRefCharInit);
 /*       ^

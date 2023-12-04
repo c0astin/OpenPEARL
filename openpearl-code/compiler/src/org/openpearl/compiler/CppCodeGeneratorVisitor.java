@@ -1901,7 +1901,16 @@ implements OpenPearlVisitor<ST> {
             stmt = m_group.getInstanceOf("AssignStorageToRefChar");
             stmt.add("id", visitName(ctx.name()));
             stmt.add("expr", visit(ctx.expression()));
-
+        } else if (attrLhs.getType() instanceof TypeReference && 
+                ( ((TypeReference)(attrLhs.getType())).getBaseType() instanceof TypeRefChar) &&
+                attrRhs.getType() instanceof TypeReference && 
+                ((TypeReference)(attrRhs.getType())).getBaseType() instanceof TypeChar) {
+            // need implicit dereference on rhs
+            stmt = m_group.getInstanceOf("AssignStorageToRefChar");
+            stmt.add("id", visitName(ctx.name()));
+            ST dereferenceRhs = m_group.getInstanceOf("CONT");
+            dereferenceRhs.add("operand", visit(ctx.expression()));
+            stmt.add("expr", dereferenceRhs);
         } else if (attrLhs.getType() instanceof TypeReference && derefLhs == false) {
             // we have a reference assignment; rhs may only be a name
             stmt.add("lhs", visit(ctx.name()));

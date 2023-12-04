@@ -14,13 +14,18 @@ t: TASK MAIN;
    CALL simpleOperations;
    printResult('simpleOperations');
    CALL comparisons;
+   /* REF CHAR() in expressions are not supported yet 
+   printResult('comparisonWithContent');
+   CALL comparisonWithContent;
+   */
    printResult('comparisons');
    CALL refCharAsParameter;
 END;
+
 refCharAsParameter: PROC;
-   DCL t CHAR(20) INIT('Hallo Welt');
+   DCL text CHAR(20) INIT('Hallo Welt');
    DCL rc REF CHAR();
-   rc = t;
+   rc = text;
    printMessage(rc);
    printMessage('hallo');
    printMessage('hallo welt');
@@ -30,7 +35,7 @@ printMessage: PROC (text REF INV CHAR() );
    PUT 'text is >',text,'<' TO so BY 3A, SKIP;
 END;
 
-printResult: PROC(test CHAR(20));
+printResult: PROC(test CHAR(30));
    PUT '------------',test TO so BY A,SKIP;
    IF errors == 0 THEN
       PUT test,': ', tests,' run without failures' TO so BY A,A,F(3),A,SKIP;
@@ -201,5 +206,55 @@ comparisons: PROC;
 
 END;
 
+/*
+REF CHAR() in expressions are not supported yet 
+
+
+comparisonWithContent: PROC;
+   DCL data CHAR(40); 
+   DCL d5 CHAR(5);
+   DCL rc REF CHAR();
+   DCL rc1 REF CHAR();
+
+   ! ----------
+   data = 'hello';
+   rc = data;
+   
+   tests = tests + 1;
+   IF CONT rc == data  THEN
+       PUT tests, ': fine rc == data: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc == data : is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   tests = tests + 1;
+   IF CONT rc == 'hello'  THEN
+       PUT tests, ': fine rc == hello: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc == hello : is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   tests = tests + 1;
+   IF CONT rc /= 'world'  THEN
+       PUT tests, ': fine rc /= world: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc /= world : is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   tests = tests + 1;
+   CONT rc = 'world';
+
+   IF CONT rc == 'world'  THEN
+       PUT tests, ': fine rc == world: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc == world : is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+END;
+*/
 
 MODEND;
