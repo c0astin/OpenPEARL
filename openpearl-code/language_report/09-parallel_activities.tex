@@ -336,6 +336,7 @@ the task first becomes ``runnable''; but it is not started, i.e.,
 transferred into the state ``running'', until it has become the runnable
 task of highest priority. %%% (cf. also 9.2.2).
 
+The start condition becomes ineffective 
 Examples:
 
 \kw{AT}\code{ 20:0:0 }\kw{ACTIVATE}\code{ statistics;}\\
@@ -359,6 +360,11 @@ start, in accordance with the syntax definition
 \index{UNTIL@\textbf{UNTIL}}
 \index{DURING@\textbf{DURING}}
 \end{grammarframe}
+
+%%%% begin added
+The evaluation of all expressions in the \hlink{StartCondition} is performed 
+at the moment when the \hlink{TaskStarting} statement is reached. 
+%%%% end added
 
 Examples:
 
@@ -450,7 +456,6 @@ task's termination (c).}
 \label{whenAfter}
 \end{figure}
 
-The start condition becomes ineffective 
 %%%\removedtext{(i.e., the task associated with
 %%%it is not executed any longer)} % verwirrende Formulierung
 ,
@@ -888,6 +893,11 @@ the following statement:
 \index{AFTER@\textbf{AFTER}}
 \index{WHEN@\textbf{WHEN}}
 \end{grammarframe}
+
+%%%% begin added
+The evaluation of all expressions in the \hlink{SimpleStartCondition} is performed 
+at the moment when the \hlink{TaskContinuing} statement is reached. 
+%%%% end added
 
 
 If Name$\S $Task is stated, the statement causes that the indicated task
