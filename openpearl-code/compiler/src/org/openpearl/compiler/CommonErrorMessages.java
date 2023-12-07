@@ -81,4 +81,8 @@ public class CommonErrorMessages {
             return "expression";
         }
     }
+    
+    public static void noVoidProcAllowed(ParserRuleContext ctx) {
+        ErrorStack.add(ctx, null, "no PROC returning nothing allowed as operand");
+    }
 }
