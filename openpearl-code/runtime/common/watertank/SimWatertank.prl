@@ -295,7 +295,7 @@ DCL cstep FIXED(15) INIT(0);
    WHILE simulation_is_running
    REPEAT
        REQUEST sema;
-       current_consumer_dissipation := ABS(SIN(2*cstep)*COS(3*cstep)/1000);
+       current_consumer_dissipation := 10*ABS(SIN(2*cstep)*COS(3*cstep))/1000;
        cstep := cstep +1;
        RELEASE sema;
        AFTER 1 SEC RESUME;
