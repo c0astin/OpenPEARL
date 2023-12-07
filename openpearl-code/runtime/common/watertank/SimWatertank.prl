@@ -128,7 +128,7 @@ start_simulation: PROC GLOBAL;
   openLogfile(fileName, '0'B1);
   log('STARTING SIMULATION');
   simulation_is_running = '1'B1;
-  ACTIVATE log_status;
+  AFTER 1 SEC prl ACTIVATE log_status;
   ACTIVATE simulation;
   AFTER 10 SEC ACTIVATE consumer;
   ACTIVATE check_tank_status;
@@ -528,8 +528,8 @@ simulation: TASK PRIO 10;
 
       pump_update(dt);
       pressure_sensor_1_update(dt);
-      pressure_sensor_2_update(dt);		
       tank_update(dt);
+      pressure_sensor_2_update(dt);		
       float_switch_update(dt);
       
       RELEASE sema;
