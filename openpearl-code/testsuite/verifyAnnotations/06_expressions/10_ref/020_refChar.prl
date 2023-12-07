@@ -1,0 +1,76 @@
+MODULE(rc);
+
+PROBLEM;
+
+refChar: PROC;
+   DCL hallo INV CHAR(5) INIT('Hallo');
+   DCL welt      CHAR(4) INIT('Welt');
+   DCL refHallo REF CHAR() INIT(hallo);
+/*$                             ^
+error: type mismatch: cannot use constant of type INV CHAR(5) as initializer for object of type REF CHAR()
+*/
+   DCL refWelt  REF CHAR() INIT(welt);
+   DCL refInvHallo REF INV CHAR() INIT(hallo);
+   DCL refInvWelt  REF INV CHAR() INIT(welt);
+   DCL invRefHallo INV REF CHAR() INIT(hallo);
+/*$                                    ^
+error: type mismatch: cannot use constant of type INV CHAR(5) as initializer for object of type INV REF CHAR()
+*/
+   DCL invRefWelt  INV REF CHAR() INIT(welt);
+   DCL invRefInvHallo INV REF INV CHAR() INIT(hallo);
+   DCL invRefInvWelt  INV REF INV CHAR() INIT(welt);
+
+
+   refHallo = hallo;
+/*$^
+error: assignment: type mismatch: cannot assign constant of type INV CHAR(5) to REF CHAR()
+*/
+   refHallo = welt;
+   refWelt = hallo;
+/*$^
+error: assignment: type mismatch: cannot assign constant of type INV CHAR(5) to REF CHAR()
+*/
+   refWelt = welt;
+
+   refInvHallo = hallo;
+   refInvHallo = welt;
+   refInvWelt = hallo;
+   refInvWelt = welt;
+
+   invRefHallo = hallo;
+/*$^
+error: assignment: INV variable not allowed on lhs
+*/
+   invRefHallo = welt;
+/*$^
+error: assignment: INV variable not allowed on lhs
+*/
+   invRefWelt = hallo;
+/*$^
+error: assignment: INV variable not allowed on lhs
+*/
+   invRefWelt = welt;
+/*$^
+error: assignment: INV variable not allowed on lhs
+*/
+   invRefInvHallo = hallo;
+/*$^
+error: assignment: INV variable not allowed on lhs
+*/
+   invRefInvHallo = welt;
+/*$^
+error: assignment: INV variable not allowed on lhs
+*/
+   invRefInvWelt = hallo;
+/*$^
+error: assignment: INV variable not allowed on lhs
+*/
+   invRefInvWelt = welt;
+/*$^
+error: assignment: INV variable not allowed on lhs
+*/
+   
+END;
+
+
+MODEND;

@@ -33,18 +33,23 @@ t1: TASK MAIN;
    f = SIZEOF CLOCK;
 
    f = SIZEOF so;
-/*$    ^
+/*$           ^
 error: SIZEOF: may not be applied on type DATION
 */
 
    f = SIZEOF s1;
-/*$    ^
+/*$           ^
 error: SIZEOF: may not be applied on type SEMA
 */
 
    f = SIZEOF b1;
-/*$    ^
+/*$           ^
 error: SIZEOF: may not be applied on type BOLT
+*/
+
+   f = SIZEOF p1;
+/*$           ^
+error: SIZEOF: may not be applied on type PROC
 */
 
 END;

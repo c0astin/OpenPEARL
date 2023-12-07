@@ -40,63 +40,63 @@ t0: TASK;
    CALL q(f7);
    CALL q(f32);
 /*$       ^
-error: q: type mismatch: cannot pass object of type FIXED(32) as FIXED(31)
+error: type mismatch: cannot pass object of type FIXED(32) as FIXED(31)
 */
 
    CALL q(hFloat);
 /*$       ^
-error: q: type mismatch: cannot pass object of type FLOAT(52) as FIXED(31)
+error: type mismatch: cannot pass object of type FLOAT(52) as FIXED(31)
 */
 
    CALL q(1);
    CALL q(1(32));
 /*$       ^
-error: q: type mismatch: cannot pass constant of type FIXED(32) as FIXED(31)
+error: type mismatch: cannot pass constant of type FIXED(32) as FIXED(31)
 */
 
    CALL q(bit2);
 /*$       ^
-error: q: type mismatch: cannot pass object of type BIT(2) as FIXED(31)
+error: type mismatch: cannot pass object of type BIT(2) as FIXED(31)
 */
 
    CALL q(dur);
 /*$       ^
-error: q: type mismatch: cannot pass object of type DURATION as FIXED(31)
+error: type mismatch: cannot pass object of type DURATION as FIXED(31)
 */
 
    CALL q(clk);
 /*$       ^
-error: q: type mismatch: cannot pass object of type CLOCK as FIXED(31)
+error: type mismatch: cannot pass object of type CLOCK as FIXED(31)
 */
 
    CALL q(ch);
 /*$       ^
-error: q: type mismatch: cannot pass object of type CHAR(2) as FIXED(31)
+error: type mismatch: cannot pass object of type CHAR(2) as FIXED(31)
 */
 
    CALL q(t1);
 /*$       ^
-error: q: type mismatch: cannot pass object of type TASK as FIXED(31)
+error: type mismatch: cannot pass object of type TASK as FIXED(31)
 */
 
    CALL q(so);
 /*$       ^
-error: q: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as FIXED(31)
+error: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as FIXED(31)
 */
 
    CALL q(irupt);
 /*$       ^
-error: q: type mismatch: cannot pass object of type INTERRUPT as FIXED(31)
+error: type mismatch: cannot pass object of type INTERRUPT as FIXED(31)
 */
 
    CALL q(b);
 /*$       ^
-error: q: type mismatch: cannot pass object of type BOLT as FIXED(31)
+error: type mismatch: cannot pass object of type BOLT as FIXED(31)
 */
 
    CALL q(sem);
 /*$       ^
-error: q: type mismatch: cannot pass object of type SEMA as FIXED(31)
+error: type mismatch: cannot pass object of type SEMA as FIXED(31)
 */
 
 END;
@@ -114,65 +114,65 @@ t1: TASK;
    CALL q1(f7);
    CALL q1(f32);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type FIXED(32) as FLOAT(23)
+error: type mismatch: cannot pass object of type FIXED(32) as FLOAT(23)
 */
 
    CALL q1(float);
 
    CALL q1(hFloat);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type FLOAT(52) as FLOAT(23)
+error: type mismatch: cannot pass object of type FLOAT(52) as FLOAT(23)
 */
 
    CALL q1(1);
    CALL q1(1(32));
 /*$        ^
-error: q1: type mismatch: cannot pass constant of type FIXED(32) as FLOAT(23)
+error: type mismatch: cannot pass constant of type FIXED(32) as FLOAT(23)
 */
 
    CALL q1(bit2);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type BIT(2) as FLOAT(23)
+error: type mismatch: cannot pass object of type BIT(2) as FLOAT(23)
 */
 
    CALL q1(dur);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type DURATION as FLOAT(23)
+error: type mismatch: cannot pass object of type DURATION as FLOAT(23)
 */
 
    CALL q1(clk);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type CLOCK as FLOAT(23)
+error: type mismatch: cannot pass object of type CLOCK as FLOAT(23)
 */
 
    CALL q1(ch);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type CHAR(2) as FLOAT(23)
+error: type mismatch: cannot pass object of type CHAR(2) as FLOAT(23)
 */
 
    CALL q1(t1);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type TASK as FLOAT(23)
+error: type mismatch: cannot pass object of type TASK as FLOAT(23)
 */
 
    CALL q1(so);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as FLOAT(23)
+error: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as FLOAT(23)
 */
 
    CALL q1(irupt);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type INTERRUPT as FLOAT(23)
+error: type mismatch: cannot pass object of type INTERRUPT as FLOAT(23)
 */
 
    CALL q1(b);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type BOLT as FLOAT(23)
+error: type mismatch: cannot pass object of type BOLT as FLOAT(23)
 */
 
    CALL q1(sem);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type SEMA as FLOAT(23)
+error: type mismatch: cannot pass object of type SEMA as FLOAT(23)
 */
 
 END;
@@ -188,59 +188,59 @@ t2: TASK;
 
    CALL q2(f32);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type FIXED(32) as DURATION
+error: type mismatch: cannot pass object of type FIXED(32) as DURATION
 */
 
    CALL q2(hFloat);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type FLOAT(52) as DURATION
+error: type mismatch: cannot pass object of type FLOAT(52) as DURATION
 */
 
    CALL q2(1(32));
 /*$        ^
-error: q2: type mismatch: cannot pass constant of type FIXED(32) as DURATION
+error: type mismatch: cannot pass constant of type FIXED(32) as DURATION
 */
 
    CALL q2(bit2);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type BIT(2) as DURATION
+error: type mismatch: cannot pass object of type BIT(2) as DURATION
 */
 
    CALL q2(dur);
 
    CALL q2(clk);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type CLOCK as DURATION
+error: type mismatch: cannot pass object of type CLOCK as DURATION
 */
 
    CALL q2(ch);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type CHAR(2) as DURATION
+error: type mismatch: cannot pass object of type CHAR(2) as DURATION
 */
 
    CALL q2(t1);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type TASK as DURATION
+error: type mismatch: cannot pass object of type TASK as DURATION
 */
 
    CALL q2(so);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as DURATION
+error: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as DURATION
 */
 
    CALL q2(irupt);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type INTERRUPT as DURATION
+error: type mismatch: cannot pass object of type INTERRUPT as DURATION
 */
 
    CALL q2(b);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type BOLT as DURATION
+error: type mismatch: cannot pass object of type BOLT as DURATION
 */
 
    CALL q2(sem);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type SEMA as DURATION
+error: type mismatch: cannot pass object of type SEMA as DURATION
 */
 
 END;
@@ -256,60 +256,60 @@ t3: TASK;
 
    CALL q3(f32);
 /*$        ^
-error: q3: type mismatch: cannot pass object of type FIXED(32) as CLOCK
+error: type mismatch: cannot pass object of type FIXED(32) as CLOCK
 */
 
 
    CALL q3(hFloat);
 /*$        ^
-error: q3: type mismatch: cannot pass object of type FLOAT(52) as CLOCK
+error: type mismatch: cannot pass object of type FLOAT(52) as CLOCK
 */
 
    CALL q3(1(32));
 /*$        ^
-error: q3: type mismatch: cannot pass constant of type FIXED(32) as CLOCK
+error: type mismatch: cannot pass constant of type FIXED(32) as CLOCK
 */
 
    CALL q3(bit2);
 /*$        ^
-error: q3: type mismatch: cannot pass object of type BIT(2) as CLOCK
+error: type mismatch: cannot pass object of type BIT(2) as CLOCK
 */
 
    CALL q3(dur);
 /*$        ^
-error: q3: type mismatch: cannot pass object of type DURATION as CLOCK
+error: type mismatch: cannot pass object of type DURATION as CLOCK
 */
 
    CALL q3(clk);
 
    CALL q3(ch);
 /*$        ^
-error: q3: type mismatch: cannot pass object of type CHAR(2) as CLOCK
+error: type mismatch: cannot pass object of type CHAR(2) as CLOCK
 */
 
    CALL q3(t1);
 /*$        ^
-error: q3: type mismatch: cannot pass object of type TASK as CLOCK
+error: type mismatch: cannot pass object of type TASK as CLOCK
 */
 
    CALL q3(so);
 /*$        ^
-error: q3: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as CLOCK
+error: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as CLOCK
 */
 
    CALL q3(irupt);
 /*$        ^
-error: q3: type mismatch: cannot pass object of type INTERRUPT as CLOCK
+error: type mismatch: cannot pass object of type INTERRUPT as CLOCK
 */
 
    CALL q3(b);
 /*$        ^
-error: q3: type mismatch: cannot pass object of type BOLT as CLOCK
+error: type mismatch: cannot pass object of type BOLT as CLOCK
 */
 
    CALL q3(sem);
 /*$        ^
-error: q3: type mismatch: cannot pass object of type SEMA as CLOCK
+error: type mismatch: cannot pass object of type SEMA as CLOCK
 */
 
 END;
@@ -327,69 +327,69 @@ t4: TASK;
    CALL q4('1'B2);
    CALL q4('100'B1);
 /*$        ^
-error: q4: type mismatch: cannot pass constant of type BIT(3) as BIT(2)
+error: type mismatch: cannot pass constant of type BIT(3) as BIT(2)
 */
 
    CALL q4(f32);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type FIXED(32) as BIT(2)
+error: type mismatch: cannot pass object of type FIXED(32) as BIT(2)
 */
 
    CALL q4(hFloat);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type FLOAT(52) as BIT(2)
+error: type mismatch: cannot pass object of type FLOAT(52) as BIT(2)
 */
 
    CALL q4(1(32));
 /*$        ^
-error: q4: type mismatch: cannot pass constant of type FIXED(32) as BIT(2)
+error: type mismatch: cannot pass constant of type FIXED(32) as BIT(2)
 */
 
    CALL q4(bit1);
    CALL q4(bit2);
    CALL q4(bit3);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type BIT(3) as BIT(2)
+error: type mismatch: cannot pass object of type BIT(3) as BIT(2)
 */
 
    CALL q4(dur);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type DURATION as BIT(2)
+error: type mismatch: cannot pass object of type DURATION as BIT(2)
 */
 
    CALL q4(clk);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type CLOCK as BIT(2)
+error: type mismatch: cannot pass object of type CLOCK as BIT(2)
 */
 
    CALL q4(ch);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type CHAR(2) as BIT(2)
+error: type mismatch: cannot pass object of type CHAR(2) as BIT(2)
 */
 
    CALL q4(t1);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type TASK as BIT(2)
+error: type mismatch: cannot pass object of type TASK as BIT(2)
 */
 
    CALL q4(so);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as BIT(2)
+error: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as BIT(2)
 */
 
    CALL q4(irupt);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type INTERRUPT as BIT(2)
+error: type mismatch: cannot pass object of type INTERRUPT as BIT(2)
 */
 
    CALL q4(b);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type BOLT as BIT(2)
+error: type mismatch: cannot pass object of type BOLT as BIT(2)
 */
 
    CALL q4(sem);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type SEMA as BIT(2)
+error: type mismatch: cannot pass object of type SEMA as BIT(2)
 */
 
 END;
@@ -406,32 +406,32 @@ t5: TASK;
 
    CALL q5(f32);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type FIXED(32) as CHAR(2)
+error: type mismatch: cannot pass object of type FIXED(32) as CHAR(2)
 */
 
    CALL q5(hFloat);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type FLOAT(52) as CHAR(2)
+error: type mismatch: cannot pass object of type FLOAT(52) as CHAR(2)
 */
 
    CALL q5(1(32));
 /*$        ^
-error: q5: type mismatch: cannot pass constant of type FIXED(32) as CHAR(2)
+error: type mismatch: cannot pass constant of type FIXED(32) as CHAR(2)
 */
 
    CALL q5(bit2);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type BIT(2) as CHAR(2)
+error: type mismatch: cannot pass object of type BIT(2) as CHAR(2)
 */
 
    CALL q5(dur);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type DURATION as CHAR(2)
+error: type mismatch: cannot pass object of type DURATION as CHAR(2)
 */
 
    CALL q5(clk);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type CLOCK as CHAR(2)
+error: type mismatch: cannot pass object of type CLOCK as CHAR(2)
 */
 
    CALL q5(ch1);
@@ -440,36 +440,36 @@ error: q5: type mismatch: cannot pass object of type CLOCK as CHAR(2)
    CALL q5('ab');
    CALL q5('abc');
 /*$        ^
-error: q5: type mismatch: cannot pass constant of type CHAR(3) as CHAR(2)
+error: type mismatch: cannot pass constant of type CHAR(3) as CHAR(2)
 */
    CALL q5(ch3);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type CHAR(3) as CHAR(2)
+error: type mismatch: cannot pass object of type CHAR(3) as CHAR(2)
 */
 
    CALL q5(t1);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type TASK as CHAR(2)
+error: type mismatch: cannot pass object of type TASK as CHAR(2)
 */
 
    CALL q5(so);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as CHAR(2)
+error: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as CHAR(2)
 */
 
    CALL q5(irupt);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type INTERRUPT as CHAR(2)
+error: type mismatch: cannot pass object of type INTERRUPT as CHAR(2)
 */
 
    CALL q5(b);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type BOLT as CHAR(2)
+error: type mismatch: cannot pass object of type BOLT as CHAR(2)
 */
 
    CALL q5(sem);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type SEMA as CHAR(2)
+error: type mismatch: cannot pass object of type SEMA as CHAR(2)
 */
 
 END;
@@ -486,68 +486,68 @@ t6: TASK;
    CALL q6(str1); ! ok
    CALL q6(str3);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type STRUCT [  FIXED(31),FLOAT(23),CHAR(1) ]  as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type STRUCT [  FIXED(31),FLOAT(23),CHAR(1) ]  as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
 
    CALL q6(f32);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type FIXED(32) as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type FIXED(32) as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(hFloat);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type FLOAT(52) as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type FLOAT(52) as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(1(32));
 /*$        ^
-error: q6: type mismatch: cannot pass constant of type FIXED(32) as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass constant of type FIXED(32) as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(bit2);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type BIT(2) as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type BIT(2) as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(dur);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type DURATION as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type DURATION as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(clk);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type CLOCK as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type CLOCK as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(ch);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type CHAR(2) as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type CHAR(2) as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(t1);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type TASK as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type TASK as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(so);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type DATION OUT ALPHIC  FORWARD NOCYCL STREAM DIM(*,80) as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(irupt);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type INTERRUPT as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type INTERRUPT as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(b);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type BOLT as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type BOLT as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
    CALL q6(sem);
 /*$        ^
-error: q6: type mismatch: cannot pass object of type SEMA as STRUCT [  FIXED(31),FLOAT(23) ]
+error: type mismatch: cannot pass object of type SEMA as STRUCT [  FIXED(31),FLOAT(23) ]
 */
 
 END;
@@ -561,15 +561,15 @@ t7: TASK;
    CALL q7(fixed);   
    CALL q7(2);
 /*$        ^
-error: q7: type mismatch: cannot pass constant of type FIXED(2) as REF FIXED(31)
+error: type mismatch: cannot pass constant of type FIXED(2) as REF FIXED(31)
 */
    CALL q7(f7);
 /*$        ^
-error: q7: type mismatch: cannot pass object of type FIXED(7) as REF FIXED(31)
+error: type mismatch: cannot pass object of type FIXED(7) as REF FIXED(31)
 */
    CALL q7(f32);
 /*$        ^
-error: q7: type mismatch: cannot pass object of type FIXED(32) as REF FIXED(31)
+error: type mismatch: cannot pass object of type FIXED(32) as REF FIXED(31)
 */
 END;
 
@@ -583,11 +583,11 @@ t7i: TASK;
    CALL q7i(if);
    CALL q7i(2); ! pass constant
 /*$         ^
-error: q7i: type mismatch: cannot pass constant of type FIXED(2) as REF INV FIXED(31)
+error: type mismatch: cannot pass constant of type FIXED(2) as REF INV FIXED(31)
 */
    CALL q7i(f7);
 /*$         ^
-error: q7i: type mismatch: cannot pass object of type FIXED(7) as REF INV FIXED(31)
+error: type mismatch: cannot pass object of type FIXED(7) as REF INV FIXED(31)
 */
    CALL q7i(1(31));
 END;
@@ -603,7 +603,7 @@ t8: TASK;
    q8(text2);
    q8('Hallo');
 /*$   ^
-error: q8: type mismatch: cannot pass constant of type CHAR(5) as REF CHAR()
+error: type mismatch: cannot pass constant of type CHAR(5) as REF CHAR()
 */
 END;
 

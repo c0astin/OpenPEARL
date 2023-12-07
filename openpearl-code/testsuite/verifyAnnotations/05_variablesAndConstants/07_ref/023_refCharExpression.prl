@@ -9,7 +9,7 @@ p: PROC;
   
   CONT rc = rc CAT '1';
 /*$         ^
-error: CAT: REF CHAR() not supported in expressions, yet  
+error: CAT or ><: REF CHAR() not supported in expressions, yet  
 */
 
 END;
