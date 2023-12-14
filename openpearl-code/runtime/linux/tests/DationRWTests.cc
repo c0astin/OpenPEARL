@@ -65,7 +65,8 @@ static pearlrt::Device* _disc = &disc;
 
 TEST(DationRW, read_write_FORWARD) {
    pearlrt::Log::info("*** DationRW: read_write_to_file start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -113,7 +114,8 @@ TEST(DationRW, read_write_FORWARD) {
 */
 TEST(DationRW, Read_Write_checkerfield) {
    pearlrt::Log::info("*** DationRW: read_write_checkerfield start ***");
-   pearlrt::Character<9> filename("chck1.txt");
+   pearlrt::Character<9> fname("chck1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -192,7 +194,8 @@ Test write X,SKIP,PAGE  on 1 dim dation
 */
 TEST(DationRW, toSkip1Dim) {
    pearlrt::Log::info("*** DationRW: toSkip1Dim start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -251,7 +254,8 @@ Test write X,SKIP,PAGE  on 2 dim dation
 */
 TEST(DationRW, toSkip2Dim) {
    pearlrt::Log::info("*** DationRW: toSkip2Dim start ***");
-   pearlrt::Character<9> filename("file2.txt");
+   pearlrt::Character<9> fname("file2.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -366,7 +370,8 @@ Test write X,SKIP,PAGE  on 3 dim dation
 */
 TEST(DationRW, toSkip3Dim) {
    pearlrt::Log::info("*** DationRW: toSkip3Dim start ***");
-   pearlrt::Character<9> filename("file3.txt");
+   pearlrt::Character<9> fname("file3.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -483,7 +488,8 @@ TEST(DationRW, toSkip3Dim) {
 */
 TEST(DationRW, Read_Write_checkerfield3) {
    pearlrt::Log::info("*** DationRW: read_write_checkerfield3 start ***");
-   pearlrt::Character<9> filename("chck1.txt");
+   pearlrt::Character<9> fname("chck1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -575,7 +581,8 @@ TEST(DationRW, Read_Write_checkerfield3) {
 */
 TEST(DationRW, read_CYCLIC) {
    pearlrt::Log::info("*** DationRW: read_cyclic start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -643,7 +650,8 @@ TEST(DationRW, read_CYCLIC) {
 */
 TEST(DationRW, write_CYCLIC) {
    pearlrt::Log::info("*** DationRW: write_cyclic start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);

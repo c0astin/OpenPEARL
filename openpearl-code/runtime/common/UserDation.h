@@ -166,9 +166,9 @@ namespace pearlrt {
 
         \note throws various exceptions if no RST-Variable is set
       */
-      template <size_t S, int R>
+      template <int R>
       void dationOpen(int p,
-                      Character<S> * idf,
+                      RefCharacter* idf,
                       Fixed<R> * rst) {
          mutexUserDation.lock();
         
@@ -188,16 +188,7 @@ namespace pearlrt {
                throw theInternalDationSignal;
             }
 
-            if (S > maxLengthIdfName) {
-               Log::error("filename exceeds %d characters",maxLengthIdfName);
-               throw theDationParamSignal;
-            }
-
-
-            RefCharacter currentFilename;
-            currentFilename.setWork(*idf);
-
-            internalDationOpen(p, &currentFilename );
+            internalDationOpen(p, idf );
 
          } catch (Signal & s) {
             if (rst) {
