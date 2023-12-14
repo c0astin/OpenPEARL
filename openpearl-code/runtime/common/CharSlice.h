@@ -235,7 +235,7 @@ namespace pearlrt {
       /**
        get the data
 
-       \returns a C-pointer to the data. It is not enshured that the
+       \returns a char pointer to the data. It is not enshured that the
            string is null-terminated.
 
       */
