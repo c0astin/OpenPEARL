@@ -409,30 +409,54 @@ implements OpenPearlVisitor<Void> {
         boolean hasANY = false;
         boolean hasCAN = false;
         boolean hasPRM = false;
+        ParserRuleContext errorContext=null;
 
         visitDationName(ctx.dationName());
 
         if (ctx.open_parameterlist() != null && ctx.open_parameterlist().open_parameter() != null) {
-
             for (int i = 0; i < ctx.open_parameterlist().open_parameter().size(); i++) {
-                //System.out.println("openParam: "+ ctx.open_parameterlist().open_parameter(i).getText());
                 if (ctx.open_parameterlist().open_parameter(i).open_parameter_idf() != null) {
                     if (hasIDF)
                         ErrorStack.add("multiple IDF attributes");
                     hasIDF = true;
-                    // let's check the type of the IDF-variable. It must be of type CHAR
-                    if (ctx.open_parameterlist().open_parameter(i).open_parameter_idf()
-                            .ID() != null) {
-                        String name = ctx.open_parameterlist().open_parameter(i)
-                                .open_parameter_idf().ID().toString();
-                        SymbolTableEntry se = m_currentSymbolTable.lookup(name);
-                        if (se == null) {
-                            ErrorStack.add("'" + name + "' is not defined");
-                        } else if ((se instanceof VariableEntry)
-                                && !((((VariableEntry) se).getType() instanceof TypeChar))) {
-                            ErrorStack.add("'" + name + "' must be of type CHAR -- has type "
-                                    + (((VariableEntry) se).getType().toString()));
+                    // let's check the type of the IDF-variable. It must be of type 
+                    // CHAR(x), REF CHAR(x), REF CHAR()
+                    if (ctx.open_parameterlist().open_parameter(i).open_parameter_idf() != null) {
+                        ASTAttribute attrIdf = m_ast.lookup(ctx.open_parameterlist().open_parameter(i).open_parameter_idf());
+//                        ASTAttribute attrName = m_ast.lookup(ctx.open_parameterlist().open_parameter(i).open_parameter_idf()
+//                            .name());
+//                        ASTAttribute attrStringSelection = m_ast.lookup(ctx.open_parameterlist().open_parameter(i).open_parameter_idf()
+//                                .stringSelection());
+//                        ASTAttribute attrStringConstant = m_ast.lookup(ctx.open_parameterlist().open_parameter(i).open_parameter_idf()
+//                                .stringConstant());
+                        if (ctx.open_parameterlist().open_parameter(i).open_parameter_idf().name() != null) {
+                            errorContext = ctx.open_parameterlist().open_parameter(i).open_parameter_idf().name();
+                        } else if (ctx.open_parameterlist().open_parameter(i).open_parameter_idf().stringSelection() != null) {
+                            errorContext = ctx.open_parameterlist().open_parameter(i).open_parameter_idf().stringSelection();
+                        } else { 
+                            errorContext = ctx.open_parameterlist().open_parameter(i).open_parameter_idf().stringConstant();
                         }
+                        
+                        TypeDefinition typeOfIdfParameter = attrIdf.m_type;
+                        String idfParameterType = attrIdf.m_type.toString();
+  
+                           if (typeOfIdfParameter instanceof TypeReference) {
+                                typeOfIdfParameter = ((TypeReference)typeOfIdfParameter).getBaseType();
+
+                                if (typeOfIdfParameter instanceof TypeChar ||
+                                        typeOfIdfParameter instanceof TypeRefChar) {
+                                    // ok
+                                }
+
+                            } else if (typeOfIdfParameter instanceof TypeChar) {
+                                // ok
+                            } else if (typeOfIdfParameter instanceof TypeVariableChar) {
+                                // ok
+                            } else {
+                                ErrorStack.add(errorContext, null,"'" + "IDF-value" + "' must be compatible with type CHAR(x) -- has type "
+                                        + (idfParameterType));
+                            }
+                        
                     }
                     /*
                      it's ok for the moment

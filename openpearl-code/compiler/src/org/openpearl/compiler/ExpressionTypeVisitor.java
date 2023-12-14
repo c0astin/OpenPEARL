@@ -4215,4 +4215,32 @@ implements OpenPearlVisitor<Void> {
         visitChildren(ctx);
         return null;
     }
+    
+    @Override
+    public Void visitOpen_parameter_idf(OpenPearlParser.Open_parameter_idfContext ctx) {
+        visitChildren(ctx);
+        ASTAttribute result = null;
+        if (ctx.name()!= null) {
+            result = m_ast.lookup(ctx.name());
+        } else if (ctx.stringSelection() != null) {
+            result = m_ast.lookup(ctx.stringSelection());
+        } else if (ctx.stringConstant() != null) {
+            ConstantCharacterValue ccv =
+                    getConstantStringLiteral(ctx.stringConstant().StringLiteral());
+            int length = ccv.getLength();
+            if (length == 0) {
+                ErrorStack.add(ctx, "char literal", "need at least 1 character");
+            }
+            // generate AST Attribute for further analysis
+            result = new ASTAttribute(new TypeChar(ccv.getLength()), true);
+            ConstantValue cv =
+                    m_constantPool.add(ccv); // add to constant pool; maybe we have it already
+            result.setConstant(cv);
+            m_ast.put(ctx.stringConstant(),result);
+        }
+        
+        m_ast.put(ctx,result);
+        return null;
+    }
+        
 }

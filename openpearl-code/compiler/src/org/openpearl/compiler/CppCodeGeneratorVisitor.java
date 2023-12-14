@@ -3223,33 +3223,65 @@ implements OpenPearlVisitor<ST> {
 
             }
             if (idfName != null) {
-                String fname = null;
-                ST declFilename = m_group.getInstanceOf("declare_idf_filename");
-                ST refFilename = m_group.getInstanceOf("reference_idf_filename");
-
-                if (idfName.ID() != null) {
-                    fname = idfName.ID().toString();
-                    SymbolTableEntry entry = m_currentSymbolTable.lookup(fname);
-
-                    if (entry instanceof VariableEntry) {
-                        declFilename.add("variable", fname);
-                        refFilename.add("variable", fname);
+                ASTAttribute attrIdf = m_ast.lookup(idfName);
+                // check whether we must look for the current context for the content for the file name
+                ParserRuleContext ctxIdfValue = null;
+                
+                if (m_ast.lookup(idfName.name()) != null) {
+                    ctxIdfValue = idfName.name();
+                } else if (m_ast.lookup(idfName.stringSelection()) != null) {
+                        ctxIdfValue = idfName.stringSelection();
+                } else {
+                    ctxIdfValue = idfName.stringConstant();
+                }
+                
+                
+                if (attrIdf.m_type instanceof TypeChar) {
+                    if (attrIdf.m_constant == null) {
+                       stmt.add("fileNameAsChar", visitAndDereference(ctxIdfValue));
                     } else {
-                        declFilename.add("stringConstant", fname);
-                        declFilename.add("lengthOfStringConstant", fname.length());
-                        refFilename.add("stringConstant", fname);
-
+                        stmt.add("fileNameAsChar", attrIdf.m_constant.toString());
+                    }
+                } else if (attrIdf.m_type instanceof TypeVariableChar) {
+                    stmt.add("fileNameAsChar", visitAndDereference(ctxIdfValue));
+                    stmt.add("mkCharRequired",1);
+                } else {
+                    // is REF CHAR(x) or REF CHAR()
+                    TypeDefinition baseType = ((TypeReference)attrIdf.m_type).getBaseType();
+                    if (baseType instanceof TypeChar) {
+                        // CONT(operand)
+                        ST deref = m_group.getInstanceOf("CONT");
+                        deref.add("operand",visitAndDereference(ctxIdfValue));
+                        stmt.add("fileNameAsChar",deref);
+                         
+                    } else {
+                       stmt.add("fileNameAsRefChar",visitAndDereference(ctxIdfValue));
                     }
                 }
-                if (idfName.StringLiteral() != null) {
-                    fname = idfName.StringLiteral().toString();
-                    fname = fname.substring(1, fname.length() - 1);
-                    declFilename.add("stringConstant", fname);
-                    declFilename.add("lengthOfStringConstant", fname.length());
-                    refFilename.add("stringConstant", fname);
-                }
-                stmt.add("declFileName", declFilename);
-                stmt.add("refFileName", refFilename);
+
+//                if (idfName.ID() != null) {
+//                    fname = idfName.ID().toString();
+//                    SymbolTableEntry entry = m_currentSymbolTable.lookup(fname);
+//
+//                    if (entry instanceof VariableEntry) {
+//                        declFilename.add("variable", fname);
+//                        refFilename.add("variable", fname);
+//                    } else {
+//                        declFilename.add("stringConstant", fname);
+//                        declFilename.add("lengthOfStringConstant", fname.length());
+//                        refFilename.add("stringConstant", fname);
+//
+//                    }
+//                }
+//                if (idfName.StringLiteral() != null) {
+//                    fname = idfName.StringLiteral().toString();
+//                    fname = fname.substring(1, fname.length() - 1);
+//                    declFilename.add("stringConstant", fname);
+//                    declFilename.add("lengthOfStringConstant", fname.length());
+//                    refFilename.add("stringConstant", fname);
+//                }
+//                stmt.add("declFileName", declFilename);
+//                stmt.add("refFileName", refFilename);
 
             }
             if (rstVar != null) {
@@ -3301,11 +3333,11 @@ implements OpenPearlVisitor<ST> {
     public ST visitOpen_parameter_idf(OpenPearlParser.Open_parameter_idfContext ctx) {
         ST st = m_group.getInstanceOf("open_parameter_idf");
 
-        if (ctx.ID() != null) {
-            st.add("id", ctx.ID().getText());
-        } else if (ctx.StringLiteral() != null) {
-            st.add("string", ctx.StringLiteral().getText());
-        }
+//        if (ctx.ID() != null) {
+//            st.add("id", ctx.ID().getText());
+//        } else if (ctx.StringLiteral() != null) {
+//            st.add("string", ctx.StringLiteral().getText());
+//        }
         return st;
     }
 
