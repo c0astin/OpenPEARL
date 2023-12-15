@@ -104,7 +104,7 @@ DCL pump_current_rpm FLOAT INIT(0.0);
 ! count how many time the pump has been switched on and off
 DCL pump_activations FIXED(31) INIT(0);
 
-! current flow rate thru the pipes
+! current flow rate provided by the pump
 DCL pump_output_flow_rate FLOAT INIT(0.0); ! flow rate in [m^3/s]
 
 ! pressure sensor #1 [PA}
@@ -394,6 +394,7 @@ END;
 pressure_sensor_1_update: PROC (dt FLOAT /* [ms] */);
     DCL a FLOAT INIT (0.0);
     DCL v FLOAT INIT (0.0);
+    DCL c FLOAT INIT (0.0);
     
     !---------------------------------------------------------------------------
     !      H * rho * g   rho * v^2
@@ -420,7 +421,12 @@ pressure_sensor_1_update: PROC (dt FLOAT /* [ms] */);
 
     IF pump_current_rpm > 0
     THEN
-        pressure_sensor_1 := ( 20 * rho * gravity) / 1000 + ( 1000 * v**2) / pump_current_rpm;
+        c := ( 20 * rho * gravity) / 1000 + ( 1000 * v**2) / pump_current_rpm;
+        IF valve_enabled THEN
+           pressure_sensor_1 := c;
+        ELSE
+           pressure_sensor_1 := pressure_sensor_1 + c;
+	FIN;
     ELSE
         pressure_sensor_1 := 0.0;
     FIN;
@@ -430,7 +436,6 @@ pressure_sensor_2_update: PROC (dt FLOAT /* [ms] */);
     !---------------------------------------------------------------------------
     !      
     !  P = rho * g * h
-
     !
     ! with P is the pressure [Pa]
     !    rho is the fluid density [kg/m^3].
@@ -443,15 +448,20 @@ pressure_sensor_2_update: PROC (dt FLOAT /* [ms] */);
     pressure_sensor_2 := (tank_fill_level / (tank_width * tank_length)) * gravity * rho;
 END;
 
-!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Important Note:
+! The current consumer dissipation is m³ per sec.
+! Therefore we must calculate the dissipation per update interval (100ms)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 tank_update: PROC (dt FLOAT /* [ms] */);
    IF valve_enabled THEN
       tank_fill_level := tank_fill_level +
                          pump_output_flow_rate / 60 -
-			 current_consumer_dissipation;
+			 (current_consumer_dissipation / 100);
   ELSE
       tank_fill_level := tank_fill_level -
-			 current_consumer_dissipation;
+			 (current_consumer_dissipation / 100);
   FIN;
   
   IF tank_fill_level >= get_watertank_capacity

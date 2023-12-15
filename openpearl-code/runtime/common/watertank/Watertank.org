@@ -491,3 +491,11 @@ Die Logdatei ist wie folgt aufgebaut:
 \cautionbox{\lipsum[5]}
 
 \importantbox{\lipsum[6]}
+
+* Verbraucher
+
+Verbraucher verbraucht zwischen 0m³/s und 0.01 m³/s 
+
+#+BEGIN_SRC sh
+  echo "f(x) = 10*abs(sin(2*x)*cos(3*x))/1000;plot f(x)" | gnuplot
+#+END_SRC
