@@ -122,13 +122,16 @@ DCL valve_enabled BIT(1) INIT('0'B1);
 ! 0, if the pump is switched off
 ! 1, if the pump is switched on
 DCL float_switch_enabled BIT(1) INIT('0'B1); 
+ 
+! Maximum allowed pressure between pump and valve [PA]
+DCL max_pressure INV FLOAT INIT(50000.0);
 
 ! ==========================================================================
 start_simulation: PROC GLOBAL;
   openLogfile(fileName, '0'B1);
   log('STARTING SIMULATION');
   simulation_is_running = '1'B1;
-  AFTER 1 SEC prl ACTIVATE log_status;
+  AFTER 1 SEC ACTIVATE log_status;
   ACTIVATE simulation;
   AFTER 10 SEC ACTIVATE consumer;
   ACTIVATE check_tank_status;
@@ -319,7 +322,9 @@ log_status: TASK PRIO 20;
   log('# 9: current_consumer_dissipation');
   log('#10: tank_fill_level');
   log('----------------------------------------------------------------------------');
-   WHILE simulation_is_running
+  log(' 1    2    3          4          5 6          7 8         9          10');
+
+  WHILE simulation_is_running
    REPEAT
      REQUEST sema;
      CONVERT '|',
@@ -425,7 +430,7 @@ pressure_sensor_1_update: PROC (dt FLOAT /* [ms] */);
         IF valve_enabled THEN
            pressure_sensor_1 := c;
         ELSE
-           pressure_sensor_1 := pressure_sensor_1 + c;
+           pressure_sensor_1 := pressure_sensor_1 + c * 0.001;
 	FIN;
     ELSE
         pressure_sensor_1 := 0.0;
