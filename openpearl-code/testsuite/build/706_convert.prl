@@ -292,6 +292,14 @@ convertToFloatF: PROC;
      BY A,F(3),X,2A,SKIP;
   FIN;
 
+  ! test: rounding
+  CONVERT 9.6 TO buffer BY RST(error), F(5);
+  IF buffer NE '   10' THEN
+    failed = failed + 1;
+    PUT errorText,testNbr, 'expected ''   10'' got ''',buffer,'''' TO stdout
+     BY A,F(3),X,2A,SKIP;
+  FIN;
+
   !! test  value shorter leading spaces
   testNbr = testNbr + 1;
   CONVERT 1.0 TO buffer BY RST(error), F(3);
