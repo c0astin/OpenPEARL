@@ -140,6 +140,7 @@ namespace pearlrt {
          // get number of digits in current value
          digits = 1;
          y = (Float<S>) 10;
+         x = absValue;
 
          while ((x >= y).getBoolean()) {
             x = x / y;
@@ -155,7 +156,6 @@ namespace pearlrt {
                           prePointDigits +
                           postPointDigits
                          );
-
          if (leadingSpaces < 0) {
             Log::info("F: width too small");
             throw theFixedValueSignal;
