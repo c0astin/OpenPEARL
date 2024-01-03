@@ -293,6 +293,7 @@ convertToFloatF: PROC;
   FIN;
 
   ! test: rounding
+  PUT 9.6 TO stdout BY RST(error), F(5), SKIP;
   CONVERT 9.6 TO buffer BY RST(error), F(5);
   IF buffer NE '   10' THEN
     failed = failed + 1;
