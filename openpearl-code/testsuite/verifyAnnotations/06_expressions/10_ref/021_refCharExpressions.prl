@@ -1,0 +1,32 @@
+MODULE(rc);
+
+PROBLEM;
+
+
+refCharInExpressions: PROC;
+   DCL rc REF CHAR();
+   DCL (c1,c2) CHAR(10);
+   rc = c1;
+   CONT rc = 'a';
+   CONT rc = rc CAT 'B';
+/*$          ^
+error: CAT or ><: REF CHAR() not supported in expressions, yet
+*/ 
+   c2 = rc.CHAR(1);
+/*$       ^
+error: .CHAR(): REF CHAR() not supported in expressions, yet
+*/ 
+
+   IF rc EQ c2 THEN; FIN;
+/*$   ^
+error: EQ or ==: REF CHAR() not supported in expressions, yet
+*/ 
+
+   IF c2 EQ rc THEN; FIN;
+/*$   ^
+error: EQ or ==: REF CHAR() not supported in expressions, yet
+*/ 
+
+END;
+
+MODEND;

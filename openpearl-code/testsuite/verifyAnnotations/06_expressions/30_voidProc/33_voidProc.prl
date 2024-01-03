@@ -1,0 +1,546 @@
+MODULE(vp);
+
+PROBLEM;
+
+voidProc: PROC;
+END;
+
+getFixed: PROC (x FIXED);
+END;
+
+ttt: PROC;
+   getFixed(voidProc);
+/*$         ^
+error: type mismatch: cannot pass object of type PROC as FIXED(31)
+*/
+   getFixed(voidProc+1);
+/*$         ^
+error: +: no PROC returning nothing allowed as operand
+*/
+
+END;
+
+unaryOperators: PROC;
+  DCL (f1,f2,f3) FIXED;
+  DCL (b1,b2,b3) BIT(32);
+  DCL (fl1, fl2) FLOAT;
+  DCL ch1 CHAR;
+  DCL str STRUCT [(a,b) FIXED];
+
+  ! unary operators 
+  !   - + NOT ABS SIGN LWB UPB TOFIXED TOFLOAT TOBIT TOCHAR ENTIER ROUND
+  !   SIZEOF
+  !   SQRT SIN COS EXP LN TAN ATAN TANH
+
+  b1 = - voidProc;
+/*$      ^
+error: unary -: no PROC returning nothing allowed as operand
+*/
+  b1 = + voidProc;
+/*$      ^
+error: unary +: no PROC returning nothing allowed as operand
+*/
+  b1 = voidProc;   ! not detected here -> CheckAssignement
+  b1 = NOT voidProc;
+/*$        ^
+error: NOT: no PROC returning nothing allowed as operand
+*/
+
+  f1 = ABS voidProc;
+/*$        ^
+error: ABS: no PROC returning nothing allowed as operand
+*/
+  f1 = SIGN voidProc;
+/*$         ^
+error: SIGN: no PROC returning nothing allowed as operand
+*/
+  f1 = LWB voidProc;
+/*$        ^
+error: LWB: no PROC returning nothing allowed as operand
+*/
+  f1 = UPB voidProc;
+/*$        ^
+error: UPB: no PROC returning nothing allowed as operand
+*/
+
+  f1 = TOFIXED voidProc;
+/*$            ^
+error: TOFIXED: no PROC returning nothing allowed as operand
+*/
+  f1 = (TOFIXED voidProc) + 1;
+/*$             ^
+error: TOFIXED: no PROC returning nothing allowed as operand
+*/
+  fl1 = TOFLOAT voidProc;
+/*$             ^
+error: TOFLOAT: no PROC returning nothing allowed as operand
+*/
+  b1 = TOBIT voidProc;
+/*$          ^
+error: TOBIT: no PROC returning nothing allowed as operand
+*/
+  
+  ch1 = TOCHAR voidProc;
+/*$            ^
+error: TOCHAR: no PROC returning nothing allowed as operand
+*/
+
+  f1 = ENTIER voidProc;
+/*$           ^
+error: ENTIER: no PROC returning nothing allowed as operand
+*/
+  f1 = ROUND voidProc;
+/*$          ^
+error: ROUND: no PROC returning nothing allowed as operand
+*/
+
+  f1 = SIZEOF f1;
+  f1 = SIZEOF voidProc;
+/*$           ^
+error: SIZEOF: may not be applied on type PROC
+*/
+  f1 = SIZEOF str;
+  
+  fl1 = SQRT voidProc;
+/*$          ^
+error: SQRT: no PROC returning nothing allowed as operand
+*/
+  fl1 = SIN  voidProc;
+/*$          ^
+error: SIN: no PROC returning nothing allowed as operand
+*/
+  fl1 = COS  voidProc;
+/*$          ^
+error: COS: no PROC returning nothing allowed as operand
+*/
+  fl1 = EXP  voidProc;
+/*$          ^
+error: EXP: no PROC returning nothing allowed as operand
+*/
+  fl1 = LN   voidProc;
+/*$          ^
+error: LN: no PROC returning nothing allowed as operand
+*/
+  fl1 = TAN  voidProc;
+/*$          ^
+error: TAN: no PROC returning nothing allowed as operand
+*/
+  fl1 = ATAN voidProc;
+/*$          ^
+error: ATAN: no PROC returning nothing allowed as operand
+*/
+  fl1 = TANH voidProc;
+/*$          ^
+error: TANH: no PROC returning nothing allowed as operand
+*/
+
+END;
+
+dyadicOperators: PROC;
+    DCL (f1,f2,f3) FIXED;
+    DCL (fl1,fl2,fl3) FLOAT;
+    DCL (b1,b2,b3) BIT(16);
+    DCL (c1,c2,c3) CHAR(16);
+    DCL bit BIT(1);
+    DCL matrix(2,3) FIXED;
+
+    ! dyadic operators:    + - * / // REM ** 
+    f1 = voidProc + f2;
+/*$      ^
+error: +: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 + voidProc;
+/*$           ^
+error: +: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 + voidProc + f3;
+/*$           ^
+error: +: no PROC returning nothing allowed as operand
+*/
+    f1 = voidProc+voidProc;
+/*$      ^
+error: +: no PROC returning nothing allowed as operand
+*/
+/*$               ^
+error: +: no PROC returning nothing allowed as operand
+*/
+
+    f1 = voidProc - f2;
+/*$      ^
+error: -: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 - voidProc;
+/*$           ^
+error: -: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 - voidProc - f3;
+/*$           ^
+error: -: no PROC returning nothing allowed as operand
+*/
+    f1 = voidProc-voidProc;
+/*$      ^
+error: -: no PROC returning nothing allowed as operand
+*/
+/*$               ^
+error: -: no PROC returning nothing allowed as operand
+*/
+
+    f1 = voidProc * f2;
+/*$      ^
+error: *: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 * voidProc;
+/*$           ^
+error: *: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 * voidProc * f3;
+/*$           ^
+error: *: no PROC returning nothing allowed as operand
+*/
+    f1 = voidProc*voidProc;
+/*$      ^
+error: *: no PROC returning nothing allowed as operand
+*/
+/*$               ^
+error: *: no PROC returning nothing allowed as operand
+*/
+
+    fl1 = voidProc / f1;
+/*$       ^
+error: /: no PROC returning nothing allowed as operand
+*/
+    fl1 = f2 / voidProc;
+/*$            ^
+error: /: no PROC returning nothing allowed as operand
+*/
+    fl1 = f2 / voidProc / f3;
+/*$            ^
+error: /: no PROC returning nothing allowed as operand
+*/
+    f1 = voidProc/voidProc;
+/*$      ^
+error: /: no PROC returning nothing allowed as operand
+*/
+/*$               ^
+error: /: no PROC returning nothing allowed as operand
+*/
+
+    f1 = voidProc // f2;
+/*$      ^
+error: //: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 // voidProc;
+/*$            ^
+error: //: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 // voidProc // f3;
+/*$            ^
+error: //: no PROC returning nothing allowed as operand
+*/
+    f1 = voidProc // voidProc;
+/*$      ^
+error: //: no PROC returning nothing allowed as operand
+*/
+/*$                  ^
+error: //: no PROC returning nothing allowed as operand
+*/
+
+    f1 = voidProc REM f2;
+/*$      ^
+error: REM: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 REM voidProc;
+/*$             ^
+error: REM: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 REM voidProc REM f3;
+/*$             ^
+error: REM: no PROC returning nothing allowed as operand
+*/
+    f1 = voidProc REM voidProc;
+/*$      ^
+error: REM: no PROC returning nothing allowed as operand
+*/
+/*$                   ^
+error: REM: no PROC returning nothing allowed as operand
+*/
+
+    f1 = voidProc ** f2;
+/*$      ^
+error: **: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 ** voidProc;
+/*$            ^
+error: **: no PROC returning nothing allowed as operand
+*/
+    f1 = f2 ** voidProc ** f3;
+/*$            ^
+error: **: no PROC returning nothing allowed as operand
+*/
+    f1 = voidProc ** voidProc;
+/*$      ^
+error: **: no PROC returning nothing allowed as operand
+*/
+/*$                  ^
+error: **: no PROC returning nothing allowed as operand
+*/
+
+
+    ! dyadic operators:    < > <= >= == /= 
+    !   IS ISNT are treated separatelly
+    bit = f1 < voidProc;
+/*$            ^
+error: LT or <: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc < f1;
+/*$       ^
+error: LT or <: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc < voidProc;
+/*$       ^
+error: LT or <: no PROC returning nothing allowed as operand
+*/
+/*$                  ^
+error: LT or <: no PROC returning nothing allowed as operand
+*/
+
+    bit = f1 > voidProc;
+/*$            ^
+error: GT or >: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc > f1;
+/*$       ^
+error: GT or >: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc > voidProc;
+/*$       ^
+error: GT or >: no PROC returning nothing allowed as operand
+*/
+/*$                  ^
+error: GT or >: no PROC returning nothing allowed as operand
+*/
+
+    bit = f1 <= voidProc;
+/*$             ^
+error: LE or <=: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc <= f1;
+/*$       ^
+error: LE or <=: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc <= voidProc;
+/*$       ^
+error: LE or <=: no PROC returning nothing allowed as operand
+*/
+/*$                   ^
+error: LE or <=: no PROC returning nothing allowed as operand
+*/
+
+    bit = f1 >= voidProc;
+/*$             ^
+error: GE or >=: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc >= f1;
+/*$       ^
+error: GE or >=: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc >= voidProc;
+/*$       ^
+error: GE or >=: no PROC returning nothing allowed as operand
+*/
+/*$                   ^
+error: GE or >=: no PROC returning nothing allowed as operand
+*/
+
+    bit = f1 == voidProc;
+/*$             ^
+error: EQ or ==: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc == f1;
+/*$       ^
+error: EQ or ==: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc == voidProc;
+/*$       ^
+error: EQ or ==: no PROC returning nothing allowed as operand
+*/
+/*$                   ^
+error: EQ or ==: no PROC returning nothing allowed as operand
+*/
+
+    bit = f1 /= voidProc;
+/*$             ^
+error: NE or /=: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc /= f1;
+/*$       ^
+error: NE or /=: no PROC returning nothing allowed as operand
+*/
+    bit = voidProc /= voidProc;
+/*$       ^
+error: NE or /=: no PROC returning nothing allowed as operand
+*/
+/*$                   ^
+error: NE or /=: no PROC returning nothing allowed as operand
+*/
+
+
+    ! dyadic operators:    AND OR EXOR CAT CSHIFT SHIFT 
+    b1 = voidProc AND b2;
+/*$      ^
+error: AND: no PROC returning nothing allowed as operand
+*/
+    b1 = b2 AND voidProc;
+/*$             ^
+error: AND: no PROC returning nothing allowed as operand
+*/
+    b1 = voidProc AND voidProc;
+/*$      ^
+error: AND: no PROC returning nothing allowed as operand
+*/
+/*$                   ^
+error: AND: no PROC returning nothing allowed as operand
+*/
+
+    b1 = voidProc OR b2;
+/*$      ^
+error: OR: no PROC returning nothing allowed as operand
+*/
+    b1 = b2 OR voidProc;
+/*$            ^
+error: OR: no PROC returning nothing allowed as operand
+*/
+    b1 = voidProc OR  voidProc;
+/*$      ^
+error: OR: no PROC returning nothing allowed as operand
+*/
+/*$                   ^
+error: OR: no PROC returning nothing allowed as operand
+*/
+
+    b1 = voidProc EXOR b2;
+/*$      ^
+error: EXOR: no PROC returning nothing allowed as operand
+*/
+    b1 = b2 EXOR voidProc;
+/*$              ^
+error: EXOR: no PROC returning nothing allowed as operand
+*/
+    b1 = voidProc EXOR voidProc;
+/*$      ^
+error: EXOR: no PROC returning nothing allowed as operand
+*/
+/*$                    ^
+error: EXOR: no PROC returning nothing allowed as operand
+*/
+
+    c1 = voidProc CAT 'A';
+/*$      ^
+error: CAT or ><: no PROC returning nothing allowed as operand
+*/
+    c1 = 'A' CAT voidProc;
+/*$              ^
+error: CAT or ><: no PROC returning nothing allowed as operand
+*/
+
+    b1 = voidProc CAT b2;
+/*$      ^
+error: CAT or ><: no PROC returning nothing allowed as operand
+*/
+    b1 = b2 CAT voidProc;
+/*$             ^
+error: CAT or ><: no PROC returning nothing allowed as operand
+*/
+    b1 = voidProc CAT voidProc;
+/*$      ^
+error: CAT or ><: no PROC returning nothing allowed as operand
+*/
+/*$                   ^
+error: CAT or ><: no PROC returning nothing allowed as operand
+*/
+
+    b1 = voidProc CSHIFT f1;
+/*$      ^
+error: CSHIFT or <>: no PROC returning nothing allowed as operand
+*/
+    b1 = b2 CSHIFT voidProc;
+/*$                ^
+error: CSHIFT or <>: no PROC returning nothing allowed as operand
+*/
+    b1 = voidProc CSHIFT voidProc;
+/*$      ^
+error: CSHIFT or <>: no PROC returning nothing allowed as operand
+*/
+/*$                      ^
+error: CSHIFT or <>: no PROC returning nothing allowed as operand
+*/
+
+    b1 = voidProc SHIFT f1;
+/*$      ^
+error: SHIFT: no PROC returning nothing allowed as operand
+*/
+    b1 = b2 SHIFT voidProc;
+/*$               ^
+error: SHIFT: no PROC returning nothing allowed as operand
+*/
+    b1 = voidProc SHIFT voidProc;
+/*$      ^
+error: SHIFT: no PROC returning nothing allowed as operand
+*/
+/*$                     ^
+error: SHIFT: no PROC returning nothing allowed as operand
+*/
+
+
+    ! dyadic operators:    FIT 
+    f1 = voidProc FIT f1;
+/*$      ^
+error: FIT: no PROC returning nothing allowed as operand
+*/
+    f1 = f1 FIT voidProc; 
+/*$             ^
+error: FIT: no PROC returning nothing allowed as operand
+*/
+    f1 = (voidProc FIT voidProc) + 1; 
+/*$       ^
+error: FIT: no PROC returning nothing allowed as operand
+*/
+/*$                    ^
+error: FIT: no PROC returning nothing allowed as operand
+*/
+
+    ! dyadic operators:    LWB UPB
+    f1 = 1 LWB voidProc;
+/*$            ^
+error: LWB: no PROC returning nothing allowed as operand
+*/
+    f1 = voidProc LWB matrix;
+/*$      ^
+error: LWB: no PROC returning nothing allowed as operand
+*/
+    f1 = 1 UPB voidProc;
+/*$            ^
+error: UPB: no PROC returning nothing allowed as operand
+*/
+    f1 = voidProc UPB matrix;
+/*$      ^
+error: UPB: no PROC returning nothing allowed as operand
+*/
+
+END;
+
+/* moved to 10_ref/is_isnt
+
+isIsnt: PROC;
+   DCL bit BIT(1);
+   DCL rbit REF BIT(1);
+   DCL rp REF PROC;
+
+    ! IS and ISNT only checked with REF BIT as reference
+    bit = rp IS  NIL;
+    bit = rp IS  voidProc;
+    bit = rp IS  bit;
+END;
+*/
+
+MODEND;

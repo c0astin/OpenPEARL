@@ -697,38 +697,33 @@ io_statement(code) ::= <<
 <code><\n>
 >>
 
-open_statement(id,paramlist,declFileName,refFileName,flen,rst_var) ::= <<
+open_statement(id,paramlist,fileNameAsRefChar,fileNameAsChar,mkCharRequired, rst_var) ::= <<
 {
-    <if(declFileName)><declFileName><endif>
-    <id>->dationOpen(
-    <if(paramlist)>
-        <paramlist>
-    <else>
-        0
+    <if(fileNameAsChar)>
+    {
+       pearlrt::RefCharacter rcForFilename; 
+       <if (mkCharRequired)>
+         rcForFilename.setWork(<fileNameAsChar>.get(),<fileNameAsChar>.upb().x);
+       <else>	
+         rcForFilename.setWork(<fileNameAsChar>);
+       <endif>
+        
     <endif>
-    <if(refFileName)>
-    <refFileName>
-    <else>
-    , (pearlrt::Character\<1>*) 0
+       <id>->dationOpen(
+       <if(paramlist)><paramlist><else>0<endif>
+       <if(fileNameAsChar)>, &rcForFilename
+       <else>
+       	    <if(fileNameAsRefChar)>, &(<fileNameAsRefChar>)
+            <else>
+            , (pearlrt::RefCharacter*) 0
+            <endif>
+       <endif>
+       <if(rst_var)>, &(<rst_var>)<else>, (pearlrt::Fixed\<31>*) 0<endif>
+       );
+    <if(fileNameAsChar)>
+   	}
     <endif>
-    <if(rst_var)>
-    , &(<rst_var>)
-    <else>
-    , (pearlrt::Fixed\<31>*) 0
-    <endif>
-    );
 }
->>
-
-declare_idf_filename(variable,stringConstant,lengthOfStringConstant) ::= <<
-<if(stringConstant)>
-   static pearlrt::Character\<<lengthOfStringConstant>\> idf_filename("<stringConstant>"); <\n>
-<endif>
->>
-
-reference_idf_filename(variable,stringConstant) ::= <<
-    <if(stringConstant)>, &idf_filename<endif>
-    <if(variable)>, &<user_variable(variable)><endif>
 >>
 
 open_parameterlist(parameter) ::= <%

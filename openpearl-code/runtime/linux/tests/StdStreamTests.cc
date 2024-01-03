@@ -106,7 +106,7 @@ TEST(StdStream, userDationStdOut) {
 
    pearlrt::StdOut stdOut;
    pearlrt::DationDim2 dim(80);
-   pearlrt::Character<1> fn;
+   pearlrt::RefCharacter fn;
    ASSERT_THROW(
       pearlrt::DationPG console(&stdOut,
                              pearlrt::Dation::IN |
@@ -157,7 +157,7 @@ TEST(StdStream, userDationStdOut) {
    ASSERT_THROW(
       console.dationOpen(
          pearlrt::Dation::CAN,
-         (pearlrt::Character<1>*) 0, //&fn,
+         (pearlrt::RefCharacter*) 0, //&fn,
          (pearlrt::Fixed<15>*)0),
      pearlrt::DationParamSignal);
 }
@@ -170,7 +170,7 @@ TEST(StdStream, userDationStdIn) {
 
    pearlrt::StdIn stdIn;
    pearlrt::DationDim2 dim(80);
-   pearlrt::Character<1> fn;
+   pearlrt::RefCharacter fn;
    ASSERT_THROW(
       pearlrt::DationPG console(&stdIn,
                              pearlrt::Dation::OUT |
@@ -221,7 +221,7 @@ TEST(StdStream, userDationStdIn) {
    ASSERT_THROW(
       console.dationOpen(
          pearlrt::Dation::CAN,
-         (pearlrt::Character<1>*) 0, //&fn,
+         (pearlrt::RefCharacter*) 0, //&fn,
          (pearlrt::Fixed<15>*)0),
      pearlrt::DationParamSignal);
 }
@@ -244,7 +244,7 @@ TEST(StdStream, putGet) {
    ASSERT_NO_THROW(
       console.dationOpen(
          0, //pearlrt::Dation::ANY ,
-         (pearlrt::Character<1>*) 0, //&fn,
+         (pearlrt::RefCharacter*) 0, //&fn,
          (pearlrt::Fixed<15>*)0));
    pearlrt::Character<8> text("PEARL");
    pearlrt::Fixed<31>  x(42);
@@ -267,7 +267,7 @@ TEST(StdStream, putGet) {
    ASSERT_NO_THROW(
       keyboard.dationOpen(
          0, //pearlrt::Dation::ANY ,
-         (pearlrt::Character<1>*) 0, //&fn,
+         (pearlrt::RefCharacter*) 0, //&fn,
          (pearlrt::Fixed<15>*)0));
    console.toA(prompt1);
    console.toSkip(1);

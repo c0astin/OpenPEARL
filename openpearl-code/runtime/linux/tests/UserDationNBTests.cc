@@ -93,7 +93,8 @@ test for multiple open/close on the same userdation
 */
 TEST(UserDationNB,MultipleOpenClose) {
    pearlrt::Log::info("*** MultipleOpenClose start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    pearlrt::Fixed<15> error;
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
@@ -132,12 +133,12 @@ printf("ttt@1\n");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::ANY | pearlrt::Dation::RST ,
-         (pearlrt::Character<1>*)NULL,&error));
+         (pearlrt::RefCharacter*)NULL,&error));
 printf("ttt@2\n");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::ANY | pearlrt::Dation::RST ,
-         (pearlrt::Character<1>*)NULL,&error));
+         (pearlrt::RefCharacter*)NULL,&error));
 printf("ttt@3\n");
    ASSERT_NO_THROW(
    logbuch.dationClose(0, (pearlrt::Fixed<15>*)0));
@@ -179,7 +180,8 @@ test Dation DCL statements
 */
 TEST(UserDationNB, DCL) {
    pearlrt::Log::info("*** DCL start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -276,7 +278,8 @@ Close(CAN) is expected to work
 */
 TEST(UserDationNB, OPEN) {
    pearlrt::Log::info("*** OPEN start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _myPipe;
    pearlrt::SystemDationNB* myPipe_ =
       static_cast<pearlrt::SystemDationNB*>(_myPipe);
@@ -328,23 +331,9 @@ TEST(UserDationNB, OPEN) {
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          0 ,
-         (pearlrt::Character<1>*)0,
+         (pearlrt::RefCharacter*)0,
          (pearlrt::Fixed<15>*)NULL));
    logbuch.dationClose(0, (pearlrt::Fixed<15>*)0);
-
-/* 2022-10-24 obsolete: the compiler enshures that ether CAN or PRM is set
- 
-   pearlrt::Log::info("*** CAN+PRM  ***");
-   ASSERT_THROW(
-      logbuch.dationOpen(
-         pearlrt::Dation::IDF |
-         pearlrt::Dation::ANY |
-         pearlrt::Dation::PRM |
-         pearlrt::Dation::CAN ,
-         &filename,
-         (pearlrt::Fixed<15>*)NULL),
-      pearlrt::InternalDationSignal);
-*/
 
    ASSERT_NO_THROW(
       logbuch.dationOpen(
@@ -358,10 +347,10 @@ TEST(UserDationNB, OPEN) {
    pearlrt::Log::info("*** OPEN no IDF on Disc");
    ASSERT_THROW(
       logbuch.dationOpen(pearlrt::Dation::NEW ,
-                         (pearlrt::Character<1>*)(NULL), (pearlrt::Fixed<15>*)NULL),
+                         (pearlrt::RefCharacter*)(NULL), (pearlrt::Fixed<15>*)NULL),
       pearlrt::DationParamSignal);
    ASSERT_NO_THROW(
-      logbuch.dationOpen(0 , (pearlrt::Character<1>*)(NULL), (pearlrt::Fixed<15>*)NULL));
+      logbuch.dationOpen(0 , (pearlrt::RefCharacter*)(NULL), (pearlrt::Fixed<15>*)NULL));
    logbuch.dationClose(0, (pearlrt::Fixed<15>*)0);
 
    pearlrt::Log::info("*** OPEN  IDF on Pipe");
@@ -376,7 +365,7 @@ TEST(UserDationNB, OPEN) {
    ASSERT_NO_THROW(
       logpipe.dationOpen(
          0 ,
-         (pearlrt::Character<1>*)(NULL),
+         (pearlrt::RefCharacter*)(NULL),
          (pearlrt::Fixed<15>*)NULL));
    logpipe.dationClose(0, (pearlrt::Fixed<15>*)0);
 
@@ -389,7 +378,8 @@ Test CAN + PRM option in OPEN and CLOSE statements
 */
 TEST(UserDationNB, OpenClose) {
    pearlrt::Log::info("*** OpenClose start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -403,16 +393,13 @@ TEST(UserDationNB, OpenClose) {
                              &dim,
                              pearlrt::Fixed<15>(1));
    // make file to be not present
-printf("aaaa:0\n");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::IDF |
          pearlrt::Dation::ANY ,
          & filename,
          (pearlrt::Fixed<15>*)NULL));
-printf("aaaa:0.1\n");
    logbuch.dationClose(pearlrt::Dation::CAN, (pearlrt::Fixed<15>*)0);
-printf("aaaa:1\n");
    ASSERT_THROW(
       logbuch.dationOpen(
          pearlrt::Dation::IDF |
@@ -431,10 +418,8 @@ printf("aaaa:2\n");
          (pearlrt::Fixed<15>*)NULL));
 
 
-printf("aaaa:3\n");
    logbuch.dationClose(0,(pearlrt::Fixed<15>*)0);
 
-printf("aaaa:4\n");
    pearlrt::Log::info("*** check if CAN superseeds in OPEN ***");
    ASSERT_NO_THROW(
       logbuch.dationOpen(
@@ -454,18 +439,6 @@ printf("aaaa:4\n");
          pearlrt::Dation::PRM,
          & filename,
          (pearlrt::Fixed<15>*)NULL));
-/* obsolete 2022-10-24: close CAN and PRM is avoided by the compiler
-   ASSERT_THROW(
-      logbuch.dationClose(pearlrt::Dation::CAN |
-                          pearlrt::Dation::PRM, (pearlrt::Fixed<15>*)0),
-      pearlrt::DationParamSignal);
-*/
-/* obsolete CLOSE CAN dominate OPEN PRM
-   ASSERT_THROW(
-   logbuch.dationClose(pearlrt::Dation::CAN, (pearlrt::Fixed<15>*)0),
-      pearlrt::DationParamSignal);
-     // close file and reopen with CAN abnd close again to remove the file
-*/
    logbuch.dationClose(0, (pearlrt::Fixed<15>*)0),
 
       logbuch.dationOpen(
@@ -484,7 +457,8 @@ test basic positioning operations on DIRECT dation
 */
 TEST(UserDationNB, PosBasic) {
    pearlrt::Log::info("*** PosBasic start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -546,7 +520,8 @@ with CYCIC,NOCYCL and STREAM
 */
 TEST(UserDationNB, Dim1_20_Pos) {
    pearlrt::Log::info("*** Dim1Pos DIM(20) start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -631,7 +606,8 @@ with CYCIC,NOCYCL and STREAM
 */
 TEST(UserDationNB, Dim1_unbound_Pos) {
    pearlrt::Log::info("*** Dim1Pos DIM(*) start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -687,7 +663,8 @@ with CYCIC,NOCYCL and STREAM, NOSTREAM
 */
 TEST(UserDationNB, Dim2_10x20_Pos) {
    pearlrt::Log::info("*** Dim2Pos DIM(10,20) start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -816,7 +793,8 @@ with CYCIC,NOCYCL and STREAM, NOSTREAM
 */
 TEST(UserDationNB, Dim2_20_Pos) {
    pearlrt::Log::info("*** Dim2Pos DIM(*,20) start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -888,7 +866,8 @@ with CYCIC,NOCYCL and STREAM, NOSTREAM
 */
 TEST(UserDationNB, Dim3_5x10x20_Pos) {
    pearlrt::Log::info("*** Dim3Pos DIM(5,10,20) start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -1053,7 +1032,8 @@ with CYCIC,NOCYCL and STREAM, NOSTREAM
 */
 TEST(UserDationNB, Dim3_10x20_Pos) {
    pearlrt::Log::info("*** Dim3Pos DIM(*,10,20) start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -1144,7 +1124,8 @@ test RST-variable treatment
 */
 TEST(Userdation, RST) {
    pearlrt::Log::info("*** Dim3Pos DIM(*,10,20) start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
@@ -1169,7 +1150,7 @@ TEST(Userdation, RST) {
          logbuch.dationOpen(
             pearlrt::Dation::RST |
             pearlrt::Dation::OLD ,
-            (pearlrt::Character<1>*)0,  // missing filename
+            (pearlrt::RefCharacter*)0,  // missing filename
             &rst));
       ASSERT_EQ(rst.x, pearlrt::theDationParamSignal.whichRST());
 
@@ -1249,7 +1230,8 @@ with CYCIC,NOCYCL and STREAM, NOSTREAM
 */
 TEST(UserDationNB, Dim3_10x20_PosForward) {
    pearlrt::Log::info("*** Dim3Pos DIM(*,10,20) FORWARD start ***");
-   pearlrt::Character<9> filename("file1.txt");
+   pearlrt::Character<9> fname("file1.txt");
+   pearlrt::RefCharacter filename(fname);
    extern pearlrt::Device* _disc;
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);

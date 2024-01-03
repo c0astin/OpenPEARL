@@ -66,7 +66,8 @@ static pearlrt::Device* _disc = &disc;
 */
 TEST(DationPG, simple_put) {
    pearlrt::Log::info("*** DationPG: simple_put start ***");
-   pearlrt::Character<9> filename("put_1.txt");
+   pearlrt::Character<9> fname("put_1.txt");
+   pearlrt::RefCharacter filename(fname);
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
    pearlrt::DationDim2 dim(80);
@@ -130,7 +131,8 @@ TEST(DationPG, simple_put) {
 */
 TEST(DationPG, simple_get) {
    pearlrt::Log::info("*** DationPG: simple_get start ***");
-   pearlrt::Character<9> filename("get_1.txt");
+   pearlrt::Character<9> fname("get_1.txt");
+   pearlrt::RefCharacter filename(fname);
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
    pearlrt::DationDim2 dim(80);
@@ -219,7 +221,8 @@ TEST(DationPG, cyclicFails) {
 
 TEST(DationPG, signal_get) {
    pearlrt::Log::info("*** DationPG: signal_get start ***");
-   pearlrt::Character<9> filename("get_1.txt");
+   pearlrt::Character<9> fname("get_1.txt");
+   pearlrt::RefCharacter filename(fname);
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
    pearlrt::DationDim2 dim(80);
@@ -312,7 +315,8 @@ test on closed files
 */
 TEST(DationPG, notOpened) {
    pearlrt::Log::info("*** DationPG: not opened start ***");
-   pearlrt::Character<9> filename("put_1.txt");
+   pearlrt::Character<9> fname("put_1.txt");
+   pearlrt::RefCharacter filename(fname);
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
    pearlrt::DationDim2 dim(80);
@@ -343,7 +347,8 @@ test for NOSTREAM overflow detection
 */
 TEST(DationPG, lineOverflow) {
    pearlrt::Log::info("*** DationPG: line overflow start ***");
-   pearlrt::Character<9> filename("put_3.txt");
+   pearlrt::Character<9> fname("put_3.txt");
+   pearlrt::RefCharacter filename(fname);
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
    pearlrt::DationDim1 dim(15);
@@ -389,7 +394,8 @@ test for EOF operation
 TEST(DationPG, eof) {
    pearlrt::Log::getInstance()->setLevel(0x0f);
    pearlrt::Log::info("*** DationPG: eof start ***");
-   pearlrt::Character<9> filename("put_4.txt");
+   pearlrt::Character<9> fname("put_4.txt");
+   pearlrt::RefCharacter filename(fname);
    pearlrt::SystemDationNB* disc_ =
       static_cast<pearlrt::SystemDationNB*>(_disc);
    pearlrt::DationDim2 dim(15);

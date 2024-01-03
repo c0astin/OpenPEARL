@@ -47,69 +47,69 @@ t0: TASK;
    
    CALL q0(15);           
 /*$        ^
-error: q0: type mismatch: cannot pass constant of type FIXED(4) as FIXED(31) by IDENT
+error: type mismatch: cannot pass constant of type FIXED(4) as FIXED(31) by IDENT
 */
 
    CALL q0(f15);          
 /*$        ^
-error: q0: type mismatch: cannot pass object of type FIXED(15) as FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(15) as FIXED(31) by IDENT
 */
 
    CALL q0(tf15);          
 /*$        ^
-error: q0: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as FIXED(31) by IDENT
 */
 
    CALL q0(str.a);        
    CALL q0(str.b);        
 /*$        ^
-error: q0: type mismatch: cannot pass object of type FIXED(15) as FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(15) as FIXED(31) by IDENT
 */
 
    CALL q0(if31);         
 /*$        ^
-error: q0: type mismatch: cannot pass object of type INV FIXED(31) as FIXED(31) by IDENT -- would break INV
+error: type mismatch: cannot pass object of type INV FIXED(31) as FIXED(31) by IDENT -- would break INV
 */
 
    CALL q0(rif31);        
 /*$        ^
-error: q0: type mismatch: cannot pass object of type REF INV FIXED(31) as FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF INV FIXED(31) as FIXED(31) by IDENT
 */
 
    CALL q0(irif31);       
 /*$        ^
-error: q0: type mismatch: cannot pass object of type INV REF INV FIXED(31) as FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type INV REF INV FIXED(31) as FIXED(31) by IDENT
 */
 
    CALL q0(f31+1);        
 /*$        ^
-error: q0: type mismatch: cannot pass expression of type FIXED(31) as FIXED(31) by IDENT
+error: type mismatch: cannot pass expression of type FIXED(31) as FIXED(31) by IDENT
 */
 
    CALL q0('a');
 /*$        ^
-error: q0: type mismatch: cannot pass constant of type CHAR(1) as FIXED(31) by IDENT
+error: type mismatch: cannot pass constant of type CHAR(1) as FIXED(31) by IDENT
 */
 
    CALL q0(c100);
 /*$        ^
-error: q0: type mismatch: cannot pass object of type CHAR(100) as FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type CHAR(100) as FIXED(31) by IDENT
 */
 
    CALL q0(rc);
 /*$        ^
-error: q0: type mismatch: cannot pass object of type REF CHAR() as FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF CHAR() as FIXED(31) by IDENT
 */
 
 
    CALL q0(ria); ! REF () INV FIXED;
 /*$        ^
-error: q0: type mismatch: cannot pass object of type REF () INV FIXED(31) as FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF () INV FIXED(31) as FIXED(31) by IDENT
 */
 
    CALL q0(iria); ! INV REF () INV FIXED INIT(ia);
 /*$        ^
-error: q0: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as FIXED(31) by IDENT
 */
 
 END;
@@ -138,66 +138,66 @@ t1: TASK;
    
    CALL q1(15);           
 /*$        ^
-error: q1: type mismatch: cannot pass constant of type FIXED(4) as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass constant of type FIXED(4) as INV FIXED(31) by IDENT
 */
 
    CALL q1(f15);          
 /*$        ^
-error: q1: type mismatch: cannot pass object of type FIXED(15) as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(15) as INV FIXED(31) by IDENT
 */
 
    CALL q1(tf15);          
 /*$        ^
-error: q1: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as INV FIXED(31) by IDENT
 */
 
    CALL q1(str.a);        
    CALL q1(str.b);        
 /*$        ^
-error: q1: type mismatch: cannot pass object of type FIXED(15) as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(15) as INV FIXED(31) by IDENT
 */
 
    CALL q1(if31);          ! ok
 
    CALL q1(rif31);  
 /*$        ^
-error: q1: type mismatch: cannot pass object of type REF INV FIXED(31) as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF INV FIXED(31) as INV FIXED(31) by IDENT
 */
 
    CALL q1(irif31); 
 /*$        ^
-error: q1: type mismatch: cannot pass object of type INV REF INV FIXED(31) as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type INV REF INV FIXED(31) as INV FIXED(31) by IDENT
 */
 
    CALL q1(f31+1);        
 /*$        ^
-error: q1: type mismatch: cannot pass expression of type FIXED(31) as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass expression of type FIXED(31) as INV FIXED(31) by IDENT
 */
 
    CALL q1('a');
 /*$        ^
-error: q1: type mismatch: cannot pass constant of type CHAR(1) as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass constant of type CHAR(1) as INV FIXED(31) by IDENT
 */
 
    CALL q1(c100);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type CHAR(100) as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type CHAR(100) as INV FIXED(31) by IDENT
 */
 
    CALL q1(rc);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type REF CHAR() as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF CHAR() as INV FIXED(31) by IDENT
 */
 
 
    CALL q1(ria); ! REF () INV FIXED;
 /*$        ^
-error: q1: type mismatch: cannot pass object of type REF () INV FIXED(31) as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF () INV FIXED(31) as INV FIXED(31) by IDENT
 */
 
    CALL q1(iria); ! INV REF () INV FIXED INIT(ia);
 /*$        ^
-error: q1: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as INV FIXED(31) by IDENT
 */
 END;
 
@@ -224,70 +224,70 @@ t2: TASK;
    
    CALL q2(15);           
 /*$        ^
-error: q2: type mismatch: cannot pass constant of type FIXED(4) as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass constant of type FIXED(4) as REF INV FIXED(31) by IDENT
 */
 
    CALL q2(f15);          
 /*$        ^
-error: q2: type mismatch: cannot pass object of type FIXED(15) as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(15) as REF INV FIXED(31) by IDENT
 */
 
    CALL q2(tf15);          
 /*$        ^
-error: q2: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as REF INV FIXED(31) by IDENT
 */
 
    CALL q2(str.a);        
 /*$        ^
-error: q2: type mismatch: cannot pass object of type FIXED(31) as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(31) as REF INV FIXED(31) by IDENT
 */
 
    CALL q2(str.b);        
 /*$        ^
-error: q2: type mismatch: cannot pass object of type FIXED(15) as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(15) as REF INV FIXED(31) by IDENT
 */
 
    CALL q2(if31);          
 /*$        ^
-error: q2: type mismatch: cannot pass object of type INV FIXED(31) as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type INV FIXED(31) as REF INV FIXED(31) by IDENT
 */
 
    CALL q2(rif31); ! ok 
 
    CALL q2(irif31); 
 /*$        ^
-error: q2: type mismatch: cannot pass object of type INV REF INV FIXED(31) as REF INV FIXED(31) by IDENT -- would break INV
+error: type mismatch: cannot pass object of type INV REF INV FIXED(31) as REF INV FIXED(31) by IDENT -- would break INV
 */
 
    CALL q2(f31+1);        
 /*$        ^
-error: q2: type mismatch: cannot pass expression of type FIXED(31) as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass expression of type FIXED(31) as REF INV FIXED(31) by IDENT
 */
 
    CALL q2('a');
 /*$        ^
-error: q2: type mismatch: cannot pass constant of type CHAR(1) as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass constant of type CHAR(1) as REF INV FIXED(31) by IDENT
 */
 
    CALL q2(c100);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type CHAR(100) as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type CHAR(100) as REF INV FIXED(31) by IDENT
 */
 
    CALL q2(rc);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type REF CHAR() as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF CHAR() as REF INV FIXED(31) by IDENT
 */
 
 
    CALL q2(ria); ! REF () INV FIXED;
 /*$        ^
-error: q2: type mismatch: cannot pass object of type REF () INV FIXED(31) as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF () INV FIXED(31) as REF INV FIXED(31) by IDENT
 */
 
    CALL q2(iria); ! INV REF () INV FIXED INIT(ia);
 /*$        ^
-error: q2: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as REF INV FIXED(31) by IDENT
 */
 END;
 
@@ -315,73 +315,73 @@ t4: TASK;
    
    CALL q4(15);           
 /*$        ^
-error: q4: type mismatch: cannot pass constant of type FIXED(4) as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass constant of type FIXED(4) as INV REF FIXED(31) by IDENT
 */
 
    CALL q4(f15);          
 /*$        ^
-error: q4: type mismatch: cannot pass object of type FIXED(15) as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(15) as INV REF FIXED(31) by IDENT
 */
 
    CALL q4(tf15);          
 /*$        ^
-error: q4: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as INV REF FIXED(31) by IDENT
 */
 
    CALL q4(str.a);        
 /*$        ^
-error: q4: type mismatch: cannot pass object of type FIXED(31) as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(31) as INV REF FIXED(31) by IDENT
 */
 
    CALL q4(str.b);        
 /*$        ^
-error: q4: type mismatch: cannot pass object of type FIXED(15) as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(15) as INV REF FIXED(31) by IDENT
 */
 
    CALL q4(if31);       
 /*$        ^
-error: q4: type mismatch: cannot pass object of type INV FIXED(31) as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type INV FIXED(31) as INV REF FIXED(31) by IDENT
 */
 
    CALL q4(rif31);  
 /*$        ^
-error: q4: type mismatch: cannot pass object of type REF INV FIXED(31) as INV REF FIXED(31) by IDENT -- would break INV
+error: type mismatch: cannot pass object of type REF INV FIXED(31) as INV REF FIXED(31) by IDENT -- would break INV
 */
 
    CALL q4(irif31); 
 /*$        ^
-error: q4: type mismatch: cannot pass object of type INV REF INV FIXED(31) as INV REF FIXED(31) by IDENT -- would break INV
+error: type mismatch: cannot pass object of type INV REF INV FIXED(31) as INV REF FIXED(31) by IDENT -- would break INV
 */
 
    CALL q4(f31+1);        
 /*$        ^
-error: q4: type mismatch: cannot pass expression of type FIXED(31) as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass expression of type FIXED(31) as INV REF FIXED(31) by IDENT
 */
 
    CALL q4('a');
 /*$        ^
-error: q4: type mismatch: cannot pass constant of type CHAR(1) as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass constant of type CHAR(1) as INV REF FIXED(31) by IDENT
 */
 
    CALL q4(c100);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type CHAR(100) as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type CHAR(100) as INV REF FIXED(31) by IDENT
 */
 
    CALL q4(rc);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type REF CHAR() as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF CHAR() as INV REF FIXED(31) by IDENT
 */
 
 
    CALL q4(ria); ! REF () INV FIXED;
 /*$        ^
-error: q4: type mismatch: cannot pass object of type REF () INV FIXED(31) as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF () INV FIXED(31) as INV REF FIXED(31) by IDENT
 */
 
    CALL q4(iria); ! INV REF () INV FIXED INIT(ia);
 /*$        ^
-error: q4: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as INV REF FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as INV REF FIXED(31) by IDENT
 */
 END;
 
@@ -408,32 +408,32 @@ t5: TASK;
    
    CALL q5(15);           
 /*$        ^
-error: q5: type mismatch: cannot pass constant of type FIXED(4) as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass constant of type FIXED(4) as INV REF INV FIXED(31) by IDENT
 */
 
    CALL q5(f15);          
 /*$        ^
-error: q5: type mismatch: cannot pass object of type FIXED(15) as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(15) as INV REF INV FIXED(31) by IDENT
 */
 
    CALL q5(tf15);          
 /*$        ^
-error: q5: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type F15 {aka: FIXED(15)} as INV REF INV FIXED(31) by IDENT
 */
 
    CALL q5(str.a);        
 /*$        ^
-error: q5: type mismatch: cannot pass object of type FIXED(31) as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(31) as INV REF INV FIXED(31) by IDENT
 */
 
    CALL q5(str.b);        
 /*$        ^
-error: q5: type mismatch: cannot pass object of type FIXED(15) as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type FIXED(15) as INV REF INV FIXED(31) by IDENT
 */
 
    CALL q5(if31);          
 /*$        ^
-error: q5: type mismatch: cannot pass object of type INV FIXED(31) as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type INV FIXED(31) as INV REF INV FIXED(31) by IDENT
 */
 
    CALL q5(rif31);  
@@ -442,33 +442,33 @@ error: q5: type mismatch: cannot pass object of type INV FIXED(31) as INV REF IN
 
    CALL q5(f31+1);        
 /*$        ^
-error: q5: type mismatch: cannot pass expression of type FIXED(31) as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass expression of type FIXED(31) as INV REF INV FIXED(31) by IDENT
 */
 
    CALL q5('a');
 /*$        ^
-error: q5: type mismatch: cannot pass constant of type CHAR(1) as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass constant of type CHAR(1) as INV REF INV FIXED(31) by IDENT
 */
 
    CALL q5(c100);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type CHAR(100) as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type CHAR(100) as INV REF INV FIXED(31) by IDENT
 */
 
    CALL q5(rc);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type REF CHAR() as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF CHAR() as INV REF INV FIXED(31) by IDENT
 */
 
 
    CALL q5(ria); ! REF () INV FIXED;
 /*$        ^
-error: q5: type mismatch: cannot pass object of type REF () INV FIXED(31) as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type REF () INV FIXED(31) as INV REF INV FIXED(31) by IDENT
 */
 
    CALL q5(iria); ! INV REF () INV FIXED INIT(ia);
 /*$        ^
-error: q5: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as INV REF INV FIXED(31) by IDENT
+error: type mismatch: cannot pass object of type INV REF () INV FIXED(31) as INV REF INV FIXED(31) by IDENT
 */
 END;
 
@@ -485,26 +485,26 @@ t8: TASK;
 
    q8(text1);
 /*$   ^
-error: q8: type mismatch: cannot pass object of type CHAR(20) as REF CHAR() by IDENT
+error: type mismatch: cannot pass object of type CHAR(20) as REF CHAR() by IDENT
 */
    q8(rc);
 
    q8(irc);
 /*$   ^
-error: q8: type mismatch: cannot pass object of type INV REF CHAR() as REF CHAR() by IDENT -- would break INV
+error: type mismatch: cannot pass object of type INV REF CHAR() as REF CHAR() by IDENT -- would break INV
 */
    q8(ric);
 /*$   ^
-error: q8: type mismatch: cannot pass object of type REF INV CHAR() as REF CHAR() by IDENT -- would break INV
+error: type mismatch: cannot pass object of type REF INV CHAR() as REF CHAR() by IDENT -- would break INV
 */
    q8(iric);
 /*$   ^
-error: q8: type mismatch: cannot pass object of type INV REF INV CHAR() as REF CHAR() by IDENT -- would break INV
+error: type mismatch: cannot pass object of type INV REF INV CHAR() as REF CHAR() by IDENT -- would break INV
 */
 
    q8('Hallo');
 /*$   ^
-error: q8: type mismatch: cannot pass constant of type CHAR(5) as REF CHAR() by IDENT
+error: type mismatch: cannot pass constant of type CHAR(5) as REF CHAR() by IDENT
 */
 END;
 
@@ -520,24 +520,24 @@ t9: TASK;
    DCL iric INV REF INV CHAR() INIT(text2);
    q9(text1);
 /*$   ^
-error: q9: type mismatch: cannot pass object of type CHAR(20) as REF INV CHAR() by IDENT
+error: type mismatch: cannot pass object of type CHAR(20) as REF INV CHAR() by IDENT
 */
 
    q9('Hallo');
 /*$   ^
-error: q9: type mismatch: cannot pass constant of type CHAR(5) as REF INV CHAR() by IDENT
+error: type mismatch: cannot pass constant of type CHAR(5) as REF INV CHAR() by IDENT
 */
 
    q9(rc); ! ok - no modification of the content possible
    q9(irc); ! fail - would break INV of REF
 /*$   ^
-error: q9: type mismatch: cannot pass object of type INV REF CHAR() as REF INV CHAR() by IDENT -- would break INV
+error: type mismatch: cannot pass object of type INV REF CHAR() as REF INV CHAR() by IDENT -- would break INV
 */
 
    q9(ric); ! ok - types fit
    q9(iric); ! fail would break INV of REF
 /*$   ^
-error: q9: type mismatch: cannot pass object of type INV REF INV CHAR() as REF INV CHAR() by IDENT -- would break INV
+error: type mismatch: cannot pass object of type INV REF INV CHAR() as REF INV CHAR() by IDENT -- would break INV
 */
 END;
 MODEND;

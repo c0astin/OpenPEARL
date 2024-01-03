@@ -90,8 +90,8 @@ DCLTASK(_TASK1, pearlrt::Prio(2), pearlrt::BitString<1>(1)) {
   //!  DCL user DATION INOUT BASIC FIXED(15) CREATED(dat);
    pearlrt::DationTS user(_dat,pearlrt::Dation::INOUT);
 
-    user.dationOpen(0,(pearlrt::Character<1>*)0, (pearlrt::Fixed<31>*)0);
-    user.dationOpen(0,(pearlrt::Character<1>*)0, (pearlrt::Fixed<31>*)0);
+    user.dationOpen(0,(pearlrt::RefCharacter*)0, (pearlrt::Fixed<31>*)0);
+    user.dationOpen(0,(pearlrt::RefCharacter*)0, (pearlrt::Fixed<31>*)0);
     user.dationWrite(&f, sizeof(f));
     user.dationRead(&f1, sizeof(f1));
     if ((f != f1).getBoolean()) {

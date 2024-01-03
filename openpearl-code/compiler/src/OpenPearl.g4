@@ -10,7 +10,6 @@
  1. Redistributions of source code must retain the above copyright
     notice, this list of conditions and the following disclaimer.
  2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
     documentation and/or other materials provided with the distribution.
  3. The name of the author may not be used to endorse or promote products
     derived from this software without specific prior written permission.
@@ -86,8 +85,8 @@ tokens {
 //
 // All other elements occurring in the syntax rules are either Names of language
 // forms or terminal symbols. Examples for terminal symbols are the PEARL keywords
-// or the characters semicolon “;”, opening round bracket “(” and closing round
-// bracket “)”, or the apostrophe “ ’ ”; the terminal symbols opening square
+// or the characters semicolon “;”, ing round bracket “(” and closing round
+// bracket “)”, or the apostrophe “ ’ ”; the terminal symbols ing square
 // bracket “[” and closing square bracket “]” are printed boldly to distinguish
 // them from the meta symbols for optional parts. Attention: the round brackets
 // are no meta characters and have thus no grouping effect!
@@ -1321,13 +1320,8 @@ open_parameter:
 ////////////////////////////////////////////////////////////////////////////////
 
 open_parameter_idf:
-    'IDF' '(' ( ID | StringLiteral ) ')'  	
+    'IDF' '(' ( name | stringSelection |  stringConstant ) ')'  	
     ;
-
-//open_close_RST :
-//	'RST' ( '(' ID ')' )
-//	;
-
 
 open_parameter_old_new_any:
       'OLD'                    
