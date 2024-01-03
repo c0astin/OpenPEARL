@@ -1,0 +1,22 @@
+MODULE(FloatToFixed);
+
+SYSTEM;
+stdout: StdOut;
+
+PROBLEM;
+SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+ticketxxx: TASK MAIN;
+  DCL testFloat FLOAT INIT(9.5);
+
+  OPEN terminal;
+  PUT testFloat TO terminal BY F(5),SKIP;
+  ! Should print 10.0
+  ! Instead it prints:
+  !     :
+  CLOSE terminal;
+END;
+
+MODEND;
+
