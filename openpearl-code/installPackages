@@ -46,6 +46,7 @@ then
    AptPackageList+=" openjdk-8-jdk"
    AptPackageList+=" flex libncurses5-dev"
    AptPackageList+=" expat libexpat1-dev"
+   AptPackageList+=" libz-dev"
    PackageManager="apt-get"
    if [ $Developer -eq 1 ]
    then
@@ -392,6 +393,7 @@ then
    # set automatic 'y' for cpan/cpanm installation
    export PERL_MM_USE_DEFAULT=1
    cpan -T App::cpanminus		# do not test
+   cpanm --notest PerlIO::gzip
    cpanm --notest Spreadsheet::Read
    cpanm --notest Spreadsheet::ReadSXC
 fi
