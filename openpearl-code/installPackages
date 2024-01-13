@@ -37,6 +37,25 @@ then
    SystemKnown=1
 fi
 
+grep "PRETTY_NAME=\"Ubuntu 22.04.3 LTS\"" /etc/os-release >/dev/null
+rc=$?
+if [ $rc -eq 0 ]
+then
+   echo "detected: Ubuntu 22.04.3 LTS"
+   AptPackageList+=" gcc g++ make"
+   AptPackageList+=" openjdk-8-jdk"
+   AptPackageList+=" flex libncurses5-dev"
+   AptPackageList+=" expat libexpat1-dev"
+   PackageManager="apt-get"
+   if [ $Developer -eq 1 ]
+   then
+      AptPackageList+=" astyle graphviz doxygen"
+      AptPackageList+=" texlive texlive-lang-english texlive-generic-extra"
+      AptPackageList+=" texlive-latex-extra"
+   fi
+   SystemKnown=1
+fi
+
 grep "PRETTY_NAME=\"Ubuntu 18.04.1 LTS\"" /etc/os-release >/dev/null
 rc=$?
 if [ $rc -eq 0 ]
