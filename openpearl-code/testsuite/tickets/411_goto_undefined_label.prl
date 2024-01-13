@@ -1,0 +1,32 @@
+MODULE(goto_to_undefined_label);
+
+SYSTEM;
+stdout: StdOut;
+
+PROBLEM;
+SPC stdout DATION OUT SYSTEM ALPHIC;
+DCL out DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+p1: PROC;
+    GOTO UNDEFINED_LABEL;
+END;
+
+p2: PROC;
+    IF 1 < 2 THEN
+      GOTO UNDEFINED_LABEL;
+    ELSE
+      GOTO UNDEFINED_LABEL;
+    FIN;
+END;
+
+t1: TASK MAIN;
+    OPEN out;
+    PUT 'A' TO out BY A, SKIP;
+    GOTO L1;
+    PUT 'B' TO out BY A, SKIP;
+L1: PUT 'C' TO out BY A, SKIP;
+    GOTO UNDEFINED_LABEL;
+    CLOSE out;
+END;
+MODEND;
+
