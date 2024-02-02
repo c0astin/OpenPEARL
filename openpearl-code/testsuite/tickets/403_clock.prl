@@ -2,14 +2,14 @@ MODULE(clk);
 
 PROBLEM;
 
-   DCL c CLOCK;
-   DCL d DURATION;
+   DCL (c1,c2,c3,c4) CLOCK;
+   DCL (d1,d2)        DURATION;
 
 x: PROC;
-   c = c - c + c;
-   c = c - c + c + d;
-   c = c - c + c - d;
-   c = c - c + c + d - d;
+   c1 = c2 - c3 + c4;
+   c1 = c2 - c3 + c4 + d1;
+   c1 = c2 - c3 + c4 - d1;
+   c1 = c2 - c3 + c4 + d1 - d2;
 END;
 
 MODEND;
