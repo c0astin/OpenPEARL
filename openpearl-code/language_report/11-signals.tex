@@ -25,6 +25,7 @@ freely selectable user names can be assigned to them.
 \input{SystemSignalDeclaration.bnf}
 \end{grammarframe}
 
+
 The signals and their associated error numbers possible on a certain
 computer are described in the respective user manual, giving their
 system names and meanings.
@@ -83,14 +84,14 @@ The general form of the specification of signals reads:
 %%%%%
 %%%%%Dies ist Thema auf der AK-Sitzung im November 2016
 
-In larger software systems it may be useful to define own signals, e.g.
-for wrong usage of functions. 
-The declaration of a user defined signal is allowed on module level.
-
-\begin{grammarframe}
-\input{UserSignalDeclaration.bnf}
-\index{SIGNAL@\textbf{SIGNAL}!Declaration}
-\end{grammarframe}
+%In larger software systems it may be useful to define own signals, e.g.
+%for wrong usage of functions. 
+%The declaration of a user defined signal is allowed on module level.
+%
+%\begin{grammarframe}
+%\input{UserSignalDeclaration.bnf}
+%\index{SIGNAL@\textbf{SIGNAL}!Declaration}
+%\end{grammarframe}
 
 Valid ranges for the error number are listed in the plattform specific manual.
 
@@ -120,17 +121,31 @@ the following statement:
 %%%%\input{SignalStatement.bnf}
 \input{SignalReaction.bnf}
 \input{SignalFinalStatement.bnf}
-\input{InduceStatement.bnf}
-\index{INDUCE@\textbf{INDUCE}}
+%\input{InduceStatement.bnf}
+%\index{INDUCE@\textbf{INDUCE}}
 \index{SIGNAL@\textbf{SIGNAL}!\textbf{INDUCE}}
 \end{grammarframe}
 
+\textbf{Note:} OpenPEARL does not support the \kw{INDUCE} with \kw{RST}, which is defined in PEARL90.
+
+\textbf{Note:} OpenPEARL enforces for easy reading that each signal reaction is terminated with a SignalFinalStatement.
+
+If the syntax variant 
+
+\x \kw{ON} \hlink{Name}$\S $Signal \kw{RST} \kw{(} \hlink{Name}$\S $ErrorVariable-FIXED \kw{)} \kw{;}
+
+is used the schededuling task (procedure) will not be terminated 
+but continued after setting the ErrorVariable upon the occurance 
+of the corresponding signal with the statement following the 
+statement, which caused the failure.
+
 %%%%%\end{discuss}
 
-Instead of UnlabeledStatement, all statements besides the
-statement SchedulingSignalReaction are permitted, particularly
-%%%\removedtext{blocks or procedure calls}\addedtext{blocks,  which  end with a SignalFinalStatement}.
-blocks,  which  end with a SignalFinalStatement.
+% obsolete 2024-02-02 (rm)
+%Instead of UnlabeledStatement, all statements besides the
+%statement SchedulingSignalReaction are permitted, particularly
+%%%%\removedtext{blocks or procedure calls}\addedtext{blocks,  which  end with a SignalFinalStatement}.
+%blocks,  which  end with a SignalFinalStatement.
 
 The statement SchedulingSignalReaction is not permitted within \code{BEGIN}
 and \code{REPEAT} blocks, or as SignalReaction.
@@ -180,6 +195,7 @@ can be simulated analogously to the occurrence of an interrupt:
 %%%\begin{added}
 \begin{grammarframe}
 \input{InduceStatement.bnf}
+\index{INDUCE@\textbf{INDUCE}}
 \end{grammarframe}
 
 
@@ -215,9 +231,9 @@ analysis: PROC;
    OPEN logBook;
    ON eof:
       BEGIN
-      CLOSE logBook;
-      RETURN;
-   END; ! ON eof
+         CLOSE logBook;
+         RETURN;
+      END; ! ON eof
    ...
    REPEAT
       READ input FROM logBook;
@@ -228,7 +244,7 @@ END; ! analysis
 
 For testing, the statement
 
-\kw{INDUCE}\code{ eof;}
+\kw{INDUCE} \code{eof;}
 
 could be executed sporadically instead of the read statement.
 
@@ -244,20 +260,21 @@ system), which terminates the causing task.
 %%%\end{modified}
 
 By stating a variable after RST in the signal scheduling, the programmer
-gets access to the error number (error cause). In this case, the signal
-SignalName can be induced for the error with the number ErrorNumber by
-
-\kw{INDUCE} SignalName \kw{RST} \kw{(} ErrorNumber \kw{)} \kw{;}
+gets access to the error number (error cause). 
+%In this case, the signal
+%SignalName can be induced for the error with the number ErrorNumber by
+%
+%\kw{INDUCE} SignalName \kw{RST} \kw{(} ErrorNumber \kw{)} \kw{;}
 
 %%%%%\begin{modified}
 %%%%%Im letzten Satz des vorherigen Abschnitts muss "'In this case"' gestrichen 
 %%%%%werden, oder?
 
 %%%%%\begin{added}
-In case of inducing a signal with an error number, the predefined number
-is superseeded for only this action with the given value. This does not change
-the identity of a signal, when setting the actual number to the
-system number of another signal.  
+%In case of inducing a signal with an error number, the predefined number
+%is superseeded for only this action with the given value. This does not change
+%the identity of a signal, when setting the actual number to the
+%system number of another signal.  
 
 
 %%%%%\end{added}
@@ -265,23 +282,29 @@ system number of another signal.
 
 Example:
 
-The signal \code{taskSignal} shall be simulated with the 
-superseeded error number ``1010`` and not superseeded error number
-The causing task shall react by writing out the error
-number on the console:
+The signal \code{taskSignal}, which covers all error situations of 
+tasking operations, may be simulated with a special situation of 
+starting a currently active task by INDUCE taskRunningSignal;
+
+% shall be simulated with the 
+%superseeded error number ``1010`` and not superseeded error number
+%The causing task shall react by writing out the error
+%number on the console:
 
 \begin{lstlisting}
 PROBLEM};\\
- SPC taskSignal SIGNAL;  ! assume signal number as 1234
- DCL errorNummer FIXED;
+ SPC taskSignal SIGNAL; 	! assume error number 100 
+ SPC taskRunningSignal SIGNAL;	! assume error number 102
+ DCL errorNumber FIXED;
 
 regulator: TASK PRIO 20;
 restart:
-   ON TaskSignal RST (errorNumber):
-   BEGIN 
-      PUT errorNumber TO console;
-      GOTO restart;
-   END;  ! of error handler 
+   ...
+   ON taskSignal RST (errorNumber):
+      BEGIN 
+         PUT errorNumber TO console;
+         GOTO restart;
+      END;  ! of error handler 
    ...
    CALL test;
    ...
@@ -295,10 +318,10 @@ test: PROC;
    IF ... 
    THEN
       ...
-      INDUCE taskSignal; ! prints 1234
+      INDUCE taskRunningSignal; ! prints 102
    ELSE
       ...
-      INDUCE taskSignal RST (1010); ! prints 1010
+      INDUCE taskSignal; ! prints 100
    FIN;
 END; ! test
 \end{lstlisting}
