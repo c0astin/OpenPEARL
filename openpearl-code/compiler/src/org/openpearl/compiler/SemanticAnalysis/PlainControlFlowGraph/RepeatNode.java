@@ -19,6 +19,7 @@ public class RepeatNode extends ControlFlowGraphNode {
 
     public RepeatNode(RepeatNode other) {
         super(other.getCtx());
+        m_isForOrWhile = other.m_isForOrWhile;
         m_alternatives.add(null);  // add loop end
     }
 
