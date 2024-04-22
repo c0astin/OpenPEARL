@@ -34,7 +34,7 @@ PROBLEM;
              CREATED(disc);
    DCL termout DATION OUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(output);
 
-ttt: TASK;
+ttt: TASK MAIN;
    DCL f FIXED(31);   ! RST-value
    DCL f15 FIXED(31);   ! RST-value
 

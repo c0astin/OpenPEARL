@@ -5,6 +5,7 @@ package imc.main;
 
 import imc.checks.CheckI2CAdrDoesNotCollide;
 import imc.checks.CheckInstances;
+import imc.checks.CheckMainTasks;
 import imc.checks.CheckMultipleSystemParts;
 import imc.checks.CheckPinsDoNotCollide;
 import imc.checks.CheckSpcDcl;
@@ -123,6 +124,7 @@ public class InterModuleChecker {
 
         // start checks ...
         CheckSystempart.checkSystemelementsForSystemParts(modules);
+        CheckSystempart.checkSystemelementsForProblemPartSystemDation(modules);
         Log.exitIfErrors();
         CheckSystempart.checkAssociationType(modules);
         Log.exitIfErrors();
@@ -153,6 +155,13 @@ public class InterModuleChecker {
 
         cSpcDcl.warnUnusedDcl();
 
+        int nbrOfMainTasks = new CheckMainTasks(modules).getCount();
+        if (nbrOfMainTasks == 0) {
+        	Log.errorWithoutLocation("no MAIN task defined");
+        }
+        
+        Log.exitIfErrors();
+        
         // create system.cpp
         CodeGenerator.create(outputFile, modules, useNameSpace);
 

@@ -15,6 +15,9 @@ If no circumflex is used, the column position may be defined with
 'line+=xxx' may be used to modify the expected error line. This option must 
 be in start of annotation line
 
+'noLocation' must be specified in the start of the annotaion line, if the error
+message contain NO location information like "xxx.prl:123:45"
+
 After the circumflex character is detected the next line denotes the message
 text.
 
@@ -51,6 +54,7 @@ int main(int narg, char * argv[]) {
    char outputFileName[128];
    FILE * input, *output;
    int lineNumber;
+   int noLocation = 0;
  
    // needed if more messages occur on one input line
    int lastRealInputLineNumber;
@@ -138,7 +142,15 @@ int main(int narg, char * argv[]) {
             case 0: // not inside of annotation
                  if (strncmp(inputLine,"/*$",3) == 0) {
                     // start of annotation found
-                    if (lastRealInputLineNumber < 0) {
+		    
+		    // expectations relating a source line  need a prceeding source line
+		    // expectations without a source line (noLocation) may be at any position 
+		    noLocation = 0;
+                    if (strstr(inputLine,"noLocation")) {
+			noLocation = 1;
+	            }
+		    
+                    if (lastRealInputLineNumber < 0 && noLocation == 0) {
                        fprintf(stderr,"%s:%d: need at least one source line before annotation\n",
                               inputFileName, lineNumber);
                        exit(-1);
@@ -165,6 +177,10 @@ int main(int narg, char * argv[]) {
 printf("col=%d\n", annotation.col);
 
                     }
+		    if ( noLocation == 1) {
+                        annotationStatus = 2;
+		    }
+
                  } else {
 //printf("update lastRealLineNumber from %d to %d\n", lastRealInputLineNumber, lineNumber);
                     lastRealInputLineNumber = lineNumber;
@@ -199,6 +215,10 @@ printf("col=%d\n", annotation.col);
                             lineNumber);
                     exit(-1);
 		 } 
+		 if ( noLocation == 1) {
+                     annotation.line = lineNumber-1;
+                     annotation.col = -1;
+		 }
                  fprintf(output,"%d,%d,%s", annotation.line,
                           annotation.col, annotation.message);
                  annotationCount ++;

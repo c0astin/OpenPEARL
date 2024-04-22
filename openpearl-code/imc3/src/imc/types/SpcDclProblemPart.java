@@ -17,10 +17,9 @@ public class SpcDclProblemPart {
     private int line;
     private int col;
 
-    private String dationAttributes;
+    private String attributes;  // DATION attributes , or MAIN for TASKs
     private String dationType;
-    private String dationSubType; // kind of SystemDationNB* or SystemDationB*
-
+ 
     private String procParameters;
     private String procReturns;
     /**
@@ -70,12 +69,12 @@ public class SpcDclProblemPart {
         return col;
     }
 
-    public String getDationAttributes() {
-        return dationAttributes;
+    public String getAttributes() {
+        return attributes;
     }
 
-    public void setDationAttributes(String dationAttributes) {
-        this.dationAttributes = dationAttributes;
+    public void setAttributes(String attributes) {
+        this.attributes = attributes;
     }
 
     public String getDationType() {
@@ -86,13 +85,6 @@ public class SpcDclProblemPart {
         this.dationType = dationType;
     }
 
-    public String getDationSubType() {
-        return dationSubType;
-    }
-
-    public void setDationSubType(String dationType) {
-        this.dationSubType = dationType;
-    }
 
     public String getProcParameters() {
         return procParameters;

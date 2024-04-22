@@ -59,7 +59,7 @@ PROBLEM;
         ]
    ];
 
-ttt: TASK;
+ttt: TASK MAIN;
 END;
 
 MODEND;

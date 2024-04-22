@@ -110,9 +110,9 @@ public class CheckSpcDcl {
                 if (!dclFound) {
                     if (useNameSpace) {
                         Log.error(
-                                "SPC of '" + userName + "' GLOBAL('" + spc.getGlobal() + "') has no declaration");
+                                "SPC of " + spc.getType() + " '" + userName + "' GLOBAL('" + spc.getGlobal() + "') has no declaration");
                     } else {
-                        Log.error("SPC of '" + userName + "' has no declaration");
+                        Log.error("SPC of " + spc.getType() + " '" + userName + "' has no declaration");
                     }
                 }
             }
@@ -243,6 +243,7 @@ public class CheckSpcDcl {
                     continue;
                 Log.setLocation(m.getSourceFileName(), dcl.getLine(), dcl.getCol());
                 Log.warn(dcl.getType() + " '" + dcl.getUserName() + "' is never used by SPC");
+                dcl.setUsedBySpc();  // avoid duplicate error messages
             }
         }
 
@@ -308,11 +309,11 @@ public class CheckSpcDcl {
                 Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
                         "type in DCL: " + dcl.getDationType());
             }
-            if (!spc.getDationAttributes().equals(dcl.getDationAttributes())) {
+            if (!spc.getAttributes().equals(dcl.getAttributes())) {
                 Log.error("mismatch in DATION attributes of '" + spc.getUserName() + "'"
-                        + spc.getDationAttributes());
+                        + spc.getAttributes());
                 Log.note(dcl.getModule().getSourceFileName(), dcl.getLine(), dcl.getCol(),
-                        "attributes in DCL " + dcl.getDationAttributes());
+                        "attributes in DCL " + dcl.getAttributes());
             }
         } else if (spc.getType().equals("PROC")) {
         	if (spc.getProcParameters() == null && dcl.getProcParameters() != null) {
@@ -416,7 +417,7 @@ public class CheckSpcDcl {
                 if (!dataTypeMatch) {
                     Log.error("conflict in type of transfer data: SPC of '" + spc.getUserName()
                     + "' has type '" + dataInSpc + "'");
-                    Log.note(currentModule.getSourceFileName(), moduleEntrySystemPart.getLine(),
+                    Log.note(m1.getSourceFileName(), moduleEntrySystemPart.getLine(),
                             moduleEntrySystemPart.getCol(), "declaration in SYSTEM part for '" + spc.getUserName()
                             + "' specifies type '" + dataInPlatform + "'");
                 }
@@ -442,7 +443,7 @@ public class CheckSpcDcl {
                 if (!attributesInPlatform.contains(attrListInSpc[i].trim())) {
                     Log.error(
                             "dation attribute '" + attrListInSpc[i].trim() + "' not supported by system device");
-                    Log.note(currentModule.getSourceFileName(), moduleEntrySystemPart.getLine(),
+                    Log.note(m1.getSourceFileName(), moduleEntrySystemPart.getLine(),
                             moduleEntrySystemPart.getCol(), moduleEntrySystemPart.getNameOfSystemelement()
                             + " supports " + attributesInPlatform.trim());
                 }

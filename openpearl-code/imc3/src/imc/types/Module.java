@@ -237,7 +237,7 @@ public class Module {
                     Log.setLocation(sourceFileName, line, col);
 
                     String dationData = null, dationAttributes = null, procParameters = null,
-                            procReturns = null, subType=null;
+                            procReturns = null, taskAttribute=null;
 
                     if (type.equals(Platform.DATION)) {
                         // parse type and attributes of dation and set them in the dictionary
@@ -274,14 +274,22 @@ public class Module {
                             }
 
                         }
+                    } else if (type.equals("TASK") && isDcl) {
+                        // parse special elements of TASK: here "MAIN"
+                    	Node attr = n.getAttributes().getNamedItem("attr");
+                    	if (attr != null) {
+                    		taskAttribute = attr.getTextContent().toUpperCase();
+                    	}
+                                           	
                     }
 
                     if (isDcl) {
                         DclProblemPart dcl = new DclProblemPart(userName, line, col, type, n, this, global);
                         dclProblemPart.add(dcl);
-                        dcl.setDationAttributes(dationAttributes);
+                        if (dationAttributes!=null) dcl.setAttributes(dationAttributes);
+                        if (taskAttribute!=null) dcl.setAttributes(taskAttribute);
                         dcl.setDationType(dationData);
-                        dcl.setDationSubType(subType);
+                       
                         dcl.setProcParameters(procParameters);
                         dcl.setProcReturns(procReturns);
                         Log.info("DCL found in module '" + moduleName + "' type= '" + type + "' '" + userName
@@ -289,8 +297,8 @@ public class Module {
                     } else {
                         SpcProblemPart spc = new SpcProblemPart(userName, line, col, type, n, this, global);
                         spcProblemPart.add(spc);
-                        spc.setDationAttributes(dationAttributes);
-                        spc.setDationSubType(subType);
+                        spc.setAttributes(dationAttributes);
+                       
                         spc.setDationType(dationData);
                         spc.setProcParameters(procParameters);
                         spc.setProcReturns(procReturns);

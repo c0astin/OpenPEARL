@@ -19,4 +19,6 @@ PROBLEM;
        strWithRef STRUCT [ (re,im) REF FLOAT],
        complex STRUCT [ (re,im) FLOAT ];
 
+t1: TASK MAIN; ! define dummy task for IMC task main check
+END;
 MODEND; 

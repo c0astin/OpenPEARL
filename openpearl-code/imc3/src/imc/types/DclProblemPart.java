@@ -11,7 +11,7 @@ import org.w3c.dom.Node;
 public class DclProblemPart extends SpcDclProblemPart {
 
     /**
-     * flag to detect unuser global definitions
+     * flag to detect unused global definitions
      */
     private boolean isUsedBySpc;
     

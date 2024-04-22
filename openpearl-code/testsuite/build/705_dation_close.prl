@@ -27,7 +27,7 @@ PROBLEM;
    DCL tableAlphicForward2u DATION OUT ALPHIC DIM(*,10) FORWARD
              CREATED(disc);
 
-ttt: TASK;
+ttt: TASK MAIN;
    DCL f FIXED(31);   ! RST-value
 
    CLOSE tableAlphicForward2u;
