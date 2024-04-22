@@ -49,7 +49,7 @@ import java.util.LinkedList;
  * <li> tfu usage by user dations with reference to system dation
  * </ul>
  * 
- * if global becomes supported, this must become extended by
+ * for global objects
  * <ul>
  * <li>specifications of problem part elements from other modules
  * <li>declarations of global problem part elements of this module
@@ -287,7 +287,7 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
                     // user dation
                     treatTfuStuff(v);
                     //if (t.getGlobal()!=null) {
-                        dation = treatDationSpcDclCommonStuff(v);
+                    dation = treatDationSpcDclCommonStuff(v);
                     //}
 
                 } else {
@@ -312,10 +312,10 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
                 st.add("lineno", v.getSourceLineNo());
                 st.add("col",v.getCharPositionInLine()+1);
                 st.add("name", v.getName());
-               // if (v.getType() instanceof TypeStructure) {
+                // if (v.getType() instanceof TypeStructure) {
                 //    st.add("type",((TypeStructure)(v.getType())).getName());
                 //} else {
-                    st.add("type", v.getType().toString4IMC(false));
+                st.add("type", v.getType().toString4IMC(false));
                 //}
                 if (v.getGlobalAttribute() != null) {
                     st.add("fromNamespace", v.getGlobalAttribute());
@@ -323,55 +323,57 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
                 problemPart.add("decls",  st);
             }
         }
-        
- 
+
+
         LinkedList<TaskEntry> tl = m_currentSymbolTable.getTaskDeclarationsAndSpecifications();
         for (TaskEntry v : tl) {
-        ST st = null;
-        if (v.isSpecified()) {
-            st = group.getInstanceOf("Specification");
-        } else {
-            if (v.getGlobalAttribute()!= null) {
-                //Declaration(lineno,col,name,type,global) ::= <<
-                st = group.getInstanceOf("Declaration");
-            } 
-        }
+            ST st = null;
+            if (v.isSpecified()) {
+                st = group.getInstanceOf("Specification");
+            } else {
+              //  if (v.getGlobalAttribute()!= null) {
+                    st = group.getInstanceOf("Declaration");
+                    if (v.isMain()) {
+                        st.add("attribute", "MAIN");
+                    }
+               // } 
+            }
 
-        // st is null, if DCL without global -> skip this for the IMC
-        if (st == null) continue;
-        st.add("lineno", v.getSourceLineNo());
-        st.add("col",v.getCharPositionInLine()+1);
-        st.add("name", v.getName());
-        st.add("type", "TASK");
-        if (v.getGlobalAttribute() != null) {
-            st.add("fromNamespace", v.getGlobalAttribute());
+            // st is null, if DCL without global -> skip this for the IMC
+            if (st == null) continue;
+            st.add("lineno", v.getSourceLineNo());
+            st.add("col",v.getCharPositionInLine()+1);
+            st.add("name", v.getName());
+            st.add("type", "TASK");
+            if (v.getGlobalAttribute() != null) {
+                st.add("fromNamespace", v.getGlobalAttribute());
+            }
+            problemPart.add("decls",  st);
         }
-        problemPart.add("decls",  st);
-    }
 
         LinkedList<ProcedureEntry> pl = m_currentSymbolTable.getProcedureDeclarationsAndSpecifications();
         for (ProcedureEntry v : pl) {
-        ST st = null;
-        if (v.isSpecified()) {
-            st = group.getInstanceOf("Specification");
-        } else {
-            if (v.getGlobalAttribute()!= null) {
-                //Declaration(lineno,col,name,type,global) ::= <<
-                st = group.getInstanceOf("Declaration");
-            } 
-        }
+            ST st = null;
+            if (v.isSpecified()) {
+                st = group.getInstanceOf("Specification");
+            } else {
+                if (v.getGlobalAttribute()!= null) {
+                    //Declaration(lineno,col,name,type,global) ::= <<
+                    st = group.getInstanceOf("Declaration");
+                } 
+            }
 
-        // st is still null, if DCL without global -> skip this for the IMC
-        if (st == null) continue;
-        st.add("lineno", v.getSourceLineNo());
-        st.add("col",v.getCharPositionInLine()+1);
-        st.add("name", v.getName());
-        st.add("type", v.getType().toString4IMC(false));
-        if (v.getGlobalAttribute() != null) {
-            st.add("fromNamespace", v.getGlobalAttribute());
+            // st is still null, if DCL without global -> skip this for the IMC
+            if (st == null) continue;
+            st.add("lineno", v.getSourceLineNo());
+            st.add("col",v.getCharPositionInLine()+1);
+            st.add("name", v.getName());
+            st.add("type", v.getType().toString4IMC(false));
+            if (v.getGlobalAttribute() != null) {
+                st.add("fromNamespace", v.getGlobalAttribute());
+            }
+            problemPart.add("decls",  st);
         }
-        problemPart.add("decls",  st);
-    }
         return;
     }
 
@@ -393,7 +395,7 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
         dation.add("name", v.getName());
         if (v.getGlobalAttribute()!= null) {
             dation.add("fromNamespace", v.getGlobalAttribute());
-         }
+        }
 
 
         TypeDation td = (TypeDation) (v.getType());
@@ -440,7 +442,7 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
             attribute.add("name", "FORWARD");
             attributes.add("attributes", attribute);
         }
-        
+
         if (!isSystemDation) {
             // these attributes are only expected by the IMC for user dations
             if (td.isCyclic()) {
@@ -452,7 +454,7 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
                 attribute.add("name", "NOCYCL");
                 attributes.add("attributes", attribute);
             }
-            
+
             if (td.isStream()) {
                 ST attribute = group.getInstanceOf("Attribute");
                 attribute.add("name", "STREAM");
@@ -476,12 +478,12 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
                 attribute.add("name", dim);
                 attributes.add("attributes", attribute);
                 if (td.hasTfu()) {
-                   attribute = group.getInstanceOf("Attribute");
-                   attribute.add("name", "TFU");
-                   attributes.add("attributes", attribute);
+                    attribute = group.getInstanceOf("Attribute");
+                    attribute.add("name", "TFU");
+                    attributes.add("attributes", attribute);
                 }
             }
-            
+
         }
         dation.add("attributes", attributes);
         return dation;
@@ -514,9 +516,9 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
 
         // detect element size if not ALPHIC or ALL
         if (d.getTypeOfTransmission() != null) {
-//            if (!d.getTypeOfTransmission().contentEquals("ALL")) {
-                recordLength *= d.getTypeOfTransmission().getSize();
-  //          }
+            //            if (!d.getTypeOfTransmission().contentEquals("ALL")) {
+            recordLength *= d.getTypeOfTransmission().getSize();
+            //          }
             // getSize returns -1, if the size is unknown to the compiler
             // the test od sufficient record size must be done at runtime
             // indicate this which recordLength=0

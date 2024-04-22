@@ -111,13 +111,14 @@ Type_Fixed(name) ::= <<
 >>
 
 
-Specification(lineno,col,name,type,fromNamespace) ::= <<
+Specification(lineno,col,name,type, fromNamespace) ::= <<
 \<spc type="<type>" name="<name>" line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif> />
 
 >>
 
-Declaration(lineno,col,name,type,fromNamespace) ::= <<
-\<dcl type="<type>" name="<name>" line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif> />
+/* attribute is used for MAIN in TASK decl */
+Declaration(lineno,col,name,type,attribute, fromNamespace) ::= <<
+\<dcl type="<type>" name="<name>" <if(attribute)>attr="<attribute>"<endif> line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif> />
 
 >>
 
@@ -125,7 +126,7 @@ Declaration(lineno,col,name,type,fromNamespace) ::= <<
 
 DationSpecification(lineno,col,name,attributes,datalist,fromNamespace) ::= <<
 \<spc type="dation" name="<name>" line="<lineno>" col="<col>" <if(fromNamespace)>global="<fromNamespace>"<endif> >
-  <if(attributes)><attributes><endif>
+  <if(attributes)>attributes="<attributes>"<endif>
   <if(datalist)><datalist><endif>
 \</spc>
 

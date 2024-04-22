@@ -51,6 +51,7 @@ public class TaskEntry extends SymbolTableEntry {
         super(name);
         this.m_ctx = ctx;
         m_controlFlowGraph = null;
+        m_isMain = false;
     }
 
     public TaskEntry(String name, OpenPearlParser.PriorityContext priority, Boolean isMain,
@@ -77,6 +78,7 @@ public class TaskEntry extends SymbolTableEntry {
         }
 
         return indentString(level) + super.toString(level) + "task"
+                + (isMain()? " MAIN" : "" )
                 + (!isSpecified()? " priority(" + taskPriority + ")" : "" )
                 + scopeString(level);
     }
@@ -94,5 +96,9 @@ public class TaskEntry extends SymbolTableEntry {
     }
 
     public SymbolTable scope;
+
+    public Boolean isMain() {
+        return m_isMain;
+    }
 
 }
