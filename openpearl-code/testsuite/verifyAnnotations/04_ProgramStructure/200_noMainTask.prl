@@ -1,0 +1,17 @@
+/*$ noLocation
+error: no MAIN task defined
+*/
+
+MODULE(noMainTask);
+
+PROBLEM;
+
+t1: TASK PRIO 10;
+END;
+
+t2: TASK PRIO 100;
+END;
+
+MODEND;
+
+

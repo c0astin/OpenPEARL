@@ -1,0 +1,18 @@
+MODULE(other);
+SYSTEM;
+
+
+  disc: StdOut;
+/*$ 
+  ^
+note: declaration in SYSTEM part for 'disc' specifies type 'ALPHIC'
+*/
+/*$ 
+  ^
+note: StdOut supports FORWARD, OUT, SYSTEM
+*/
+
+
+
+MODEND;
+

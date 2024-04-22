@@ -1,0 +1,14 @@
+MODULE(idf);
+
+PROBLEM;
+   SPC disc DATION INOUT SYSTEM ALL GLOBAL(other);
+/*$    ^
+error: conflict in type of transfer data: SPC of 'disc' has type 'ALL'
+*/
+/*$    ^
+error: dation attribute 'INOUT' not supported by system device
+*/
+   DCL file DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(disc);
+
+MODEND;
+
