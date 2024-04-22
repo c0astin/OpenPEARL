@@ -31,8 +31,7 @@ DONOTBUILDESP32= 030 031  \
 
 #	022_mixedDcl \ not int repo yet
 
-DONOTRUN=000 \
-	022 \
+DONOTRUN= 022 \
 	450 \
         703 \
 	704 \
