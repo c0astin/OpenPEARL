@@ -147,9 +147,11 @@ prl_cc.inc:
 
 clean:
 	$(RM) org/openpearl/compiler/OpenPearl.tokens
+	$(RM) org/openpearl/compiler/OpenPearl.interp
 	$(RM) org/openpearl/compiler/OpenPearlBaseVisitor.java
 	$(RM) org/openpearl/compiler/OpenPearlLexer.java
 	$(RM) org/openpearl/compiler/OpenPearlLexer.tokens
+	$(RM) org/openpearl/compiler/OpenPearlLexer.interp
 	$(RM) org/openpearl/compiler/OpenPearlParser.java
 	$(RM) org/openpearl/compiler/OpenPearlVisitor.java
 	$(RM) $(OUTPUT_PRL_DIR)/org/openpearl/compiler/*.class
