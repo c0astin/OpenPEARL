@@ -623,7 +623,7 @@ Auswirkung auf alte Teile pruefen
 \begin{grammarframe}
 \htgt{RealTimeStatement} ::=\\
 \x \hlink{TaskControlStatement} $\mid$ \hlink{TaskCoordinationStatement}\\
-\x $\mid$ \hlink{InterruptStatement} $\mid$ \hlink{SignalStatement}\\
+\x $\mid$ \hlink{InterruptStatement} $\mid$ \hlink{SchedulingSignalReaction}\\
 
 \htgt{TaskControlStatement} ::=\\
 \x \hlink{TaskStarting} $\mid$ \hlink{TaskTerminating}\\             
@@ -673,7 +673,7 @@ Auswirkung auf alte Teile pruefen
 
 %%%%%\begin{added}
 \input{UserSignalDeclaration.bnf}
-\input{SignalStatement.bnf}
+\input{SchedulingSignalReaction.bnf}
 \input{SignalReaction.bnf}
 \input{SignalFinalStatement.bnf}
 \input{InduceStatement.bnf} 
