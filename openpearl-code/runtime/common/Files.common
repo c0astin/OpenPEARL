@@ -43,7 +43,8 @@ CXX_COMMON = \
 	Duration.cc  \
 	PutDuration.cc GetDuration.cc \
 	Signals.cc \
-	ScheduleSignalAction.cc \
+	SignalAction.cc \
+	ScheduledSignalActions.cc \
 	Fixed63.cc \
 	Fixed.cc \
 	Prio.cc \

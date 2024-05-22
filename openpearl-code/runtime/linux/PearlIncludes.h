@@ -67,7 +67,8 @@ Only this file mus be included.
 #include "GetCharacter.h"
 
 #include "RefChar.h"
-#include "ScheduleSignalAction.h"
+#include "SignalAction.h"
+#include "ScheduledSignalActions.h"
 #include "Prio.h"
 #include "BitString.h"
 #include "BitSlice.h"

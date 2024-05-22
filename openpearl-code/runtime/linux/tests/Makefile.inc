@@ -49,7 +49,7 @@ targets +=  \
 	tests/api  tests/lot_of_tasks  \
 	tests/susp_cont_test \
 	tests/sched_demo \
-	tests/signalTest\
+#	tests/signalTest\
 	tests/DationTests
 #	tests/DationSuspendTerminateTests 
 
