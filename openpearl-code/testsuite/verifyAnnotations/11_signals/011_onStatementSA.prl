@@ -1,0 +1,111 @@
+MODULE(on);
+SYSTEM;
+   arithmeticOverflow: ArithmeticOverflowSignal; ! hast number 201
+   div0: FixedDivideByZeroSignal; ! hast number 202
+   arith: ArithmeticSignal; ! covers signals 200-299
+
+PROBLEM;
+   SPC (div0,arith,arithmeticOverflow) SIGNAL;
+
+t1: TASK MAIN;
+
+   ON div0: RETURN;
+/*$         ^
+error: signal handler: RETURN is not allowed is a signal reaction of a task
+*/
+
+   ON div0: BEGIN
+              RETURN;
+/*$           ^
+error: signal handler: RETURN is not allowed is a signal reaction of a task
+*/
+            END;
+
+
+END;
+
+deprecated: PROC;
+   DCL x FIXED;
+   DCL refSignal REF SIGNAL;
+ 
+   ON div0 RST(x); ! should by ok
+/*$^
+warning: deprecated: the usage of error variables is dangerous
+*/
+END;
+
+handlerTermination: PROC RETURNS(FIXED);
+   DCL errno FIXED;
+
+   ON div0: GOTO exit; ! ok
+   ON div0: INDUCE arith;  ! ok
+   ON div0: INDUCE;     ! ok
+   ON div0: RETURN(1); ! ok
+!   ON div0: RETURN;    ! not ok, but will be captured in a later pass
+   ON div0: TERMINATE; ! ok
+   ON div0: TERMINATE t1; 
+/*$                   ^
+error: signal handler: TERMINATE as signal termination statement forbids a name for task
+*/
+
+
+   ON div0: BEGIN
+            END;
+/*$         ^
+error: signal handler: must end with RETURN, TERMINATE, INDUCE or GOTO
+*/
+
+   ON div0: BEGIN
+		errno=1;
+		INDUCE;
+            END;
+
+   ON div0: BEGIN
+		errno=1;
+		INDUCE arith;
+            END;
+
+   ON div0: BEGIN
+		errno=1;
+		TERMINATE;
+            END;
+
+   ON div0: BEGIN
+		errno=1;
+		RETURN (1);  
+            END;
+
+   ON div0: BEGIN
+		errno=1;
+		GOTO exit;
+            END;
+
+   ON div0: BEGIN
+		IF errno> 0 THEN 
+/*$             ^
+error: signal handler: must end with RETURN, TERMINATE, INDUCE or GOTO
+*/
+			INDUCE;
+		ELSE
+		    TERMINATE;
+		FIN;
+            END;
+
+   ON div0: BEGIN
+		    errno = 2;
+/*$                 ^
+error: signal handler: must end with RETURN, TERMINATE, INDUCE or GOTO
+*/
+            END;
+
+
+
+
+
+
+exit:;
+    RETURN(0);
+END;
+
+MODEND;
+  

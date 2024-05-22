@@ -1,0 +1,48 @@
+/* this test adresses problems with expressions in ON statements
+   problems which become detected in later semantic passes
+   will not be recocognized here
+*/
+MODULE(on);
+SYSTEM;
+   arithmeticOverflow: ArithmeticOverflowSignal; ! hast number 201
+   div0: FixedDivideByZeroSignal; ! hast number 202
+   arith: ArithmeticSignal; ! covers signals 200-299
+
+PROBLEM;
+   SPC (div0,arith,arithmeticOverflow) SIGNAL;
+
+
+typeMismatch: PROC;
+   DCL x FIXED;
+   DCL x1 FIXED(14);
+   DCL refSignal REF SIGNAL;
+ 
+   ON div0 RST(x); ! should by ok
+
+   ON x RST(div0);
+/*$         ^
+error: type mismatch: expected FIXED(15) or larger --- got SIGNAL
+*/
+/*$   ^
+error: type mismatch: expected type SIGNAL --- got type FIXED(31)
+*/
+
+   ON refSignal RST(x);  ! should be ok
+
+   ON returnRefSignal1(refSignal) RST(x);  ! should be ok
+
+   ON returnRefSignal2(div0) RST(x);  ! should be ok
+
+END;
+
+returnRefSignal1: PROC (x REF SIGNAL) RETURNS (REF SIGNAL);
+   RETURN (x);
+END;
+
+returnRefSignal2: PROC (x SIGNAL IDENT) RETURNS (REF SIGNAL);
+   DCL ref REF SIGNAL INIT(x);
+   RETURN (ref);
+END;
+
+MODEND;
+  
