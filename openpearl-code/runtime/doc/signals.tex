@@ -3,6 +3,11 @@
 
 The signal definitions are stored in the OpenOffice document {\em Signals.ods}
 for all plattforms.
+The signals are objects of the class \verb|pearlrt::Signal|. 
+Inducing a signal becomes mapped to a C++ throw statement.
+The signal reactions are caught in a \verb|try-catch| block in procedures and
+tasks, which use \verb|ON| statements of PEARL.
+
 As shown in fig. \ref{signals_ods} the perl script
 {\em GenerateSignalDefinitions.pl} creates two files
 {\em Signals.hh} and {\em Signals.hcc} containing the class definitions 
@@ -72,29 +77,21 @@ The scripts captures all entries of all group sheet with a matching
 \section{Decoration Scheme}
 \begin{description}
 \item[xxx] is the user supplied identifier for a signal
-\item[\_xxx] is the (private) identifier with the concrete signal object
-\item[generalized\_xxx] is the upcasted (public) identifier 
-    of the concrete signal
-\item[index\_xxx] is the enumeration item for the signal index within
-   one procedure ore task
-
-\item[lll] is the user defined identifer for a label 
-\item[label\_lll] is the label in C++
-\item[index\_lll] is the index of the label in the array for the computed goto
-
+\item[theXxx] is t global identifier with the concrete signal object
 \end{description}
 
-\section{Usage in System Part (is subject of change)}
+\section{Usage in System Part}
 A plattform specific signal is mapped to a user defined identifer in the 
 system part. 
+Each defined signal is statically instanciated to avoid
+dynamic memory allocation when a exception should become thrown. 
 
 \begin{PEARLCode}
 CHAR_OVERFLOW: CharacterTooLongSignal;
 \end{PEARLCode}
 
 \begin{CppCode}
-static pearlrt::CharacterTooLongSignal _CHAR_OVERFLOW;
-pearlrt::Signal * generalized_CHAR_OVERFLOW = &_CHAR_OVERFLOW;
+static pearlrt::Signal* _CHAR_OVERFLOW = pearlrt::theCharacterTooLongSignal;
 \end{CppCode}
 
 There is no possibility to define a signal upon its number, since this
@@ -113,9 +110,19 @@ The definition of a signal handler inside of IF/THEN/ELSE-blocks is ok.
 Possible reaction is a block of statements, which is executed and the
 PROC is exited (the TASK teriminated) if the signal handler does not
 contain a {\em GOTO-statement} defining the continuation point.
+As extension to PEARL90 there a the possibility to \verb|INDUCE| the same, or another signal in OpenPEARL as signal reaction.
+ 
+The language definition requires that a signal reaction will not triggered from inside the reation, thus a signal reaction must become disabled as soon as the
+reaction becomes triggered.
 
-These code structure requires that only labels defined on task or proc level
-may be used for this goto.
+The signal reactions ending with \verb|TERMINATE|, \verb|RETURN| do not require
+to reenable the signal reaction, since the control flow ends with the statement.
+In case of ending with an \verb|INDUCE| there might arise a problem of endless
+loops between different signal reaction handlers. Thus the reaction must remain disabled when ending with \verb|INDIUCE|. 
+The only case for enable a signal reaction arises with \verb|GOTO| from a signal handler into the application code.
+
+
+Example:
 
 \begin{PEARLCode}
 SYSTEM;
@@ -170,7 +177,7 @@ restart:
       END;
       
       IF p == 11 THEN
-          k := 10 / (k-k);  ! force 'div by 0'
+          k := 10 // (k-k);  ! force 'div by 0'
       FIN;
 
       FOR i TO 100 REPEAT
@@ -179,7 +186,12 @@ restart:
 exit:
   END;
 \end{PEARLCode}
+
 There are four signal handler defined in the procedure.
+The \verb|Arithmetic| signal covers also the \verb|FixedOverFlowSignal|
+and \verb|FixedDivideByZeroSignal| and some other error situations 
+with arithmetics.
+
 Since there are signals handler defined in the procedure,
 the body is placed in a try-catch-block.
 The catch block checks, whether the current signal matches 
@@ -187,19 +199,9 @@ on of the scheduled signal actions.
 
 \begin{CppCode}
 // system part
-static pearlrt::FixedRangeSignal _overfl;
-pearlrt::Signal *generalized_overfl = &_overfl;
-
-
-static pearlrt::FixedDivideByZeroSignal _div0;
-pearlrt::Signal *generalized_div0 = &_div0;
-
-static pearlrt::ArithmeticSignal _arith;
-pearlrt::Signal *generalized_arith = &_arith;
-
-extern pearlrt::Signal *generalized_overfl;
-extern pearlrt::Signal *generalized_div0;
-extern pearlrt::Signal *generalized_arith;
+extern pearlrt::Signal *_overfl;
+extern pearlrt::Signal * _div0;
+extern pearlrt::Signal * _arith;
 
 // problem part
 SPCTASK(TASK1);
@@ -208,144 +210,49 @@ void _x(pearlrt::Task * me, pearlrt::Fixed<15> p) {
    pearlrt::Fixed<15> _k;
 
    //[ generated from ON statements in PROC
-   static pearlrt::ScheduleSignalAction sigActions[] = {
-		pearlrt::ScheduleSignalAction(generalized_arith),
-		pearlrt::ScheduleSignalAction(generalized_overfl),
-		pearlrt::ScheduleSignalAction(generalized_div0)};
+   pearlrt::SignalAction sigActions[5];
+   pearlrt::ScheduledSignalActions scheduledSignalActions(5, sigActions);
 
-   const size_t NBROFSIGACTIONS = 
-		sizeof(sigActions)/sizeof(sigActions[0]);
-
-   enum signalIndex{index_arith, index_overfl, index_div0};
-   int indexOfSignalAction = -1; // no action -> execute proc body
-   //]
-
-
-      // local decls
-      _k = pearlrt::Fixed<15>(2);
-
-label_restart:  // user label
-
-   //[ autogenerated due to ON statements in PROC 
-   //    (after decls before first statement but after fisrt label)
-tryAgain:    // << autogen
-   try {
-      switch(indexOfSignalAction) {
+    tryAgain:
+    try {
+       switch (indexOfSignalAction) {
           case -1: break;
-          //[ generated from signal action #1 in PROC
-          case 1:
-             sigActions[index_arith].disable();
-             printf("proc x: arithmetic error (returning)\n");
-             return; // if in PROC; else me->terminate(me);
-             sigActions[index_arith].enable();
-          //]
-          //[ generated from signal action #2 in PROC
-          case 2:
-             sigActions[index_overfl].disable();
-             printf("proc x: Overflow occured (terminating)\n");
-             sigActions[index_overfl].enable();
-             me->terminate(me);
-          //]
-          //[ generated from signal action #3 in PROC
-          case 3: 		 // signal action #3
-             sigActions[index_overfl].disable();
-                printf("proc x: Overflow occured (returning)\n");
-             sigActions[index_overfl].enable();
-               return; // if in PROC; else me->terminate(me);
-          //]
-          //[ generated from signal action #4 in PROC
-	  case 4:               // signal action #4
-              // disable div0 for this handler
-              sigActions[index_div0].disable();
-                // code for PUT 'PROC X: divide by 0 (restarting)'
-                // TO console BY A, SKIP;
-              printf("proc x: divide by 0 (restarting)\n");
-              if ((p == pearlrt::Fixed<15>(6)).getBoolean()) {
-                 sigActions[index_div0].enable();
-                 goto label_exit;                 
-              } 
-              if ((p == pearlrt::Fixed<15>(12)).getBoolean()) {
-	         _k = pearlrt::Fixed<15>(11)/(_k-_k);
-              } 
-              
-              p = pearlrt::Fixed<15>(6);
-              sigActions[index_div0].enable();
-              goto label_restart;                 
-              
-          //]
-      } // end of switch
-   //]
 
-   printf("---  x(%d) ---------------\n",p.x);
+       case 1: // first signal reaction
+         ...
+         break;
 
-
-      //[ generated from ON
-      sigActions[index_arith].setActionIndex(1);
-      //]
-       
-      if ((p == pearlrt::Fixed<15>(1)).getBoolean()) {
-         //[ generated from ON
-         sigActions[index_overfl].setActionIndex(2);
-      //]
-      }
-
-      if ((p > pearlrt::Fixed<15>(5)).getBoolean()) {
-         //[ generated from ON
-         sigActions[index_overfl].setActionIndex(3);
-         //]
-      }
-     
-      //[ generated from ON
-      sigActions[index_div0].setActionIndex(4);
-      //]
-
-      if ((p == pearlrt::Fixed<15>(11)).getBoolean()) {
-         _k = pearlrt::Fixed<15>(10)/(_k-_k);
-      }
-
-      if ((p == pearlrt::Fixed<15>(12)).getBoolean()) {
-         _k = pearlrt::Fixed<15>(10)/(_k-_k);
-      }
-
-      {
-         pearlrt::Fixed<15> _i;    // loop counter is auto gen.
-         for (_i = 1;
-            (_i<=pearlrt::Fixed<15>(100)).getBoolean(); 
-            _i = _i + pearlrt::Fixed<15>(1)) {
-             _k =  _k * _k;
-         }
-      }
-label_exit:    //<< user label
-	/* nop */ ;
-   //[ generated due to ON statements in PROC
-   } catch (pearlrt::Signal & s) {
-      indexOfSignalAction = pearlrt::ScheduleSignalAction::getAction(
-		&s, NBROFSIGACTIONS, sigActions);
-      printf("got exception: indexOfAction=%d\n", indexOfSignalAction);
-      if (indexOfSignalAction == 0) {
-        // no active handler found
-        throw;
-      }
-      goto tryAgain;
-   } // end of catch
-   //] end of generated code
-}
+       } // end of switch
+ 
+       // PROC or TASK body with schedudling of signal reactions
+       ...  // normal code until first ON
+      sigActions[1-1].setSignal(_artith);
+      ...
+      // 2nd ON
+      sigActions[2-1].setSignal(_artith);
+      ...
+   } catch(pearlrt::Signal & s) {
+       indexOfSignalAction = 
+		scheduledSignalActions.getActionIndexAndSetRstAndDisableHandler(&s);
+       if (indexOfSignalAction == 0) {
+          // no handler found
+          throw;
+       }
+       goto tryAgain; // signal handler found
+    }
+    // END OF SIGNAL FRAME
+}  and of PROC or TASK
 \end{CppCode}
 
 
 Remarks:
 \begin{description}
 \item[disable signal handler] is done if the signal handler becomes
-   active. The handler is enables at the end of the signal handlers
-   statements. In detail, this is only necessray, if the handler is exited 
-   with a GOTO statment --- even at intermediate GOT-statements in the handler.
-\item[generated identifiers]  may use different decorations if
-   suitable for the compiler.
-\item[sigActions] must be of type auto to provide task specific 
+   active. Enabling is only necessray, if the handler is exited 
+   with a GOTO statement, which requires a modified C++ code generation,
+   when a GOTO statement leaves the range of a signal handler.
+\item[sigActions] must be of type auto to provide task and procedure specific 
    signal reactions.
-\item[sigGoto] must be of type auto to provide task specific 
-   signal reactions.
-\item[labels] should be defined as static, for speedup reasons
 \end{description}
 
 \section{C++ Code for Signal Handler with RST-Tag}
@@ -355,48 +262,51 @@ RST-value must be read into the given variable.
 \begin{PEARLCode}
 DCL Errorcode FIXED(15);
 ...
-   ! 2nd ON statement in proc/task
-   ON overfl RST(Errorcode) ...
+   ! version 1  ON statement in proc/task
+   ON overfl RST(Errorcode): BEGIN .... END;
+
+   ! version 2  ON statement in proc/task
+   ON overfl RST(Errorcode);
 \end{PEARLCode}
 
-Currently there is a problem with the headers of Signal and Fixed.
-Therefore the type \verb|Fixed<x>| may not be used inside the Signal-class.
-The statement {\em RST(Errorcode)} modifies the code in the signal handler
-alternative towards.
+Version 1 is treated inside the function \verb|ScheduledSignalReactions::getActionIndexAndSetRstAndDisableHandler(Signal*s);|
+
+Version 2 require that each statement in the task or procedure body ---
+including the signal reactions --- becomes wrapped with a try catch block like:
 
 \begin{CppCode}
-Fixed<15> _Errorcode;
-...
-case 2:
-   _Errorcode.x = s.getCurrentRst();
-   ...
+    try {
+       _x = CONST_FIXED_P_10_4;
+    } catch (pearlrt::Signal & s) {
+       scheduledSignalActions.setErrorOrThrow(&s);
+    }
 \end{CppCode}
-Obviously the used variable in RST must be defined on module,
- task or procedure level. 
+
+This wrapping could be omitted for statements which do not 
+throw a signal exception. This is part of a future check in the compiler.
+
 
 \section{Induce}
 The statement {\em INDUCE} simulates a signal and causes the trigger 
 of the scheduled reaction.
-Induce may specify a RST-value, which causes to raising of the 
-signal with the given number.
-In this case a temporary RST-value is set inside the signal structure.
-This does not affect the identification of the signal.
+Note that OpenPEARL forbids an induce statement with a RST-value.
 
 
 \begin{PEARLCode}
 INDUCE div_0;
-INDUCE div_0 RST (1234);
 \end{PEARLCode}
 
 \begin{CppCode}
-generalized_div0->induce();
-generalized_div0->induce(1234);
+throw *_div_0;
 \end{CppCode}
+
+\section{Groups of Signals and Delegation of Signals to invoking Procedures and Task}
+
 
 \begin{PEARLCode}
 SYSTEM;
-   TaskRunningSignal: Signal(102);
-   Arithmetic: Signal(200);
+   TaskRunningSignal: TaskRunningSignal; ! number 102
+   Arithmetic: ArithmethicSignal;        ! number 200
 
 PROBLEM;
    SPC TaskRunningSignal SIGNAL;
@@ -420,10 +330,14 @@ Demo: TASK;
 END;
 
 Test: PROC;
+   DCL k FIXED(15) INIT(2);
+
    CASE counter
-   ALT /* 1 */ INDUCE TaskRunningSignal RST(200);
-   ALT /* 2 */ INDUCE TaskRunningSignal;
-   ALT /* 3 */ INDUCE TaskRunningSignal RST(200);
+   ALT /* 1 */ INDUCE TaskRunningSignal;
+   ALT /* 2 */ k = k//(k-k);   ! produce divide by zero
+   ALT /* 3 */ REPEAT  
+	  	k = k * 2;  ! procuces FixedOverflowSignal
+	       END;
    FIN;
 END;
 \end{PEARLCode}
@@ -431,32 +345,11 @@ END;
 This program will produce the output
 \begin{verbatim}
 TaskSignal occured with RST=200
-TaskSignal occured with RST=102
-TaskSignal occured with RST=200
+Arithmetic problem occured with RST=102
+Arithmetic problem occured with RST=103
 \end{verbatim}
-The setting of the RST-value to 102 (which is the error code of 
-the {\em Arithmetic} does not affect the signal identification.
-The setting of the RST-value is done with another version of the 
-induce()-method, which allows an {\em int} value as parameter.
 
-Since signals are global objects the feature of setting the RST at
-induce should be used with care. The implementation is not safe against
-race conditions.
-
-Sample C++ code for procedure {\em Test}:
+Sample C++ Code:
 \begin{CppCode}
-void _Test(pearlrt::Task * me) {
-   switch(_counter.x) {
-      case 1: 
-       generalized_TaskRunningSignal->induce(200);
-       break;
-      case 2: 
-       generalized_TaskRunningSignal->induce();
-       break;
-      case 3: 
-       generalized_TaskRunningSignal->induce(200);'
-       break;
-    }
-}
+c++ code missing
 \end{CppCode}
-
