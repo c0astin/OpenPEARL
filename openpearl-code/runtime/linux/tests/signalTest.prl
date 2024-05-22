@@ -12,62 +12,86 @@ SYSTEM;
 
 PROBLEM;
 
-   SPC so DATION OUT ALPHIC SYSTEM;
-   SPC (overflow, div0, arith) SIGNAL;
+   SPC so DATION OUT SYSTEM ALPHIC ;
+   SPC (overflow, div0, arith) SIGNAL GLOBAL;
 
-   DCL to DATION OUT ALPHIC FORWARD DIM(*,80) CREATED(so);
+   DCL to DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
 
-x: PROC(p FIXED);
+xxx: PROC;
+   DCL errno FIXED;
+   ON div0 RST(errno);
+   errno = 1;
+END;
+
+/*
+
+x: PROC(p FIXED(15));
    DCL k FIXED;
+   DCL errno FIXED INIT(0);
 
 
+    PUT 'starting p=',p TO to BY A,F(3), SKIP;
+   BEGIN 
+     DCL ggg FIXED;
+     BEGIN 
+       DCL qqqq FIXED;
+     END b2;
+   END b1;
 restart:
-
-    PUT '---------------' TO to BY A, SKIP;
+    PUT '--- restart ---' TO to BY A, SKIP;
 
    ! register all arithmetic errors
-   ON arith: BEGIN
-       PUT  'proc x: arithmetic error (returning)' TO to BY A,SKIP;
+   ON arith RST(errno): BEGIN 
+       PUT  'proc x: got signal ', errno, ' arithmetic error (returning)' TO to BY A,F(4),A, SKIP;
        RETURN;
-   END;
+   END b3;
+
+   k= 2;
 
    IF p == 1 THEN
       ! register overflow as specific arithmetic error
-      ON overfl: BEGIN
+      ON overflow: BEGIN 
          PUT 'proc x: Overflow occured (returning)' TO to BY A,SKIP;
          RETURN;
-      END;
+      END b4;
    FIN;
 
    IF p > 5 THEN
        ! register other owerflow reaction
-       ON overfl: BEGIN
+       ON overflow: BEGIN 
          PUT 'Overflow occured (terminating)' TO to BY A, SKIP;
          TERMINATE; 
-       END;
+       END b5;
    FIN;
 
-   k= 2;
 
     ! should cause arithemetic reaction
     IF p == 10 THEN
        k = 10//(k-k);
     FIN;
 
+
     ! register divide by 0 special reaction
-    ON div0: BEGIN
-         PUT 'PROC X: divide by 0 (restarting)' TO to BY A, SKIP;
+    ON div0: BEGIN 
+         DCL qqq FIXED;
+         PUT 'PROC X: divide by 0 (restarting)  p=',p TO to BY A,F(3), SKIP;
+         qqq = 1;
          IF p EQ 6 THEN
             GOTO exit;
          FIN;
+         IF p EQ 11 THEN
+	    RETURN;
+         FIN;
          IF p EQ 12 THEN
-           k := 11/(k-k);  ! this should delegate to the next layer  
+PUT 'div0-handler: do a new div0' TO to BY A, SKIP;
+           k := 11//(k-k);  ! this should delegate to the next layer  
          FIN;
          p = 6;
          GOTO restart;
-    END;
+    END b6;
 
     IF p == 11 THEN
+
        k = 10//(k-k);
     FIN;
 
@@ -76,6 +100,7 @@ restart:
        k = 10//(k-k); 
     FIN;
 
+    PUT 'start looping until overflow occurs' TO to BY A, SKIP;
     TO 100 REPEAT
       k = k * k;
     END;
@@ -85,10 +110,22 @@ END;
 
 
 t1: TASK MAIN;
-    pearlrt::Fixed<15> f;
+    DCL f FIXED(15);
+    DCL errno FIXED;
+    OPEN to;
+    PUT 't1 started' TO to BY A, SKIP;
 
+ON arith : BEGIN 
+      PUT  't1 got signal --> terminating' TO to BY SKIP, A,SKIP;
+      TERMINATE;
+    END b7;  
+
+    PUT 'ON arith finished' TO to BY A, SKIP;
+
+    PUT 't1 : CALL x(0)' TO to BY A, SKIP;
     f = 0;
     CALL x(f);
+
     f = 11;
     CALL x(f);
     f = 10;
@@ -97,7 +134,9 @@ t1: TASK MAIN;
     CALL x(f);
     f = 12;
     CALL x(f);
+
 END;
+*/
 
 MODEND;
 
