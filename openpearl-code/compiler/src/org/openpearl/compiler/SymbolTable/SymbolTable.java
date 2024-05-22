@@ -457,6 +457,7 @@ public class SymbolTable {
 
         return listOfBoltEntries;
     }
+    
     public LinkedList<InterruptEntry> getInterruptSpecifications() {
         LinkedList<InterruptEntry> listOfVariableDeclarationsEntries =
                 new LinkedList<InterruptEntry>();
@@ -472,6 +473,21 @@ public class SymbolTable {
         return listOfVariableDeclarationsEntries;
     }
     
+    
+    public LinkedList<SignalEntry> getSignalSpecifications() {
+        LinkedList<SignalEntry> list =
+                new LinkedList<SignalEntry>();
+   
+        for (Iterator<SymbolTableEntry> it = m_entries.values().iterator(); it.hasNext();) {
+            SymbolTableEntry symbolTableEntry = it.next();
+            if (symbolTableEntry instanceof SignalEntry) {
+                SignalEntry variableEntry = (SignalEntry) symbolTableEntry;
+                list.add(variableEntry);
+            }
+        }
+
+        return list;
+    }
     public LinkedList<ProcedureEntry> getProcedureSpecificationsAndDeclarations() {
         LinkedList<ProcedureEntry> listOfVariableDeclarationsEntries =
                 new LinkedList<ProcedureEntry>();
@@ -601,7 +617,8 @@ public class SymbolTable {
                         structures);
             } else if (symbolTableEntry instanceof LabelEntry ||
                        symbolTableEntry instanceof InterruptEntry ||
-                       symbolTableEntry instanceof LengthEntry){
+                       symbolTableEntry instanceof LengthEntry ||
+                       symbolTableEntry instanceof SignalEntry){
                 // nothing to do
             } else {
                 ErrorStack.add(symbolTableEntry.getCtx(),"SymbolTable@560", "missing alternative");
@@ -777,4 +794,5 @@ public class SymbolTable {
     private boolean m_usesSystemElements;
     private static Vector<SymbolTableEntry> m_loopsAndBlocks = new Vector<SymbolTableEntry>();
     private static Vector<SymbolTableEntry> m_systemPartNames = new Vector<SymbolTableEntry>();
+
 }

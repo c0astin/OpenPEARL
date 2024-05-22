@@ -95,6 +95,13 @@ public class ASTAttribute {
      */
     private static final int statementIsUnreachable = 0x010;
     
+    /*
+     * flag is set in CheckSignalSchedulingAndReactions if a TASK or PROC contains
+     * an "ON xxx RST(errno);" statement
+     * this is check in the code generation
+     */
+    private static final int onSignalSetOnlyRstUsed = 0x020;
+    
     
     public ASTAttribute(TypeDefinition type) {
         m_type = type;
@@ -283,6 +290,24 @@ public class ASTAttribute {
      */
     public void setIsFunctionCall(boolean newValue) {
       setFlag(bitIsFunctionCall, newValue);
+    }
+    
+    /**
+     * mark that the TASK/PROC uses old style ON signal RST(errno); statement 
+     * 
+     * @return
+     */
+    public void setOnSignalSetOnlyRst() {
+      setFlag(onSignalSetOnlyRstUsed,true);
+    }
+
+    /**
+     * check if the TASK/PROC uses old style ON signal RST(errno); statement 
+     * 
+     * @return
+     */
+    public boolean useOnSignalSetOnlyRst() {
+      return getFlag(onSignalSetOnlyRstUsed);
     }
     
   

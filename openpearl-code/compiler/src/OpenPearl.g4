@@ -42,6 +42,9 @@
 2022-03-20 (rm)
    StructuredType replaced by typeStructure | ID (of type)   
    ID of type replaced by identifierForType
+
+2024-04-22 (rm)
+	start of SIGNAL support   
       
 */
 
@@ -322,8 +325,37 @@ specificationItem :
 	| taskDenotation
 	| procedureDenotation
 	| interruptDenotation
+	| signalDenotation
 	| identification
 	;    
+
+//// Signal stuff
+schedulingSignalReaction :
+    'ON' name (
+		signalRST
+		| (signalRST)? ':' signalReaction
+    	      )  ;
+signalRST:
+    'RST' '(' name ')'
+    ;
+
+signalReaction :
+   ( signalFinalStatement 
+     | block_statement )
+   ;
+
+signalFinalStatement :
+    returnStatement
+    | gotoStatement
+    | induceStatement
+    | task_terminating
+    ;
+
+induceStatement :
+    'INDUCE' ( name )? ';'
+    ;
+
+/// end of signal stuff
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -738,6 +770,8 @@ unlabeled_statement:
     | callStatement
     | returnStatement
     | gotoStatement
+    | induceStatement
+    | schedulingSignalReaction
     | loopStatement
     | exitStatement
     | convertStatement
@@ -817,7 +851,7 @@ exitStatement
 ////////////////////////////////////////////////////////////////////////////////
 
 assignment_statement:
-     (dereference)? name ( bitSelectionSlice | charSelectionSlice)?
+     (dereference)? name ( bitSelection | charSelection)?
        ( ':=' | '=' ) expression ';'
     ;
 
@@ -838,7 +872,7 @@ dereference
 ////////////////////////////////////////////////////////////////////////////////
 
 stringSelection:
-  	name (  bitSelectionSlice | charSelectionSlice )
+  	name (  bitSelection | charSelection )
    	;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -852,7 +886,7 @@ stringSelection:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bitSelectionSlice:
+bitSelection:
     '.' 'BIT' '(' 
     (
     	 expression
@@ -873,7 +907,7 @@ bitSelectionSlice:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-charSelectionSlice:
+charSelection:
    '.' 'CHAR' '(' 
     (
     	 expression
@@ -1225,6 +1259,7 @@ semaTry
 boltDenotation :
     'BOLT' globalAttribute? 
     ;
+    
 
 
 
@@ -1746,6 +1781,11 @@ interruptDenotation :
      identifierDenotation ( 'INTERRUPT' | 'IRPT' ) globalAttribute? 
     ;
 
+
+signalDenotation :
+     identifierDenotation 'SIGNAL' globalAttribute? 
+    ;
+    
 ////////////////////////////////////////////////////////////////////////////////
 // ListOfConstants ::=
 //   ConstantParameter [, ConstantParameter ]...

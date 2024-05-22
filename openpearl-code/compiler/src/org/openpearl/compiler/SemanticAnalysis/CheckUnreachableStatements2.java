@@ -72,6 +72,16 @@ implements OpenPearlVisitor<Void> {
     private void checkUnreachableStatements(ControlFlowGraph cfg) {
         boolean warningEmitted = false;
         cfg.clearAllFlagsInGraph();
+        
+        // mark SIGNAL reactions as reachable
+        for (int i=0; i<cfg.getNodeList().size(); i++) {
+            ControlFlowGraphNode n = cfg.getNodeList().get(i);
+            if (n instanceof PseudoNode) {
+                if (((PseudoNode)n).getNodeType() == PseudoNode.sigReaction) {
+                   markReachableNodes(n);
+                }
+            }
+        }
         markReachableNodes(cfg.getFirstEntry());
         for (int i=0; i<cfg.getNodeList().size(); i++) {
             ControlFlowGraphNode n = cfg.getNodeList().get(i);
@@ -87,10 +97,11 @@ implements OpenPearlVisitor<Void> {
                     // END of PROC is normally not reached if the PROC has RETURN
                     // END of REPEAT is not reached if the loop is ended by EXIT, GOTO, RETURN, TERMINATE
                     if (pseudo.getNodeType() == PseudoNode.procEnd ||
-                            pseudo.getNodeType() == PseudoNode.repeatBodyEnd) {
+                            pseudo.getNodeType() == PseudoNode.repeatBodyEnd ||
+                            pseudo.getNodeType() == PseudoNode.blockEnd) {
                         noWarn=true;
                     }
-                    // if the END of the loop is no reachen, warn with the next statement 
+                    // if the END of the loop is no reached, warn with the next statement 
                     if (pseudo.getNodeType() == PseudoNode.repeatEnd) {
                         n = pseudo.getNext();
                     }
@@ -108,6 +119,7 @@ implements OpenPearlVisitor<Void> {
         if (n != null) {
             if (!n.isSet(reached)) {
                 n.setFlag(reached);
+             //   System.out.println("reached: " + n.getCtx().start.getLine() + ": "+n.printCtx(10));
                 for (int node=0; node < n.m_alternatives.size(); node++) {
                     markReachableNodes(n.m_alternatives.get(node));
                 }

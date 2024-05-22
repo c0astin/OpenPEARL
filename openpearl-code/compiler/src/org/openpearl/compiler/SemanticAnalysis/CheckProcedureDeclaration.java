@@ -48,7 +48,7 @@ import org.openpearl.compiler.SymbolTable.VariableEntry;
  *    arrays, dations and realtime elements by IDENT,
  * <li> the result type is supported (currently no TYPE and no REF)
  * <li>the RETURN statement uses a proper type of expression, 
- *    but an implicit RETURN at the end of a PROc with RETURNS is not 
+ *    but an implicit RETURN at the end of a PROC with RETURNS is not 
  *    part of this check 
  * <li>the procedure call uses compatible parameters
  * </ul>

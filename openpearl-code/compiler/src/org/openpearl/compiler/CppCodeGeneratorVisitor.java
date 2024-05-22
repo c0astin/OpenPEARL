@@ -86,6 +86,10 @@ implements OpenPearlVisitor<ST> {
     private String m_thisNamespace;
     private TypeDefinition m_typeOfTransmission;  // used for type expansion in WRITE and SEND
     private boolean m_suppressDeadlockDetection;
+    private int m_indexOfSignalReaction;
+    private ST m_schedulingSignalReactions;
+    private boolean m_applyTryCatchOnEachStatement;
+    private boolean m_isInSignalReaction;  // flag to detect GOTO in signal handler
     
     public enum Type {
         BIT, CHAR, FIXED
@@ -140,6 +144,7 @@ implements OpenPearlVisitor<ST> {
     
     private String currentCallContextIdentifier = "";
     private String currentCallContextType = "";
+
     private void registerDeadlockOperation(String resourcesType, String actionType, ParserRuleContext ctx, OpenPearlParser.ListOfNamesContext ctxListOfNames)
     {
 //        if (!m_suppressDeadlockDetection) {
@@ -209,7 +214,6 @@ implements OpenPearlVisitor<ST> {
             //            listOfTaskNames.add(taskEntries.get(i).getName());
         }
 
-        //     taskspec.add("taskname", listOfTaskNames);
         prologue.add("taskSpecifierList", taskspec);
         prologue.add("ConstantPoolList", generateConstantPool());
 
@@ -466,36 +470,6 @@ implements OpenPearlVisitor<ST> {
     }
 
 
-
-// 2022-12-29 (rm) obsolete    
-//    /*
-//     * Time/Clock example: 11:30:00 means 11.30 15:45:3.5 means 15.45 and 3.5
-//     * seconds 25:00:00 means 1.00
-//     */
-//    private Double getTime(OpenPearlParser.TimeConstantContext ctx) {
-//        Integer hours = 0;
-//        Integer minutes = 0;
-//        Double seconds = 0.0;
-//
-//        hours = (Integer.valueOf(ctx.IntegerConstant(0).toString()) % 24);
-//        minutes = Integer.valueOf(ctx.IntegerConstant(1).toString());
-//
-//        if (ctx.IntegerConstant().size() == 3) {
-//            seconds = Double.valueOf(ctx.IntegerConstant(2).toString());
-//        }
-//
-//        if (ctx.floatingPointConstant() != null) {
-//            seconds = CommonUtils.getFloatingPointConstantValue(ctx.floatingPointConstant());
-//        }
-//
-//        if (hours < 0 || minutes < 0 || minutes > 59) {
-//            throw new NotSupportedTypeException(ctx.getText(), ctx.start.getLine(),
-//                    ctx.start.getCharPositionInLine());
-//        }
-//
-//        return hours * 3600 + minutes * 60 + seconds;
-//    }
-
     @Override
     public ST visitModule(OpenPearlParser.ModuleContext ctx) {
         ST module = m_group.getInstanceOf("module");
@@ -579,6 +553,17 @@ implements OpenPearlVisitor<ST> {
     }
 
 
+    private ST generateSpecification(SignalEntry ve) {
+        ST st = m_group.getInstanceOf("SignalSpecifications");
+        ST spec = m_group.getInstanceOf("SignalSpecification");
+        ST scope = getScope(ve);
+
+        spec.add("id", ve.getName());
+        scope.add("variable", spec);
+        st.add("specs", scope);
+        return st;
+    }
+    
     private ST generateSpecification(InterruptEntry ve) {
         ST st = m_group.getInstanceOf("InterruptSpecifications");
         ST spec = m_group.getInstanceOf("InterruptSpecification");
@@ -698,19 +683,7 @@ implements OpenPearlVisitor<ST> {
             scope.add("variable", specifyDation);
             dationSpecifications.add("decl", scope);
 
-            //        } else if (isSimpleType(t)) {
-            //            // scopeXXX adds the extern/static/ ...
-            //            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
-            //            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-            //            specifyVariable.add("type",t.toST(m_group));
-            //            scope.add("variable", specifyVariable);
-            //            dationSpecifications.add("decl",  scope);
-            //        } else if (t instanceof TypeReference) {
-            //            ST specifyVariable=m_group.getInstanceOf("variable_denotation"); 
-            //            specifyVariable.add("name",getUserVariableWithoutNamespace(ve.getName()));
-            //            specifyVariable.add("type",t.toST(m_group));
-            //            scope.add("variable", specifyVariable);
-            //            dationSpecifications.add("decl",  scope);
+
         } else {
             ErrorStack.add("CppCodeGenerator:generateSpecification @865: missing alternative");
         }
@@ -751,10 +724,10 @@ implements OpenPearlVisitor<ST> {
 
     private ST generateVariableDeclaration(VariableEntry ve) {
 
-        ST variableDeclaration = m_group.getInstanceOf("variable_denotation");
-        ST semaDeclarations = m_group.getInstanceOf("SemaDeclaraction");
+        //ST variableDeclaration = m_group.getInstanceOf("variable_denotation");
+        //ST semaDeclarations = m_group.getInstanceOf("SemaDeclaraction");
         ST scalarVariableDeclaration = m_group.getInstanceOf("ScalarVariableDeclaration");
-        ST DationDeclarations = m_group.getInstanceOf("DationDeclarations");
+        //ST DationDeclarations = m_group.getInstanceOf("DationDeclarations");
         ST st = null;
 
 
@@ -1107,6 +1080,15 @@ implements OpenPearlVisitor<ST> {
             problem_part.add("InterruptSpecifications", generateSpecification(ve));
 
         }
+        // get variable entries from SymbolTable and create code for their definition
+        LinkedList<SignalEntry> sigEntries = m_currentSymbolTable.getSignalSpecifications();
+
+        for (int i=0; i<sigEntries.size(); i++) {
+            SignalEntry ve = sigEntries.get(i);
+
+            problem_part.add("SignalSpecifications", generateSpecification(ve));
+
+        }
 
         // get variable entries from SymbolTable and create code for their definition
         LinkedList<ProcedureEntry> procEntries = m_currentSymbolTable.getProcedureSpecificationsAndDeclarations();
@@ -1349,9 +1331,13 @@ implements OpenPearlVisitor<ST> {
         ST taskdecl = m_group.getInstanceOf("task_declaration");
         ST priority = m_group.getInstanceOf("expression");
         Integer main = 0;
+        m_indexOfSignalReaction = 0;
+        m_schedulingSignalReactions = m_group.getInstanceOf("SignalReactions");
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
-
+        ASTAttribute attr = m_ast.lookup(ctx);
+        m_applyTryCatchOnEachStatement = attr.useOnSignalSetOnlyRst();
+     
         if (ctx.priority() != null) {
             priority = visitAndDereference(ctx.priority().expression());
         } else {
@@ -1388,6 +1374,8 @@ implements OpenPearlVisitor<ST> {
             }
         }
 
+
+
         m_currentSymbolTable = m_currentSymbolTable.ascend();
         return taskdecl;
     }
@@ -1409,6 +1397,11 @@ implements OpenPearlVisitor<ST> {
             }
         }
 
+        if (m_indexOfSignalReaction > 0) {
+            // add signalreaction frame only if signal reactions were defined
+            taskbody.add("signalReactions",  m_schedulingSignalReactions);
+            taskbody.add("numberOfSignalReactions",m_indexOfSignalReaction);
+        }
         return taskbody;
     }
 
@@ -1453,6 +1446,9 @@ implements OpenPearlVisitor<ST> {
         stmt.add("srcColumn", ctx.start.getCharPositionInLine());
         m_tempVariableList.add(m_group.getInstanceOf("TempVariableList"));
         m_tempVariableNbr.add(Integer.valueOf(0));
+        if(m_applyTryCatchOnEachStatement) {
+            stmt.add("wrapWithTryCatch", 1);
+        }
 
         if (ctx != null) {
             if (ctx.label_statement() != null) {
@@ -1481,6 +1477,8 @@ implements OpenPearlVisitor<ST> {
                                 visitBlock_statement((OpenPearlParser.Block_statementContext) c));
                     } else if (c instanceof OpenPearlParser.Cpp_inlineContext) {
                         stmt.add("cpp", visitCpp_inline((OpenPearlParser.Cpp_inlineContext) c));
+                    } else {
+ //                       ErrorStack.addInternal(ctx, "untreated alternative:","CppCodeGenerator:1479");
                     }
                 }
             }
@@ -1502,8 +1500,19 @@ implements OpenPearlVisitor<ST> {
 
     @Override
     public ST visitGotoStatement(OpenPearlParser.GotoStatementContext ctx) {
+        System.out.println("visitGoto: isInSignalRection: "+m_isInSignalReaction+
+                "  target: "+ctx.ID().getText());
+        SymbolTableEntry se = m_ast.lookup(ctx).getSymbolTableEntry();
+        //System.out.println("   level="+se.getLevel());
+        
         ST st = m_group.getInstanceOf("goto_statement");
-        st.add("label", ctx.ID().getText());
+        st.add("label", se.getName());
+        int levelOfGotoTarget = se.getLevel();
+        if (levelOfGotoTarget == 2 && m_isInSignalReaction) {
+            // we jump to a label in TASK or PROC level --> we leave the signal handler
+            System.out.println("add enable for sigAction: "+m_indexOfSignalReaction);
+            st.add("enableSignalHandler",m_indexOfSignalReaction);
+        }
         return st;
     }
 
@@ -1536,6 +1545,12 @@ implements OpenPearlVisitor<ST> {
             statement.add("code", visitGotoStatement(ctx.gotoStatement()));
         } else if (ctx.convertStatement() != null) {
             statement.add("code", visitConvertStatement(ctx.convertStatement()));
+        } else if (ctx.induceStatement() != null) {
+            statement.add("code", visitInduceStatement(ctx.induceStatement()));
+        } else if (ctx.schedulingSignalReaction() != null) {
+            statement.add("code", visitSchedulingSignalReaction(ctx.schedulingSignalReaction()));
+        } else {
+            ErrorStack.addInternal(ctx, "untreated alternative @CppCodeGenerator1540", ctx.getText());
         }
 
         return statement;
@@ -1805,8 +1820,8 @@ implements OpenPearlVisitor<ST> {
             st.add("id", visitName(ctx.name()));
         }
 
-        OpenPearlParser.BitSelectionSliceContext c = ctx.bitSelectionSlice();
-        ASTAttribute attr = m_ast.lookup(ctx.bitSelectionSlice());
+        OpenPearlParser.BitSelectionContext c = ctx.bitSelection();
+        ASTAttribute attr = m_ast.lookup(ctx.bitSelection());
         if (attr.getConstantSelection() != null) {
             st.add("lwb", attr.getConstantSelection().getLowerBoundary());
             st.add("upb", attr.getConstantSelection().getUpperBoundary());
@@ -1817,7 +1832,7 @@ implements OpenPearlVisitor<ST> {
             } else {
                 ST upb = m_group.getInstanceOf("expression");
                 upb.add("code", visitAndDereference(c.expression(1)));
-                TerminalNode intConst = ctx.bitSelectionSlice().IntegerConstant();
+                TerminalNode intConst = ctx.bitSelection().IntegerConstant();
 
                 if (intConst != null) {
                     upb.add("code", "+");
@@ -1842,9 +1857,9 @@ implements OpenPearlVisitor<ST> {
             st.add("id", visitName(ctx.name()));
         }
 
-        ASTAttribute attr = m_ast.lookup(ctx.charSelectionSlice());
+        ASTAttribute attr = m_ast.lookup(ctx.charSelection());
 
-        OpenPearlParser.CharSelectionSliceContext c = ctx.charSelectionSlice();
+        OpenPearlParser.CharSelectionContext c = ctx.charSelection();
         ST slice = m_group.getInstanceOf("GetCharSelection");
         if (attr.getConstantSelection() != null) {
             slice.add("lwb", attr.getConstantSelection().getLowerBoundary());
@@ -1888,11 +1903,11 @@ implements OpenPearlVisitor<ST> {
         //        }
 
         // check if we have a deref and/or a type Reference
-        if (ctx.bitSelectionSlice() != null) {
+        if (ctx.bitSelection() != null) {
             ST bitSel = lhs4BitSelection(ctx, derefLhs);
             bitSel.add("rhs", visitAndDereference(ctx.expression()));
             stmt.add("lhs", bitSel);
-        } else if (ctx.charSelectionSlice() != null) {
+        } else if (ctx.charSelection() != null) {
             stmt.add("lhs", lhs4CharSelection(ctx, derefLhs));
             // rhs is already treated
         } else if (attrLhs.getType() instanceof TypeReference && 
@@ -2076,13 +2091,14 @@ implements OpenPearlVisitor<ST> {
             }
             currentType=((ProcedureEntry)entry).getType();
         } else if (entry instanceof FormalParameter) {
-            int x=0;
             currentType= ((FormalParameter) entry).getType();
         } else if (entry instanceof VariableEntry) {
             // simple variable treated in else of name space check
             currentType = ((VariableEntry)entry).getType();
+        } else if (entry instanceof SignalEntry) {
+            currentType = new TypeSignal();
         } else {
-            ErrorStack.addInternal(ctx, "CppCodegen@2194", "missing treatment of "+ entry.getClass());
+            ErrorStack.addInternal(ctx, "CppCodegen@2062", "missing treatment of "+ entry.getClass());
             return null;
         }
 
@@ -2250,21 +2266,21 @@ implements OpenPearlVisitor<ST> {
 
         ST st = null;
         if (attr.getType() instanceof TypeChar) {
-            st = makeST_forCharSelection(ctx.charSelectionSlice());
+            st = makeST_forCharSelection(ctx.charSelection());
            
         } else if (attr.getType() instanceof TypeBit) {
-            st = makeST_forBitSelection(ctx.bitSelectionSlice());
+            st = makeST_forBitSelection(ctx.bitSelection());
         }
         st.add("id", visit(ctx.name()));
         return st;
     }
     
   
-    private ST makeST_forCharSelection(OpenPearlParser.CharSelectionSliceContext ctx) {
+    private ST makeST_forCharSelection(OpenPearlParser.CharSelectionContext ctx) {
         ASTAttribute attr = m_ast.lookup(ctx);
 
         if (m_verbose > 0) {
-            System.out.println("CppCodeGeneratorVisitor: makeST_forCharSelection");
+            System.out.println("CppCodeGeneratorVisitor: make ST_forCharSelection");
         }
 
         ST st = null;
@@ -2312,7 +2328,7 @@ implements OpenPearlVisitor<ST> {
     }
 
     //Override
-    private ST makeST_forBitSelection(OpenPearlParser.BitSelectionSliceContext ctx) {
+    private ST makeST_forBitSelection(OpenPearlParser.BitSelectionContext ctx) {
         ASTAttribute attr = m_ast.lookup(ctx);
 
         if (m_verbose > 0) {
@@ -3513,9 +3529,9 @@ implements OpenPearlVisitor<ST> {
                             data.add("variable", visit(ssc.name()));
                             data.add("nbr_of_elements", "1");
                             data.add("lwb",
-                                    visitAndDereference(ssc.charSelectionSlice().expression(0)));
+                                    visitAndDereference(ssc.charSelection().expression(0)));
                             data.add("upb",
-                                    visitAndDereference(ssc.charSelectionSlice().expression(1)));
+                                    visitAndDereference(ssc.charSelection().expression(1)));
                         } else if (attr.getType() instanceof TypeRefChar) {
                             attr.setType(new TypeReference(new TypeRefChar()));  // fake AST attribute
                             data.add("size", "0") ;
@@ -3570,7 +3586,7 @@ implements OpenPearlVisitor<ST> {
                             } catch (NullPointerException ex) {
                             } ;
 
-                            if (ssc != null && ssc.charSelectionSlice()!=null) {
+                            if (ssc != null && ssc.charSelection()!=null) {
                                 // fixed size char selection
                                 data.remove("type");
                                 data.add("type", "CHARSLICE");
@@ -3586,10 +3602,10 @@ implements OpenPearlVisitor<ST> {
                                 } else {
                                     // must be of type .char(x:x+4) of type .char(x); with x is non constant expression
                                     data.add("lwb", visitAndDereference(
-                                            ssc.charSelectionSlice().expression(0)));
+                                            ssc.charSelection().expression(0)));
                                     ST upb = m_group.getInstanceOf("expression");
                                     upb.add("code", data.getAttribute("lwb"));
-                                    if (ssc.charSelectionSlice().IntegerConstant() != null) {
+                                    if (ssc.charSelection().IntegerConstant() != null) {
                                         upb.add("code", "+");
                                         upb.add("code", "(pearlrt::Fixed<15>)("
                                                 + (attr.getType().getPrecision() - 1) + ")");
@@ -5089,7 +5105,12 @@ implements OpenPearlVisitor<ST> {
     public ST visitProcedureDeclaration(OpenPearlParser.ProcedureDeclarationContext ctx) {
         ST st = m_group.getInstanceOf("ProcedureDeclaration");
         st.add("id", ctx.nameOfModuleTaskProc().ID().getText());
-
+        m_indexOfSignalReaction = 0;
+        m_schedulingSignalReactions = m_group.getInstanceOf("SignalReactions");
+        
+        ASTAttribute attr = m_ast.lookup(ctx);
+        m_applyTryCatchOnEachStatement = attr.useOnSignalSetOnlyRst();
+        
         ProcedureEntry se =(ProcedureEntry)
                 m_currentSymbolTable.lookup(ctx.nameOfModuleTaskProc().ID().toString());
 
@@ -5128,6 +5149,8 @@ implements OpenPearlVisitor<ST> {
         if (ctx.procedureBody()!= null) {
             st.add("body", visit(ctx.procedureBody()));
         }
+        
+
 
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
 
@@ -5136,142 +5159,7 @@ implements OpenPearlVisitor<ST> {
         return scope;
     }
 
-    // generate parameters from symbol table
-    //    @Override
-    //    public ST visitListOfFormalParameters(OpenPearlParser.ListOfFormalParametersContext ctx) {
-    //        ST st = m_group.getInstanceOf("ListOfFormalParameters");
-    //
-    //        if (ctx != null) {
-    //            for (int i = 0; i < ctx.formalParameter().size(); i++) {
-    //                st.add("FormalParameters", visitFormalParameter(ctx.formalParameter(i)));
-    //            }
-    //        }
-    //
-    //        return st;
-    //    }
-    //
-    //    @Override
-    //    public ST visitFormalParameter(OpenPearlParser.FormalParameterContext ctx) {
-    //        ST st = m_group.getInstanceOf("FormalParameters");
-    //
-    //        if (ctx != null) {
-    //    
-    //            for (int i = 0; i < ctx.identifier().size(); i++) {
-    //                boolean treatArray = false;
-    //                boolean treatStructure = false;
-    //                String typeName = "";
-    //
-    //                ST param = m_group.getInstanceOf("FormalParameter");
-    //
-    //                // test if we have an parameter of type array
-    //                SymbolTableEntry se =
-    //                        m_currentSymbolTable.lookup(ctx.identifier(i).ID().toString());
-    //
-    //                if (se instanceof VariableEntry) {
-    //                    VariableEntry ve = (VariableEntry) se;
-    //
-    //                    if (ve.getType() instanceof TypeArray) {
-    //                        treatArray = true;
-    //
-    //                    } else if (ve.getType() instanceof TypeStructure) {
-    //                        treatStructure = true;
-    //                        typeName = ((TypeStructure) ve.getType()).getStructureName();
-    //
-    //                    }
-    //                }
-    //
-    //                if (treatArray) {
-    //                  param.add("isArray", "");
-    //                }
-    //                param.add("id", ctx.identifier(i).ID());
-    //
-    //                if (treatStructure) {
-    //                    param.add("type", typeName);
-    //                } else {
-    //                    
-    //                    param.add("type", visitParameterType(ctx.parameterType()));
-    //                }
-    //                if (ctx.assignmentProtection() != null) {
-    //                    param.add("assignmentProtection", "");
-    //                }
-    //
-    //                if (ctx.passIdentical() != null) {
-    //                    param.add("passIdentical", "");
-    //                }
-    //
-    //                st.add("FormalParameter", param);
-    //
-    //            }
-    //        }
-    //
-    //        return st;
-    //    }
-    //
-    //    @Override
-    //    public ST visitParameterType(OpenPearlParser.ParameterTypeContext ctx) {
-    //        ST st = m_group.getInstanceOf("ParameterType");
-    //
-    //        for (ParseTree c : ctx.children) {
-    //            if (c instanceof OpenPearlParser.SimpleTypeContext) {
-    //                st.add("type", visitSimpleType(ctx.simpleType()));
-    //            } else if (c instanceof OpenPearlParser.TypeReferenceContext) {
-    //                st.add("type", visitTypeReference(ctx.typeReference()));
-    //            } else if (c instanceof OpenPearlParser.TypeStructureContext) {
-    //                st.add("type", visitTypeStructure(ctx.typeStructure()));
-    //            } else if (c instanceof OpenPearlParser.TypeRealTimeObjectContext) {
-    //                OpenPearlParser.TypeRealTimeObjectContext rto = (OpenPearlParser.TypeRealTimeObjectContext)c;
-    //                if (rto.typeBolt() != null) {
-    //                    st.add("type", visitTypeBolt(rto.typeBolt()));
-    //                } else if (rto.typeSema() != null) {
-    //                   st.add("type", visitTypeSema(rto.typeSema()));
-    //                } else if (rto.typeInterrupt() != null) {
-    //                   st.add("type", visitTypeInterrupt(rto.typeInterrupt()));
-    //// remove until SIGNAL implementation starts                
-    ////            } else if (c instanceof OpenPearlParser.TypeSignalContext) {
-    ////                st.add("type", visitTypeSignal((TypeSignalContext)c));
-    //                }
-    //            } else {
-    //                System.err.println("CppCodeGen:visitParameterType: untreated type "
-    //                        + c.getClass().getCanonicalName());
-    //            }
-    //        }
-    //
-    //        return st;
-    //    }
 
-    //    @Override
-    //    public ST visitTypeTask(OpenPearlParser.TypeTaskContext ctx) {
-    //        ST st = m_group.getInstanceOf("task_type");
-    //        return st;
-    //    }
-    //    
-    //    @Override
-    //    public ST visitTypeBolt(OpenPearlParser.TypeBoltContext ctx) {
-    //        ST st = m_group.getInstanceOf("bolt_type");
-    //        System.out.println("visitTypeSema called");
-    //        return st;
-    //    }
-    //
-    //    @Override
-    //    public ST visitTypeSema(OpenPearlParser.TypeSemaContext ctx) {
-    //        ST st = m_group.getInstanceOf("sema_type");
-    //        System.out.println("visitTypeSema called");
-    //        return st;
-    //    }
-    //    
-    //    @Override
-    //    public ST visitTypeInterrupt(OpenPearlParser.TypeInterruptContext ctx) {
-    //        ST st = m_group.getInstanceOf("interrupt_type");
-    //        
-    //System.out.println("visitTypeInterrpt called");
-    //        return st;
-    //    }
-    //
-    //    @Override
-    //    public ST visitTypeSignal(OpenPearlParser.TypeSignalContext ctx) {
-    //        ST st = m_group.getInstanceOf("signal_type");
-    //        return st;
-    //    }
     @Override
     public ST visitProcedureBody(OpenPearlParser.ProcedureBodyContext ctx) {
         ST st = m_group.getInstanceOf("Body");
@@ -5290,6 +5178,11 @@ implements OpenPearlVisitor<ST> {
             }
         }
 
+        if (m_indexOfSignalReaction > 0) {
+            // add signal reaction frame only if signal reactions were defined
+            st.add("signalReactions",  m_schedulingSignalReactions);
+            st.add("numberOfSignalReactions",m_indexOfSignalReaction);
+        }
         return st;
     }
 
@@ -5541,13 +5434,85 @@ implements OpenPearlVisitor<ST> {
         st.add("id", visitAndDereference(ctx.name()));
         return st;
     }
+    
 
+    @Override
+    public ST visitInduceStatement(OpenPearlParser.InduceStatementContext ctx) {
+        ST st = m_group.getInstanceOf("InduceStatement");
+
+        if (m_verbose > 0) {
+            System.out.println("CppCodeGeneratorVisitor: visitInduceStatement");
+        }
+        if (ctx.name() != null) {
+           st.add("id", visitAndDereference(ctx.name()));
+        }
+        return st;
+    }
+    
+    @Override
+    public ST visitSchedulingSignalReaction(OpenPearlParser.SchedulingSignalReactionContext ctx) {
+        String s1 = ctx.getText();
+        
+        ST signalReaction = m_group.getInstanceOf("SignalReaction");
+        ST setReaction = m_group.getInstanceOf("setSignalReaction");
+        
+        if (m_verbose > 0) {
+            System.out.println("CppCodeGeneratorVisitor: visitSchedulingSignalReaction");
+        }
+
+        ST stOfName = visitAndDereference(ctx.name()); 
+        
+        setReaction.add("signal", stOfName);
+
+        if (ctx.signalRST() != null) {
+            setReaction.add("rst", visitAndDereference(ctx.signalRST().name()));
+        }
+            
+        if (ctx.signalReaction() != null) {
+            m_indexOfSignalReaction++;  // must be incremented before the reaction becomes processed
+            //String s = ctx.signalReaction().getText();
+            signalReaction.add("reaction", visitSignalReaction(ctx.signalReaction()));
+
+            signalReaction.add("index", m_indexOfSignalReaction);
+            setReaction.add("index", m_indexOfSignalReaction);
+ 
+            m_schedulingSignalReactions.add("sigReaction", signalReaction);
+        } else {
+            // ON xxx RST();
+            m_indexOfSignalReaction++;  
+            //signalReaction.add("index", m_indexOfSignalReaction);
+            setReaction.add("index", m_indexOfSignalReaction);
+ 
+            //m_schedulingSignalReactions.add("sigReaction", signalReaction);
+        }
+     
+        
+        return setReaction;
+    }
+    
+    @Override
+    public ST visitSignalReaction(OpenPearlParser.SignalReactionContext ctx) {
+        m_isInSignalReaction = true;
+        String s1 = ctx.getText();
+        ST st = null;
+        if (ctx.block_statement()!= null) {
+            st =  visitBlock_statement(ctx.block_statement());
+        }
+        if (ctx.signalFinalStatement()!= null) {
+            st = visit(ctx.signalFinalStatement());    
+        }
+        m_isInSignalReaction = false;
+
+        return st;
+    }
+
+    
     /**
      * create an array descriptor according the definition of the variable 'array'
      * <p>
      * if the variable is a formal parameter, we create an anyonymous array descrptor
      * according the formal parameter's name
-     * x: PROC( abc() FIXED --> data is storedat FIXED* data_abc
+     * x: PROC( abc() FIXED --> data is stored FIXED* data_abc
      * array descriptor is named 'Array* ad_abc'
      * <p>
      * if the variable is a real array, the array descriptor is named according the
@@ -5801,4 +5766,5 @@ implements OpenPearlVisitor<ST> {
         return structLHS;
     }
 
+    
 }

@@ -1408,7 +1408,7 @@ implements OpenPearlVisitor<Void> {
                     LabelEntry entry =
                             new LabelEntry(
                                     ctx.label_statement(i).ID().getText(), ctx.label_statement(i));
-
+System.out.println(""+ctx.label_statement(i).ID().getText());
                     if (!m_currentSymbolTable.enter(entry)) {
                         ErrorStack.add(
                                 ctx, "DECLARATION", "duplicate name '" + entry.getName() + "' in scope");
@@ -1893,6 +1893,27 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visitSignalDenotation(SignalDenotationContext ctx) {
+        m_isGlobal = false;
+        m_globalName = null;
+
+        if (m_verbose > 0) {
+            System.out.println("SymbolTableVisitor:visitSignalDenotaion");
+        }
+
+        visitChildren(ctx);
+
+        for (int i = 0; i < ctx.identifierDenotation().identifier().size(); i++) {
+            String iName = ctx.identifierDenotation().identifier(i).ID().toString();
+            SignalEntry ie = new SignalEntry(iName, ctx.identifierDenotation().identifier(i));
+            checkDoubleDefinitionAndEnterToSymbolTable(
+                    ie, ctx.identifierDenotation().identifier(i));
+        }
+        m_type = null; // invalidate m_type to avoid side effects with SIZOF <type>
+
+        return null;
+    }
     /** add specified interrupts to the symbol table maybe this would be better placed in */
     @Override
     public Void visitTaskDenotation(TaskDenotationContext ctx) {

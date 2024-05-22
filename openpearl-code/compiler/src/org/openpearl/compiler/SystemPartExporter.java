@@ -32,6 +32,7 @@ package org.openpearl.compiler;
 import org.openpearl.compiler.SymbolTable.InterruptEntry;
 import org.openpearl.compiler.SymbolTable.ModuleEntry;
 import org.openpearl.compiler.SymbolTable.ProcedureEntry;
+import org.openpearl.compiler.SymbolTable.SignalEntry;
 import org.openpearl.compiler.SymbolTable.SymbolTable;
 import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
 import org.openpearl.compiler.SymbolTable.TaskEntry;
@@ -126,6 +127,7 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
         problemPart.add("decls", tfuUsage);
 
         exportInterruptSpecifications();
+        exportSignalSpecifications();
         exportProblemPartSpcAndDcl();
         module.add("ProblemPart", problemPart);
 
@@ -271,6 +273,29 @@ public class SystemPartExporter extends OpenPearlBaseVisitor<ST> implements Open
                 interruptSpecification.add("fromNamespace", v.getGlobalAttribute());
             } 
             problemPart.add("decls", interruptSpecification);
+        }
+    }
+    
+    private void exportSignalSpecifications() {
+        // export signal specifications
+
+        LinkedList<SignalEntry> l = m_currentSymbolTable.getSignalSpecifications();
+        for (SignalEntry v : l) {
+            SourceLocation loc = getSourceLoc(v.getCtx().start.getLine());
+
+            if (loc == null) {
+                System.err.println("internal compiler error: SystemPartExporter\n\tplease send a bug report");
+            }
+
+            ST signalSpecification = group.getInstanceOf("Specification");
+            signalSpecification.add("type", "SIGNAL");
+            signalSpecification.add("lineno", loc.getLineNo(v.getCtx().start.getLine()));
+            signalSpecification.add("col", v.getCtx().start.getCharPositionInLine() + 1);
+            signalSpecification.add("name", v.getName());
+            if (m_useNamespaceForGlobals) {
+                signalSpecification.add("fromNamespace", v.getGlobalAttribute());
+            } 
+            problemPart.add("decls", signalSpecification);
         }
     }
 

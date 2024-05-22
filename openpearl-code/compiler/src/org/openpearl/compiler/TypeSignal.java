@@ -1,6 +1,6 @@
 /*
- * [The "BSD license"]
- * *  Copyright (c) 2012-2021 Marcel Schaible
+ * [A "BSD license"]
+ * *  Copyright (c) 2024 Rainer Müller
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,9 @@
 
 package org.openpearl.compiler;
 
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
+
 public class TypeSignal extends TypeDefinition {
     TypeSignal() {
         super("SIGNAL");
@@ -46,5 +49,9 @@ public class TypeSignal extends TypeDefinition {
     public boolean equals(Object other) {
         return other instanceof TypeSignal;
     }
-
+    
+    public ST toST(STGroup group) {
+        ST st = group.getInstanceOf("signal_type");
+        return st;
+    }
 }

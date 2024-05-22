@@ -716,7 +716,8 @@ public class TypeUtilities {
         }
         
         ASTAttribute attr = m_ast.lookup(expression);
-        if (attr.getVariable()==null && attr.getConstant() == null) {
+        if (attr.getVariable()==null && attr.getConstant() == null && 
+                (!(attr.m_type instanceof TypeSignal))) {
             CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr,"");
             //ErrorStack.add(expression,"IDENT parameter","cannot pass expression result by IDENT");
             return assignable;
@@ -726,7 +727,8 @@ public class TypeUtilities {
         if (typeOfFormalParameter.equals(paramType)) {
             
           
-            if ((paramType.hasAssignmentProtection() || attr.isConstant()) && !typeOfFormalParameter.hasAssignmentProtection()) {
+            if ((paramType.hasAssignmentProtection() || attr.isConstant()) && 
+                !typeOfFormalParameter.hasAssignmentProtection()) {
                 CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
                  //ErrorStack.add(expression,"type mismatch","pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT would break INV");
             } else {

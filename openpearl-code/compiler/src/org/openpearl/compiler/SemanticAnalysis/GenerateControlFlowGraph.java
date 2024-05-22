@@ -106,6 +106,7 @@ sequential_control_statement:
     private Vector<BlockLevel> m_blockLevels = new Vector<>();
             
     private Vector<ParserRuleContext> m_functionCalls;
+    private Vector<PseudoNode> m_signalReactions;
     
     /*
      * the variable m_previousNode points the the previous node in the cfg
@@ -173,6 +174,8 @@ sequential_control_statement:
         m_functionCalls = null;
         m_gotoNodes = null;
         m_labelNodes = null;
+        m_signalReactions = new Vector<PseudoNode>();
+        
         
         m_procEndNode = new PseudoNode(ctx.endOfBlockLoopProcOrTask(),PseudoNode.procEnd);
         
@@ -211,7 +214,7 @@ sequential_control_statement:
         m_functionCalls = null;
         m_gotoNodes = null;
         m_labelNodes = null;
-
+        m_signalReactions = new Vector<PseudoNode>();
         
         visitChildren(ctx);
         
@@ -244,13 +247,13 @@ sequential_control_statement:
         if (ctx.blockId() != null) {
             blockLabel = ctx.blockId().ID().toString();
         }
-      
         
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        
         PseudoNode blockBegin = new PseudoNode(ctx, PseudoNode.blockBegin);
         m_currentCfg.addNode(blockBegin);
         updatePreviousNode(blockBegin);
-        PseudoNode blockEnd = new PseudoNode(ctx, PseudoNode.blockEnd);
+        PseudoNode blockEnd = new PseudoNode(ctx.endOfBlockLoopProcOrTask(), PseudoNode.blockEnd);
 
        
        
@@ -264,6 +267,7 @@ sequential_control_statement:
         m_currentCfg.addNode(blockEnd);
                 
         m_blockLevels.removeElementAt(0);
+        
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;
     }
@@ -784,13 +788,25 @@ sequential_control_statement:
         return null;
     }
 
-
+    public Void visitSchedulingSignalReaction(OpenPearlParser.SchedulingSignalReactionContext ctx) {
+        if (ctx.signalReaction() != null) {
+           PseudoNode s = new PseudoNode(ctx.signalReaction(),PseudoNode.sigReaction);
+           m_currentCfg.addNode(s);
+           ControlFlowGraphNode  safePreviousNode = m_previousNode;
+           m_signalReactions.add(s);
+           m_previousNode = s;
+           visitChildren(ctx.signalReaction());
+           m_previousNode = safePreviousNode;
+        }
+        return null;
+    }
+    
     /*
     triggerStatement : 'TRIGGER' ID ';'     ;
      */
     @Override
     public Void visitTriggerStatement(OpenPearlParser.TriggerStatementContext ctx) {
- 
+        ErrorStack.warn(ctx, "generate CFG", "TRIGGER not supported");
         return null;
     }
 
@@ -805,10 +821,9 @@ sequential_control_statement:
             // at least one goto found
             for (ControlFlowGraphNode n: m_gotoNodes) {
                 GotoStatementContext gto = (GotoStatementContext)(n.getCtx());
-                String name = gto.ID().getText();
-                SymbolTableEntry se = m_currentSymbolTable.lookup(name);
-                ParserRuleContext labelCtx = se.getCtx();
-
+                ASTAttribute attr = m_ast.lookup(gto);
+                ParserRuleContext labelCtx = attr.getSymbolTableEntry().getCtx();
+                
                 for ( ControlFlowGraphNode l: m_labelNodes) {
                     if (l.getCtx().equals(labelCtx)) {
                         n.setNext(l);

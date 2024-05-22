@@ -207,6 +207,7 @@ ProblemPart(ScalarVariableDeclarations,
             StructVariableDeclarations,
             ProcedureSpecifications,ProcedureDeclarations,
             InterruptSpecifications,
+            SignalSpecifications,
             cpp_inlines) ::= <<
 /////////////////////////////////////////////////////////////////////////////
 // PROBLEM PART
@@ -224,6 +225,14 @@ ProblemPart(ScalarVariableDeclarations,
 // INTERRUPT SPECIFICATIONS
 /////////////////////////////////////////////////////////////////////////////
 <InterruptSpecifications>
+<endif>
+
+
+<if(SignalSpecifications)>
+/////////////////////////////////////////////////////////////////////////////
+// SIGNAL SPECIFICATIONS
+/////////////////////////////////////////////////////////////////////////////
+<SignalSpecifications>
 <endif>
 
 <if(ProcedureSpecifications)>
@@ -439,7 +448,7 @@ pearlrt::Interrupt*
 %>
 
 signal_type() ::= <%
- SIGNAL not available, yet
+pearlrt::Signal *
 %>
  
 
@@ -488,24 +497,32 @@ if_statement(rhs, then_block, else_block) ::= <<
 >>
 
 
-statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList) ::= <<
+statement(srcFilename,srcLine,srcColumn,label,code,cpp,tempVariableList,wrapWithTryCatch) ::= <<
 <if(label)><label><endif>
 <if(srcFilename)>
 me->setLocation(<srcLine>, <srcFilename>);
 <endif>
+<if(wrapWithTryCatch)>try {<endif>
 <if(tempVariableList)>{<tempVariableList><endif>
 <if(cpp)>
 <cpp_inline(cpp)>
 <endif>
 <if(code)><code><endif>
 <if(tempVariableList)>}<endif>
+<if(wrapWithTryCatch)>} catch (pearlrt::Signal & s) {
+   scheduledSignalActions.setErrorOrThrow(&s);
+}
+<endif>
 >>
 
 label_statement(label) ::= <%
 	<user_label(label)>:
 %>
 
-goto_statement(label) ::= <<
+goto_statement(label,enableSignalHandler) ::= <<
+	<if(enableSignalHandler)>
+	sigActions[<enableSignalHandler>-1].enable();
+	<endif>
 	goto <user_label(label)>;
 >>
 
@@ -1792,9 +1809,37 @@ LoopStatement(srcLine,variable,GenerateLoopCounter,precision,from,by,to,while_co
 <endif>
 >>
 
-Body(declarations,statements) ::= <<
+
+Body(declarations,signalReactions, numberOfSignalReactions, statements) ::= <<
 <declarations>
+<if(signalReactions)> 
+// SIGNAL REACTION FRAME 
+// signal handling data
+int indexOfSignalAction = -1; 
+pearlrt::SignalAction sigActions[<numberOfSignalReactions>];
+pearlrt::ScheduledSignalActions scheduledSignalActions(<numberOfSignalReactions>, sigActions);
+
+tryAgain:
+try {
+   switch (indexOfSignalAction) {
+      case -1: break;
+
+	<signalReactions>
+   }
+<endif>
 <statements>
+
+<if(signalReactions)>
+} catch(pearlrt::Signal & s) {
+   indexOfSignalAction = scheduledSignalActions.getActionIndexAndSetRstAndDisableHandler(&s);
+   if (indexOfSignalAction == 0) {
+      // no handler found
+      throw;
+   } 
+   goto tryAgain;
+} 
+// END OF SIGNAL FRAME
+<endif>
 >>
 
 /* --------------------- PROCEDURES -------------------------- */
@@ -2181,6 +2226,42 @@ TriggerStatement(id) ::= <%
   <id>->trigger();
 %>
 
+// ---- SIGNALS
+InduceStatement(id) ::= <%
+	<if(id)>
+	   throw *<id>;
+	<else>
+	   throw ;
+	<endif>
+%>
+
+SignalSpecifications(specs) ::= <%
+<specs: {spec|<spec>}>
+%>
+
+SignalSpecification(id) ::= <%
+pearlrt::Signal *<user_variable(id)>;<\n>
+%>
+
+setSignalReaction(index, signal,rst) ::= <<
+<if(rst)>
+   scheduledSignalActions.setAction(<index>,<signal>,<rst>);
+<else>
+   scheduledSignalActions.setAction(<index>,<signal>);
+<endif>
+>>
+
+SignalReaction(index, reaction) ::= <<
+
+case <index> : 
+    <if(reaction)><reaction><endif>
+    break;
+>>
+
+SignalReactions(sigReaction) ::= <<
+   <sigReaction :{signal|<signal>}>
+>>
+	
 /* --------------------------- STRUCTURE -------------------------------------------*/
 /* unused template
 StructVariableDeclarations(decl) ::= <%
@@ -2194,11 +2275,11 @@ struct <name> {<\n>
 };<\n>
 %>
 
-/* deprecated
+
 StructureVariableDeclaration(name,inv,type,initElements) ::= <%
 <if(inv)> const <endif><type>  <user_variable(name)> <if(initElements)> = <initElements><endif>;<\n>
 %>
-*/
+
 
 StructComponentDeclaration(name,TypeAttribute) ::= <<
    <TypeAttribute> <name>;<\n>
