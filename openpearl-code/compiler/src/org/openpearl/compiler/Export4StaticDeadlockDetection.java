@@ -135,6 +135,7 @@ public class Export4StaticDeadlockDetection {
             flags=0;
             reducedCfg = null;
         }
+        
         public ControlFlowGraph getReducedCfg() {
             return reducedCfg;
         }
@@ -528,16 +529,16 @@ public class Export4StaticDeadlockDetection {
             }
 
             reduceFineBlockStatements(copy);
-            //copy.output("abc"+fileCounter++);
+            copy.output("abc"+fileCounter++);
 
-            //        System.out.println("\n");
-            //        for (int i=0; i< copy.getNodeList().size(); i++) {
-            //            ControlFlowGraphNode n = copy.getNodeList().get(i);
-            //            System.out.println(n.printCtx(10) + " deadlockRelevant:"
-            //                    + n.isSet(flag_is_deadlock_relevant) + " reducable: "
-            //                    + n.isSet(flag_is_reduceable) + " reached: " + n.isSet(flag_node_reached)
-            //                    );
-            //        }
+                    System.out.println("\n");
+                    for (int i=0; i< copy.getNodeList().size(); i++) {
+                        ControlFlowGraphNode n = copy.getNodeList().get(i);
+                        System.out.println(n.printCtx(10) + " deadlockRelevant:"
+                                + n.isSet(flag_is_deadlock_relevant) + " reducable: "
+                                + n.isSet(flag_is_reduceable) + " reached: " + n.isSet(flag_node_reached)
+                                );
+                    }
 
             //copy.output("abc"+fileCounter++);
 
@@ -592,7 +593,7 @@ public class Export4StaticDeadlockDetection {
                     } else {
                         combindNode = (CombinedNode)n;
                     }
-                    while (next.isSet(flag_is_reduceable)) {
+                    while (/*next != null && */ next.isSet(flag_is_reduceable)) {
                         combindNode.add(next);
                         combindNode.setNext(next.getNext());
                         next.setFlag(flag_remove_me);
@@ -791,6 +792,7 @@ public class Export4StaticDeadlockDetection {
 
         }
         removeRemoveableNodes(cfg);
+        cfg.output(null);
 
     }
 
@@ -801,6 +803,31 @@ public class Export4StaticDeadlockDetection {
             }
         }
     }
+    
+//    private void reduceSequentialExecution(ControlFlowGraph cfg, 
+//            ControlFlowGraphNode startPseudoNode) {
+//        boolean allReducible = true;
+//        ControlFlowGraphNode node = startPseudoNode.getNext();
+//        boolean goon = true;
+//        do {
+//            if (!node.isSet(flag_is_reduceable)) {
+//                allReducible = false;
+//            }
+//            node = node.getNext();
+//            if (node instanceof PseudoNode) {
+//                PseudoNode pn = (PseudoNode) node;
+//                int nodeType = pn.getNodeType();
+//                if (nodeType == PseudoNode.blockEnd || nodeType == PseudoNode.caseAlt ||
+//                        nodeType == PseudoNode.caseFin || nodeType == PseudoNode.caseOut ||
+//                        nodeType == PseudoNode.ifElse || nodeType == PseudoNode.ifFin ||
+//                        nodeType == PseudoNode.repeatBodyEnd) {
+//                    goon = false;
+//                }
+//            }
+//        } while (goon);
+//        
+//        
+//    }
 
     private void reduceBeginStatement(ControlFlowGraph cfg,
             ControlFlowGraphNode node) {
@@ -1015,144 +1042,175 @@ public class Export4StaticDeadlockDetection {
     /*
      * considerations about reduction of loop statements
      * 
-     * calls to simple function may become eliminated
+     * a) we may have procedure calls in FOR
+     * b) we may have procedure calls and TRY in WHILE
+     * c) we may have procedure calls and Deadlock Operations in loop body
      * 
-     * case 1: no deadlock relevant operation contained
-     *     if a loop statement ends, it may become reduced like an IF statement
-     *     if it is an endless loop; an empty endless loop remains
-     * case 2: control sections (FOR/WHILE) may be reduced
+     *  NOTE: if body must remain, at least FOR or WHILE must remain to enshure the structure
+     *          if while has function calls or TRY we must keep the FOR-node to execute
+     *          the function call/TRY in each iteration
      *  
+     *   a      b       c       Action
+     * true     false   false   keep for, remove WHILE-node, reduce body
+     * true     true    false   keep for, keep WHILE, reduce body
+     * false    false   false   remove complete loop
+     * false    true    false   keep FOR, keep WHILE, reduce body
+     * true     false   true    keep FOR, remove WHILE-node, keep body
+     * true     true    true    keep FOR, keep WHILE, keep body
+     * false    false   true    keep FOR, remove WHILE-node, keep body
+     * false    true    true    keep FOR, keep WHILE, keep body
+     * missing  false   false   remove complete loop
+     * missing  true    false   keep WHILE-node, reduce body
+     * missing  false   true    keep complete loop
+     * missing  true    true    keep complete loop 
+     * true     missing true    keep complete loop
+     * true     missing false   remove complete loop; keep function calls of FOR 
+     * false    missing true    keep complete loop
+     * false    missing false   remove complete loop  
+     * 
+     *          
      */
-    private void reduceRepeatStatement(ControlFlowGraph cfg, PseudoNode pseudoNode) {
-        boolean allAlternativesAreReducible = true; 
-        //String s = pseudoNode.printCtx(maxLengthOfStatement);
-        //System.out.println("reduce "+s);
-
+    private void reduceRepeatStatement(ControlFlowGraph cfg, PseudoNode repeatBegin) {
+        
+        // gather information
+        boolean whileHasFunctionCallsOrTry = false;
         ControlFlowGraphNode forNode = null;
         ControlFlowGraphNode whileNode = null;
         ControlFlowGraphNode functionCallsInNextStatement = null;
+        ControlFlowGraphNode functionCallsInForStatement = null;
         ControlFlowGraphNode functionCallsInWhileStatement = null;
-        ControlFlowGraphNode nextNodeAfterRepeat = null;
 
-        ControlFlowGraphNode bodyBegin = pseudoNode.getNext();
-        
+        // search begin of loop body, there may be some function calls in FOR and WHILE
+        // as well as FOR and/or WHILE-nodes, or none of them
+        ControlFlowGraphNode bodyBegin = repeatBegin.getNext();
+
         // lets see what is present
         // + for given/with/without function calls
         // + while given/with/without function calls
         // + body with/without deadlock relevant operations 
-        while (!(bodyBegin instanceof PseudoNode && ((PseudoNode)bodyBegin).getNodeType() == PseudoNode.repeatBodyBegin)) {
+        while (!(bodyBegin instanceof PseudoNode && 
+                ((PseudoNode)bodyBegin).getNodeType() == PseudoNode.repeatBodyBegin)) {
             if (bodyBegin instanceof FunctionCallsInNextStatement) {
                 functionCallsInNextStatement = bodyBegin;
-                allAlternativesAreReducible = false;
             }
             if (bodyBegin instanceof RepeatNode) {
-                // each RepeatNode has a reference to the RepeatEnd-node.
-                // if the complete loop may be reduced, we need the next statement after the loop
-                nextNodeAfterRepeat = ((RepeatNode)bodyBegin).getEndNode().getNext();
             }
             if (bodyBegin instanceof RepeatNode && ((RepeatNode)bodyBegin).getRepeatType() == RepeatType.IsFor) {
-                forNode = bodyBegin;
-                //forNode.setFlag(flag_is_reduceable);
+                forNode = bodyBegin;  // FOR node found
+
                 if (functionCallsInNextStatement != null) {
+                    functionCallsInForStatement = functionCallsInNextStatement;
                     functionCallsInNextStatement = null;
-                }
+                } 
             } 
             if (bodyBegin instanceof RepeatNode && ((RepeatNode)bodyBegin).getRepeatType() == RepeatType.IsWhile) {
-                whileNode = bodyBegin;
+                whileNode = bodyBegin;  // WHILE node found
                 if (functionCallsInNextStatement != null) {
                     functionCallsInWhileStatement = functionCallsInNextStatement;
+                    whileHasFunctionCallsOrTry = true;
                     functionCallsInNextStatement = null;
-                }
+                } 
             }
 
             bodyBegin = bodyBegin.getNext();
         }
-      
+
+        // check for complete loop remove
+        boolean reductionComplete = false;
+        if (whileHasFunctionCallsOrTry == false && allReducable(bodyBegin)) {
+           CombinedNode loopNode = reduceLoop(cfg,repeatBegin, forNode, whileNode);
+           if (functionCallsInForStatement != null) {
+               // if we have function call in FOR, they were marked to remove in reduceLoop()
+               // we must keep them as only remaining element of the loop  
+               functionCallsInForStatement.clrFlag(flag_remove_me);
+               functionCallsInForStatement.setNext(loopNode);
+               getPredecessor(cfg, repeatBegin).setNext(functionCallsInForStatement);
+           } else {
+               getPredecessor(cfg, repeatBegin).setNext(loopNode);
+           }
+           reductionComplete = true;
+        }
         
-        if (functionCallsInWhileStatement == null && whileNode != null) {
-            whileNode.setFlag(flag_is_reduceable);
-
-        }
-
-
-        if (allReducable(bodyBegin) ) {
-            bodyBegin.setFlag(flag_is_reduceable);
-            ControlFlowGraphNode n; // not defined in for-loop to access 'n' afterwards
-            for (n = bodyBegin;
-                    !(n instanceof PseudoNode && ((PseudoNode)n).getNodeType() == PseudoNode.repeatBodyEnd);
-                    n=n.getNext()) {
-                n.setFlag(flag_remove_me);
-            }
-            n.setFlag(flag_remove_me);
-            //n.setNext(null);
-            if (!allAlternativesAreReducible) {
-                CombinedNode combindNode = new CombinedNode(bodyBegin.getCtx());
-                combindNode.setFlag(flag_is_reduceable);
-                cfg.addNode(combindNode);
-                if (whileNode != null) {
-                    if (whileNode.isSet(flag_is_reduceable) ) {
-                        if (forNode != null) {
-                            // while may be abandoned
-                            ((RepeatNode)forNode).setBodyNode(combindNode);
-                            combindNode.setNext(forNode);
-                            whileNode.setFlag(flag_remove_me);
-                        }
-                    } else {
-                        ((RepeatNode)whileNode).setBodyNode(combindNode);
-                        combindNode.setNext(forNode);
-                    }
-                } else if (forNode != null) {
-                    
-                } else {
-                    getPredecessor(cfg, forNode).setNext(combindNode);
-                    combindNode.setNext(((RepeatNode)forNode).getEndNode());
-                    forNode.setFlag(flag_remove_me);
-                    //((RepeatNode)forNode).setBodyNode(combindNode);
-                    //combindNode.setNext(forNode);
-                }
-            }
-        } else  {
-            allAlternativesAreReducible = false;
-        }
-
-
-        if (allAlternativesAreReducible) {
-            //System.out.println("reduce "+s);
-            pseudoNode.setFlag(flag_remove_me);
-            if (forNode != null) {
-                forNode.setFlag(flag_remove_me);
-            }
-            if (whileNode != null) {
-                whileNode.setFlag(flag_remove_me);
-            }
-
-
-
-            Vector<ControlFlowGraphNode> previousNodes = new Vector<ControlFlowGraphNode>() ;
-            previousNodes = getPredecessors(cfg, pseudoNode);
-            CombinedNode combined = new CombinedNode(pseudoNode.getCtx());
-            if (forNode != null) {
-                combined.setNext(((RepeatNode)forNode).getEndNode().getNext());
-                ((RepeatNode)forNode).getEndNode().setFlag(flag_remove_me);
-            }
-
-            cfg.addNode(combined);
-            combined.setFlag(flag_is_reduceable);
-
-            if (previousNodes.size() != 1) {
-                System.out.println("uups: should be 1 - is "+previousNodes.size());
+        // remove WHILE, if FOR is present
+        if ( (!reductionComplete) && forNode != null && whileNode != null && whileHasFunctionCallsOrTry == false) {
+            whileNode.setFlag(flag_remove_me);
+            
+            if (functionCallsInWhileStatement != null) {
+                functionCallsInWhileStatement.setNext(((RepeatNode)whileNode).getNext());
             } else {
-                previousNodes.get(0).setNext(combined);
+                forNode.setNext(((RepeatNode)whileNode).getNext());
             }
-
+        }
+   
+        // check for reduce body
+        if ( (!reductionComplete) && allReducable(bodyBegin)) {
+            CombinedNode loopBody = reduceBody(cfg,bodyBegin);
+            // reduce body sets the next of the result node to the next statement of BodyEnd
+            getPredecessor(cfg, bodyBegin).setNext(loopBody);
         }
 
+ 
+    }
+
+    private CombinedNode reduceBody(ControlFlowGraph cfg, ControlFlowGraphNode bodyBegin) {
+        CombinedNode combindBody = new CombinedNode(bodyBegin.getCtx());
+
+        bodyBegin.setFlag(flag_is_reduceable);
+        ControlFlowGraphNode n; // not defined in for-loop to access 'n' afterwards
+
+        for (n = bodyBegin;
+                !(n instanceof PseudoNode && 
+                        ((PseudoNode)n).getNodeType() == PseudoNode.repeatBodyEnd);
+
+                n=n.getNext()) {
+            n.setFlag(flag_remove_me);
+        }
+        //n.setFlag(flag_remove_me);
+        combindBody.setNext(n);
+        bodyBegin.setNext(combindBody);
+
+        combindBody.setFlag(flag_is_reduceable);
+        cfg.addNode(combindBody);
+        return combindBody;
+    }
+
+    private CombinedNode reduceLoop(ControlFlowGraph cfg, PseudoNode repeatBegin, 
+            ControlFlowGraphNode forNode, ControlFlowGraphNode whileNode) {
+        CombinedNode combinedLoop = new CombinedNode(repeatBegin.getCtx());
+        cfg.addNode(combinedLoop);
+       // getPredecessor(cfg, repeatBegin).setNext(combinedLoop);
+        combinedLoop.setFlag(flag_is_reduceable);
+        if (forNode != null) {
+            ((RepeatNode)forNode).setFlag(flag_remove_me);
+            ((RepeatNode)forNode).getEndNode().setFlag(flag_remove_me);
+            combinedLoop.setNext(((RepeatNode)forNode).getEndNode().getNext());
+        } else if (whileNode != null) {
+            ((RepeatNode)whileNode).setFlag(flag_remove_me);
+            ((RepeatNode)whileNode).getEndNode().setFlag(flag_remove_me);
+            combinedLoop.setNext(((RepeatNode)whileNode).getEndNode().getNext());
+        } else {
+            // endless loop
+            combinedLoop.setNext(null);
+        }
+
+        // remove nodes of the loop
+        ControlFlowGraphNode n;  // I need the index afterwards
+        for ( n= repeatBegin; 
+                !(n instanceof PseudoNode  && ((PseudoNode)n).getNodeType()==PseudoNode.repeatBodyEnd);
+                n=n.getNext()) {
+            n.setFlag(flag_remove_me);
+        }
+        // remove reapeatBodyEnd
+        n.setFlag(flag_remove_me);
+        repeatBegin.setFlag(flag_remove_me);
+
+        return combinedLoop;
     }
 
     private ControlFlowGraphNode getPredecessor(ControlFlowGraph cfg, ControlFlowGraphNode n) {
         Vector<ControlFlowGraphNode> previousNodes = getPredecessors(cfg, n);
         if (previousNodes.size() != 1) {
-            ErrorStack.addInternal(n.getCtx(),"Export4StaticDeadlockDetrection@564", 
+            ErrorStack.addInternal(n.getCtx(),"Export4StaticDeadlockDetection@564", 
                     "exactly one predecessor node expected -- got "+
                             previousNodes.size());
             return n;
