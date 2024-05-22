@@ -278,6 +278,10 @@ public class CheckGotoExit extends OpenPearlBaseVisitor<Void> implements OpenPea
                         "'" + name + "' is not a label --- " + se.getClass().getName());
             } else {
                 se.setIsUsed(true);
+                // add the label entry as to the ASTAttributes.
+                // this simplifies the generation of the control flow graph
+                ASTAttribute attr = new ASTAttribute(null, se);
+                m_ast.put(ctx, attr);
             }
         }
         return null;
