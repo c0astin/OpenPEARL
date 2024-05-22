@@ -25,39 +25,47 @@
  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 /**
 \file
 
 \brief class which provides the RST-Format support
 
-*/
+ */
 #include "Rst.h"
 #include "Fixed.h"
 
 namespace pearlrt {
+    Rst::Rst() {
+        rstVoidPointer = NULL;
+        rstLength = 0;
+        //printf("Rst::Rst this=%p  Ptr=%p size=%d\n", this, rstVoidPointer, rstLength);
+    }
 
-   void Rst::rst(void * rstPointer, size_t len) {
-      rstVoidPointer = rstPointer;
-      rstLength = len;
-      /* is in Fixed.h */
-      assignInt32ToFixedViaVoidPointer(rstVoidPointer, rstLength, 0);
-   }
+    void Rst::rst(void * rstPointer, size_t len) {
+        //printf("Rst::rst Ptr=%p size=%d\n", rstPointer, len);
+        rstVoidPointer = rstPointer;
+        rstLength = len;
+        /* is in Fixed.h */
+        assignInt32ToFixedViaVoidPointer(rstVoidPointer, rstLength, 0);
+    }
 
-   bool Rst::updateRst(Signal * s) {
-      if (rstVoidPointer != NULL) {
-         if (s->whichRST() < 100) {
-            // internal signals are not catchable 
-            return false;
-         }
-         /* is in Fixed.h */
-         assignInt32ToFixedViaVoidPointer(rstVoidPointer, rstLength,
-                                        s->whichRST());
-         return true;
-      }
+    bool Rst::updateRst(Signal * s) {
+        //printf("Rst::updateRst ptr=%p size=%d\n", rstVoidPointer, rstLength);
+        if (rstVoidPointer != NULL) {
+            if (s->whichRST() < 100) {
+                // internal signals are not catchable
+                return false;
+            }
+            /* is in Fixed.h */
+            //printf("Rst.cc updateRst  ... rstLength = %d newValue=%d\n", rstLength,s->whichRST());
+            assignInt32ToFixedViaVoidPointer(rstVoidPointer, rstLength,
+                    s->whichRST());
+            return true;
+        }
 
-      return false;
-   }
+        return false;
+    }
 
 }

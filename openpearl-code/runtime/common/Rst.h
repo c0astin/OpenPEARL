@@ -25,7 +25,7 @@
  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #ifndef RST_INCLUDED
 #define RST_INCLUDED
@@ -35,18 +35,18 @@
 
 \brief class to support RST-format
 
-*/
+ */
 
 #include "Signals.h"
 #include "Fixed.h"
 
 namespace pearlrt {
-   /**
+    /**
    \addtogroup io_common
    @{
-   */
+     */
 
-   /**
+    /**
    \brief This class provides RST format behavior for UserDation and CONVERT
 
 
@@ -55,49 +55,53 @@ namespace pearlrt {
      If the rst-formatting element was set,
      the exception is treated, else it is rethrown.
 
-   */
-   class Rst {
-   protected:
-      /**
+     */
+    class Rst {
+        protected:
+            /**
       pointer to the error variable with the IOJob interface
 
       If this pointer is NULL, no rst variable is set.
       This attribute is preset with NULL in the start of the i/o
       operation.
-      */
-      void * rstVoidPointer;
+             */
+            void * rstVoidPointer;
 
-      /**
+            /**
       the length of the rst variable.
       To avoid assignement problems of a too large error number,
       it is recommended that the error variable is at least of
       the type FIXED(15). 
-      */
-      size_t rstLength;
+             */
+            size_t rstLength;
 
-   public:
-      /**
+        public:
+            /** default ctor
+             */
+            Rst();
+
+            /**
         set the rst variable
 
         \param rstVariable the variable, which should be set is case of
                       exception after this call
-      */
-      template <int SIZE>
-      void rst(Fixed<SIZE> & rstVariable) {
-         rst(&rstVariable, SIZE);
-      }
+             */
+            template <int SIZE>
+            void rst(Fixed<SIZE> & rstVariable) {
+                rst(&rstVariable, SIZE);
+            }
 
-      /**
+            /**
         set the rst variable via an IOJob
 
         \param rstVoidPointer pointer the variable,
                       which should be set is case of
                       exception after this call
         \param len the length of the FIXED-variable
-      */
-      void rst(void * rstVoidPointer, size_t len);
+             */
+            void rst(void * rstVoidPointer, size_t len);
 
-      /**
+            /**
          update the RST variable if set
 
          This method is intended to be called in the exception handler
@@ -107,11 +111,11 @@ namespace pearlrt {
          \param s pointer to the signal which was caught
          \returns true, if RST-variable was defined
          \returns false, if RST-variable was NOT defined
-      */
-      bool updateRst(Signal * s);
-   };
+             */
+            bool updateRst(Signal * s);
+    };
 
-   /** @} */
+    /** @} */
 
 }
 #endif
