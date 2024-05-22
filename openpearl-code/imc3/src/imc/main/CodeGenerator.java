@@ -259,12 +259,14 @@ public class CodeGenerator {
             functionBody.append("\t  " + addNsPrefix(nameSpacePrefix) + userName + "= (pearlrt::Interrupt*) &"
                     /* + nameSpacePrefix */ + "sys" + userName + ";\n");
         } else if (pse.getType().equals(Platform.SIGNAL)) {
-            prototypes.append("\tpearlrt::Signal *" + " " /* + nameSpacePrefix*/
-                    + "generalized" + userName + ";" + locationComment(se));
-            functionBody.append("\t  // " + module.getSourceFileName() + ":" + se.getLine() + "\n");
-            functionBody.append("\t  pearlrt:: " +se.getNameOfSystemelement() + userName + ";\n" );
-            functionBody.append("\t  "+ addNsPrefix(nameSpacePrefix) + "generalized" + userName + "= & "
-                    /* + nameSpacePrefix*/ + userName + ";\n\n");
+        	prototypes.append("\tpearlrt::Signal * "+ " " /* + nameSpacePrefix*/
+                  + userName + " = & pearlrt::the"+se.getNameOfSystemelement() + ";" + locationComment(se));
+//            prototypes.append("\tpearlrt::Signal *" + " " /* + nameSpacePrefix*/
+//                    + "generalized" + userName + ";" + locationComment(se));
+//            functionBody.append("\t  // " + module.getSourceFileName() + ":" + se.getLine() + "\n");
+//            functionBody.append("\t  pearlrt:: " +se.getNameOfSystemelement() + userName + ";\n" );
+//            functionBody.append("\t  "+ addNsPrefix(nameSpacePrefix) + "generalized" + userName + "= & "
+//                    /* + nameSpacePrefix*/ + userName + ";\n\n");
         } else {
             Log.error("unsupported type: " + pse.getType());
         }
