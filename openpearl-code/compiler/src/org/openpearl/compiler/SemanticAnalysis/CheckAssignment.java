@@ -87,9 +87,9 @@ implements OpenPearlVisitor<Void> {
 
         lhsType = lhsAttr.getType(); //  CommonUtils.getBaseTypeForName(ctxName, m_currentSymbolTable);
 
+       
         id = ctxName.ID().getText();
-
-        if (lhsType == null) {
+        if (lhsType == null) {   
             ErrorStack.addInternal(id + " not in symbol table or is no variable");
         }
 

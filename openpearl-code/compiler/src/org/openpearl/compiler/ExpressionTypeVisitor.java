@@ -4076,6 +4076,11 @@ implements OpenPearlVisitor<Void> {
     private void checkListOfExpressionAsIndices(ListOfExpressionContext ctx) {
         for (int i=0; i<ctx.expression().size(); i++) {
             ASTAttribute attr = m_ast.lookup(ctx.expression(i));
+            if (attr == null) {
+                // abort treatment of the expression, since there was an error
+                // in the expression evaluation
+                return;
+            }
             TypeDefinition savedActualIndexType = attr.getType();
 
             makeExpressionToType(ctx.expression(i), new TypeFixed());

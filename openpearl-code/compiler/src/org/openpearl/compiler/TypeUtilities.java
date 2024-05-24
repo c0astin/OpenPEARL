@@ -48,7 +48,8 @@ public class TypeUtilities {
      * @param lhsType  the target type (lhs in assignment, formalParameter in function calls, input values ini/o statements
      * @param expression the expression on the rhs
      * @param m_ast the AST
-     * @param isInAssignment is true we are in an assignment, else we have a procedure call
+     * @param isInAssignment is true we are in an assignment, 
+     *                          else we have an actual parameter of a procedure call
      * @return true, if ok, else false
      */
     public static  boolean mayBeAssignedTo( TypeDefinition lhsType, SymbolTableEntry lhs,
@@ -56,34 +57,36 @@ public class TypeUtilities {
 
         ASTAttribute rhsAttr = m_ast.lookup(expression);
         TypeDefinition rhsType = m_ast.lookupType(expression);
-               
+
         String rhsOriginalType = rhsType.toString4IMC(true);
         if (rhsType instanceof UserDefinedSimpleType) {
             rhsOriginalType = rhsType.toErrorString();
         }
-        
+
         if (rhsType instanceof UserDefinedTypeStructure) {
             rhsOriginalType = rhsType.toErrorString();
-           // rhsType = ((UserDefinedTypeStructure)rhsType).getStructuredType();
+            // rhsType = ((UserDefinedTypeStructure)rhsType).getStructuredType();
         }
 
         String lhsOriginalType = lhsType.toString4IMC(true);
         if (lhsType instanceof UserDefinedSimpleType) {
             lhsOriginalType = lhsType.toErrorString();
         }
-        
+
         if (lhsType instanceof UserDefinedTypeStructure) {
             lhsOriginalType = lhsType.toErrorString();
             //lhsType = ((UserDefinedTypeStructure)lhsType).getStructuredType();
         }
 
-        
+
         VariableEntry rhsVariable = rhsAttr.getVariable();
         SymbolTableEntry rhsSymbol = rhsAttr.getSymbolTableEntry();
 
 
         // there are a lot of possible cases
         // let's check valid assignments start with easy cases
+
+
         // RefChar() assignment this differs from
         // rc = charVariable; ! setup the work zone
         // CONT rc = charExpression ! fill the work zone
@@ -104,7 +107,7 @@ public class TypeUtilities {
             }
             if (rhsVariable != null && (rhsType instanceof TypeChar || rhsType instanceof TypeRefChar)) {
                 // ok: ref char assignment of work zone
-                
+
                 if (rhsType.hasAssignmentProtection()) {
                     TypeRefChar trc = (TypeRefChar)(((TypeReference)(lhsType)).getBaseType());
                     if(!trc.hasAssignmentProtection()) {
@@ -116,7 +119,7 @@ public class TypeUtilities {
                         return false;
                     }
                 }
-                        
+
                 checkLifeCycle(lhs, rhsVariable);
                 return true;
             }
@@ -126,6 +129,30 @@ public class TypeUtilities {
             if (((TypeReference)lhsType).getBaseType().hasAssignmentProtection() && rhsAttr.getConstant()!= null) {
                 return true;
             }
+        }
+
+        // same type
+        if (lhsType.equals(rhsType)) {
+                      
+            //            if (lhsType instanceof TypeReference) {
+            // no lifetime check reasonable, this would cause problems 
+            // e.q. sorting a linked list, where local copies of references are required
+
+            //                boolean needCheckLifecycle = true; 
+            //                TypeDefinition baseType = ((TypeReference)lhsType).getBaseType();
+            //                if (baseType instanceof TypeProcedure || baseType instanceof TypeTask) {
+            //                    // no need to check the lifecycle, since PROC, TASK are 
+            //                    // always defined on module level
+            //                    needCheckLifecycle = false;
+            //                } 
+            //
+            //
+            //                if (needCheckLifecycle) {
+            //                    checkLifeCycle(lhs, rhsVariable);
+            //                }
+            //                return true;
+            //            }
+            return true;
         }
 
 
@@ -144,12 +171,12 @@ public class TypeUtilities {
                 rhsAttr.setIsFunctionCall(true);
                 rhsAttr.setType(resultType);
             }
-//            if (rhsType instanceof TypeProcedure &&
-//                    ((TypeProcedure)rhsType).getResultType() != null  ) {
-//                resultType = ((TypeProcedure)rhsType).getResultType();
-//                rhsAttr.setIsFunctionCall(true);
-//                rhsAttr.setType(resultType);
-//            }
+            //            if (rhsType instanceof TypeProcedure &&
+            //                    ((TypeProcedure)rhsType).getResultType() != null  ) {
+            //                resultType = ((TypeProcedure)rhsType).getResultType();
+            //                rhsAttr.setIsFunctionCall(true);
+            //                rhsAttr.setType(resultType);
+            //            }
 
             //-- easiest case; simple variable assignment
             if (resultType != null && simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, resultType)) {
@@ -159,17 +186,17 @@ public class TypeUtilities {
                 ruleApplied=true;
                 break;
             }
-          
+
 
             if (!(lhsType instanceof TypeReference) ) {
                 // Part 1: lhsType is NOT TypeReference
-                
+
                 //-- lhs is not TypeReference; rhs is TypeReference with compatible baseType
                 if (rhsType instanceof TypeReference &&          
                         TypeUtilities.simpleTypeInclVarCharAndRefCharMayBeAssignedTo(lhsType, ((TypeReference)rhsType).getBaseType())) {
                     // implicit dereference required
                     if (! (((TypeReference)rhsType).getBaseType() instanceof TypeRefChar)) {
-                       rhsAttr.setType(((TypeReference)rhsType).getBaseType());
+                        rhsAttr.setType(((TypeReference)rhsType).getBaseType());
                     }
                     ruleApplied=true;
                     break;
@@ -192,14 +219,14 @@ public class TypeUtilities {
                         ErrorStack.addInternal(expression, "TypeUtlities@165", "missing alternative");
                     }
                     rhsAttr.setType(rhsType);
-                 
+
                     ruleApplied=true;
                 }
 
             } else {
                 // Part 2: lhsType IS TypeReference
                 TypeDefinition lhsBaseType = ((TypeReference)lhsType).getBaseType();
-                
+
                 // -- lhs is reference; rhs is TypeReference with compatible base type
                 if (rhsType instanceof TypeReference) {
                     TypeDefinition rhsBaseType = ((TypeReference)rhsType).getBaseType();
@@ -209,7 +236,7 @@ public class TypeUtilities {
                         break;
                     }
                 }
-                
+
                 // -- lhs is reference; rhs is a symbol; 
                 // -- lhs is reference; rhs is variable of the same type and INV setting
                 // -- lhs is reference; rhs PROC returning basetype of lhs with same INV-setting
@@ -235,16 +262,16 @@ public class TypeUtilities {
                         return  false;
                     }
                 }
-                
+
                 // -- lhs is reference to INV ; rhs is constant of base type of lhs
                 if (    rhsAttr.getConstant() != null && 
                         (lhsBaseType.equals(rhsType) &&
-                        (lhsBaseType.hasAssignmentProtection()))) { 
+                                (lhsBaseType.hasAssignmentProtection()))) { 
                     // checkLifeCycle(lhs, ...); not required since constants are defined in module level 
                     ruleApplied=true;
                     break;
                 }
-                
+
 
                 // -- lhs is reference to PROC; rhs is PROC of same type
                 if (lhsBaseType instanceof TypeProcedure &&
@@ -289,7 +316,7 @@ public class TypeUtilities {
                     ruleApplied=true;
                     break;
                 }
-                
+
                 if ( ((TypeReference)lhsType).getBaseType().equals(rhsType)) {
                     ruleApplied=true;
                     break;
@@ -302,17 +329,17 @@ public class TypeUtilities {
                         ok = true;
                     }
                     // test rhs is UserDefineTypeStructure
-                    
+
                     if (!ok && rhsType instanceof UserDefinedTypeStructure) {
                         String lhsTypeString = ((TypeSameStructure)lhsBaseType).getContainerStructure().getStructuredType().getName();
                         String rhsTypeAsString = ((UserDefinedTypeStructure)rhsType).getStructuredType().getName();
                         if (lhsTypeString.equals(rhsTypeAsString)) {
-                           ok = true;
+                            ok = true;
                         }
                     }
-                            
-                        
-                    
+
+
+
                     if (!ok) {
                         // emit special error message
                         if (!isInAssignment) {
@@ -347,9 +374,9 @@ public class TypeUtilities {
                 if ((rhsAttr.isLValue())) {
                     TypeDefinition lhsBase = ((TypeReference)lhsType).getBaseType();      
                     if (lhsBase.equals(rhsAttr.getType())) {
-                       // pointer assignment from SymbolTableEntry
-                       ruleApplied=true;
-                       break;
+                        // pointer assignment from SymbolTableEntry
+                        ruleApplied=true;
+                        break;
                     }
                 }
             }
@@ -386,7 +413,7 @@ public class TypeUtilities {
                 }
                 return false;
             }
-            
+
         } else {
             if (!isInAssignment) {
                 FormalParameter fp = (FormalParameter)lhs;
@@ -407,14 +434,14 @@ public class TypeUtilities {
             // lhsVariable may be formalParameter, variableEntry,...
             // attention FormalParameter is derived from VariableEntry --> must be checked first!
             if (lhsVariable instanceof FormalParameter) {
-              // always ok, since we have no local procedures  
+                // always ok, since we have no local procedures  
             } else if (lhsVariable instanceof VariableEntry) {
                 if (lhsVariable.getLevel() < rhsVariable.getLevel()) {
                     ErrorStack.add("life cycle of '" + rhsVariable.getName() + "' is shorter than '"
                             + lhsVariable.getName() + "'");
                 }
             } else {
-                ErrorStack.addInternal("untreeated alternative @ TypeUtilities:375");
+                ErrorStack.addInternal("untreated alternative @ TypeUtilities:375");
             }
         } else {
             // rhs is NIL, TASK or PROC
@@ -448,13 +475,13 @@ public class TypeUtilities {
         }
         return result;
     }
-    
+
 
     public static boolean simpleTypeInclVarCharAndRefCharMayBeAssignedTo(TypeDefinition lhs, TypeDefinition rhs) {
         boolean result = false;
         TypeDefinition effectiveLhs = lhs;
         TypeDefinition effectiveRhs = rhs;
-        
+
         if (lhs instanceof UserDefinedSimpleType) {
             effectiveLhs = ((UserDefinedSimpleType)lhs).getSimpleType();
         }
@@ -543,7 +570,7 @@ public class TypeUtilities {
         TypeDefinition currentType = attr.m_type;
         boolean goon;
         int loopCounter = 0;
-        
+
         do {
             goon = true;
             if (targetType instanceof TypeReference) {
@@ -555,7 +582,7 @@ public class TypeUtilities {
             if (goon) 
                 currentType = performImplicitDereferenceAndFunctioncall(attr);
             if (currentType == null) goon = false;
-            
+
             if (targetType instanceof TypeReference && ((TypeReference)targetType).getBaseType().equals(currentType)) goon = false;
             if (simpleTypeInclVarCharAndRefCharMayBeAssignedTo(targetType, currentType) ) goon = false;
 
@@ -564,24 +591,24 @@ public class TypeUtilities {
 
     }
 
-//    /**
-//     * check if we can obtain a TypeFixed (of any size) with dereferencing or procedure calls
-//     * 
-//     * @param attr the ASTAttribute of an expression 
-//     * @return TypeFixed if it was possible<br>
-//     *         null, else 
-//     */
-//    public static TypeDefinition performImplicitDereferenceAndFunctioncallForTargetTypeFixed(ASTAttribute attr) {
-//        TypeDefinition t = null;
-//        do {
-//            t = performImplicitDereferenceAndFunctioncall(attr);
-//
-//        } while (t instanceof TypeProcedure);
-//        if (t instanceof TypeFixed) {
-//            return t;
-//        }
-//        return null;
-//    }
+    //    /**
+    //     * check if we can obtain a TypeFixed (of any size) with dereferencing or procedure calls
+    //     * 
+    //     * @param attr the ASTAttribute of an expression 
+    //     * @return TypeFixed if it was possible<br>
+    //     *         null, else 
+    //     */
+    //    public static TypeDefinition performImplicitDereferenceAndFunctioncallForTargetTypeFixed(ASTAttribute attr) {
+    //        TypeDefinition t = null;
+    //        do {
+    //            t = performImplicitDereferenceAndFunctioncall(attr);
+    //
+    //        } while (t instanceof TypeProcedure);
+    //        if (t instanceof TypeFixed) {
+    //            return t;
+    //        }
+    //        return null;
+    //    }
 
 
     public static TypeDefinition performImplicitDereferenceAndFunctioncall(ASTAttribute attr) {
@@ -634,10 +661,10 @@ public class TypeUtilities {
             baseTypeOfTarget = ((TypeReference)targetType).getBaseType();
             exactMatch = true;
         }
-        
+
         TypeDefinition t = TypeUtilities.performImplicitDereferenceAndFunctioncall(attr); // getEffectiveType(ctx);
-        
-         
+
+
         if (exactMatch) {
             equal = t.equals(targetType);
             if (!equal) {
@@ -648,7 +675,7 @@ public class TypeUtilities {
                 equal = simpleTypeInclVarCharAndRefCharMayBeAssignedTo(targetType,t);
             } 
         }
-        
+
         if (!equal) {
             t = TypeUtilities.performImplicitDereferenceAndFunctioncallForTargetType(attr,targetType); 
 
@@ -658,7 +685,7 @@ public class TypeUtilities {
             }
         }
     }
-    
+
     /**
      * return true, if given type is a <ul>
      * <li>simpleType pr
@@ -694,14 +721,14 @@ public class TypeUtilities {
             FormalParameter formalParameter, ExpressionContext expression, AST m_ast) {
         boolean assignable = false;
         final String breaksINV = " -- would break INV";
-        
+
         TypeDefinition paramType = m_ast.lookupType(expression);
         String paramOriginalType = paramType.toErrorString();
-        
+
         if (paramType instanceof UserDefinedSimpleType) {
             paramOriginalType = paramType.toErrorString();
         }
-        
+
         if (paramType instanceof UserDefinedTypeStructure) {
             paramOriginalType = paramType.toErrorString();
         }
@@ -710,11 +737,11 @@ public class TypeUtilities {
         if (typeOfFormalParameter instanceof UserDefinedSimpleType) {
             formalParamOriginalType = typeOfFormalParameter.toErrorString();
         }
-        
+
         if (typeOfFormalParameter instanceof UserDefinedTypeStructure) {
             formalParamOriginalType = typeOfFormalParameter.toErrorString();
         }
-        
+
         ASTAttribute attr = m_ast.lookup(expression);
         if (attr.getVariable()==null && attr.getConstant() == null && 
                 (!(attr.m_type instanceof TypeSignal))) {
@@ -722,40 +749,40 @@ public class TypeUtilities {
             //ErrorStack.add(expression,"IDENT parameter","cannot pass expression result by IDENT");
             return assignable;
         }
-        
+
         // note: .equals does not look on INV 
         if (typeOfFormalParameter.equals(paramType)) {
-            
-          
+
+
             if ((paramType.hasAssignmentProtection() || attr.isConstant()) && 
-                !typeOfFormalParameter.hasAssignmentProtection()) {
+                    !typeOfFormalParameter.hasAssignmentProtection()) {
                 CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
-                 //ErrorStack.add(expression,"type mismatch","pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT would break INV");
+                //ErrorStack.add(expression,"type mismatch","pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT would break INV");
             } else {
                 assignable = checkInvOfIdentParameter(typeOfFormalParameter, paramType);
                 if (!assignable) {
                     CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
                 }
-                 
+
                 //assignable = true;
             }
-//         } else if (paramType instanceof TypeReference) {
-//             // maybe we may dereference the ref parameter
-//             paramType = ((TypeReference)paramType).getBaseType();
-//             if (typeOfFormalParameter.equals(paramType)) {
-//                 if (paramType.hasAssignmentProtection() && !typeOfFormalParameter.hasAssignmentProtection()) {
-//                     CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
-//                     // ErrorStack.add(expression,"type mismatch","pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT would break INV");
-//                 } else {
-//                      assignable = true;
-//                 }
-//             } else {
-//                 CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, null);
-//             }
-         } else {
-             CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr,null);
-             // ErrorStack.add(expression,"type mismatch","cannot pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT");
-         }
+            //         } else if (paramType instanceof TypeReference) {
+            //             // maybe we may dereference the ref parameter
+            //             paramType = ((TypeReference)paramType).getBaseType();
+            //             if (typeOfFormalParameter.equals(paramType)) {
+            //                 if (paramType.hasAssignmentProtection() && !typeOfFormalParameter.hasAssignmentProtection()) {
+            //                     CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, breaksINV);
+            //                     // ErrorStack.add(expression,"type mismatch","pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT would break INV");
+            //                 } else {
+            //                      assignable = true;
+            //                 }
+            //             } else {
+            //                 CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr, null);
+            //             }
+        } else {
+            CommonErrorMessages.typeMismatchProcedureParameterIdent(formalParamOriginalType, paramOriginalType, attr,null);
+            // ErrorStack.add(expression,"type mismatch","cannot pass "+paramOriginalType+" to "+formalParamOriginalType+" by IDENT");
+        }
         return assignable;
     }
 
@@ -766,7 +793,7 @@ public class TypeUtilities {
         if (actualParameter.hasAssignmentProtection() && !formalParameter.hasAssignmentProtection()) {
             return false;
         }
-        
+
         while (actualParameter instanceof TypeReference || actualParameter instanceof TypeArray) {
             if (actualParameter instanceof TypeReference) {
                 actualParameter = ((TypeReference)actualParameter).getBaseType();
