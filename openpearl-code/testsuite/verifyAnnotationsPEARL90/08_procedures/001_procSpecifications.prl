@@ -6,7 +6,7 @@ PROBLEM;
 warning: SPC PROC: no list of identifiers allowed
 */
 /*$    ^
-error: SPC of 'listOfNames' has no declaration
+error: SPC of PROC ( FIXED(31), FIXED(31) ) 'listOfNames' has no declaration
 */
 MODEND;
 
