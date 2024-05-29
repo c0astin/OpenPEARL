@@ -46,58 +46,44 @@ namespace pearlrt {
         int groupLevelOfAction;
         int groupLevelAction, allLevelAction;
         int result = 0;
+	int currentSignal = s->whichRST();
 
         //printf("got signal %d\n", s->whichRST());
         groupLevelAction = -1;  // 99 signals
         allLevelAction = -1;    // all signals
 
         for (i=0; i<numberOfActions; i++) {
-            if (actions[i].isEnabled() ) {
-                if (actions[i].getSignal() == NULL) {
-                    //printf("action[%d] has no signal yet\n", i);
-                } else {
-                    //printf("action[%d] has signal %d\n", i,actions[i].getSignal()->whichRST());
+            if (!actions[i].isEnabled() ) {
+		continue;
+ 	    }
+            if (actions[i].getSignal() == NULL) {
+                //printf("action[%d] has no signal yet\n", i);
+		continue;
+	    }
 
-                    groupLevelOfAction = 0;
-                    int signalOfAction =  actions[i].getSignal()->whichRST();
-                    if (signalOfAction == 0) {
-                        groupLevelOfAction= 2;
-                    } else if (signalOfAction / 100 * 100 == signalOfAction) {
-                        groupLevelOfAction= 1;
-                    } 
-                    //printf("actions[%d]: registered signal has level %d\n", i, groupLevelOfAction);
+            int signalOfAction =  actions[i].getSignal()->whichRST();
+            //printf("action[%d] has signal %d\n", i,signalOfAction);
 
-                    switch (groupLevelOfAction) {
-                    case 0:
-                        if (actions[i].getSignal()->whichRST() == s->whichRST()) {
-                            //printf(".. exact match --> result=%d\n", i+1);
-                            result = i+1;
-                        }
-                        break;
-                    case 1:
-                        if (actions[i].getSignal()->whichRST() == s->whichRST()/100*100) {
-                            //printf(".. level1 match --> result=%d\n", i+1);
-                            groupLevelAction = i+1;
-                        }
-                        break;
-                    case 2:
-                        if (actions[i].getSignal()->whichRST() == s->whichRST()/1000*1000) {
-                            //printf(".. level2 match --> result=%d\n", i+1);
-                            allLevelAction = i+1;
-                        }
-                        break;
-                    }
-                }
-            }    
+            if (currentSignal == signalOfAction) {
+	      result = i+1;
+	      break; // no need for further iterations
+            } else if (currentSignal/100*100 == signalOfAction) {
+		groupLevelAction = i+1;
+            } else if (currentSignal/1000*1000 == signalOfAction) {
+		allLevelAction = i+1;
+            }
+	}
+		
+
+        if (result == 0 && groupLevelAction>0) {
+            // found action for 'group level'  (99 signals)
+            result= groupLevelAction; 
+	}
+        if (result== 0 && allLevelAction>0) { 
+            // found action for 'all signals' (2) (all signals)
+            result = allLevelAction; 
         }
-
-        if (result == 0 && groupLevelAction>0)
-            result= groupLevelAction;  // found action for 'group level'  (99 signals)
-        if (result== 0 && allLevelAction>0) 
-            result = allLevelAction;  // found action for 'all signals' (2) (all signals)
-        if (result == 0) {
-            //printf("no match found\n");
-        } else {
+        if (result != 0) {
             actions[result-1].updateRst(s);
 	    //printf("disable action[%d]\n",result-1);
             actions[result-1].disable();
