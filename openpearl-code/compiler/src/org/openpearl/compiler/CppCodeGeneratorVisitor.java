@@ -1500,8 +1500,8 @@ implements OpenPearlVisitor<ST> {
 
     @Override
     public ST visitGotoStatement(OpenPearlParser.GotoStatementContext ctx) {
-        System.out.println("visitGoto: isInSignalRection: "+m_isInSignalReaction+
-                "  target: "+ctx.ID().getText());
+        //System.out.println("visitGoto: isInSignalRection: "+m_isInSignalReaction+
+        //        "  target: "+ctx.ID().getText());
         SymbolTableEntry se = m_ast.lookup(ctx).getSymbolTableEntry();
         //System.out.println("   level="+se.getLevel());
         
@@ -1510,7 +1510,7 @@ implements OpenPearlVisitor<ST> {
         int levelOfGotoTarget = se.getLevel();
         if (levelOfGotoTarget == 2 && m_isInSignalReaction) {
             // we jump to a label in TASK or PROC level --> we leave the signal handler
-            System.out.println("add enable for sigAction: "+m_indexOfSignalReaction);
+            //System.out.println("add enable for sigAction: "+m_indexOfSignalReaction);
             st.add("enableSignalHandler",m_indexOfSignalReaction);
         }
         return st;

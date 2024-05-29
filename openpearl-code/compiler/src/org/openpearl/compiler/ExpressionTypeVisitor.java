@@ -3989,6 +3989,11 @@ implements OpenPearlVisitor<Void> {
 
         if (ctx.name() != null) {
             ASTAttribute sig = m_ast.lookup(ctx.name());
+            if (sig == null) {
+                // error message already emitted
+                return null;
+            }
+                
             TypeDefinition t = sig.getType();
 
             if (t instanceof TypeReference) {
