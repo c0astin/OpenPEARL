@@ -675,7 +675,12 @@ endSampling:
             result *= Fixed63((Fixed63::Fixed63_t)(sign));
             *f = result;
             return;
-         } catch (ArithmeticSignal s) {
+         } catch (ArithmeticOverflowSignal s) {
+            // arithmetic error
+            // *f = zero;
+            discardRemaining();
+            throw theFixedRangeSignal;
+         } catch (ArithmeticUnderflowSignal s) {
             // arithmetic error
             // *f = zero;
             discardRemaining();

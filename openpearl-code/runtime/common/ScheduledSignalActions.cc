@@ -44,13 +44,12 @@ namespace pearlrt {
     int ScheduledSignalActions::getActionIndexAndSetRstAndDisableHandler(Signal *s) {
         int i;
         int groupLevelOfAction;
-        int level1Action, level2Action, level3Action;
+        int groupLevelAction, allLevelAction;
         int result = 0;
 
         //printf("got signal %d\n", s->whichRST());
-        level1Action = -1;
-        level2Action = -1;
-        level3Action = -1;
+        groupLevelAction = -1;  // 99 signals
+        allLevelAction = -1;    // all signals
 
         for (i=0; i<numberOfActions; i++) {
             if (actions[i].isEnabled() ) {
@@ -58,15 +57,14 @@ namespace pearlrt {
                     //printf("action[%d] has no signal yet\n", i);
                 } else {
                     //printf("action[%d] has signal %d\n", i,actions[i].getSignal()->whichRST());
+
                     groupLevelOfAction = 0;
                     int signalOfAction =  actions[i].getSignal()->whichRST();
-                    if (signalOfAction / 10 * 10 == signalOfAction){
-                        groupLevelOfAction= 1;
-                    } else if (signalOfAction / 100 * 100 == signalOfAction){
+                    if (signalOfAction == 0) {
                         groupLevelOfAction= 2;
-                    } else if (signalOfAction / 1000 * 1000 == signalOfAction){
-                        groupLevelOfAction= 3;
-                    }
+                    } else if (signalOfAction / 100 * 100 == signalOfAction) {
+                        groupLevelOfAction= 1;
+                    } 
                     //printf("actions[%d]: registered signal has level %d\n", i, groupLevelOfAction);
 
                     switch (groupLevelOfAction) {
@@ -77,41 +75,34 @@ namespace pearlrt {
                         }
                         break;
                     case 1:
-                        if (actions[i].getSignal()->whichRST() == s->whichRST()/10*10) {
+                        if (actions[i].getSignal()->whichRST() == s->whichRST()/100*100) {
                             //printf(".. level1 match --> result=%d\n", i+1);
-                            level1Action = i+1;
+                            groupLevelAction = i+1;
                         }
                         break;
                     case 2:
-                        if (actions[i].getSignal()->whichRST() == s->whichRST()/100*100) {
-                            //printf(".. level2 match --> result=%d\n", i+1);
-                            level2Action = i+1;
-                        }
-                        break;
-                    case 3:
                         if (actions[i].getSignal()->whichRST() == s->whichRST()/1000*1000) {
-                            //printf(".. level3 match --> result=%d\n", i+1);
-                            level3Action = i+1;
+                            //printf(".. level2 match --> result=%d\n", i+1);
+                            allLevelAction = i+1;
                         }
                         break;
                     }
                 }
-            }
+            }    
         }
 
-        if (result == 0 && level1Action>0)
-            result= level1Action;  // found action for group level 1 (9 signals)
-        if (result== 0 && level2Action>0) 
-            result = level2Action;  // found action for group level 2 (99 signals)
-        if (result == 0 && level3Action>0) 
-            result = level3Action;  // found action for group level 3 (999 signals)
+        if (result == 0 && groupLevelAction>0)
+            result= groupLevelAction;  // found action for 'group level'  (99 signals)
+        if (result== 0 && allLevelAction>0) 
+            result = allLevelAction;  // found action for 'all signals' (2) (all signals)
         if (result == 0) {
-            //printf("no match found\n\n");
+            //printf("no match found\n");
         } else {
             actions[result-1].updateRst(s);
 	    //printf("disable action[%d]\n",result-1);
             actions[result-1].disable();
         }
+	//printf("result = %d\n\n", result);
         return result;
     }
 
@@ -136,10 +127,10 @@ namespace pearlrt {
         //printf("set error for signal %d\n", s->whichRST());
         int index = getActionIndexAndSetRstAndDisableHandler(s) ;
         if (index > 0) {
-            //printf("  ... rst should become set .. returning\n");
+           // printf("  ... rst should become set .. returning\n");
             return;
         }
-        printf("ScheduledSignalActions:  ... throw\n");
+        //printf("ScheduledSignalActions:  ... throw\n");
         throw *s;
     };
 }

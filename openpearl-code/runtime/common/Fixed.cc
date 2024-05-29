@@ -61,7 +61,7 @@ namespace pearlrt {
 // no 64 bit support required
 //            *(int64_t*)voidPointerToFixed = valueToAssign;
          } else {
-            Log::error("illegal length for int to Fixed Assign (%d)",
+            Log::error("illegal length for int to Fixed Assign (%zu)",
                        lengthOfFixed);
             throw theInternalDationSignal;
          }

@@ -267,9 +267,13 @@ sub printEntries
                 $string = "extern ".$xls->[$cur_sheet_nr]{cell}[2][$i].
                           " the".$xls->[$cur_sheet_nr]{cell}[2][$i];  
 	         print $fileHandle "$string;\n";
+              } elsif ($target eq "Signals.xml" && $cur_sheet_nr > 5) {
               } elsif ($target eq "Signals.xml") {
-                $string = "   <signal name=\"".$xls->[$cur_sheet_nr]{cell}[2][$i]."\"/>";  
-	         print $fileHandle "$string\n";
+		  # xml does not contain internal signals
+		  if ($cur_sheet_nr > 2) {
+                     $string = "   <signal name=\"".$xls->[$cur_sheet_nr]{cell}[2][$i]."\"/>";  
+	             print $fileHandle "$string\n";
+		  }
               } else {
 		die "*** body: illegal parameter (".$target.")\n";
 	      }

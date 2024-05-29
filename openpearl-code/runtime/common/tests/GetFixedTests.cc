@@ -142,6 +142,7 @@ TEST(GetFixed, conversions) {
       pearlrt::Character<30> d("99999999999999999999999999999");
       rc.setWork(d);
       source.rewind();
+
       EXPECT_THROW(
          pearlrt::GetFixed<63>::fromF(f63, 30, 0, source),
          pearlrt::FixedRangeSignal);
