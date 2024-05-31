@@ -134,8 +134,8 @@ If the syntax variant
 
 \x \kw{ON} \hlink{Name}$\S $Signal \kw{RST} \kw{(} \hlink{Name}$\S $ErrorVariable-FIXED \kw{)} \kw{;}
 
-is used the schededuling task (procedure) will not be terminated 
-but continued after setting the ErrorVariable upon the occurance 
+is used the scheduling task (or procedure) will not be terminated (or aborted)
+but continued after setting the error variable upon the occurance 
 of the corresponding signal with the statement following the 
 statement, which caused the failure.
 
@@ -279,12 +279,18 @@ gets access to the error number (error cause).
 
 %%%%%\end{added}
 %%%%%\end{discuss}
+OpenPEARL  uses groups of signals for tasking (\code{TaskSignal}), 
+operations upon simple data types (\code{DataValueSignal}), 
+dations (\code{DationSignal}) and formatting (\code{FormatSignal}).
+ Additional there exist the signal \code{AnySignal}, which covers all
+application relevant signals.
+
 
 Example:
 
 The signal \code{taskSignal}, which covers all error situations of 
 tasking operations, may be simulated with a special situation of 
-starting a currently active task by INDUCE taskRunningSignal;
+starting a currently active task by \code{INDUCE taskRunningSignal;}
 
 % shall be simulated with the 
 %superseeded error number ``1010`` and not superseeded error number
@@ -292,9 +298,15 @@ starting a currently active task by INDUCE taskRunningSignal;
 %number on the console:
 
 \begin{lstlisting}
-PROBLEM};\\
- SPC taskSignal SIGNAL; 	! assume error number 100 
- SPC taskRunningSignal SIGNAL;	! assume error number 102
+SYSTEM;
+ taskSignal: TaskSignal;
+ prioOutOfRange: PrioOutOfRangeSignal;
+ taskRunningSignal: TaskRunningSignal;
+  
+PROBLEM;
+ SPC taskSignal SIGNAL; 	! assume error number 1100 
+ SPC prioOutOfRange SIGNAL;     ! assume error number 1101
+ SPC taskRunningSignal SIGNAL;	! assume error number 1102
  DCL errorNumber FIXED;
 
 regulator: TASK PRIO 20;
@@ -318,10 +330,10 @@ test: PROC;
    IF ... 
    THEN
       ...
-      INDUCE taskRunningSignal; ! prints 102
+      INDUCE taskRunningSignal; ! prints 1102
    ELSE
       ...
-      INDUCE taskSignal; ! prints 100
+      INDUCE prioOutOfRangeSignal; ! prints 1101
    FIN;
 END; ! test
 \end{lstlisting}

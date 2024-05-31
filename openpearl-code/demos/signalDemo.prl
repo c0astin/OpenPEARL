@@ -1,0 +1,245 @@
+/*
+Demonstrate the SIGNAL mechanism
+
+   * generate FixedDevideByZero signals and capture them 
+     with different handlers
+   * generate FixedDevideByZero signals and capture them 
+     with old style setting an error variable
+   * replace a handler for a signal
+   * usage of INDUCE
+*/
+MODULE(signals);
+SYSTEM;
+   so: StdOut;
+   fixedRange: FixedRangeSignal; ! has number 1201
+   div0: FixedDivideByZeroSignal; ! has number 1202
+   dataValue: DataValueSignal; ! covers signals 1200-1299 
+
+PROBLEM;
+   SPC so DATION OUT SYSTEM ALPHIC ;
+   SPC (div0,dataValue, fixedRange) SIGNAL;
+
+   DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+t1: TASK MAIN;
+    OPEN stdout;
+    PUT 'Demonstrate SIGNAL treatment' TO stdout BY A, SKIP;
+    printSeparator;
+    CALL testDiv0;
+    CALL testDiv0WithPlainErrorSetting;   
+    CALL replaceSignalHandler;
+    CALL induce;
+END;
+
+/*
+   produce divide by zero signals and capture them with 
+   FixedDivideByZeroSignal and ArithmeticSignal.
+
+   If the handler for FixedDivideByZero is blocked, the handler
+   for ArithmeticSignal treats the signal.
+
+   Generate the FixedDivideByZero in a PROC with and without 
+   local handler for the signal.
+*/
+testDiv0: PROC;
+   DCL errno FIXED;
+   DCL (f,g) FIXED INIT(1,2);
+   DCL testNumber FIXED INIT(0);
+
+   /* testNumber
+   1-3: capture div0 with group signal dataValue
+   4-7: capture div0 with group signal dataValue and produce div0 in handler
+   8-11: capture div0 with local handler in PROC or with group signal (dataValue)
+   */
+
+   /* note:
+      regard that the signal handler exit with goto nextTest. 
+      Thats the reason we have no loop statement in the procedure
+      except the case where the signal was treated in the next level procedure  
+   */
+ON dataValue RST(errno): BEGIN
+    PUT 'testDiv0: testNumber=', testNumber,': got dataValuemetic signal with code ',errno
+     TO stdout BY X(4), A, F(3), A, F(4), SKIP;
+
+    GOTO nextTest;
+    END;
+
+ON div0 RST(errno): BEGIN
+    PUT 'testDiv0: testNumber=', testNumber,': got div0 signal with code ',errno
+     TO stdout BY X(4), A, F(3), A, F(4), SKIP;
+
+    IF testNumber > 3 AND testNumber <=6 THEN
+       ! this would only executed one time, since this reaction remains in 
+       ! blocked state due to the exit of the signal reaction with a SIGNAL
+       PUT 'testDiv0: testNumber= ',testNumber, ' expected reaction: "got dataValuemetic signal with code 1202"'
+          TO stdout BY X(4), A, F(3), SKIP, X(3), A,SKIP;
+       PUT '*** produce fixedDivideByZeroSignal' TO stdout BY X(4), A, SKIP;
+       f := f // (g - g);   ! // is fixed division
+    FIN;
+
+    GOTO nextTest;
+    END;
+
+
+nextTest:
+    IF testNumber <= 3  THEN
+       testNumber = testNumber + 1;
+       PUT 'testDiv0: testNumber= ',testNumber, ' expected reaction: "got div0 signal with code 1202"'
+          TO stdout BY SKIP, A, F(3), SKIP, X(3), A,SKIP;
+       PUT '*** produce fixedDivideByZeroSignal' TO stdout BY X(4), A, SKIP;
+       f := f // (g - g);   ! // is fixed division
+    FIN;
+
+    IF testNumber <= 6 THEN
+       testNumber = testNumber + 1;
+       PUT 'testDiv0: testNumber= ',testNumber, ' expected reaction: "got dataValuemetic signal with code 1202"'
+          TO stdout BY SKIP, A, F(3), SKIP, X(3), A,SKIP;
+       PUT '*** produce fixedDivideByZeroSignal' TO stdout BY X(4), A, SKIP;
+       f := f // (g - g);   ! // is fixed division
+    FIN;
+
+    IF testNumber <=8 THEN
+       testNumber = testNumber + 1;
+       PUT 'testDiv0: testNumber= ',testNumber, ' expected reaction: "got dataValuemetic signal with code 1202"'
+          TO stdout BY SKIP, A, F(3), SKIP, X(3), A,SKIP;
+       PUT '*** produce fixedDivideByZeroSignal in PROC withouthandler' TO stdout BY X(4), A, SKIP;
+       divideByZero('0'B1); 
+   FIN;
+
+    WHILE testNumber <=10 REPEAT
+       testNumber = testNumber + 1;
+       PUT 'testDiv0: testNumber= ',testNumber, ' expected reaction: "got fixedDivideByZeroSignal code 1202 in PROC"'
+          TO stdout BY SKIP, A, F(3), SKIP, X(3), A,SKIP;
+       PUT '*** produce fixedDivideByZeroSignal in PROC withouthandler' TO stdout BY X(4), A, SKIP;
+       divideByZero('1'B1); 
+    END;
+
+   printSeparator;
+
+END;
+
+testDiv0WithPlainErrorSetting: PROC;
+   DCL (errnoDataValue, errnoDiv0) FIXED INIT(1,1);
+   DCL f FIXED(3) INIT(7); ! FIXED(3) has values -8 ... +7
+
+   PUT 'error variables initialized non zero',
+       'errnoDataValue= ',errnoDataValue,
+       'errnoDiv0 = ',errnoDiv0
+   TO stdout BY A,SKIP,(2)(X(4),A,F(3),SKIP);
+
+ON dataValue RST(errnoDataValue);
+
+   PUT 'errnoDataValue should be cleared by signal action scheduling (errnoDataValue=', errnoDataValue, ')'
+   TO stdout BY A,F(3),A,SKIP;
+
+ON div0 RST(errnoDiv0);
+
+   PUT 'errnoDiv0 should be cleared by signal action scheduling (errnoDiv0=', errnoDiv0, ')'
+   TO stdout BY A,F(3),A,SKIP;
+
+   PUT '*** produce fixedDivideByZeroSignal' TO stdout BY X(4), A, SKIP;
+   divideByZero('0'B1);
+   PUT 'errnoDataValue= ',errnoDataValue,
+       'errnoDiv0 = ',errnoDiv0
+   TO stdout BY (2)(X(4),A,F(4),SKIP);
+  
+   PUT '*** produce fixedOverflowSignal (code=1201)' TO stdout BY X(4), A, SKIP;
+   f = f + 1; ! produce fixedOverflowSignal
+   PUT 'errnoDataValue= ',errnoDataValue,
+       'errnoDiv0 = ',errnoDiv0
+   TO stdout BY (2)(X(4),A,F(4),SKIP);
+ 
+
+   printSeparator;
+END;
+
+
+replaceSignalHandler: PROC;
+   DCL errno FIXED;
+   PUT 'replace the signal handler for divide by zero' TO stdout
+   BY A, SKIP;
+
+ON div0: BEGIN
+    PUT 'handler1 got fixedDivideByZeroSignal' TO stdout BY X(4),A,SKIP;
+    GOTO goOn1;
+    END;
+
+    divideByZero('0'B1);
+    
+goOn1: ! reached via the signal handler
+
+ON div0: BEGIN
+    PUT 'handler2 got fixedDivideByZeroSignal' TO stdout BY X(4),A,SKIP;
+    GOTO goOn2;
+    END;
+
+    divideByZero('0'B1);
+
+goOn2:
+    ON div0 RST(errno);
+    divideByZero('0'B1);
+    PUT 'error code is :', errno TO stdout BY A, F(4), SKIP;
+    PUT 'error code is still:', errno TO stdout BY A, F(4), SKIP;
+
+    printSeparator;
+END;
+
+
+induce: PROC;
+   DCL testNumber FIXED INIT(0);
+   DCL errno FIXED;
+   DCL refSignal REF SIGNAL INIT(div0);
+
+   refSignal = fixedRange;
+   PUT 'usage of INDUCE' TO stdout
+   BY A, SKIP;
+
+ON div0: BEGIN
+    PUT 'got FixedDivideByZeroSignal' TO stdout BY X(4),A,SKIP;
+    GOTO nextTest;
+    END;
+
+ON dataValue RST(errno): BEGIN
+    PUT 'got DataValueSignal (code=',errno,')' TO stdout BY X(4),A,F(4),A, SKIP;
+    GOTO nextTest;
+    END;
+
+nextTest:
+    IF  testNumber < 1 THEN
+       testNumber = testNumber + 1;
+       INDUCE div0;
+    FIN;
+    IF  testNumber < 2 THEN
+       testNumber = testNumber + 1;
+       INDUCE fixedRange;
+    FIN;
+ 
+    IF  testNumber < 2 THEN
+       testNumber = testNumber + 1;
+       INDUCE refSignal; 
+    FIN;
+END;
+
+ 
+divideByZero: PROC(captureInProc BIT(1) );
+   DCL (f,g) FIXED INIT(1,2);
+   DCL errno FIXED;
+
+   IF  captureInProc THEN
+      ON div0 RST(errno):
+         BEGIN
+            PUT 'got fixedDivideByZeroSignal with code ',errno,' in PROC divideByZero'
+               TO stdout BY X(4), A,F(4),A,SKIP;
+            RETURN;
+      END;
+   FIN;
+   f = f // (g-g);
+END;
+
+
+
+
+printSeparator: PROC;
+  PUT '------------------------' TO stdout BY A, SKIP;
+END;
+MODEND;

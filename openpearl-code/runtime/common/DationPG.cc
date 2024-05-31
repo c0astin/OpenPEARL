@@ -217,7 +217,7 @@ namespace pearlrt {
             if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
                 Log::error("array slice select %d elements",
                   dataList->entry[dataElement].param1.numberOfElements);
-                throw theBadArraySliceSignal;
+                throw theBadArraySegmentSignal;
             }
             // treat all data entries, which are  simple types or arrays of simple types
             // structs were unrolled by the compiler
@@ -320,7 +320,7 @@ namespace pearlrt {
             if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
                Log::error("array slice select %d elements",
                  dataList->entry[dataElement].param1.numberOfElements);
-               throw theBadArraySliceSignal;
+               throw theBadArraySegmentSignal;
             }
 
             // treat arrays of simple types

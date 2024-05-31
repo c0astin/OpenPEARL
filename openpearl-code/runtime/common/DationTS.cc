@@ -150,7 +150,7 @@ namespace pearlrt {
          if (dataList->entry[0].param1.numberOfElements <= 0) {
             Log::error("array slice select %d elements",
               dataList->entry[0].param1.numberOfElements);
-            throw theBadArraySliceSignal;
+            throw theBadArraySegmentSignal;
          }
 
 	 nbrOfBytes = dataList->entry[0].getSize();
@@ -189,7 +189,7 @@ namespace pearlrt {
          if (dataList->entry[0].param1.numberOfElements <= 0) {
             Log::error("array slice select %d elements",
               dataList->entry[0].param1.numberOfElements);
-            throw theBadArraySliceSignal;
+            throw theBadArraySegmentSignal;
          }
 
 	 nbrOfBytes = dataList->entry[0].getSize();

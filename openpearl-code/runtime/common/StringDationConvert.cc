@@ -253,7 +253,7 @@ namespace pearlrt {
             if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
                Log::error("array slice select %d elements",
                  dataList->entry[dataElement].param1.numberOfElements);
-                throw theBadArraySliceSignal;
+                throw theBadArraySegmentSignal;
             }
 
             // treat arrays of simple types
@@ -376,7 +376,7 @@ namespace pearlrt {
             if (dataList->entry[dataElement].param1.numberOfElements <= 0) {
                   Log::error("array slice select %d elements",
                       dataList->entry[dataElement].param1.numberOfElements);
-                  throw theBadArraySliceSignal;
+                  throw theBadArraySegmentSignal;
             }
 
             for (int32_t dataIndex = 0;
