@@ -1,0 +1,67 @@
+MODULE(m1);
+/*
+check types of procedure parameters with must be passed by IDENT
+*/
+PROBLEM;
+
+arrayFail: PROC(a(,) FIXED);
+/*$             ^
+error: PROC: param: arrays must passed by IDENT
+*/
+END;
+
+arrayOk: PROC(a(,) FIXED IDENT);
+END;
+
+sigFail: PROC (signal SIGNAL);
+/*$            ^
+error: PROC: param: SIGNAL must passed by IDENT
+*/
+END;
+
+sigOk: PROC (signal SIGNAL IDENT);
+END;
+
+irqFail: PROC (irq INTERRUPT);
+/*$            ^
+error: PROC: param: INTERRUPT must passed by IDENT
+*/
+END;
+
+irqOk: PROC (irq INTERRUPT IDENT);
+END;
+
+semaFail: PROC (sema SEMA);
+/*$             ^
+error: PROC: param: SEMA must passed by IDENT
+*/
+END;
+
+semaOk: PROC (sema SEMA IDENT);
+/*$           ^
+warning: deadlock detection disabled: not possible with parameter SEMA IDENT
+*/
+END;
+
+boltFail: PROC (bolt BOLT);
+/*$             ^
+error: PROC: param: BOLT must passed by IDENT
+*/
+END;
+
+boltOk: PROC (bolt BOLT IDENT);
+END;
+
+dationFail: PROC (dation DATION OUT ALPHIC DIM(*,80));
+/*$               ^
+error: PROC: param: DATION must passed by IDENT
+*/
+END;
+
+dationOk: PROC (dation DATION OUT ALPHIC DIM(*,80) IDENT);
+END;
+
+
+! ======================================
+
+MODEND;
