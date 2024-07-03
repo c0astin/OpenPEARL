@@ -51,26 +51,26 @@ DECLARE x FLOAT,
 Summarised, scalar variables can be declared as follows:
 
 \begin{grammarframe}
-\input{ScalarVariableDeclaration.bnf}
+\inputBNF{ScalarVariableDeclaration.bnf}
 \index{DCL@\textbf{DCL}!Scalar Variable}
 
-\input{ScalarDeclareDataSentence.bnf}
+\inputBNF{ScalarDeclareDataSentence.bnf}
 
 %%%IdentifierDenotation ::=\\
 %%%\x Identifier $\mid$ (Identifier [ , Identifier ] $^{...}$ )
 
-\input{TypeAttribute.bnf}
+\inputBNF{TypeAttribute.bnf}
 
-\input{SimpleType.bnf}
+\inputBNF{SimpleType.bnf}
 \end{grammarframe}
 
 The general form of specifying scalar variables reads as follows:
 
 \begin{grammarframe}
-\input{ScalarVariableSpecification.bnf}
+\inputBNF{ScalarVariableSpecification.bnf}
 \index{SPC@\textbf{SPC}!Scalar Variable}
 
-\input{VariableDenotationS.bnf}
+\inputBNF{VariableDenotationS.bnf}
 \end{grammarframe}
 
 Allocation protection and initialisation attribute are described in 
@@ -114,8 +114,8 @@ the precision is derived from the constants.
 
 Variables for integers are declared with the type attribute \code{FIXED}.
 \begin{grammarframe}
-\input{TypeFixed.bnf}
-\input{Precision.bnf}
+\inputBNF{TypeFixed.bnf}
+\inputBNF{Precision.bnf}
 \end{grammarframe}
 
 The precision gives the number of bit positions in which the
@@ -182,7 +182,7 @@ numbers as values) are declared with type attribute \code{FLOAT}.
 
 %%% TypeFloatingPointNumber renamed into TypeFloat
 \begin{grammarframe}
-\input{TypeFloat.bnf}
+\inputBNF{TypeFloat.bnf}
 \end{grammarframe}
 
 %%%The statements of 5.2 are valid; 
@@ -263,10 +263,10 @@ B2 & B1 & B3 & B1  & B4 & B1   & B4  & B1\\
 Variables for bit strings are to be declared with type attribute \code{BIT}.
 
 \begin{grammarframe}
-\input{TypeBitString.bnf}
+\inputBNF{TypeBitString.bnf}
 
 %%% rename length --> LengthOfString
-\input{LengthOfString.bnf}
+\inputBNF{LengthOfString.bnf}
 \end{grammarframe}
 
 Length gives the number of elements of the bit string. If the length
@@ -333,7 +333,7 @@ Variables for character strings are declared by the type attribute
 \code{CHARACTER}.
 
 \begin{grammarframe}
-\input{TypeCharacterString.bnf}
+\inputBNF{TypeCharacterString.bnf}
 \end{grammarframe}
 
 Length gives the number of characters. If no length is indicated, it had
@@ -370,7 +370,7 @@ not determined by notation (for constants) or declaration (for
 variables).
 
 \begin{grammarframe}
-\input{LengthDefinition.bnf}
+\inputBNF{LengthDefinition.bnf}
 \end{grammarframe}
 
 Example:
@@ -431,7 +431,7 @@ Example:
 Variables for times are declared with type attribute \code{CLOCK}.
 
 \begin{grammarframe}
-\input{TypeClock.bnf}
+\inputBNF{TypeClock.bnf}
 \end{grammarframe}
 
 Example:
@@ -479,7 +479,7 @@ Variables for durations have to be declared with the type attribute
 \code{DURATION} or \code{DUR}.
 
 \begin{grammarframe}
-\input{TypeDuration.bnf}
+\inputBNF{TypeDuration.bnf}
 \end{grammarframe}
 
 Example:
@@ -560,9 +560,9 @@ In general, it holds:
 %%%
 %%%\end{front}
 \begin{grammarframe}
-\input{TypeReference.bnf}
-\input{VirtualDimensionList.bnf}
-\input{Dereferentiation.bnf}
+\inputBNF{TypeReference.bnf}
+\inputBNF{VirtualDimensionList.bnf}
+\inputBNF{Dereferentiation.bnf}
 \index{CONT@\textbf{CONT}}
 \end{grammarframe}
 
@@ -816,12 +816,12 @@ variables
 The general form of a array declaration reads as follows:
 
 \begin{grammarframe}
-\input{ArrayDeclaration.bnf} 
+\inputBNF{ArrayDeclaration.bnf} 
 \index{DCL@\textbf{DCL}!Array}
-\input{ArrayDenotation.bnf}
-\input{TypeAttributeForArray.bnf}
-\input{DimensionAttribute.bnf}
-\input{DimensionBoundaries.bnf}
+\inputBNF{ArrayDenotation.bnf}
+\inputBNF{TypeAttributeForArray.bnf}
+\inputBNF{DimensionAttribute.bnf}
+\inputBNF{DimensionBoundaries.bnf}
 \end{grammarframe}
 
 Thus, even negative integers are allowed as dimension boundary. The
@@ -865,10 +865,10 @@ DCL message (numberOfMessages) CHAR(12),
 The general specification form of an array reads:
 
 \begin{grammarframe}
-\input{ArraySpecification.bnf}
+\inputBNF{ArraySpecification.bnf}
 \index{SPC@\textbf{SPC}!Array}
-\input{ArrayDenotationS.bnf}
-\input{VirtualDimensionList.bnf}
+\inputBNF{ArrayDenotationS.bnf}
+\inputBNF{VirtualDimensionList.bnf}
 \end{grammarframe}
 
 The number n of commas in the virtual dimension attribute informs that
@@ -1038,23 +1038,23 @@ IF contribution(i).alreadyBroadcast(j) THEN...FIN;
 The general form of the structure declaration reads:
 
 \begin{grammarframe}
-\input{StructureDeclaration.bnf}
+\inputBNF{StructureDeclaration.bnf}
 \index{DCL@\textbf{DCL}!Structure}
-\input{StructureDenotation.bnf}
+\inputBNF{StructureDenotation.bnf}
 
-\input{TypeStructure.bnf}
+\inputBNF{TypeStructure.bnf}
 
-\input{StructureComponent.bnf}
+\inputBNF{StructureComponent.bnf}
 
-\input{TypeAttributeInStructureComponent.bnf}
+\inputBNF{TypeAttributeInStructureComponent.bnf}
 \end{grammarframe}
 
 The general form of the structure specification reads:
 
 \begin{grammarframe}
-\input{StructureSpecification.bnf}
+\inputBNF{StructureSpecification.bnf}
 \index{SPC@\textbf{SPC}!Structure}
-\input{StructureDenotationS.bnf}
+\inputBNF{StructureDenotationS.bnf}
 \end{grammarframe}
 
 \section{Type Definition (TYPE)} % 5.12
@@ -1223,7 +1223,7 @@ OrderString(10).Succ:=NIL;
 Generally, a new data type is defined as follows:
 
 \begin{grammarframe}
-\input{TypeDefinition.bnf}
+\inputBNF{TypeDefinition.bnf}
 \end{grammarframe}
 
 The definition of a new data type has to take place before its use.
@@ -1279,9 +1279,9 @@ values. The initialisation attribute is given as last attribute of the
 respective declaration:
 
 \begin{grammarframe}
-\input{InitialisationAttribute.bnf}
-\input{InitElement.bnf}
-\input{Constant.bnf}
+\inputBNF{InitialisationAttribute.bnf}
+\inputBNF{InitElement.bnf}
+\inputBNF{Constant.bnf}
 \end{grammarframe}
 
 The type of the given init element has to be compatible with the type of
@@ -1454,10 +1454,10 @@ expressions may occur. These expressions may only contain constants
 and the results are inserted in the respective positions.
 
 \begin{grammarframe}
-\input{ConstantExpression.bnf}
-\input{ConstantFIXEDExpression.bnf}
-\input{Term.bnf}
-\input{Factor.bnf}
+\inputBNF{ConstantExpression.bnf}
+\inputBNF{ConstantFIXEDExpression.bnf}
+\inputBNF{Term.bnf}
+\inputBNF{Factor.bnf}
 \end{grammarframe}
 
 %%%%% begin added 2022-01-22 (rm)

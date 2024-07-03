@@ -106,38 +106,38 @@ The local declarations and the statements of the procedure form the
 procedure body.
 
 \begin{grammarframe}
-\input{ProcedureDeclaration.bnf}
+\inputBNF{ProcedureDeclaration.bnf}
 \index{PROC@\textbf{PROC}}
 \index{END@\textbf{END}!Procedure}
 \index{PROCEDURE@\textbf{PROCEDURE}|see {PROC}}
 
-\input{ProcedureBody.bnf}
-\input{ListOfFormalParameters.bnf}
+\inputBNF{ProcedureBody.bnf}
+\inputBNF{ListOfFormalParameters.bnf}
 
-\input{FormalParameter.bnf}
+\inputBNF{FormalParameter.bnf}
 
-\input{VirtualDimensionList.bnf}
-\input{ParameterType.bnf}
-\input{ResultAttribute.bnf}
+\inputBNF{VirtualDimensionList.bnf}
+\inputBNF{ParameterType.bnf}
+\inputBNF{ResultAttribute.bnf}
 \index{RETURNS@\textbf{RETURNS}}
 
-\input{TypeRealTimeObject.bnf}
+\inputBNF{TypeRealTimeObject.bnf}
 \index{SEMA@\textbf{SEMA}!Parameter}
 \index{BOLT@\textbf{BOLT}!Parameter}
 \index{INTERRUPT@\textbf{INTERRUPT}!Parameter}
 \index{IRPT@\textbf{IRPT}!Parameter}
 \index{SIGNAL@\textbf{SIGNAL}!Parameter}
 
-\input{ResultType.bnf}
+\inputBNF{ResultType.bnf}
 \end{grammarframe}
 
 The general form of the specification of a procedure reads as follows:
 
 \begin{grammarframe}
-\input{ProcedureSpecification.bnf}
+\inputBNF{ProcedureSpecification.bnf}
 \index{SPC@\textbf{SPC}!Procedure}
-\input{ListOfParametersForSPC.bnf}
-\input{ParameterSpecification.bnf}
+\inputBNF{ListOfParametersForSPC.bnf}
+\inputBNF{ParameterSpecification.bnf}
 \index{IDENT@\textbf{IDENT}!Procedure}
 \index{IDENTICAL@\textbf{IDENTICAL}|see {IDENT}}
 \end{grammarframe}
@@ -163,7 +163,7 @@ result which is returned to the call position. With the help of the
 return statement, this return takes place in the form
 
 \begin{grammarframe}
-\input{ReturnStatement.bnf}
+\inputBNF{ReturnStatement.bnf}
 \index{RETURN@\textbf{RETURN}}
 \end{grammarframe}
 
@@ -220,10 +220,10 @@ Subprogram procedures are called with the help of the keyword CALL or
 only with their identifiers:
 
 \begin{grammarframe} 
-\input{ProcedureCall.bnf}
+\inputBNF{ProcedureCall.bnf}
 \index{CALL@\textbf{CALL}}
 
-\input{ListOfActualParameters.bnf}
+\inputBNF{ListOfActualParameters.bnf}
 \end{grammarframe} 
 
 Example:
@@ -246,7 +246,7 @@ statement, but within expressions upon stating the identifier and the
 actual parameters:
 
 \begin{grammarframe}
-\input{FunctionCall.bnf}
+\inputBNF{FunctionCall.bnf}
 \end{grammarframe}
 
 Example:
@@ -374,10 +374,10 @@ A declaration of reference variables for procedures contains the
 description of all parameter types, as well as the type of the result.
 
 \begin{grammarframe}
-\input{ProcedureReferenceDeclaration.bnf}
+\inputBNF{ProcedureReferenceDeclaration.bnf}
 \index{DCL@\textbf{DCL}!Reference Procedure}
 \index{REF@\textbf{REF}!Procedure}
-\input{TypeProcedure.bnf} 
+\inputBNF{TypeProcedure.bnf} 
 \index{Procedure!Reference}
 \end{grammarframe}
 
@@ -385,7 +385,7 @@ The general form of the specification of procedure reference variables
 reads:
 
 \begin{grammarframe}
-\input{ProcedureReferenceSpecification.bnf} 
+\inputBNF{ProcedureReferenceSpecification.bnf} 
 \index{SPC@\textbf{SPC}!Reference Procedure}
 \end{grammarframe}
 
@@ -393,7 +393,7 @@ The value assignment to a procedure reference variable takes place with
 the assignment:
 
 \begin{grammarframe}
-\input{RefProcAssignment.bnf}
+\inputBNF{RefProcAssignment.bnf}
 \index{Assignment!Reference Procedure}
 \end{grammarframe}
 

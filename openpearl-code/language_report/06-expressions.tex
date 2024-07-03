@@ -36,8 +36,8 @@ Identifiers, indexed identifiers and names of structure components are
 generally summarised under the notion ``Name'':
 
 \begin{grammarframe}
-\input{Name.bnf}
-\input{Index.bnf}
+\inputBNF{Name.bnf}
+\inputBNF{Index.bnf}
 \end{grammarframe}
 
 Examples:
@@ -66,7 +66,7 @@ variables; however, in the expression lists of the output statements
 In general, an expression has the form
 
 \begin{grammarframe}
-\input{Expression.bnf}
+\inputBNF{Expression.bnf}
 \end{grammarframe}
 
 Monadic operators have only one operand, dyadic operators have two
@@ -77,7 +77,7 @@ operands.
 %%%eigene Operatoren
 %%%\end{removed}
 \begin{grammarframe}
-\input{MonadicOperator.bnf}
+\inputBNF{MonadicOperator.bnf}
 \index{NOT@\textbf{NOT}}
 \index{ABS@\textbf{ABS}}
 \index{SIGN@\textbf{SIGN}}
@@ -92,7 +92,7 @@ operands.
 \index{ENTIER@\textbf{ENTIER}}
 \index{ROUND@\textbf{ROUND}}
 
-\input{DyadicOperator.bnf}
+\inputBNF{DyadicOperator.bnf}
 \index{REM@\textbf{REM}}
 \index{LT@\textbf{LT}}
 \index{GT@\textbf{GT}}
@@ -112,7 +112,7 @@ operands.
 \index{ISNT@\textbf{ISNT}}
 \index{FIT@\textbf{FIT}}
 
-\input{Operand.bnf}
+\inputBNF{Operand.bnf}
 \index{PRIO@\textbf{PRIO}}
 \index{TASK@\textbf{TASK}!Operand}
 \index{TRY@\textbf{TRY}}
@@ -168,7 +168,7 @@ The importance of dereferentiation was treated in
 general form reads:
 
 \begin{grammarframe}
-\input{Dereferentiation.bnf}
+\inputBNF{Dereferentiation.bnf}
 \end{grammarframe}
 
 The i-th bit of a bit string can be addressed with the help of the
@@ -205,7 +205,7 @@ bits or characters can be addresses analogously; the general form of
 addressing is:
 
 \begin{grammarframe}
-\input{StringSelection.bnf}
+\inputBNF{StringSelection.bnf}
 \index{BIT@\textbf{BIT}!String Selection}
 \index{CHAR@\textbf{CHAR}!String Selection}
 \index{CHARACTER@\textbf{CHARACTER}!String Selection}
@@ -1054,9 +1054,9 @@ expression.
 %%%\x SimpleType $\mid$ StructuredType $\mid$ TypeReference
 %%%\end{front}
 %%%\begin{grammar}
-%%%\input{OperatorDefinition.bnf}
-%%%\input{OpName.bnf}
-%%%\input{OpParameter.bnf}
+%%%\inputBNF{OperatorDefinition.bnf}
+%%%\inputBNF{OpName.bnf}
+%%%\inputBNF{OpParameter.bnf}
 %%%\end{grammar}
 %%%
 %%%The meaning is analogous to the one of a function procedure (cf. 8).
@@ -1097,7 +1097,7 @@ expression.
 %%%introduced in a standard way, a rank between 1 and 7 can be determined
 %%%with the help of a rank declaration:
 %%%
-%%%\input{PrecedenceDefinition.bnf}
+%%%\inputBNF{PrecedenceDefinition.bnf}
 %%%
 %%%If a precedence shall be defined for a new operator, this must take place
 %%%before the operator definition; if no precedence definition is stated, the
@@ -1118,7 +1118,7 @@ Assignments are implemented for scalar variables and for structures, but
 not for arrays.
 
 \begin{grammarframe}
-\input{Assignment.bnf}
+\inputBNF{Assignment.bnf}
 \index{Assignment}
 \end{grammarframe}
 
@@ -1127,7 +1127,7 @@ not for arrays.
 Assignments for scalar variables are defined as follows:
 
 \begin{grammarframe}
-\input{ScalarAssignment.bnf}
+\inputBNF{ScalarAssignment.bnf}
 \index{Assignment!Scalar Variable}
 \end{grammarframe}
 
@@ -1200,7 +1200,7 @@ The values of all components of a structure can be assigned to another
 structure in one single assignment:
 
 \begin{grammarframe}
-\input{StructureAssignment.bnf}
+\inputBNF{StructureAssignment.bnf}
 \index{Assignment!Structure}
 \end{grammarframe}
 
@@ -1341,7 +1341,7 @@ workpiece.quality := measurement;
 %%%\x {\bf STRUCT} [ ]
 %%%\end{front}
 %%%\begin{grammar}
-%%%\input{Type-VOID.bnf}
+%%%\inputBNF{Type-VOID.bnf}
 %%%\end{grammar}
 %%%
 %%%A reference variable with this type can admit any variable address, the

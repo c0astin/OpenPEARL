@@ -11,17 +11,17 @@ The general form of a PEARL program reads as follows:
 
 
 \begin{grammarframe}
-\input{Program.bnf}
+\inputBNF{Program.bnf}
 \index{Program}
 
-\input{Module.bnf}
+\inputBNF{Module.bnf}
 \index{MODULE@\textbf{MODULE}}
 \index{MODEND@\textbf{MODEND}}
 
-\input{SystemPart.bnf}
+\inputBNF{SystemPart.bnf}
 \index{SYSTEM@\textbf{SYSTEM}!System Part}
 
-\input{ProblemPart.bnf}
+\inputBNF{ProblemPart.bnf}
 \index{PROBLEM@\textbf{PROBLEM}}
 \end{grammarframe}
 
@@ -234,11 +234,11 @@ In general, the form of identification reads as follows:
 %%%\x \{ {\bf SPECIFY $\mid$ SPC} \} Identifier [ AllocationProtection ] Type IdentificationAttribute ;
 
 \begin{grammarframe}
-\input{Identification.bnf}
+\inputBNF{Identification.bnf}
 \index{Identification}
 \index{SPC@\textbf{SPC}!Identification}
 
-\input{IdentificationAttribute.bnf}
+\inputBNF{IdentificationAttribute.bnf}
 \index{IDENT@\textbf{IDENT}!Identification}
 \end{grammarframe}
 
@@ -253,7 +253,7 @@ the scope and the life-span of PEARL objects. A block is a summary of
 declarations and statements:
 
 \begin{grammarframe}
-\input{Block.bnf}
+\inputBNF{Block.bnf}
 \index{BEGIN@\textbf{BEGIN}}
 \index{END@\textbf{END}}
 \end{grammarframe}
@@ -414,7 +414,7 @@ attribute.
 The general form of the global attribute reads:
 
 \begin{grammarframe}
-\input{GlobalAttribute.bnf}
+\inputBNF{GlobalAttribute.bnf}
 \index{GLOBAL@\textbf{GLOBAL}}
 \end{grammarframe}
 

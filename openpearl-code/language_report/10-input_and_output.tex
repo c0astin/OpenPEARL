@@ -42,7 +42,7 @@ system names of the needed devices. The devices can only be addressed in
 I/O statements of the problem part via these user names. 
 
 \begin{grammarframe}
-\input{SystemPart.bnf}
+\inputBNF{SystemPart.bnf}
 \end{grammarframe}
 %%%\begin{added}
 
@@ -61,21 +61,21 @@ following form:
 
 
 \begin{grammarframe}
-\input{UserNameDeclaration.bnf}
+\inputBNF{UserNameDeclaration.bnf}
 \end{grammarframe}
 
 The declaration of interrupts and signals are defined in
  chapter \ref{sec_interrupts} and \ref{signals}.
 
 \begin{grammarframe}
-\input{SystemDationDeclaration.bnf}
+\inputBNF{SystemDationDeclaration.bnf}
 
-%\input{SystemSignalDeclaration.bnf}
-%\input{SystemInterruptDeclaration.bnf}
+%\inputBNF{SystemSignalDeclaration.bnf}
+%\inputBNF{SystemInterruptDeclaration.bnf}
 
-\input{Association.bnf}
-\input{ListOfConstants.bnf}
-\input{ConstantParameter.bnf}
+\inputBNF{Association.bnf}
+\inputBNF{ListOfConstants.bnf}
+\inputBNF{ConstantParameter.bnf}
 \end{grammarframe}
  
 %%%\begin{added}
@@ -84,7 +84,7 @@ may configure the behavior of the PEARL environment, like the
 definition of an error output channel. 
 
 \begin{grammarframe}
-\input{ConfigurationElement.bnf}
+\inputBNF{ConfigurationElement.bnf}
 \end{grammarframe}
 
 %%%\begin{removed}
@@ -224,9 +224,9 @@ problem part, defining their associated user names.
 The general form reads:
 
 \begin{grammarframe}
-\input{DationSpecification.bnf}
+\inputBNF{DationSpecification.bnf}
 \index{SPC@\textbf{SPC}!System Data Station}
-\input{TypeDationSystem.bnf}
+\inputBNF{TypeDationSystem.bnf}
 \end{grammarframe}
 
 The different attributes in a system dation specification describe the
@@ -262,7 +262,7 @@ dations --- the direct declaration of system dations is forbidden in OpenPEARL.
 
 
 \begin{grammarframe}
-\input{DationDeclaration.bnf}
+\inputBNF{DationDeclaration.bnf}
 \index{DCL@\textbf{DCL}!User Data Station}
 \end{grammarframe}
 
@@ -275,14 +275,14 @@ the features of data stations and their way of using in I/O statements
 already at compilation time.
 
 \begin{grammarframe}
-\input{TypeDation.bnf}
+\inputBNF{TypeDation.bnf}
 \end{grammarframe}
 
 Each data station is source and/or sink of a data transmission. The
 corresponding feature must be given upon declaration:
 
 \begin{grammarframe}
-\input{SourceSinkAttribute.bnf}
+\inputBNF{SourceSinkAttribute.bnf}
 \end{grammarframe}
 
 \code{IN} \index{IN@\textbf{IN}}
@@ -332,12 +332,12 @@ have class attribute \code{BASIC} \index{BASIC@\textbf{BASIC}}.
 The general form of the class attribute reads:
 
 \begin{grammarframe}
-\input{ClassAttribute.bnf}
-\input{TypeOfTransmissionData.bnf}
-\input{SimpleType.bnf}
-\input{IOCompoundType.bnf}
-\input{IOStructure.bnf}
-\input{IOStructureComponent.bnf}
+\inputBNF{ClassAttribute.bnf}
+\inputBNF{TypeOfTransmissionData.bnf}
+\inputBNF{SimpleType.bnf}
+\inputBNF{IOCompoundType.bnf}
+\inputBNF{IOStructure.bnf}
+\inputBNF{IOStructureComponent.bnf}
 \end{grammarframe}
 
 Hence, the type of the transmission data may also be a multiply
@@ -393,9 +393,9 @@ elements in a line, the number of lines in a page, and the number of
 pages must be denoted in the structure attribute:
 
 \begin{grammarframe}
-\input{Typology.bnf}
-\input{TypologyDeclaration.bnf}
-\input{TypologySpecification.bnf}
+\inputBNF{Typology.bnf}
+\inputBNF{TypologyDeclaration.bnf}
+\inputBNF{TypologySpecification.bnf}
 \index{DIM@\textbf{DIM}}
 \end{grammarframe}
 
@@ -518,7 +518,7 @@ The possible ways of accessing a data station are determined by the
 access attribute:
 
 \begin{grammarframe}
-\input{AccessAttribute.bnf}
+\inputBNF{AccessAttribute.bnf}
 \end{grammarframe}
 
 \code{DIRECT} \index{DIRECT@\textbf{DIRECT}}
@@ -605,7 +605,7 @@ Before a data station may be used for the first time in a data
 transmission statement, it must be opened by the open statement:
 
 \begin{grammarframe}
-\input{OpenStatement.bnf}
+\inputBNF{OpenStatement.bnf}
 \index{OPEN@\textbf{OPEN}!\textbf{BY}}
 \index{OPEN@\textbf{OPEN}!\textbf{IDF}}
 \index{BY@\textbf{BY}!\textbf{OPEN}}
@@ -623,7 +623,7 @@ open statement.
 
 
 \begin{grammarframe}
-\input{OpenParameter.bnf}
+\inputBNF{OpenParameter.bnf}
 \end{grammarframe}
 
 
@@ -701,7 +701,7 @@ usable again not before the execution of an open statement.
 
 \index{CLOSE@\textbf{CLOSE}}
 \begin{grammarframe}
-\input{CloseStatement.bnf}
+\inputBNF{CloseStatement.bnf}
 \index{CLOSE@\textbf{CLOSE}!CloseStatement}
 \index{BY@\textbf{BY}!\textbf{CLOSE}}
 \end{grammarframe}
@@ -714,7 +714,7 @@ be overwritten by a close statement:
 %%%\x {\bf CAN $\mid$ PRM $\mid$ RST} (Name$\S $ErrorVariable-FIXED)
 %%%\end{front}
 \begin{grammarframe}
-\input{CloseParameter.bnf}
+\inputBNF{CloseParameter.bnf}
 \index{RST@\textbf{RST}!\textbf{CLOSE}}
 \index{CAN@\textbf{CAN}!\textbf{CLOSE}}
 \index{PRM@\textbf{PRM}!\textbf{CLOSE}}
@@ -842,12 +842,12 @@ END; ! measurement
 The general forms of the read and write statements read:
 
 \begin{grammarframe}
-\input{ReadStatement.bnf}
+\inputBNF{ReadStatement.bnf}
 \index{READ@\textbf{READ}!ReadStatement}
 \index{FROM@\textbf{FROM}!\textbf{READ}}
 \index{BY@\textbf{BY}!\textbf{READ}}
 \index{RST@\textbf{RST}!\textbf{READ}}
-\input{WriteStatement.bnf}
+\inputBNF{WriteStatement.bnf}
 \index{WRITE@\textbf{WRITE}!WriteStatement}
 \index{TO@\textbf{TO}!\textbf{WRITE}}
 \index{BY@\textbf{BY}!\textbf{WRITE}}
@@ -859,18 +859,18 @@ expressions. They are not accepted in the read statement.
 
 A slice may be defined as range of the last index of an array.
 \begin{grammarframe}
-\input{ArraySlice.bnf}
+\inputBNF{ArraySlice.bnf}
 
-\input{Position.bnf}
+\inputBNF{Position.bnf}
 \index{BY@\textbf{BY}!Position}
 
-\input{AbsolutePosition.bnf}
+\inputBNF{AbsolutePosition.bnf}
 \index{COL@\textbf{COL}}
 \index{LINE@\textbf{LINE}}
 \index{POS@\textbf{POS}}
 \index{SOP@\textbf{SOP}}
 
-\input{RelativePosition.bnf}
+\inputBNF{RelativePosition.bnf}
 \index{X@\textbf{X}}
 \index{SKIP@\textbf{SKIP}}
 \index{PAGE@\textbf{PAGE}}
@@ -1229,19 +1229,19 @@ GET articleId, quantity, price FROM inputFile BY
 The general forms of the get and put statements read:
 
 \begin{grammarframe}
-\input{GetStatement.bnf}
+\inputBNF{GetStatement.bnf}
 \index{GET@\textbf{GET}!GetStatement}
 \index{FROM@\textbf{FROM}!\textbf{GET}}
 \index{BY@\textbf{BY}!\textbf{GET}}
 \index{RST@\textbf{RST}!\textbf{GET}}
-\input{PutStatement.bnf}
+\inputBNF{PutStatement.bnf}
 \index{PUT@\textbf{PUT}!PutStatement}
 \index{TO@\textbf{TO}!\textbf{PUT}}
 \index{BY@\textbf{BY}!\textbf{PUT}}
 \index{RST@\textbf{RST}!\textbf{PUT}}
-\input{FormatOrPosition.bnf}
-\input{FormatFactor.bnf}
-\input{Format.bnf}
+\inputBNF{FormatOrPosition.bnf}
+\inputBNF{FormatFactor.bnf}
+\inputBNF{Format.bnf}
 \end{grammarframe}
 
 \OpenPEARL{} regards \hyperlink{StringSelection}{string selections} as
@@ -1348,14 +1348,14 @@ in the \code{PUT} statements.
 \index{F@\textbf{F}}
 
 \begin{grammarframe}
-\input{FixedFormat.bnf}
+\inputBNF{FixedFormat.bnf}
 
-\input{FieldWidth.bnf}
+\inputBNF{FieldWidth.bnf}
 \index{FORMAT@\textbf{FORMAT}!\textbf{F}}
 \index{FieldWidth!F-Format}
 \index{F@\textbf{F}!FieldWidth}
 
-\input{DecimalPositions.bnf}
+\inputBNF{DecimalPositions.bnf}
 \index{DecimalPositions!F-Format}
 \index{F@\textbf{F}!DecimalPositions}
 \end{grammarframe}
@@ -1451,12 +1451,12 @@ value       &          & \code{FIXED} & \code{FLOAT}  \\ \hline
 \index{FORMAT@\textbf{FORMAT}!\textbf{E3}}
 
 \begin{grammarframe}
-\input{FloatFormat.bnf}
+\inputBNF{FloatFormat.bnf}
 \index{FieldWidth!E-Format}
 \index{E@\textbf{E}!FieldWidth}
 \index{DecimalPositions!E-Format}
 \index{E@\textbf{E}!DecimalPositions}
-\input{Significance.bnf}
+\inputBNF{Significance.bnf}
 \index{Significance!E-Format}
 \index{E@\textbf{E}!Significance}
 \end{grammarframe}
@@ -1551,7 +1551,7 @@ d+1 , no assignment happens and
 %%%  \removedtext{ $\mid$ {\bf S} (Name$\S $NumberCharactersVariableFixed) }
 %%%\end{front}
 \begin{grammarframe}
-\input{CharacterStringFormat.bnf}
+\inputBNF{CharacterStringFormat.bnf}
 \index{A@\textbf{A}}
 \index{FORMAT@\textbf{FORMAT}!\textbf{A}}
 \end{grammarframe}
@@ -1665,7 +1665,7 @@ The input of the character string '\code{PEARL\_\_}' to a
 \label{sec_dation_b_format}
 
 \begin{grammarframe}
-\input{BitFormat.bnf}
+\inputBNF{BitFormat.bnf}
 \index{FORMAT@\textbf{FORMAT}!\textbf{B},B1,B2,B3,B4}
 \index{B@\textbf{B}}
 \index{B1@\textbf{B1}|see {B}}
@@ -1749,7 +1749,7 @@ AB                         & \code{B4(2)}  &         10101011
 \label{sec_dation_t_format}
 
 \begin{grammarframe}
-\input{TimeFormat.bnf}
+\inputBNF{TimeFormat.bnf}
 \index{T@\textbf{T}}
 \index{FieldWidth!T-Format}
 \index{T@\textbf{T}!FieldWidth}
@@ -1833,7 +1833,7 @@ value               & format  & output \\ \hline
 \label{sec_dation_d_format}
 
 \begin{grammarframe}
-\input{DurationFormat.bnf}
+\inputBNF{DurationFormat.bnf}
 \index{D@\textbf{D}}
 \index{FieldWidth!D-Format}
 \index{D@\textbf{D}!FieldWidth}
@@ -1946,7 +1946,7 @@ The character \_ means a space.
 \label{sec_dation_list_format}
 
 \begin{grammarframe}
-\input{ListFormat.bnf}
+\inputBNF{ListFormat.bnf}
 \index{L@\textbf{L}}
 \index{LIST@\textbf{LIST}|see {L}}
 \index{FORMAT@\textbf{FORMAT}!\textbf{L}}
@@ -2002,7 +2002,7 @@ once. For this, a list with the so-called format declaration is
 introduced.
 
 \begin{grammarframe}
-\input{FormatDeclaration.bnf}
+\inputBNF{FormatDeclaration.bnf}
 \index{FORMAT@\textbf{FORMAT}!Statement}
 \end{grammarframe}
 
@@ -2015,7 +2015,7 @@ A format declared in such a way can be used in a get or put statement,
 stating its identifier:
 
 \begin{grammarframe}
-\input{RFormat.bnf}
+\inputBNF{RFormat.bnf}
 \index{R@\textbf{R}}
 \index{FORMAT@\textbf{FORMAT}!\textbf{R}}
 \end{grammarframe}
@@ -2047,14 +2047,14 @@ respectively, instead of a data station.
 The general forms of the convert statement are:
 
 \begin{grammarframe}
-\input{ConvertStatement.bnf}
-\input{ConvertToStatement.bnf}
+\inputBNF{ConvertStatement.bnf}
+\inputBNF{ConvertToStatement.bnf}
 \index{BY@\textbf{BY}!\textbf{CONVERT}}
 \index{TO@\textbf{TO}!\textbf{CONVERT}}
-\input{ConvertFromStatement.bnf}
+\inputBNF{ConvertFromStatement.bnf}
 \index{FROM@\textbf{FROM}!\textbf{CONVERT}}
-\input{FormatOrPositionConvert.bnf}
-\input{PositionConvert.bnf}
+\inputBNF{FormatOrPositionConvert.bnf}
+\inputBNF{PositionConvert.bnf}
 \index{RST@\textbf{RST}!\textbf{CONVERT}}
 \end{grammarframe}
 
@@ -2096,16 +2096,16 @@ process data, and for the data exchange with user specific drivers,
 respectively. The data station must possess the class attribute BASIC.
 
 \begin{grammarframe}
-\input{TakeStatement.bnf}
+\inputBNF{TakeStatement.bnf}
 \index{TAKE@\textbf{TAKE}}
 \index{BY@\textbf{BY}!\textbf{TAKE}}
 \index{FROM@\textbf{FROM}!\textbf{TAKE}}
 \index{RST@\textbf{RST}!\textbf{TAKE}}
-\input{SendStatement.bnf}
+\inputBNF{SendStatement.bnf}
 \index{SEND@\textbf{SEND}}
 \index{BY@\textbf{BY}!\textbf{SEND}}
 \index{TO@\textbf{TO}!\textbf{SEND}}
-\input{RSTFormat.bnf}
+\inputBNF{RSTFormat.bnf}
 \index{RST@\textbf{RST}!\textbf{SEND}}
 \end{grammarframe}
 

@@ -22,7 +22,7 @@ freely selectable user names can be assigned to them.
 %%%%%\end{removed}
 
 \begin{grammarframe}
-\input{SystemSignalDeclaration.bnf}
+\inputBNF{SystemSignalDeclaration.bnf}
 \end{grammarframe}
 
 
@@ -73,7 +73,7 @@ The general form of the specification of signals reads:
 %%%{\bf SIGNAL} [ GlobalAttribute ] ;
 %%%\end{front}
 \begin{grammarframe}
-\input{SignalSpecification.bnf}
+\inputBNF{SignalSpecification.bnf}
 \index{SIGNAL@\textbf{SIGNAL}}
 \index{SIGNAL@\textbf{SIGNAL}!Specification}
 \end{grammarframe}
@@ -89,7 +89,7 @@ The general form of the specification of signals reads:
 %The declaration of a user defined signal is allowed on module level.
 %
 %\begin{grammarframe}
-%\input{UserSignalDeclaration.bnf}
+%\inputBNF{UserSignalDeclaration.bnf}
 %\index{SIGNAL@\textbf{SIGNAL}!Declaration}
 %\end{grammarframe}
 
@@ -113,15 +113,15 @@ the following statement:
 
 %%%%%\begin{discuss}
 \begin{grammarframe}
-\input{SchedulingSignalReaction.bnf}
+\inputBNF{SchedulingSignalReaction.bnf}
 \index{SIGNAL@\textbf{SIGNAL}!Reaction}
 \index{SIGNAL@\textbf{SIGNAL}!\textbf{ON}}
 \index{ON@\textbf{ON}}
 \index{RST@\textbf{RST}!Signal Reaction}
-%%%%\input{SignalStatement.bnf}
-\input{SignalReaction.bnf}
-\input{SignalFinalStatement.bnf}
-%\input{InduceStatement.bnf}
+%%%%\inputBNF{SignalStatement.bnf}
+\inputBNF{SignalReaction.bnf}
+\inputBNF{SignalFinalStatement.bnf}
+%\inputBNF{InduceStatement.bnf}
 %\index{INDUCE@\textbf{INDUCE}}
 \index{SIGNAL@\textbf{SIGNAL}!\textbf{INDUCE}}
 \end{grammarframe}
@@ -194,7 +194,7 @@ can be simulated analogously to the occurrence of an interrupt:
 %%%\end{removed}
 %%%\begin{added}
 \begin{grammarframe}
-\input{InduceStatement.bnf}
+\inputBNF{InduceStatement.bnf}
 \index{INDUCE@\textbf{INDUCE}}
 \end{grammarframe}
 

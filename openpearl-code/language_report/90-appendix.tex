@@ -200,23 +200,23 @@ korrekt?
 \end{discuss}
 \subsection{Program}    % A 3.1
 
-\input{Program.bnf}
+\inputBNF{Program.bnf}
 
-\input{Module.bnf}
+\inputBNF{Module.bnf}
 
 \subsection{System Part}   % A 3.2
 
-\input{SystemPart.bnf}
+\inputBNF{SystemPart.bnf}
 
-\input{UserNameDeclaration.bnf}
-\input{SystemDationDeclaration.bnf}
-\input{SystemSignalDeclaration.bnf}
-\input{SystemInterruptDeclaration.bnf}
+\inputBNF{UserNameDeclaration.bnf}
+\inputBNF{SystemDationDeclaration.bnf}
+\inputBNF{SystemSignalDeclaration.bnf}
+\inputBNF{SystemInterruptDeclaration.bnf}
 
-\input{ConfigurationElement.bnf}
-\input{ListOfConstants.bnf}
-\input{ConstantParameter.bnf}
-\input{Association.bnf}
+\inputBNF{ConfigurationElement.bnf}
+\inputBNF{ListOfConstants.bnf}
+\inputBNF{ConstantParameter.bnf}
+\inputBNF{Association.bnf}
 
 %%%\begin{removed}
 %%%nngz ::= \\
@@ -225,17 +225,17 @@ korrekt?
 
 
 \subsection{Basic Elements}    % A 3.3 
-\input{Digit.bnf} 
-\input{Letter.bnf}
-\input{Identifier.bnf}
+\inputBNF{Digit.bnf} 
+\inputBNF{Letter.bnf}
+\inputBNF{Identifier.bnf}
 
-\input{Constant.bnf}
+\inputBNF{Constant.bnf}
 
-\input{Integer.bnf} 
+\inputBNF{Integer.bnf} 
 
-\input{IntegerWithoutPrecision.bnf}
+\inputBNF{IntegerWithoutPrecision.bnf}
 
-\input{Precision.bnf}
+\inputBNF{Precision.bnf}
 
 \begin{grammarframe}
 \htgt{FloatingPointNumber} ::=\\
@@ -289,21 +289,21 @@ korrekt?
 	$\mid$ \hlink{FloatingPointNumberWithoutPrecision} \} \kw{SEC}
 \end{grammarframe}
 
-\input{ConstantExpression.bnf}
+\inputBNF{ConstantExpression.bnf}
 
-\input{ConstantFIXEDExpression.bnf} 
+\inputBNF{ConstantFIXEDExpression.bnf} 
         
-\input{Term.bnf}
+\inputBNF{Term.bnf}
 
-\input{Factor.bnf}
+\inputBNF{Factor.bnf}
 
 \subsection{Problem Part}   % A 3.4
 
-\input{ProblemPart.bnf}
+\inputBNF{ProblemPart.bnf}
 
 \subsubsection{Declaration}    % A 3.4.1
 
-\input{Declaration.bnf}
+\inputBNF{Declaration.bnf}
 
 %%%%%\begin{removed}
 %%%%%\x $\mid$ OperatorDefinition\\
@@ -311,23 +311,23 @@ korrekt?
 %%%%%\end{removed}
 
 
-\input{LengthDefinition.bnf} 
+\inputBNF{LengthDefinition.bnf} 
 
-\input{TypeDefinition.bnf}
-\input{Type.bnf}
-\input{TypeFixed.bnf}
-\input{TypeFloat.bnf}
-\input{TypeBitString.bnf}
-\input{TypeCharacterString.bnf}
-\input{TypeClock.bnf}
-\input{TypeDuration.bnf}
+\inputBNF{TypeDefinition.bnf}
+\inputBNF{Type.bnf}
+\inputBNF{TypeFixed.bnf}
+\inputBNF{TypeFloat.bnf}
+\inputBNF{TypeBitString.bnf}
+\inputBNF{TypeCharacterString.bnf}
+\inputBNF{TypeClock.bnf}
+\inputBNF{TypeDuration.bnf}
 
-\input{LengthOfString.bnf}
+\inputBNF{LengthOfString.bnf}
 
-\input{ScalarVariableDeclaration.bnf}
-%%%\input{VariableDenotation.bnf}
-\input{ScalarDeclareDataSentence.bnf}
-\input{TypeAttribute.bnf}
+\inputBNF{ScalarVariableDeclaration.bnf}
+%%%\inputBNF{VariableDenotation.bnf}
+\inputBNF{ScalarDeclareDataSentence.bnf}
+\inputBNF{TypeAttribute.bnf}
 
 \begin{discuss}
 sind DeclareSentence und DationAttribute noch notwendig?
@@ -355,11 +355,11 @@ Doppelte Regel mit DationDeclaration
 \end{discuss}
 
 
-\input{OneIdentifierOrList.bnf}
+\inputBNF{OneIdentifierOrList.bnf}
 
-\input{DimensionAttribute.bnf}
+\inputBNF{DimensionAttribute.bnf}
 
-\input{DimensionBoundaries.bnf}
+\inputBNF{DimensionBoundaries.bnf}
  
 \begin{grammarframe}       
 \htgt{ProblemDataAttribute} ::=\\
@@ -368,43 +368,43 @@ Doppelte Regel mit DationDeclaration
 \x [ \hlink{GlobalAttribute} ] [ \hlink{InitialisationAttribute} ]\\
 \end{grammarframe}       
 
-\input{SimpleType.bnf}
+\inputBNF{SimpleType.bnf}
 
 \begin{grammarframe}       
 \htgt{StructuredType} ::=\\
 \x \hlink{TypeStructure} $\mid$ \hlink{Identifier}$\S $ForNewDefinedType\\
 
-% war schon mal da \input{TypeStructure.bnf}
+% war schon mal da \inputBNF{TypeStructure.bnf}
 \end{grammarframe}
 
-\input{StructureComponent.bnf}
+\inputBNF{StructureComponent.bnf}
 
-\input{TypeAttributeInStructureComponent.bnf}
+\inputBNF{TypeAttributeInStructureComponent.bnf}
 
-\input{TypeReference.bnf}
+\inputBNF{TypeReference.bnf}
 
-\input{VirtualDimensionList.bnf}
+\inputBNF{VirtualDimensionList.bnf}
 
 %%%\begin{removed}
-%%%\input{Type-VOID.bnf}
+%%%\inputBNF{Type-VOID.bnf}
 %%%\end{removed}
 
-\input{ArrayDeclaration.bnf}
-\input{ArrayDenotation.bnf}
-\input{TypeAttributeForArray.bnf}
-% war schon mal da \input{DimensionAttribute.bnf}
-% war schon mal da \input{DimensionBoundaries.bnf}
+\inputBNF{ArrayDeclaration.bnf}
+\inputBNF{ArrayDenotation.bnf}
+\inputBNF{TypeAttributeForArray.bnf}
+% war schon mal da \inputBNF{DimensionAttribute.bnf}
+% war schon mal da \inputBNF{DimensionBoundaries.bnf}
 
-\input{ArraySpecification.bnf}
-\input{ArrayDenotationS.bnf}
+\inputBNF{ArraySpecification.bnf}
+\inputBNF{ArrayDenotationS.bnf}
 
-\input{StructureDeclaration.bnf}
-\input{StructureDenotation.bnf}
-\input{TypeStructure.bnf}
-% ist schon mal da  \input{StructureComponent.bnf}
-% ist schon mal da \input{TypeAttributeInStructureComponent.bnf}
-\input{StructureSpecification.bnf}
-\input{StructureDenotationS.bnf}
+\inputBNF{StructureDeclaration.bnf}
+\inputBNF{StructureDenotation.bnf}
+\inputBNF{TypeStructure.bnf}
+% ist schon mal da  \inputBNF{StructureComponent.bnf}
+% ist schon mal da \inputBNF{TypeAttributeInStructureComponent.bnf}
+\inputBNF{StructureSpecification.bnf}
+\inputBNF{StructureDenotationS.bnf}
 
 \begin{grammarframe}
 \htgt{SemaAttribute} ::=\\
@@ -416,21 +416,21 @@ Doppelte Regel mit DationDeclaration
 \x \kw{BOLT} [ \hlink{GlobalAttribute} ]\\
 \end{grammarframe}
 
-\input{GlobalAttribute.bnf}
+\inputBNF{GlobalAttribute.bnf}
 
-\input{InitialisationAttribute.bnf}
+\inputBNF{InitialisationAttribute.bnf}
 
-\input{InitElement.bnf}
+\inputBNF{InitElement.bnf}
 
 
-\input{DationDeclaration.bnf}
+\inputBNF{DationDeclaration.bnf}
 
-%%%\input{DationAttribute.bnf}
+%%%\inputBNF{DationAttribute.bnf}
 
-\input{TypeDationSystem.bnf}
-\input{TypeDation.bnf}
+\inputBNF{TypeDationSystem.bnf}
+\inputBNF{TypeDation.bnf}
 
-\input{SourceSinkAttribute.bnf}
+\inputBNF{SourceSinkAttribute.bnf}
 
 %%%%%\begin{removed}
 %%%%%ClassAttribute ::= \\
@@ -438,52 +438,52 @@ Doppelte Regel mit DationDeclaration
 %%%%%\end{removed}
 
 %%%%%\begin{added}
-\input{ClassAttribute.bnf}
+\inputBNF{ClassAttribute.bnf}
 %%%%%\end{added}
 
-\input{TypeOfTransmissionData.bnf}
-\input{IOCompoundType.bnf}
-\input{IOStructure.bnf}
-\input{IOStructureComponent.bnf}
+\inputBNF{TypeOfTransmissionData.bnf}
+\inputBNF{IOCompoundType.bnf}
+\inputBNF{IOStructure.bnf}
+\inputBNF{IOStructureComponent.bnf}
 
-\input{Typology.bnf}
-\input{TypologyDeclaration.bnf}
-\input{TypologySpecification.bnf}
+\inputBNF{Typology.bnf}
+\inputBNF{TypologyDeclaration.bnf}
+\inputBNF{TypologySpecification.bnf}
 
-\input{AccessAttribute.bnf}
+\inputBNF{AccessAttribute.bnf}
 
-\input{FormatDeclaration.bnf}
+\inputBNF{FormatDeclaration.bnf}
 
-\input{ProcedureDeclaration.bnf}
+\inputBNF{ProcedureDeclaration.bnf}
 
-\input{ProcedureBody.bnf}
+\inputBNF{ProcedureBody.bnf}
 
-\input{ListOfFormalParameters.bnf}
+\inputBNF{ListOfFormalParameters.bnf}
         
-\input{FormalParameter.bnf}
+\inputBNF{FormalParameter.bnf}
 
-\input{ParameterType.bnf}
+\inputBNF{ParameterType.bnf}
 
-\input{TypeRealTimeObject.bnf}
+\inputBNF{TypeRealTimeObject.bnf}
 
-\input{ResultAttribute.bnf}
+\inputBNF{ResultAttribute.bnf}
 
-\input{ResultType.bnf}
+\inputBNF{ResultType.bnf}
 
-\input{TaskDeclaration.bnf}
+\inputBNF{TaskDeclaration.bnf}
 
-\input{TaskBody.bnf}
+\inputBNF{TaskBody.bnf}
         
-\input{PriorityAttribute.bnf}
+\inputBNF{PriorityAttribute.bnf}
 
 %%%%%\begin{removed}
-%%%%%\input{OperatorDefinition.bnf}
+%%%%%\inputBNF{OperatorDefinition.bnf}
 %%%%%
-%%%%%\input{OpName.bnf}
+%%%%%\inputBNF{OpName.bnf}
 %%%%%
-%%%%%\input{OpParameter.bnf}
+%%%%%\inputBNF{OpParameter.bnf}
 %%%%%
-%%%%%\input{PrecedenceDefinition.bnf}
+%%%%%\inputBNF{PrecedenceDefinition.bnf}
 %%%%%
 %%%%%\end{removed}
 
@@ -491,8 +491,8 @@ Doppelte Regel mit DationDeclaration
 \begin{discuss}
 Auswirkung auf alte Teile pruefen
 
-\input{ScalarVariableSpecification.bnf}
-\input{VariableDenotationS.bnf}
+\inputBNF{ScalarVariableSpecification.bnf}
+\inputBNF{VariableDenotationS.bnf}
 \end{discuss}
 
 \begin{grammarframe}
@@ -531,48 +531,48 @@ Auswirkung auf alte Teile pruefen
 %%%	[ \hlink{VirtualDimensionList} ]\\
 %%%\x \hlink{ParameterType} [ {\bf IDENTICAL $\mid$ IDENT} ]\\
 %%%\end{removed}
-\input{ProcedureSpecification.bnf}
-\input{ListOfParametersForSPC.bnf}
-\input{ParameterSpecification.bnf}
-\input{TypeProcedure.bnf}
+\inputBNF{ProcedureSpecification.bnf}
+\inputBNF{ListOfParametersForSPC.bnf}
+\inputBNF{ParameterSpecification.bnf}
+\inputBNF{TypeProcedure.bnf}
 
 \begin{grammarframe}
 \htgt{TaskUsageAttribute} ::=\\
 \x \kw{TASK} \hlink{GlobalAttribute}
 \end{grammarframe}
 
-\input{Identification.bnf}
+\inputBNF{Identification.bnf}
 
 
-\input{IdentificationAttribute.bnf}
+\inputBNF{IdentificationAttribute.bnf}
 
 \subsection{Expressions}    % A 3.4.3
 
-\input{Expression.bnf}
+\inputBNF{Expression.bnf}
 
-\input{MonadicOperator.bnf}
+\inputBNF{MonadicOperator.bnf}
 
-\input{DyadicOperator.bnf}
+\inputBNF{DyadicOperator.bnf}
 
-\input{Operand.bnf}
+\inputBNF{Operand.bnf}
 
-\input{Name.bnf}
+\inputBNF{Name.bnf}
 
-\input{Index.bnf}
+\inputBNF{Index.bnf}
 
-\input{FunctionCall.bnf}
+\inputBNF{FunctionCall.bnf}
 
-\input{ListOfActualParameters.bnf}
+\inputBNF{ListOfActualParameters.bnf}
 
 %%%\begin{discuss}
 %%%aus Sprache gestrichen
 %%%
-%%%\input{ConditionalExpression.bnf}  %%% noch nicht in front genutzt!
+%%%\inputBNF{ConditionalExpression.bnf}  %%% noch nicht in front genutzt!
 %%%\end{discuss}
 
-\input{Dereferentiation.bnf}
+\inputBNF{Dereferentiation.bnf}
 
-\input{StringSelection.bnf}
+\inputBNF{StringSelection.bnf}
 
 \subsection{Statements}    % A 3.4.4
 
@@ -585,40 +585,40 @@ Auswirkung auf alte Teile pruefen
 \x $\mid$ \hlink{RealTimeStatement} $\mid$ \hlink{ConvertStatement} $\mid$ \hlink{I/O-Statement}\\
 \end{grammarframe}
 
-\input{EmptyStatement.bnf}
+\inputBNF{EmptyStatement.bnf}
 
-\input{Assignment.bnf}
-\input{ScalarAssignment.bnf}
-\input{StructureAssignment.bnf}
-\input{RefProcAssignment.bnf}
+\inputBNF{Assignment.bnf}
+\inputBNF{ScalarAssignment.bnf}
+\inputBNF{StructureAssignment.bnf}
+\inputBNF{RefProcAssignment.bnf}
 
-\input{Block.bnf}
+\inputBNF{Block.bnf}
 
-\input{SequentialControlStatement.bnf}
+\inputBNF{SequentialControlStatement.bnf}
 
-\input{IfStatement.bnf}
+\inputBNF{IfStatement.bnf}
 
-\input{CaseStatement.bnf}
+\inputBNF{CaseStatement.bnf}
 
-\input{CaseStatement1.bnf}
+\inputBNF{CaseStatement1.bnf}
 
-\input{CaseStatement2.bnf}
+\inputBNF{CaseStatement2.bnf}
 
-\input{CaseIndex.bnf}
+\inputBNF{CaseIndex.bnf}
 
-\input{CaseList.bnf}
+\inputBNF{CaseList.bnf}
 
-\input{IndexRange.bnf}
+\inputBNF{IndexRange.bnf}
 
-\input{LoopStatement.bnf}
+\inputBNF{LoopStatement.bnf}
         
-\input{ExitStatement.bnf}
+\inputBNF{ExitStatement.bnf}
 
-\input{ProcedureCall.bnf}
+\inputBNF{ProcedureCall.bnf}
 
-\input{ReturnStatement.bnf}
+\inputBNF{ReturnStatement.bnf}
 
-\input{GoToStatement.bnf}
+\inputBNF{GoToStatement.bnf}
 
 \begin{grammarframe}
 \htgt{RealTimeStatement} ::=\\
@@ -631,31 +631,31 @@ Auswirkung auf alte Teile pruefen
 \x $\mid$ \hlink{TaskResuming} $\mid$ \hlink{TaskPreventing}\\
 \end{grammarframe}
 
-\input{TaskStarting.bnf}
+\inputBNF{TaskStarting.bnf}
 
-\input{SimpleStartCondition.bnf}
+\inputBNF{SimpleStartCondition.bnf}
 
-\input{PriorityExpression.bnf}
+\inputBNF{PriorityExpression.bnf}
 
-\input{StartCondition.bnf}
+\inputBNF{StartCondition.bnf}
 
-\input{Frequency.bnf}
+\inputBNF{Frequency.bnf}
 
-\input{TaskTerminating.bnf}
+\inputBNF{TaskTerminating.bnf}
 
-\input{TaskSuspending.bnf}
+\inputBNF{TaskSuspending.bnf}
 
-\input{TaskContinuing.bnf}
+\inputBNF{TaskContinuing.bnf}
 
-\input{TaskResuming.bnf}
+\inputBNF{TaskResuming.bnf}
 
-\input{TaskPreventing.bnf}
+\inputBNF{TaskPreventing.bnf}
 
-\input{TaskCoordinationStatement.bnf}
-\input{SemaStatement.bnf}
-\input{BoltStatement.bnf}
+\inputBNF{TaskCoordinationStatement.bnf}
+\inputBNF{SemaStatement.bnf}
+\inputBNF{BoltStatement.bnf}
 
-\input{InterruptStatement.bnf}
+\inputBNF{InterruptStatement.bnf}
 
 %%%%%\begin{removed}
 %%%%%SchedulingSignalReaction ::=\\
@@ -672,22 +672,22 @@ Auswirkung auf alte Teile pruefen
 %%%%%\end{removed}
 
 %%%%%\begin{added}
-\input{UserSignalDeclaration.bnf}
-\input{SchedulingSignalReaction.bnf}
-\input{SignalReaction.bnf}
-\input{SignalFinalStatement.bnf}
-\input{InduceStatement.bnf} 
+\inputBNF{UserSignalDeclaration.bnf}
+\inputBNF{SchedulingSignalReaction.bnf}
+\inputBNF{SignalReaction.bnf}
+\inputBNF{SignalFinalStatement.bnf}
+\inputBNF{InduceStatement.bnf} 
 %%%%%\end{added}
 
-\input{ConvertStatement.bnf}
+\inputBNF{ConvertStatement.bnf}
 
-\input{ConvertToStatement.bnf}
+\inputBNF{ConvertToStatement.bnf}
 
-\input{ConvertFromStatement.bnf}
+\inputBNF{ConvertFromStatement.bnf}
 
-\input{FormatOrPositionConvert.bnf}
+\inputBNF{FormatOrPositionConvert.bnf}
 
-\input{PositionConvert.bnf}
+\inputBNF{PositionConvert.bnf}
 
 \begin{grammarframe}
 \htgt{I/O-Statement} ::=\\
@@ -697,22 +697,22 @@ Auswirkung auf alte Teile pruefen
 \x $\mid$ \hlink{SendStatement} $\mid$ \hlink{TakeStatement}\\
 \end{grammarframe}
          
-\input{OpenStatement.bnf}
+\inputBNF{OpenStatement.bnf}
 
-\input{OpenParameter.bnf}
+\inputBNF{OpenParameter.bnf}
 
-\input{CloseStatement.bnf}
+\inputBNF{CloseStatement.bnf}
 
-\input{CloseParameter.bnf}
+\inputBNF{CloseParameter.bnf}
 
-\input{PutStatement.bnf}
+\inputBNF{PutStatement.bnf}
 
-\input{GetStatement.bnf}
+\inputBNF{GetStatement.bnf}
 
 
-\input{WriteStatement.bnf}
+\inputBNF{WriteStatement.bnf}
         
-\input{ReadStatement.bnf}
+\inputBNF{ReadStatement.bnf}
         
 %%%%%\begin{removed}
 %%%%%SendStatement ::=\\
@@ -730,17 +730,17 @@ Auswirkung auf alte Teile pruefen
 %%%%%\end{removed}
 
 %%%%%\begin{added}
-\input{SendStatement.bnf} 
+\inputBNF{SendStatement.bnf} 
 
-\input{TakeStatement.bnf}
+\inputBNF{TakeStatement.bnf}
 
-\input{RSTFormat.bnf}
+\inputBNF{RSTFormat.bnf}
 
 %%%%%\end{added}
 
-\input{ArraySlice.bnf}
+\inputBNF{ArraySlice.bnf}
 
-\input{FormatOrPosition.bnf}
+\inputBNF{FormatOrPosition.bnf}
       
 %%%%%\begin{removed}  
 %%%%%Factor ::=\\
@@ -749,26 +749,26 @@ Auswirkung auf alte Teile pruefen
 %%%%%.. and sustituted Factor by FormatFactor in Convert and Put/GET statements
 %%%%%\end{removed}  
 %%%%%\begin{added}  
-\input{FormatFactor.bnf}
+\inputBNF{FormatFactor.bnf}
 
 %%%%%\end{added}  
 
-\input{Format.bnf}
-\input{FixedFormat.bnf}
-\input{FloatFormat.bnf}
-\input{CharacterStringFormat.bnf}
-\input{BitFormat.bnf}
-\input{TimeFormat.bnf}
-\input{DurationFormat.bnf}
-\input{ListFormat.bnf}
-\input{RFormat.bnf}
-\input{FieldWidth.bnf}
-\input{DecimalPositions.bnf}
-\input{Significance.bnf}
+\inputBNF{Format.bnf}
+\inputBNF{FixedFormat.bnf}
+\inputBNF{FloatFormat.bnf}
+\inputBNF{CharacterStringFormat.bnf}
+\inputBNF{BitFormat.bnf}
+\inputBNF{TimeFormat.bnf}
+\inputBNF{DurationFormat.bnf}
+\inputBNF{ListFormat.bnf}
+\inputBNF{RFormat.bnf}
+\inputBNF{FieldWidth.bnf}
+\inputBNF{DecimalPositions.bnf}
+\inputBNF{Significance.bnf}
 
-\input{Position.bnf}
-\input{AbsolutePosition.bnf}
-\input{RelativePosition.bnf}
+\inputBNF{Position.bnf}
+\inputBNF{AbsolutePosition.bnf}
+\inputBNF{RelativePosition.bnf}
 
 \twocolumn[\section{List of Keywords with Shortforms}   % A 4
 The denotation behind the keyword refers to the paragraph where it

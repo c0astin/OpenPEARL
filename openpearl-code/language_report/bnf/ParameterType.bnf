@@ -1,7 +1,8 @@
 \htgt{ParameterType} ::=\\
-\x \{ \hlink{SimpleType} $\mid$
-      \hlink{TypeReference} \} $\mid$   
+\x  \hlink{SimpleType} $\mid$
+      \hlink{TypeReference}  $\mid$   
       \hlink{TypeStructure} \\
 \x $\mid$ \hlink{Identifier}\S ForType $\mid$ \hlink{TypeDation} 
    $\mid$ \hlink{TypeRealTimeObject}
+   $\mid$ \hlink{TypeSignal}
 

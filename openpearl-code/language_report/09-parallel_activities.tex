@@ -85,13 +85,13 @@ END; ! output
 The general form of a task declaration reads:
 
 \begin{grammarframe}
-\input{TaskDeclaration.bnf}
+\inputBNF{TaskDeclaration.bnf}
 \index{TASK@\textbf{TASK}}
 \index{MAIN@\textbf{MAIN}}
-\input{PriorityAttribute.bnf}
+\inputBNF{PriorityAttribute.bnf}
 \index{PRIO@\textbf{PRIO}}
 \index{PRIORITY@\textbf{PRIORITY}|see {PRIO}}
-\input{TaskBody.bnf}
+\inputBNF{TaskBody.bnf}
 \end{grammarframe}
 
 If no priority is given in a task declaration, priority 255 is assumed.
@@ -109,7 +109,7 @@ the \code{PrioNotMappableSignal} is induced.
 The general form of a task specification reads:
 
 \begin{grammarframe}
-\input{TaskSpecification.bnf}
+\inputBNF{TaskSpecification.bnf}
 \index{SPC@\textbf{SPC}!Task}
 \end{grammarframe}
 
@@ -133,7 +133,7 @@ objects of type \code{TASK}. The declaration of corresponding reference
 variables can take place like this:
 
 \begin{grammarframe}
-\input{TaskReferenceDeclaration.bnf}
+\inputBNF{TaskReferenceDeclaration.bnf}
 \index{DCL@\textbf{DCL}!Task Reference}
 \index{REF@\textbf{REF}!Task Reference}
 \end{grammarframe}
@@ -141,7 +141,7 @@ variables can take place like this:
 The general form of the specification of task reference variables reads:
 
 \begin{grammarframe}
-\input{TaskReferenceSpecification.bnf}
+\inputBNF{TaskReferenceSpecification.bnf}
 \index{SPC@\textbf{SPC}!Task Reference}
 \end{grammarframe}
 
@@ -219,7 +219,7 @@ ptrTask := TASK;  ! provides address of the task containing
 The general form of task reference assignment reads:
 
 \begin{grammarframe}
-\input{RefTaskAssignment.bnf}
+\inputBNF{RefTaskAssignment.bnf}
 \index{Assignement!Task Reference}
 \end{grammarframe}
 
@@ -327,7 +327,7 @@ dependence of time instants and interrupts. Thus, a task must first be
 syntax
 
 \begin{grammarframe}
-\input{TaskStarting.bnf}
+\inputBNF{TaskStarting.bnf}
 \end{grammarframe}
 
 The start itself is managed by a real time operating system. If
@@ -350,12 +350,12 @@ With the start condition, tasks can be scheduled for cyclic (repeated)
 start, in accordance with the syntax definition
 
 \begin{grammarframe}
-\input{StartCondition.bnf}
+\inputBNF{StartCondition.bnf}
 \index{AT@\textbf{AT}}
 \index{AFTER@\textbf{AFTER}}
 \index{WHEN@\textbf{WHEN}}
 
-\input{Frequency.bnf}
+\inputBNF{Frequency.bnf}
 \index{ALL@\textbf{ALL}}
 \index{UNTIL@\textbf{UNTIL}}
 \index{DURING@\textbf{DURING}}
@@ -504,8 +504,8 @@ statement.
 %%%\x \{ {\bf PRIORITY $\mid$ PRIO} \} Expression$\S $WithPositiveIntegerAsValue
 %%%\end{front}
 %%%\begin{grammar}
-%%%\input{TaskStarting.bnf}
-%%%\input{PriorityExpression.bnf}
+%%%\inputBNF{TaskStarting.bnf}
+%%%\inputBNF{PriorityExpression.bnf}
 %%%\end{grammar}
 %%%\begin{discuss}
 %%%TaskStarting already inserted in sec start condition
@@ -826,7 +826,7 @@ The premature termination of a task is achieved by following
 statement:
 
 \begin{grammarframe}
-\input{TaskTerminating.bnf}
+\inputBNF{TaskTerminating.bnf}
 \index{TERMINATE@\textbf{TERMINATE}}
 \index{TASK@\textbf{TASK}!Termination}
 \end{grammarframe}
@@ -852,7 +852,7 @@ Possible problem situations:
 By executing the statement
 
 \begin{grammarframe}
-\input{TaskSuspending.bnf}
+\inputBNF{TaskSuspending.bnf}
 \index{SUSPEND@\textbf{SUSPEND}}
 \index{TASK@\textbf{TASK}!Suspending}
 \end{grammarframe}
@@ -884,11 +884,11 @@ time, after a certain duration or after the occurrence of an interrupt by
 the following statement:
 
 \begin{grammarframe}
-\input{TaskContinuing.bnf}
+\inputBNF{TaskContinuing.bnf}
 \index{CONTINUE@\textbf{CONTINUE}}
 \index{TASK@\textbf{TASK}!Continuation}
 
-\input{SimpleStartCondition.bnf}
+\inputBNF{SimpleStartCondition.bnf}
 \index{AT@\textbf{AT}}
 \index{AFTER@\textbf{AFTER}}
 \index{WHEN@\textbf{WHEN}}
@@ -1261,7 +1261,7 @@ interrupt, respectively, (if it is to be delayed), the following
 statement is to be executed:
 
 \begin{grammarframe}
-\input{TaskResuming.bnf}
+\inputBNF{TaskResuming.bnf}
 \index{RESUME@\textbf{RESUME}}
 \index{Task!Delay}
 \end{grammarframe}
@@ -1304,7 +1304,7 @@ i.e., to take care that the start conditions related to this task become
 ineffective. This can be achieved with the following statement:
 
 \begin{grammarframe}
-\input{TaskPreventing.bnf}
+\inputBNF{TaskPreventing.bnf}
 \index{PREVENT@\textbf{PREVENT}}
 \index{Task!De-schedule}
 \end{grammarframe}
@@ -1655,12 +1655,12 @@ The general forms for the declaration of semaphore variables as well as
 locking and release statements read:
 
 \begin{grammarframe}
-\input{SemaDeclaration.bnf}
+\inputBNF{SemaDeclaration.bnf}
 \index{DCL@\textbf{DCL}!Semaphore}
 \index{SEMA@\textbf{SEMA}}
 \index{PRESET@\textbf{PRESET}}
-\input{SemaStatement.bnf}
-\input{TRYOperator.bnf}
+\inputBNF{SemaStatement.bnf}
+\inputBNF{TRYOperator.bnf}
 \end{grammarframe}
 
 
@@ -1683,7 +1683,7 @@ variables \code{s1} and \code{s2}, respectively.
 The general form for the specification of semaphore variables reads:
 
 \begin{grammarframe}
-\input{SemaSpecification.bnf}
+\inputBNF{SemaSpecification.bnf}
 \end{grammarframe}
 
 %%%\begin{added}
@@ -1818,13 +1818,13 @@ semaphore variables.
 Generally, bolt variables can be declared and used as follows:
 
 \begin{grammarframe}
-\input{BoltDeclaration.bnf}
+\inputBNF{BoltDeclaration.bnf}
 \index{BOLT@\textbf{BOLT}}
 \index{DCL@\textbf{DCL}!Bolt}
 
-\input{BoltSpecification.bnf}
+\inputBNF{BoltSpecification.bnf}
 \index{SPC@\textbf{SPC}!Bolt}
-\input{BoltStatement.bnf}
+\inputBNF{BoltStatement.bnf}
 \index{ENTER@\textbf{ENTER}}
 \index{LEAVE@\textbf{LEAVE}}
 \index{RESERVE@\textbf{RESERVE}}
@@ -1904,10 +1904,10 @@ END; ! supply
 The general form of an interrupt declaration and specification reads:
 
 \begin{grammarframe}
-\input{SystemInterruptDeclaration.bnf}
+\inputBNF{SystemInterruptDeclaration.bnf}
 \index{INTERRUPT@\textbf{INTERRUPT}!System Part}
 
-\input{InterruptSpecification.bnf}
+\inputBNF{InterruptSpecification.bnf}
 \index{INTERRUPT@\textbf{INTERRUPT}!Specification}
 \index{SPC@\textbf{SPC}!Interrupt}
 \end{grammarframe}
@@ -1933,7 +1933,7 @@ occurs, a disable statement is to be executed for this purpose, which
 in turn can be revoked again by executing an enable statement.
 
 \begin{grammarframe}
-\input{InterruptStatement.bnf}
+\inputBNF{InterruptStatement.bnf}
 \index{ENABLE@\textbf{ENABLE}}
 \index{DISABLE@\textbf{DISABLE}}
 \index{TRIGGER@\textbf{TRIGGER}}

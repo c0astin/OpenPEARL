@@ -18,7 +18,7 @@ Such control statements are
 \end{itemize}
 
 \begin{grammarframe}
-\input{SequentialControlStatement.bnf}
+\inputBNF{SequentialControlStatement.bnf}
 \end{grammarframe}
 
 %%%\begin{added}
@@ -30,7 +30,7 @@ The empty statement  consists of one semicolon only and has no effects.
 The general form of the empty statement reads:
 
 \begin{grammarframe}
-\input{EmptyStatement.bnf}
+\inputBNF{EmptyStatement.bnf}
 \end{grammarframe}
 
 %%%\end{added}
@@ -44,7 +44,7 @@ on the result of an expression with which statement the program
 execution is to continued.
 
 \begin{grammarframe}
-\input{IfStatement.bnf}
+\inputBNF{IfStatement.bnf}
 \index{IF@\textbf{IF}}
 \index{THEN@\textbf{THEN}}
 \index{ELSE@\textbf{ELSE}}
@@ -98,8 +98,8 @@ allows only integers as distinction criteria; the newer one permits also
 characters. At first, the older form is described:
 
 \begin{grammarframe}
-\input{CaseStatement.bnf}
-\input{CaseStatement1.bnf}
+\inputBNF{CaseStatement.bnf}
+\inputBNF{CaseStatement1.bnf}
 \index{CASE@\textbf{CASE}}
 \index{CASE@\textbf{CASE}!\textbf{OUT}}
 \index{CASE@\textbf{CASE}!\textbf{ALT}}
@@ -174,14 +174,14 @@ out'').
 The second form of the statement selection has the following form:
 
 \begin{grammarframe}
-\input{CaseStatement2.bnf}
+\inputBNF{CaseStatement2.bnf}
 \index{CASE@\textbf{CASE}}
 \index{CASE@\textbf{CASE}!\textbf{OUT}}
 \index{CASE@\textbf{CASE}!\textbf{FIN}}
 \index{CASE@\textbf{CASE}!\textbf{ALT}}
-\input{CaseIndex.bnf}
-\input{CaseList.bnf}
-\input{IndexRange.bnf}
+\inputBNF{CaseIndex.bnf}
+\inputBNF{CaseList.bnf}
+\inputBNF{IndexRange.bnf}
 \end{grammarframe}
 
 All given constants must be of type CaseIndex expression; \code{CHAR(1)} or
@@ -266,7 +266,7 @@ END;
 In general, such ``program loops'' are constructed like this:
 
 \begin{grammarframe}
-\input{LoopStatement.bnf}
+\inputBNF{LoopStatement.bnf}
 \index{FOR@\textbf{FOR}}
 \index{FROM@\textbf{FROM}!\textbf{FOR}}
 \index{TO@\textbf{TO}!\textbf{FOR}}
@@ -452,7 +452,7 @@ a range exception.
 \index{Statement!\textbf{GOTO}}
 
 \begin{grammarframe}
-\input{GoToStatement.bnf}
+\inputBNF{GoToStatement.bnf}
 \index{GOTO@\textbf{GOTO}}
 \end{grammarframe}
 
@@ -488,7 +488,7 @@ deliberately, which must have an identifier (the jump target) at the
 corresponding end.
 
 \begin{grammarframe}
-\input{ExitStatement.bnf}
+\inputBNF{ExitStatement.bnf}
 \index{EXIT@\textbf{EXIT}}
 \end{grammarframe}
 
