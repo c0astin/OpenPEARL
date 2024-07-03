@@ -1,0 +1,345 @@
+* Präprozessor
+
+Der Präprozessor führt Transformationen an dem OpenPEARL Quelltext aus
+und übergibt diese danach an den Übersetzer.
+
+** Präprozessor-Anweisungen
+
+Präprozessoranweisungen müssen stets am Zeilenanfang stehen und dürfen
+bei Bedarf um zu Beispiel eine bessere Strukturierung zu erreichen,
+eingerückt werden. 
+
+Die Anweisungen richten sich weitgehend an denen aus RTOS-UH bekannten
+Befehlen aus. Die bei RTOS-UH notwendige Abschluss einer Anweisung mit
+einem Semikolon ist beim OpenPEARL-Präprozessor optional.
+
+| Anweisung | Funktion                                              |
+|-----------+-------------------------------------------------------|
+| #DEFINE   | Definiere eine benamte Konstante                      |
+| #ENDEF    | Schließt einen =#DEFINE=-Block ab                     |
+| #UNDEF    | Undefiniere eine definierte Konstante                 |
+| #INCLUDE  | Bette eine Datei ein                                  |
+| #IF       | Compiliere Folgetext wenn Bedingung nicht Null ergibt |
+| #IFDEF    | Compiliere Folgetext wenn Objekt existiert            |
+| #IFUDEF   | Compiliere Folgetext wenn Objekt nicht existiert      |
+| #ELSE     | Alternativer Zweig zum =#IF=                          |
+| #FIN      | Schließt das letzte =#IF= ab                          |
+
+
+*** DONE Die Präprozessoranweisung =#DEFINE=
+
+Die Präprozessoranweisung =#DEFINE= definiert ein Makro.
+Dabei werden folgende zwei Alternativen unterschieden:
+
+*** /Objekt-ähnliche/ Makros
+
+Ein objekt-ähnliches Makro defineirt einen Bezeichner, welcher im
+nachfolgenden Quellcode durch das Code-Fragment ersetzt wird.
+
+#+BEGIN_SRC
+#DEFINE <id> <text>;
+#+END_SRC
+
+Das abschliessende Semikolon ist optional.
+
+Diese Art von Makros wird oft dazu verwendet, numerischen Konstanten
+eine sprechenden namen zu geben:
+
+Beispiel:
+
+#+BEGIN_SRC
+#DEFINE NO_OF_ELEMENTS 42;
+#+END_SRC
+
+
+*** /Funktions-ähnliche/ Makros
+
+/Funktions-ähnliche/ Makros sehen aus wie gewöhnliche Prozeduraufrufe,
+werden jedoch zur Übersetzungszeit ausgeführt.
+
+#+BEGIN_SRC
+#DEFINE <id> (<param-list>);
+    <text>
+#ENDEF;
+#+END_SRC
+
+Die abschliessenden Semikola sind optional.
+
+Beispiel:
+
+#+BEGIN_SRC
+#DEFINE ASSERT(expr)
+  IF NOT (expr) THEN
+    PUT 'ASSERTION FAILED' TO CONSOLE;
+  FIN;  
+#ENDEF
+#+END_SRC
+
+Dieses Makro wird wie folgt umgesetzt:
+
+#+BEGIN_SRC
+ASSERT(var < 10);
+#+END_SRC
+->
+#+BEGIN_SRC
+IF NOT (var < 10) THEN
+   PUT 'ASSERTION FAILED' TO CONSOLE;
+FIN;  
+#+END_SRC
+
+*** DONE Erstellen von Zeichenketten
+
+Oft ist es notendig ein Makro-Argument in eine Zeichenkette
+umzuwandeln.  Dies kann mittels dem =#=-Operator erfolgen. Wird ein
+Makroargument mit einem führenden =#= verwendet, so wird dieses mit
+der Zeichenkette ersetzt.
+
+Beispiel:
+
+#+BEGIN_SRC
+#DEFINE warn_if(expr)
+  IF (expr) THEN
+    PUT 'WARNING: ', #expr TO CONSOLE BY A,A;
+  FIN;
+#ENDEF
+#+END_SRC
+
+*** DONE Konkatenation von Zeichenketten
+
+Es ist oft sinnvoll beim Expandieren eines Makros zwei Argumente zu
+konkatinieren. Hierzu wird der =##=-Operator eingesetzt:
+
+Beispiel:
+
+#+BEGIN_SRC
+#DEFINE cmd(name)
+   name ## _test()
+#ENDEF
+#+END_SRC
+
+Der Aufruf =cmd(add)= erzeugt folgenden Text:
+
+#+BEGIN_SRC
+add_test()
+#+END_SRC
+
+*** DONE Vordefinierte Makros
+Folgende Makros sind vordefiniert:
+
+| Makro         | Bedeutung                                                  |
+|---------------+------------------------------------------------------------|
+| =__FILE_NAME__= | Dieses Makros wird zu dem aktuellen Dateinamen expandiert. |
+
+
+*** DONE Die Präprozessoranweisung =#UNDEF=
+
+Die Präprozessoransweisung =#UNDEF= undefiniert ein vorher
+definiertes Makro.
+
+#+BEGIN_SRC
+#UNDEF <id>;
+#+END_SRC
+
+Falls =<id>= nicht vorhanden ist, wird eine Warnung generiert.
+
+Das abschliessende Semikolon ist optional.
+
+*** DONE Die Präprozessoranweisung =#INCLUDE=
+
+Mittels der Präprozessoranweisung =#INCLUDE= wird weitere Quelldatei
+eingefügt. 
+
+#+BEGIN_SRC
+#INCLUDE <file>;
+#+END_SRC
+
+Hierbei wird =<file>= als Zeichenkette behandelt und darin enthaltene
+Kommentare werden *nicht* herausgefiltert.
+
+Das abschliessende Semikolon ist optional.
+
+Folgt nach dem Dateinamen außer einem Semikolon oder eines
+Kommentares, so wird dieses als Fehler betrachtet.
+
+*** DONE Die Präprozessoranweisung =#IF=
+
+Die Präprozessoranweisung ='IF' wertet einen =FIXED=-Ausdruck aus
+fügt, falls dieser nicht Null ergibt, fügt die Textzeilen /A/
+ansonsten die Textzeilen /B/ ein.  Der =#ELSE=-Zweig ist optional.
+
+#+BEGIN_SRC
+#IF <fixed-expression>;
+ Text A
+#ELSE;
+ Text B
+#FIN;
+#+END_SRC
+
+Die abschliessenden Semikola sind optional.
+
+*** DONE Die Präprozessoranweisung =#IFDEF=
+
+Mittels der Präprozessoranweisung =#IFDEF= wird geprüft, ob das Makro =<id>=
+definiert ist und falls ja, werden die Textzeilen /A/ eingefügt
+ansonsten die Textzeilen /B/.  Der =#ELSE=-Zweig ist optional.
+
+#+BEGIN_SRC
+#IFDEF <id>;
+ Text A
+#ELSE;
+ Text B
+#FIN;
+#+END_SRC
+
+Die abschliessenden Semikola sind optional.
+
+*** DONE Die Präprozessoranweisung =#IFUDEF=
+
+#+BEGIN_QUOTE
+TestMerged.prl war mein Entwicklungsversuch so etwas wie Googletests
+nachzubauen.  Dieses Programm sollte bei dir schon laufen.
+
+Daraus abgeleitet: TestFramework.system und TestFramework.problem mit
+den Einträgen im SYSTEM- und PROBLEM-Teil.  Falls wir mehrere SYSTEM
+und PROBLEM-Teile in einem Modul zuliessen, dann könnten diese beiden
+zusammenfallen.
+
+Test.prl wäre dann die eigentliche Testanwendung
+
+Welche Notation für die Verwendung von Makroparametern muss noch
+geklärt werden, sodass es einfach zu implementieren ist.  Die Notation
+mit BEGIN/END könnte kritisch werden, wenn in einem Macro auch ein
+END stehen sollte.
+
+Mit den Signalen muss ich noch ein paar Kleinigkeiten im Sprachreport
+und Kontrollflussgrafen fertigstellen.
+#+END_QUOTE
+
+#+BEGIN_SRC
+#DEFINE TEST(partition, test) 
+  #partition\ 5F \#test: PROC RETURNS(FIXED);
+#ENDDEF
+#+END_SRC
+
+
+Die Präprozessoranweisung =#IFUDEF= verhält sich ähnlich wie =#IFDEF*
+mit dem Unterschiede, dass geprüft wird , ob das Makro =<id>= *nicht*
+definiert ist und falls ja, werden die Textzeilen /A/ eingefügt
+ansonsten die Textzeilen /B/.  Der =#ELSE=-Zweig ist optional.
+
+#+BEGIN_SRC
+#IFUDEF <id>;
+ Text A
+#ELSE;
+ Text B
+#FIN;
+#+END_SRC
+
+Die abschliessenden Semikola sind optional.
+
+** Start of Line  :noexport:
+
+#+BEGIN_QUOTE
+Simplest approach is to just recognize an EOL as the corresponding BOL
+token.
+#+END_QUOTE
+
+#+BEGIN_SRC
+BC  : '/*' .*? '*/' -> channel(HIDDEN) ;
+LC  : '//' ~[\r\n]* -> channel(HIDDEN) ;
+HWS : [ \t]*        -> channel(HIDDEN) ;
+BOL : [\r\n\f]+ ;
+#+END_SRC
+
+#+BEGIN_QUOTE
+Rules like a block comment rule will consume the EOLs internally, so
+no problem there. Rules like a line comment will not consume the EOL,
+so a proper BOL will be emitted for the line immediately following.
+
+A potential problem is that no BOL will be emitted for the beginning
+of input. Simplest way to handle this is to force prefix the input
+text with a line terminal before feeding it to the lexer.
+
+
+Excellent answer, it helped me with a similar question (I got here via
+http://stackoverflow.com/q/32870858/1112244). I will add that if you don't
+route BOL to a hidden channel, you will have to include it in your
+parser everywhere you expect to encounter those characters. In my
+case, I use a separate lexer and parser, and I defined in my lexer the
+token that had to appear at the beginning of the line (it is a line
+label). My parser rules are not EOL-delimited otherwise, so I routed
+BOL to a hidden channel in order to avoid adding it as a parser
+rule. – Peter Nov 7, 2017 at 4:06
+#+END_QUOTE
+
+** Grammatik :noexport:
+[[https://stackoverflow.com/questions/54822851/antlr4-preprocessor-grammar-integrate-with-c-grammar][ANTRL4 preprocessor]]
+
+#+BEGIN_SRC
+Whitespace
+:   [ \t]+
+    -> channel(HIDDEN)
+;
+Newline
+:   (   '\r' '\n'?
+    |   '\n'
+    )
+    -> skip
+;
+
+BlockComment
+:   '/*' .*? '*/'
+;
+
+LineComment
+:   '//' ~[\r\n]*
+;
+
+
+IncludeBlock
+ :   '#' Whitespace? 'include' ~[\r\n]*
+ ;
+
+DefineStart
+:     '#' Whitespace? 'define'
+;
+
+DefineBlock
+ :   DefineStart (~[\\\r\n] | '\\\\' '\r'? '\n' | '\\'. )*
+ ;
+
+MultiDefine
+:   DefineStart MultiDefineBody
+;
+
+MultiDefineBody
+:   [\\] [\r\n]+ MultiDefineBody
+|   ~[\r\n]
+;
+
+preprocessorDeclaration
+:   includeDeclaration
+|   defineDeclaration
+;
+
+includeDeclaration
+:   IncludeBlock
+;
+
+defineDeclaration
+:   DefineBlock | MultiDefine
+;
+
+comment
+:   BlockComment
+|   LineComment
+;
+
+declaration
+:   declarationSpecifiers initDeclaratorList ';'
+|   declarationSpecifiers ';'
+|   staticAssertDeclaration
+|   preprocessorDeclaration
+|   comment
+;
+#+END_SRC
