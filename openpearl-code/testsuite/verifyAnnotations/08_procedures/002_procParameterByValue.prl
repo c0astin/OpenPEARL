@@ -17,8 +17,9 @@ PROBLEM;
 
 SPC so DATION OUT ALPHIC DIM(*,80) FORWARD GLOBAL(other);
 SPC irupt INTERRUPT GLOBAL(other);
-DCL b BOLT;
-DCL sem SEMA;
+
+   DCL b BOLT;
+   DCL sem SEMA;
    DCL fixed FIXED;
    DCL f7 FIXED(7);
    DCL f32 FIXED(32);
@@ -31,7 +32,6 @@ DCL sem SEMA;
 q: PROC (f FIXED(31) );
    f := f +1 ;
 END;
-
 
 
 ! call by value with type FIXED(31)
