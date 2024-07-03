@@ -664,13 +664,13 @@ parameterType :
     | typeStructure
     | identifierForType
     | typeRealTimeObject
+    | typeSignal
     ;
 
 typeRealTimeObject :
       typeSema
     | typeBolt
     | typeInterrupt
-    | typeSignal
     ;
     
 ////////////////////////////////////////////////////////////////////////////////
