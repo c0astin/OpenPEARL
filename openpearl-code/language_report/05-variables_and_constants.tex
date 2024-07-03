@@ -288,7 +288,7 @@ The addressing of parts of bit strings is treated in
 
 %%%\begin{added}
 \OpenPEARL{} supports all lengths from 1 to 64.
-In case of selecting a slice which is not part of the bit string, the
+In case of selecting a segment which is not part of the bit string, the
 signal \code{BitIndexOutOfRangeSignal} is induced.
 %%%\end{added}
 
@@ -356,7 +356,7 @@ The addressing of parts of character strings is treated in
 All operations are monitored:
 In case defining a \code{CHAR} variable with more than 32767 elements the
 \code{CharacterTooLongSignal} is induced.
-In case of selecting a slice which is not part of the \code{CHAR} variable the 
+In case of selecting a segment which is not part of the \code{CHAR} variable the 
 \code{CharacterIndexOutOfRangeSignal} is induced.
 %%%\end{added}
 
