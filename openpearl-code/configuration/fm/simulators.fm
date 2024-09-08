@@ -8,5 +8,13 @@ config SIMWATERTANK
 	This configuration enables the virtual devices for simulating a watertank.
         The Simulator support is depending of an existing working OpenPEARL environment.
 	The OpenPEARL compiler must be working prior of selecting this option.
+
+config SIMFILEXTRUDER
+		boolean "Select the Filament Extrusion Process Simulator
+	default n
+	help
+	This configuration enables the virtual devices for simulating a polymer filament extrusion process.
+        The Simulator support is depending of an existing working OpenPEARL environment.
+	The OpenPEARL compiler must be working prior of selecting this option.
 	
 endmenu	

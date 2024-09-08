@@ -1,0 +1,193 @@
+MODULE(Extruder);
+
+SYSTEM;
+stdout: StdOut;
+screwmotor: ScrewMotor(0);
+screwheater: ScrewHeater(0);
+spoolermotor: SpoolerMotor(0);
+diameter_sensor: DiameterSensor(0);
+temperature_sensor: TemperatureSensor(0);
+
+
+disc: Disc('./',1);
+
+!__________________________________________________________________!
+!_______________________________INIT_______________________________!
+
+PROBLEM;
+SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+SPC screwmotor DATION INOUT SYSTEM BASIC FIXED(31);
+DCL screwMotor DATION INOUT BASIC FIXED(31) CREATED(screwmotor);
+
+SPC spoolermotor DATION INOUT SYSTEM BASIC FIXED(31);
+DCL spoolerMotor DATION INOUT BASIC FIXED(31) CREATED(spoolermotor);
+
+SPC screwheater DATION INOUT SYSTEM BASIC FIXED(31);
+DCL screwHeater DATION INOUT BASIC FIXED(31) CREATED(screwheater);
+
+SPC diameter_sensor DATION IN SYSTEM BASIC FLOAT;
+DCL diameterSensor DATION IN BASIC FLOAT CREATED(diameter_sensor);
+
+SPC temperature_sensor DATION IN SYSTEM BASIC FLOAT;
+DCL temperatureSensor DATION IN BASIC FLOAT CREATED(temperature_sensor);
+
+! Semaphore for global variables (logging)
+DCL sema SEMA PRESET(1);
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+print_separator: PROC;
+  PUT '===================================================' TO terminal BY A, SKIP;	
+END;
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+test_screwMotor: PROC;
+    DCL rpm FIXED(31);
+
+    print_separator;
+    PUT 'EXTRUDER: Test Antrieb Extruderschnecke:' TO terminal BY A, SKIP;
+    print_separator;
+
+    TAKE rpm FROM screwMotor;
+    PUT 'EXTRUDER: Aktuelle Drehzahl:', rpm TO terminal BY A, F(4),SKIP;
+
+    PUT 'EXTRUDER: Motor anschalten mit 100 RPM.' TO terminal BY A, SKIP;
+    SEND 100 TO screwMotor;
+    AFTER 3 SEC RESUME;
+    TAKE rpm FROM screwMotor;
+    PUT 'EXTRUDER: Aktuelle Drehzahl:', rpm TO terminal BY A, F(4), SKIP;
+
+    PUT 'EXTRUDER: Drehzahl auf 200 RPM setzen.' TO terminal BY A, SKIP;
+    SEND 200 TO screwMotor;
+    AFTER 3 SEC RESUME;
+    TAKE rpm FROM screwMotor;
+    PUT 'EXTRUDER: Aktuelle Drehzahl:', rpm TO terminal BY A, F(4), SKIP;
+
+    PUT 'EXTRUDER: Zu hohe Drehzahl setzen (3000 RPM).' TO terminal BY A, SKIP;
+    SEND 3000 TO screwMotor;
+    AFTER 3 SEC RESUME;
+    TAKE rpm FROM screwMotor;
+    PUT 'EXTRUDER: Aktuelle Drehzahl:', rpm TO terminal BY A,F(4),SKIP;
+
+    PUT 'EXTRUDER: Motor ausschalten.' TO terminal BY A, SKIP;
+    SEND 0 TO screwMotor;
+    AFTER 3 SEC RESUME;
+    TAKE rpm FROM screwMotor;
+    PUT 'EXTRUDER: Aktuelle Drehzahl:', rpm TO terminal BY A,F(4),SKIP;
+
+END;
+
+test_screwHeater: PROC;
+    DCL pwm FIXED(31);
+    DCL temperature FLOAT;
+
+    print_separator;
+    PUT 'EXTRUDER: Test Heizelement:' TO terminal BY A, SKIP;
+    print_separator;
+
+    TAKE pwm FROM screwHeater;
+    TAKE temperature FROM temperatureSensor;
+    PUT 'EXTRUDER: Aktuelle Heizleistung:', pwm TO terminal BY A, F(4),SKIP;
+    PUT 'EXTRUDER: Aktuelle Temperatur:', temperature TO terminal BY A, F(8,4), SKIP;
+    PUT 'EXTRUDER: 50% Heizleistung einstellen.' TO terminal BY A, SKIP;
+    SEND 50 TO screwHeater;
+    AFTER 0.5 SEC RESUME;
+    TAKE pwm FROM screwHeater;
+    PUT 'EXTRUDER: Aktuelle Heizleistung:', pwm TO terminal BY A, F(4), SKIP;
+
+    PUT 'EXTRUDER: Heizleistung auf 100% setzen.' TO terminal BY A, SKIP;
+    SEND 100 TO screwHeater;
+    AFTER 0.5 SEC RESUME;
+    TAKE pwm FROM screwHeater;
+    PUT 'EXTRUDER: Aktuelle Heizleistung:', pwm TO terminal BY A, F(4), SKIP;
+
+    PUT 'EXTRUDER: Zu hohe Heizleistung setzen.' TO terminal BY A, SKIP;
+    SEND 200 TO screwHeater;
+    AFTER 0.5 SEC RESUME;
+    TAKE pwm FROM screwHeater;
+    PUT 'EXTRUDER: Aktuelle Heizleistung:', pwm TO terminal BY A,F(4),SKIP;
+    AFTER 5 SEC RESUME;
+    TAKE temperature FROM temperatureSensor;
+    PUT 'EXTRUDER: Aktuelle Temperatur:', temperature TO terminal BY A, F(8,4), SKIP;
+    PUT 'EXTRUDER: Heizung ausschalten.' TO terminal BY A, SKIP;
+    SEND 0 TO screwHeater;
+    AFTER 0.5 SEC RESUME;
+    TAKE pwm FROM screwHeater;
+    PUT 'EXTRUDER: Aktuelle Heizleistung:', pwm TO terminal BY A,F(4),SKIP;
+    AFTER 5 SEC RESUME;
+    TAKE temperature FROM temperatureSensor;
+    PUT 'EXTRUDER: Aktuelle Temperatur:', temperature TO terminal BY A, F(8,4), SKIP;
+
+END;
+
+test_spoolerMotor: PROC;
+    DCL rpm FIXED(31);
+    DCL diameter FLOAT;
+
+    print_separator;
+    PUT 'SPOOLER: Test Antrieb Filamentspule:' TO terminal BY A, SKIP;
+    print_separator;
+
+    TAKE rpm FROM spoolerMotor;
+    TAKE diameter FROM diameterSensor;
+    PUT 'SPOOLER: Aktuelle Drehzahl:', rpm TO terminal BY A, F(4),SKIP;
+    PUT 'SPOOLER: Aktueller Filament-Durchmesser:', diameter TO terminal BY A, F(8,4), SKIP;
+
+    PUT 'SPOOLER: Motor anschalten mit 10 RPM.' TO terminal BY A, SKIP;
+    SEND 10 TO spoolerMotor;
+    AFTER 3 SEC RESUME;
+    TAKE rpm FROM spoolerMotor;
+    TAKE diameter FROM diameterSensor;
+    PUT 'SPOOLER: Aktuelle Drehzahl:', rpm TO terminal BY A, F(4), SKIP;
+    PUT 'SPOOLER: Aktueller Filament-Durchmesser:', diameter TO terminal BY A, F(8,4), SKIP;
+
+    PUT 'SPOOLER: Drehzahl auf 20 RPM setzen.' TO terminal BY A, SKIP;
+    SEND 20 TO spoolerMotor;
+    AFTER 3 SEC RESUME;
+    TAKE rpm FROM spoolerMotor;
+    PUT 'SPOOLER: Aktuelle Drehzahl:', rpm TO terminal BY A, F(4), SKIP;
+
+    PUT 'SPOOLER: Zu hohe Drehzahl setzen (3000 RPM).' TO terminal BY A, SKIP;
+    SEND 3000 TO spoolerMotor;
+    AFTER 3 SEC RESUME;
+    TAKE rpm FROM spoolerMotor;
+    PUT 'SPOOLER: Aktuelle Drehzahl:', rpm TO terminal BY A,F(4),SKIP;
+
+    PUT 'SPOOLER: Motor ausschalten.' TO terminal BY A, SKIP;
+    SEND 0 TO spoolerMotor;
+    AFTER 3 SEC RESUME;
+    TAKE rpm FROM spoolerMotor;
+    TAKE diameter FROM diameterSensor;
+    PUT 'SPOOLER: Aktuelle Drehzahl:', rpm TO terminal BY A,F(4),SKIP;
+    PUT 'SPOOLER: Aktueller Filament-Durchmesser:', diameter TO terminal BY A, F(8,4), SKIP;
+END;
+
+
+test: TASK PRIO 100 MAIN;
+   OPEN terminal;
+   OPEN screwMotor;
+   OPEN screwHeater;
+   OPEN spoolerMotor;
+   OPEN diameterSensor;
+   OPEN temperatureSensor;
+
+   PUT 'EXTRUDER: DATION ScrewMotor geoeffnet' TO terminal BY A, SKIP;
+   test_screwMotor;
+   test_spoolerMotor;
+   test_screwHeater;
+   PUT 'EXTRUDER: Test beendet' TO terminal BY A, SKIP;
+   print_separator;
+
+   CLOSE screwMotor;
+   CLOSE screwHeater;
+   CLOSE spoolerMotor;
+   CLOSE diameterSensor;
+   CLOSE temperatureSensor;
+   CLOSE terminal;
+END;
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+MODEND;

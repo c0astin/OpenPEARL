@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module name="SimFilExtruder"  file="SimFilExtruderControl.prl" standard="-std=OpenPEARL" >
+<problem>
+  <tfuusage>
+  </tfuusage>
+
+</problem>
+</module>

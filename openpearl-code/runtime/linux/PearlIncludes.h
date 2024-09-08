@@ -148,6 +148,11 @@ Only this file mus be included.
 #include "watertank/Watertank.h"
 #endif
 
+#ifdef CONFIG_SIMFILEXTRUDER
+#include "filamentExtruder/FilamentExtruder.h"
+#endif
+
+
 #include "TcpIpServer.h"
 #include "IOJob.h"
 

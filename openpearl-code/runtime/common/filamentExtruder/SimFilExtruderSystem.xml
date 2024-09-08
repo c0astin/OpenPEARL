@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module name="SimFilExtruder"  file="SimFilExtruderSystem.prl" standard="-std=OpenPEARL" >
+<system>
+ <username name="homeFolder"  line="35" col="3"  >
+   <sysname name="Disc">
+       <parameters>
+           <CHAR>'./'</CHAR> 
+             <FIXED>1</FIXED> 
+       </parameters>
+   </sysname>
+ </username>
+
+ <username name="pipe"  line="36" col="3"  >
+   <sysname name="Pipe">
+       <parameters>
+           <CHAR>'/tmp/simulator'</CHAR> 
+             <FIXED>2</FIXED> 
+           <CHAR>'OPEN1'</CHAR> 
+       </parameters>
+   </sysname>
+ </username>
+
+
+</system>
+
+<problem>
+  <tfuusage>
+  </tfuusage>
+
+</problem>
+</module>

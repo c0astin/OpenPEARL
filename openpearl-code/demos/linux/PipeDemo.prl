@@ -45,7 +45,7 @@ producer: TASK;
       PUT 'send ', floatVal, ' to pipe' TO terminal BY A, F(6,3), A, SKIP; 
       PUT  'f= ',floatVal TO writeFormatted BY A,F(6,3), SKIP;
       floatVal = floatVal + 1.0;
-      AFTER 0.5 SEC RESUME;
+      AFTER 5 SEC RESUME;
    END;
 
 END;
@@ -85,8 +85,8 @@ consumerAlphic: TASK;
    !AFTER 1 SEC RESUME;
       PUT 'try to read from pipe' TO terminal BY A, SKIP;
 
-      GET line FROM readAlphic BY A,SKIP;
-      PUT 'gotA >',line,'<' TO terminal BY A,A,A,SKIP;
+     ! GET line FROM readAlphic BY A,SKIP;
+     ! PUT 'gotA >',line,'<' TO terminal BY A,A,A,SKIP;
    END;
 END;
 

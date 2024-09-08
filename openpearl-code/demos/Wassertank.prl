@@ -1,0 +1,948 @@
+MODULE(watertank);
+
+SYSTEM;
+
+stdout: StdOut;
+stdin: StdIn;
+
+disc: Disc('./',1);
+
+floatswitch: FloatSwitch;
+pump: Pump(0);
+valve: Valve;
+pressure_sensor1: PressureSensor(0);
+pressure_sensor2: PressureSensor(1);	
+
+!__________________________________________________________________!
+!_______________________________INIT_______________________________!
+
+PROBLEM;
+SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+DCL terminal_out DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+SPC stdin DATION IN SYSTEM ALPHIC GLOBAL;
+DCL terminal_in DATION IN ALPHIC DIM(*,80) TFU FORWARD NOSTREAM CREATED(stdin);
+
+SPC floatswitch DATION IN SYSTEM BASIC BIT(1);
+DCL schwimmerschalter DATION IN BASIC BIT(1) CREATED(floatswitch);
+
+SPC pump DATION INOUT SYSTEM BASIC FIXED(31);
+DCL foerderpumpe DATION INOUT BASIC FIXED(31) CREATED(pump);
+
+SPC valve DATION INOUT SYSTEM BASIC FIXED(15);
+DCL ventil DATION INOUT BASIC FIXED(15) CREATED(valve);
+
+SPC pressure_sensor1 DATION IN SYSTEM BASIC FLOAT;
+DCL sensor1 DATION IN BASIC FLOAT CREATED(pressure_sensor1);
+
+SPC pressure_sensor2 DATION IN SYSTEM BASIC FLOAT;
+DCL sensor2 DATION IN BASIC FLOAT CREATED(pressure_sensor2);
+
+! Pressure sensor request & controller calc frequency:
+DCL req_freq_s INV DUR INIT(1 SEC);
+
+! Valve dependant delay time: open --> closed
+DCL valve_switch_delay_s DUR INIT(1 SEC);
+
+! Semaphore for global variables (logging)
+DCL sema SEMA PRESET(1);
+
+
+DCL pump_startup_rpm FIXED(31) INIT(2000);
+DCL pump_startup_pressure FLOAT INIT(2000);
+
+DCL controller_selection CHAR(1);
+DCL testcase_selection CHAR(1) INIT('0');
+DCL error_selection CHAR(1) INIT('0');
+
+! Datenstruktur (hauptsächlich fuer Logging / Error Handling)
+! Pump state 0 = OFF, 1 = RUNNING, 2 = STARTUP, 3 = STOPPING
+DCL Data STRUCT [
+   pump_state CHAR(8),
+   pump_rpm FIXED(31),
+   pressure1 FLOAT,
+   pressure2 FLOAT,
+   switch_status BIT(1),
+   valve_status FIXED(15)];
+
+DCL calc_control REF PROC (pressure FLOAT);
+
+!For Logging
+DCL fileName CHAR(20) INIT('watertank_data.csv');
+SPC disc DATION INOUT SYSTEM ALL;
+DCL logFile DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(disc);
+
+
+!___________________________________________________________________!
+!_______________________________TASKS_______________________________!
+
+! ==========================================================================
+! Startup-Task
+   ! Verarbeitet Eingabe des Nutzers zur Auswahl des Reglers.
+   ! Startet die Tasks zur Überwachung der Sensoren udn des Schwimmschalters.
+   ! Öffnet Kommunikationskanal zu Förderpumpe, Schwimmschalter, Ventil, Drucksensoren.
+! ==========================================================================
+Startup_task: TASK PRIO 100 MAIN;
+   OPEN terminal_out;
+   OPEN terminal_in;
+   
+   PUT '---WASSERTANK-REGELUNG---' TO terminal_out BY A, SKIP;
+   open_log_file(fileName);
+   log('Wassertank v1');
+   select_controller;
+   CLOSE terminal_in;
+
+   open_dations;
+
+   set_pump_state('OFF');
+
+
+   ACTIVATE Pressure_surv_task;
+   ACTIVATE Float_switch_surv_task;
+   ACTIVATE Log_task;
+   ACTIVATE Error_checker_task;
+   ACTIVATE Pump_control_task;
+   IF (testcase_selection == '1') THEN
+      ACTIVATE Manual_control_task;
+   FIN;
+   IF (error_selection == '1') THEN
+      trigger_error_1;
+   FIN;
+   IF (error_selection == '2') THEN
+      trigger_error_2;
+   FIN;
+END; !Startup_task
+
+
+! ==========================================================================
+! Task zur Überwachung des Pumpen- und Tankdrucks
+   ! Zyklische Abfrage der Druecke mit einstellbarer Zykluszeit.
+! ==========================================================================
+Pressure_surv_task: TASK PRIO 50;
+   DCL p1_value FLOAT;
+   DCL p2_value FLOAT;
+      WHILE '1'B1
+      REPEAT
+         p1_value = read_p_pump_sens;
+         p2_value := read_p_tank_sens;
+      AFTER req_freq_s RESUME;
+      END;
+END; !Pressure_surv_task
+
+! ==========================================================================
+! Task zur Überwachung der Schwimmer-Schalterstellung
+   ! Nothalt wenn Schwimmerschalter ausgelöst wird.
+! ==========================================================================
+Float_switch_surv_task: TASK PRIO 45;
+   DCL switch_status BIT(1);
+   WHILE '1'B1
+   REPEAT
+      switch_status := read_switch_status;
+      IF switch_status== '1'B THEN
+         pump_stop;
+      FIN;
+      AFTER 1 SEC RESUME;
+   END;
+END; !Float_switch_surv_task
+
+! ==========================================================================
+! Task fuer Pumpen-Regelung
+   ! Pumpe starten wenn Druck unter einer Grenze liegt.
+      ! Bei Fuzzy- und PID-Regler startet die Pumpe sofort.
+   ! Regler zyklisch neu rechnen wenn Pumpe läuft.
+! ==========================================================================
+Pump_control_task: TASK PRIO 50;
+   DCL pressure_tank FLOAT;
+   DCL pump_rpm FIXED(31);
+   DCL pump_state CHAR(8);
+   WHILE '1'B1
+   REPEAT 
+      pump_rpm := read_pump_rpm;
+      pressure_tank := get_p_tank;
+      pump_state := get_pump_state;
+
+      IF testcase_selection /= '1' THEN !Wenn manueller Steuermodus nicht aktiv ist.
+         IF pump_state == 'OFF' THEN   !Wenn Pumpe aus
+               IF pressure_tank < pump_startup_pressure THEN                         
+                  pump_start;
+               FIN;
+         FIN;
+         IF pump_state== 'RUNNING' THEN    !Wenn Pumpe an
+               calc_control(pressure_tank);
+         FIN;
+      FIN;
+
+      AFTER req_freq_s RESUME;
+   END;
+END; !Pump_control_task
+
+! ==========================================================================
+! Task zur manuellen Steuerung
+   ! Fuer Test-Modus.
+   ! Erlaubt die Steuerung von Ventil und Pumpe ueber User-Input
+! ==========================================================================
+Manual_control_task: TASK PRIO 50;
+      OPEN terminal_in;
+      set_pump_state('TESTMODE');
+      WHILE '1'B1
+      REPEAT
+         manual_user_input;
+      AFTER 2 SEC RESUME;
+      END;
+END; !Manual_control_task
+
+! ==========================================================================
+! Task fuer Error Handling
+   ! Zyklische Auswertung der Messdaten und Überpruefung auf Fehlerzustände.
+   ! Warnings: Hinweis im Terminal, aber kein Programmabbruch.
+   ! Error: Fehlermeldung im Terminal und Abbruch des Programms.
+! ==========================================================================
+DCL prev_p2_value FLOAT INIT(0);
+Error_checker_task: TASK PRIO 45;
+   DCL DataSet STRUCT[pump_state CHAR(8), rpm FIXED(31), p1 FLOAT, p2 FLOAT, switch_status BIT(1), valve_status FIXED(15)];
+   WHILE '1'B1
+   REPEAT
+      DataSet := get_all_data;
+
+      !Fehler: Fehlmessung an Drucksensor P2 (Unrealistischer Wert.)
+      IF DataSet.p2 > 20000 OR DataSet.p2 < 0 THEN
+         CALL error(3);
+      FIN;
+
+      !Fehler: Fehlmessung an Drucksensor P1 (Unrealistischer Wert.)
+      IF DataSet.p1 < 0 OR DataSet.p1 > 1000 THEN 
+         CALL error(5);   ! Fehler wenn Druck zu niedrig
+      FIN;
+
+      !Fehler: Pumpe defekt
+      IF (DataSet.p1 < 10 AND DataSet.pump_state == 'RUNNING') THEN 
+         CALL error(1);  
+      FIN;
+
+      !Fehler: Starker Druckabfall / Undichtigkeit
+      IF (prev_p2_value - DataSet.p2)*(1 SEC)/req_freq_s > 500.0 THEN
+         CALL  error(4); 
+      FIN;
+
+      !Fehler: Ventil offen obwohl Pumpe nicht laeuft.
+      IF DataSet.valve_status==1 AND DataSet.pump_state == 'OFF' THEN
+         CALL error(2);  
+      FIN;
+
+      !Fehler: Ventil geschlossen obwohl Startup abgeschlossen.
+      IF DataSet.valve_status==0 AND DataSet.pump_state == 'RUNNING' THEN
+         CALL error(2);
+      FIN;
+
+      !Warnung: Fuellstand unterschritten
+      IF DataSet.p2 < 2000 AND prev_p2_value > 2000 THEN  
+         CALL warning(1);
+      FIN;
+
+      !Warnung: Fuellstand ueberschritten
+      IF DataSet.p2 > 18000 AND prev_p2_value < 18000 THEN
+         CALL warning(2);
+      FIN;
+
+      !Warnung wenn Schwimmerschalter betätigt und Pumpe stoppen
+      IF DataSet.switch_status THEN
+         CALL warning(3); !Schwimmerschalter ausgelöst
+      FIN;     
+      
+   prev_p2_value := DataSet.p2; 
+   AFTER 1 SEC RESUME;
+  END;
+END; !Error_checker_task
+
+! ==========================================================================
+! Task fuer Logging
+   ! Ausgabe der aktuellen Sensorwerte im Terminal.
+   ! Schreiben der aktuellen Sensorwerte in ein csv-File (fuer Live-Plot in Python)
+! ==========================================================================
+Log_task: TASK PRIO 60;
+DCL DataSet STRUCT[pump_state CHAR(8), rpm FIXED(31), p1 FLOAT, p2 FLOAT, switch_status BIT(1), valve_status FIXED(15)];
+   DCL log_start CLOCK;
+   DCL line CHAR(100);
+
+   !Header schreiben
+   log('timestamp [s]; pump rpm [1/min]; pump state; p1 [Pa]; p2 [Pa]; valve status; floatswitch status');
+
+   log_start = NOW;
+   
+   WHILE '1'B1
+   REPEAT
+      DataSet := get_all_data;
+
+      !Daten in Zeile fuer csv schreiben
+      CONVERT 
+      (NOW-log_start)/(1SEC), '; ', DataSet.rpm, '; ', DataSet.pump_state, '; ',
+      DataSet.p1, '; ', DataSet.p2, '; ', DataSet.valve_status, '; ', DataSet.switch_status
+      TO line BY 
+      F(6,1),A, F(4), A, A, A,
+      F(5), A, F(5), A, F(1), A, B(1);
+      log(line);
+
+      !Daten in Terminal ausgeben
+      PUT 'Zeit: ', NOW, '    | RPM: ', DataSet.rpm, ' |  Pumpen Status: ', DataSet.pump_state, ' | P1: ', DataSet.p1, ' | P2: ', DataSet.p2, 
+      ' |  Ventil: ', DataSet.valve_status, ' |  Schwimmer: ', DataSet.switch_status TO terminal_out BY          
+      A, T(12,1),A, F(4), A, A, A, F(5),
+      A, F(6), A, F(3), A, B(1), SKIP;
+
+      AFTER 1 SEC RESUME;
+   END;
+END; !Log_task
+
+!________________________________________________________________________!
+!_______________________________PROCEDURES_______________________________!
+
+! ==========================================================================
+! Anschalten der Pumpe:
+   ! Drehzahl an Pumpe senden
+   ! Warten bis richtige Drehzahl zurueckgemeldet wird
+   ! Ventil Öffnen
+   ! Ventilstatus nach Öffnungszeit pruefen.
+   ! Pumpenstatus auf "Running" wechseln.
+! ==========================================================================
+pump_start: PROC;
+      DCL rpm FIXED(31) INIT(0);
+      DCL status FIXED(15);
+      DCL start_wait_time CLOCK;
+      
+      set_pump_state('STARTING');
+      PUT '---PUMPE ANSCHALTEN---' TO terminal_out BY A, SKIP;
+      start_wait_time := NOW;
+      set_pump_rpm(pump_startup_rpm);
+         WHILE rpm < pump_startup_rpm !Auf Erreichen der Drehzahl warten.
+         REPEAT
+            IF NOW-start_wait_time > 5 SEC THEN !Abbruch wenn Drehzahl nach 5s nicht erreicht.
+               CALL error(1); !Error: Pumpe defekt.
+            FIN;
+            rpm := read_pump_rpm;
+            AFTER 0.3 SEC RESUME;
+         END;
+         set_valve(1); !Ventil öffnen 
+         AFTER valve_switch_delay_s RESUME; !Ventilstatus nach Öffnungszeit pruefen.
+         status := read_v_status;
+         IF status == 1 THEN
+            PUT '---PUMPE GESTARTET UND VENTIL GEÖFFNET---' TO terminal_out BY A, SKIP;
+         ELSE 
+            CALL error(2);
+         FIN;
+      set_pump_state('RUNNING');
+END;
+
+! ==========================================================================
+! Task fuer das Abschalten der Pumpe:
+   ! Ventil schließen
+   ! Nach Schließzeit pruefen ob Ventil zu ist.
+   !   --> Fehler falls noch offen.
+   ! Pumpe stoppen
+   ! Nach gewisser Zeit pruefen ob Drehzahl 0 ist.
+   !   --> Fehler falls nicht.
+! ==========================================================================
+pump_stop: PROC;
+   DCL rpm FIXED(31) INIT(0);
+   DCL status FIXED(15);
+   DCL start_wait_time CLOCK;
+
+   set_pump_state('STOPPING');
+   set_valve(0);
+   AFTER valve_switch_delay_s RESUME;
+   status := read_v_status;
+   IF status == 0 THEN
+      PUT '---VENTIL GESCHLOSSEN---' TO terminal_out BY A, SKIP;
+   ELSE
+      CALL error(2);
+   FIN;
+   set_pump_rpm(0);
+   rpm := read_pump_rpm;
+   start_wait_time := NOW;
+   WHILE rpm > 0 !Warten bis Drehzahl 0
+   REPEAT
+      IF NOW-start_wait_time > 5 SEC THEN !Abbruch wenn Drehzahl nach 5s nicht erreicht.
+         CALL error(1); !Error: Pumpe defekt.
+      FIN;
+      rpm := read_pump_rpm;
+      AFTER 0.3 SEC RESUME;
+   END;
+   set_pump_state('OFF');
+END;
+
+! ==========================================================================
+! Zwei-Punkt-Regler mit konst. Drehzahl.
+   !(Anschalten der Pumpe erfolgt im Pump_control_task weil fuer alle Regler relevant.)
+   ! Abschalten der Pumpe bei Überschreiten eines oberen Limits.
+! ==========================================================================
+DCL two_point_lower_limit FIXED(31) INIT(1000);
+
+two_point_control: PROC (p2 FLOAT);
+   DCL two_point_upper_limit FIXED(31) INIT(18000);
+   DCL state CHAR(8);
+   state := get_pump_state;
+         IF p2 > two_point_upper_limit AND state == 'RUNNING'
+         THEN 
+            PUT '---PUMPE ABSCHALTEN---' TO terminal_out BY A, SKIP;
+            pump_stop;
+         FIN;  
+   END; !two_point_control
+
+! ==========================================================================
+! Fuzzy-Regler mit kleinem Drehzahlbereich
+   !(HINWEIS: PARAMETER NICHT OPTIMIERT!)
+! ==========================================================================
+   DCL small_rpm_step INV FIXED(31) INIT(10);
+   DCL big_rpm_step INV FIXED(31) INIT(50);
+   DCL error_small_step INV FLOAT INIT(100);
+   DCL error_big_step INV FLOAT INIT(1000);
+   DCL fuzzy_p2_target INV FLOAT INIT(8000);
+   DCL fuzzy_min_rpm INV FIXED(31) INIT(300);
+   DCL fuzzy_max_rpm INV FIXED(31) INIT(700);
+   DCL fuzzy_startup_rpm FIXED(31) INIT (700);
+
+   fuzzy_control: PROC(p2 FLOAT);
+      DCL rpm_new FIXED(31);
+      DCL error FLOAT;
+      DCL rpm FIXED(31) INIT(0);
+
+      rpm := get_pump_rpm;
+      error = fuzzy_p2_target - p2;
+
+      !Bei kleiner Abweichung zum Soll-Wert
+      IF error_big_step > ABS error AND ABS error > error_small_step THEN 
+         rpm_new = rpm + SIGN error * small_rpm_step;
+         IF rpm_new > fuzzy_min_rpm AND rpm_new < fuzzy_max_rpm THEN
+            set_pump_rpm(rpm_new);
+         FIN;
+      FIN;
+
+      !Bei großer Abweichung zum Soll-Wert
+      IF ABS error > error_big_step THEN 
+         rpm_new = rpm + SIGN error * big_rpm_step;
+         IF rpm_new > fuzzy_min_rpm AND rpm_new < fuzzy_max_rpm THEN
+            set_pump_rpm(rpm_new);
+         FIN;
+       FIN;
+   END; !fuzzy_control
+
+! ==========================================================================
+! Einfacher PID-Regler // Als PI-Regler implementiert (Kd = 0)
+   !(HINWEIS: PARAMETER NICHT OPTIMIERT!)
+! ==========================================================================
+   DCL pid_min_rpm INV FIXED(31) INIT(100);
+   DCL pid_max_rpm INV FIXED(31) INIT(2000);
+   DCL kp INV FLOAT INIT(0.3);
+   DCL ki INV FLOAT INIT(0.2);
+   DCL kd INV FLOAT INIT(0.1);
+   DCL pid_startup_rpm INV FIXED(31) INIT (300);
+   DCL last_rpm FIXED(31) INIT(300);
+   DCL last_pid_exec CLOCK;
+   DCL pid_p2_target FLOAT INIT(8000);
+   DCL error_sum FLOAT INIT(0);
+   DCL last_error FLOAT INIT(0);
+
+   pid_control: PROC(p2 FLOAT);
+      DCL now CLOCK;
+      DCL dt DURATION;
+      DCL error FLOAT;
+      DCL rpm_new FIXED(31);
+
+         now = NOW;
+         error = pid_p2_target-p2;
+         dt = (now - last_pid_exec);
+         error_sum = error_sum + dt/(1 SEC)*error;
+         rpm_new = ROUND (kp*error+ki*error_sum+kd*(error-last_error)+pid_startup_rpm);
+         IF rpm_new > pid_max_rpm THEN
+            rpm_new = pid_max_rpm;
+         FIN;
+         IF rpm_new < pid_min_rpm THEN
+            rpm_new = pid_min_rpm;
+         FIN;
+         set_pump_rpm(rpm_new);
+      last_pid_exec = NOW;
+   END; !pid_control
+
+! ==========================================================================
+! Prozedur fuer Behandlung von Fehlern
+   ! Ausgabe der Fehlermeldung
+   ! Pumpe stoppen und Programm beenden
+! ==========================================================================
+   error : PROC(error_code FIXED);
+      DCL error_string CHAR(100);
+      CASE error_code
+         ALT (1)
+            error_string := '---ERROR: PUMPE DEFEKT (CODE 1).---';
+         ALT (2)
+            error_string := '---ERROR: VENTIL DEFEKT (CODE 2).---';
+         ALT (3)
+            error_string := '---ERROR: DRUCKSENSOR 2 DEFEKT (CODE 3).---';
+         ALT (4)
+            error_string := '---ERROR: STARKER DRUCKABFALL. TANK UNDICHT! (CODE 4).---';
+         ALT (5)
+            error_string := '---ERROR: DRUCKSENSOR 1 DEFEKT (CODE 5).---';
+         FIN;
+
+         PUT error_string TO terminal_out BY A, SKIP;
+         log(error_string);
+         emergency_stop;
+   END; !error
+
+! ==========================================================================
+! Prozedur fuer Behandlung von Warnungen
+   !Ausgabe einer Warnung
+! ==========================================================================
+   warning: PROC(warning_code FIXED);
+      DCL warning_string CHAR(100);
+      CASE warning_code
+         ALT (1)
+            warning_string := '---WARNING: TANK FILL LEVEL 10%.---';
+         ALT (2)
+            warning_string := '---WARNING: TANK FILL LEVEL 90%.---';
+         ALT (3)
+            warning_string := '---WARNING: SCHWIMMERSCHALTER BETAETIGT! DRUCKSENSOR ODER REGLER DEFEKT.---';
+         FIN;
+         PUT warning_string TO terminal_out BY A, SKIP;
+   END; !warning
+
+! ==========================================================================
+! Prozeduren fuer Logging
+   !open_log_file: Öffnen eines Logging-Files (csv-Datei)
+   !log: Schreiben einer neuen Zeile in das Logging File
+! ==========================================================================
+
+   open_log_file: PROC(logfileName REF INV CHAR());
+      DCL fn CHAR(40);
+      fn = logfileName;
+      OPEN logFile BY IDF(fn), ANY;
+      CLOSE logFile BY CAN;
+      OPEN logFile BY IDF(fn), NEW;
+      PUT '---New log file created---' TO terminal_out BY A, SKIP;
+   END;
+
+   log: PROC(line  REF INV CHAR() );
+      PUT line TO logFile BY A,SKIP;
+   END; 
+
+! ==========================================================================
+! Beenden des Programs im Fehlerfall
+   !Pumpe stoppen
+! ==========================================================================
+   emergency_stop: PROC;
+      PUT '---NOTHALT EINGELEITET!---' TO terminal_out BY A, SKIP;
+      set_pump_rpm(0);
+      set_valve(0);
+      TERMINATE Log_task;
+      TERMINATE Pressure_surv_task;
+      TERMINATE Float_switch_surv_task; 
+      TERMINATE Pump_control_task;
+      TERMINATE Error_checker_task;
+   END;
+
+! ==========================================================================
+! User Input: Auswahl des Reglers
+   ! Wahl zwischen Zwei-Punkt-, Fuzzy- und PID-Regler durch User-Eingabe.
+   ! Wahl des Test-Modus.
+   !Festlegen der Startwerte fuer die Regler.
+! ==========================================================================
+select_controller: PROC;
+   DCL wrong_input BIT(1);
+   wrong_input := '1'B1;
+   WHILE wrong_input
+      REPEAT
+      PUT 'REGLER AUSWAEHLEN: 1 = Zwei-Punkt-Regler, 2 = Fuzzy-Regler, 3 = PID-Regler, 4 = TestMode' TO terminal_out BY A, SKIP;
+      GET controller_selection FROM terminal_in BY A;
+      CASE controller_selection
+         ALT ('1')
+            PUT '---Zwei-Punkt-Regler ausgewählt!---' TO terminal_out BY A, SKIP;
+            log('Modus: Zwei-Punkt-Regler');
+            calc_control := two_point_control;
+            pump_startup_rpm := two_point_lower_limit;
+            wrong_input := '0'B1;
+         ALT ('2')
+            PUT '---Fuzzy-Regler ausgewählt!---' TO terminal_out BY A, SKIP;
+            log('Modus: Fuzzy-Regler');
+            calc_control := fuzzy_control;
+            pump_startup_rpm := fuzzy_startup_rpm;
+            pump_startup_pressure := 18000;
+            wrong_input := '0'B1;
+         ALT ('3')
+            PUT '---PID-Regler ausgewählt!---' TO terminal_out BY A, SKIP;
+            log('Modus: PID-Regler');
+            calc_control := pid_control;
+            pump_startup_rpm := pid_startup_rpm;
+            pump_startup_pressure := 18000;
+            wrong_input := '0'B1;
+         ALT ('4')
+            PUT '---TEST-MODE AKTIV---' TO terminal_out BY A, SKIP;
+            select_testcase;
+            wrong_input := '0'B1;
+         OUT
+            PUT '---Falsche Eingabe!---' TO terminal_out BY A, SKIP;
+      FIN;
+   END;
+END;
+
+! ==========================================================================
+! User Input: Auswahl TestCase
+   !Auswahl des Testprogramms im Test-Modus.
+      !Manuelle Steuerung: Steuerung von Pumpe und Ventil ueber Benutzereingabe.
+      !SelfCheck: Durchlaufen eines Ablaufs zur Überpruefung der Sensoren und Funktionen.
+      !ErrorTest: Bewusstes Herbeifuehren von Fehlerfällen.
+! ==========================================================================
+select_testcase: PROC;
+   DCL wrong_input BIT(1) INIT('1'B1);
+   WHILE wrong_input
+      REPEAT
+      PUT 'TestCase: 1 = Manuelle Steuerung, 2 = SelfCheck, 3 = ErrorTest, 4 = Return' TO terminal_out BY A, SKIP;
+      GET testcase_selection FROM terminal_in BY A;
+      CASE testcase_selection
+         ALT ('1')
+            PUT '---MANUELLER MODUS AKTIV---' TO terminal_out BY A, SKIP;
+            log('Modus: Manuelle Steuerung');
+            wrong_input := '0'B1;
+         ALT ('2')
+            PUT '---SELFCHECK WIRD GESTARTET---' TO terminal_out BY A, SKIP;
+            log('Modus: Selfcheck');
+            self_check;
+            wrong_input := '0'B1;
+         ALT ('3')
+            PUT '---ERROR TEST---' TO terminal_out BY A, SKIP;
+            select_error;
+            wrong_input := '0'B1;
+         ALT ('4') !Zurueck zur Auswahl des Reglers
+            select_controller;
+            wrong_input := '0'B1;
+         OUT
+            PUT '---Falsche Eingabe!---' TO terminal_out BY A, SKIP;
+      FIN;
+   END;
+END;
+
+! ==========================================================================
+! User Input: Auswahl Error fuer Error-Test
+   !Fehler 1: Ventil defekt
+   !Fehler 2: Pumpe defekt
+! ==========================================================================
+
+select_error: PROC;
+   DCL wrong_input BIT(1) INIT('1'B1);
+   WHILE wrong_input
+      REPEAT
+      PUT '1 = Code1 (Pumpe defekt), 2 = Code2 (Ventil defekt), 3 = Return' TO terminal_out BY A, SKIP;
+      GET error_selection FROM terminal_in BY A;
+      CASE error_selection
+         ALT ('1')
+            wrong_input := '0'B1;
+         ALT ('2')
+            wrong_input := '0'B1;
+         ALT ('3') !Zurueck zur Auswahl des Testcases
+            select_testcase;
+            wrong_input := '0'B1;
+         OUT
+            PUT '---Falsche Eingabe!---' TO terminal_out BY A, SKIP;
+      FIN;
+   END;
+END;
+
+
+trigger_error_2: PROC;
+   DCL status FIXED(15);
+   PUT '---ERROR 2 WIRD AUSGELÖST (VENTIL OFFEN / PUMPE AUS)---' TO terminal_out BY A, SKIP;
+   
+   open_dations;
+
+   set_pump_state('OFF');
+   set_valve(1);
+   AFTER 1 SEC RESUME;
+   status := read_v_status;
+   AFTER 2 SEC RESUME;
+END;
+
+trigger_error_1: PROC;
+
+   DCL rpm FIXED(31);
+   PUT '---ERROR 1 WIRD AUSGELÖST (PUMPE DEFEKT)---' TO terminal_out BY A, SKIP;
+   
+   open_dations;
+
+   set_pump_state('RUNNING');
+   set_pump_rpm(0);
+   AFTER 1 SEC RESUME;
+   rpm := read_pump_rpm;
+   AFTER 2 SEC RESUME;
+END;
+
+
+! ==========================================================================
+! User Input: Steuerung im manuellen Modus
+   ! Z.B. um Fehlerfaelle zu ueberpruefen.
+   ! Möglichkeit das Ventil auf- und zuzuschalten.
+   ! Möglichkeit die Pumpe an- und auszuschalten.
+   ! Möglichkeit einen regulaeren Pumpenstart zu initieren (Pumpe an, Warten, Ventil auf).
+   ! Möglichkeit einen regulaeren Pumpenstop zu initieren.
+! ==========================================================================
+manual_user_input: PROC;
+   DCL input CHAR(1);
+   DCL wrong_input BIT(1);
+   DCL status FIXED(15);
+   
+   wrong_input := '1'B1;
+   WHILE wrong_input
+      REPEAT
+      PUT 'MANUELLER MODUS AKTIV. BEFEHLE: s = Startup, x = Stop, v = Ventil öffnen / schließen, p = Pumpe an- / ausschalten (ENTER zum bestätigen)' TO terminal_out BY A, SKIP;
+      GET input FROM terminal_in BY A;
+      CASE input
+         ALT('s')
+            pump_start;
+         ALT('x')
+            pump_stop;
+         ALT('v')
+            IF get_v_status==0 THEN
+               PUT '---VENTIL ÖFFNEN---' TO terminal_out BY A, SKIP;
+               set_valve(1);
+            ELSE
+               PUT '---VENTIL SCHLIESSEN---' TO terminal_out BY A, SKIP;
+               set_valve(0);
+            FIN;
+            AFTER valve_switch_delay_s RESUME;
+            status := read_v_status;
+            wrong_input := '0'B1;
+         ALT('p')
+            IF get_pump_rpm == 0 THEN
+               PUT '---PUMPE ANSCHALTEN---' TO terminal_out BY A, SKIP;
+               set_pump_rpm(pump_startup_rpm);
+            ELSE
+               PUT '---PUMPE ABSCHALTEN---' TO terminal_out BY A, SKIP;
+               set_pump_rpm(0);
+            FIN;
+         OUT
+            PUT '---Ungueltige Eingabe!---' TO terminal_out BY A, SKIP;
+      FIN;
+      set_pump_state('TESTMODE');
+
+   END;
+END;
+
+! ==========================================================================
+! Prozedur fuer SelfCheck
+   ! Ablauf zur Ueberpruefung der Sensoren und Funktionen.
+! ==========================================================================
+self_check: PROC;
+   DCL p2_val FLOAT;
+   DCL error_count FIXED(15) INIT(0);
+   open_dations;
+   AFTER 0.5 SEC RESUME;
+   print_separator;
+   PUT '---INITIALE SENSORWERTE PRUEFEN---' TO terminal_out BY A, SKIP;
+   IF (read_p_pump_sens == 0) THEN 
+      PUT '---DRUCKSENSOR PUMPE: OK---' TO terminal_out BY A, SKIP;
+   ELSE
+      PUT '---DRUCKSENSOR PUMPE: ERROR---' TO terminal_out BY A, SKIP;
+      error_count := error_count + 1;
+   FIN;
+   p2_val := read_p_tank_sens;
+   IF p2_val < 3000 AND p2_val > 1000 THEN 
+      PUT '---DRUCKSENSOR TANK: OK---' TO terminal_out BY A, SKIP;
+   ELSE
+      PUT '---DRUCKSENSOR TANK: ERROR---' TO terminal_out BY A, SKIP;
+      error_count := error_count + 1;
+   FIN;  
+   print_separator;
+   PUT '---PUMPE PRUEFEN---' TO terminal_out BY A, SKIP;
+   set_pump_rpm(1000);
+   AFTER 2 SEC RESUME;
+   IF (read_p_pump_sens > 0) THEN
+      PUT '---PUMPENFUNKTION: OK---' TO terminal_out BY A, SKIP;
+   ELSE 
+      PUT '---PUMPENFUNKTION: ERROR---' TO terminal_out BY A, SKIP;
+      error_count := error_count + 1;
+   FIN;
+   print_separator;
+   PUT '---VENTIL PRUEFEN---' TO terminal_out BY A, SKIP;
+   p2_val := read_p_tank_sens;
+   set_valve(1);
+   AFTER 3 SEC RESUME;
+   IF (read_p_tank_sens > p2_val) THEN
+      PUT '---VENTILFUNKTION: OK---' TO terminal_out BY A, SKIP;
+   ELSE  
+      PUT '---VENTILFUNKTION: ERROR---' TO terminal_out BY A, SKIP;
+      error_count := error_count + 1;
+   FIN;
+   print_separator;
+   PUT '---SCHWIMMERSCHALTER PRUEFEN---' TO terminal_out BY A, SKIP;
+   IF read_switch_status == '0'B1 THEN
+      PUT '---SCHWIMMERSCHALTER OFF, TANK WIRD GEFUELLT...---' TO terminal_out BY A, SKIP;
+   ELSE
+      PUT '---SCHWIMMERSCHALTER: ERROR---' TO terminal_out BY A, SKIP;
+      error_count := error_count + 1;
+   FIN;
+   set_pump_rpm(2000);
+   WHILE p2_val < 19620
+   REPEAT
+      p2_val := read_p_tank_sens;
+      AFTER 3 SEC RESUME;
+   END;
+   IF read_switch_status == '1'B1 THEN
+      PUT '---SCHWIMMERSCHALTER: OK---' TO terminal_out BY A, SKIP;
+   ELSE
+      PUT '---SCHWIMMERSCHALTER: ERROR---' TO terminal_out BY A, SKIP;
+      error_count := error_count + 1;
+   FIN;
+   print_separator;
+   pump_stop;
+   PUT 'SELFCHECK BEENDET MIT ', error_count, ' FEHLERN.' TO terminal_out BY A, F(1), A, SKIP;
+   select_testcase;
+END;
+
+! ==========================================================================
+! Prozedur um alle Dations zu öffnen
+! ==========================================================================
+open_dations: PROC;
+   OPEN foerderpumpe;
+   OPEN ventil;
+   OPEN sensor1;
+   OPEN sensor2;
+   OPEN schwimmerschalter;
+END;
+
+
+print_separator: PROC;
+   PUT '===================================================' TO terminal_out BY A, SKIP;	
+END;
+
+! ==========================================================================
+! Getter und Setter fuer Datenstruktur
+! Hauptsächlich fuer Logging (und Error Handling)
+! "Read" um Sensorwerte auszulesen und in Datenstruktur zu speichern
+! "Get" um Werte aus Datenstruktur zu lesen
+! ==========================================================================
+get_all_data: PROC RETURNS (STRUCT[pump_state CHAR(8), rpm FIXED(31), p1 FLOAT, p2 FLOAT, switch_status BIT(1), valve_status FIXED(15)]);
+   DCL DataSet STRUCT[pump_state CHAR(8), rpm FIXED(31), p1 FLOAT, p2 FLOAT, switch_status BIT(1), valve_status FIXED(15)];
+   REQUEST sema;
+   DataSet := Data;
+   RELEASE sema;
+   RETURN (DataSet);
+END;
+
+!___Pumpe__!
+
+!Drehzahl auslesen und in Datenstruktur ablegen.
+read_pump_rpm: PROC RETURNS(FIXED(31));
+   DCL rpm FIXED(31);
+   TAKE rpm FROM foerderpumpe; !Drehzahl auslesen.
+   REQUEST sema;
+   Data.pump_rpm := rpm; !Wert in Datenstruktur ablegen.
+   RELEASE sema;
+   RETURN(rpm);
+END;
+
+!Wert aus Datenstruktur lesen.
+get_pump_rpm: PROC RETURNS(FIXED(31));
+   DCL rpm FIXED(31);
+   REQUEST sema;
+   rpm := Data.pump_rpm;
+   RELEASE sema;
+   RETURN(rpm);
+END;
+
+!Drehzahl an Pumpe schicken.
+set_pump_rpm: PROC (rpm FIXED(31));
+   SEND rpm TO foerderpumpe;
+END;
+
+!___Pumpen Status__!
+
+set_pump_state: PROC (state CHAR(8));
+   REQUEST sema;
+   Data.pump_state := state;
+   RELEASE sema;
+END;
+
+get_pump_state: PROC RETURNS (CHAR(8));
+   DCL state CHAR(8);
+   REQUEST sema;
+   state := Data.pump_state;
+   RELEASE sema;
+   RETURN(state);
+END;
+
+!___Drucksensor 1__!
+
+read_p_pump_sens: PROC RETURNS(FLOAT);
+   DCL pressure1 FLOAT;
+   TAKE pressure1 FROM sensor1;
+   REQUEST sema;
+   Data.pressure1 := pressure1;
+   RELEASE sema;
+   RETURN(pressure1);
+END;
+
+get_p_pump: PROC RETURNS(FLOAT);
+   DCL p1 FLOAT;
+   REQUEST sema;
+   p1 := Data.pressure1;
+   RELEASE sema;
+   RETURN(p1);
+END; 
+
+!___Drucksensor 2__!
+
+read_p_tank_sens: PROC RETURNS(FLOAT);
+   DCL pressure2 FLOAT;
+   TAKE pressure2 FROM sensor2;
+   REQUEST sema;
+   Data.pressure2 := pressure2;
+   RELEASE sema;
+   RETURN(pressure2);
+END;
+
+get_p_tank: PROC RETURNS(FLOAT);
+   DCL p2 FLOAT;
+   REQUEST sema;
+   p2 := Data.pressure2;
+   RELEASE sema;
+   RETURN(p2);
+END;
+
+!___Ventil___!
+
+read_v_status: PROC RETURNS(FIXED(15));
+   DCL v_status FIXED(15);
+   TAKE v_status FROM ventil;
+   REQUEST sema;
+   Data.valve_status := v_status;
+   RELEASE sema;
+   RETURN(v_status);
+END;
+
+get_v_status: PROC RETURNS(FIXED(15));
+   DCL v_status FIXED(15);
+   REQUEST sema;
+   v_status := Data.valve_status;
+   RELEASE sema;
+   RETURN(v_status);
+END;
+
+set_valve: PROC (valve_position FIXED(15));
+   SEND valve_position TO ventil;
+END;
+
+!___Schwimmerschalter___!
+
+read_switch_status: PROC RETURNS(BIT(1));
+   DCL s_status BIT(1);
+   TAKE s_status FROM schwimmerschalter;
+   REQUEST sema;
+   Data.switch_status := s_status;
+   RELEASE sema;
+   RETURN(s_status);
+END;
+
+get_switch_status: PROC RETURNS(BIT(1));
+   DCL s_status BIT(1);
+   REQUEST sema;
+   s_status := Data.switch_status;
+   RELEASE sema; 
+   RETURN(s_status);
+END;
+
+MODEND;

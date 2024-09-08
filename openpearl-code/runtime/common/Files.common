@@ -131,6 +131,31 @@ ifeq ($(CONFIG_SIMWATERTANK),y)
    CXX_COMMON += watertank/WatertankInt.cc  
 endif
 
+#CONFIG_SIMFILEXTRUDER must be set manually by the makefile of
+# the platform, which is build now
+ifeq ($(CONFIG_SIMFILEXTRUDER),y)
+   XML_COMMON += filamentExtruder/Simulator.xml 
+   HDR_COMMON += filamentExtruder/ScrewMotor.h
+   CXX_COMMON += filamentExtruder/ScrewMotor.cc
+   XML_COMMON += filamentExtruder/ScrewMotor.xml
+   HDR_COMMON += filamentExtruder/ScrewHeater.h
+   CXX_COMMON += filamentExtruder/ScrewHeater.cc
+   XML_COMMON += filamentExtruder/ScrewHeater.xml
+   HDR_COMMON += filamentExtruder/SpoolerMotor.h
+   CXX_COMMON += filamentExtruder/SpoolerMotor.cc
+   XML_COMMON += filamentExtruder/SpoolerMotor.xml
+   HDR_COMMON += filamentExtruder/TemperatureSensor.h
+   CXX_COMMON += filamentExtruder/TemperatureSensor.cc
+   XML_COMMON += filamentExtruder/TemperatureSensor.xml
+   HDR_COMMON += filamentExtruder/FilamentDiameterSensor.h
+   CXX_COMMON += filamentExtruder/FilamentDiameterSensor.cc
+   XML_COMMON += filamentExtruder/FilamentDiameterSensor.xml
+   HDR_COMMON += filamentExtruder/SimFilExtruder.h
+   CXX_COMMON += filamentExtruder/SimFilExtruder.cc
+   HDR_COMMON += filamentExtruder/FilExtruderInt.h
+   CXX_COMMON += filamentExtruder/FilExtruderInt.cc  
+endif
+
 XML_COMMON += Log.xml LogFile.xml SampleBasicDation.xml SoftInt.xml
 XML_COMMON += SendXML.xml
 

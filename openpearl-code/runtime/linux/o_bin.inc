@@ -1,0 +1,1 @@
+g++ -Wall -g  -fstack-protector -fexceptions -pthread -O2 -fno-non-call-exceptions -DTARGET=1 -std=c++11    -I "/usr/local"/include $objects -o $target "/usr/local"/lib/libOpenPEARLlinux.a -lpthread -lrt  >>$target.out 2>>$target.log

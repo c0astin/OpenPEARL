@@ -1,0 +1,511 @@
+/*
+Simulation of a filament extruder.
+
+ [A "BSD license"]
+ Copyright (c) 2023 Marcel Schaible
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+MODULE(SimFilExtruder);
+
+PROBLEM;
+
+SPC pipe DATION INOUT SYSTEM ALL GLOBAL(SimFilExtruder);
+DCL writeFormatted DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(pipe);
+DCL readInternal   DATION IN  CHAR   DIM(*,80) FORWARD CREATED(pipe);
+
+SPC homeFolder DATION INOUT SYSTEM ALL GLOBAL(SimFilExtruder);
+DCL logFile DATION OUT ALPHIC DIM(*,80) FORWARD  CREATED(homeFolder);
+DCL fileName CHAR(7) INIT('sim.log');
+DCL message CHAR(80);
+
+! ==========================================================================
+DCL pi INV FLOAT INIT(3.1415926);
+
+! ==========================================================================
+! 
+DCL simulation_is_running BIT(1) INIT('0'B1);
+
+! ==========================================================================
+! 
+DCL sema SEMA PRESET(1);
+
+! ==========================================================================
+! 
+DCL step FIXED INIT(0);
+
+! ==========================================================================
+
+
+! ==========================================================================
+! Extruder: Geometric properties
+! ==========================================================================
+
+! Nozzle diameter
+DCL nozzle_diameter FLOAT INIT(1.75)
+
+! Screw diameter
+DCL screw_diameter FLOAT INIT(40.0)
+
+! Extruder wall thickness
+DCL wall_thickness FLOAT INIT(20.0)
+
+! ==========================================================================
+! Material: PLA properties
+! ==========================================================================
+! Min. processing temperature
+DCL min_processing_temp FIXED(15) INIT(190);
+
+! Max. processing temperature
+DCL max_processing_temp FIXED(15) INIT(210);
+
+! Material density in [g/cm^3]
+DCL density FLOAT INIT(1.24)
+
+! ==========================================================================
+! General
+! ==========================================================================
+! Ambient temperature in Kelvin
+DCL ambient_temp FIXED(15) INIT(293);
+
+! ==========================================================================
+! Extruder: Screw Drive
+! ==========================================================================
+! maximum revolution per min
+DCL screwmotor_max_rpm FIXED(15) INIT(1000); 
+
+! if extruder is switched on and no rpm is requested, extruder screw will run with this rpm
+DCL screwmotor_idle_rpm FIXED(15) INIT(100);
+
+! Extruder motor spinup time in [rpm]
+DCL screwmotor_spin_up_speed FIXED(15) INIT(500); 
+
+! Extruder motor spindown time in [rpm]
+DCL screwmotor_spin_down_speed FIXED(15) INIT(700); 
+
+! requested rpm [revolution/min]
+DCL screwmotor_requested_rpm FIXED(15) INIT(0); 
+
+! current rpm [revolution/min]
+DCL screwmotor_current_rpm FLOAT INIT(0.0); 
+
+! count how many times the motor has been switched on and off
+DCL screwmotor_activations FIXED(31) INIT(0);
+
+! ==========================================================================
+! Extruder: Screw Heater
+! ==========================================================================
+
+! maximum pwm
+DCL screwheater_max_pwm FIXED(15) INIT(100); 
+
+! current pwm [%]
+DCL screwheater_current_pwm FLOAT INIT(0.0); 
+
+! max heating power [W]
+DCL screwheater_power_max FLOAT INIT(2000.0);
+
+! requested pwm [%]
+DCL screwheater_requested_pwm FLOAT INIT(0.0);
+
+! count how many times the heater has been switched on and off
+DCL screwheater_activations FIXED(31) INIT(0);
+
+! ==========================================================================
+! Extruder: Sensors
+! ==========================================================================
+
+! temperature sensor
+DCL temperature_sensor FLOAT INIT(23.0);
+
+
+! ==========================================================================
+! Spooler
+! ==========================================================================
+
+! maximum revolution per min
+DCL spoolermotor_max_rpm FIXED(15) INIT(500); 
+
+! if spooler is switched on and no rpm is requested, spooler will run with this rpm
+DCL spoolermotor_idle_rpm FIXED(15) INIT(5);
+
+! Spooler motor spinup time in [rpm]
+DCL spoolermotor_spin_up_speed FIXED(15) INIT(500); 
+
+! Spooler motor spindown time in [rpm]
+DCL spoolermotor_spin_down_speed FIXED(15) INIT(700); 
+
+! requested rpm [revolution/min]
+DCL spoolermotor_requested_rpm FIXED(15) INIT(0); 
+
+! current rpm [revolution/min]
+DCL spoolermotor_current_rpm FLOAT INIT(0.0); 
+
+! count how many time the motor has been switched on and off
+DCL spoolermotor_activations FIXED(31) INIT(0);
+
+! current winding diameter [mm]
+DCL winding_diameter FLOAT INIT(52.0)
+
+! spool width [mm]
+DCL spool_width FIXED INIT(67)
+
+! ==========================================================================
+! Diameter Sensor
+! ==========================================================================
+
+! filament diameter measured by laser sensor
+DCL diameter_sensor FLOAT INIT(0.0);
+
+! ==========================================================================
+start_simulation: PROC GLOBAL;
+   openLogfile(fileName, '0'B1);
+   OPEN writeFormatted;
+   log('STARTING SIMULATION');
+   simulation_is_running = '1'B1;
+   AFTER 1 SEC ACTIVATE log_status;
+   ACTIVATE simulation;
+END;
+
+! ==========================================================================
+stop_simulation: PROC GLOBAL;
+   log('REQUEST STOPPING SIMULATION');
+   simulation_is_running = '0'B1;
+   CLOSE writeFormatted;
+!  closeLogfile;	  
+END;
+
+! ==========================================================================
+openLogfile: PROC(logFileName REF INV CHAR(), addToExistingFile BIT(1));
+   DCL fn CHAR(30); ! workarround since REF CHAR() is not accepted as IDF
+   fn = logFileName;! see ticket #414
+
+   IF addToExistingFile THEN
+      OPEN logFile BY IDF(fn), ANY;
+      PUT TO logFile BY EOF;
+   ELSE
+      ! we want a new log file for each execution
+      ! --> just open with ANY and close with CAN
+      OPEN logFile BY IDF(fn), ANY;
+      CLOSE logFile BY CAN;
+      ! previous log file deleted
+
+      ! create a new file
+      OPEN logFile BY IDF(fn), NEW;
+   FIN;
+END;
+
+! ==========================================================================
+closeLogfile: PROC;
+   CLOSE logFile; 
+END;
+
+! ==========================================================================
+log: PROC(line  REF INV CHAR() );
+   PUT NOW,' SIM: ', line TO logFile BY T(12,3),A,A,SKIP;
+   PUT NOW,' SIM: ', line TO writeFormatted BY T(12,3),A,A,SKIP;   
+END;
+
+log_status: TASK PRIO 20;
+   DCL line CHAR(80);
+  log('Fields:');
+  log('|#1|#2|#3|#4|#5|#6|#7|#8|#9|#10|');
+  log('# 1: simulation_is_running');
+  log('# 2: ScrewMotor RPM');
+  log('# 3: ScrewMotor Activations');
+  log('# 4: SpoolerMotor RPM');
+  log('# 5: SpoolerMotor Activations');
+  log('# 6: ScrewHeater PWM');
+  log('# 7: Filament Diameter');
+  log('# 8: Extruder Temperature');
+  log('----------------------------------------------------------------------------');
+  log(' 1    2    3    4    5    6    7    8');
+
+  WHILE simulation_is_running
+   REPEAT
+     REQUEST sema;
+     CONVERT '|',
+             simulation_is_running, '|',
+             screwmotor_current_rpm, '|',
+             screwmotor_activations, '|',
+             spoolermotor_current_rpm, '|',
+             spoolermotor_activations, '|',
+             screwheater_current_pwm, '|',
+             diameter_sensor, '|',
+             temperature_sensor, '|'
+	     TO line BY A,
+ 	               B(1),A,
+			         F(4),A,
+                  F(4),A,
+                  F(4),A,
+                  F(4),A,
+                  F(10,4),A,
+                  F(10,4),A,
+                  F(10,4),A;
+     RELEASE sema;
+     log(line);
+     AFTER 1 SEC RESUME;
+   END;
+
+END;
+! time of the last update cycle
+DCL last_update CLOCK;
+
+
+! ==========================================================================
+! Extruder: Screw Drive
+! ==========================================================================
+
+! Returns the current rotation speed of the extruder screw in [revolutions/min]
+get_screwmotor_rotational_speed: PROC RETURNS (FIXED(31)) GLOBAL;
+  DCL rpm FIXED(31);
+  REQUEST sema;
+  rpm := ENTIER screwmotor_current_rpm;
+  RELEASE sema;
+  RETURN (rpm);
+END;
+
+! Request the rpm of the extruder screw in [rpm]
+set_screwmotor_rotational_speed: PROC(rpm FIXED(15)) GLOBAL;
+  REQUEST sema;
+  screwmotor_requested_rpm := rpm;
+  RELEASE sema;
+END;
+!
+screwmotor_update: PROC (dt FLOAT /* [ms] */);
+  IF screwmotor_current_rpm == 0 AND screwmotor_requested_rpm > 0.0
+  THEN
+      screwmotor_activations := screwmotor_activations + 1;
+  FIN;
+
+  IF screwmotor_current_rpm < screwmotor_requested_rpm
+  THEN
+      screwmotor_current_rpm := screwmotor_current_rpm + ENTIER (dt * screwmotor_spin_up_speed / 1000);
+      IF screwmotor_current_rpm > screwmotor_requested_rpm
+      THEN
+        screwmotor_current_rpm = screwmotor_requested_rpm;
+      FIN;
+  FIN;
+
+  IF screwmotor_current_rpm > screwmotor_requested_rpm
+  THEN
+     screwmotor_current_rpm := screwmotor_current_rpm - ENTIER (dt * screwmotor_spin_down_speed / 1000);
+
+     IF screwmotor_current_rpm < 0
+     THEN
+        screwmotor_current_rpm = 0;
+     FIN;
+  FIN;
+
+  IF screwmotor_current_rpm > screwmotor_max_rpm
+  THEN
+    screwmotor_current_rpm := screwmotor_max_rpm;	
+  FIN;
+
+END;
+
+! ==========================================================================
+! Extruder: Heating Element
+! ==========================================================================
+
+! Returns the current pwm of the extruder heater in [%]
+get_screwheater_pwm: PROC RETURNS (FIXED(31)) GLOBAL;
+  DCL pwm FIXED(31);
+  REQUEST sema;
+  pwm := ENTIER screwheater_current_pwm;
+  RELEASE sema;
+  RETURN (pwm);
+END;
+
+! Set the pwm of the extruder screw in [%]
+set_screwheater_pwm: PROC(pwm FIXED(15)) GLOBAL;
+  REQUEST sema;
+  screwheater_requested_pwm := pwm;
+  RELEASE sema;
+END;
+
+screwheater_update: PROC (dt FLOAT /* [ms] */);
+   IF screwheater_current_pwm == 0 AND screwheater_requested_pwm > 0.0
+   THEN
+         screwheater_activations := screwheater_activations + 1;
+   FIN;
+
+   IF screwheater_requested_pwm > 0.0
+   THEN
+         IF screwheater_requested_pwm  > screwheater_max_pwm
+         THEN 
+            screwheater_current_pwm := screwheater_max_pwm;
+         ELSE
+            screwheater_current_pwm := screwheater_requested_pwm;
+         FIN;
+      ELSE
+      screwheater_current_pwm := 0.0;;	
+   FIN;
+END;
+
+! ==========================================================================
+! Extruder: Temperature Sensor
+! ==========================================================================
+
+! Returns the temperature reading of the temperature sensor in [°C]
+get_temperature_sensor: PROC RETURNS (FLOAT) GLOBAL;
+   DCL temperature FLOAT;
+   REQUEST sema;
+   temperature := temperature_sensor;
+   RELEASE sema;
+   RETURN(temperature);
+END;
+
+temperature_sensor_update: PROC (dt FLOAT /* [ms] */);
+
+!calculate current temperature sensor reading based on:
+!-previous value
+!-last calc timestamp
+!-difference to ambient temp
+!-current heater pwm / power
+!-constants (material properties of steal, used polymer, wall thickness, screw diameter)
+! Without respect to:
+!-forced convection
+!-radiation
+IF screwheater_current_pwm > 0
+   THEN
+      temperature_sensor := screwheater_current_pwm*screwheater_power_max*dt / (5*0.134)-temperature_sensor;
+   ELSE
+      IF temperature_sensor <= 23.0
+      THEN
+      temperature_sensor := 23.0;
+      ELSE
+      temperature_sensor := temperature_sensor - 0.1;
+      FIN;
+   FIN;
+END;
+
+
+
+! ==========================================================================
+! Spooler: Motor
+! ==========================================================================
+
+! Returns the current rotation speed of the spooler in [revolutions/min]
+get_spoolermotor_rotational_speed: PROC RETURNS (FIXED(31)) GLOBAL;
+  DCL rpm FIXED(31);
+  REQUEST sema;
+  rpm := ENTIER spoolermotor_current_rpm;
+  RELEASE sema;
+  RETURN (rpm);
+END;
+
+! Request the rpm of the spooler in [rpm]
+set_spoolermotor_rotational_speed: PROC(rpm FIXED(15)) GLOBAL;
+  REQUEST sema;
+  spoolermotor_requested_rpm := rpm;
+  RELEASE sema;
+END;
+!
+spoolermotor_update: PROC (dt FLOAT /* [ms] */);
+  IF spoolermotor_current_rpm == 0 AND spoolermotor_requested_rpm > 0.0
+  THEN
+      spoolermotor_activations := spoolermotor_activations + 1;
+  FIN;
+
+  IF spoolermotor_current_rpm < spoolermotor_requested_rpm
+  THEN
+      spoolermotor_current_rpm := spoolermotor_current_rpm + ENTIER (dt * spoolermotor_spin_up_speed / 1000);
+      IF spoolermotor_current_rpm > spoolermotor_requested_rpm
+      THEN
+        spoolermotor_current_rpm = spoolermotor_requested_rpm;
+      FIN;
+  FIN;
+
+  IF spoolermotor_current_rpm > spoolermotor_requested_rpm
+  THEN
+     spoolermotor_current_rpm := spoolermotor_current_rpm - ENTIER (dt * spoolermotor_spin_down_speed / 1000);
+
+     IF spoolermotor_current_rpm < 0
+     THEN
+        spoolermotor_current_rpm = 0;
+     FIN;
+  FIN;
+
+  IF spoolermotor_current_rpm > spoolermotor_max_rpm
+  THEN
+    spoolermotor_current_rpm := spoolermotor_max_rpm;	
+  FIN;
+
+END;
+
+! ==========================================================================
+! Spooler: Diameter Sensor
+! ==========================================================================
+! Returns the current diameter reading of diameter sensor in [mm]
+get_diameter_sensor: PROC RETURNS (FLOAT) GLOBAL;
+   DCL diameter FLOAT;
+   REQUEST sema;
+   diameter := diameter_sensor;
+   RELEASE sema;
+   RETURN(diameter);
+END;
+
+diameter_sensor_update: PROC (dt FLOAT /* [ms] */);
+   IF spoolermotor_current_rpm > 0
+   THEN
+      diameter_sensor := diameter_sensor + 0.001;
+   ELSE
+      diameter_sensor := 0.0;
+   FIN;
+END;
+
+! ==========================================================================
+! Simulation Main Task
+! ==========================================================================
+simulation: TASK PRIO 10;
+  DCL current_clock CLOCK;
+  DCL dt FLOAT;
+  DCL msg CHAR(80);
+  DCL err FIXED;
+  
+  WHILE simulation_is_running
+  REPEAT
+      REQUEST sema;
+      current_clock = NOW;
+      dt := (current_clock - last_update) / 0.001 SEC; ! [ms]
+      screwmotor_update(dt);
+      screwheater_update(dt);
+      spoolermotor_update(dt);
+      diameter_sensor_update(dt);
+      temperature_sensor_update(dt);
+      RELEASE sema;
+      
+      last_update = current_clock;
+
+      AFTER 0.01 SEC RESUME;
+  END; ! WHILE .. REPEAT
+
+
+  log('SIMULATION TASK STOPPED');
+END;
+
+MODEND;

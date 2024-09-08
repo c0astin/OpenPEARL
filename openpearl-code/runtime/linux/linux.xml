@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<platform file="linux.xml">
+   <dation name="Pipe">
+      <parameters>
+        <CHAR length="32767" name="nameOfPipe"> <NotEmpty/> </CHAR>
+        <FIXED length="31" name="lengthOfPipe"> <FIXEDRANGE>1,9999</FIXEDRANGE> </FIXED>
+        <CHAR length="32767" name="openAttributes">
+           <ConsistsOf>'OLD','NEW','ANY','OPEN1','CAN','PRM'</ConsistsOf>
+        </CHAR>
+      </parameters>
+      <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+      <checks>
+         <check instances="oncePerSet" set="Pipe($nameOfPipe)"/>
+      </checks>
+   </dation>
+   <dation name="Disc">
+      <parameters>
+        <CHAR length="32767" name="dir"> <NotEmpty/> </CHAR>
+        <FIXED length="31" name="numberOfFiles"> <FIXEDGT>0</FIXEDGT> </FIXED>
+      </parameters>
+      <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+      <associationProvider>
+         <associationType name="NamedAlphicOutProvider"/>
+      </associationProvider>
+   </dation>
+   <dation name="StdIn">
+      <parameters> </parameters>
+      <attributes>FORWARD, IN, SYSTEM</attributes>
+      <data>ALPHIC</data>
+      <checks>
+          <check instances="oncePerSet" set="StdIn"/>
+      </checks>
+   </dation>
+   <dation name="StdOut">
+      <parameters> </parameters>
+      <attributes>FORWARD, OUT, SYSTEM</attributes>
+      <data>ALPHIC</data>
+      <associationProvider>
+         <associationType name="AlphicOutProvider"/>
+      </associationProvider>
+      <checks>
+        <check instances="oncePerSet"  set="StdOut"/>
+      </checks>
+   </dation>
+   <dation name="StdError">
+      <parameters> </parameters>
+      <attributes>FORWARD, OUT, SYSTEM</attributes>
+      <data>ALPHIC</data>
+      <checks>
+         <check instances="oncePerSet" set="StdError" />
+      </checks>
+   </dation>
+   <dation name="Console">
+      <parameters> </parameters>
+      <attributes>FORWARD, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALPHIC</data>
+      <checks>
+         <check instances="oncePerSet" set="StdIn"/>
+         <check instances="oncePerSet" set="StdOut"/>
+      </checks>
+      <requireTFU maxsize="80"/>
+   </dation>
+   <interrupt name="UnixSignal">
+      <parameters>
+         <FIXED length="31" name="signalNumber">
+            <VALUES>1,2,3,15,16,17</VALUES>
+         </FIXED>
+      </parameters>
+      <checks>
+        <check instances="oncePerSet" set="UnixSignal($signalNumber)" />
+      </checks>
+   </interrupt>
+   <dation name="TcpIpServer">
+      <parameters>
+        <FIXED length="31" name="port"> <FIXEDRANGE>1,65535</FIXEDRANGE> </FIXED>
+      </parameters>
+      <attributes>FORWARD, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+      <checks>
+          <check instances="oncePerSet" set="TcpIpServer($port)" />
+      </checks>
+   </dation>
+   <dation name="LM75">
+      <parameters>
+         <BIT length="8" name="iicAdr">
+            <VALUES>
+            '48'B4, '49'B4, '4A'B4, '4B'B4,
+            '4C'B4, '4D'B4 , '4E'B4, '4F'B4
+            </VALUES>
+         </BIT>
+      </parameters>
+      <attributes>SYSTEM, BASIC, IN</attributes>
+      <data>FIXED(15)</data>
+      <checks>
+         <check i2cAdrDoesNotCollide="LM75" nonShareable="$iicAdr" />
+      </checks>
+      <needAssociation name="I2CBusProvider" />
+   </dation>
+   <dation name="ADS1015SE">
+      <parameters>
+         <BIT length="8" name="iicAdr">
+            <VALUES>
+            '48'B4, '49'B4, '4A'B4, '4B'B4
+            </VALUES>
+         </BIT>
+         <FIXED length="15" name="channel"><FIXEDRANGE>0,3</FIXEDRANGE></FIXED>
+         <FIXED length="15" name="gain"><FIXEDRANGE>0,5</FIXEDRANGE></FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, IN</attributes>
+      <data>FIXED(15)</data>
+      <needAssociation name="I2CBusProvider" />
+      <checks>
+         <check pin2DoesNotCollide="ADS1015SE($iicAdr)" start="$channel" />
+      </checks>
+   </dation>
+   <dation name="PCF8574In">
+      <parameters>
+         <BIT length="8" name="iicAdr">
+            <VALUES>
+            '20'B4, '21'B4, '22'B4, '23'B4,
+            '24'B4, '25'B4, '26'B4, '27'B4,
+            '38'B4, '39'B4, '3A'B4, '3B'B4,
+            '3C'B4, '3D'B4, '3E'B4, '3F'B4,
+            </VALUES>
+         </BIT>
+         <FIXED length="15" name="start"><FIXEDRANGE>0,7</FIXEDRANGE></FIXED>
+         <FIXED length="15" name="width"><FIXEDRANGE>1,[1+$start]</FIXEDRANGE></FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, IN</attributes>
+      <data>BIT($width)</data>
+      <needAssociation name="I2CBusProvider" />
+      <checks>
+         <check i2cAdrDoesNotCollide="PCF8574" shareable="$iicAdr" />
+         <check pinDoesNotCollide="PCF8574($iicAdr)" start="$start" width="$width" />
+      </checks>
+
+   </dation>
+   <dation name="PCF8574Out">
+      <parameters>
+         <BIT length="8" name="iicAdr">
+            <VALUES>
+            '20'B4, '21'B4, '22'B4, '23'B4,
+            '24'B4, '25'B4, '26'B4, '27'B4,
+            '38'B4, '39'B4, '3A'B4, '3B'B4,
+            '3C'B4, '3D'B4, '3E'B4, '3F'B4,
+            </VALUES>
+         </BIT>
+         <FIXED length="15" name="start"><FIXEDRANGE>0,7</FIXEDRANGE></FIXED>
+         <FIXED length="15" name="width"><FIXEDRANGE>1,[1+$start]</FIXEDRANGE></FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, OUT</attributes>
+      <data>BIT($width)</data>
+      <needAssociation name="I2CBusProvider" />
+      <checks>
+         <check i2cAdrDoesNotCollide="PCF8574" shareable="$iicAdr" />
+         <check pinDoesNotCollide="PCF8574($iicAdr)" start="$start" width="$width" />
+      </checks>
+   </dation>
+   <dation name="BME280">
+      <parameters>
+         <BIT length="8" name="iicAdr">
+            <VALUES>
+            '76'B4, '77'B4
+            </VALUES>
+         </BIT>
+         <FIXED length="7" name="p1">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7" name="p2">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7" name="p3">
+           <VALUES>0,1,2,3,4,5</VALUES>
+         </FIXED>
+         <FIXED length="7" name="p4">
+           <VALUES>0,1,2,3,4</VALUES>
+         </FIXED>
+         <FIXED length="7" name="p5">
+           <VALUES>0,1,2,3,4,5,6,7,8</VALUES>
+         </FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, IN</attributes>
+      <data>ALL</data>
+      <needAssociation name="I2CBusProvider" />
+      <checks>
+         <check i2cAdrDoesNotCollide="BME280" nonShareable="$iicAdr" />
+      </checks>
+   </dation>
+   <connection name="PCA9685">
+      <parameters>
+         <BIT length="8" name="iicAdr">
+           <VALUES>
+		'40'B4, '41'B4, '42'B4, '43'B4, '44'B4, '45'B4, '46'B4, '47'B4,
+		'48'B4, '49'B4, '4A'B4, '4B'B4, '4C'B4, '4D'B4, '4E'B4, '4F'B4,
+		'50'B4, '51'B4, '52'B4, '53'B4, '54'B4, '55'B4, '56'B4, '57'B4,
+		'58'B4, '59'B4, '5A'B4, '5B'B4, '5C'B4, '5D'B4, '5E'B4, '5F'B4,
+		'60'B4, '61'B4, '62'B4, '63'B4, '64'B4, '65'B4, '66'B4, '67'B4,
+		'68'B4, '69'B4, '6A'B4, '6B'B4, '6C'B4, '6D'B4, '6E'B4, '6F'B4,
+		'70'B4, '71'B4, '72'B4, '73'B4, '74'B4, '75'B4, '76'B4, '77'B4,
+		'78'B4, '79'B4, '7A'B4, '7B'B4, '7C'B4, '7D'B4, '7E'B4, '7F'B4
+           </VALUES>
+         </BIT>
+         <FIXED length="31" name="frequency">
+            <FIXEDRANGE>3,255</FIXEDRANGE>
+         </FIXED>
+      </parameters>
+      <associationProvider>
+         <associationType name="PCA9685Provider"/>
+      </associationProvider>
+      <needAssociation name="I2CBusProvider" />
+      <checks>
+        <check i2cAdrDoesNotCollide="PCA8596" nonShareable="$iicAdr" />
+      </checks>
+   </connection>
+   <dation name="PCA9685Channel">
+      <parameters>
+         <FIXED length="31" name="channel">
+            <FIXEDRANGE>0,15</FIXEDRANGE>
+         </FIXED>
+      </parameters>
+      <attributes>SYSTEM, BASIC, OUT</attributes>
+      <data>FIXED(15)</data>
+      <needAssociation name="PCA9685Provider" />
+      <checks>
+         <check pinDoesNotCollide="PCA9685Channel"
+                start="$channel" errorText="pwm channel" />
+      </checks>
+   </dation>
+<configuration name="Simulator">
+  <parameters>
+    <CHAR length="1" name="config">
+      <NotEmpty/>
+    </CHAR>
+  </parameters>
+  <checks>
+    <check instances="oncePerSet" set="Simulator"/>
+  </checks>
+</configuration>
+<dation name="FloatSwitch">
+  <attributes> IN, SYSTEM, BASIC</attributes>
+  <data>BIT(1)</data>
+  <requiresModule fileName="SimWatertank/SimWatertankSystem" />
+</dation>
+<dation name="Pump">
+  <parameters>
+    <FIXED length="31" name="rpm">
+    </FIXED>
+  </parameters>
+  <attributes> INOUT,SYSTEM,BASIC</attributes>
+  <data>FIXED(31)</data>
+  <requiresModule fileName="SimWatertank/SimWatertankSystem" />
+</dation>
+
+
+<dation name="Valve">
+  <attributes>SYSTEM,BASIC,INOUT</attributes>
+  <data>FIXED(15)</data>
+  <requiresModule fileName="SimWatertank/SimWatertankSystem" />
+</dation>
+
+
+<dation name="PressureSensor">
+  <parameters>
+    <FIXED length="15" name="addr">
+      <VALUES>0,1</VALUES>
+    </FIXED>
+  </parameters>
+  <attributes> IN, SYSTEM, BASIC</attributes>
+  <data>FLOAT(23)</data>
+  <requiresModule fileName="SimWatertank/SimWatertankSystem" />
+</dation>
+<configuration name="Simulator">
+  <parameters>
+    <CHAR length="1" name="config">
+      <NotEmpty/>
+    </CHAR>
+  </parameters>
+  <checks>
+    <check instances="oncePerSet" set="Simulator"/>
+  </checks>
+</configuration>
+<dation name="ScrewMotor">
+  <parameters>
+    <FIXED length="31" name="rpm">
+    </FIXED>
+  </parameters>
+  <attributes> INOUT,SYSTEM,BASIC</attributes>
+  <data>FIXED(31)</data>
+  <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
+</dation>
+
+
+<dation name="ScrewHeater">
+  <parameters>
+    <FIXED length="31" name="pwm">
+    </FIXED>
+  </parameters>
+  <attributes> INOUT,SYSTEM,BASIC</attributes>
+  <data>FIXED(31)</data>
+  <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
+</dation>
+
+
+<dation name="SpoolerMotor">
+  <parameters>
+    <FIXED length="31" name="rpm">
+    </FIXED>
+  </parameters>
+  <attributes> INOUT,SYSTEM,BASIC</attributes>
+  <data>FIXED(31)</data>
+  <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
+</dation>
+
+
+<dation name="TemperatureSensor">
+  <parameters>
+    <FIXED length="15" name="addr">
+      <VALUES>0,1</VALUES>
+    </FIXED>
+  </parameters>
+  <attributes> IN, SYSTEM, BASIC</attributes>
+  <data>FLOAT(23)</data>
+  <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
+</dation>
+<dation name="DiameterSensor">
+  <parameters>
+    <FIXED length="15" name="addr">
+      <VALUES>0,1</VALUES>
+    </FIXED>
+  </parameters>
+  <attributes> IN, SYSTEM, BASIC</attributes>
+  <data>FLOAT(23)</data>
+  <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
+</dation>
+   <configuration name="Log">
+      <parameters>
+         <CHAR length="4" name="logLevel">
+           <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <needAssociation name="AlphicOutProvider"/>
+      <checks>
+ 	<check instances="oncePerSet" set="Log"/>
+      </checks>
+   </configuration>
+   <connection name="LogFile">
+      <parameters>
+         <CHAR length="32767" name="logFileName">
+            <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <associationProvider>
+         <associationType name="AlphicOutProvider"/>
+      </associationProvider>
+      <needAssociation name="NamedAlphicOutProvider"/>
+      <checks>
+         <check instances="oncePerSet" set="LogFile"/>
+      </checks>
+   </connection>
+   <dation name="SampleBasicDation">
+      <parameters>
+      </parameters>
+      <attributes> BASIC, SYSTEM, IN, OUT, INOUT</attributes>
+      <data>FIXED(15)</data>
+   </dation>
+   <interrupt name="SoftInt">
+      <parameters>
+         <FIXED length="31" name="interruptNumber">
+            <FIXEDRANGE>1,31</FIXEDRANGE>
+         </FIXED>
+      </parameters>
+      <checks>
+         <check instances="oncePerSet" set="SoftInt($interruptNumber)"/>
+      </checks>
+   </interrupt>
+   <configuration name="SendXML">
+      <parameters>
+      </parameters>
+      <checks>
+ 	<check instances="oncePerSet" set="SendXML"/>
+      </checks>
+   </configuration>
+   <connection name="I2CBus">
+      <parameters>
+         <CHAR length="32767" name="deviceName">
+            <NotEmpty/>
+         </CHAR>
+      </parameters>
+      <associationProvider>
+         <associationType name="I2CBusProvider"/>
+      </associationProvider>
+      <checks>
+         <check instances="oncePerSet" set="I2CBus($deviceName)"/>
+      </checks>
+   </connection>
+<!-- Signals.xml : auto generated (Sun Aug 18 14:28:01 2024) -->
+   <signal name="AnySignal"/>
+   <signal name="TaskSignal"/>
+   <signal name="PrioOutOfRangeSignal"/>
+   <signal name="TaskRunningSignal"/>
+   <signal name="TaskSuspendedSignal"/>
+   <signal name="TaskTerminatedSignal"/>
+   <signal name="IllegalSchedulingSignal"/>
+   <signal name="SemaOverflowSignal"/>
+   <signal name="BoltStateSignal"/>
+   <signal name="BoltReserveDuplicateSignal"/>
+   <signal name="DataValueSignal"/>
+   <signal name="FixedRangeSignal"/>
+   <signal name="FixedDivideByZeroSignal"/>
+   <signal name="DurationDivideByZeroSignal"/>
+   <signal name="DurationRangeSignal"/>
+   <signal name="FloatIsNaNSignal"/>
+   <signal name="FloatIsINFSignal"/>
+   <signal name="FunctionParameterOutOfRangeException"/>
+   <signal name="BitIndexOutOfRangeSignal"/>
+   <signal name="CharacterTooLongSignal"/>
+   <signal name="CharacterIndexOutOfRangeSignal"/>
+   <signal name="CharIsINVSignal"/>
+   <signal name="ArrayIndexOutOfBoundsSignal"/>
+   <signal name="RefNotInitializedSignal"/>
+   <signal name="BadArraySegmentSignal"/>
+</platform>

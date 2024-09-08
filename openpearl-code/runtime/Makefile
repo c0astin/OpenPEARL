@@ -70,6 +70,9 @@ prepare:
 ifeq ($(CONFIG_SIMWATERTANK),y)
 	@(cd common/watertank; make prepare;)
 endif
+ifeq ($(CONFIG_SIMFILEXTRUDER),y)
+	@(cd common/filamentExtruder; make prepare;)
+endif
 ifeq ($(CONFIG_LINUX),y) 
 	@(cd linux; make prepare;)
 endif
@@ -112,6 +115,10 @@ install: cc_o.inc o_bin.inc run_bin.inc targets.inc
 ifeq ($(CONFIG_SIMWATERTANK),y) 
 	@(cd common/watertank; make install;)
 	#cp "common/watertank/SimWatertank.xml" /usr/local/include
+endif
+ifeq ($(CONFIG_SIMFILEXTRUDER),y) 
+	@(cd common/filamentExtruder; make install;)
+	#cp "common/filamentExtruder/SimFilExtruder.xml" /usr/local/include
 endif
 ifeq ($(CONFIG_LINUX),y) 
 	@(cd linux; make -B install;)

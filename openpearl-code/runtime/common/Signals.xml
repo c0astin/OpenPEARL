@@ -1,0 +1,26 @@
+<!-- Signals.xml : auto generated (Sun Aug 18 14:28:01 2024) -->
+   <signal name="AnySignal"/>
+   <signal name="TaskSignal"/>
+   <signal name="PrioOutOfRangeSignal"/>
+   <signal name="TaskRunningSignal"/>
+   <signal name="TaskSuspendedSignal"/>
+   <signal name="TaskTerminatedSignal"/>
+   <signal name="IllegalSchedulingSignal"/>
+   <signal name="SemaOverflowSignal"/>
+   <signal name="BoltStateSignal"/>
+   <signal name="BoltReserveDuplicateSignal"/>
+   <signal name="DataValueSignal"/>
+   <signal name="FixedRangeSignal"/>
+   <signal name="FixedDivideByZeroSignal"/>
+   <signal name="DurationDivideByZeroSignal"/>
+   <signal name="DurationRangeSignal"/>
+   <signal name="FloatIsNaNSignal"/>
+   <signal name="FloatIsINFSignal"/>
+   <signal name="FunctionParameterOutOfRangeException"/>
+   <signal name="BitIndexOutOfRangeSignal"/>
+   <signal name="CharacterTooLongSignal"/>
+   <signal name="CharacterIndexOutOfRangeSignal"/>
+   <signal name="CharIsINVSignal"/>
+   <signal name="ArrayIndexOutOfBoundsSignal"/>
+   <signal name="RefNotInitializedSignal"/>
+   <signal name="BadArraySegmentSignal"/>

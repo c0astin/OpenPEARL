@@ -1,0 +1,11 @@
+<dation name="ScrewHeater">
+  <parameters>
+    <FIXED length="31" name="pwm">
+    </FIXED>
+  </parameters>
+  <attributes> INOUT,SYSTEM,BASIC</attributes>
+  <data>FIXED(31)</data>
+  <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
+</dation>
+
+
