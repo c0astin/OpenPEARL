@@ -61,10 +61,10 @@ else
 	   $(error You must be root to execute this command)
 endif
 
-prl:
+prl: showVersion
 	runtime/includeComposer/ic  <prl.inc >prl
 
-install: configuration/include/autoconf.h  flashinterface.inc 
+install: showVersion configuration/include/autoconf.h  flashinterface.inc 
 	(cd compiler/src; make clean; )
 	(cd compiler/src; make install; )
 	(cd runtime; make clean; )
@@ -137,6 +137,12 @@ flashinterface.inc: ./configuration/.config
                 }'  $< >flashinterface.inc
 
 
-
+.PHONY: showVersion
+showVersion:
+	@rm -f showVersion.inc
+	@echo "# automatic generated, never commit to repo" >showVersion.inc
+	@echo $(shell git log -1 --date=format:'%b %d %Y %H:%M:%S %z' | sed -n 3,3p | cut -c 9- | sed 's/^/echo last commit: /') >>showVersion.inc
+	@echo $(shell date +'%b %d %Y %H:%M:%S %z' | sed 's/^/echo build date: /') >> showVersion.inc
+	@echo "# automatic generated --- end" >>showVersion.inc
 
 

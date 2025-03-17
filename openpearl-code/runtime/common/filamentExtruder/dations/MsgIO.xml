@@ -1,0 +1,11 @@
+<dation name="MsgIO">
+  <parameters>
+    <BIT length="64" name="msg">
+    </BIT>
+  </parameters>
+  <attributes> INOUT,SYSTEM,BASIC</attributes>
+  <data>BIT(64)</data>
+  <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
+</dation>
+
+

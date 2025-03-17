@@ -1,0 +1,117 @@
+MODULE(openParams);
+SYSTEM;
+  disc: Disc('/tmp',10);
+PROBLEM;
+   SPC disc DATION INOUT SYSTEM ALL;
+   DCL file1 DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(disc);
+
+t: TASK;
+   DCL e14 FIXED(14);
+   DCL e15 FIXED(15);
+   DCL e31 FIXED(31);
+   DCL fl FLOAT;
+
+   OPEN file1 BY RST(e14);
+/*$^
+error: OPEN: RST variable must be at least FIXED(15) -- got FIXED(14)
+*/
+   OPEN file1 BY RST(e15);
+   OPEN file1 BY RST(e15), RST(e15);
+/*$^
+warning: OPEN: multiple RST attributes
+*/
+
+   OPEN file1 BY RST(e31);
+   OPEN file1 BY RST(fl);
+/*$^
+error: OPEN: RST variable must be FIXED -- got FLOAT(23)
+*/
+
+   OPEN file1;
+   OPEN file1 BY IDF('aa');
+
+   OPEN file1 BY ANY;
+ 
+   OPEN file1 BY NEW;
+/*$^
+error: OPEN: NEW requires IDF
+*/
+
+   OPEN file1 BY OLD;
+/*$^
+error: OPEN: OLD requires IDF
+*/
+
+   OPEN file1 BY CAN;
+/*$^
+error: OPEN: CAN requires IDF
+*/
+
+   OPEN file1 BY PRM;
+/*$^
+error: OPEN: PRM requires IDF
+*/
+
+   OPEN file1 BY ANY;
+
+   OPEN file1 BY ANY,ANY,OLD,NEW, OLD, IDF('xxx'), NEW;
+/*$^
+warning: OPEN: multiple OLD attributes
+*/
+/*$^
+warning: OPEN: multiple NEW attributes
+*/
+/*$^
+warning: OPEN: multiple ANY attributes
+*/
+/*$^
+error: OPEN: only one of OLD/NEW/ANY allowed
+*/
+
+   OPEN file1 BY ANY, CAN, PRM, CAN, PRM;
+/*$^
+error: OPEN: ether CAN or PRM allowed
+*/
+/*$^
+warning: OPEN: multiple CAN attributes
+*/
+/*$^
+warning: OPEN: multiple PRM attributes
+*/
+/*$^
+error: OPEN: PRM requires IDF
+*/
+/*$^
+error: OPEN: CAN requires IDF
+*/
+
+   CLOSE file1 BY CAN,PRM,CAN,PRM;
+/*$^
+error: CLOSE: ether CAN or PRM allowed
+*/
+/*$^
+warning: CLOSE: multiple CAN attributes
+*/
+/*$^
+warning: CLOSE: multiple PRM attributes
+*/
+
+   CLOSE file1 BY RST(e14);
+/*$^
+error: CLOSE: RST variable must be at least FIXED(15) -- got FIXED(14)
+*/
+   CLOSE file1 BY RST(e15);
+   CLOSE file1 BY RST(e15), RST(e15);
+/*$^
+warning: CLOSE: multiple RST attributes
+*/
+
+   CLOSE file1 BY RST(e31);
+   CLOSE file1 BY RST(fl);
+/*$^
+error: CLOSE: RST variable must be FIXED -- got FLOAT(23)
+*/
+
+END;
+
+MODEND;

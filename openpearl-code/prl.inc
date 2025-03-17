@@ -54,6 +54,7 @@ treatOptions() {
         -nosys)         NOSYSTEMPART=1;                shift;;
         -h)             HELP=1;                        shift;;
         -keep)          keepFiles=1;                   shift;;
+        -version)       showVersion=1;                 shift;;
          -*) echo "unknown option " $1;
                shift;
                exit 1;;
@@ -70,6 +71,10 @@ standard="-std=OpenPEARL"
 treatOptions $PRLFLAGS
 
 treatOptions $@
+
+if [[ "showVersion" -eq "1" ]] ; then
+    #include "showVersion.inc"
+fi;
 
 compilerFlags+=" "$standard;
 if [[ "noSDD" -eq "0" ]] ; then
@@ -102,6 +107,7 @@ then
    echo "                               known plattforms: $plattforms"
    echo "    -D name                    Predefine name as a macro with a definition of 1"
    echo "    -D name=definition         Predefine name as a macro with value of definition"
+   echo "    -U name                    Cancel a previous definition with -D name"
    echo "    -E                         preprocess only"
    echo "    -noSDD                     no static deadlock detection"
    echo "    -I dir                     add the directory dir to the list of directories"
@@ -111,7 +117,6 @@ then
    echo "    -noimc                     do not invoke the imc - current system.cc is used"
    echo "                               (for developers)"
 #   echo "    -nosys do not invoke the imc - no system part is used"
-   echo "    -U name                    Cancel a previous definition with -D name"
    echo "    -v                         verbose: print log file to console"
    echo "    -h                         this page" 
    echo "   Note: "

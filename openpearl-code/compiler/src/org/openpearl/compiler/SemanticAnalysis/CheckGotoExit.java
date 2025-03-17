@@ -112,7 +112,7 @@ public class CheckGotoExit extends OpenPearlBaseVisitor<Void> implements OpenPea
     @Override
     public Void visitModule(OpenPearlParser.ModuleContext ctx) {
         if (m_debug) {
-            System.out.println("Semantic: Check Case: visitModule");
+            System.out.println("Semantic: Check Goto/Exit: visitModule");
         }
 
         org.openpearl.compiler.SymbolTable.SymbolTableEntry symbolTableEntry =
@@ -126,7 +126,7 @@ public class CheckGotoExit extends OpenPearlBaseVisitor<Void> implements OpenPea
     @Override
     public Void visitProcedureDeclaration(OpenPearlParser.ProcedureDeclarationContext ctx) {
         if (m_debug) {
-            System.out.println("Semantic: Check Case: visitProcedureDeclaration");
+            System.out.println("Semantic: Check Goto/Exit: visitProcedureDeclaration");
         }
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -138,7 +138,7 @@ public class CheckGotoExit extends OpenPearlBaseVisitor<Void> implements OpenPea
     @Override
     public Void visitTaskDeclaration(OpenPearlParser.TaskDeclarationContext ctx) {
         if (m_debug) {
-            System.out.println("Semantic: Check Case: visitTaskDeclaration");
+            System.out.println("Semantic: Check Goto/Exit: visitTaskDeclaration");
         }
 
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
@@ -150,7 +150,7 @@ public class CheckGotoExit extends OpenPearlBaseVisitor<Void> implements OpenPea
     @Override
     public Void visitBlock_statement(OpenPearlParser.Block_statementContext ctx) {
         if (m_debug) {
-            System.out.println("Semantic: Check Case: visitBlock_statement");
+            System.out.println("Semantic: Check Goto/Exit: visitBlock_statement");
         }
         BlockEntry be = (BlockEntry) (m_currentSymbolTable.lookupLoopBlock(ctx));
         ASTAttribute attr = m_ast.lookup(ctx);
@@ -177,7 +177,7 @@ public class CheckGotoExit extends OpenPearlBaseVisitor<Void> implements OpenPea
     @Override
     public Void visitLoopStatement(OpenPearlParser.LoopStatementContext ctx) {
         if (m_debug) {
-            System.out.println("Semantic: Check Case: visitLoopStatement");
+            System.out.println("Semantic: Check Goto/Exit: visitLoopStatement");
         }
         LoopEntry le = (LoopEntry) (m_currentSymbolTable.lookupLoopBlock(ctx));
         ASTAttribute attr = m_ast.lookup(ctx);

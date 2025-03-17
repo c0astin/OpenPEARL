@@ -1,0 +1,45 @@
+MODULE(Extruder);
+
+SYSTEM;
+so: StdOut;
+div0: FixedDivideByZeroSignal;
+
+screwheater: ScrewHeater(0);
+
+PROBLEM;
+
+SPC div0 SIGNAL;
+
+SPC so DATION OUT SYSTEM ALPHIC ;
+DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+SPC screwheater DATION INOUT SYSTEM BASIC FIXED(31);
+DCL screwHeater DATION INOUT BASIC FIXED(31) CREATED(screwheater);
+
+DCL data_access BOLT;
+
+DCL global_value FIXED;
+
+Startup_task: TASK PRIO 50 MAIN;
+    OPEN screwHeater;
+    OPEN stdout;
+    ALL 0.1 SEC ACTIVATE Get_value_task;
+END;
+
+Get_value_task: TASK PRIO 50;
+    DCL value FIXED;
+
+      ON div0:
+      BEGIN;
+        PUT 'Error: Division by 0.' TO stdout BY A, SKIP;
+        TERMINATE;
+      END;
+
+    TAKE value FROM screwHeater;
+    value := 100 // value;
+    RESERVE data_access;
+    global_value := value;
+    FREE data_access;
+    PUT value TO stdout BY F(4), SKIP;
+END;
+MODEND;

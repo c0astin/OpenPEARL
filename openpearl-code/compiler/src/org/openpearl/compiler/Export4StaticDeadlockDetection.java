@@ -1218,6 +1218,7 @@ public class Export4StaticDeadlockDetection {
         return previousNodes.get(0);
     }
 
+    // getPredecessors is since 2024-07-09 a method og ControlFlowGraph
     private Vector<ControlFlowGraphNode> getPredecessors(ControlFlowGraph cfg, ControlFlowGraphNode n) {
         Vector<ControlFlowGraphNode> previousNodes = new Vector<ControlFlowGraphNode>() ;
         for (int i=0; i<cfg.getNodeList().size(); i++) {

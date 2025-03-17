@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <termios.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <cstdint>
 #include <sys/types.h>
@@ -6684,6 +6685,85 @@ namespace pearlrt {
 
 }
 
+#define PIPENBR_INCLUDED
+
+
+
+
+
+
+
+
+namespace pearlrt {
+
+
+   class PipeNBR: public InterruptableSystemDationNB {
+   public:
+
+      class PipeFile : public InterruptableSystemDationNB {
+      private:
+         FILE * fp;
+         PipeNBR * 	myPipe;
+         int            cap;
+      public:
+
+         bool inUse;
+
+         PipeFile(PipeNBR* disc);
+
+         int capabilities();
+
+         PipeFile* dationOpen(const RefCharacter * fileName, int openParams);
+
+         void dationClose(int closeParams);
+
+         void dationRead(void * destination, size_t size);
+
+         void dationWrite(void * destination, size_t size);
+
+         void dationUnGetChar(const char c);
+
+         void translateNewLine(bool doNewLineTranslation);
+      };
+   private:
+
+      Mutex mutex;
+
+      bool nonBlockingRead;
+
+      int cap;
+
+      int capacity;
+
+      int usedCapacity;
+      PipeFile**  object;
+
+      char * devicePath;
+      FILE* defaultReader;
+      bool removeFile;
+   public:
+
+      PipeNBR(const char* name, const int nbrOfFiles, const char* params = NULL);
+
+      ~PipeNBR();
+
+      int capabilities();
+
+      PipeFile* dationOpen(const RefCharacter * fileName, int openParams);
+
+      void dationClose(int closeParams);
+
+      void dationRead(void * destination, size_t size);
+
+      void dationWrite(void * destination, size_t size);
+
+      void dationUnGetChar(const char c);
+
+      void translateNewLine(bool doNewLineTranslation);
+   };
+
+}
+
 #define DISC_INCLUDED
 
 
@@ -7316,6 +7396,50 @@ namespace pearlrt {
    public:
       SpoolerMotor(int start);
       ~SpoolerMotor();
+      SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
+      void dationClose(int closeParam = 0);
+      void dationWrite(void * data, size_t size);
+      void dationRead(void * data, size_t size);
+      int capabilities();
+   private:
+      const int start;
+  };
+}
+
+#define CONTACTSWITCH_H_INCLUDED
+
+
+
+
+
+
+
+namespace pearlrt {
+   class ContactSwitch: public SystemDationB {
+   public:
+      ContactSwitch();
+      ~ContactSwitch();
+      SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
+      void dationClose(int closeParam = 0);
+      void dationWrite(void * data, size_t size);
+      void dationRead(void * data, size_t size);
+      int capabilities();
+   };
+}
+
+#define MSGIO_H_INCLUDED
+
+
+
+
+
+
+
+namespace pearlrt {
+  class MsgIO: public SystemDationB {
+   public:
+      MsgIO(int start);
+      ~MsgIO();
       SystemDationB* dationOpen(const RefCharacter * idf = 0, int openParam = 0);
       void dationClose(int closeParam = 0);
       void dationWrite(void * data, size_t size);

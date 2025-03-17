@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module name="SimFilExtruder"  file="SimFilExtruderSystem.prl" standard="-std=OpenPEARL" >
 <system>
- <username name="homeFolder"  line="35" col="3"  >
+ <username name="openFileErr"  line="8" col="3"  >
+   <sysname name="OpenFailedSignal">
+   </sysname>
+ </username>
+
+ <username name="homeFolder"  line="10" col="3"  >
    <sysname name="Disc">
        <parameters>
            <CHAR>'./'</CHAR> 
@@ -10,12 +15,40 @@
    </sysname>
  </username>
 
- <username name="pipe"  line="36" col="3"  >
-   <sysname name="Pipe">
+ <username name="pipeSim"  line="14" col="3"  >
+   <sysname name="PipeNBR">
        <parameters>
-           <CHAR>'/tmp/simulator'</CHAR> 
-             <FIXED>2</FIXED> 
-           <CHAR>'OPEN1'</CHAR> 
+           <CHAR>'./simulator'</CHAR> 
+             <FIXED>1</FIXED> 
+           <CHAR>'OPEN1 ANY CAN NBR'</CHAR> 
+       </parameters>
+   </sysname>
+ </username>
+
+ <username name="pipeMsgOut"  line="15" col="3"  >
+   <sysname name="PipeNBR">
+       <parameters>
+           <CHAR>'./msgFromSim'</CHAR> 
+             <FIXED>1</FIXED> 
+           <CHAR>'OPEN1 ANY CAN NBR'</CHAR> 
+       </parameters>
+   </sysname>
+ </username>
+
+ <username name="pipeMsgIn"  line="16" col="3"  >
+   <sysname name="PipeNBR">
+       <parameters>
+           <CHAR>'./msgToSim'</CHAR> 
+             <FIXED>1</FIXED> 
+           <CHAR>'OPEN1 CAN NBR'</CHAR> 
+       </parameters>
+   </sysname>
+ </username>
+
+ <username name="contactswitchirpt"  line="17" col="3"  >
+   <sysname name="SoftInt">
+       <parameters>
+             <FIXED>1</FIXED> 
        </parameters>
    </sysname>
  </username>

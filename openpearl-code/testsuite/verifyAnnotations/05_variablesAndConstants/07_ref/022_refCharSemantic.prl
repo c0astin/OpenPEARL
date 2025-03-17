@@ -38,12 +38,6 @@ error: assignment: INV variable not allowed on lhs
 
 END;
 
-proc: PROC RETURNS(REF CHAR());
-/*$                ^
-error: PROC: RETURNS: type REF CHAR() is not allowed as result type
-*/
-   RETURN(rc);
-END;
 
 print: PROC(x REF CHAR());
 END;

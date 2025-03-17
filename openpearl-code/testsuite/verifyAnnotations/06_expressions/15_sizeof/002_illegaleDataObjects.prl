@@ -1,0 +1,20 @@
+MODULE(m);
+SYSTEM;
+  so: StdOut;
+  ctrl_c: UnixSignal(2);
+
+PROBLEM;
+   SPC so DATION OUT SYSTEM ALPHIC;
+   SPC ctrl_c INTERRUPT;
+   DCL stdOut DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+   DCL s1 SEMA;
+   DCL b1 BOLT;
+   DCL str STRUCT [ a FIXED, b REF TASK, c REF INTERRUPT ]; 
+/*$    ^
+warning: deadlock detection disabled: not possible with REF STRUCT [  FIXED(31),REF TASK,REF INTERRUPT ]
+*/
+t: TASK MAIN;
+END;
+
+MODEND;
+

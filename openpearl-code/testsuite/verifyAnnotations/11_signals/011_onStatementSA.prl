@@ -11,13 +11,13 @@ t1: TASK MAIN;
 
    ON div0: RETURN;
 /*$         ^
-error: signal handler: RETURN is not allowed is a signal reaction of a task
+error: signal handler: RETURN is not allowed in a signal reaction of a task
 */
 
    ON div0: BEGIN
               RETURN;
 /*$           ^
-error: signal handler: RETURN is not allowed is a signal reaction of a task
+error: signal handler: RETURN is not allowed in a signal reaction of a task
 */
             END;
 
@@ -50,10 +50,10 @@ error: signal handler: TERMINATE as signal termination statement forbids a name 
 
 
    ON div0: BEGIN
-            END;
 /*$         ^
 error: signal handler: must end with RETURN, TERMINATE, INDUCE or GOTO
 */
+            END;
 
    ON div0: BEGIN
 		errno=1;
@@ -82,9 +82,6 @@ error: signal handler: must end with RETURN, TERMINATE, INDUCE or GOTO
 
    ON div0: BEGIN
 		IF errno> 0 THEN 
-/*$             ^
-error: signal handler: must end with RETURN, TERMINATE, INDUCE or GOTO
-*/
 			INDUCE;
 		ELSE
 		    TERMINATE;

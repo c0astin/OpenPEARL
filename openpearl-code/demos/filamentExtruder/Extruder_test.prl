@@ -1,0 +1,548 @@
+!__________________________________________________________________!
+!___________TESTPROGRAM FOR FILAMENT EXTRUDER SIMULATOR____________!
+!Gesamtlaufzeit: 100s
+!Testprotokoll: extruder_test.txt
+
+MODULE(Extruder);
+
+SYSTEM;
+stdout: StdOut;
+
+screwmotor: ScrewMotor(0);
+screwheater: ScrewHeater(0);
+spoolermotor: SpoolerMotor(0);
+
+diameter_sensor: DiameterSensor(0);
+temperature_sensor: TemperatureSensor(0);
+contact_switch: ContactSwitch;
+msgio: MsgIO('0'B4);
+
+pipeMsgOutTest: Pipe('/tmp/msgFromSim', 6, 'OPEN1 CAN NBR');
+pipeMsgInTest: Pipe('/tmp/msgToSim', 6, 'OPEN1');
+
+httpSocket: TcpIpServer(8081, 'NBR');
+
+taskActiveErr : TaskTerminatedSignal;
+
+disc: Disc('./',1);
+
+!__________________________________________________________________!
+!_______________________________INIT_______________________________!
+
+PROBLEM;
+
+! =============== Dations für Sensoren & Aktoren ===============
+
+SPC screwmotor DATION INOUT SYSTEM BASIC FIXED(31);
+DCL screwMotor DATION INOUT BASIC FIXED(31) CREATED(screwmotor);
+
+SPC spoolermotor DATION INOUT SYSTEM BASIC FIXED(31);
+DCL spoolerMotor DATION INOUT BASIC FIXED(31) CREATED(spoolermotor);
+
+SPC screwheater DATION INOUT SYSTEM BASIC FIXED(31);
+DCL screwHeater DATION INOUT BASIC FIXED(31) CREATED(screwheater);
+
+SPC diameter_sensor DATION IN SYSTEM BASIC FLOAT;
+DCL diameterSensor DATION IN BASIC FLOAT CREATED(diameter_sensor);
+
+SPC temperature_sensor DATION IN SYSTEM BASIC FLOAT;
+DCL temperatureSensor DATION IN BASIC FLOAT CREATED(temperature_sensor);
+
+! Dation für Spulen-Kontaktschalter optional. Alternativ kann Interrupt genutz werden.
+SPC contact_switch DATION IN SYSTEM BASIC BIT(1);
+DCL contactSwitch DATION IN BASIC BIT(1) CREATED(contact_switch);
+
+SPC contactswitchirpt IRPT GLOBAL(SimFilExtruder);
+
+! =============== Dations für Ausgabe & Interprocess Communication ===============
+
+SPC msgio DATION INOUT SYSTEM BASIC BIT(64);
+DCL MsgIO DATION INOUT BASIC BIT(64) CREATED(msgio);
+
+SPC pipeMsgInTest DATION OUT SYSTEM ALL;
+DCL readMsgPipeTest DATION OUT BIT(64) DIM(*,80) FORWARD CREATED(pipeMsgInTest);
+
+SPC pipeMsgOutTest DATION IN SYSTEM ALL;
+DCL writeMsgPipeTest DATION IN BIT(64) DIM(*,80) FORWARD CREATED(pipeMsgOutTest);
+
+SPC httpSocket DATION INOUT SYSTEM ALL;
+DCL usHttpSocket DATION INOUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(httpSocket); 
+
+SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+!Time at programm startup
+DCL start_clock CLOCK; 
+
+!Für Logging
+DCL fileName CHAR(20) INIT('extruder_test.txt');
+SPC disc DATION INOUT SYSTEM ALL;
+DCL logFile DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(disc);
+
+!Interprocess Communication Mode
+DCL ipc_mode CHAR(8) INIT('MSG'); !TCP oder PIPE
+
+DCL error_count FIXED(15) INIT(0);
+
+DCL start_time CLOCK;
+
+!___________________________________________________________________!
+!_______________________________TASKS_______________________________!
+
+! ==========================================================================
+! Main-Task
+   ! Öffnet die Dations für Aktoren, Sensoren und Ein- / Ausgabe
+   ! Durchläuft die Test-Prozeduren für alle Dations und den Kontaktschalter-Interrupt
+   ! Erstellt ein Testprotokoll
+! ==========================================================================
+Main_task: TASK PRIO 100 MAIN;
+   OPEN terminal;
+   open_log_file(fileName);
+   log('---FILAMENT EXTRUDER TEST PROGRAM---');
+   open_dations;
+
+   WHEN contactswitchirpt ACTIVATE test_contactswitch_irpt_task;  
+
+   start_clock = NOW; 
+   test_Pipes;
+   test_Heater_And_TempSens;
+   test_screwMotor;
+   test_spoolerMotor_And_diameterSensor;
+   test_contact_switch;
+
+   log('TEST ABGESCHLOSSEN. FEHLER GESAMT:');
+   PUT error_count TO terminal BY F(4), SKIP;
+   PUT error_count TO logFile BY F(4), SKIP;
+END; !Main_task
+
+
+DCL irpt_triggered BIT(1) INIT ('0'B1);
+test_contactswitch_irpt_task: TASK PRIO 50;
+      PUT '---SPOOL SWITCH AUSGELÖST---' TO terminal BY A, SKIP;
+      PUT NOW-start_time TO terminal BY D(24,3), SKIP;
+      irpt_triggered = '1'B1;
+      DISABLE contactswitchirpt;
+END;
+
+!________________________________________________________________________!
+!_______________________________PROCEDURES_______________________________!
+
+! ==========================================================================
+! Prozeduren fuer Logging
+   !open_log_file: Öffnen eines Logging-Files (csv-Datei)
+   !log: Schreiben einer neuen Zeile in das Logging File
+! ==========================================================================
+
+   open_log_file: PROC(logfileName REF INV CHAR());
+      DCL fn CHAR(40);
+      fn = logfileName;
+      OPEN logFile BY IDF(fn), ANY;
+      CLOSE logFile BY CAN;
+      OPEN logFile BY IDF(fn), NEW;
+   END;
+
+   log: PROC(line  REF INV CHAR() );
+      PUT line TO logFile BY A,SKIP;
+      PUT line TO terminal BY A, SKIP;
+   END; 
+
+   print_separator: PROC;
+      PUT '===================================================' TO logFile BY A, SKIP;
+      PUT '===================================================' TO terminal BY A, SKIP;
+   END;
+
+! ==========================================================================
+! Funktionen für Interprozess-Kommunikation
+! ==========================================================================
+fixed_val_to_msg: PROC(val FIXED(31), id FIXED(8)) RETURNS (BIT(64));
+    DCL timestamp FIXED(24);
+    DCL current_clock CLOCK;
+    DCL msg BIT(64);
+    DCL val_bit64 BIT(64);
+    DCL id_time_bit32 BIT(32);
+
+    current_clock = NOW;
+    timestamp := ENTIER ((current_clock - start_clock)*1000/1 SEC); !Timestamp in ms since startup
+    ! Var overflow after 5h --> not critical
+
+    id_time_bit32 = TOBIT (id) >< TOBIT (timestamp);
+    !msg = val_bit32 >< id_time_bit32 didnt seem to properly work?!
+    val_bit64 = TOBIT val SHIFT -1;
+    val_bit64 = val_bit64 SHIFT -32;
+    msg = id_time_bit32 OR val_bit64;
+
+    RETURN (msg);
+END;
+
+! ==========================================================================
+! Prozedur um alle Dations zu öffnen
+! ==========================================================================
+open_dations: PROC;
+   OPEN screwMotor;
+   OPEN screwHeater;
+   OPEN spoolerMotor;
+   OPEN diameterSensor;
+   OPEN temperatureSensor;
+   OPEN contactSwitch;
+   OPEN writeMsgPipeTest;
+   OPEN readMsgPipeTest;
+   IF ipc_mode == 'MSG' THEN
+   OPEN MsgIO;
+   FIN;
+   IF ipc_mode == 'TCP' THEN
+   OPEN usHttpSocket;
+   FIN;
+END;
+
+
+
+
+test_Pipes: PROC;
+   DCL msg BIT(64) INIT ('0123456789ABCDEF'B4);
+   DCL msg_back BIT(64); 
+
+   print_separator;
+    log('EXTRUDER: Test Msg In / Out:');
+   print_separator;
+
+   !Check Pipe Sim --> UI  
+   SEND msg TO MsgIO;
+   AFTER 1 SEC RESUME;
+   READ msg_back FROM writeMsgPipeTest;
+   IF (msg_back == msg) THEN 
+      log('TC-M1: MSG OUT - WRITE TO PIPE: OK');
+   ELSE
+      log('TC-M1: MSG OUT - WRITE TO PIPE: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   !Check Pipe UI --> Sim
+   WRITE msg TO readMsgPipeTest;
+   AFTER 1 SEC RESUME;
+   TAKE msg_back FROM MsgIO;
+   READ msg_back FROM writeMsgPipeTest;
+   IF (msg_back == msg) THEN 
+      log('TC-M2: MSG IN - READ FROM PIPE: OK');
+   ELSE
+      log('TC-M2: MSG IN - READ FROM PIPE: ERROR');
+      error_count := error_count + 1;
+   FIN;
+END;
+
+test_Heater_And_TempSens: PROC;
+    DCL pwm FIXED(31);
+    DCL temperature FLOAT;
+    DCL temperature_old FLOAT;
+    DCL msg BIT(64);
+
+    print_separator;
+    log('EXTRUDER: Test Heizelement und Temperatursensor:');
+    print_separator;
+
+   TAKE temperature FROM temperatureSensor;
+   IF (temperature == 23.0) THEN 
+      log('TC-H1: TEMPERATURSENSOR - UMGEBUNG: OK');
+   ELSE
+      log('TC-H1: TEMPERATURSENSOR - UMGEBUNG: ERROR');
+      error_count := error_count + 1;
+   FIN;
+   
+   TAKE pwm FROM screwHeater;
+   IF (pwm == 0) THEN
+      log('TC-H2: HEIZELEMENT - AUS: OK');
+   ELSE
+      log('TC-H2: HEIZELEMENT - AUS: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   SEND 90 TO screwHeater;
+   AFTER 0.1 SEC RESUME;
+   TAKE pwm FROM screwHeater;
+   IF (pwm == 90) THEN
+      log('TC-H3: HEIZELEMENT - AN: OK');
+   ELSE
+      log('TC-H3: HEIZELEMENT - AN: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   AFTER 2.9 SEC RESUME;
+   TAKE temperature FROM temperatureSensor;
+   IF 29 < temperature AND temperature <30 THEN
+      log('TC-H4: HEIZELEMENT - PLAUSIBLER WERT: OK');
+   ELSE
+      log('TC-H4: HEIZELEMENT - PLAUSIBLER WERT: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   SEND 150 TO screwHeater;
+   AFTER 0.1 SEC RESUME;
+   TAKE pwm FROM screwHeater;
+   IF (pwm == 100) THEN
+      log('TC-H5: HEIZELEMENT - ZU HOHER WERT: OK');
+   ELSE
+      log('TC-H5: HEIZELEMENT - ZU HOHER WERT: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   TAKE temperature_old FROM temperatureSensor;
+   AFTER 1 SEC RESUME;
+   TAKE temperature FROM temperatureSensor;
+   IF temperature > temperature_old THEN
+      log('TC-H6: HEIZELEMENT - HEIZEN: OK');
+   ELSE
+      log('TC-H6: HEIZELEMENT - HEIZEN: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   SEND 0 TO screwHeater;
+   TAKE temperature_old FROM temperatureSensor;
+   AFTER 1 SEC RESUME;
+   TAKE temperature FROM temperatureSensor;
+   IF temperature < temperature_old THEN
+      log('TC-H7: HEIZELEMENT - KÜHLEN: OK');
+   ELSE
+      log('TC-H7: HEIZELEMENT - KÜHLEN: ERROR');
+      error_count := error_count + 1;
+   FIN;
+END;
+
+test_screwMotor: PROC;
+    DCL rpm FIXED(31);
+    DCL temperature FLOAT;
+
+    print_separator;
+    log('EXTRUDER: Test Antrieb Extruderschnecke:');
+    print_separator;
+
+   TAKE rpm FROM screwMotor;
+   IF (rpm == 0) THEN 
+      log('TC-S1: SCHNECKENANTRIEB - AUS: OK');
+   ELSE
+      log('TC-S1: SCHNECKENANTRIEB - AUS: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   SEND 10 TO screwMotor;
+   AFTER 1 SEC RESUME;
+   TAKE rpm FROM screwMotor;
+   IF (rpm == 0) THEN 
+      log('TC-S2: SCHNECKENANTRIEB - START TEMP NIO: OK');
+   ELSE
+      log('TC-S2: SCHNECKENANTRIEB - START TEMP NIO: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   SEND 100 TO screwHeater;
+   TAKE temperature FROM temperatureSensor;
+   WHILE temperature < 200
+   REPEAT
+      TAKE temperature FROM temperatureSensor;
+      AFTER 0.3 SEC RESUME;
+   END;
+   SEND 0 TO screwHeater;
+
+   SEND 0 TO screwMotor;
+   AFTER 2 SEC RESUME;
+   SEND 50 TO screwMotor;
+   start_time = NOW;
+   WHILE rpm < 50
+   REPEAT
+      IF NOW-start_time > 5 SEC THEN !Abbruch wenn Drehzahl nach 5s nicht erreicht.
+         GOTO err_s3;
+      FIN;
+      TAKE rpm FROM screwMotor;
+   AFTER 0.1 SEC RESUME;
+   END;
+   AFTER 0.5 SEC RESUME; ! Warten um zu detektieren falls Drehzahl über Zielwert steigt.
+   IF rpm == 50 AND NOW-start_time > 1.4 SEC AND NOW-start_time < 1.9 SEC THEN 
+      log('TC-S3: SCHNECKENANTRIEB - START TEMP IO: OK');
+   ELSE
+      err_s3:
+      log('TC-S3: SCHNECKENANTRIEB - START TEMP IO: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   SEND 150 TO screwMotor;
+   AFTER 2 SEC RESUME;
+   TAKE rpm FROM screwMotor;
+   IF rpm == 100 THEN 
+      log('TC-S4: SCHNECKENANTRIEB - ZU HOHER WERT: OK');
+   ELSE
+      log('TC-S4: SCHNECKENANTRIEB - ZU HOHER WERT: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   SEND 100 TO screwMotor;
+   AFTER 1 SEC RESUME;
+   SEND 0 TO screwMotor;
+   start_time = NOW;
+   WHILE rpm > 0
+   REPEAT
+      IF NOW-start_time > 5 SEC THEN !Abbruch wenn Drehzahl nach 5s nicht erreicht.
+         GOTO err_s5;
+      FIN;
+      TAKE rpm FROM screwMotor;
+   AFTER 0.1 SEC RESUME;
+   END;
+   IF NOW-start_time > 0.8 SEC AND NOW-start_time < 1.2 SEC THEN 
+      log('TC-S5: SCHNECKENANTRIEB - AUSSCHALTEN: OK');
+   ELSE
+      err_s5:
+      log('TC-S5: SCHNECKENANTRIEB - AUSSCHALTEN: ERROR');
+      error_count := error_count + 1;
+   FIN;  
+
+   SEND 100 TO screwMotor;
+   AFTER 2 SEC RESUME;
+   SEND 100 TO screwHeater;
+   WHILE temperature < 211
+   REPEAT
+      TAKE temperature FROM temperatureSensor;
+   AFTER 0.3 SEC RESUME;
+   END;
+   SEND 0 TO screwHeater;
+   AFTER 2 SEC RESUME;
+   TAKE rpm FROM screwMotor;
+   IF (rpm == 0) THEN 
+      log('TC-S6: SCHNECKENANTRIEB - ZU HOHE TEMP: OK');
+   ELSE
+      log('TC-S6: SCHNECKENANTRIEB - ZU HOHE TEMP: ERROR');
+      error_count := error_count + 1;
+   FIN;
+END;
+
+test_spoolerMotor_And_diameterSensor: PROC;
+   DCL rpm FIXED(31);
+   DCL diameter FLOAT;
+   DCL temperature FLOAT;
+   print_separator;
+   log('EXTRUDER: Test Spulenantrieb & Durchmessersensor:');
+   print_separator;
+   SEND 0 TO screwMotor; !Ensure ScrewMotor is off
+   AFTER 2 SEC RESUME;
+
+
+   TAKE rpm FROM spoolerMotor;
+   IF (rpm == 0) THEN 
+      log('TC-D1: SPULENANTRIEB - AUS: OK');
+   ELSE
+      log('TC-D1: SPULENANTRIEB - AUS: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   TAKE diameter FROM diameterSensor;
+   IF (diameter == 0) THEN
+      log('TC-D2: DURCHMESSERSENSOR - START: OK');
+   ELSE
+      log('TC-D2: DURCHMESSERSENSOR - START: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   SEND 50 TO spoolerMotor;
+   AFTER 1 SEC RESUME;
+   TAKE rpm FROM spoolerMotor;
+   IF (rpm == 50) THEN 
+      log('TC-D3: SPULENANTRIEB - AN: OK');
+   ELSE
+      log('TC-D3: SPULENANTRIEB - AN: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   TAKE diameter FROM diameterSensor;
+   IF (diameter == 0) THEN
+      log('TC-D4: DURCHMESSERSENSOR - SCHNECKE AUS: OK');
+   ELSE
+      log('TC-D4: DURCHMESSERSENSOR - SCHNECKE AUS: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+
+   TAKE temperature FROM temperatureSensor;
+   WHILE temperature > 210
+   REPEAT
+      TAKE temperature FROM temperatureSensor;
+      AFTER 0.3 SEC RESUME;
+   END;
+
+   SEND 50 TO screwMotor;
+   AFTER 2 SEC RESUME;
+   TAKE diameter FROM diameterSensor;
+   IF diameter > 2.1 AND diameter < 2.2 THEN
+      log('TC-D5: DURCHMESSERSENSOR - LAUFEND: OK');
+   ELSE
+      log('TC-D5: DURCHMESSERSENSOR - LAUFEND: ERROR');
+      error_count := error_count + 1;
+   FIN;
+END;
+
+test_contact_switch: PROC;
+   DCL switchStatus BIT(1);
+
+   print_separator;
+    log('EXTRUDER: Test Kontaktschalter:');
+   print_separator;
+
+   TAKE switchStatus FROM contactSwitch;
+   IF switchStatus == '0'B1 THEN
+      log('TC-C1: KONTAKTSCHALTER - DATION AUS: OK');
+   ELSE
+      log('TC-C1: KONTAKTSCHALTER - DATION AUS: ERROR');
+      error_count := error_count + 1;
+   FIN; 
+
+   start_time = NOW;
+   WHILE switchStatus == '0'B1
+   REPEAT
+      IF NOW-start_time > 60 SEC THEN !Abbruch wenn Schalter nicht auslöst.
+         GOTO err_c2;
+      FIN;
+      TAKE switchStatus FROM contactSwitch;
+      AFTER 0.1 SEC RESUME;
+   END;   
+   PUT NOW-start_time TO terminal BY D(24,3), SKIP;
+   IF NOW-start_time > 30 SEC AND NOW-start_time < 60 SEC THEN 
+      log('TC-C2: KONTAKTSCHALTER - DATION AN: OK');
+   ELSE
+      err_c2:
+      log('TC-C2: KONTAKTSCHALTER - DATION AN: ERROR');
+      error_count := error_count + 1;
+   FIN;
+
+   SEND 0 TO screwMotor;
+   SEND 0 TO spoolerMotor;
+   AFTER 2 SEC RESUME;
+   TAKE switchStatus FROM contactSwitch;
+   IF switchStatus == '0'B1 THEN
+      log('TC-C1: KONTAKTSCHALTER - SPULENWECHSEL: OK');
+   ELSE
+      log('TC-C1: KONTAKTSCHALTER - SPULENWECHSEL: ERROR');
+      error_count := error_count + 1;
+   FIN;  
+
+   ENABLE contactswitchirpt;
+   SEND 50 TO screwMotor;
+   SEND 50 TO spoolerMotor;
+   start_time = NOW;
+   WHILE irpt_triggered == '0'B1
+   REPEAT
+      IF NOW-start_time > 120 SEC THEN 
+         GOTO err_c3;
+      FIN;
+   AFTER 0.2SEC RESUME;
+   END;
+   PUT NOW-start_time TO terminal BY D(24,3), SKIP;
+   IF NOW-start_time > 30 SEC AND NOW-start_time < 90 SEC THEN 
+      log('TC-C3: KONTAKTSCHALTER - INTERRUPT: OK');
+   ELSE
+      err_c3:
+      log('TC-C3: KONTAKTSCHALTER - INTERRUPT: ERROR');
+      error_count := error_count + 1;
+   FIN;  
+
+END; 
+
+
+      
+
+
+MODEND;

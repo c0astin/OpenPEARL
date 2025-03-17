@@ -38,9 +38,6 @@ error: PROC: param: SEMA must passed by IDENT
 END;
 
 semaOk: PROC (sema SEMA IDENT);
-/*$           ^
-warning: deadlock detection disabled: not possible with parameter SEMA IDENT
-*/
 END;
 
 boltFail: PROC (bolt BOLT);

@@ -98,6 +98,7 @@ sequential_control_statement:
     private IfNode m_currentIfStatement = null;
     private Vector<ControlFlowGraphNode> m_gotoNodes = null;
     private Vector<ControlFlowGraphNode> m_labelNodes = null;
+    private static int removeMe = 1;
 
     /**
      * in order to locate the addressed block in EXIT, the nested block levels are stacked 
@@ -115,7 +116,7 @@ sequential_control_statement:
      *    RETURN, which jump to procEnd
      *    GOTO, which jumps to the given label
      *    TERMINATE without a taskname, which terminates the execution of the task
-     *  In these cases the m_prevoisNode is set to null, to indicate that the next statement
+     *  In these cases the m_previousNode is set to null, to indicate that the next statement
      *  has no predecessor   
      */
     private void updatePreviousNode(ControlFlowGraphNode next) {
@@ -178,6 +179,7 @@ sequential_control_statement:
         
         
         m_procEndNode = new PseudoNode(ctx.endOfBlockLoopProcOrTask(),PseudoNode.procEnd);
+        proc.setEnd(m_procEndNode);
         
         visitChildren(ctx);
         
@@ -187,11 +189,14 @@ sequential_control_statement:
         updatePreviousNode(m_procEndNode);
         
         finalizeGotos();
+        removePseudoNodesWithoutPredecessors();
         procedureEntry.setControlFlowGraph(m_currentCfg);
                
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;
     }
+
+
 
     /* ----------------------------------------------------------------------- */
     /* class specify stuff starts here                                         */
@@ -207,10 +212,10 @@ sequential_control_statement:
         String name = ctx.nameOfModuleTaskProc().ID().toString();
         TaskEntry taskEntry = (TaskEntry) m_currentSymbolTable.lookup(name);
         
-        PseudoNode task = new PseudoNode(ctx,PseudoNode.taskEntry);
-        m_currentCfg = new ControlFlowGraph(task);
-        m_currentCfg.addNode(task);
-        m_previousNode = task;
+        PseudoNode taskEntryNode = new PseudoNode(ctx,PseudoNode.taskEntry);
+        m_currentCfg = new ControlFlowGraph(taskEntryNode);
+        m_currentCfg.addNode(taskEntryNode);
+        m_previousNode = taskEntryNode;
         m_functionCalls = null;
         m_gotoNodes = null;
         m_labelNodes = null;
@@ -218,14 +223,16 @@ sequential_control_statement:
         
         visitChildren(ctx);
         
-        task = new PseudoNode(ctx.endOfBlockLoopProcOrTask(),PseudoNode.taskEnd);
-        m_currentCfg.addNode(task);
+        PseudoNode taskEnd = new PseudoNode(ctx.endOfBlockLoopProcOrTask(),PseudoNode.taskEnd);
+        m_currentCfg.addNode(taskEnd);
+        taskEntryNode.setEnd(taskEnd);
 
         if (m_previousNode != null) {
-           m_previousNode.setNext(task);
+           m_previousNode.setNext(taskEnd);
         }
         
         finalizeGotos();
+        removePseudoNodesWithoutPredecessors();
         taskEntry.setControlFlowGraph(m_currentCfg);
         
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
@@ -254,10 +261,8 @@ sequential_control_statement:
         m_currentCfg.addNode(blockBegin);
         updatePreviousNode(blockBegin);
         PseudoNode blockEnd = new PseudoNode(ctx.endOfBlockLoopProcOrTask(), PseudoNode.blockEnd);
-
-       
-       
-        
+        blockBegin.setEnd(blockEnd);
+               
         BlockLevel bl = new BlockLevel(blockLabel, blockEnd);
         m_blockLevels.add(0,bl);  // add as first element
        
@@ -265,6 +270,7 @@ sequential_control_statement:
         
         updatePreviousNode(blockEnd);
         m_currentCfg.addNode(blockEnd);
+
                 
         m_blockLevels.removeElementAt(0);
         
@@ -344,6 +350,23 @@ sequential_control_statement:
         return null;
     }
     
+    @Override
+    public Void visitInduceStatement  (OpenPearlParser.InduceStatementContext ctx) {
+        
+        // note: the statement after an INDUCE has no predecessor
+        //   thus the 2nd parameter should be true
+        //   but we need the created node for the resolution with the labels
+        treatSimpleSequentialStatement(ctx, false); 
+//        if (m_gotoNodes == null) {
+//            m_gotoNodes = new Vector<ControlFlowGraphNode>();
+//        }
+//        m_gotoNodes.add(m_previousNode);
+//        
+        // now fix the workaround from above
+        m_previousNode = null;
+    
+        return null;
+    }
     
     
     @Override
@@ -769,10 +792,7 @@ sequential_control_statement:
     }
     
 
-
-    
-    
-    
+ 
     /**
     task_terminating: 'TERMINATE' name? ';' ;
      */
@@ -830,6 +850,35 @@ sequential_control_statement:
                         break;
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * remove pseudo nodes without predecessors like FIN, END which are never reached
+     * in the CFG
+     */
+    private void removePseudoNodesWithoutPredecessors() {
+        for (ControlFlowGraphNode n: m_currentCfg.getNodeList()) {
+            if (n instanceof PseudoNode) {
+                int nodeType = ((PseudoNode)n).getNodeType();
+                
+                if (nodeType == PseudoNode.blockEnd ||
+                        nodeType == PseudoNode.caseFin ||
+                        nodeType == PseudoNode.ifFin ||
+                        nodeType == PseudoNode.repeatEnd ||
+                        nodeType == PseudoNode.repeatBodyEnd) {
+                    Vector<ControlFlowGraphNode> predecessors = m_currentCfg.getPredecessors(n);
+                    if (predecessors.size() == 0) {
+                        n.setFlag(removeMe);
+                    }
+                }
+            }
+        }
+        
+        for (int i=m_currentCfg.getNodeList().size()-1; i>=0; i--) {
+            if (m_currentCfg.getNodeList().elementAt(i).isSet(removeMe)) {
+                m_currentCfg.getNodeList().remove(i);
             }
         }
     }

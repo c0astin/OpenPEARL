@@ -3,9 +3,21 @@ package org.openpearl.compiler.SemanticAnalysis.PlainControlFlowGraph;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 
+/**
+ * pseudo nodes are added to the CFG in order to improve the readability of the CFG.
+ * They have no execution information.
+ * 
+ * Search operations like proper termination of a signal reaction or 
+ * given RETURN statements in a procedure returning a value become very simple
+ * if the end node of a proc, task or signal-block has a predecessor.
+ *   
+ * @author mueller
+ *
+ */
 public class PseudoNode extends ControlFlowGraphNode {
     
     private int m_typeOfNode;
+    private ControlFlowGraphNode m_end;  // the corresponding end node for procEntry, taskEntry, blockBegin
     
     public static final int procEntry = 0, procEnd=1, taskEntry=2, taskEnd=3, blockBegin=4, blockEnd=5,
            ifThen=6, ifElse=7, ifFin=8, repeatBegin = 9, repeatWhile = 10, repeatEnd=11, 
@@ -27,6 +39,7 @@ public class PseudoNode extends ControlFlowGraphNode {
     public PseudoNode( PseudoNode other) {
         super(other.getCtx());
         m_typeOfNode = other.getNodeType();
+        m_end = other.m_end;
     }
 
     public int getNodeType() {
@@ -45,6 +58,14 @@ public class PseudoNode extends ControlFlowGraphNode {
         }
                 
         return readable;
+    }
+
+    public ControlFlowGraphNode getEnd() {
+        return m_end;
+    }
+
+    public void setEnd(ControlFlowGraphNode end) {
+        this.m_end = end;
     }
     
 }

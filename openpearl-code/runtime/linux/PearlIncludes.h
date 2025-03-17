@@ -108,6 +108,7 @@ Only this file mus be included.
 #include "StdError.h"
 #include "Console.h"
 #include "Pipe.h"
+#include "PipeNBR.h"
 #include "Disc.h"
 #include "UnixSignal.h"
 #include "SoftInt.h"

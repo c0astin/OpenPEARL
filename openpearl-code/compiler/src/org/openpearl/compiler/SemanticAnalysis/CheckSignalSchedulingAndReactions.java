@@ -30,13 +30,19 @@
 package org.openpearl.compiler.SemanticAnalysis;
 
 import java.util.List;
+import java.util.Vector;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.openpearl.compiler.*;
 import org.openpearl.compiler.OpenPearlParser.StatementContext;
 import org.openpearl.compiler.OpenPearlParser.Task_control_statementContext;
-import org.openpearl.compiler.OpenPearlParser.Task_terminatingContext;
 import org.openpearl.compiler.OpenPearlParser.Unlabeled_statementContext;
+import org.openpearl.compiler.SemanticAnalysis.PlainControlFlowGraph.ControlFlowGraph;
+import org.openpearl.compiler.SemanticAnalysis.PlainControlFlowGraph.ControlFlowGraphNode;
+import org.openpearl.compiler.SemanticAnalysis.PlainControlFlowGraph.PseudoNode;
+import org.openpearl.compiler.SymbolTable.ProcedureEntry;
+import org.openpearl.compiler.SymbolTable.TaskEntry;
 import org.openpearl.compiler.SymbolTable.SymbolTable;
+import org.openpearl.compiler.SymbolTable.SymbolTableEntry;
 
 
 public class CheckSignalSchedulingAndReactions extends OpenPearlBaseVisitor<Void>
@@ -74,41 +80,129 @@ implements OpenPearlVisitor<Void> {
                 ((org.openpearl.compiler.SymbolTable.ModuleEntry) symbolTableEntry).scope;
         visitChildren(ctx);
         m_currentSymbolTable = m_currentSymbolTable.ascend();
+        
         return null;
     }
 
     @Override
     public Void visitProcedureDeclaration(OpenPearlParser.ProcedureDeclarationContext ctx) {
+        SymbolTable symbolTable;
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        symbolTable = this.m_currentSymbolTable;
+        
+        // step up one level to get the symbol table with the procedure declaration
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend(); 
+        String name = ctx.nameOfModuleTaskProc().ID().toString();
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(name);
+
+        
+        // switch back to the symbol table of the procedure
+        this.m_currentSymbolTable = symbolTable;
+                
         m_isInTask = false;
         m_OnForbidden = false;
         ASTAttribute attr = m_ast.lookup(ctx);
         if (attr == null) {
-            attr = new ASTAttribute(new TypeProcedure(null, null) );
+            attr = new ASTAttribute(((ProcedureEntry)entry).getType(), entry );
         }
+        
         m_ast.put(ctx, attr);
         m_taskOrProcContext = ctx;        
         visitChildren(ctx);
+        
+        // check signal handler for proper termination
+        ControlFlowGraph cfg = ((ProcedureEntry)entry).getControlFlowGraph();
+        checkAllSignalHandlers(cfg);
+
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         return null;
     }
-
+    
     @Override
     public Void visitTaskDeclaration(OpenPearlParser.TaskDeclarationContext ctx) {
+        SymbolTable symbolTable;
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
+        symbolTable = this.m_currentSymbolTable;
+        
+        // step up one level to get the symbol table with the procedure declaration
+        this.m_currentSymbolTable = this.m_currentSymbolTable.ascend(); 
+        String name = ctx.nameOfModuleTaskProc().ID().toString();
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(name);
+        
+        // switch back to the symbol table of the procedure
+        this.m_currentSymbolTable = symbolTable;
+
         m_isInTask = true;
         m_OnForbidden = false;
         ASTAttribute attr = m_ast.lookup(ctx);
         if (attr == null) {
-            attr = new ASTAttribute(new TypeTask());
+            attr = new ASTAttribute(new TypeTask(),entry);
         }
         m_ast.put(ctx, attr);
         m_taskOrProcContext = ctx;
 
         visitChildren(ctx);
+        
+        // check signal handler for proper termination
+        ControlFlowGraph cfg = ((TaskEntry)entry).getControlFlowGraph();
+        checkAllSignalHandlers(cfg);
+        
         m_currentSymbolTable = m_currentSymbolTable.ascend();
         return null;
     }
+
+    private void checkAllSignalHandlers(ControlFlowGraph cfg) {
+    
+        Vector<ControlFlowGraphNode> nodes = cfg.getNodeList();
+        for (ControlFlowGraphNode n: nodes) {
+            if (n instanceof PseudoNode && ((PseudoNode)n).getNodeType() == PseudoNode.sigReaction) {
+                checkSignalHandler(cfg, n);
+            }
+        }
+    }
+    
+    private void checkSignalHandler(ControlFlowGraph cfg, ControlFlowGraphNode signalHandler) {
+
+        ControlFlowGraphNode begin = signalHandler.getNext();
+        
+        // the grammar makes shure that 
+        //   ether a BEGIN/END block exists 
+        //   or a signal terminating statement is given
+        
+        // test if we have a BEGIN/END-block
+        if (!(begin instanceof PseudoNode)) return;
+        
+        // we have a signal handler with a block of statements
+        ControlFlowGraphNode end = ((PseudoNode)begin).getEnd();
+        Vector<ControlFlowGraphNode> predecessors = cfg.getPredecessors(end);
+        if (predecessors.size() == 0) {
+            // fine, we do not reach the end
+        } else {
+            // mark the first real node of predecessors as error
+            ControlFlowGraphNode errorNode=predecessors.firstElement();
+            ErrorStack.add(errorNode.getCtx(), "signal handler", "must end with RETURN, TERMINATE, INDUCE or GOTO");
+
+//            boolean hasRealStatement = true;
+//            // if we have nested IF/SWITCH-contructs, we must iterate backward to the first real statement
+//            while (hasRealStatement == true && errorNode instanceof PseudoNode && errorNode != begin) {
+//                Vector<ControlFlowGraphNode> p = cfg.getPredecessors(errorNode);
+//                if (p.size() == 0) {
+//                    hasRealStatement = false;
+//                } else {
+//                   errorNode = p.firstElement();
+//                }
+//            }
+//            if (hasRealStatement) {
+//                if (errorNode == begin) {
+//                   // empty handler --> mark END
+//                   errorNode = begin.getNext();
+//               }
+//               ErrorStack.add(errorNode.getCtx(), "signal handler", "requires signal termination statement");
+//            }
+        }
+    }
+
+
 
     @Override
     public Void visitUnlabeled_statement(OpenPearlParser.Unlabeled_statementContext ctx) {
@@ -124,49 +218,6 @@ implements OpenPearlVisitor<Void> {
         this.m_currentSymbolTable = m_symbolTableVisitor.getSymbolTablePerContext(ctx);
         m_OnForbidden = true;
         visitChildren(ctx);
-        if (m_isInSignalReaction) {
-            boolean endOfHandlerIsOk = false;
-            // check last statement of signal handler to BE GOTO, RETURN, INDUCE, TERMINATE
-            // this is easier to implement as to enshure that all paths of control
-            // it would be better to parse the control flow graph of the handler to
-            // enshure that no path exist with a singakTerminationStatement
-            List<StatementContext> stmts = ctx.statement();
-            int last = stmts.size();
-            if (last > 0) {
-                OpenPearlParser.StatementContext lastStmnt = stmts.get(last - 1);
-                Unlabeled_statementContext checkMe =lastStmnt.unlabeled_statement();
-                if ( checkMe != null) {
-                    if (checkMe.gotoStatement() != null || 
-                            checkMe.induceStatement() != null) {
-                        endOfHandlerIsOk = true;
-                    } else if (checkMe.returnStatement() != null ) {
-                        endOfHandlerIsOk = true; // avoid duplicate error message
-                        if (m_isInTask) {
-                            ErrorStack.add(checkMe.returnStatement(),"signal handler", "RETURN is not allowed is a signal reaction of a task");
-                        }
-                    } else if (checkMe.realtime_statement() != null) {
-                        Task_control_statementContext tcs = checkMe.realtime_statement().task_control_statement();
-                        if ( tcs != null && tcs.task_terminating() != null) {
-                            if (tcs.task_terminating().name() != null) {
-                                ErrorStack.add(tcs.task_terminating().name(),
-                                        "signal handler","TERMINATE as signal termination statement forbids a name for task");
-                                endOfHandlerIsOk = true; // avoid duplicate error on same statement 
-                            } else {
-                                endOfHandlerIsOk = true;  // TERMINATE without task name
-                            }
-
-                        }
-                    }
-                }
-
-                if (!endOfHandlerIsOk) {
-                    ErrorStack.add(lastStmnt,"signal handler","must end with RETURN, TERMINATE, INDUCE or GOTO");
-                }
-            } else {
-                ErrorStack.add(ctx.endOfBlockLoopProcOrTask(),"signal handler","must end with RETURN, TERMINATE, INDUCE or GOTO");
-            }
-        }
-
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
         m_OnForbidden = saveOnForbidden;
         return null;
@@ -199,7 +250,7 @@ implements OpenPearlVisitor<Void> {
             ErrorStack.warn(ctx,"deprecated","the usage of error variables is dangerous");
             ASTAttribute attr = m_ast.lookup(m_taskOrProcContext);
             attr.setOnSignalSetOnlyRst();
-            int x=11;
+           
         }
         return null;
     }
@@ -227,7 +278,7 @@ implements OpenPearlVisitor<Void> {
         if (ctx.returnStatement() != null) {
             // must be in PROC!
             if (m_isInTask) {
-                ErrorStack.add(ctx.returnStatement(),"signal handler", "RETURN is not allowed is a signal reaction of a task");
+                ErrorStack.add(ctx.returnStatement(),"signal handler", "RETURN is not allowed in a signal reaction of a task");
             }
         }
         // nothing to do for INDUCE and GOTO
@@ -247,5 +298,16 @@ implements OpenPearlVisitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visitReturnStatement(OpenPearlParser.ReturnStatementContext ctx) {
+        visitChildren(ctx);
+        if (m_isInSignalReaction) {
+            if (m_isInTask) {
+                ErrorStack.add(ctx,"signal handler", "RETURN is not allowed in a signal reaction of a task");
+            }
+         }
+
+        return null;
+    }
 
 }

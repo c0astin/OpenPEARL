@@ -24,7 +24,7 @@ public class ControlFlowGraph {
    private ControlFlowGraphNode m_entry;
    private Vector<ControlFlowGraphNode> m_nodes;
    private static final int lengthOfContextString=20; 
-   
+   public static final int flag_is_reached = 1;
    public ControlFlowGraph(ControlFlowGraphNode entry) {
        m_entry=entry;
        m_nodes=new Vector<ControlFlowGraphNode>();
@@ -69,15 +69,19 @@ public class ControlFlowGraph {
                    m_nodes.get(i).m_alternatives.set(j, null);
                }
            }
+           
            if (other.m_nodes.elementAt(i) instanceof IfNode) {
                IfNode ifNode = (IfNode)(other.m_nodes.elementAt(i));
                index = other.getNodeList().indexOf(ifNode.getFinNode());
                ((IfNode)(m_nodes.get(i))).setFinNode(m_nodes.get(index));
-           }
-           if (other.m_nodes.elementAt(i) instanceof CaseNode) {
+           } else if (other.m_nodes.elementAt(i) instanceof CaseNode) {
                CaseNode caseNode = (CaseNode)(other.m_nodes.elementAt(i));
                index = other.getNodeList().indexOf(caseNode.getFinNode());
                ((CaseNode)(m_nodes.get(i))).setFinNode(m_nodes.get(index));
+           } else if (other.m_nodes.elementAt(i) instanceof PseudoNode) {
+               PseudoNode pseudoNode = (PseudoNode)(other.m_nodes.elementAt(i));
+               index = other.getNodeList().indexOf(pseudoNode.getEnd());
+               ((PseudoNode)(m_nodes.get(i))).setEnd(m_nodes.get(index));
            }
        }
    }
@@ -98,6 +102,22 @@ public class ControlFlowGraph {
    
    public Vector<ControlFlowGraphNode> getNodeList() {
        return m_nodes;
+   }
+   
+   public Vector<ControlFlowGraphNode> getPredecessors(ControlFlowGraphNode n) {
+       Vector<ControlFlowGraphNode> previousNodes = new Vector<ControlFlowGraphNode>() ;
+       for (int i=0; i<getNodeList().size(); i++) {
+           //            System.out.println("aa: "+cfg.getNodeList().get(i).getCtx().getStart().getLine()+":"
+           //        + cfg.getNodeList().get(i).printCtx(10));
+           for (ControlFlowGraphNode node : getNodeList().get(i).m_alternatives) {
+
+               if (node != null && node.equals(n)) {
+                   previousNodes.add(getNodeList().get(i)); 
+                   //                    System.out.println("xx: "+ cfg.getNodeList().get(i).printCtx(10));
+               }
+           }
+       }
+       return previousNodes;
    }
 
    public void output(String nameOfProcOrTask) {

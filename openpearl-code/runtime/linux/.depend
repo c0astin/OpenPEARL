@@ -100,6 +100,25 @@ Pipe.o: Pipe.cc Pipe.h ../common/SystemDationNB.h \
  ../../configuration/include/autoconf.h ../common/Prio.h CSema.h \
  ../common/Clock.h ../common/Duration.h ../common/Interrupt.h \
  ../common/Fixed.h TaskTimer.h ../common/TaskTimerCommon.h
+PipeNBR.o: PipeNBR.cc PipeNBR.h ../common/SystemDationNB.h \
+ ../common/SystemDation.h ../common/Dation.h ../common/Device.h \
+ ../common/Fixed.h ../common/Signals.h ../common/Signals.hh \
+ ../common/Fixed63.h ../common/../../configuration/include/autoconf.h \
+ ../common/stackcheck.h ../common/IfThenElseTemplate.h \
+ ../common/NumberOfBytes.h ../common/RefChar.h ../common/Character.h \
+ Mutex.h ../common/MutexCommon.h ../common/RefChar.h \
+ ../common/Character.h InterruptableSystemDationNB.h \
+ ../common/TaskCommon.h ../common/Clock.h ../common/BitString.h \
+ ../common/Log.h ../common/SystemDationNB.h ../common/Duration.h \
+ ../common/Float.h ../common/FloatHelper.h ../common/Interrupt.h \
+ ../common/TaskWhenLinks.h Mutex.h ../common/Prio.h CSema.h \
+ ../common/CSemaCommon.h ../common/UserDation.h ../common/Rst.h \
+ ../common/TaskCommon.h ../common/PriorityQueue.h \
+ ../common/TaskTimerCommon.h ../common/Dation.h ../common/Log.h \
+ ../common/Signals.h Task.h ../common/BitString.h PrioMapper.h \
+ ../../configuration/include/autoconf.h ../common/Prio.h CSema.h \
+ ../common/Clock.h ../common/Duration.h ../common/Interrupt.h \
+ ../common/Fixed.h TaskTimer.h ../common/TaskTimerCommon.h
 Disc.o: Disc.cc Disc.h InterruptableSystemDationNB.h \
  ../common/TaskCommon.h ../common/Dation.h ../common/Device.h \
  ../common/Fixed.h ../common/Signals.h ../common/Signals.hh \
@@ -1022,7 +1041,7 @@ FloatSwitch.o: ../common/watertank/FloatSwitch.cc ../common/Log.h \
  ../common/Control.h ../common/SendXML.h StdIn.h \
  InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
  ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
  ../common/SoftInt.h ../common/Float.h ../common/compare.h \
  ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
  ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
@@ -1032,11 +1051,13 @@ FloatSwitch.o: ../common/watertank/FloatSwitch.cc ../common/Log.h \
  ../common/watertank/Pump.h ../common/watertank/Valve.h \
  ../common/watertank/PressureSensor.h \
  ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
  ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
  ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
  ../common/DynamicDeadlockDetection/Graph.h \
@@ -1090,7 +1111,7 @@ Pump.o: ../common/watertank/Pump.cc ../common/Log.h \
  ../common/Control.h ../common/SendXML.h StdIn.h \
  InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
  ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
  ../common/SoftInt.h ../common/Float.h ../common/compare.h \
  ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
  ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
@@ -1100,11 +1121,13 @@ Pump.o: ../common/watertank/Pump.cc ../common/Log.h \
  ../common/watertank/Pump.h ../common/watertank/Valve.h \
  ../common/watertank/PressureSensor.h \
  ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
  ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
  ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
  ../common/DynamicDeadlockDetection/Graph.h \
@@ -1158,7 +1181,7 @@ Valve.o: ../common/watertank/Valve.cc ../common/Log.h \
  ../common/Control.h ../common/SendXML.h StdIn.h \
  InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
  ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
  ../common/SoftInt.h ../common/Float.h ../common/compare.h \
  ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
  ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
@@ -1168,11 +1191,13 @@ Valve.o: ../common/watertank/Valve.cc ../common/Log.h \
  ../common/watertank/Pump.h ../common/watertank/Valve.h \
  ../common/watertank/PressureSensor.h \
  ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
  ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
  ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
  ../common/DynamicDeadlockDetection/Graph.h \
@@ -1226,7 +1251,7 @@ PressureSensor.o: ../common/watertank/PressureSensor.cc ../common/Log.h \
  ../common/Control.h ../common/SendXML.h StdIn.h \
  InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
  ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
  ../common/SoftInt.h ../common/Float.h ../common/compare.h \
  ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
  ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
@@ -1236,11 +1261,13 @@ PressureSensor.o: ../common/watertank/PressureSensor.cc ../common/Log.h \
  ../common/watertank/Pump.h ../common/watertank/Valve.h \
  ../common/watertank/PressureSensor.h \
  ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
  ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
  ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
  ../common/DynamicDeadlockDetection/Graph.h \
@@ -1291,7 +1318,7 @@ SimWatertank.o: ../common/watertank/SimWatertank.cc PearlIncludes.h \
  ../common/Control.h ../common/SendXML.h StdIn.h \
  InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
  ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
  ../common/SoftInt.h ../common/Float.h ../common/compare.h \
  ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
  ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
@@ -1301,11 +1328,13 @@ SimWatertank.o: ../common/watertank/SimWatertank.cc PearlIncludes.h \
  ../common/watertank/Pump.h ../common/watertank/Valve.h \
  ../common/watertank/PressureSensor.h \
  ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
  ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
  ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
  ../common/DynamicDeadlockDetection/Graph.h \
@@ -1356,7 +1385,7 @@ WatertankInt.o: ../common/watertank/WatertankInt.cc \
  ../common/Control.h ../common/SendXML.h StdIn.h \
  InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
  ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
  ../common/SoftInt.h ../common/Float.h ../common/compare.h \
  ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
  ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
@@ -1366,233 +1395,32 @@ WatertankInt.o: ../common/watertank/WatertankInt.cc \
  ../common/watertank/Pump.h ../common/watertank/Valve.h \
  ../common/watertank/PressureSensor.h \
  ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
  ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
  ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
  ../common/DynamicDeadlockDetection/Graph.h \
  ../common/DynamicDeadlockDetection/ResourceAllocationGraph.h \
  ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h \
  ../common/watertank/SimWatertank.h
-ScrewMotor.o: ../common/filamentExtruder/ScrewMotor.cc ../common/Log.h \
- ../common/SystemDationNB.h ../common/SystemDation.h ../common/Dation.h \
- ../common/Device.h ../common/Fixed.h ../common/Signals.h \
- ../common/Signals.hh ../common/Fixed63.h \
- ../common/../../configuration/include/autoconf.h ../common/stackcheck.h \
- ../common/IfThenElseTemplate.h ../common/NumberOfBytes.h \
- ../common/RefChar.h ../common/Character.h ../common/Signals.h \
- ../common/filamentExtruder/ScrewMotor.h ../common/SystemDationB.h \
- ../common/Fixed.h ../common/Character.h ../common/RefChar.h \
- ../common/filamentExtruder/FilExtruderInt.h PearlIncludes.h \
- ../common/Ref.h ../common/Log.h Task.h ../common/BitString.h \
- PrioMapper.h ../../configuration/include/autoconf.h ../common/Prio.h \
- CSema.h ../common/CSemaCommon.h ../common/Clock.h ../common/BitString.h \
- ../common/Duration.h ../common/Float.h ../common/FloatHelper.h \
- ../common/Clock.h ../common/Duration.h ../common/Interrupt.h \
- ../common/TaskWhenLinks.h Mutex.h ../common/MutexCommon.h \
- ../common/TaskCommon.h ../common/Interrupt.h ../common/Prio.h CSema.h \
- ../common/UserDation.h ../common/Rst.h ../common/TaskCommon.h \
- ../common/PriorityQueue.h ../common/TaskTimerCommon.h TaskTimer.h \
- ../common/TaskTimerCommon.h ../common/TaskMonitor.h ../common/Array.h \
- ../common/PutClock.h ../common/Sink.h ../common/GetClock.h \
- ../common/Source.h ../common/GetClock.h ../common/PutDuration.h \
- ../common/GetDuration.h ../common/PutFixed.h ../common/compare.h \
- ../common/CharSlice.h ../common/Ref.h ../common/GetFixed.h \
- ../common/GetHelper.h ../common/PutFloat.h ../common/PutHelper.h \
- ../common/GetFloat.h ../common/Fixed63.h ../common/CharSlice.h \
- ../common/PutCharacter.h ../common/GetCharacter.h \
- ../common/SignalAction.h ../common/ScheduledSignalActions.h \
- ../common/SignalAction.h ../common/BitSlice.h ../common/PutBitString.h \
- ../common/GetBitString.h ../common/RefCharSink.h ../common/Device.h \
- ../common/SystemDationNB.h ../common/UserDation.h ../common/DationPG.h \
- ../common/UserDationNB.h ../common/DationDim.h ../common/TFUBuffer.h \
- ../common/IOJob.h ../common/SystemDationNBSink.h \
- ../common/SystemDationNBSource.h ../common/IOFormats.h \
- ../common/PutFixed.h ../common/GetFixed.h ../common/GetFloat.h \
- ../common/PutFloat.h ../common/PutCharacter.h ../common/GetCharacter.h \
- ../common/PutBitString.h ../common/GetBitString.h \
- ../common/StringDationConvert.h ../common/RefCharSink.h \
- ../common/RefCharSource.h ../common/DationRW.h ../common/DationTS.h \
- ../common/SystemDationB.h ../common/TFUBuffer.h ../common/TFURecord.h \
- ../common/UserDationNB.h ../common/DationDim.h ../common/DationDim1.h \
- ../common/DationDim2.h ../common/DationDim3.h ../common/Semaphore.h \
- Task.h ../common/Bolt.h ../common/LogFile.h \
- ../common/SystemDationNBSink.h ../common/SystemDationNBSource.h \
- ../common/Control.h ../common/SendXML.h StdIn.h \
- InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
- ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
- ../common/SoftInt.h ../common/Float.h ../common/compare.h \
- ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
- ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
- ../common/PCA9685Channel.h ../common/PCA9685.h ../common/LM75.h \
- ../common/ADS1015SE.h ../common/PCF8574In.h ../common/PCF8574Out.h \
- ../common/watertank/Watertank.h ../common/watertank/FloatSwitch.h \
- ../common/watertank/Pump.h ../common/watertank/Valve.h \
- ../common/watertank/PressureSensor.h \
- ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
- ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
- ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
- ../common/DynamicDeadlockDetection/Graph.h \
- ../common/DynamicDeadlockDetection/ResourceAllocationGraph.h \
- ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h \
- ../common/filamentExtruder/SimFilExtruder.h
-ScrewHeater.o: ../common/filamentExtruder/ScrewHeater.cc ../common/Log.h \
- ../common/SystemDationNB.h ../common/SystemDation.h ../common/Dation.h \
- ../common/Device.h ../common/Fixed.h ../common/Signals.h \
- ../common/Signals.hh ../common/Fixed63.h \
- ../common/../../configuration/include/autoconf.h ../common/stackcheck.h \
- ../common/IfThenElseTemplate.h ../common/NumberOfBytes.h \
- ../common/RefChar.h ../common/Character.h ../common/Signals.h \
- ../common/filamentExtruder/ScrewHeater.h ../common/SystemDationB.h \
- ../common/Fixed.h ../common/Character.h ../common/RefChar.h \
- ../common/filamentExtruder/FilExtruderInt.h PearlIncludes.h \
- ../common/Ref.h ../common/Log.h Task.h ../common/BitString.h \
- PrioMapper.h ../../configuration/include/autoconf.h ../common/Prio.h \
- CSema.h ../common/CSemaCommon.h ../common/Clock.h ../common/BitString.h \
- ../common/Duration.h ../common/Float.h ../common/FloatHelper.h \
- ../common/Clock.h ../common/Duration.h ../common/Interrupt.h \
- ../common/TaskWhenLinks.h Mutex.h ../common/MutexCommon.h \
- ../common/TaskCommon.h ../common/Interrupt.h ../common/Prio.h CSema.h \
- ../common/UserDation.h ../common/Rst.h ../common/TaskCommon.h \
- ../common/PriorityQueue.h ../common/TaskTimerCommon.h TaskTimer.h \
- ../common/TaskTimerCommon.h ../common/TaskMonitor.h ../common/Array.h \
- ../common/PutClock.h ../common/Sink.h ../common/GetClock.h \
- ../common/Source.h ../common/GetClock.h ../common/PutDuration.h \
- ../common/GetDuration.h ../common/PutFixed.h ../common/compare.h \
- ../common/CharSlice.h ../common/Ref.h ../common/GetFixed.h \
- ../common/GetHelper.h ../common/PutFloat.h ../common/PutHelper.h \
- ../common/GetFloat.h ../common/Fixed63.h ../common/CharSlice.h \
- ../common/PutCharacter.h ../common/GetCharacter.h \
- ../common/SignalAction.h ../common/ScheduledSignalActions.h \
- ../common/SignalAction.h ../common/BitSlice.h ../common/PutBitString.h \
- ../common/GetBitString.h ../common/RefCharSink.h ../common/Device.h \
- ../common/SystemDationNB.h ../common/UserDation.h ../common/DationPG.h \
- ../common/UserDationNB.h ../common/DationDim.h ../common/TFUBuffer.h \
- ../common/IOJob.h ../common/SystemDationNBSink.h \
- ../common/SystemDationNBSource.h ../common/IOFormats.h \
- ../common/PutFixed.h ../common/GetFixed.h ../common/GetFloat.h \
- ../common/PutFloat.h ../common/PutCharacter.h ../common/GetCharacter.h \
- ../common/PutBitString.h ../common/GetBitString.h \
- ../common/StringDationConvert.h ../common/RefCharSink.h \
- ../common/RefCharSource.h ../common/DationRW.h ../common/DationTS.h \
- ../common/SystemDationB.h ../common/TFUBuffer.h ../common/TFURecord.h \
- ../common/UserDationNB.h ../common/DationDim.h ../common/DationDim1.h \
- ../common/DationDim2.h ../common/DationDim3.h ../common/Semaphore.h \
- Task.h ../common/Bolt.h ../common/LogFile.h \
- ../common/SystemDationNBSink.h ../common/SystemDationNBSource.h \
- ../common/Control.h ../common/SendXML.h StdIn.h \
- InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
- ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
- ../common/SoftInt.h ../common/Float.h ../common/compare.h \
- ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
- ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
- ../common/PCA9685Channel.h ../common/PCA9685.h ../common/LM75.h \
- ../common/ADS1015SE.h ../common/PCF8574In.h ../common/PCF8574Out.h \
- ../common/watertank/Watertank.h ../common/watertank/FloatSwitch.h \
- ../common/watertank/Pump.h ../common/watertank/Valve.h \
- ../common/watertank/PressureSensor.h \
- ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
- ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
- ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
- ../common/DynamicDeadlockDetection/Graph.h \
- ../common/DynamicDeadlockDetection/ResourceAllocationGraph.h \
- ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h \
- ../common/filamentExtruder/SimFilExtruder.h
-SpoolerMotor.o: ../common/filamentExtruder/SpoolerMotor.cc \
+ScrewMotor.o: ../common/filamentExtruder/dations/ScrewMotor.cc \
  ../common/Log.h ../common/SystemDationNB.h ../common/SystemDation.h \
  ../common/Dation.h ../common/Device.h ../common/Fixed.h \
  ../common/Signals.h ../common/Signals.hh ../common/Fixed63.h \
  ../common/../../configuration/include/autoconf.h ../common/stackcheck.h \
  ../common/IfThenElseTemplate.h ../common/NumberOfBytes.h \
  ../common/RefChar.h ../common/Character.h ../common/Signals.h \
- ../common/filamentExtruder/SpoolerMotor.h ../common/SystemDationB.h \
- ../common/Fixed.h ../common/Character.h ../common/RefChar.h \
- ../common/filamentExtruder/FilExtruderInt.h PearlIncludes.h \
- ../common/Ref.h ../common/Log.h Task.h ../common/BitString.h \
- PrioMapper.h ../../configuration/include/autoconf.h ../common/Prio.h \
- CSema.h ../common/CSemaCommon.h ../common/Clock.h ../common/BitString.h \
- ../common/Duration.h ../common/Float.h ../common/FloatHelper.h \
- ../common/Clock.h ../common/Duration.h ../common/Interrupt.h \
- ../common/TaskWhenLinks.h Mutex.h ../common/MutexCommon.h \
- ../common/TaskCommon.h ../common/Interrupt.h ../common/Prio.h CSema.h \
- ../common/UserDation.h ../common/Rst.h ../common/TaskCommon.h \
- ../common/PriorityQueue.h ../common/TaskTimerCommon.h TaskTimer.h \
- ../common/TaskTimerCommon.h ../common/TaskMonitor.h ../common/Array.h \
- ../common/PutClock.h ../common/Sink.h ../common/GetClock.h \
- ../common/Source.h ../common/GetClock.h ../common/PutDuration.h \
- ../common/GetDuration.h ../common/PutFixed.h ../common/compare.h \
- ../common/CharSlice.h ../common/Ref.h ../common/GetFixed.h \
- ../common/GetHelper.h ../common/PutFloat.h ../common/PutHelper.h \
- ../common/GetFloat.h ../common/Fixed63.h ../common/CharSlice.h \
- ../common/PutCharacter.h ../common/GetCharacter.h \
- ../common/SignalAction.h ../common/ScheduledSignalActions.h \
- ../common/SignalAction.h ../common/BitSlice.h ../common/PutBitString.h \
- ../common/GetBitString.h ../common/RefCharSink.h ../common/Device.h \
- ../common/SystemDationNB.h ../common/UserDation.h ../common/DationPG.h \
- ../common/UserDationNB.h ../common/DationDim.h ../common/TFUBuffer.h \
- ../common/IOJob.h ../common/SystemDationNBSink.h \
- ../common/SystemDationNBSource.h ../common/IOFormats.h \
- ../common/PutFixed.h ../common/GetFixed.h ../common/GetFloat.h \
- ../common/PutFloat.h ../common/PutCharacter.h ../common/GetCharacter.h \
- ../common/PutBitString.h ../common/GetBitString.h \
- ../common/StringDationConvert.h ../common/RefCharSink.h \
- ../common/RefCharSource.h ../common/DationRW.h ../common/DationTS.h \
- ../common/SystemDationB.h ../common/TFUBuffer.h ../common/TFURecord.h \
- ../common/UserDationNB.h ../common/DationDim.h ../common/DationDim1.h \
- ../common/DationDim2.h ../common/DationDim3.h ../common/Semaphore.h \
- Task.h ../common/Bolt.h ../common/LogFile.h \
- ../common/SystemDationNBSink.h ../common/SystemDationNBSource.h \
- ../common/Control.h ../common/SendXML.h StdIn.h \
- InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
- ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
- ../common/SoftInt.h ../common/Float.h ../common/compare.h \
- ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
- ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
- ../common/PCA9685Channel.h ../common/PCA9685.h ../common/LM75.h \
- ../common/ADS1015SE.h ../common/PCF8574In.h ../common/PCF8574Out.h \
- ../common/watertank/Watertank.h ../common/watertank/FloatSwitch.h \
- ../common/watertank/Pump.h ../common/watertank/Valve.h \
- ../common/watertank/PressureSensor.h \
- ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
- ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
- ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
- ../common/DynamicDeadlockDetection/Graph.h \
- ../common/DynamicDeadlockDetection/ResourceAllocationGraph.h \
- ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h \
- ../common/filamentExtruder/SimFilExtruder.h
-TemperatureSensor.o: ../common/filamentExtruder/TemperatureSensor.cc \
- ../common/Log.h ../common/SystemDationNB.h ../common/SystemDation.h \
- ../common/Dation.h ../common/Device.h ../common/Fixed.h \
- ../common/Signals.h ../common/Signals.hh ../common/Fixed63.h \
- ../common/../../configuration/include/autoconf.h ../common/stackcheck.h \
- ../common/IfThenElseTemplate.h ../common/NumberOfBytes.h \
- ../common/RefChar.h ../common/Character.h ../common/Signals.h \
- ../common/filamentExtruder/TemperatureSensor.h ../common/SystemDationB.h \
- ../common/Fixed.h ../common/BitString.h ../common/Log.h \
- ../common/Character.h ../common/RefChar.h \
- ../common/filamentExtruder/FilExtruderInt.h PearlIncludes.h \
- ../common/Ref.h Task.h PrioMapper.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/SystemDationB.h ../common/Fixed.h ../common/Character.h \
+ ../common/RefChar.h \
+ ../common/filamentExtruder/dations/../SimFilExtruderInt.h \
+ PearlIncludes.h ../common/Ref.h ../common/Log.h Task.h \
+ ../common/BitString.h PrioMapper.h \
  ../../configuration/include/autoconf.h ../common/Prio.h CSema.h \
  ../common/CSemaCommon.h ../common/Clock.h ../common/BitString.h \
  ../common/Duration.h ../common/Float.h ../common/FloatHelper.h \
@@ -1629,7 +1457,7 @@ TemperatureSensor.o: ../common/filamentExtruder/TemperatureSensor.cc \
  ../common/Control.h ../common/SendXML.h StdIn.h \
  InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
  ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
  ../common/SoftInt.h ../common/Float.h ../common/compare.h \
  ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
  ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
@@ -1639,11 +1467,229 @@ TemperatureSensor.o: ../common/filamentExtruder/TemperatureSensor.cc \
  ../common/watertank/Pump.h ../common/watertank/Valve.h \
  ../common/watertank/PressureSensor.h \
  ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
+ ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
+ ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
+ ../common/DynamicDeadlockDetection/Graph.h \
+ ../common/DynamicDeadlockDetection/ResourceAllocationGraph.h \
+ ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h \
+ ../common/filamentExtruder/SimFilExtruder.h
+ScrewHeater.o: ../common/filamentExtruder/dations/ScrewHeater.cc \
+ ../common/Log.h ../common/SystemDationNB.h ../common/SystemDation.h \
+ ../common/Dation.h ../common/Device.h ../common/Fixed.h \
+ ../common/Signals.h ../common/Signals.hh ../common/Fixed63.h \
+ ../common/../../configuration/include/autoconf.h ../common/stackcheck.h \
+ ../common/IfThenElseTemplate.h ../common/NumberOfBytes.h \
+ ../common/RefChar.h ../common/Character.h ../common/Signals.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/SystemDationB.h ../common/Fixed.h ../common/Character.h \
+ ../common/RefChar.h \
+ ../common/filamentExtruder/dations/../SimFilExtruderInt.h \
+ PearlIncludes.h ../common/Ref.h ../common/Log.h Task.h \
+ ../common/BitString.h PrioMapper.h \
+ ../../configuration/include/autoconf.h ../common/Prio.h CSema.h \
+ ../common/CSemaCommon.h ../common/Clock.h ../common/BitString.h \
+ ../common/Duration.h ../common/Float.h ../common/FloatHelper.h \
+ ../common/Clock.h ../common/Duration.h ../common/Interrupt.h \
+ ../common/TaskWhenLinks.h Mutex.h ../common/MutexCommon.h \
+ ../common/TaskCommon.h ../common/Interrupt.h ../common/Prio.h CSema.h \
+ ../common/UserDation.h ../common/Rst.h ../common/TaskCommon.h \
+ ../common/PriorityQueue.h ../common/TaskTimerCommon.h TaskTimer.h \
+ ../common/TaskTimerCommon.h ../common/TaskMonitor.h ../common/Array.h \
+ ../common/PutClock.h ../common/Sink.h ../common/GetClock.h \
+ ../common/Source.h ../common/GetClock.h ../common/PutDuration.h \
+ ../common/GetDuration.h ../common/PutFixed.h ../common/compare.h \
+ ../common/CharSlice.h ../common/Ref.h ../common/GetFixed.h \
+ ../common/GetHelper.h ../common/PutFloat.h ../common/PutHelper.h \
+ ../common/GetFloat.h ../common/Fixed63.h ../common/CharSlice.h \
+ ../common/PutCharacter.h ../common/GetCharacter.h \
+ ../common/SignalAction.h ../common/ScheduledSignalActions.h \
+ ../common/SignalAction.h ../common/BitSlice.h ../common/PutBitString.h \
+ ../common/GetBitString.h ../common/RefCharSink.h ../common/Device.h \
+ ../common/SystemDationNB.h ../common/UserDation.h ../common/DationPG.h \
+ ../common/UserDationNB.h ../common/DationDim.h ../common/TFUBuffer.h \
+ ../common/IOJob.h ../common/SystemDationNBSink.h \
+ ../common/SystemDationNBSource.h ../common/IOFormats.h \
+ ../common/PutFixed.h ../common/GetFixed.h ../common/GetFloat.h \
+ ../common/PutFloat.h ../common/PutCharacter.h ../common/GetCharacter.h \
+ ../common/PutBitString.h ../common/GetBitString.h \
+ ../common/StringDationConvert.h ../common/RefCharSink.h \
+ ../common/RefCharSource.h ../common/DationRW.h ../common/DationTS.h \
+ ../common/SystemDationB.h ../common/TFUBuffer.h ../common/TFURecord.h \
+ ../common/UserDationNB.h ../common/DationDim.h ../common/DationDim1.h \
+ ../common/DationDim2.h ../common/DationDim3.h ../common/Semaphore.h \
+ Task.h ../common/Bolt.h ../common/LogFile.h \
+ ../common/SystemDationNBSink.h ../common/SystemDationNBSource.h \
+ ../common/Control.h ../common/SendXML.h StdIn.h \
+ InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
+ ../common/Dation.h ../common/ConsoleCommon.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
+ ../common/SoftInt.h ../common/Float.h ../common/compare.h \
+ ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
+ ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
+ ../common/PCA9685Channel.h ../common/PCA9685.h ../common/LM75.h \
+ ../common/ADS1015SE.h ../common/PCF8574In.h ../common/PCF8574Out.h \
+ ../common/watertank/Watertank.h ../common/watertank/FloatSwitch.h \
+ ../common/watertank/Pump.h ../common/watertank/Valve.h \
+ ../common/watertank/PressureSensor.h \
+ ../common/filamentExtruder/FilamentExtruder.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
+ ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
+ ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
+ ../common/DynamicDeadlockDetection/Graph.h \
+ ../common/DynamicDeadlockDetection/ResourceAllocationGraph.h \
+ ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h \
+ ../common/filamentExtruder/SimFilExtruder.h
+SpoolerMotor.o: ../common/filamentExtruder/dations/SpoolerMotor.cc \
+ ../common/Log.h ../common/SystemDationNB.h ../common/SystemDation.h \
+ ../common/Dation.h ../common/Device.h ../common/Fixed.h \
+ ../common/Signals.h ../common/Signals.hh ../common/Fixed63.h \
+ ../common/../../configuration/include/autoconf.h ../common/stackcheck.h \
+ ../common/IfThenElseTemplate.h ../common/NumberOfBytes.h \
+ ../common/RefChar.h ../common/Character.h ../common/Signals.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/SystemDationB.h ../common/Fixed.h ../common/Character.h \
+ ../common/RefChar.h \
+ ../common/filamentExtruder/dations/../SimFilExtruderInt.h \
+ PearlIncludes.h ../common/Ref.h ../common/Log.h Task.h \
+ ../common/BitString.h PrioMapper.h \
+ ../../configuration/include/autoconf.h ../common/Prio.h CSema.h \
+ ../common/CSemaCommon.h ../common/Clock.h ../common/BitString.h \
+ ../common/Duration.h ../common/Float.h ../common/FloatHelper.h \
+ ../common/Clock.h ../common/Duration.h ../common/Interrupt.h \
+ ../common/TaskWhenLinks.h Mutex.h ../common/MutexCommon.h \
+ ../common/TaskCommon.h ../common/Interrupt.h ../common/Prio.h CSema.h \
+ ../common/UserDation.h ../common/Rst.h ../common/TaskCommon.h \
+ ../common/PriorityQueue.h ../common/TaskTimerCommon.h TaskTimer.h \
+ ../common/TaskTimerCommon.h ../common/TaskMonitor.h ../common/Array.h \
+ ../common/PutClock.h ../common/Sink.h ../common/GetClock.h \
+ ../common/Source.h ../common/GetClock.h ../common/PutDuration.h \
+ ../common/GetDuration.h ../common/PutFixed.h ../common/compare.h \
+ ../common/CharSlice.h ../common/Ref.h ../common/GetFixed.h \
+ ../common/GetHelper.h ../common/PutFloat.h ../common/PutHelper.h \
+ ../common/GetFloat.h ../common/Fixed63.h ../common/CharSlice.h \
+ ../common/PutCharacter.h ../common/GetCharacter.h \
+ ../common/SignalAction.h ../common/ScheduledSignalActions.h \
+ ../common/SignalAction.h ../common/BitSlice.h ../common/PutBitString.h \
+ ../common/GetBitString.h ../common/RefCharSink.h ../common/Device.h \
+ ../common/SystemDationNB.h ../common/UserDation.h ../common/DationPG.h \
+ ../common/UserDationNB.h ../common/DationDim.h ../common/TFUBuffer.h \
+ ../common/IOJob.h ../common/SystemDationNBSink.h \
+ ../common/SystemDationNBSource.h ../common/IOFormats.h \
+ ../common/PutFixed.h ../common/GetFixed.h ../common/GetFloat.h \
+ ../common/PutFloat.h ../common/PutCharacter.h ../common/GetCharacter.h \
+ ../common/PutBitString.h ../common/GetBitString.h \
+ ../common/StringDationConvert.h ../common/RefCharSink.h \
+ ../common/RefCharSource.h ../common/DationRW.h ../common/DationTS.h \
+ ../common/SystemDationB.h ../common/TFUBuffer.h ../common/TFURecord.h \
+ ../common/UserDationNB.h ../common/DationDim.h ../common/DationDim1.h \
+ ../common/DationDim2.h ../common/DationDim3.h ../common/Semaphore.h \
+ Task.h ../common/Bolt.h ../common/LogFile.h \
+ ../common/SystemDationNBSink.h ../common/SystemDationNBSource.h \
+ ../common/Control.h ../common/SendXML.h StdIn.h \
+ InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
+ ../common/Dation.h ../common/ConsoleCommon.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
+ ../common/SoftInt.h ../common/Float.h ../common/compare.h \
+ ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
+ ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
+ ../common/PCA9685Channel.h ../common/PCA9685.h ../common/LM75.h \
+ ../common/ADS1015SE.h ../common/PCF8574In.h ../common/PCF8574Out.h \
+ ../common/watertank/Watertank.h ../common/watertank/FloatSwitch.h \
+ ../common/watertank/Pump.h ../common/watertank/Valve.h \
+ ../common/watertank/PressureSensor.h \
+ ../common/filamentExtruder/FilamentExtruder.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
+ ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
+ ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
+ ../common/DynamicDeadlockDetection/Graph.h \
+ ../common/DynamicDeadlockDetection/ResourceAllocationGraph.h \
+ ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h \
+ ../common/filamentExtruder/SimFilExtruder.h
+TemperatureSensor.o: \
+ ../common/filamentExtruder/dations/TemperatureSensor.cc ../common/Log.h \
+ ../common/SystemDationNB.h ../common/SystemDation.h ../common/Dation.h \
+ ../common/Device.h ../common/Fixed.h ../common/Signals.h \
+ ../common/Signals.hh ../common/Fixed63.h \
+ ../common/../../configuration/include/autoconf.h ../common/stackcheck.h \
+ ../common/IfThenElseTemplate.h ../common/NumberOfBytes.h \
+ ../common/RefChar.h ../common/Character.h ../common/Signals.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/SystemDationB.h ../common/Fixed.h ../common/BitString.h \
+ ../common/Log.h ../common/Character.h ../common/RefChar.h \
+ ../common/filamentExtruder/dations/../SimFilExtruderInt.h \
+ PearlIncludes.h ../common/Ref.h Task.h PrioMapper.h \
+ ../../configuration/include/autoconf.h ../common/Prio.h CSema.h \
+ ../common/CSemaCommon.h ../common/Clock.h ../common/BitString.h \
+ ../common/Duration.h ../common/Float.h ../common/FloatHelper.h \
+ ../common/Clock.h ../common/Duration.h ../common/Interrupt.h \
+ ../common/TaskWhenLinks.h Mutex.h ../common/MutexCommon.h \
+ ../common/TaskCommon.h ../common/Interrupt.h ../common/Prio.h CSema.h \
+ ../common/UserDation.h ../common/Rst.h ../common/TaskCommon.h \
+ ../common/PriorityQueue.h ../common/TaskTimerCommon.h TaskTimer.h \
+ ../common/TaskTimerCommon.h ../common/TaskMonitor.h ../common/Array.h \
+ ../common/PutClock.h ../common/Sink.h ../common/GetClock.h \
+ ../common/Source.h ../common/GetClock.h ../common/PutDuration.h \
+ ../common/GetDuration.h ../common/PutFixed.h ../common/compare.h \
+ ../common/CharSlice.h ../common/Ref.h ../common/GetFixed.h \
+ ../common/GetHelper.h ../common/PutFloat.h ../common/PutHelper.h \
+ ../common/GetFloat.h ../common/Fixed63.h ../common/CharSlice.h \
+ ../common/PutCharacter.h ../common/GetCharacter.h \
+ ../common/SignalAction.h ../common/ScheduledSignalActions.h \
+ ../common/SignalAction.h ../common/BitSlice.h ../common/PutBitString.h \
+ ../common/GetBitString.h ../common/RefCharSink.h ../common/Device.h \
+ ../common/SystemDationNB.h ../common/UserDation.h ../common/DationPG.h \
+ ../common/UserDationNB.h ../common/DationDim.h ../common/TFUBuffer.h \
+ ../common/IOJob.h ../common/SystemDationNBSink.h \
+ ../common/SystemDationNBSource.h ../common/IOFormats.h \
+ ../common/PutFixed.h ../common/GetFixed.h ../common/GetFloat.h \
+ ../common/PutFloat.h ../common/PutCharacter.h ../common/GetCharacter.h \
+ ../common/PutBitString.h ../common/GetBitString.h \
+ ../common/StringDationConvert.h ../common/RefCharSink.h \
+ ../common/RefCharSource.h ../common/DationRW.h ../common/DationTS.h \
+ ../common/SystemDationB.h ../common/TFUBuffer.h ../common/TFURecord.h \
+ ../common/UserDationNB.h ../common/DationDim.h ../common/DationDim1.h \
+ ../common/DationDim2.h ../common/DationDim3.h ../common/Semaphore.h \
+ Task.h ../common/Bolt.h ../common/LogFile.h \
+ ../common/SystemDationNBSink.h ../common/SystemDationNBSource.h \
+ ../common/Control.h ../common/SendXML.h StdIn.h \
+ InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
+ ../common/Dation.h ../common/ConsoleCommon.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
+ ../common/SoftInt.h ../common/Float.h ../common/compare.h \
+ ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
+ ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
+ ../common/PCA9685Channel.h ../common/PCA9685.h ../common/LM75.h \
+ ../common/ADS1015SE.h ../common/PCF8574In.h ../common/PCF8574Out.h \
+ ../common/watertank/Watertank.h ../common/watertank/FloatSwitch.h \
+ ../common/watertank/Pump.h ../common/watertank/Valve.h \
+ ../common/watertank/PressureSensor.h \
+ ../common/filamentExtruder/FilamentExtruder.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
  ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
  ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
  ../common/DynamicDeadlockDetection/Graph.h \
@@ -1651,18 +1697,18 @@ TemperatureSensor.o: ../common/filamentExtruder/TemperatureSensor.cc \
  ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h \
  ../common/filamentExtruder/SimFilExtruder.h
 FilamentDiameterSensor.o: \
- ../common/filamentExtruder/FilamentDiameterSensor.cc ../common/Log.h \
- ../common/SystemDationNB.h ../common/SystemDation.h ../common/Dation.h \
- ../common/Device.h ../common/Fixed.h ../common/Signals.h \
- ../common/Signals.hh ../common/Fixed63.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.cc \
+ ../common/Log.h ../common/SystemDationNB.h ../common/SystemDation.h \
+ ../common/Dation.h ../common/Device.h ../common/Fixed.h \
+ ../common/Signals.h ../common/Signals.hh ../common/Fixed63.h \
  ../common/../../configuration/include/autoconf.h ../common/stackcheck.h \
  ../common/IfThenElseTemplate.h ../common/NumberOfBytes.h \
  ../common/RefChar.h ../common/Character.h ../common/Signals.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
  ../common/SystemDationB.h ../common/Fixed.h ../common/BitString.h \
  ../common/Log.h ../common/Character.h ../common/RefChar.h \
- ../common/filamentExtruder/FilExtruderInt.h PearlIncludes.h \
- ../common/Ref.h Task.h PrioMapper.h \
+ ../common/filamentExtruder/dations/../SimFilExtruderInt.h \
+ PearlIncludes.h ../common/Ref.h Task.h PrioMapper.h \
  ../../configuration/include/autoconf.h ../common/Prio.h CSema.h \
  ../common/CSemaCommon.h ../common/Clock.h ../common/BitString.h \
  ../common/Duration.h ../common/Float.h ../common/FloatHelper.h \
@@ -1699,7 +1745,7 @@ FilamentDiameterSensor.o: \
  ../common/Control.h ../common/SendXML.h StdIn.h \
  InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
  ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
  ../common/SoftInt.h ../common/Float.h ../common/compare.h \
  ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
  ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
@@ -1709,11 +1755,84 @@ FilamentDiameterSensor.o: \
  ../common/watertank/Pump.h ../common/watertank/Valve.h \
  ../common/watertank/PressureSensor.h \
  ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
+ ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
+ ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
+ ../common/DynamicDeadlockDetection/Graph.h \
+ ../common/DynamicDeadlockDetection/ResourceAllocationGraph.h \
+ ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h \
+ ../common/filamentExtruder/SimFilExtruder.h
+ContactSwitch.o: ../common/filamentExtruder/dations/ContactSwitch.cc \
+ ../common/Log.h ../common/SystemDationNB.h ../common/SystemDation.h \
+ ../common/Dation.h ../common/Device.h ../common/Fixed.h \
+ ../common/Signals.h ../common/Signals.hh ../common/Fixed63.h \
+ ../common/../../configuration/include/autoconf.h ../common/stackcheck.h \
+ ../common/IfThenElseTemplate.h ../common/NumberOfBytes.h \
+ ../common/RefChar.h ../common/Character.h ../common/Signals.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/SystemDationB.h ../common/Fixed.h ../common/BitString.h \
+ ../common/Log.h ../common/Character.h ../common/RefChar.h \
+ ../common/filamentExtruder/dations/../SimFilExtruderInt.h \
+ PearlIncludes.h ../common/Ref.h Task.h PrioMapper.h \
+ ../../configuration/include/autoconf.h ../common/Prio.h CSema.h \
+ ../common/CSemaCommon.h ../common/Clock.h ../common/BitString.h \
+ ../common/Duration.h ../common/Float.h ../common/FloatHelper.h \
+ ../common/Clock.h ../common/Duration.h ../common/Interrupt.h \
+ ../common/TaskWhenLinks.h Mutex.h ../common/MutexCommon.h \
+ ../common/TaskCommon.h ../common/Interrupt.h ../common/Prio.h CSema.h \
+ ../common/UserDation.h ../common/Rst.h ../common/TaskCommon.h \
+ ../common/PriorityQueue.h ../common/TaskTimerCommon.h TaskTimer.h \
+ ../common/TaskTimerCommon.h ../common/TaskMonitor.h ../common/Array.h \
+ ../common/PutClock.h ../common/Sink.h ../common/GetClock.h \
+ ../common/Source.h ../common/GetClock.h ../common/PutDuration.h \
+ ../common/GetDuration.h ../common/PutFixed.h ../common/compare.h \
+ ../common/CharSlice.h ../common/Ref.h ../common/GetFixed.h \
+ ../common/GetHelper.h ../common/PutFloat.h ../common/PutHelper.h \
+ ../common/GetFloat.h ../common/Fixed63.h ../common/CharSlice.h \
+ ../common/PutCharacter.h ../common/GetCharacter.h \
+ ../common/SignalAction.h ../common/ScheduledSignalActions.h \
+ ../common/SignalAction.h ../common/BitSlice.h ../common/PutBitString.h \
+ ../common/GetBitString.h ../common/RefCharSink.h ../common/Device.h \
+ ../common/SystemDationNB.h ../common/UserDation.h ../common/DationPG.h \
+ ../common/UserDationNB.h ../common/DationDim.h ../common/TFUBuffer.h \
+ ../common/IOJob.h ../common/SystemDationNBSink.h \
+ ../common/SystemDationNBSource.h ../common/IOFormats.h \
+ ../common/PutFixed.h ../common/GetFixed.h ../common/GetFloat.h \
+ ../common/PutFloat.h ../common/PutCharacter.h ../common/GetCharacter.h \
+ ../common/PutBitString.h ../common/GetBitString.h \
+ ../common/StringDationConvert.h ../common/RefCharSink.h \
+ ../common/RefCharSource.h ../common/DationRW.h ../common/DationTS.h \
+ ../common/SystemDationB.h ../common/TFUBuffer.h ../common/TFURecord.h \
+ ../common/UserDationNB.h ../common/DationDim.h ../common/DationDim1.h \
+ ../common/DationDim2.h ../common/DationDim3.h ../common/Semaphore.h \
+ Task.h ../common/Bolt.h ../common/LogFile.h \
+ ../common/SystemDationNBSink.h ../common/SystemDationNBSource.h \
+ ../common/Control.h ../common/SendXML.h StdIn.h \
+ InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
+ ../common/Dation.h ../common/ConsoleCommon.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
+ ../common/SoftInt.h ../common/Float.h ../common/compare.h \
+ ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
+ ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
+ ../common/PCA9685Channel.h ../common/PCA9685.h ../common/LM75.h \
+ ../common/ADS1015SE.h ../common/PCF8574In.h ../common/PCF8574Out.h \
+ ../common/watertank/Watertank.h ../common/watertank/FloatSwitch.h \
+ ../common/watertank/Pump.h ../common/watertank/Valve.h \
+ ../common/watertank/PressureSensor.h \
+ ../common/filamentExtruder/FilamentExtruder.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
  ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
  ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
  ../common/DynamicDeadlockDetection/Graph.h \
@@ -1765,7 +1884,7 @@ SimFilExtruder.o: ../common/filamentExtruder/SimFilExtruder.cc \
  ../common/Control.h ../common/SendXML.h StdIn.h \
  InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
  ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
  ../common/SoftInt.h ../common/Float.h ../common/compare.h \
  ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
  ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
@@ -1775,18 +1894,20 @@ SimFilExtruder.o: ../common/filamentExtruder/SimFilExtruder.cc \
  ../common/watertank/Pump.h ../common/watertank/Valve.h \
  ../common/watertank/PressureSensor.h \
  ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
  ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
  ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
  ../common/DynamicDeadlockDetection/Graph.h \
  ../common/DynamicDeadlockDetection/ResourceAllocationGraph.h \
  ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h
-FilExtruderInt.o: ../common/filamentExtruder/FilExtruderInt.cc \
- ../common/filamentExtruder/FilExtruderInt.h PearlIncludes.h \
+SimFilExtruderInt.o: ../common/filamentExtruder/SimFilExtruderInt.cc \
+ ../common/filamentExtruder/SimFilExtruderInt.h PearlIncludes.h \
  ../common/Ref.h ../common/Signals.h ../common/Signals.hh ../common/Log.h \
  ../common/SystemDationNB.h ../common/SystemDation.h ../common/Dation.h \
  ../common/Device.h ../common/Fixed.h ../common/Fixed63.h \
@@ -1830,7 +1951,7 @@ FilExtruderInt.o: ../common/filamentExtruder/FilExtruderInt.cc \
  ../common/Control.h ../common/SendXML.h StdIn.h \
  InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
  ../common/Dation.h ../common/ConsoleCommon.h \
- ../common/FullDuplexDationAbortNB.h Pipe.h Disc.h UnixSignal.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
  ../common/SoftInt.h ../common/Float.h ../common/compare.h \
  ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
  ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
@@ -1840,11 +1961,84 @@ FilExtruderInt.o: ../common/filamentExtruder/FilExtruderInt.cc \
  ../common/watertank/Pump.h ../common/watertank/Valve.h \
  ../common/watertank/PressureSensor.h \
  ../common/filamentExtruder/FilamentExtruder.h \
- ../common/filamentExtruder/ScrewMotor.h \
- ../common/filamentExtruder/TemperatureSensor.h \
- ../common/filamentExtruder/FilamentDiameterSensor.h \
- ../common/filamentExtruder/ScrewHeater.h \
- ../common/filamentExtruder/SpoolerMotor.h TcpIpServer.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
+ ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
+ ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
+ ../common/DynamicDeadlockDetection/Graph.h \
+ ../common/DynamicDeadlockDetection/ResourceAllocationGraph.h \
+ ../common/DynamicDeadlockDetection/DynamicDeadlockDetection.h \
+ ../common/filamentExtruder/SimFilExtruder.h
+MsgIO.o: ../common/filamentExtruder/dations/MsgIO.cc ../common/Log.h \
+ ../common/SystemDationNB.h ../common/SystemDation.h ../common/Dation.h \
+ ../common/Device.h ../common/Fixed.h ../common/Signals.h \
+ ../common/Signals.hh ../common/Fixed63.h \
+ ../common/../../configuration/include/autoconf.h ../common/stackcheck.h \
+ ../common/IfThenElseTemplate.h ../common/NumberOfBytes.h \
+ ../common/RefChar.h ../common/Character.h ../common/Signals.h \
+ ../common/filamentExtruder/dations/MsgIO.h ../common/SystemDationB.h \
+ ../common/Fixed.h ../common/Character.h ../common/RefChar.h \
+ ../common/filamentExtruder/dations/../SimFilExtruderInt.h \
+ PearlIncludes.h ../common/Ref.h ../common/Log.h Task.h \
+ ../common/BitString.h PrioMapper.h \
+ ../../configuration/include/autoconf.h ../common/Prio.h CSema.h \
+ ../common/CSemaCommon.h ../common/Clock.h ../common/BitString.h \
+ ../common/Duration.h ../common/Float.h ../common/FloatHelper.h \
+ ../common/Clock.h ../common/Duration.h ../common/Interrupt.h \
+ ../common/TaskWhenLinks.h Mutex.h ../common/MutexCommon.h \
+ ../common/TaskCommon.h ../common/Interrupt.h ../common/Prio.h CSema.h \
+ ../common/UserDation.h ../common/Rst.h ../common/TaskCommon.h \
+ ../common/PriorityQueue.h ../common/TaskTimerCommon.h TaskTimer.h \
+ ../common/TaskTimerCommon.h ../common/TaskMonitor.h ../common/Array.h \
+ ../common/PutClock.h ../common/Sink.h ../common/GetClock.h \
+ ../common/Source.h ../common/GetClock.h ../common/PutDuration.h \
+ ../common/GetDuration.h ../common/PutFixed.h ../common/compare.h \
+ ../common/CharSlice.h ../common/Ref.h ../common/GetFixed.h \
+ ../common/GetHelper.h ../common/PutFloat.h ../common/PutHelper.h \
+ ../common/GetFloat.h ../common/Fixed63.h ../common/CharSlice.h \
+ ../common/PutCharacter.h ../common/GetCharacter.h \
+ ../common/SignalAction.h ../common/ScheduledSignalActions.h \
+ ../common/SignalAction.h ../common/BitSlice.h ../common/PutBitString.h \
+ ../common/GetBitString.h ../common/RefCharSink.h ../common/Device.h \
+ ../common/SystemDationNB.h ../common/UserDation.h ../common/DationPG.h \
+ ../common/UserDationNB.h ../common/DationDim.h ../common/TFUBuffer.h \
+ ../common/IOJob.h ../common/SystemDationNBSink.h \
+ ../common/SystemDationNBSource.h ../common/IOFormats.h \
+ ../common/PutFixed.h ../common/GetFixed.h ../common/GetFloat.h \
+ ../common/PutFloat.h ../common/PutCharacter.h ../common/GetCharacter.h \
+ ../common/PutBitString.h ../common/GetBitString.h \
+ ../common/StringDationConvert.h ../common/RefCharSink.h \
+ ../common/RefCharSource.h ../common/DationRW.h ../common/DationTS.h \
+ ../common/SystemDationB.h ../common/TFUBuffer.h ../common/TFURecord.h \
+ ../common/UserDationNB.h ../common/DationDim.h ../common/DationDim1.h \
+ ../common/DationDim2.h ../common/DationDim3.h ../common/Semaphore.h \
+ Task.h ../common/Bolt.h ../common/LogFile.h \
+ ../common/SystemDationNBSink.h ../common/SystemDationNBSource.h \
+ ../common/Control.h ../common/SendXML.h StdIn.h \
+ InterruptableSystemDationNB.h Mutex.h StdOut.h StdError.h Console.h \
+ ../common/Dation.h ../common/ConsoleCommon.h \
+ ../common/FullDuplexDationAbortNB.h Pipe.h PipeNBR.h Disc.h UnixSignal.h \
+ ../common/SoftInt.h ../common/Float.h ../common/compare.h \
+ ../common/SampleBasicDation.h I2CBus.h ../common/I2CProvider.h \
+ ../common/BME280.h ../common/I2CProvider.h ../common/PCA9685.h \
+ ../common/PCA9685Channel.h ../common/PCA9685.h ../common/LM75.h \
+ ../common/ADS1015SE.h ../common/PCF8574In.h ../common/PCF8574Out.h \
+ ../common/watertank/Watertank.h ../common/watertank/FloatSwitch.h \
+ ../common/watertank/Pump.h ../common/watertank/Valve.h \
+ ../common/watertank/PressureSensor.h \
+ ../common/filamentExtruder/FilamentExtruder.h \
+ ../common/filamentExtruder/dations/ScrewMotor.h \
+ ../common/filamentExtruder/dations/TemperatureSensor.h \
+ ../common/filamentExtruder/dations/FilamentDiameterSensor.h \
+ ../common/filamentExtruder/dations/ScrewHeater.h \
+ ../common/filamentExtruder/dations/SpoolerMotor.h \
+ ../common/filamentExtruder/dations/ContactSwitch.h \
+ ../common/filamentExtruder/dations/MsgIO.h TcpIpServer.h \
  ../common/IOJob.h ../common/DynamicDeadlockDetection/DeadlockOperation.h \
  ../common/DynamicDeadlockDetection/PerformedDeadlockOperation.h \
  ../common/DynamicDeadlockDetection/Graph.h \

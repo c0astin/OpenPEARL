@@ -1,0 +1,5 @@
+<dation name="ContactSwitch">
+  <attributes> IN, SYSTEM, BASIC</attributes>
+  <data>BIT(1)</data>
+  <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
+</dation>

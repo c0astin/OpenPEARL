@@ -19,9 +19,9 @@ static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_P_0_31(0);
 static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_P_1_31(1);
 static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_N_1_31(-1);
 static /*const*/ pearlrt::Fixed<1>         CONST_FIXED_P_0_1(0);
-static /*const*/ pearlrt::Character<2>         CONST_CHARACTER_423eefc1_41eb_4a24_8078_6ae03f404173("./");
-static /*const*/ pearlrt::Character<14>         CONST_CHARACTER_9c5435fb_03f4_4b57_89a8_18db8d1c2e7e("/tmp/simulator");
-static /*const*/ pearlrt::Character<5>         CONST_CHARACTER_3a02b7b6_30e6_453c_83a6_bcb8170d42f9("OPEN1");
+static /*const*/ pearlrt::Character<2>         CONST_CHARACTER_cc3d44d2_a624_4b5d_abb4_16ddfdac499a("./");
+static /*const*/ pearlrt::Character<14>         CONST_CHARACTER_341583ac_a725_4b57_9f05_90fd2a875c80("/tmp/simulator");
+static /*const*/ pearlrt::Character<5>         CONST_CHARACTER_e5ad3960_9734_4077_9634_c0ec771a697c("OPEN1");
 
 /////////////////////////////////////////////////////////////////////////////
 // TASK SPECIFIERS

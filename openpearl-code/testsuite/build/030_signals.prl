@@ -1,0 +1,138 @@
+MODULE(signals);
+SYSTEM;
+   overfl: FixedRangeSignal;  
+   div0:   FixedDivideByZeroSignal;
+   arith:  DataValueSignal;
+   so: StdOut;
+
+ PROBLEM;
+   SPC so DATION OUT SYSTEM ALPHIC;
+   SPC overfl SIGNAL;
+   SPC div0   SIGNAL;
+   SPC arith  SIGNAL;
+   DCL console DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+   DCL reaction(4) BIT(1);
+   DCL fails FIXED INIT(0);
+   DCL f FIXED(15);
+ 
+x: PROC (p FIXED) ;
+      DCL k FIXED(15);
+
+      k := 2;
+
+restart: 
+      ! signal action #1
+      ON overfl: BEGIN
+         PUT 'PROC X: Overflow occured (returning)' TO console BY A, SKIP;
+         reaction(1) = '1'B1;
+         RETURN;
+      END;
+
+      ! signal action #2
+      IF p == 1 THEN
+         ON overfl: BEGIN
+            PUT 'PROC X: Overflow occured (terminating)' TO console BY A, SKIP;
+            reaction(2) = '1'B1;
+            TERMINATE;     
+         END;
+      FIN;
+      
+      IF  p > 5 THEN
+      ! signal action #3
+        ON overfl: BEGIN
+           PUT 'PROC X: Overflow occured (returning)' TO console BY A, SKIP;
+            reaction(3) = '1'B1;
+            RETURN;     
+        END;
+      FIN;
+
+      ! signal action #4
+      ON div0: BEGIN 
+          PUT 'Divide by zero (restarting)' TO console BY A, SKIP;
+          reaction(4) = '1'B1;
+          IF ( p ==  6) THEN
+             GOTO exit;
+          ELSE
+             p := 6;
+             GOTO restart;
+          FIN;
+      END;
+      
+      IF p == 11 THEN
+          k := 10 // (k-k);  ! force 'div by 0'
+      FIN;
+
+      ! produce overflow
+      FOR i TO 100 REPEAT
+        k := k * k;
+      END;
+exit:;
+  END;
+
+  resetReactionArray: PROC;
+     FOR i TO UPB reaction REPEAT
+         reaction(i) = '0'B1;
+     END;
+  END;
+
+
+  TASK1: TASK MAIN;
+      OPEN console;
+
+      f = 0;
+      resetReactionArray;
+      x(f);
+      !PUT reaction TO console BY (4)(B1,X),SKIP;
+      IF NOT reaction(1) THEN
+         PUT 'x(',f,') unexpected reaction' TO console BY A,F(2),A, SKIP;
+         fails = fails + 1;
+      ELSE
+         PUT 'x(',f,') worked fine' TO console BY A,F(2),A, SKIP;
+      FIN;
+
+      f = 11;
+      resetReactionArray;
+      x(f); ! produce Divide by Zero and Overlow
+      !PUT reaction TO console BY (4)(B1,X),SKIP;
+      IF NOT (reaction(3) AND reaction(4))  THEN
+         PUT 'x(',f,') unexpected reaction' TO console BY A,F(2),A, SKIP;
+         fails = fails + 1;
+      ELSE
+         PUT 'x(',f,') worked fine' TO console BY A,F(2),A, SKIP;
+      FIN;
+
+      f = 10;
+      resetReactionArray;
+      x(f);
+      !PUT reaction TO console BY (4)(B1,X),SKIP;
+      IF NOT reaction(3)  THEN
+         PUT 'x(',f,') unexpected reaction' TO console BY A,F(2),A, SKIP;
+         fails = fails + 1;
+      ELSE
+         PUT 'x(',f,') worked fine' TO console BY A,F(2),A, SKIP;
+      FIN;
+
+      f = 1;
+      AFTER 1 SEC ACTIVATE TASK2; 
+      resetReactionArray;
+      x(f); ! should terminate
+      PUT 'x(',f,') unexpected reaction: did not terminate' TO console BY A,F(2),A, SKIP;
+   END;
+
+TASK2: TASK;
+      ! PUT reaction TO console BY (4)(B1,X),SKIP;
+      IF NOT reaction(2)  THEN
+         PUT 'x(',f,') unexpected reaction' TO console BY A,F(2),A, SKIP;
+         fails = fails + 1;
+      ELSE
+         PUT 'x(',f,') worked fine' TO console BY A,F(2),A, SKIP;
+      FIN;
+
+      IF fails > 0 THEN
+          ! set failure result value
+          __cpp__("pearlrt::Control::setExitCode(1);");
+      FIN;
+END;
+MODEND;
+
+

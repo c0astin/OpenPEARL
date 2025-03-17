@@ -1,0 +1,83 @@
+MODULE(arraySlice);
+/* test of array slice violations only upon CONVERT TO
+since the treatment of array slices is independet of 
+the i/o statement and the data type
+*/
+SYSTEM;
+so: StdOut;
+
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC;
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+  DCL string CHAR(80);
+  DCL array(10,20) FIXED;
+
+t: TASK MAIN;
+  DCL ok BIT(1) INIT('1'B1);
+  DCL gotSignal BIT(1);
+  DCL (line,col) FIXED INIT(2,2);
+  OPEN stdout;
+
+  FOR i TO 1 UPB array REPEAT
+    FOR j TO 2 UPB array REPEAT
+       array(i,j) = 100*i + j;
+    END;
+  END;
+
+  ! happy day 
+  CONVERT array(2,2:4) TO string BY F(6);
+  IF string /= '   202   203   204' THEN
+     ok = '0'B1;
+     PUT 'failed: got >', string,'<' TO stdout BY 3A, SKIP;
+  FIN;
+
+  CONVERT array(line,col:col+2) TO string BY F(6);
+  IF string /= '   202   203   204' THEN
+     ok = '0'B1;
+     PUT 'failed: got >', string,'<' TO stdout BY 3A, SKIP;
+  FIN;
+
+   ! ---------------------
+   gotSignal = '0'B1;
+  __cpp__("try {"); 
+  CONVERT array(line-2,col:col+2) TO string BY F(6);
+  __cpp__("} catch (pearlrt::ArrayIndexOutOfBoundsSignal s) { "
+          "   _gotSignal=CONST_BITSTRING_1_1;"
+          "}");
+  IF NOT gotSignal THEN
+     ok = '0'B1;
+     PUT 'failed: no signal received' TO stdout BY A, SKIP;
+  FIN;
+
+   ! ---------------------
+   gotSignal = '0'B1;
+  __cpp__("try {"); 
+  CONVERT array(line,col-2:col+2) TO string BY F(6);
+  __cpp__("} catch (pearlrt::ArrayIndexOutOfBoundsSignal s) { "
+          "   _gotSignal=CONST_BITSTRING_1_1;"
+          "}");
+  IF NOT gotSignal THEN
+     ok = '0'B1;
+     PUT 'failed: no signal received' TO stdout BY A, SKIP;
+  FIN;
+
+   ! ---------------------
+   gotSignal = '0'B1;
+  __cpp__("try {"); 
+  CONVERT array(line,col:col+19) TO string BY F(6);
+  __cpp__("} catch (pearlrt::ArrayIndexOutOfBoundsSignal s) { "
+          "   _gotSignal=CONST_BITSTRING_1_1;"
+          "}");
+  IF NOT gotSignal THEN
+     ok = '0'B1;
+     PUT 'failed: no signal received' TO stdout BY A, SKIP;
+  FIN;
+
+  IF NOT ok THEN
+     PUT 'some tests failed: exit with error code' TO stdout BY A, SKIP;
+   __cpp__("pearlrt::Control::setExitCode(1);");
+  FIN;
+END;
+
+MODEND;

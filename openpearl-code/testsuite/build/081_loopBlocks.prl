@@ -1,0 +1,74 @@
+MODULE(loopBlockExit);
+SYSTEM;
+  so: StdOut;
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC;
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+
+   DCL success BIT(1) INIT('1'B1);
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+T1: TASK MAIN;
+  DCL local_var FIXED;
+  DCL start FIXED(63) INIT(1);
+
+  OPEN stdout;
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  local_var = 0;
+  FOR i FROM 1 TO 10 REPEAT
+    ! PUT 'a:', i, local_var TO stdout  BY A,F(6),F(6),SKIP;
+    BEGIN 
+     IF i == 5 THEN 
+       EXIT;  ! exit block - continue the loop
+     FIN;
+     local_var := local_var + 1;
+
+     IF i == 7 THEN
+       EXIT loop1;
+     FIN;
+     local_var := local_var + 1;
+    END;
+    ! PUT 'x:',i, local_var TO stdout  BY A, F(6),F(6),SKIP;
+  END loop1;
+
+
+  IF local_var NE  11 THEN
+     PUT '*** fail *** local_var should be 11, but is ',local_var 
+     TO stdout BY A,F(6),SKIP; 
+     success = '0'B1;
+  FIN;
+
+  !!!!!!!!!!!!!!!!
+  local_var = 0;
+  FOR i FROM 1 TO 10 REPEAT
+  ! PUT 'a:', i, local_var TO stdout  BY A,F(6),F(6),SKIP;
+    BEGIN 
+     IF i == 5 THEN 
+       EXIT loop2;  ! exit block - continue the loop
+     FIN;
+     local_var := local_var + 1;
+
+     IF i == 7 THEN
+       EXIT loop2;
+     FIN;
+     local_var := local_var + 1;
+    END;
+  ! PUT 'x:',i, local_var TO stdout  BY A, F(6),F(6),SKIP;
+  END loop2;
+
+
+  IF local_var NE  8 THEN
+     PUT '*** fail *** local_var should be 8, but is ',local_var 
+     TO stdout BY A,F(6),SKIP; 
+     success = '0'B1;
+  FIN;
+  
+  IF NOT success THEN
+    __cpp__( "pearlrt::Control::setExitCode(1);");
+  FIN;
+END;
+
+MODEND;

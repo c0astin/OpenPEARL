@@ -1408,7 +1408,7 @@ implements OpenPearlVisitor<Void> {
                     LabelEntry entry =
                             new LabelEntry(
                                     ctx.label_statement(i).ID().getText(), ctx.label_statement(i));
-System.out.println(""+ctx.label_statement(i).ID().getText());
+//System.out.println(""+ctx.label_statement(i).ID().getText());
                     if (!m_currentSymbolTable.enter(entry)) {
                         ErrorStack.add(
                                 ctx, "DECLARATION", "duplicate name '" + entry.getName() + "' in scope");

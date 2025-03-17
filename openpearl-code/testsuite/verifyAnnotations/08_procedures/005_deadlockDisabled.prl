@@ -1,0 +1,20 @@
+MODULE(m1);
+PROBLEM;
+
+boltOk: PROC (bolt BOLT IDENT);
+/*$           ^
+warning: deadlock detection disabled: not possible with parameter BOLT IDENT
+*/
+END;
+
+/* only the first violation for SDD is warned */
+semaOk: PROC (sema SEMA IDENT);
+END;
+
+t1: TASK MAIN;
+END;
+
+
+! ======================================
+
+MODEND;

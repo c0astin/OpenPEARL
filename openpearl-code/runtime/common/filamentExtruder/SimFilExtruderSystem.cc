@@ -14,14 +14,16 @@ static const char* filename = (char*) "SimFilExtruderSystem.prl";
 // CONSTANT POOL
 /////////////////////////////////////////////////////////////////////////////
 static /*const*/ pearlrt::Fixed<1>         CONST_FIXED_P_1_1(1);
-static /*const*/ pearlrt::Fixed<2>         CONST_FIXED_P_2_2(2);
 static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_P_0_31(0);
 static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_P_1_31(1);
 static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_N_1_31(-1);
 static /*const*/ pearlrt::Fixed<1>         CONST_FIXED_P_0_1(0);
-static /*const*/ pearlrt::Character<2>         CONST_CHARACTER_6c7c5cae_9937_4943_aa4b_2cfe8f9f8a33("./");
-static /*const*/ pearlrt::Character<14>         CONST_CHARACTER_82efed4f_bd28_4e61_86c0_d8c0b013a844("/tmp/simulator");
-static /*const*/ pearlrt::Character<5>         CONST_CHARACTER_7bcbc9d0_e402_4aeb_a9dc_44643b84ec8f("OPEN1");
+static /*const*/ pearlrt::Character<2>         CONST_CHARACTER_317a2b78_2451_41aa_a238_cfc8a0c9b641("./");
+static /*const*/ pearlrt::Character<11>         CONST_CHARACTER_9a16c8a9_1e0b_4a8b_9483_2b55e0309211("./simulator");
+static /*const*/ pearlrt::Character<17>         CONST_CHARACTER_760e845e_61e0_4ad4_bcc2_814ab24dc234("OPEN1 ANY CAN NBR");
+static /*const*/ pearlrt::Character<12>         CONST_CHARACTER_f2af69ea_631f_42b9_9de9_f362f2dd83ad("./msgFromSim");
+static /*const*/ pearlrt::Character<10>         CONST_CHARACTER_53bdd3e9_a0fd_453b_8eb6_8dae34dfe29c("./msgToSim");
+static /*const*/ pearlrt::Character<13>         CONST_CHARACTER_2411c215_643e_4033_9008_c032a47d1701("OPEN1 CAN NBR");
 
 /////////////////////////////////////////////////////////////////////////////
 // TASK SPECIFIERS

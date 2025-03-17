@@ -29,9 +29,13 @@
 
 package org.openpearl.compiler.SemanticAnalysis;
 
+import java.util.Vector;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.openpearl.compiler.*;
+import org.openpearl.compiler.OpenPearlParser.ReturnStatementContext;
 import org.openpearl.compiler.Exception.*;
+import org.openpearl.compiler.SemanticAnalysis.PlainControlFlowGraph.ControlFlowGraph;
+import org.openpearl.compiler.SemanticAnalysis.PlainControlFlowGraph.*;
 import org.openpearl.compiler.SymbolTable.FormalParameter;
 import org.openpearl.compiler.SymbolTable.ModuleEntry;
 import org.openpearl.compiler.SymbolTable.ProcedureEntry;
@@ -45,8 +49,8 @@ import org.openpearl.compiler.SymbolTable.VariableEntry;
  * checks whether:
  * <ul>
  * <li>the formal parameters are passed correctly ---
- *    arrays, dations and realtime elements by IDENT,
- * <li> the result type is supported (currently no TYPE and no REF)
+ *    arrays, dations, signals and realtime elements by IDENT,
+ * <li> the result type is supported 
  * <li>the RETURN statement uses a proper type of expression, 
  *    but an implicit RETURN at the end of a PROC with RETURNS is not 
  *    part of this check 
@@ -147,13 +151,14 @@ implements OpenPearlVisitor<Void> {
         
         // step up one level to get the symbol table with the procedure declaration
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend(); 
-
-        SymbolTableEntry entry =
-                this.m_currentSymbolTable.lookup(ctx.nameOfModuleTaskProc().ID().toString());
+        String name = ctx.nameOfModuleTaskProc().ID().toString();
+        SymbolTableEntry entry = this.m_currentSymbolTable.lookup(name);
         if (entry == null) {
-            throw new InternalCompilerErrorException(
-                    "PROC " + ctx.nameOfModuleTaskProc().ID().toString() + " not found",
-                    ctx.start.getLine(), ctx.start.getCharPositionInLine());
+            ErrorStack.addInternal(ctx, "procedure declaration",
+                    "no symbol table entry found for " + name);
+//            throw new InternalCompilerErrorException(
+//                    "PROC " + ctx.nameOfModuleTaskProc().ID().toString() + " not found",
+//                    ctx.start.getLine(), ctx.start.getCharPositionInLine());
         }
 
         ProcedureEntry procedureEntry = (ProcedureEntry) entry;
@@ -176,26 +181,41 @@ implements OpenPearlVisitor<Void> {
 
         if (m_typeOfReturns != null) {
             TypeReference refChar = new TypeReference(new TypeRefChar());
-            
+
             if (m_typeOfReturns.equals(refChar)) {
                 ErrorStack.add(ctx.typeProcedure().resultAttribute().resultType(),"RETURNS", "type "+refChar+" is not allowed as result type");
-            }
+                return null;
+            } 
             
-            // check last statement of function to be RETURN
-            // this is easier to implement as to enshure that all paths of control
-            // meet a RETURN(..) statement
-            OpenPearlParser.ProcedureBodyContext b = ctx.procedureBody();
-            int last = b.statement().size();
-            if (last == 0) {
-                ErrorStack.add("must end with RETURN (" + m_typeOfReturns.toString() + ")");
-            } else {
-                OpenPearlParser.StatementContext lastStmnt = b.statement(last - 1);
-                if (lastStmnt.unlabeled_statement() != null) {
-                    if (lastStmnt.unlabeled_statement().returnStatement() == null) {
-                        ErrorStack.add("must end with RETURN (" + m_typeOfReturns.toString() + ")");
-
-                    } 
-                }
+            // if there are multiple paths with no RETURN in the procedure returning a value
+            // we mark only the first location where  a path to procedure end startsa
+            // other paths will become detected as soon the fisrt path was corrected
+            ControlFlowGraph cfg = ((ProcedureEntry)entry).getControlFlowGraph();
+            ControlFlowGraphNode end = ((PseudoNode)(cfg.getFirstEntry())).getEnd();
+            Vector<ControlFlowGraphNode> predecessors = cfg.getPredecessors(end);
+            for (ControlFlowGraphNode n :predecessors) {
+               if (!n.isSet(ControlFlowGraph.flag_is_reached)) continue; 
+//               boolean hasRealStatement = true;
+               if (!(n.getCtx() instanceof ReturnStatementContext )) {
+                   // walk back until we find a non pseudo node
+//                   ControlFlowGraphNode errorNode = n;
+//                   while (hasRealStatement == true && errorNode instanceof PseudoNode && errorNode != cfg.getFirstEntry()) {
+//                       Vector<ControlFlowGraphNode> pre = cfg.getPredecessors(errorNode);
+//                       if (pre.size()  > 0){
+//                          errorNode = pre.firstElement();
+//                       } else {
+//                           hasRealStatement = false;
+//                       }
+//                   }
+//                   if (hasRealStatement) {
+//                       if (errorNode == cfg.getFirstEntry()) {
+//                           // empty proc found
+//                           errorNode = end;
+//                       }
+//                       ErrorStack.add(errorNode.getCtx(),null, "must end with RETURN (" + m_typeOfReturns.toString() + ")");
+//                   }
+                   ErrorStack.add(n.getCtx(),null, "must end with RETURN (" + m_typeOfReturns.toString() + ")");
+               }
             }
         }
         this.m_currentSymbolTable = this.m_currentSymbolTable.ascend();
@@ -283,51 +303,7 @@ implements OpenPearlVisitor<Void> {
                     int x=0;
                     }
                 }
-//                // check for implicit dereference /reference possibilities
-//                // --> base types must be compatible
-//                if (tmpTypeOfResult instanceof TypeReference) {
-//                    tmpTypeOfResult = ((TypeReference) tmpTypeOfResult).getBaseType();
-//                }
-//                if (tmpExprType instanceof TypeReference) {
-//                    tmpExprType = ((TypeReference) tmpExprType).getBaseType();
-//                }
-//
-//                // check compatibility of baseTypes
-//                if (tmpTypeOfResult instanceof TypeFixed && tmpExprType instanceof TypeFixed) {
-//                    if (((TypeFixed) tmpTypeOfResult).getPrecision() < ((TypeFixed) tmpExprType)
-//                            .getPrecision()) {
-//                        typeIsCompatible = false;
-//                    }
-//                } else if (tmpTypeOfResult instanceof TypeFloat
-//                        && tmpExprType instanceof TypeFloat) {
-//                    if (((TypeFloat) tmpTypeOfResult).getPrecision() < ((TypeFloat) tmpExprType)
-//                            .getPrecision()) {
-//                        typeIsCompatible = false;
-//                    }
-//                } else if (tmpTypeOfResult instanceof TypeBit && tmpExprType instanceof TypeBit) {
-//                    if (((TypeBit) tmpTypeOfResult).getPrecision() < ((TypeBit) tmpExprType)
-//                            .getPrecision()) {
-//                        typeIsCompatible = false;
-//                    }
-//                } else if (tmpTypeOfResult instanceof TypeChar && tmpExprType instanceof TypeChar) {
-//                    if (((TypeChar) tmpTypeOfResult).getSize() < ((TypeChar) tmpExprType)
-//                            .getSize()) {
-//                        typeIsCompatible = false;
-//                    }
-//                } else if (tmpTypeOfResult instanceof TypeChar
-//                        && tmpExprType instanceof TypeVariableChar) {
-//                    // this must be checked during runtime
-//                } else {
-//                    if (!tmpTypeOfResult.equals(tmpExprType)) {
-//                        typeIsCompatible = false;
-//                    }
-//                }
-//
-//                if (!typeIsCompatible) {
-//                    ErrorStack.add("expression does not fit to RETURN type: expected "
-//                            + m_typeOfReturns.toString() + " -- got " + exprType.toString());
-//                }
-//
+
                 if (m_typeOfReturns instanceof TypeReference) {
                     // check lifeCyle required
                     ASTAttribute attrRhs = m_ast.lookup(ctx.expression());
@@ -339,14 +315,12 @@ implements OpenPearlVisitor<Void> {
                         // level 3: task/proc local top level objects
                         // level 4...: deeper nested blocks/loops
                         
-                        // objects, which are related to a formal parameter have static lifetimem,
+                        // objects, which are related to a formal parameter have static lifetime,
                         //   since we have no nested procedures/tasks
                         if (level > 2) {
                             ErrorStack.add("life cycle of '" + attrRhs.getVariable().getName()
                                     + "' is too short");
                         }
-//                    } else if (attrRhs.getType() instanceof TypeProcedure) {
-//                        // ok - we have a procedure name
                     }
                 }
 

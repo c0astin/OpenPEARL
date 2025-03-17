@@ -1,0 +1,260 @@
+MODULE(refChar);
+
+SYSTEM;
+   stdout: StdOut;
+PROBLEM;
+   SPC stdout DATION OUT SYSTEM ALPHIC;
+
+   DCL so DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+   DCL errors FIXED INIT(0);
+   DCL tests FIXED INIT(0);
+
+t: TASK MAIN;
+   OPEN so;
+   CALL simpleOperations;
+   printResult('simpleOperations');
+   CALL comparisons;
+   /* REF CHAR() in expressions are not supported yet 
+   printResult('comparisonWithContent');
+   CALL comparisonWithContent;
+   */
+   printResult('comparisons');
+   CALL refCharAsParameter;
+END;
+
+refCharAsParameter: PROC;
+   DCL text CHAR(20) INIT('Hallo Welt');
+   DCL rc REF CHAR();
+   rc = text;
+   printMessage(rc);
+   printMessage('hallo');
+   printMessage('hallo welt');
+END;
+
+printMessage: PROC (text REF INV CHAR() );
+   PUT 'text is >',text,'<' TO so BY 3A, SKIP;
+END;
+
+printResult: PROC(test CHAR(30));
+   PUT '------------',test TO so BY A,SKIP;
+   IF errors == 0 THEN
+      PUT test,': ', tests,' run without failures' TO so BY A,A,F(3),A,SKIP;
+   ELSE
+      PUT test,': ', errors,' failed of ', tests TO so BY A,A,F(3),A,F(3),SKIP;
+   FIN;
+   errors = 0;
+   tests = 0;
+END;
+
+
+simpleOperations: PROC;
+   DCL data CHAR(40); 
+   DCL d5 CHAR(5);
+   DCL rc REF CHAR();
+   DCL rc1 REF CHAR();
+
+   ! ----------
+   tests = tests + 1;
+   rc = data;
+   IF SIZEOF rc MAX == SIZEOF data THEN
+       PUT tests, ': fine SIZEOF rc MAX: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail SIZEOF rc MAX: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   rc = data;
+   IF SIZEOF rc LENGTH == SIZEOF data THEN
+       PUT tests,': fine SIZEOF rc LENGTH: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail SIZEOF rc LENGTH: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   rc = data;
+   CONT rc = 'abc';
+   IF SIZEOF rc LENGTH == 3 THEN
+       PUT tests,': fine SIZEOF rc LENGTH: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,':*** fail SIZEOF rc LENGTH: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   d5 = CONT rc;
+   IF d5 == 'abc' THEN
+       PUT tests,': fine: CONT rc is "abc": is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,':*** fail CONT rc: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   rc = data;
+   IF rc IS data THEN
+       PUT tests,': fine: rc IS data: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,':*** fail rc IS data: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   rc = data;
+   rc1 = data;
+   IF rc IS rc1 THEN
+       PUT tests,': fine: rc IS rc1: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,':*** fail rc IS rc1: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   rc = data;
+   rc1 = d5;
+   IF rc ISNT rc1 THEN
+       PUT tests,': fine: rc ISNT rc1: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,':*** fail rc ISNT rc1: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+END;
+
+comparisons: PROC;
+   DCL data CHAR(40); 
+   DCL d5 CHAR(5);
+   DCL rc REF CHAR();
+   DCL rc1 REF CHAR();
+
+   ! ----------
+   tests = tests + 1;
+   IF rc IS rc1 THEN
+       PUT tests, ': fine rc IS rc1: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc IS rc1: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   IF rc IS NIL THEN
+       PUT tests, ': fine rc IS NIL: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc IS NIL: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   IF NIL IS rc THEN
+       PUT tests, ': fine NIL IS rc: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail NIL IS rc: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   rc = data;
+   IF data IS rc THEN
+       PUT tests, ': fine data IS rc: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail data IS rc: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   rc = data;
+   IF rc IS data THEN
+       PUT tests, ': fine rc IS data: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc IS data: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   rc = data;
+   rc1 = data;
+   IF rc IS rc1 THEN
+       PUT tests, ': fine rc IS rc1: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc IS rc1: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   ! ----------
+   tests = tests + 1;
+   rc = data;
+   rc1 = d5;
+   IF rc IS rc1 THEN
+       PUT tests,': *** fail rc IS rc1: is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   ELSE
+       PUT tests, ': fine rc IS NOT rc1: is ok' TO so BY F(3),A, SKIP;
+   FIN;
+
+   ! ----------
+
+END;
+
+/*
+REF CHAR() in expressions are not supported yet 
+
+
+comparisonWithContent: PROC;
+   DCL data CHAR(40); 
+   DCL d5 CHAR(5);
+   DCL rc REF CHAR();
+   DCL rc1 REF CHAR();
+
+   ! ----------
+   data = 'hello';
+   rc = data;
+   
+   tests = tests + 1;
+   IF CONT rc == data  THEN
+       PUT tests, ': fine rc == data: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc == data : is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   tests = tests + 1;
+   IF CONT rc == 'hello'  THEN
+       PUT tests, ': fine rc == hello: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc == hello : is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   tests = tests + 1;
+   IF CONT rc /= 'world'  THEN
+       PUT tests, ': fine rc /= world: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc /= world : is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+   tests = tests + 1;
+   CONT rc = 'world';
+
+   IF CONT rc == 'world'  THEN
+       PUT tests, ': fine rc == world: is ok' TO so BY F(3),A, SKIP;
+   ELSE
+       PUT tests,': *** fail rc == world : is not ok' TO so BY F(3),A, SKIP;
+       errors = errors + 1;
+   FIN;
+
+END;
+*/
+
+MODEND;

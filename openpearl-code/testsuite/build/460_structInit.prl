@@ -1,0 +1,69 @@
+MODULE(structInit);
+SYSTEM;
+so: StdOut;
+
+PROBLEM;
+  SPC so DATION OUT SYSTEM ALPHIC;
+  DCL stdout DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(so);
+
+  DCL a FIXED INIT(1);
+  DCL b REF FIXED INIT(a);
+  DCL c CHAR(10) INIT('1234567890');
+  DCL sema1 SEMA PRESET(1);
+  DCL str STRUCT [a FIXED, b REF FIXED, c REF CHAR() , sem REF SEMA]
+            INIT (1,b,c,sema1);
+
+t: TASK MAIN;
+  DCL errors FIXED INIT(0);
+  OPEN stdout;
+
+  IF str.a == a THEN
+     PUT 'str.a is ok' TO stdout BY A,SKIP;
+  ELSE
+     PUT '*** FAIL: str.a is not ok' TO stdout BY A,SKIP;
+     errors = errors + 1;
+  FIN;
+
+  IF str.b == a THEN
+     PUT 'str.b is ok' TO stdout BY A,SKIP;
+  ELSE
+     PUT '*** FAIL: str.b is not ok' TO stdout BY A,SKIP;
+     errors = errors + 1;
+  FIN;
+
+  !a = SIZEOF str.c MAX;
+  !PUT 'MAX: ', SIZEOF str.c MAX TO  stdout BY A,F(3),SKIP;
+
+  IF str.c IS c THEN
+     PUT 'str.c is ok' TO stdout BY A,SKIP;
+  ELSE
+     PUT '*** FAIL: str.c is not ok' TO stdout BY A,SKIP;
+     errors = errors + 1;
+  FIN;
+
+  CONT str.c = 'a';
+  IF c == 'a234567890'  THEN
+     PUT 'c is changed ok' TO stdout BY A,SKIP;
+  ELSE
+     PUT '*** FAIL: base of str.c is ',c TO stdout BY A,A,SKIP;
+     errors = errors + 1;
+  FIN;
+
+  REQUEST str.sem;
+  IF TRY str.sem THEN
+     PUT '*** FAIL: sema1 should be busy ' TO stdout BY A,SKIP;
+     errors = errors + 1;
+  ELSE
+     PUT 'sema1 is busy -- ok' TO stdout BY A,SKIP;
+  FIN;
+
+  IF errors == 0 THEN
+    PUT '*** success' TO stdout BY A, SKIP;
+  ELSE
+    PUT '*** ', errors, ' fails' TO stdout BY A,F(3),A, SKIP;
+    __cpp__("pearlrt::Control::setExitCode(1);");
+  FIN;
+END;
+
+MODEND;
+

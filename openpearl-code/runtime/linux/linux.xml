@@ -14,6 +14,17 @@
          <check instances="oncePerSet" set="Pipe($nameOfPipe)"/>
       </checks>
    </dation>
+   <dation name="PipeNBR">
+      <parameters>
+        <CHAR length="32767" name="nameOfPipe"> <NotEmpty/> </CHAR>
+        <FIXED length="31" name="lengthOfPipe"> <FIXEDRANGE>1,9999</FIXEDRANGE> </FIXED>
+        <CHAR length="32767" name="openAttributes">
+           <ConsistsOf>'OLD','NEW','ANY','OPEN1','CAN','PRM', 'NBR'</ConsistsOf>
+        </CHAR>
+      </parameters>
+      <attributes>FORWARD, DIRECT, IN, OUT, INOUT, SYSTEM</attributes>
+      <data>ALL</data>
+   </dation>
    <dation name="Disc">
       <parameters>
         <CHAR length="32767" name="dir"> <NotEmpty/> </CHAR>
@@ -334,6 +345,22 @@
   <data>FLOAT(23)</data>
   <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
 </dation>
+<dation name="ContactSwitch">
+  <attributes> IN, SYSTEM, BASIC</attributes>
+  <data>BIT(1)</data>
+  <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
+</dation>
+<dation name="MsgIO">
+  <parameters>
+    <BIT length="64" name="msg">
+    </BIT>
+  </parameters>
+  <attributes> INOUT,SYSTEM,BASIC</attributes>
+  <data>BIT(64)</data>
+  <requiresModule fileName="SimFilExtruder/SimFilExtruderSystem" />
+</dation>
+
+
    <configuration name="Log">
       <parameters>
          <CHAR length="4" name="logLevel">
@@ -395,7 +422,17 @@
          <check instances="oncePerSet" set="I2CBus($deviceName)"/>
       </checks>
    </connection>
-<!-- Signals.xml : auto generated (Sun Aug 18 14:28:01 2024) -->
+<!-- Signals.xml : auto generated (Sun Mar 16 23:42:47 2025) -->
+   <signal name="InternalSignal"/>
+   <signal name="InternalTaskSignal"/>
+   <signal name="InternalDationSignal"/>
+   <signal name="InternalDatatypeSignal"/>
+   <signal name="InternalConfigurationSignal"/>
+   <signal name="TerminateRequestSignal"/>
+   <signal name="ArithmeticOverflowSignal"/>
+   <signal name="ArithmeticUnderflowSignal"/>
+   <signal name="ArithmeticDivideByZeroSignal"/>
+   <signal name="InternalSignalsSignal"/>
    <signal name="AnySignal"/>
    <signal name="TaskSignal"/>
    <signal name="PrioOutOfRangeSignal"/>
@@ -421,4 +458,35 @@
    <signal name="ArrayIndexOutOfBoundsSignal"/>
    <signal name="RefNotInitializedSignal"/>
    <signal name="BadArraySegmentSignal"/>
+   <signal name="DationSignal"/>
+   <signal name="DationParamSignal"/>
+   <signal name="DationNotOpenSignal"/>
+   <signal name="OpenFailedSignal"/>
+   <signal name="CloseFailedSignal"/>
+   <signal name="PositioningFailedSignal"/>
+   <signal name="InvalidPositioningSignal"/>
+   <signal name="ReadingFailedSignal"/>
+   <signal name="WritingFailedSignal"/>
+   <signal name="DationIndexBoundSignal"/>
+   <signal name="DationNotSupportedSignal"/>
+   <signal name="DationEOFSignal"/>
+   <signal name="NoEOFDationSignal"/>
+   <signal name="DationTFURecordSignal"/>
+   <signal name="DationDatatypeSignal"/>
+   <signal name="DationFormatRepetitionValue"/>
+   <signal name="DationFormatRepetitionOverflow"/>
+   <signal name="DeviceNotFoundSignal"/>
+   <signal name="FormatSignal"/>
+   <signal name="NoMoreCharactersSignal"/>
+   <signal name="DurationFormatSignal"/>
+   <signal name="ClockFormatSignal"/>
+   <signal name="FixedFormatSignal"/>
+   <signal name="CharacterFormatSignal"/>
+   <signal name="BitFormatSignal"/>
+   <signal name="ClockValueSignal"/>
+   <signal name="FixedValueSignal"/>
+   <signal name="BitValueSignal"/>
+   <signal name="DurationValueSignal"/>
+   <signal name="ExpFormatSignal"/>
+   <signal name="ExpValueSignal"/>
 </platform>

@@ -13,5 +13,9 @@ namespace ns_SimFilExtruder {
   void _set_screwheater_pwm(pearlrt::Task *me, pearlrt::Fixed<15>);
   pearlrt::Float<23> _get_temperature_sensor(pearlrt::Task *me);
   pearlrt::Float<23> _get_diameter_sensor(pearlrt::Task *me);
+  pearlrt::BitString<64> _read_msg(pearlrt::Task *me);
+  void _send_msg(pearlrt::Task *me, pearlrt::BitString<64>);
+  pearlrt::BitString<1> _get_contact_switch_state(pearlrt::Task *me);
+
 
 }

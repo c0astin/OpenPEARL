@@ -1,0 +1,796 @@
+MODULE(Extruder);
+
+SYSTEM;
+
+!I/O
+stdout: StdOut;
+httpSocket: TcpIpServer(8081);
+disc: Disc('./',1);
+
+!Simulator Dations:
+screwmotor: ScrewMotor(0);
+screwheater: ScrewHeater(0);
+spoolermotor: SpoolerMotor(0);
+diameter_sensor: DiameterSensor(0);
+temperature_sensor: TemperatureSensor(0);
+!contact_switch: ContactSwitch;
+msgio: MsgIO('0'B4);
+
+!Signals
+taskActiveErr : TaskTerminatedSignal;
+
+!__________________________________________________________________!
+!_______________________________INIT_______________________________!
+
+PROBLEM;
+
+! =============== Dations for sensors & actuators ===============
+
+SPC screwmotor DATION INOUT SYSTEM BASIC FIXED(31);
+DCL screwMotor DATION INOUT BASIC FIXED(31) CREATED(screwmotor);
+
+SPC spoolermotor DATION INOUT SYSTEM BASIC FIXED(31);
+DCL spoolerMotor DATION INOUT BASIC FIXED(31) CREATED(spoolermotor);
+
+SPC screwheater DATION INOUT SYSTEM BASIC FIXED(31);
+DCL screwHeater DATION INOUT BASIC FIXED(31) CREATED(screwheater);
+
+SPC diameter_sensor DATION IN SYSTEM BASIC FLOAT;
+DCL diameterSensor DATION IN BASIC FLOAT CREATED(diameter_sensor);
+
+SPC temperature_sensor DATION IN SYSTEM BASIC FLOAT;
+DCL temperatureSensor DATION IN BASIC FLOAT CREATED(temperature_sensor);
+
+!Optional dation for spool contact switch status. Interrupt can be used instead
+!SPC contact_switch DATION IN SYSTEM BASIC BIT(1);
+!DCL contactswitch DATION IN BASIC BIT(1) CREATED(contact_switch);
+
+SPC contactswitchirpt IRPT GLOBAL(SimFilExtruder);
+
+! =============== Dations for Output & Inter process communication  ===============
+
+!Interprocess Communication Mode
+!Pipe communication recommended. TCP/IP unidirectional (User->UI) only
+DCL ipc_mode CHAR(8) INIT('PIPE'); !'NONE' or 'TCP' or 'PIPE' 
+
+!MsgIO Dation uses pipes specified in simulator
+SPC msgio DATION INOUT SYSTEM BASIC BIT(64);
+DCL MsgIO DATION INOUT BASIC  BIT(64) CREATED(msgio);
+
+!TCP/IP Socket for TCP Mode
+SPC httpSocket DATION INOUT SYSTEM ALL;
+DCL usHttpSocket DATION INOUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(httpSocket); 
+
+SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
+DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
+
+SPC taskActiveErr SIGNAL;
+
+!For Logging
+DCL fileName CHAR(20) INIT('extruder_data.csv');
+DCL logFile DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(disc);
+
+SPC disc DATION INOUT SYSTEM ALL;
+
+! Bolt for protected access to data structure
+DCL data_pool BOLT;
+
+!Data structure (mainly for logging)
+DCL Data STRUCT [
+   system_state CHAR(1),
+   screw_motor_rpm FIXED(31),
+   spooler_motor_rpm FIXED(31),
+   heater_pwm FIXED(31),
+   temperature FLOAT,
+   diameter FLOAT,
+   switch_status BIT(1)];
+
+! =============== Controller settings  ===============
+
+!Control mode: 
+!AUTO: Wechselt automatisch zwischen System-States. Erfordert keine Verbindung zum Web-GUI
+!MANUAL: Manuelles verstellen der Motordrehzahlen und der Heizleistung via Web-GUI. 
+DCL ctrl_mode CHAR(8) INIT('AUTO'); !MANUAL oder AUTO
+
+!Diameter control target value
+ DCL ctrl_target_dia INV FLOAT INIT(1.75);
+
+!Spooler motor startup rpm. Initial value for diameter controller
+DCL spooler_startup_rpm FIXED(31) INIT(60);
+
+!Screw drive working point rpm.
+DCL screw_target_rpm FIXED(31) INIT(20);
+
+!Filament sensor request & diameter controller calc frequency
+DCL req_freq_dia_s INV DUR INIT(0.1 SEC);
+
+!Temperature limits for heater control
+DCL min_temp FIXED(31) INIT(180);
+DCL max_temp FIXED(31) INIT(210);
+
+!Temp. sensor request & temp. controller calc frequency
+DCL req_freq_temp_s INV DUR INIT(1 SEC);
+
+!System state:
+!'H' = PreHeat, 'G' = GoReady, 'P' = Prepare, 'R' = Running, 'S' = Stopping, 'I' = Idle
+!DCL current_state CHAR(1) INIT('I');
+
+!Time at programm startup
+DCL start_clock CLOCK; 
+
+!__________________________________________________________________!
+!_____________________________Startup _____________________________!
+
+! ==========================================================================
+! Startup-Task
+   ! Activates tasks for sensor and actuator state monitoring
+   ! Opens IO channels for logging, console output and IPC
+! ==========================================================================
+Startup_task: TASK PRIO 100 MAIN;
+   OPEN terminal;
+   open_log_file(fileName);
+
+   PUT '---FILAMENT EXTRUDER STARTUP---' TO terminal BY A, SKIP;
+
+   !Handle contact switch interrupt
+   ENABLE contactswitchirpt;
+   WHEN contactswitchirpt ACTIVATE change_spool_and_restart_task;  
+
+   open_dations;
+   start_clock = NOW; 
+
+   !Task reads incoming messages (only available in Pipe Mode)
+   IF ipc_mode == 'PIPE' THEN
+      ACTIVATE Msg_surv_task; 
+   FIN;
+
+   !Tasks for sensor and actuator surveillance
+   ACTIVATE Temperature_surv_task;
+   ACTIVATE Diameter_surv_task;
+   ACTIVATE Actor_state_surv_task;
+
+   !Task for logging
+   ACTIVATE Log_task;
+   
+   !Start extruder preheating if initial mode is set to 'AUTO'
+   change_state('I');
+   IF ctrl_mode == 'AUTO' THEN
+      req_state_change('H');
+   FIN;
+END; !Startup_task
+!___________________________________________________________________________
+
+! ==========================================================================
+! Procedure: Open all relevant dations
+! ==========================================================================
+open_dations: PROC;
+   IF ipc_mode == 'PIPE' THEN
+      PUT 'Waiting for pipe connections...' TO terminal BY A, SKIP;
+      OPEN MsgIO;
+      PUT 'Pipes to Web-UI opened.' TO terminal BY A, SKIP;
+   FIN;
+   IF ipc_mode == 'TCP' THEN
+      PUT 'Waiting for TCP/IP socket connection...' TO terminal BY A, SKIP;
+      OPEN usHttpSocket;
+      PUT 'Connection established.' TO terminal BY A, SKIP;
+   FIN;
+   OPEN screwMotor;
+   OPEN screwHeater;
+   OPEN spoolerMotor;
+   OPEN diameterSensor;
+   OPEN temperatureSensor;
+END;
+
+!__________________________________________________________________!
+!______________________System state handling ______________________!
+
+! ==========================================================================
+!State machine. Processes state change requests
+!'H' = PreHeat, 'G' = GoReady, 'P' = Prepare, 'R' = Running, 'S' = Stopping, 'I' = Idle
+! ==========================================================================
+
+req_state_change: PROC (req_state CHAR(1));
+   DCL current_state CHAR(1);
+   current_state := get_state;
+   CASE req_state
+
+   ALT ('H', 'G') !Requested state: PREHEAT or GORDY
+      CASE current_state
+      ALT ('I') !Current state: IDLE
+         change_state('H');
+         ACTIVATE Temperature_ctrl_task;
+         !GOTO end;
+      OUT
+            PUT 'Current state doesnt allow state change to PREHEAT.' TO terminal BY A, SKIP;
+      FIN;
+
+   ALT ('P', 'R') !Requested state: PREPARE or RUNNING
+      CASE current_state
+      ALT('G') !Current state: GORDY
+         CALL motor_startup;
+      OUT
+         PUT 'Cant start extruder. Temperature out of target range.' TO terminal BY A, SKIP;
+      FIN;
+
+   ALT ('S', 'I') !Requested state: STOPPING or IDLE
+      stop;
+   FIN;
+END; !req_state_change
+!____________________________________________________________________________
+
+change_state: PROC (new_state CHAR(1));
+   RESERVE data_pool;
+   Data.system_state = new_state;
+   FREE data_pool;
+END;
+!____________________________________________________________________________
+
+get_state: PROC RETURNS(CHAR(1));
+   DCL current_state CHAR(1);
+   ENTER data_pool;
+      current_state := Data.system_state;
+   LEAVE data_pool;
+   RETURN(current_state);
+END;
+!____________________________________________________________________________
+
+!Called when spool contact switch triggers
+change_spool_and_restart_task: TASK PRIO 50;
+      PUT '---SPOOL FULL---' TO terminal BY A, SKIP;
+      DISABLE contactswitchirpt;
+      req_state_change('S');
+      ENABLE contactswitchirpt;
+END;
+
+!____________________________________________________________________________
+
+change_ctrl_mode: PROC (new_mode CHAR(8));
+   IF new_mode == 'MANUAL' AND ctrl_mode == 'AUTO' THEN
+      ctrl_mode = 'MANUAL';
+      stop;
+      PUT 'Operationg in MANUAL mode now.' TO terminal BY A, SKIP;
+   ELSE
+      IF new_mode == 'AUTO' AND ctrl_mode == 'MANUAL' THEN
+         ctrl_mode = 'AUTO';
+         change_state('I');
+         req_state_change('H');
+         PUT 'Operating in AUTOMATIC mode now.' TO terminal BY A, SKIP;
+      FIN;
+   FIN;   
+END;
+
+!__________________________________________________________________!
+!______________________Actuator start & stop ______________________!
+
+motor_startup: PROC;
+   DCL screw_rpm FIXED(31) INIT(0);
+   DCL spooler_rpm FIXED(31) INIT(0);
+   DCL start_wait_time CLOCK;
+
+   change_state('P'); !State: Prepare
+   PUT 'System startup...' TO terminal BY A, SKIP;
+
+   !Startup spooler motor
+   set_spooler_rpm(spooler_startup_rpm);
+   start_wait_time := NOW;
+   WHILE get_spooler_rpm < spooler_startup_rpm !Wait until rpm is reached
+   REPEAT
+   IF NOW-start_wait_time > 5 SEC THEN !Cancel
+      PUT 'ERROR: Spooler motor startup took too long.' TO terminal BY A, SKIP;
+      change_state('H');
+   FIN;
+      AFTER 0.3 SEC RESUME;
+   END;
+
+   !Startup screw motor
+   set_screw_rpm(screw_target_rpm);
+   start_wait_time := NOW;
+   WHILE get_screw_rpm < screw_target_rpm !Warten bis Drehzahl erreicht
+   REPEAT
+      IF NOW-start_wait_time > 5 SEC THEN !Cancel
+         PUT 'ERROR: Screw motor startup took too long.' TO terminal BY A, SKIP;
+         change_state('H');
+      FIN;
+      AFTER 0.3 SEC RESUME;
+   END;
+
+   IF ctrl_mode == 'AUTO' THEN
+      ACTIVATE Diameter_ctrl_task;
+      PUT 'Startup successfull. System running...' TO terminal BY A, SKIP;
+      change_state('R'); !State: Running
+   FIN;
+END; !motor_startup
+!____________________________________________________________________________
+
+stop_heater: PROC;
+      ON taskActiveErr:
+      BEGIN;
+         RETURN;
+      END;
+      TERMINATE Temperature_ctrl_task;
+      set_heater_pwm(0);
+END;
+!____________________________________________________________________________
+
+stop_screw_motor: PROC;
+      ON taskActiveErr:
+      BEGIN;
+         RETURN;
+      END;
+      set_screw_rpm(0);
+      TERMINATE Diameter_ctrl_task; 
+END;
+!____________________________________________________________________________
+
+stop_spooler_motor: PROC;
+      ON taskActiveErr:
+      BEGIN;
+         RETURN;
+      END;
+      set_spooler_rpm(0);
+      TERMINATE Diameter_ctrl_task; 
+END;
+!____________________________________________________________________________
+
+!Stop all actuators
+stop: PROC;
+   PUT 'Stopping...' TO terminal BY A, SKIP;
+   stop_heater;
+   stop_screw_motor;
+   stop_spooler_motor;
+
+   !Wait until spooler rpm is 0:
+   WHILE get_spooler_rpm > 0
+   REPEAT
+   AFTER 0.3 SEC RESUME;
+   END;
+
+   !Wait until screw rpm is 0:
+   WHILE get_screw_rpm > 0 
+   REPEAT
+   AFTER 0.3 SEC RESUME;
+   END;
+
+   PUT 'Stopped. Changed State to IDLE' TO terminal BY A, SKIP;
+   change_state('I');
+END;
+
+!________________________________________________________________________!
+!________________________Process surveillance____________________________!
+
+! ==========================================================================
+! Task: Monitor screw temperature
+   ! Cyclic read of screw temperature with adjustable interval.
+   ! State change from Preheat to Running when temperature within processing limits
+! ==========================================================================
+
+Temperature_surv_task: TASK PRIO 50;
+   DCL temperature FLOAT;
+      WHILE '1'B1
+      REPEAT
+         temperature = read_temp_sens;
+         IF get_state == 'H' THEN
+            IF temperature > min_temp AND temperature < max_temp THEN
+               change_state('G');
+               req_state_change('R');
+            FIN;
+         FIN;
+      AFTER req_freq_temp_s RESUME;
+      END;
+END; !Temperature_surv_task
+
+! ==========================================================================
+! Task: Monitor filament diameter
+   ! Cyclic read of filament diameter with adjustable interval.
+! ==========================================================================
+Diameter_surv_task: TASK PRIO 50;
+   DCL diameter_value FLOAT;
+      WHILE '1'B1
+      REPEAT
+         diameter_value = read_diameter_sens;
+         AFTER req_freq_dia_s RESUME;
+      END;
+END; !Diameter_surv_task
+
+! ==========================================================================
+! Task: Monitor screw and spooler rpm
+! ==========================================================================
+Actor_state_surv_task: TASK PRIO 50;
+!Hier alle State-Übergänge etc abwickeln und Erfassung von 
+   DCL screw_rpm FIXED(31);
+   DCL spooler_rpm FIXED(31);
+      WHILE '1'B1
+      REPEAT
+         screw_rpm := read_screw_rpm;
+         spooler_rpm := read_spooler_rpm;
+         AFTER 0.1 SEC RESUME;
+      END;
+END; !Actor_state_surv_task
+
+!________________________________________________________________________!
+!______________________________CONTROLLER________________________________!
+
+! ==========================================================================
+! Task: Temperature control
+   ! Active during states "Preheat", "GoReady" and "Running"
+! ==========================================================================
+Temperature_ctrl_task: TASK PRIO 50;
+    DCL temperature FLOAT;
+    WHILE '1'B1
+    REPEAT
+        temperature := get_temp;
+        two_point_control(temperature);
+        AFTER req_freq_temp_s RESUME;
+    END;
+END; !Temperature_ctrl_task
+
+
+! ==========================================================================
+! Task: Filament diameter control
+   ! Active during state "Running"
+! ==========================================================================
+Diameter_ctrl_task: TASK PRIO 50;
+    DCL diameter FLOAT;
+    WHILE '1'B1
+    REPEAT
+        diameter := get_diameter;
+        diameter_control(diameter);
+        AFTER req_freq_dia_s RESUME;
+    END;
+END; !Diameter_ctrl_task
+
+! ==========================================================================
+! Filament diameter step controller
+! ==========================================================================
+   DCL small_rpm_step INV FIXED(31) INIT(1);
+   DCL big_rpm_step INV FIXED(31) INIT(2);
+   DCL error_small_step INV FLOAT INIT(0.01);
+   DCL error_big_step INV FLOAT INIT(0.1);
+   DCL ctrl_min_rpm INV FIXED(31) INIT(20);
+   DCL ctrl_max_rpm INV FIXED(31) INIT(200);
+   DCL ctrl_startup_rpm FIXED(31) INIT (100);
+
+   diameter_control: PROC(diameter FLOAT);
+      DCL rpm_new FIXED(31);
+      DCL error FLOAT;
+      DCL rpm FIXED(31) INIT(0);
+      rpm := get_spooler_rpm; 
+      error = diameter - ctrl_target_dia;
+      !Small deviation from target diameter:
+      IF error_big_step > ABS error AND ABS error > error_small_step THEN 
+         rpm_new = rpm + SIGN error * small_rpm_step;
+        IF rpm_new > ctrl_min_rpm AND rpm_new < ctrl_max_rpm THEN
+            set_spooler_rpm(rpm_new);
+         FIN;
+      FIN;
+
+      !Large deviation from target diameter:
+      IF ABS error > error_big_step THEN 
+         rpm_new = rpm + SIGN error * big_rpm_step;    
+         IF rpm_new > ctrl_min_rpm AND rpm_new < ctrl_max_rpm THEN
+            set_spooler_rpm(rpm_new); 
+         FIN;
+      FIN;
+   END; !diameter_control
+
+! ==========================================================================
+! Temperature two-point-controller
+   ! Turn on heater when below lower limit.
+   ! Turn off heater when above upper limit.
+! ==========================================================================
+
+two_point_control: PROC (temperature FLOAT);
+   DCL two_point_lower_limit FIXED(31) INIT(180);
+   DCL two_point_upper_limit FIXED(31) INIT(190);
+         IF temperature > two_point_upper_limit
+         THEN 
+            set_heater_pwm(0);
+         ELSE 
+            IF temperature < two_point_lower_limit
+            THEN
+                set_heater_pwm(100);
+            FIN;
+         FIN;  
+   END; !two_point_control
+
+
+!________________________________________________________________________!
+!________________________________LOGGING_________________________________!
+
+! ==========================================================================
+! Task: Logging
+   ! Output of current metrics in terminal
+   ! Outputs current metrics to .csv-logfile
+! ==========================================================================
+Log_task: TASK PRIO 60;
+DCL DataSet STRUCT[system_state CHAR(1), screw_motor_rpm FIXED(31), spooler_motor_rpm FIXED(31), heater_pwm FIXED(31), temperature FLOAT, diameter FLOAT, switch_status BIT(1)];
+   DCL log_start CLOCK;
+   DCL line CHAR(100);
+
+   !Write headers
+   log('timestamp [s]; system state; screw rpm [1/min]; spooler rpm [1/min]; heater pwm [%]; temperature [°C]; diameter [mm]; switch status');
+
+   log_start = NOW;
+   WHILE '1'B1
+   REPEAT
+      DataSet := get_all_data;
+
+      !Write Data structure to line 
+      CONVERT 
+      (NOW-log_start)/(1SEC), '; ', DataSet.system_state, '; ', DataSet.screw_motor_rpm, '; ',
+      DataSet.spooler_motor_rpm, '; ', DataSet.heater_pwm, '; ', DataSet.temperature, '; ', 
+      DataSet.diameter, '; ', DataSet.switch_status
+      TO line BY 
+      F(6,1),A, A, A, F(4), A,
+      F(4), A, F(3), A, F(12,2), A,
+      F(12,3), A, B(1);
+      log(line);
+
+      !Output data to terminal
+      PUT 'Zeit: ', NOW, '    | System Status: ', DataSet.system_state, ' |  RPM Schnecke: ', DataSet.screw_motor_rpm,
+      ' | RPM Spule: ', DataSet.spooler_motor_rpm, ' | PWM Heizung: ', DataSet.heater_pwm, 
+      ' |  Temperatur: ', DataSet.temperature, ' |  Fil.Durchmesser: ', DataSet.diameter, ' |  Switch: ', DataSet.switch_status
+      TO terminal BY          
+      A, T(12,1),A, A, A, F(4), A, 
+      F(4), A, F(3), A, F(12,2), A,
+      F(12,3), A, B(1), SKIP;
+
+      AFTER 1 SEC RESUME;
+   END;
+END; !Log_task
+
+!____________________________________________________________________________
+open_log_file: PROC(logfileName REF INV CHAR());
+   DCL fn CHAR(40);
+   fn = logfileName;
+   OPEN logFile BY IDF(fn), ANY;
+   CLOSE logFile BY CAN;
+   OPEN logFile BY IDF(fn), NEW;
+   PUT '---New log file created---' TO terminal BY A, SKIP;
+END;
+
+!____________________________________________________________________________
+log: PROC(line  REF INV CHAR() );
+   PUT line TO logFile BY A,SKIP;
+END; 
+
+!________________________________________________________________________!
+!______________________Interprocess Communication________________________!
+
+! ==========================================================================
+! Task: Handle incoming messages
+! ==========================================================================
+Msg_surv_task: TASK PRIO 50;
+   DCL msg BIT(64);
+      WHILE '1'B1
+      REPEAT
+         TAKE msg FROM MsgIO;            
+         IF msg /= '0'B4 !Dation returns '0' if no msg is read from pipe
+         THEN
+            read_msg(msg);
+         FIN;
+      AFTER 0.5 SEC RESUME;
+      END;
+END; !Msg_surv_task
+!____________________________________________________________________________
+
+! Extracts IDs and values from incoming 8 byte messages and initiates reaction
+read_msg: PROC (msg BIT(64));
+   DCL value FIXED(31);
+   DCL id FIXED(8);
+   !Parse message --> ID / Value:
+   value := TOFIXED msg.BIT(34:64); !1 bit is losed when converting to FIXED(31). Not a problem since requested value would be too high anyway.
+   id := TOFIXED msg.BIT(1:8);
+
+   !Handle requests:
+      PUT 'Received message:', msg TO terminal BY  A, B4(16), SKIP;
+      CASE id
+         ALT (1) !Change control mode
+            IF value == 1 
+            THEN  
+               change_ctrl_mode('MANUAL');
+            ELSE
+               change_ctrl_mode('AUTO');
+            FIN;
+         ALT (2) !Start
+            IF ctrl_mode == 'AUTO'
+            THEN
+               req_state_change('H');
+            FIN;
+         ALT (3) !Change spooler rpm
+            IF ctrl_mode == 'MANUAL' THEN
+               set_spooler_rpm(value);
+            FIN;
+         ALT (4) !Change screw rpm
+            IF ctrl_mode == 'MANUAL' THEN
+               set_screw_rpm(value);
+            FIN;
+         ALT (5) !Change heater pwm
+            IF ctrl_mode == 'MANUAL' THEN
+               set_heater_pwm(value); 
+            FIN;          
+         ALT (6) !Emergency Stop
+            req_state_change('S'); !EMERGENCY STOP
+      FIN;
+END; !read_msg 
+!____________________________________________________________________________
+
+! Composes 8 byte messages from ID, timestamp and value of data struct entries.
+fixed_val_to_msg: PROC(val FIXED(31), id FIXED(8)) RETURNS (BIT(64));
+    DCL timestamp FIXED(24);
+    DCL current_clock CLOCK;
+    DCL msg BIT(64);
+    DCL val_bit64 BIT(64);
+    DCL id_time_bit32 BIT(32);
+
+    current_clock = NOW;
+    timestamp := ENTIER ((current_clock - start_clock)*100/1 SEC); !Timestamp in 10ms since startup
+    ! Var overflow after 5h --> not critical
+
+    id_time_bit32 = TOBIT (id) >< TOBIT (timestamp);
+    !can_msg = val_bit32 >< id_time_bit32 didnt seem to work properly?! 
+    val_bit64 = TOBIT val;
+    val_bit64 = val_bit64 SHIFT -33; !shift 31bit value to last msg bits
+    msg = id_time_bit32 OR val_bit64;
+    RETURN (msg);
+END;
+!____________________________________________________________________________
+
+!Send msgs over Pipe or TCP/IP to be read by Web-UI
+send_msgs: PROC (msg BIT(64));
+   IF ipc_mode == 'PIPE' THEN
+      SEND msg TO MsgIO;
+   FIN;
+   IF ipc_mode == 'TCP' THEN
+      PUT msg TO usHttpSocket BY B4(16), SKIP;
+   FIN;
+END;
+
+!________________________________________________________________________!
+!_________________Getter & Setter for Simulator Dations__________________!
+
+! ==========================================================================
+! "Read" takes value from Dation and puts it into "Data"
+! "Get" takes value from "Data"
+! "Set" writes value to Dation
+! ==========================================================================
+
+get_all_data: PROC RETURNS (STRUCT[system_state CHAR(1), screw_motor_rpm FIXED(31), spooler_motor_rpm FIXED(31), heater_pwm FIXED(31), temperature FLOAT, diameter FLOAT, switch_status BIT(1)]);
+   DCL DataSet STRUCT[system_state CHAR(1), screw_motor_rpm FIXED(31), spooler_motor_rpm FIXED(31), heater_pwm FIXED(31), temperature FLOAT, diameter FLOAT, switch_status BIT(1)];
+   ENTER data_pool;
+   DataSet := Data;
+   LEAVE data_pool;
+   RETURN (DataSet);
+END;
+
+!____________________________________________________________________________
+!___Screw drive__!
+
+!Read rpm from dation and write to data structure
+read_screw_rpm: PROC RETURNS(FIXED(31));
+   DCL rpm FIXED(31);
+   DCL msg BIT(64);
+   TAKE rpm FROM screwMotor;
+   RESERVE data_pool;
+   Data.screw_motor_rpm := rpm;
+   msg = fixed_val_to_msg(rpm, 4);
+   send_msgs(msg);
+   FREE data_pool;
+   RETURN(rpm);
+END;
+
+!Read value from data structure
+get_screw_rpm: PROC RETURNS(FIXED(31));
+   DCL rpm FIXED(31);
+   ENTER data_pool;
+   rpm := Data.screw_motor_rpm;
+   LEAVE data_pool;
+   RETURN(rpm);
+END;
+
+!Send value to dation
+set_screw_rpm: PROC (rpm FIXED(31));
+   SEND rpm TO screwMotor;
+END;
+
+!____________________________________________________________________________
+!___Spooler drive__!
+
+read_spooler_rpm: PROC RETURNS(FIXED(31));
+   DCL rpm FIXED(31);
+   DCL msg BIT(64);
+   TAKE rpm FROM spoolerMotor; !Drehzahl auslesen.
+   RESERVE data_pool;
+   Data.spooler_motor_rpm := rpm; !Wert in Datenstruktur ablegen.
+   msg = fixed_val_to_msg(rpm, 3);
+   send_msgs(msg);
+   FREE data_pool;
+   RETURN(rpm);
+END;
+
+get_spooler_rpm: PROC RETURNS(FIXED(31));
+   DCL rpm FIXED(31);
+   ENTER data_pool;
+   rpm := Data.spooler_motor_rpm;
+   LEAVE data_pool;
+   RETURN(rpm);
+END;
+
+set_spooler_rpm: PROC (rpm FIXED(31));
+   SEND rpm TO spoolerMotor;
+END;
+!____________________________________________________________________________
+!___Heater__!
+
+read_heater_pwm: PROC RETURNS(FIXED(31));
+   DCL pwm FIXED(31);
+   DCL msg BIT(64);
+   TAKE pwm FROM screwHeater;
+   RESERVE data_pool;
+   Data.heater_pwm := pwm;
+   msg = fixed_val_to_msg(pwm, 5);
+   send_msgs(msg);
+   FREE data_pool;
+   RETURN(pwm);
+END;
+
+get_heater_pwm: PROC RETURNS(FIXED(31));
+   DCL pwm FIXED(31);
+   ENTER data_pool;
+   pwm := Data.heater_pwm;
+   LEAVE data_pool;
+   RETURN(pwm);
+END;
+
+set_heater_pwm: PROC (pwm FIXED(31));
+   SEND pwm TO screwHeater;
+END;
+
+!____________________________________________________________________________
+!___Temperature sensor__!
+
+read_temp_sens: PROC RETURNS(FLOAT);
+   DCL temperature FLOAT;
+   DCL msg BIT(64);
+   TAKE temperature FROM temperatureSensor;
+   RESERVE data_pool;
+   Data.temperature := temperature;
+   msg = fixed_val_to_msg(ROUND temperature, 2);
+   send_msgs(msg);
+   FREE data_pool;
+   RETURN(temperature);
+END;
+
+get_temp: PROC RETURNS(FLOAT);
+   DCL temperature FLOAT;
+   ENTER data_pool;
+   temperature := Data.temperature;
+   LEAVE data_pool;
+   RETURN(temperature);
+END; 
+
+!____________________________________________________________________________
+!___Filament diameter sensor__!
+
+read_diameter_sens: PROC RETURNS(FLOAT);
+   DCL diameter FLOAT;
+   DCL msg BIT(64);
+   TAKE diameter FROM diameterSensor;
+   RESERVE data_pool;
+   Data.diameter := diameter;
+   msg = fixed_val_to_msg(ROUND (diameter*1000), 1);
+   send_msgs(msg);
+   FREE data_pool;
+   RETURN(diameter);
+END;
+
+get_diameter: PROC RETURNS(FLOAT);
+   DCL diameter FLOAT;
+   ENTER data_pool;
+   diameter := Data.diameter;
+   LEAVE data_pool;
+   RETURN(diameter);
+END; 
+!____________________________________________________________________________
+
+MODEND;

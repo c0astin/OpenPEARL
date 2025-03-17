@@ -26,8 +26,6 @@ implements OpenPearlVisitor<Void> {
     private AST m_ast = null;
     
     private boolean m_debug;
-    private static final int reached = 1;
-    private static final int noWarning=2;
         
     public CheckUnreachableStatements2(String sourceFileName, int verbose, boolean debug,
             SymbolTableVisitor symbolTableVisitor, ExpressionTypeVisitor expressionTypeVisitor,
@@ -85,7 +83,7 @@ implements OpenPearlVisitor<Void> {
         markReachableNodes(cfg.getFirstEntry());
         for (int i=0; i<cfg.getNodeList().size(); i++) {
             ControlFlowGraphNode n = cfg.getNodeList().get(i);
-            if (n.isSet(reached)) {
+            if (n.isSet(ControlFlowGraph.flag_is_reached)) {
                 warningEmitted = false;
             } else {
                 markStatementInAstAsUnreachable(n);
@@ -101,9 +99,20 @@ implements OpenPearlVisitor<Void> {
                             pseudo.getNodeType() == PseudoNode.blockEnd) {
                         noWarn=true;
                     }
-                    // if the END of the loop is no reached, warn with the next statement 
-                    if (pseudo.getNodeType() == PseudoNode.repeatEnd) {
-                        n = pseudo.getNext();
+                    // if the END/FIN of the loop, IF or  CASE is no reached, warn with the next statement,
+                    // as long as the next statement is not PROC/TASK END
+                    if (pseudo.getNodeType() == PseudoNode.repeatEnd || 
+                            pseudo.getNodeType() == PseudoNode.ifFin ||
+                            pseudo.getNodeType() == PseudoNode.caseFin) {
+                        ControlFlowGraphNode next = pseudo.getNext();
+                       if (next instanceof PseudoNode) {
+                           int nodeType = ((PseudoNode)next).getNodeType();
+                           if (nodeType != PseudoNode.procEnd && nodeType != PseudoNode.taskEnd) {
+                             n = next;
+                        }
+                       } else {
+                           n = next;
+                       }
                     }
                 }
                 if (!noWarn) { 
@@ -117,8 +126,8 @@ implements OpenPearlVisitor<Void> {
     
     private void markReachableNodes(ControlFlowGraphNode n) {
         if (n != null) {
-            if (!n.isSet(reached)) {
-                n.setFlag(reached);
+            if (!n.isSet(ControlFlowGraph.flag_is_reached)) {
+                n.setFlag(ControlFlowGraph.flag_is_reached);
              //   System.out.println("reached: " + n.getCtx().start.getLine() + ": "+n.printCtx(10));
                 for (int node=0; node < n.m_alternatives.size(); node++) {
                     markReachableNodes(n.m_alternatives.get(node));

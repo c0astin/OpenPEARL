@@ -85,10 +85,10 @@ public class Compiler {
 
     // public static boolean enableDetailedCompile = false; // 2022-11-04 unused
     public static Set<String> taskIdentifiers = new TreeSet<>();
-//    public static List<DeadlockResourceDeclaration> deadlockResourceDeclarations = new ArrayList<>();
-//    public static List<DeadlockOperation> deadlockOperations = new ArrayList<>();
-//    public static List<DeadlockControlFlowGraphProcedure> procedureDeclarations = new ArrayList<>();
-//    public static ArrayList<ProcedureCall> procedureCalls = new ArrayList<>();
+    //    public static List<DeadlockResourceDeclaration> deadlockResourceDeclarations = new ArrayList<>();
+    //    public static List<DeadlockOperation> deadlockOperations = new ArrayList<>();
+    //    public static List<DeadlockControlFlowGraphProcedure> procedureDeclarations = new ArrayList<>();
+    //    public static ArrayList<ProcedureCall> procedureCalls = new ArrayList<>();
 
 
     public static void main(String[] args) {
@@ -176,6 +176,10 @@ public class Compiler {
             }
 
             try {
+                // sequential execution of the compilation steps
+                // as long as no error was detected
+                // in case of detected errors the following steps are igored one by one
+                
                 if (parser.getNumberOfSyntaxErrors() <= 0) {
                     symbolTableVisitor.visit(tree);
 
@@ -223,7 +227,7 @@ public class Compiler {
                     fixUpSymbolTableVisitor.visit(tree);
                 }
 
-                if (Options.isDumpConstantPool()) {
+                if (ErrorStack.getTotalErrorCount() <= 0 && Options.isDumpConstantPool()) {
                     ConstantPool.dump();
                 }
 
@@ -233,53 +237,48 @@ public class Compiler {
                             tree, symbolTableVisitor, expressionTypeVisitor, ast);
                 }
 
-
-                // check if deadlock detection is possible
-                containsRefTaskProcSemaBolt = false;
-                // check if there are REFs used on TASK,PROC,SEMA or BOLT
                 SymbolTable symbolTable = symbolTableVisitor.symbolTable;
-                LinkedList<VariableEntry> vars= symbolTable.getAllVariableDeclarations();
-                for (VariableEntry v:vars) {
-                    if (v instanceof FormalParameter ) {
-                        if ( ((FormalParameter)v).passIdentical() ) {
-                            if (v.getType() instanceof TypeSemaphore || v.getType() instanceof TypeBolt ) {
-                                ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with parameter "+v.getType().toErrorString()+" IDENT");
-                                containsRefTaskProcSemaBolt = true;
-                                break;
 
+                if (ErrorStack.getTotalErrorCount() <= 0 ) {
+                    // check if deadlock detection is possible
+                    containsRefTaskProcSemaBolt = false;
+                    // check if there are REFs used on TASK,PROC,SEMA or BOLT
+
+                    LinkedList<VariableEntry> vars= symbolTable.getAllVariableDeclarations();
+                    for (VariableEntry v:vars) {
+                        if (v instanceof FormalParameter ) {
+                            if ( ((FormalParameter)v).passIdentical() ) {
+                                if (v.getType() instanceof TypeSemaphore || v.getType() instanceof TypeBolt ) {
+                                    ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with parameter "+v.getType().toErrorString()+" IDENT");
+                                    containsRefTaskProcSemaBolt = true;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    TypeDefinition td = v.getType();
-                    if (td instanceof TypeReference) {
-                        td = ((TypeReference) td).getBaseType();
-                        if (td instanceof TypeTask ||
-                                td instanceof TypeProcedure ||
-                                td instanceof TypeSemaphore ||
-                                td instanceof TypeBolt) {
-                            ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with REF "+td.toErrorString());
-                            containsRefTaskProcSemaBolt = true;
-                            break;
+                        TypeDefinition td = v.getType();
+                        if (td instanceof TypeReference) {
+                            td = ((TypeReference) td).getBaseType();
+                            if (td instanceof TypeTask ||
+                                    td instanceof TypeProcedure ||
+                                    td instanceof TypeSemaphore ||
+                                    td instanceof TypeBolt) {
+                                ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with REF "+td.toErrorString());
+                                containsRefTaskProcSemaBolt = true;
+                                break;
+                            } else if (td instanceof TypeStructure || td instanceof UserDefinedTypeStructure) {
+                                if (containsIllegalRefForDD(td)) {
+                                    ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with REF "+td.toErrorString());
+                                    containsRefTaskProcSemaBolt = true;
+                                }
+                            }
                         } else if (td instanceof TypeStructure || td instanceof UserDefinedTypeStructure) {
                             if (containsIllegalRefForDD(td)) {
                                 ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with REF "+td.toErrorString());
                                 containsRefTaskProcSemaBolt = true;
                             }
                         }
-                    } else if (td instanceof TypeStructure || td instanceof UserDefinedTypeStructure) {
-                        if (containsIllegalRefForDD(td)) {
-                            ErrorStack.warn(v.getCtx(), "deadlock detection disabled", "not possible with REF "+td.toErrorString());
-                            containsRefTaskProcSemaBolt = true;
-                        }
                     }
                 }
-
-                // output control flow graphs
-                if (Options.isDebugControlFlowGraph()) {
-                    dumpControlFlowGraphs(symbolTableVisitor.symbolTable);
-                }
-                 
-                
 
                 if (ErrorStack.getTotalErrorCount() <= 0) {
                     CppGenerate(SourceLocations.getTopFileName(), tree, symbolTableVisitor,
@@ -294,12 +293,14 @@ public class Compiler {
                     SystemPartExport(filename, tree, symbolTableVisitor, ast, Options.isStdOpenPEARL());
                 }
 
-                //System.out.println("Options.isMakeStaticDeadlockDetection()" + Options.isMakeStaticDeadlockDetection());
-                boolean sddPossible = Options.isMakeStaticDeadlockDetection() && !containsRefTaskProcSemaBolt;
-                String filePath = m_sourceFilename.substring(0, m_sourceFilename.lastIndexOf(".")) + "_d_cfg.dot";
-//                    DeadlockControlFlowGraph.generate(semanticCheck.getControlFlowGraphs(), filePath);
-                Export4StaticDeadlockDetection exp = new Export4StaticDeadlockDetection(ast, symbolTable);
-                exp.generate(sddPossible);
+                if (ErrorStack.getTotalErrorCount() <= 0) {
+                    //System.out.println("Options.isMakeStaticDeadlockDetection()" + Options.isMakeStaticDeadlockDetection());
+                    boolean sddPossible = Options.isMakeStaticDeadlockDetection() && !containsRefTaskProcSemaBolt;
+                    String filePath = m_sourceFilename.substring(0, m_sourceFilename.lastIndexOf(".")) + "_d_cfg.dot";
+                    //                    DeadlockControlFlowGraph.generate(semanticCheck.getControlFlowGraphs(), filePath);
+                    Export4StaticDeadlockDetection exp = new Export4StaticDeadlockDetection(ast, symbolTable);
+                    exp.generate(sddPossible);
+                }
 
 
             } catch (Exception ex) {
@@ -381,28 +382,8 @@ public class Compiler {
         }
     }
 
-    private static void dumpControlFlowGraphs(SymbolTable table_level0) {
-        SymbolTable st = table_level0.getModuleTable();
-               
-        LinkedList<ProcedureEntry> procs=st.getProcedureSpecificationsAndDeclarations();
-        LinkedList<TaskEntry> tasks=st.getTaskDeclarationsAndSpecifications();
-        //System.out.println("proc "+procs.size());
-        //System.out.println("tasks "+tasks.size());
-    
-        for (int i=0; i<procs.size(); i++) {
-            ProcedureEntry pe = ((ProcedureEntry)(procs.get(i)));
-            if (pe.getControlFlowGraph() != null) {
-               pe.getControlFlowGraph().output(pe.getName());
-            }
-        }
-        for (int i=0; i<tasks.size(); i++) {
-            TaskEntry te = ((TaskEntry)tasks.get(i));
-            if (te.getControlFlowGraph() != null) {
-               te.getControlFlowGraph().output(te.getName());
-            }
-        }
-    }
-    
+
+
 
 
     private static boolean containsIllegalRefForDD(TypeDefinition td) {

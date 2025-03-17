@@ -10,9 +10,6 @@ PROBLEM;
    DCL s1 SEMA;
    DCL b1 BOLT;
    DCL str STRUCT [ a FIXED, b REF TASK, c REF INTERRUPT ]; 
-/*$    ^
-warning: deadlock detection disabled: not possible with REF STRUCT [  FIXED(31),REF TASK,REF INTERRUPT ]
-*/
 
 p1: PROC;
 END;

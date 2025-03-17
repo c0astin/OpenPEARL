@@ -61,7 +61,6 @@ install: SimFilExtruderSystem.xml SimFilExtruder.cc
 
 .PHONY: SimFilExtruder.cc
 SimFilExtruder.cc:
-	prl -cc SimFilExtruderControl.prl
 	prl -cc SimFilExtruder.prl 
 
 .PHONY: SimFilExtruderSystem.xml
@@ -71,7 +70,7 @@ SimFilExtruderSystem.xml:
 ###############################################################################
 
 clean:
-	$(RM) SimFilExtruder.cc SimFilExtruderSystem.cc SimFilExtruder.xml SimFilExtruderSystem.xml SimFilExtruderControl.cc SimFilExtruderControl.xml
+	$(RM) SimFilExtruder.cc SimFilExtruderSystem.cc SimFilExtruder.xml SimFilExtruderSystem.xml
 
 ###############################################################################
 

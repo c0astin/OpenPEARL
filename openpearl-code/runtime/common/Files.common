@@ -135,25 +135,32 @@ endif
 # the platform, which is build now
 ifeq ($(CONFIG_SIMFILEXTRUDER),y)
    XML_COMMON += filamentExtruder/Simulator.xml 
-   HDR_COMMON += filamentExtruder/ScrewMotor.h
-   CXX_COMMON += filamentExtruder/ScrewMotor.cc
-   XML_COMMON += filamentExtruder/ScrewMotor.xml
-   HDR_COMMON += filamentExtruder/ScrewHeater.h
-   CXX_COMMON += filamentExtruder/ScrewHeater.cc
-   XML_COMMON += filamentExtruder/ScrewHeater.xml
-   HDR_COMMON += filamentExtruder/SpoolerMotor.h
-   CXX_COMMON += filamentExtruder/SpoolerMotor.cc
-   XML_COMMON += filamentExtruder/SpoolerMotor.xml
-   HDR_COMMON += filamentExtruder/TemperatureSensor.h
-   CXX_COMMON += filamentExtruder/TemperatureSensor.cc
-   XML_COMMON += filamentExtruder/TemperatureSensor.xml
-   HDR_COMMON += filamentExtruder/FilamentDiameterSensor.h
-   CXX_COMMON += filamentExtruder/FilamentDiameterSensor.cc
-   XML_COMMON += filamentExtruder/FilamentDiameterSensor.xml
+   HDR_COMMON += filamentExtruder/dations/ScrewMotor.h
+   CXX_COMMON += filamentExtruder/dations/ScrewMotor.cc
+   XML_COMMON += filamentExtruder/dations/ScrewMotor.xml
+   HDR_COMMON += filamentExtruder/dations/ScrewHeater.h
+   CXX_COMMON += filamentExtruder/dations/ScrewHeater.cc
+   XML_COMMON += filamentExtruder/dations/ScrewHeater.xml
+   HDR_COMMON += filamentExtruder/dations/SpoolerMotor.h
+   CXX_COMMON += filamentExtruder/dations/SpoolerMotor.cc
+   XML_COMMON += filamentExtruder/dations/SpoolerMotor.xml
+   HDR_COMMON += filamentExtruder/dations/TemperatureSensor.h
+   CXX_COMMON += filamentExtruder/dations/TemperatureSensor.cc
+   XML_COMMON += filamentExtruder/dations/TemperatureSensor.xml
+   HDR_COMMON += filamentExtruder/dations/FilamentDiameterSensor.h
+   CXX_COMMON += filamentExtruder/dations/FilamentDiameterSensor.cc
+   XML_COMMON += filamentExtruder/dations/FilamentDiameterSensor.xml
+   HDR_COMMON += filamentExtruder/dations/ContactSwitch.h
+   CXX_COMMON += filamentExtruder/dations/ContactSwitch.cc
+   XML_COMMON += filamentExtruder/dations/ContactSwitch.xml
    HDR_COMMON += filamentExtruder/SimFilExtruder.h
    CXX_COMMON += filamentExtruder/SimFilExtruder.cc
-   HDR_COMMON += filamentExtruder/FilExtruderInt.h
-   CXX_COMMON += filamentExtruder/FilExtruderInt.cc  
+   HDR_COMMON += filamentExtruder/SimFilExtruderInt.h
+   CXX_COMMON += filamentExtruder/SimFilExtruderInt.cc 
+   HDR_COMMON += filamentExtruder/dations/MsgIO.h
+   CXX_COMMON += filamentExtruder/dations/MsgIO.cc
+   XML_COMMON += filamentExtruder/dations/MsgIO.xml
+
 endif
 
 XML_COMMON += Log.xml LogFile.xml SampleBasicDation.xml SoftInt.xml

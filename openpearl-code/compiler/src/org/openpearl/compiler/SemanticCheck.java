@@ -29,18 +29,14 @@
 
 package org.openpearl.compiler;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.LinkedList;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.openpearl.compiler.SymbolTable.ModuleEntry;
+import org.openpearl.compiler.SymbolTable.ProcedureEntry;
 import org.openpearl.compiler.SymbolTable.SymbolTable;
+import org.openpearl.compiler.SymbolTable.TaskEntry;
 import org.openpearl.compiler.SemanticAnalysis.*;
-//import org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph.ControlFlowGraph;
-//import org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph.ControlFlowGraphNode;
-//import org.openpearl.compiler.SemanticAnalysis.ControlFlowGraph.NotImplementedException;
 
 public class SemanticCheck {
 
@@ -76,27 +72,43 @@ public class SemanticCheck {
             System.out.println( "Performing semantic check");
         }
 
-        //new CheckVariableDeclaration(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+        // we have several semantic checks. They are more or less independent except:
+        // * generateControlFlowGraph depends on correct use of labels in EXIT and GOTO
+        // * checkUnreacableCode depends on the controlFlowGraph
+        // * checkProcedureDeclaration depends on the controlFlowGraph
+        // * checkSignalSchedulingAndReactions depends on the controlFlowGraph
+        // * checkUnusedElements must run after checkGotoExit
+        
+        // let's start with primitive checks
+        
+        // start with independent checks 
         new CheckVariableDeclaration(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast);
-
-        //     new CheckDationDeclaration(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
-        new CheckProcedureDeclaration(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
-        new CheckAssignment(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
-      
-       
         new CheckSwitchCase(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckGotoExit(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);        
+        new CheckAssignment(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckRealTimeStatements(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckDeclarationScope(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckArrayDeclarationAccess(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckIOStatements(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
+
+        // the following checks rely on that no errors were detected 
+        if (ErrorStack.getTotalErrorCount()<=0) {
+            new GenerateControlFlowGraph(sourceFileName, symbolTableVisitor, ast).visit(tree);
+            // output control flow graphs
+            if (Options.isDebugControlFlowGraph()) {
+                dumpControlFlowGraphs(symbolTableVisitor.symbolTable);
+            }
+        } else {
+            return;
+        }
+        new CheckUnreachableStatements2(sourceFileName, verbose, debug, symbolTableVisitor, expressionTypeVisitor, ast).visit(m_parseTree);
+        
+        // these checks require the CFG
+        new CheckProcedureDeclaration(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
         new CheckSignalSchedulingAndReactions(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast).visit(m_parseTree);
-        if (ErrorStack.getTotalErrorCount()<=0) {
-           new GenerateControlFlowGraph(sourceFileName, symbolTableVisitor, ast).visit(tree);
-        }
-        if (ErrorStack.getTotalErrorCount()<=0) {
-            new CheckUnreachableStatements2(sourceFileName, verbose, debug, symbolTableVisitor, expressionTypeVisitor, ast).visit(m_parseTree);
-        }
+
+ 
+        
 //        cfgGenerate = new ControlFlowGraphGenerate(m_sourceFileName, m_verbose, m_debug, m_symbolTableVisitor, m_expressionTypeVisitor, m_ast);
 //        cfgGenerate.visit(tree);
 //        
@@ -201,4 +213,26 @@ public class SemanticCheck {
 //            e.printStackTrace();
 //        }
 //    }
+    
+    private static void dumpControlFlowGraphs(SymbolTable table_level0) {
+        SymbolTable st = table_level0.getModuleTable();
+
+        LinkedList<ProcedureEntry> procs=st.getProcedureSpecificationsAndDeclarations();
+        LinkedList<TaskEntry> tasks=st.getTaskDeclarationsAndSpecifications();
+        //System.out.println("proc "+procs.size());
+        //System.out.println("tasks "+tasks.size());
+
+        for (int i=0; i<procs.size(); i++) {
+            ProcedureEntry pe = ((ProcedureEntry)(procs.get(i)));
+            if (pe.getControlFlowGraph() != null) {
+                pe.getControlFlowGraph().output(pe.getName());
+            }
+        }
+        for (int i=0; i<tasks.size(); i++) {
+            TaskEntry te = ((TaskEntry)tasks.get(i));
+            if (te.getControlFlowGraph() != null) {
+                te.getControlFlowGraph().output(te.getName());
+            }
+        }
+    }
 }

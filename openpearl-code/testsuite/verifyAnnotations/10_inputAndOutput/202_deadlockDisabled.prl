@@ -1,0 +1,14 @@
+MODULE(format);
+
+PROBLEM;
+otherDataOutByF: PROC;
+   DCL rt REF TASK;
+/*$    ^
+warning: deadlock detection disabled: not possible with REF TASK
+*/
+END;
+
+t1: TASK MAIN;
+END;
+MODEND;
+
