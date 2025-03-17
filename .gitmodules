@@ -1,0 +1,3 @@
+[submodule "openpearl-code/demos/filamentExtruder/Simulator_Web_GUI"]
+	path = openpearl-code/demos/filamentExtruder/Simulator_Web_GUI
+	url = git@github.com:c0astin/Simulator_Web_GUI.git
