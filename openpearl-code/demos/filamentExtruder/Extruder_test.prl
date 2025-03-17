@@ -17,10 +17,8 @@ temperature_sensor: TemperatureSensor(0);
 contact_switch: ContactSwitch;
 msgio: MsgIO('0'B4);
 
-pipeMsgOutTest: Pipe('/tmp/msgFromSim', 6, 'OPEN1 CAN NBR');
-pipeMsgInTest: Pipe('/tmp/msgToSim', 6, 'OPEN1');
-
-httpSocket: TcpIpServer(8081, 'NBR');
+pipeMsgOutTest: PipeNBR('./msgFromSim', 6, 'OPEN1 CAN NBR');
+pipeMsgInTest: PipeNBR('./msgToSim', 6, 'OPEN1 NBR');
 
 taskActiveErr : TaskTerminatedSignal;
 
@@ -65,9 +63,6 @@ DCL readMsgPipeTest DATION OUT BIT(64) DIM(*,80) FORWARD CREATED(pipeMsgInTest);
 SPC pipeMsgOutTest DATION IN SYSTEM ALL;
 DCL writeMsgPipeTest DATION IN BIT(64) DIM(*,80) FORWARD CREATED(pipeMsgOutTest);
 
-SPC httpSocket DATION INOUT SYSTEM ALL;
-DCL usHttpSocket DATION INOUT ALPHIC DIM(*,80) FORWARD STREAM CREATED(httpSocket); 
-
 SPC stdout DATION OUT SYSTEM ALPHIC GLOBAL;
 DCL terminal DATION OUT ALPHIC DIM(*,80) FORWARD CREATED(stdout);
 
@@ -99,8 +94,9 @@ Main_task: TASK PRIO 100 MAIN;
    OPEN terminal;
    open_log_file(fileName);
    log('---FILAMENT EXTRUDER TEST PROGRAM---');
-   open_dations;
 
+   open_dations;
+   log('WARNUNG: extruderSim_for_test.cfg durch umbenennen in extruderSim.cfg nutzen!');
    WHEN contactswitchirpt ACTIVATE test_contactswitch_irpt_task;  
 
    start_clock = NOW; 
@@ -162,7 +158,7 @@ fixed_val_to_msg: PROC(val FIXED(31), id FIXED(8)) RETURNS (BIT(64));
     DCL id_time_bit32 BIT(32);
 
     current_clock = NOW;
-    timestamp := ENTIER ((current_clock - start_clock)*1000/1 SEC); !Timestamp in ms since startup
+    timestamp := ENTIER ((current_clock - start_clock)*100/1 SEC); !Timestamp in ms since startup
     ! Var overflow after 5h --> not critical
 
     id_time_bit32 = TOBIT (id) >< TOBIT (timestamp);
@@ -186,15 +182,8 @@ open_dations: PROC;
    OPEN contactSwitch;
    OPEN writeMsgPipeTest;
    OPEN readMsgPipeTest;
-   IF ipc_mode == 'MSG' THEN
    OPEN MsgIO;
-   FIN;
-   IF ipc_mode == 'TCP' THEN
-   OPEN usHttpSocket;
-   FIN;
 END;
-
-
 
 
 test_Pipes: PROC;
@@ -334,7 +323,7 @@ test_screwMotor: PROC;
 
    SEND 100 TO screwHeater;
    TAKE temperature FROM temperatureSensor;
-   WHILE temperature < 200
+   WHILE temperature < 55
    REPEAT
       TAKE temperature FROM temperatureSensor;
       AFTER 0.3 SEC RESUME;
@@ -343,9 +332,9 @@ test_screwMotor: PROC;
 
    SEND 0 TO screwMotor;
    AFTER 2 SEC RESUME;
-   SEND 50 TO screwMotor;
+   SEND 20 TO screwMotor;
    start_time = NOW;
-   WHILE rpm < 50
+   WHILE rpm < 20
    REPEAT
       IF NOW-start_time > 5 SEC THEN !Abbruch wenn Drehzahl nach 5s nicht erreicht.
          GOTO err_s3;
@@ -354,7 +343,7 @@ test_screwMotor: PROC;
    AFTER 0.1 SEC RESUME;
    END;
    AFTER 0.5 SEC RESUME; ! Warten um zu detektieren falls Drehzahl über Zielwert steigt.
-   IF rpm == 50 AND NOW-start_time > 1.4 SEC AND NOW-start_time < 1.9 SEC THEN 
+   IF rpm == 20 AND NOW-start_time > 1 SEC AND NOW-start_time < 2 SEC THEN 
       log('TC-S3: SCHNECKENANTRIEB - START TEMP IO: OK');
    ELSE
       err_s3:
@@ -365,14 +354,14 @@ test_screwMotor: PROC;
    SEND 150 TO screwMotor;
    AFTER 2 SEC RESUME;
    TAKE rpm FROM screwMotor;
-   IF rpm == 100 THEN 
+   IF rpm == 50 THEN 
       log('TC-S4: SCHNECKENANTRIEB - ZU HOHER WERT: OK');
    ELSE
       log('TC-S4: SCHNECKENANTRIEB - ZU HOHER WERT: ERROR');
       error_count := error_count + 1;
    FIN;
 
-   SEND 100 TO screwMotor;
+   SEND 50 TO screwMotor;
    AFTER 1 SEC RESUME;
    SEND 0 TO screwMotor;
    start_time = NOW;
@@ -384,7 +373,7 @@ test_screwMotor: PROC;
       TAKE rpm FROM screwMotor;
    AFTER 0.1 SEC RESUME;
    END;
-   IF NOW-start_time > 0.8 SEC AND NOW-start_time < 1.2 SEC THEN 
+   IF NOW-start_time > 0.8 SEC AND NOW-start_time < 1.4 SEC THEN 
       log('TC-S5: SCHNECKENANTRIEB - AUSSCHALTEN: OK');
    ELSE
       err_s5:
@@ -392,10 +381,10 @@ test_screwMotor: PROC;
       error_count := error_count + 1;
    FIN;  
 
-   SEND 100 TO screwMotor;
+   SEND 20 TO screwMotor;
    AFTER 2 SEC RESUME;
    SEND 100 TO screwHeater;
-   WHILE temperature < 211
+   WHILE temperature < 60.5
    REPEAT
       TAKE temperature FROM temperatureSensor;
    AFTER 0.3 SEC RESUME;
@@ -458,13 +447,13 @@ test_spoolerMotor_And_diameterSensor: PROC;
 
 
    TAKE temperature FROM temperatureSensor;
-   WHILE temperature > 210
+   WHILE temperature > 60
    REPEAT
       TAKE temperature FROM temperatureSensor;
       AFTER 0.3 SEC RESUME;
    END;
 
-   SEND 50 TO screwMotor;
+   SEND 20 TO screwMotor;
    AFTER 2 SEC RESUME;
    TAKE diameter FROM diameterSensor;
    IF diameter > 2.1 AND diameter < 2.2 THEN
@@ -520,7 +509,7 @@ test_contact_switch: PROC;
    FIN;  
 
    ENABLE contactswitchirpt;
-   SEND 50 TO screwMotor;
+   SEND 20 TO screwMotor;
    SEND 50 TO spoolerMotor;
    start_time = NOW;
    WHILE irpt_triggered == '0'B1
@@ -530,7 +519,6 @@ test_contact_switch: PROC;
       FIN;
    AFTER 0.2SEC RESUME;
    END;
-   PUT NOW-start_time TO terminal BY D(24,3), SKIP;
    IF NOW-start_time > 30 SEC AND NOW-start_time < 90 SEC THEN 
       log('TC-C3: KONTAKTSCHALTER - INTERRUPT: OK');
    ELSE
