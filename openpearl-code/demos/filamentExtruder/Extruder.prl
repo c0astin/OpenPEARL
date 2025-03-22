@@ -76,6 +76,7 @@ SPC disc DATION INOUT SYSTEM ALL;
 DCL data_pool BOLT;
 
 !Data structure (mainly for logging)
+!System states: 'H' = PreHeat, 'G' = GoReady, 'P' = Prepare, 'R' = Running, 'S' = Stopping, 'I' = Idle
 DCL Data STRUCT [
    system_state CHAR(1),
    screw_motor_rpm FIXED(31),
@@ -110,10 +111,6 @@ DCL max_temp FIXED(31) INIT(210);
 
 !Temp. sensor request & temp. controller calc frequency
 DCL req_freq_temp_s INV DUR INIT(1 SEC);
-
-!System state:
-!'H' = PreHeat, 'G' = GoReady, 'P' = Prepare, 'R' = Running, 'S' = Stopping, 'I' = Idle
-!DCL current_state CHAR(1) INIT('I');
 
 !Time at programm startup
 DCL start_clock CLOCK; 
@@ -399,10 +396,12 @@ Actor_state_surv_task: TASK PRIO 50;
 !Hier alle State-Übergänge etc abwickeln und Erfassung von 
    DCL screw_rpm FIXED(31);
    DCL spooler_rpm FIXED(31);
+   DCL heater_pwm FIXED(31);
       WHILE '1'B1
       REPEAT
          screw_rpm := read_screw_rpm;
          spooler_rpm := read_spooler_rpm;
+         heater_pwm := read_heater_pwm;
          AFTER 0.1 SEC RESUME;
       END;
 END; !Actor_state_surv_task
