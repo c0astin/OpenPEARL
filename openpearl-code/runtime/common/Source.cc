@@ -58,7 +58,7 @@ namespace pearlrt {
          }
 
        printf("map signal %s (%d) to NoMoreCharactersSignal\n", e.which(),
-   		   e.whichRST());
+   	 	  e.whichRST());
          throw theNoMoreCharactersSignal;
       }
 

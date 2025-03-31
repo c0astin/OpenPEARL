@@ -422,7 +422,7 @@
          <check instances="oncePerSet" set="I2CBus($deviceName)"/>
       </checks>
    </connection>
-<!-- Signals.xml : auto generated (Sun Mar 16 23:42:47 2025) -->
+<!-- Signals.xml : auto generated (Mon Mar 31 12:42:05 2025) -->
    <signal name="InternalSignal"/>
    <signal name="InternalTaskSignal"/>
    <signal name="InternalDationSignal"/>

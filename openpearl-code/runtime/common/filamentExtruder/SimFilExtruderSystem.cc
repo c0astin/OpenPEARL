@@ -18,12 +18,12 @@ static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_P_0_31(0);
 static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_P_1_31(1);
 static /*const*/ pearlrt::Fixed<31>         CONST_FIXED_N_1_31(-1);
 static /*const*/ pearlrt::Fixed<1>         CONST_FIXED_P_0_1(0);
-static /*const*/ pearlrt::Character<2>         CONST_CHARACTER_317a2b78_2451_41aa_a238_cfc8a0c9b641("./");
-static /*const*/ pearlrt::Character<11>         CONST_CHARACTER_9a16c8a9_1e0b_4a8b_9483_2b55e0309211("./simulator");
-static /*const*/ pearlrt::Character<17>         CONST_CHARACTER_760e845e_61e0_4ad4_bcc2_814ab24dc234("OPEN1 ANY CAN NBR");
-static /*const*/ pearlrt::Character<12>         CONST_CHARACTER_f2af69ea_631f_42b9_9de9_f362f2dd83ad("./msgFromSim");
-static /*const*/ pearlrt::Character<10>         CONST_CHARACTER_53bdd3e9_a0fd_453b_8eb6_8dae34dfe29c("./msgToSim");
-static /*const*/ pearlrt::Character<13>         CONST_CHARACTER_2411c215_643e_4033_9008_c032a47d1701("OPEN1 CAN NBR");
+static /*const*/ pearlrt::Character<2>         CONST_CHARACTER_ec2eb6a2_5311_4422_afa3_b7dfc27d1be2("./");
+static /*const*/ pearlrt::Character<11>         CONST_CHARACTER_9c90344c_c0f8_43ae_abf8_9a64c9f93040("./simulator");
+static /*const*/ pearlrt::Character<17>         CONST_CHARACTER_9c725358_33a5_4ea2_ad03_1c1cd8163695("OPEN1 ANY CAN NBR");
+static /*const*/ pearlrt::Character<12>         CONST_CHARACTER_e9f9f5f1_cfe7_440f_9e6a_0f26d719fce5("./msgFromSim");
+static /*const*/ pearlrt::Character<10>         CONST_CHARACTER_ddb6c6da_d2ce_44b1_a7fc_2b49e4830304("./msgToSim");
+static /*const*/ pearlrt::Character<13>         CONST_CHARACTER_ad7e3720_9566_442c_9b66_1477dd28a912("OPEN1 CAN NBR");
 
 /////////////////////////////////////////////////////////////////////////////
 // TASK SPECIFIERS

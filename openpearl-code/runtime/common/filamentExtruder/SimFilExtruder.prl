@@ -50,13 +50,13 @@ DCL pi INV FLOAT INIT(3.1415926);
 ! Material properties: PLA & Steel
 ! ==========================================================================
 ! PLA: Min. processing temperature
-DCL min_processing_temp FIXED(15) INIT(180);
+DCL min_processing_temp FIXED(15) INIT(170);
 ! PLA: Max. processing temperature
 DCL max_processing_temp FIXED(15) INIT(210);
 ! PLA: Material density in [g/mm^3]
 DCL density FLOAT INIT(0.00124);
 ! PLA: Specific heat capacity in [J/kg*K]
-DCL spec_heat_pla FLOAT INIT(2.0);
+DCL spec_heat_pla FLOAT INIT(1800.0);
 ! Steel: Specific heat capacity in [J/kg*K]
 DCL spec_heat_steel FLOAT INIT(480.0);
 ! Steel - Air: Heat transfer coefficient in [W/m^2*K]
@@ -293,7 +293,7 @@ screwmotor_update: PROC (dt FLOAT /* [ms] */);
    IF temp_ok == '0'B1 AND screwmotor_requested_rpm > 0
    THEN
       screwmotor_requested_rpm = 0;
-      log('Temperature out of target range. Screw RPM set to 0 to prevent damage.');
+      log('WARNING: Temperature out of target range. Screw RPM set to 0 to prevent damage.');
    FIN;
 
 !Check if requested rpm is smaller than permitted max rpm.
@@ -351,10 +351,9 @@ END;
 
 screwheater_update: PROC (dt FLOAT /* [ms] */);
    !Turn off heater if temperature is too high.
-   IF overtemp == '1'B1 AND screwheater_requested_pwm > 0
+   IF overtemp == '1'B1 AND screwheater_current_pwm > 0
    THEN
-      screwheater_requested_pwm = 0;
-      log('WARNING: Overtemperature! Heating Element turned off to prevent damage.');
+      log('WARNING: Overtemperature! Turn off heating element.');
    FIN;
 
    !Check if requested value is within limits and change pwm accordingly
@@ -399,7 +398,7 @@ temperature_sensor_update: PROC (dt FLOAT /* [ms] */);
    cooling_pwr_conv := (ambient_temp-temperature_sensor)*h_air_steel*A_cylinder;
 
    !Cooling caused by mass flow assuming heat transfer from screw and cylinder to polymer
-   cooling_pwr_fil := (ambient_temp-temperature_sensor)*mass_flow * spec_heat_pla;
+   cooling_pwr_fil := (ambient_temp-temperature_sensor)*mass_flow * spec_heat_pla / 1000;
 
    !Resulting temperature change
    temp_change := (heating_pwr_element+cooling_pwr_conv+cooling_pwr_fil)*dt / (screw_mass*spec_heat_steel*100*1000);
@@ -712,7 +711,7 @@ read_config : PROC RETURNS (STRUCT[openErr BIT(1), readErrArray(10) FIXED]);
          CONVERT temperature_sensor FROM data BY RST(cfgErrors.readErrArray(8)),F(7,2);
          GET data FROM cfgFile BY A, RST(cfgErrors.readErrArray(9)), SKIP;
          CONVERT min_processing_temp FROM data BY RST(cfgErrors.readErrArray(9)),F(4);
-         GET data FROM cfgFile BY A, RST(cfgErrors.readErrArray(10)), SKIP;
+         GET data FROM cfgFile BY A, RST(cfgErrors.readErrArray(10));
          CONVERT max_processing_temp FROM data BY RST(cfgErrors.readErrArray(10)),F(4); 
          
    CLOSE cfgFile;

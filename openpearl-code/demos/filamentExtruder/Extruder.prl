@@ -274,7 +274,8 @@ motor_startup: PROC;
    REPEAT
    IF NOW-start_wait_time > 5 SEC THEN !Cancel
       PUT 'ERROR: Spooler motor startup took too long.' TO terminal BY A, SKIP;
-      change_state('H');
+      change_state('I');
+      RETURN;
    FIN;
       AFTER 0.3 SEC RESUME;
    END;
@@ -286,7 +287,8 @@ motor_startup: PROC;
    REPEAT
       IF NOW-start_wait_time > 5 SEC THEN !Cancel
          PUT 'ERROR: Screw motor startup took too long.' TO terminal BY A, SKIP;
-         change_state('H');
+         change_state('I');
+         RETURN;
       FIN;
       AFTER 0.3 SEC RESUME;
    END;

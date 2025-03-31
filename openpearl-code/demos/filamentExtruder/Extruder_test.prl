@@ -462,6 +462,17 @@ test_spoolerMotor_And_diameterSensor: PROC;
       log('TC-D5: DURCHMESSERSENSOR - LAUFEND: ERROR');
       error_count := error_count + 1;
    FIN;
+
+   SEND 5 TO spoolerMotor;
+   SEND 50 TO screwMotor;
+   AFTER 2 SEC RESUME;
+   TAKE diameter FROM diameterSensor;
+   IF diameter == 5 THEN
+      log('TC-D6: DURCHMESSERSENSOR - MAX: OK');
+   ELSE
+      log('TC-D6: DURCHMESSERSENSOR - MAX: ERROR');
+      error_count := error_count + 1;
+   FIN;
 END;
 
 test_contact_switch: PROC;
@@ -471,6 +482,9 @@ test_contact_switch: PROC;
     log('EXTRUDER: Test Kontaktschalter:');
    print_separator;
 
+   !Reset spool:
+   SEND 0 TO spoolerMotor;
+   AFTER 2 SEC RESUME;
    TAKE switchStatus FROM contactSwitch;
    IF switchStatus == '0'B1 THEN
       log('TC-C1: KONTAKTSCHALTER - DATION AUS: OK');
@@ -479,6 +493,9 @@ test_contact_switch: PROC;
       error_count := error_count + 1;
    FIN; 
 
+   SEND 20 TO screwMotor;
+   AFTER 2 SEC RESUME;
+   SEND 50 TO spoolerMotor;
    start_time = NOW;
    WHILE switchStatus == '0'B1
    REPEAT
@@ -486,10 +503,11 @@ test_contact_switch: PROC;
          GOTO err_c2;
       FIN;
       TAKE switchStatus FROM contactSwitch;
+      !PUT NOW-start_time TO terminal BY D(24,3), SKIP;
       AFTER 0.1 SEC RESUME;
    END;   
    PUT NOW-start_time TO terminal BY D(24,3), SKIP;
-   IF NOW-start_time > 30 SEC AND NOW-start_time < 60 SEC THEN 
+   IF NOW-start_time > 40 SEC AND NOW-start_time < 45 SEC THEN 
       log('TC-C2: KONTAKTSCHALTER - DATION AN: OK');
    ELSE
       err_c2:
@@ -502,35 +520,32 @@ test_contact_switch: PROC;
    AFTER 2 SEC RESUME;
    TAKE switchStatus FROM contactSwitch;
    IF switchStatus == '0'B1 THEN
-      log('TC-C1: KONTAKTSCHALTER - SPULENWECHSEL: OK');
+      log('TC-C3: KONTAKTSCHALTER - SPULENWECHSEL: OK');
    ELSE
-      log('TC-C1: KONTAKTSCHALTER - SPULENWECHSEL: ERROR');
+      log('TC-C3: KONTAKTSCHALTER - SPULENWECHSEL: ERROR');
       error_count := error_count + 1;
    FIN;  
 
    ENABLE contactswitchirpt;
    SEND 20 TO screwMotor;
+   AFTER 2 SEC RESUME;
    SEND 50 TO spoolerMotor;
    start_time = NOW;
    WHILE irpt_triggered == '0'B1
    REPEAT
-      IF NOW-start_time > 120 SEC THEN 
+      IF NOW-start_time > 60 SEC THEN 
          GOTO err_c3;
       FIN;
    AFTER 0.2SEC RESUME;
    END;
-   IF NOW-start_time > 30 SEC AND NOW-start_time < 90 SEC THEN 
-      log('TC-C3: KONTAKTSCHALTER - INTERRUPT: OK');
+   IF NOW-start_time > 40 SEC AND NOW-start_time < 45 SEC THEN 
+      log('TC-C4: KONTAKTSCHALTER - INTERRUPT: OK');
    ELSE
       err_c3:
-      log('TC-C3: KONTAKTSCHALTER - INTERRUPT: ERROR');
+      log('TC-C4: KONTAKTSCHALTER - INTERRUPT: ERROR');
       error_count := error_count + 1;
    FIN;  
 
 END; 
-
-
-      
-
 
 MODEND;
